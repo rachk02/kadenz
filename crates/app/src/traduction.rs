@@ -60,6 +60,12 @@ pub fn tr(texte: &str) -> String {
         .unwrap_or_else(|| texte.to_owned())
 }
 
+/// Vrai si la langue en cours se lit de droite à gauche (l'arabe). Même source
+/// que `Theme.rtl` côté Slint : la traduction du texte « ltr » vaut « rtl ».
+pub fn droite_a_gauche() -> bool {
+    tr("ltr") == "rtl"
+}
+
 /// Comme [`tr`], puis remplace chaque `{}` par l'argument suivant, comme `@tr` côté Slint.
 pub fn trf(texte: &str, arguments: &[&dyn Display]) -> String {
     let modele = tr(texte);

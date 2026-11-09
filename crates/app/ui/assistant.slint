@@ -4,7 +4,7 @@
 // de l'assistant reste à ajouter.
 
 import { CheckBox } from "std-widgets.slint";
-import { Bouton, Champ, Titre, MessageErreur, Theme } from "composants.slint";
+import { Bouton, Champ, MessageErreur, Rangee, Theme, Titre } from "composants.slint";
 
 export struct DonneesAssistant {
     nom: string,
@@ -82,7 +82,8 @@ export component EcranAssistant inherits Rectangle {
 
     background: white;
 
-    HorizontalLayout {
+    Rangee {
+        remplit: true;
         // Bandeau de marque : logo Kadenz et étapes, sur le motif Cadence (docs/marque).
         Rectangle {
             width: 240px;
@@ -106,23 +107,24 @@ export component EcranAssistant inherits Rectangle {
                     width: 130px;
                     height: 36px;
                     image-fit: contain;
-                    horizontal-alignment: left;
+                    horizontal-alignment: Theme.rtl ? ImageHorizontalAlignment.right : ImageHorizontalAlignment.left;
                 }
 
                 Rectangle {
                     height: 20px;
                 }
 
-                for nom[i] in root.etapes: HorizontalLayout {
+                for nom[i] in root.etapes: Rangee {
                     spacing: 8px;
                     Rectangle {
                         width: 6px;
                         height: 6px;
-                        y: (parent.height - self.height) / 2;
+                        cross-axis-self-alignment: CrossAxisAlignment.center;
                         background: i == root.etape ? Theme.ambre : transparent;
                     }
 
                     Text {
+                        horizontal-alignment: Theme.debut;
                         text: nom;
                         font-size: 13px;
                         font-weight: i == root.etape ? 600 : 400;
@@ -135,7 +137,7 @@ export component EcranAssistant inherits Rectangle {
         VerticalLayout {
             alignment: center;
 
-            HorizontalLayout {
+            Rangee {
                 alignment: center;
 
                 VerticalLayout {
@@ -148,6 +150,7 @@ export component EcranAssistant inherits Rectangle {
                     }
 
                     Text {
+                        horizontal-alignment: Theme.debut;
                         text: @tr("Étape {} sur {} : {}", root.etape + 1, root.etapes.length, root.etapes[root.etape]);
                         color: Theme.texte-secondaire;
                     }
@@ -238,6 +241,7 @@ export component EcranAssistant inherits Rectangle {
                         spacing: 12px;
 
                         Text {
+                            horizontal-alignment: Theme.debut;
                             text: @tr("Ce compte administre l'installation : utilisateurs, droits, sauvegardes.");
                             color: Theme.texte-secondaire;
                             wrap: word-wrap;
@@ -270,6 +274,7 @@ export component EcranAssistant inherits Rectangle {
                         spacing: 12px;
 
                         Text {
+                            horizontal-alignment: Theme.debut;
                             text: @tr("Valeurs séparées par des points-virgules, en pourcentage (ex. 0 ; 18). Modifiables plus tard dans les paramètres.");
                             color: Theme.texte-secondaire;
                             wrap: word-wrap;
@@ -305,27 +310,32 @@ export component EcranAssistant inherits Rectangle {
                         spacing: 8px;
 
                         Text {
+                            horizontal-alignment: Theme.debut;
                             text: @tr("Entreprise : {}", root.nom);
                             color: Theme.texte;
                         }
 
                         Text {
+                            horizontal-alignment: Theme.debut;
                             text: @tr("Administrateur : {} ({})", root.admin-nom, root.admin-identifiant);
                             color: Theme.texte;
                         }
 
                         Text {
+                            horizontal-alignment: Theme.debut;
                             text: @tr("TVA : {}   Remise : {}   Retenue : {}", root.taux-tva, root.taux-remise, root.taux-retenue);
                             color: Theme.texte;
                         }
 
                         Text {
+                            horizontal-alignment: Theme.debut;
                             text: @tr("Modes de paiement : {}", root.modes-paiement);
                             color: Theme.texte;
                             wrap: word-wrap;
                         }
 
                         Text {
+                            horizontal-alignment: Theme.debut;
                             text: @tr("Montant en lettres : {}", root.orthographe-traditionnelle ? @tr("orthographe traditionnelle") : @tr("orthographe rectifiée"));
                             color: Theme.texte;
                         }
@@ -335,7 +345,7 @@ export component EcranAssistant inherits Rectangle {
                         text: root.erreur;
                     }
 
-                    HorizontalLayout {
+                    Rangee {
                         spacing: 8px;
                         alignment: end;
 

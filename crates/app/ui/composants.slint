@@ -14,8 +14,18 @@ export global Theme {
     // de secours choisie par Windows est japonaise, sans les caractères simplifiés.
     // Microsoft YaHei, livrée avec Windows, couvre le chinois simplifié et le latin.
     in property <bool> chinois: false;
-    out property <string> police-texte: root.chinois ? "Microsoft YaHei UI" : "Inter";
-    out property <string> police-titre: root.chinois ? "Microsoft YaHei UI" : "Manrope";
+    out property <string> police-texte: root.chinois ? "Microsoft YaHei UI" : root.rtl ? "Segoe UI" : "Inter";
+    out property <string> police-titre: root.chinois ? "Microsoft YaHei UI" : root.rtl ? "Segoe UI" : "Manrope";
+
+    // Sens de lecture, déduit de la traduction : seul ar.po traduit « ltr » par « rtl ».
+    // De droite à gauche, les écrans sont mis en miroir : rangées inversées (Rangee),
+    // textes alignés à droite (debut), menu et panneaux de marque à droite.
+    // Arabe : Segoe UI, livrée avec Windows, dessine l'arabe à la taille du latin.
+    out property <bool> rtl: @tr("ltr") == "rtl";
+    out property <TextHorizontalAlignment> debut: root.rtl ? TextHorizontalAlignment.right : TextHorizontalAlignment.left;
+    out property <TextHorizontalAlignment> fin: root.rtl ? TextHorizontalAlignment.left : TextHorizontalAlignment.right;
+    out property <LayoutAlignment> rangee-debut: root.rtl ? LayoutAlignment.end : LayoutAlignment.start;
+    out property <LayoutAlignment> rangee-fin: root.rtl ? LayoutAlignment.start : LayoutAlignment.end;
     // Couleurs de la marque : Indigo (accent), Nuit pour les fonds sombres, Ambre en
     // touche d'accent (jamais en texte sur blanc ; Ambre foncé pour cet usage).
     out property <color> nuit: #1a2259;
@@ -29,6 +39,23 @@ export global Theme {
     out property <color> succes: #067647;
     out property <color> fond-lateral: #f4f5f9;
     out property <color> bordure: #d9dce3;
+}
+
+// Rangée horizontale qui suit le sens de lecture : à utiliser à la place de
+// HorizontalLayout (même comportement de gauche à droite : éléments étirés selon
+// horizontal-stretch, sans retour à la ligne), inversée de droite à gauche.
+// Un FlexboxLayout se déclare extensible en hauteur sans limite, alors qu'une
+// rangée de boutons ou de champs doit garder sa hauteur. Une rangée qui remplit
+// l'écran (`remplit: true`, par exemple une liste et sa fiche) a donc un facteur
+// d'extension de 1 : la colonne qui la contient lui donne seule l'espace libre.
+// (Un plafond `max-height: preferred-height` boucle à l'exécution entre rangées
+// imbriquées.)
+export component Rangee inherits FlexboxLayout {
+    in property <bool> remplit: false;
+    flex-direction: Theme.rtl ? FlexboxLayoutDirection.row-reverse : FlexboxLayoutDirection.row;
+    flex-wrap: FlexboxLayoutWrap.no-wrap;
+    alignment: LayoutAlignment.stretch;
+    vertical-stretch: root.remplit ? 1 : 0;
 }
 
 // Champ de saisie avec son libellé au-dessus.
@@ -46,9 +73,11 @@ export component Champ inherits VerticalLayout {
         text: root.libelle;
         font-size: 12px;
         color: Theme.texte-secondaire;
+        horizontal-alignment: Theme.debut;
     }
 
     saisie := LineEdit {
+        horizontal-alignment: Theme.debut;
         input-type: root.secret ? InputType.password : InputType.text;
         read-only: root.lecture-seule;
         edited(texte) => {
@@ -71,6 +100,7 @@ export component MessageRetour inherits Text {
     in property <Retour> retour;
     text: root.retour.message;
     color: root.retour.ok ? Theme.succes : Theme.erreur;
+    horizontal-alignment: Theme.debut;
     wrap: word-wrap;
     visible: root.retour.message != "";
 }
@@ -85,6 +115,7 @@ export global Droits {
 
 // Libellé de section dans un panneau.
 export component Section inherits Text {
+    horizontal-alignment: Theme.debut;
     font-family: Theme.police-titre;
     font-size: 15px;
     font-weight: 700;
@@ -92,6 +123,7 @@ export component Section inherits Text {
 }
 
 export component Titre inherits Text {
+    horizontal-alignment: Theme.debut;
     font-family: Theme.police-titre;
     font-size: 22px;
     font-weight: 800;
@@ -187,6 +219,7 @@ export component Bouton inherits Rectangle {
 }
 
 export component MessageErreur inherits Text {
+    horizontal-alignment: Theme.debut;
     color: Theme.erreur;
     wrap: word-wrap;
 }
@@ -209,8 +242,9 @@ export component ElementNavigation inherits Rectangle {
         root.clique();
     }
 
+    // Repère, icône et libellé partent du bord de début : à droite en arabe.
     Rectangle {
-        x: 0px;
+        x: Theme.rtl ? parent.width - self.width : 0px;
         width: 3px;
         height: 18px;
         background: Theme.ambre;
@@ -218,7 +252,7 @@ export component ElementNavigation inherits Rectangle {
     }
 
     Image {
-        x: 12px;
+        x: Theme.rtl ? parent.width - 12px - self.width : 12px;
         width: 18px;
         height: 18px;
         source: root.icone;
@@ -226,8 +260,9 @@ export component ElementNavigation inherits Rectangle {
     }
 
     Text {
-        x: 40px;
+        x: Theme.rtl ? 8px : 40px;
         width: parent.width - 48px;
+        horizontal-alignment: Theme.debut;
         text: root.libelle;
         color: root.actif ? white : Theme.texte;
         font-weight: root.actif ? 600 : 400;

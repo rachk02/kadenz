@@ -3,7 +3,7 @@
 // faits par l'application : cet écran ne fait qu'afficher et transmettre la saisie.
 
 import { CheckBox, ComboBox, LineEdit, ScrollView, StandardTableView } from "std-widgets.slint";
-import { Bouton, Champ, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+import { Bouton, Champ, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct LigneFactureUi {
     // 0 pour une ligne libre, sans produit d'origine.
@@ -120,7 +120,7 @@ component Registre inherits VerticalLayout {
     padding: 24px;
     spacing: 12px;
 
-    HorizontalLayout {
+    Rangee {
         spacing: 8px;
 
         Titre {
@@ -138,7 +138,7 @@ component Registre inherits VerticalLayout {
         }
     }
 
-    HorizontalLayout {
+    Rangee {
         spacing: 8px;
 
         recherche := LineEdit {
@@ -182,12 +182,24 @@ component Registre inherits VerticalLayout {
     }
 
     if root.erreur-filtre != "": Text {
+        horizontal-alignment: Theme.debut;
         text: root.erreur-filtre;
         color: Theme.erreur;
     }
 
     StandardTableView {
-        columns: [
+        // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
+        columns: Theme.rtl ? [
+            { title: @tr("Échéance"), min-width: 85px, horizontal-stretch: 0 },
+            { title: @tr("Mode"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Paiement"), min-width: 85px, horizontal-stretch: 0 },
+            { title: @tr("Statut"), min-width: 80px, horizontal-stretch: 0 },
+            { title: @tr("Montant TTC"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Libellé"), min-width: 110px, horizontal-stretch: 2 },
+            { title: @tr("Client"), min-width: 130px, horizontal-stretch: 2 },
+            { title: @tr("Date"), min-width: 85px, horizontal-stretch: 0 },
+            { title: @tr("N°"), min-width: 110px, horizontal-stretch: 1 },
+        ] : [
             { title: @tr("N°"), min-width: 110px, horizontal-stretch: 1 },
             { title: @tr("Date"), min-width: 85px, horizontal-stretch: 0 },
             { title: @tr("Client"), min-width: 130px, horizontal-stretch: 2 },
@@ -204,14 +216,15 @@ component Registre inherits VerticalLayout {
             FacturesApi.selectionner(ligne);
         }
         sort-ascending(colonne) => {
-            FacturesApi.trier(colonne, true);
+            FacturesApi.trier(Theme.rtl ? 8 - colonne : colonne, true);
         }
         sort-descending(colonne) => {
-            FacturesApi.trier(colonne, false);
+            FacturesApi.trier(Theme.rtl ? 8 - colonne : colonne, false);
         }
     }
 
     Text {
+        horizontal-alignment: Theme.debut;
         text: FacturesApi.resume + " " + @tr("Cliquer sur une facture pour ouvrir sa fiche.");
         font-size: 12px;
         color: Theme.texte-secondaire;
@@ -223,7 +236,7 @@ component Registre inherits VerticalLayout {
 }
 
 // Libellé et valeur alignés à droite, pour le bloc des totaux.
-component LigneTotal inherits HorizontalLayout {
+component LigneTotal inherits Rangee {
     in property <string> libelle;
     in property <string> valeur;
     in property <bool> fort;
@@ -233,7 +246,7 @@ component LigneTotal inherits HorizontalLayout {
     Text {
         text: root.libelle;
         horizontal-stretch: 1;
-        horizontal-alignment: right;
+        horizontal-alignment: Theme.fin;
         color: Theme.texte-secondaire;
         font-weight: root.fort ? 700 : 400;
     }
@@ -241,7 +254,7 @@ component LigneTotal inherits HorizontalLayout {
     Text {
         text: root.valeur;
         width: 140px;
-        horizontal-alignment: right;
+        horizontal-alignment: Theme.fin;
         color: Theme.texte;
         font-weight: root.fort ? 700 : 400;
     }
@@ -313,7 +326,7 @@ component Fiche inherits ScrollView {
         spacing: 14px;
         alignment: start;
 
-        HorizontalLayout {
+        Rangee {
             spacing: 12px;
 
             Bouton {
@@ -337,12 +350,13 @@ component Fiche inherits ScrollView {
             border-radius: 4px;
             background: root.fiche.annule ? #fdecea : (root.fiche.brouillon ? #fff4e5 : Theme.accent-survol);
 
-            HorizontalLayout {
+            Rangee {
                 padding-left: 12px;
                 padding-right: 12px;
                 spacing: 24px;
 
                 Text {
+                    horizontal-alignment: Theme.debut;
                     text: @tr("Statut : {}", root.fiche.statut);
                     font-weight: 700;
                     color: Theme.texte;
@@ -350,6 +364,7 @@ component Fiche inherits ScrollView {
                 }
 
                 if root.fiche.paiement != "": Text {
+                    horizontal-alignment: Theme.debut;
                     text: @tr("Paiement : {}", root.fiche.paiement);
                     color: Theme.texte;
                     vertical-alignment: center;
@@ -358,6 +373,7 @@ component Fiche inherits ScrollView {
                 Rectangle { }
 
                 if root.fiche.brouillon: Text {
+                    horizontal-alignment: Theme.debut;
                     text: @tr("Aucun numéro tant que la facture n'est pas validée.");
                     color: Theme.texte-secondaire;
                     vertical-alignment: center;
@@ -366,10 +382,13 @@ component Fiche inherits ScrollView {
         }
 
         // En-tête : client, dates, libellé.
-        HorizontalLayout {
+        // Grille et non Rangee : le détail du client, à la ligne, y garde une hauteur stable.
+        GridLayout {
             spacing: 16px;
 
             VerticalLayout {
+                row: 0;
+                col: Theme.rtl ? 2 : 0;
                 spacing: 4px;
                 horizontal-stretch: 2;
 
@@ -377,7 +396,7 @@ component Fiche inherits ScrollView {
                     text: @tr("Client");
                 }
 
-                HorizontalLayout {
+                Rangee {
                     spacing: 8px;
 
                     if root.fiche.modifiable: recherche-client := LineEdit {
@@ -399,6 +418,7 @@ component Fiche inherits ScrollView {
                 }
 
                 Text {
+                    horizontal-alignment: Theme.debut;
                     text: root.fiche.tiers-detail;
                     font-size: 12px;
                     color: Theme.texte-secondaire;
@@ -407,6 +427,8 @@ component Fiche inherits ScrollView {
             }
 
             VerticalLayout {
+                row: 0;
+                col: 1;
                 horizontal-stretch: 1;
                 alignment: start;
 
@@ -421,6 +443,8 @@ component Fiche inherits ScrollView {
             }
 
             VerticalLayout {
+                row: 0;
+                col: Theme.rtl ? 0 : 2;
                 horizontal-stretch: 1;
                 alignment: start;
 
@@ -441,7 +465,7 @@ component Fiche inherits ScrollView {
             text: @tr("Lignes");
         }
 
-        HorizontalLayout {
+        Rangee {
             spacing: 8px;
 
             Etiquette {
@@ -467,7 +491,7 @@ component Fiche inherits ScrollView {
             Etiquette {
                 text: @tr("Total");
                 width: 110px;
-                horizontal-alignment: right;
+                horizontal-alignment: Theme.fin;
             }
 
             if root.fiche.modifiable: Rectangle {
@@ -475,7 +499,7 @@ component Fiche inherits ScrollView {
             }
         }
 
-        for ligne[i] in FacturesApi.lignes: HorizontalLayout {
+        for ligne[i] in FacturesApi.lignes: Rangee {
             spacing: 8px;
 
             LineEdit {
@@ -498,7 +522,7 @@ component Fiche inherits ScrollView {
                 width: 110px;
                 text <=> ligne.prix;
                 read-only: !root.fiche.modifiable;
-                horizontal-alignment: right;
+                horizontal-alignment: Theme.fin;
                 edited => {
                     root.recalculer();
                 }
@@ -508,7 +532,7 @@ component Fiche inherits ScrollView {
                 width: 80px;
                 text <=> ligne.quantite;
                 read-only: !root.fiche.modifiable;
-                horizontal-alignment: right;
+                horizontal-alignment: Theme.fin;
                 edited => {
                     root.recalculer();
                 }
@@ -517,7 +541,7 @@ component Fiche inherits ScrollView {
             Text {
                 width: 110px;
                 text: ligne.total;
-                horizontal-alignment: right;
+                horizontal-alignment: Theme.fin;
                 vertical-alignment: center;
                 color: Theme.texte;
             }
@@ -549,11 +573,12 @@ component Fiche inherits ScrollView {
         }
 
         if FacturesApi.lignes.length == 0: Text {
+            horizontal-alignment: Theme.debut;
             text: @tr("Aucune ligne.");
             color: Theme.texte-secondaire;
         }
 
-        if root.fiche.modifiable: HorizontalLayout {
+        if root.fiche.modifiable: Rangee {
             spacing: 8px;
 
             recherche-produit := LineEdit {
@@ -588,6 +613,7 @@ component Fiche inherits ScrollView {
         }
 
         if root.fiche.modifiable: Text {
+            horizontal-alignment: Theme.debut;
             text: @tr("Le produit choisi remplit la référence, la désignation et le prix, qui restent modifiables sur la ligne. Une référence tapée puis validée par Entrée reprend le produit correspondant.");
             font-size: 12px;
             color: Theme.texte-secondaire;
@@ -595,14 +621,17 @@ component Fiche inherits ScrollView {
         }
 
         // Taux, paiement et totaux.
-        HorizontalLayout {
+        // Grille et non Rangee : le montant en lettres, à la ligne, y garde une hauteur stable.
+        GridLayout {
             spacing: 24px;
 
             VerticalLayout {
+                row: 0;
+                col: Theme.rtl ? 1 : 0;
                 spacing: 10px;
                 width: 320px;
 
-                HorizontalLayout {
+                Rangee {
                     spacing: 12px;
 
                     VerticalLayout {
@@ -658,6 +687,8 @@ component Fiche inherits ScrollView {
             }
 
             VerticalLayout {
+                row: 0;
+                col: Theme.rtl ? 0 : 1;
                 spacing: 6px;
                 horizontal-stretch: 1;
 
@@ -689,7 +720,7 @@ component Fiche inherits ScrollView {
 
                 Text {
                     text: FacturesApi.totaux.lettres;
-                    horizontal-alignment: right;
+                    horizontal-alignment: Theme.fin;
                     color: Theme.texte-secondaire;
                     wrap: word-wrap;
                 }
@@ -697,7 +728,7 @@ component Fiche inherits ScrollView {
         }
 
         // Actions selon le statut.
-        HorizontalLayout {
+        Rangee {
             spacing: 8px;
             alignment: start;
 
@@ -767,12 +798,13 @@ component Fiche inherits ScrollView {
             spacing: 8px;
 
             Text {
+                horizontal-alignment: Theme.debut;
                 text: root.confirmation == 1 ? @tr("Valider cette facture ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés.") : (root.confirmation == 2 ? @tr("Annuler cette facture ? Elle reste dans le registre avec son numéro, en lecture seule.") : @tr("Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit."));
                 color: Theme.texte;
                 wrap: word-wrap;
             }
 
-            HorizontalLayout {
+            Rangee {
                 spacing: 8px;
                 alignment: start;
 
@@ -806,12 +838,14 @@ component Fiche inherits ScrollView {
         }
 
         if !root.fiche.modifiable && !root.fiche.admin-modifiable && !root.fiche.annule: Text {
+            horizontal-alignment: Theme.debut;
             text: root.fiche.brouillon ? @tr("Lecture seule : votre rôle ne permet pas de modifier une facture.") : @tr("Facture validée : lignes et montants figés.");
             color: Theme.texte-secondaire;
             wrap: word-wrap;
         }
 
         if root.fiche.annule: Text {
+            horizontal-alignment: Theme.debut;
             text: @tr("Facture annulée : lecture seule, numéro conservé.");
             color: Theme.texte-secondaire;
         }
@@ -821,22 +855,25 @@ component Fiche inherits ScrollView {
             text: @tr("Historique");
         }
 
-        for evenement in FacturesApi.historique: HorizontalLayout {
+        for evenement in FacturesApi.historique: Rangee {
             spacing: 12px;
 
             Text {
+                horizontal-alignment: Theme.debut;
                 text: evenement.date;
                 width: 140px;
                 color: Theme.texte-secondaire;
             }
 
             Text {
+                horizontal-alignment: Theme.debut;
                 text: evenement.libelle;
                 horizontal-stretch: 1;
                 color: Theme.texte;
             }
 
             Text {
+                horizontal-alignment: Theme.debut;
                 text: evenement.utilisateur;
                 width: 200px;
                 color: Theme.texte-secondaire;

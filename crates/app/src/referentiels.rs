@@ -53,10 +53,16 @@ pub(crate) fn retour_erreur(message: impl std::fmt::Display) -> Retour {
     }
 }
 
+/// Lignes d'un tableau. De droite à gauche, les colonnes sont déclarées dans
+/// l'ordre inverse côté Slint : les cellules de chaque ligne le sont aussi.
 pub(crate) fn modele_lignes(lignes: Vec<Vec<String>>) -> ModelRc<ModelRc<StandardListViewItem>> {
+    let inverser = crate::traduction::droite_a_gauche();
     let lignes: Vec<ModelRc<StandardListViewItem>> = lignes
         .into_iter()
-        .map(|cellules| {
+        .map(|mut cellules| {
+            if inverser {
+                cellules.reverse();
+            }
             let cellules: Vec<StandardListViewItem> = cellules
                 .into_iter()
                 .map(|c| StandardListViewItem::from(SharedString::from(c)))

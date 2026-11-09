@@ -2,7 +2,7 @@
 // Une liste filtrable et triable à gauche, la fiche sélectionnée à droite.
 
 import { CheckBox, ComboBox, LineEdit, StandardTableView } from "std-widgets.slint";
-import { Bouton, Champ, Droits, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+import { Bouton, Champ, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 import { ImportApi } from "import.slint";
 
 // Fiche telle que l'écran la manipule ; `existe` est faux pour une nouvelle fiche.
@@ -78,7 +78,7 @@ component ActionsFiche inherits VerticalLayout {
     spacing: 8px;
     vertical-stretch: 0;
 
-    HorizontalLayout {
+    Rangee {
         spacing: 8px;
         alignment: start;
 
@@ -107,6 +107,7 @@ component ActionsFiche inherits VerticalLayout {
     }
 
     if root.existe && !root.modifiable: Text {
+        horizontal-alignment: Theme.debut;
         text: @tr("Lecture seule : votre rôle ne permet pas de modifier une fiche existante.");
         color: Theme.texte-secondaire;
         wrap: word-wrap;
@@ -116,12 +117,13 @@ component ActionsFiche inherits VerticalLayout {
         spacing: 8px;
 
         Text {
+            horizontal-alignment: Theme.debut;
             text: @tr("Retirer cette fiche ? Elle est supprimée si aucun document ne la cite, sinon seulement désactivée.");
             wrap: word-wrap;
             color: Theme.texte;
         }
 
-        HorizontalLayout {
+        Rangee {
             spacing: 8px;
             alignment: start;
 
@@ -191,7 +193,7 @@ export component PageTiers inherits VerticalLayout {
         text: @tr("Tiers");
     }
 
-    HorizontalLayout {
+    Rangee {
         spacing: 8px;
 
         recherche := LineEdit {
@@ -232,20 +234,29 @@ export component PageTiers inherits VerticalLayout {
         }
     }
 
-    HorizontalLayout {
+    Rangee {
+        remplit: true;
         spacing: 16px;
 
         VerticalLayout {
             spacing: 4px;
 
             StandardTableView {
-                columns: [
-                    { title: @tr("Nom"), min-width: 160px, horizontal-stretch: 3 },
-                    { title: @tr("Type"), min-width: 100px, horizontal-stretch: 1 },
-                    { title: @tr("Téléphone"), min-width: 100px, horizontal-stretch: 1 },
-                    { title: @tr("Localisation"), min-width: 110px, horizontal-stretch: 1 },
-                    { title: @tr("IFU"), min-width: 90px, horizontal-stretch: 1 },
-                    { title: @tr("État"), min-width: 90px, horizontal-stretch: 1 },
+                // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
+                columns: Theme.rtl ? [
+                    { title: @tr("État"), min-width: 70px, horizontal-stretch: 1 },
+                    { title: @tr("IFU"), min-width: 70px, horizontal-stretch: 1 },
+                    { title: @tr("Localisation"), min-width: 90px, horizontal-stretch: 1 },
+                    { title: @tr("Téléphone"), min-width: 90px, horizontal-stretch: 1 },
+                    { title: @tr("Type"), min-width: 80px, horizontal-stretch: 1 },
+                    { title: @tr("Nom"), min-width: 140px, horizontal-stretch: 3 },
+                ] : [
+                    { title: @tr("Nom"), min-width: 140px, horizontal-stretch: 3 },
+                    { title: @tr("Type"), min-width: 80px, horizontal-stretch: 1 },
+                    { title: @tr("Téléphone"), min-width: 90px, horizontal-stretch: 1 },
+                    { title: @tr("Localisation"), min-width: 90px, horizontal-stretch: 1 },
+                    { title: @tr("IFU"), min-width: 70px, horizontal-stretch: 1 },
+                    { title: @tr("État"), min-width: 70px, horizontal-stretch: 1 },
                 ];
                 rows: TiersApi.lignes;
                 current-row <=> TiersApi.ligne-courante;
@@ -254,14 +265,15 @@ export component PageTiers inherits VerticalLayout {
                     root.charger(TiersApi.selectionner(ligne));
                 }
                 sort-ascending(colonne) => {
-                    TiersApi.trier(colonne, true);
+                    TiersApi.trier(Theme.rtl ? 5 - colonne : colonne, true);
                 }
                 sort-descending(colonne) => {
-                    TiersApi.trier(colonne, false);
+                    TiersApi.trier(Theme.rtl ? 5 - colonne : colonne, false);
                 }
             }
 
             Text {
+                horizontal-alignment: Theme.debut;
                 text: TiersApi.resume;
                 font-size: 12px;
                 color: Theme.texte-secondaire;
@@ -323,6 +335,7 @@ export component PageTiers inherits VerticalLayout {
                         spacing: 4px;
 
                         Text {
+                            horizontal-alignment: Theme.debut;
                             text: @tr("Type");
                             font-size: 12px;
                             color: Theme.texte-secondaire;
@@ -362,6 +375,7 @@ export component PageTiers inherits VerticalLayout {
             }
 
             if !root.fiche.existe && !Droits.ajouter-referentiel: Text {
+                horizontal-alignment: Theme.debut;
                 text: @tr("Sélectionner un tiers dans la liste pour afficher sa fiche.");
                 color: Theme.texte-secondaire;
                 wrap: word-wrap;
@@ -412,7 +426,7 @@ export component PageProduits inherits VerticalLayout {
         text: @tr("Produits et services");
     }
 
-    HorizontalLayout {
+    Rangee {
         spacing: 8px;
 
         recherche := LineEdit {
@@ -453,14 +467,22 @@ export component PageProduits inherits VerticalLayout {
         }
     }
 
-    HorizontalLayout {
+    Rangee {
+        remplit: true;
         spacing: 16px;
 
         VerticalLayout {
             spacing: 4px;
 
             StandardTableView {
-                columns: [
+                // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
+                columns: Theme.rtl ? [
+                    { title: @tr("État"), min-width: 90px, horizontal-stretch: 1 },
+                    { title: @tr("Sens"), min-width: 120px, horizontal-stretch: 1 },
+                    { title: @tr("Prix (FCFA)"), min-width: 110px, horizontal-stretch: 1 },
+                    { title: @tr("Désignation"), min-width: 180px, horizontal-stretch: 3 },
+                    { title: @tr("Référence"), min-width: 110px, horizontal-stretch: 1 },
+                ] : [
                     { title: @tr("Référence"), min-width: 110px, horizontal-stretch: 1 },
                     { title: @tr("Désignation"), min-width: 180px, horizontal-stretch: 3 },
                     { title: @tr("Prix (FCFA)"), min-width: 110px, horizontal-stretch: 1 },
@@ -474,14 +496,15 @@ export component PageProduits inherits VerticalLayout {
                     root.charger(ProduitsApi.selectionner(ligne));
                 }
                 sort-ascending(colonne) => {
-                    ProduitsApi.trier(colonne, true);
+                    ProduitsApi.trier(Theme.rtl ? 4 - colonne : colonne, true);
                 }
                 sort-descending(colonne) => {
-                    ProduitsApi.trier(colonne, false);
+                    ProduitsApi.trier(Theme.rtl ? 4 - colonne : colonne, false);
                 }
             }
 
             Text {
+                horizontal-alignment: Theme.debut;
                 text: ProduitsApi.resume;
                 font-size: 12px;
                 color: Theme.texte-secondaire;
@@ -521,6 +544,7 @@ export component PageProduits inherits VerticalLayout {
                 spacing: 4px;
 
                 Text {
+                    horizontal-alignment: Theme.debut;
                     text: @tr("Sens d'utilisation");
                     font-size: 12px;
                     color: Theme.texte-secondaire;
@@ -558,6 +582,7 @@ export component PageProduits inherits VerticalLayout {
             }
 
             if !root.fiche.existe && !Droits.ajouter-referentiel: Text {
+                horizontal-alignment: Theme.debut;
                 text: @tr("Sélectionner un produit dans la liste pour afficher sa fiche.");
                 color: Theme.texte-secondaire;
                 wrap: word-wrap;

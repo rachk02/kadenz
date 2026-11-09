@@ -2,7 +2,7 @@
 // enregistrement des seules lignes valides (cahier des charges, section 6.8).
 
 import { ComboBox, StandardTableView } from "std-widgets.slint";
-import { Bouton, MessageRetour, Retour, Theme, Titre } from "composants.slint";
+import { Bouton, MessageRetour, Rangee, Retour, Theme, Titre } from "composants.slint";
 
 export global ImportApi {
     in property <bool> actif;
@@ -40,10 +40,11 @@ export component PanneauImport inherits Rectangle {
             text: ImportApi.titre;
         }
 
-        HorizontalLayout {
+        Rangee {
             spacing: 8px;
 
             Text {
+                horizontal-alignment: Theme.debut;
                 text: ImportApi.fichier == "" ? @tr("Aucun fichier choisi.") : @tr("Fichier : {}", ImportApi.fichier);
                 color: Theme.texte;
                 vertical-alignment: center;
@@ -59,16 +60,18 @@ export component PanneauImport inherits Rectangle {
         }
 
         if ImportApi.erreur != "": Text {
+            horizontal-alignment: Theme.debut;
             text: ImportApi.erreur;
             color: Theme.erreur;
             wrap: word-wrap;
         }
 
-        if ImportApi.erreur == "": HorizontalLayout {
+        if ImportApi.erreur == "": Rangee {
             spacing: 8px;
             alignment: start;
 
             Text {
+                horizontal-alignment: Theme.debut;
                 text: ImportApi.libelle-defaut;
                 color: Theme.texte-secondaire;
                 vertical-alignment: center;
@@ -85,6 +88,7 @@ export component PanneauImport inherits Rectangle {
         }
 
         if ImportApi.erreur == "": Text {
+            horizontal-alignment: Theme.debut;
             text: ImportApi.colonnes;
             font-size: 12px;
             color: Theme.texte-secondaire;
@@ -92,7 +96,13 @@ export component PanneauImport inherits Rectangle {
         }
 
         StandardTableView {
-            columns: [
+            // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
+            columns: Theme.rtl ? [
+                { title: @tr("Remarque"), min-width: 220px, horizontal-stretch: 3 },
+                { title: @tr("Fiche"), min-width: 200px, horizontal-stretch: 2 },
+                { title: @tr("État"), min-width: 100px, horizontal-stretch: 0 },
+                { title: @tr("Ligne"), min-width: 60px, horizontal-stretch: 0 },
+            ] : [
                 { title: @tr("Ligne"), min-width: 60px, horizontal-stretch: 0 },
                 { title: @tr("État"), min-width: 100px, horizontal-stretch: 0 },
                 { title: @tr("Fiche"), min-width: 200px, horizontal-stretch: 2 },
@@ -102,12 +112,13 @@ export component PanneauImport inherits Rectangle {
         }
 
         Text {
+            horizontal-alignment: Theme.debut;
             text: ImportApi.resume;
             color: Theme.texte;
             wrap: word-wrap;
         }
 
-        HorizontalLayout {
+        Rangee {
             spacing: 8px;
             alignment: start;
 
@@ -125,11 +136,11 @@ export component PanneauImport inherits Rectangle {
                     ImportApi.fermer();
                 }
             }
+        }
 
-            MessageRetour {
-                retour: ImportApi.retour;
-                vertical-alignment: center;
-            }
+        // Sous les boutons : un texte à la ligne dans une Rangee ferait boucler la mise en page.
+        MessageRetour {
+            retour: ImportApi.retour;
         }
     }
 }

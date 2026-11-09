@@ -1,4 +1,4 @@
-import { Bouton, Champ, Titre, MessageErreur, Theme } from "composants.slint";
+import { Bouton, Champ, MessageErreur, Rangee, Theme, Titre } from "composants.slint";
 
 // Écran de connexion : panneau de marque Kadenz à gauche (logo, motif Cadence),
 // formulaire à droite sous le nom de l'entreprise qui utilise l'installation.
@@ -22,7 +22,8 @@ export component EcranConnexion inherits Rectangle {
 
     background: white;
 
-    HorizontalLayout {
+    Rangee {
+        remplit: true;
         Rectangle {
             width: max(340px, min(460px, root.width * 0.4));
             background: Theme.nuit;
@@ -44,7 +45,7 @@ export component EcranConnexion inherits Rectangle {
                     height: 40px;
                     source: @image-url("icones/kadenz-logo-horizontal-negatif.svg");
                     image-fit: contain;
-                    horizontal-alignment: left;
+                    horizontal-alignment: Theme.rtl ? ImageHorizontalAlignment.right : ImageHorizontalAlignment.left;
                 }
 
                 Rectangle { }
@@ -52,21 +53,23 @@ export component EcranConnexion inherits Rectangle {
                 // Les trois temps de la marque, en Ambre pour le dernier.
                 VerticalLayout {
                     spacing: 6px;
+                    // Décalage vers la fin de la ligne : vers la gauche en arabe.
                     Rectangle {
+                        x: Theme.rtl ? parent.width - self.width : 0px;
                         width: 56px;
                         height: 4px;
                         background: white;
                     }
 
                     Rectangle {
-                        x: 10px;
+                        x: Theme.rtl ? parent.width - self.width - 10px : 10px;
                         width: 56px;
                         height: 4px;
                         background: white;
                     }
 
                     Rectangle {
-                        x: 20px;
+                        x: Theme.rtl ? parent.width - self.width - 20px : 20px;
                         width: 56px;
                         height: 4px;
                         background: Theme.ambre;
@@ -74,6 +77,7 @@ export component EcranConnexion inherits Rectangle {
                 }
 
                 Text {
+                    horizontal-alignment: Theme.debut;
                     text: @tr("Gestion commerciale");
                     color: white;
                     font-family: Theme.police-titre;
@@ -83,6 +87,7 @@ export component EcranConnexion inherits Rectangle {
                 }
 
                 Text {
+                    horizontal-alignment: Theme.debut;
                     text: @tr("Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements.");
                     color: #c5cae0;
                     font-size: 14px;
@@ -94,6 +99,7 @@ export component EcranConnexion inherits Rectangle {
                 }
 
                 Text {
+                    horizontal-alignment: Theme.debut;
                     text: @tr("Version {}", root.version-logiciel);
                     color: #9aa3c7;
                     font-size: 12px;
@@ -104,7 +110,7 @@ export component EcranConnexion inherits Rectangle {
         VerticalLayout {
             alignment: center;
 
-            HorizontalLayout {
+            Rangee {
                 alignment: center;
 
                 VerticalLayout {
@@ -113,6 +119,7 @@ export component EcranConnexion inherits Rectangle {
                     padding: 24px;
 
                     Text {
+                        horizontal-alignment: Theme.debut;
                         text: @tr("CONNEXION");
                         font-family: Theme.police-titre;
                         font-size: 12px;
@@ -127,6 +134,7 @@ export component EcranConnexion inherits Rectangle {
                     }
 
                     Text {
+                        horizontal-alignment: Theme.debut;
                         text: @tr("Saisissez votre identifiant et votre mot de passe.");
                         color: Theme.texte-secondaire;
                         wrap: word-wrap;

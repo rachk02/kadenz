@@ -1,5 +1,5 @@
 import { AboutSlint, ComboBox } from "std-widgets.slint";
-import { Bouton, Champ, Droits, Titre, MessageErreur, ElementNavigation, Section, Theme } from "composants.slint";
+import { Bouton, Champ, Droits, ElementNavigation, MessageErreur, Rangee, Section, Theme, Titre } from "composants.slint";
 import { EcranAssistant, DonneesAssistant } from "assistant.slint";
 import { EcranConnexion } from "connexion.slint";
 import { PageProduits, PageTiers, ProduitsApi, TiersApi } from "referentiels.slint";
@@ -58,17 +58,19 @@ component PageMonCompte inherits VerticalLayout {
     }
 
     Text {
+        horizontal-alignment: Theme.debut;
         text: @tr("{} ({}), rôle : {}", root.utilisateur-nom, root.utilisateur-identifiant, root.utilisateur-role);
         color: Theme.texte-secondaire;
     }
 
     Text {
+        horizontal-alignment: Theme.debut;
         text: @tr("Langue de l'interface");
         font-weight: 700;
         color: Theme.texte;
     }
 
-    HorizontalLayout {
+    Rangee {
         alignment: start;
 
         // Chaque langue est écrite dans sa propre langue, pour être reconnue
@@ -88,12 +90,13 @@ component PageMonCompte inherits VerticalLayout {
     }
 
     Text {
+        horizontal-alignment: Theme.debut;
         text: @tr("Changer de mot de passe");
         font-weight: 700;
         color: Theme.texte;
     }
 
-    HorizontalLayout {
+    Rangee {
         alignment: start;
 
         VerticalLayout {
@@ -123,6 +126,7 @@ component PageMonCompte inherits VerticalLayout {
             }
 
             if root.reussi: Text {
+                horizontal-alignment: Theme.debut;
                 text: @tr("Mot de passe modifié.");
                 color: Theme.succes;
             }
@@ -253,7 +257,8 @@ export component FenetrePrincipale inherits Window {
         }
     }
 
-    if root.ecran == Ecran.application: HorizontalLayout {
+    if root.ecran == Ecran.application: Rangee {
+        remplit: true;
         Rectangle {
             width: 220px;
             background: Theme.fond-lateral;
@@ -263,6 +268,7 @@ export component FenetrePrincipale inherits Window {
                 spacing: 4px;
 
                 Text {
+                    horizontal-alignment: Theme.debut;
                     text: root.nom-entreprise;
                     font-size: 16px;
                     font-weight: 700;
@@ -286,6 +292,7 @@ export component FenetrePrincipale inherits Window {
                 Rectangle { }
 
                 Text {
+                    horizontal-alignment: Theme.debut;
                     text: root.utilisateur-nom + " (" + root.utilisateur-role + ")";
                     font-size: 12px;
                     color: Theme.texte;
@@ -300,6 +307,7 @@ export component FenetrePrincipale inherits Window {
                 }
 
                 Text {
+                    horizontal-alignment: Theme.debut;
                     text: root.etat-base;
                     font-size: 11px;
                     color: Theme.texte-secondaire;
@@ -318,6 +326,7 @@ export component FenetrePrincipale inherits Window {
                 }
 
                 Text {
+                    horizontal-alignment: Theme.debut;
                     text: @tr("Module en cours de construction.");
                     color: Theme.texte-secondaire;
                 }
@@ -369,7 +378,7 @@ export component FenetrePrincipale inherits Window {
                     clip: true;
 
                     Image {
-                        x: parent.width - self.width;
+                        x: Theme.rtl ? 0px : parent.width - self.width;
                         width: min(360px, parent.width / 2);
                         height: parent.height;
                         source: @image-url("icones/motif-cadence.svg");
@@ -386,10 +395,11 @@ export component FenetrePrincipale inherits Window {
                             height: 46px;
                             source: @image-url("icones/kadenz-logo-horizontal-negatif.svg");
                             image-fit: contain;
-                            horizontal-alignment: left;
+                            horizontal-alignment: Theme.rtl ? ImageHorizontalAlignment.right : ImageHorizontalAlignment.left;
                         }
 
                         Text {
+                            horizontal-alignment: Theme.debut;
                             text: @tr("Gestion commerciale");
                             color: white;
                             font-family: Theme.police-titre;
@@ -398,6 +408,7 @@ export component FenetrePrincipale inherits Window {
                         }
 
                         Text {
+                            horizontal-alignment: Theme.debut;
                             text: @tr("Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements.");
                             color: #c5cae0;
                             font-size: 13px;
@@ -406,10 +417,14 @@ export component FenetrePrincipale inherits Window {
                     }
                 }
 
-                HorizontalLayout {
+                // Grille et non Rangee : les textes à la ligne y gardent une hauteur stable.
+                // Les deux colonnes s'échangent de droite à gauche.
+                GridLayout {
                     spacing: 20px;
 
                     Rectangle {
+                        row: 0;
+                        col: Theme.rtl ? 1 : 0;
                         border-width: 1px;
                         border-color: Theme.bordure;
                         border-radius: 4px;
@@ -424,18 +439,21 @@ export component FenetrePrincipale inherits Window {
                             }
 
                             Text {
+                                horizontal-alignment: Theme.debut;
                                 text: @tr("Version {}", root.version-logiciel);
                                 color: Theme.texte;
                                 font-weight: 600;
                             }
 
                             Text {
+                                horizontal-alignment: Theme.debut;
                                 text: @tr("Logiciel propriétaire, tous droits réservés.");
                                 color: Theme.texte-secondaire;
                                 wrap: word-wrap;
                             }
 
                             Text {
+                                horizontal-alignment: Theme.debut;
                                 text: @tr("Gestion commerciale mono-poste pour Windows : les données restent sur ce poste.");
                                 color: Theme.texte-secondaire;
                                 wrap: word-wrap;
@@ -444,6 +462,8 @@ export component FenetrePrincipale inherits Window {
                     }
 
                     Rectangle {
+                        row: 0;
+                        col: Theme.rtl ? 0 : 1;
                         border-width: 1px;
                         border-color: Theme.bordure;
                         border-radius: 4px;
@@ -458,18 +478,21 @@ export component FenetrePrincipale inherits Window {
                             }
 
                             Text {
+                                horizontal-alignment: Theme.debut;
                                 text: @tr("Interface : Slint, sous licence Slint Royalty-free 2.0.");
                                 color: Theme.texte-secondaire;
                                 wrap: word-wrap;
                             }
 
                             Text {
+                                horizontal-alignment: Theme.debut;
                                 text: @tr("Polices : Inter et Manrope, sous licence SIL Open Font License 1.1.");
                                 color: Theme.texte-secondaire;
                                 wrap: word-wrap;
                             }
 
                             Text {
+                                horizontal-alignment: Theme.debut;
                                 text: @tr("Base de données : SQLite, dans le domaine public.");
                                 color: Theme.texte-secondaire;
                                 wrap: word-wrap;

@@ -2,7 +2,7 @@
 // (cahier des charges, sections 10.1 et 10.2).
 
 import { CheckBox, ComboBox, ScrollView, StandardTableView, TabWidget } from "std-widgets.slint";
-import { Bouton, Champ, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+import { Bouton, Champ, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct CompteUi {
     nom: string,
@@ -43,7 +43,8 @@ export global UtilisateursApi {
     callback enregistrer-matrice() -> Retour;
 }
 
-component OngletComptes inherits HorizontalLayout {
+component OngletComptes inherits Rangee {
+    remplit: true;
     property <CompteUi> compte;
     property <Retour> retour;
 
@@ -68,7 +69,13 @@ component OngletComptes inherits HorizontalLayout {
         spacing: 8px;
 
         StandardTableView {
-            columns: [
+            // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
+            columns: Theme.rtl ? [
+                { title: @tr("État"), min-width: 90px, horizontal-stretch: 1 },
+                { title: @tr("Rôle"), min-width: 110px, horizontal-stretch: 1 },
+                { title: @tr("Identifiant"), min-width: 110px, horizontal-stretch: 1 },
+                { title: @tr("Nom complet"), min-width: 160px, horizontal-stretch: 2 },
+            ] : [
                 { title: @tr("Nom complet"), min-width: 160px, horizontal-stretch: 2 },
                 { title: @tr("Identifiant"), min-width: 110px, horizontal-stretch: 1 },
                 { title: @tr("Rôle"), min-width: 110px, horizontal-stretch: 1 },
@@ -82,7 +89,7 @@ component OngletComptes inherits HorizontalLayout {
             }
         }
 
-        HorizontalLayout {
+        Rangee {
             alignment: start;
 
             Bouton {
@@ -117,6 +124,7 @@ component OngletComptes inherits HorizontalLayout {
             spacing: 4px;
 
             Text {
+                horizontal-alignment: Theme.debut;
                 text: @tr("Rôle");
                 font-size: 12px;
                 color: Theme.texte-secondaire;
@@ -128,7 +136,7 @@ component OngletComptes inherits HorizontalLayout {
             }
         }
 
-        if root.compte.existe && !root.compte.soi-meme: HorizontalLayout {
+        if root.compte.existe && !root.compte.soi-meme: Rangee {
             spacing: 8px;
             alignment: start;
 
@@ -151,6 +159,7 @@ component OngletComptes inherits HorizontalLayout {
         }
 
         if root.compte.soi-meme: Text {
+            horizontal-alignment: Theme.debut;
             text: @tr("C'est le compte de la session en cours : son rôle et son état se changent depuis un autre compte administrateur. Le mot de passe se change dans « Mon compte ».");
             color: Theme.texte-secondaire;
             wrap: word-wrap;
@@ -172,7 +181,7 @@ component OngletComptes inherits HorizontalLayout {
             secret: true;
         }
 
-        if !root.compte.soi-meme: HorizontalLayout {
+        if !root.compte.soi-meme: Rangee {
             alignment: start;
 
             Bouton {
@@ -212,12 +221,13 @@ component OngletDroits inherits ScrollView {
         alignment: start;
 
         Text {
+            horizontal-alignment: Theme.debut;
             text: @tr("Cocher ce que chaque rôle peut faire. Le rôle Admin garde toujours la gestion des utilisateurs et des droits. Les contrôles s'appliquent dès l'enregistrement ; le menu des autres comptes se met à jour à leur prochaine connexion.");
             color: Theme.texte-secondaire;
             wrap: word-wrap;
         }
 
-        HorizontalLayout {
+        Rangee {
             spacing: 8px;
             height: 32px;
 
@@ -239,11 +249,12 @@ component OngletDroits inherits ScrollView {
             height: 36px;
             background: mod(i, 2) == 0 ? Theme.fond-lateral : transparent;
 
-            HorizontalLayout {
+            Rangee {
                 padding-left: 8px;
                 spacing: 8px;
 
                 Text {
+                    horizontal-alignment: Theme.debut;
                     horizontal-stretch: 1;
                     text: ligne.libelle;
                     color: Theme.texte;
@@ -251,7 +262,7 @@ component OngletDroits inherits ScrollView {
                     overflow: elide;
                 }
 
-                for autorise[j] in ligne.autorisations: HorizontalLayout {
+                for autorise[j] in ligne.autorisations: Rangee {
                     width: 110px;
                     alignment: center;
 
@@ -266,7 +277,7 @@ component OngletDroits inherits ScrollView {
             }
         }
 
-        HorizontalLayout {
+        Rangee {
             padding-top: 8px;
             spacing: 8px;
             alignment: start;
@@ -286,11 +297,12 @@ component OngletDroits inherits ScrollView {
                     UtilisateursApi.matrice-par-defaut();
                 }
             }
+        }
 
-            MessageRetour {
-                retour: root.retour;
-                vertical-alignment: center;
-            }
+        // Sous les boutons et non dans leur rangée : un texte à la ligne dans une
+        // Rangee (FlexboxLayout) ferait boucler le calcul de largeur de la page défilante.
+        MessageRetour {
+            retour: root.retour;
         }
     }
 }
