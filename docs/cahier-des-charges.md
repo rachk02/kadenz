@@ -11,7 +11,7 @@
 | 2.5 | 2026-11-09 | Questions 3 (orthographe rectifiée par défaut), 10 (délais vides par défaut) et 11 (import dans l'assistant reporté) tranchées |
 | 2.6 | 2026-11-09 | Jalon J3 : périmètre livré et reports (section 19), droits des actions que la matrice ne nommait pas (section 10.1), conditions de validation (section 7.2), question 12 sur le réglage de la numérotation, identifiants jamais réutilisés (section 7.4) |
 | 2.7 | 2026-11-09 | Choix de J3 validés par l'utilisateur ; question 12 tranchée : format du compteur annuel `F2026-0001` et réglage de la numérotation (sections 5.4 et 6.1) |
-| 2.8 | 2026-11-09 | Interface en sept langues, langue choisie par compte, documents clients en français (section 13) |
+| 2.8 | 2026-11-09 | Interface en sept langues, langue choisie par compte, documents clients en français (section 13) ; résultat de l'essai PDF (section 12) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -374,6 +374,8 @@ Règles multi-pages (spécifié) :
 - Pagination automatique.
 
 Choix technique (à l'étude) : c'est la partie la plus délicate en Rust pur (modèles, pagination, logo, polices). La bibliothèque sera choisie après un essai sur une page de facture complète.
+
+Essai du 2026-11-09 (crate `kadenz-pdf`, données fictives) : bibliothèque krilla 0.8.2 (licence MIT ou Apache-2.0, Rust pur, sans dépendance système), polices Inter et Manrope embarquées et sous-ensemblées, logos PNG ou JPEG lus depuis la base. Le texte est façonné une fois (rustybuzz) pour être mesuré puis tracé à l'identique, ce qui rend la pagination exacte. Facture fictive de 46 lignes sur 3 pages A4 : en-tête répété, bloc tiers en page 1, en-tête du tableau répété, lignes jamais coupées, « À reporter » et « Report », totaux, montant en lettres et signataire ensemble sur la dernière page, pied de page avec « Page n/N », filigranes « BROUILLON » et « ANNULÉ » ; environ 30 Ko et 0,1 s par document en mode debug. Choix proposé, en attente de validation.
 
 ---
 
