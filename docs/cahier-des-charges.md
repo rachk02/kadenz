@@ -11,6 +11,7 @@
 | 2.5 | 2026-11-09 | Questions 3 (orthographe rectifiée par défaut), 10 (délais vides par défaut) et 11 (import dans l'assistant reporté) tranchées |
 | 2.6 | 2026-11-09 | Jalon J3 : périmètre livré et reports (section 19), droits des actions que la matrice ne nommait pas (section 10.1), conditions de validation (section 7.2), question 12 sur le réglage de la numérotation, identifiants jamais réutilisés (section 7.4) |
 | 2.7 | 2026-11-09 | Choix de J3 validés par l'utilisateur ; question 12 tranchée : format du compteur annuel `F2026-0001` et réglage de la numérotation (sections 5.4 et 6.1) |
+| 2.8 | 2026-11-09 | Interface en sept langues, langue choisie par compte, documents clients en français (section 13) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -379,7 +380,8 @@ Choix technique (à l'étude) : c'est la partie la plus délicate en Rust pur (m
 ## 13. Exigences non fonctionnelles (spécifié)
 
 - Windows 10/11 64 bits, fonctionnement 100 % local, exécutable natif. Seule exception : la vérification facultative de mise à jour (section 16), qui échoue sans gêne hors connexion.
-- Interface et documents en français uniquement (V1).
+- Interface en sept langues : français (langue source), anglais, arabe, japonais, chinois, turc et espagnol (décision du 2026-11-09). La langue se choisit par compte, dans Mon compte ; l'interface s'affiche en français avant la connexion et revient au français à la déconnexion. Traductions rédigées sans relecture par un locuteur natif, choix assumé de l'utilisateur. Limite connue : l'arabe s'affiche correctement, mais la disposition des écrans reste de gauche à droite (pas de mise en miroir automatique). Spécifié.
+- Documents remis aux clients (PDF, montant en lettres) en français uniquement pour l'instant.
 - Devise FCFA uniquement (V1).
 - Base stockée dans le dossier de données de l'utilisateur Windows (`%APPDATA%`).
 - Migrations appliquées automatiquement au démarrage.

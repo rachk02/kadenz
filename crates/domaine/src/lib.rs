@@ -5,6 +5,7 @@
 
 pub mod calcul;
 pub mod document;
+pub mod langue;
 pub mod lettres;
 pub mod numerotation;
 pub mod paiement;

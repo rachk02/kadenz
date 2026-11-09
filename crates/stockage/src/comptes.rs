@@ -4,6 +4,7 @@
 use argon2::Argon2;
 use argon2::password_hash::phc::PasswordHash;
 use argon2::password_hash::{PasswordHasher, PasswordVerifier};
+use kadenz_domaine::langue::Langue;
 use kadenz_domaine::role::{Droit, Role};
 use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::json;
@@ -21,6 +22,8 @@ pub struct Utilisateur {
     pub identifiant: String,
     pub role: Role,
     pub actif: bool,
+    /// Langue de l'interface choisie par le compte.
+    pub langue: Langue,
 }
 
 #[derive(Debug, Clone)]
@@ -96,10 +99,12 @@ fn ligne_vers_utilisateur(r: &rusqlite::Row<'_>) -> rusqlite::Result<Utilisateur
         identifiant: r.get(2)?,
         role,
         actif: r.get(4)?,
+        // Code inconnu (impossible avec la contrainte) : français par défaut.
+        langue: Langue::depuis_code(&r.get::<_, String>(5)?).unwrap_or_default(),
     })
 }
 
-const COLONNES: &str = "id, nom_complet, identifiant, role, actif";
+const COLONNES: &str = "id, nom_complet, identifiant, role, actif, langue";
 
 pub fn lire(conn: &Connection, id: i64) -> Resultat<Option<Utilisateur>> {
     Ok(conn
@@ -193,6 +198,7 @@ pub(crate) fn creer_sans_controle(
         identifiant: identifiant.to_string(),
         role: nouveau.role,
         actif: true,
+        langue: Langue::default(),
     })
 }
 
@@ -209,7 +215,7 @@ pub fn connecter(
                 "SELECT {COLONNES}, mot_de_passe_hache FROM utilisateur WHERE identifiant = ?1"
             ),
             [identifiant.trim()],
-            |r| Ok((ligne_vers_utilisateur(r)?, r.get(5)?)),
+            |r| Ok((ligne_vers_utilisateur(r)?, r.get(6)?)),
         )
         .optional()?;
     match trouve {
@@ -374,10 +380,66 @@ pub fn changer_role(conn: &Connection, acteur: &Utilisateur, id: i64, role: Role
     )
 }
 
+/// Choix de la langue de l'interface pour son propre compte. Aucun droit requis :
+/// chacun règle sa langue ; le compte est relu en base (il doit être actif).
+pub fn changer_langue(conn: &Connection, acteur: &Utilisateur, langue: Langue) -> Resultat<()> {
+    let ancienne: Option<String> = conn
+        .query_row(
+            "SELECT langue FROM utilisateur WHERE id = ?1 AND actif = 1",
+            [acteur.id],
+            |r| r.get(0),
+        )
+        .optional()?;
+    let Some(ancienne) = ancienne else {
+        return Err(Erreur::Validation("compte inconnu ou désactivé".into()));
+    };
+    if ancienne == langue.code() {
+        return Ok(());
+    }
+    conn.execute(
+        "UPDATE utilisateur SET langue = ?1 WHERE id = ?2",
+        params![langue.code(), acteur.id],
+    )?;
+    audit::journaliser(
+        conn,
+        Entree {
+            entite: "utilisateur",
+            entite_id: acteur.id,
+            action: "changement_langue",
+            ancienne_valeur: Some(json!({ "langue": ancienne })),
+            nouvelle_valeur: Some(json!({ "langue": langue.code() })),
+            utilisateur_id: Some(acteur.id),
+        },
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::ouvrir_en_memoire;
+
+    #[test]
+    fn langue_du_compte() {
+        let conn = ouvrir_en_memoire().unwrap();
+        let admin = crate::droits::tests::compte(&conn, "admin", Role::Admin);
+        assert_eq!(admin.langue, Langue::Francais);
+        changer_langue(&conn, &admin, Langue::Japonais).unwrap();
+        assert_eq!(
+            lire(&conn, admin.id).unwrap().unwrap().langue,
+            Langue::Japonais
+        );
+        assert_eq!(
+            connecter(&conn, "admin", "motdepasse1")
+                .map(|u| u.langue)
+                .ok(),
+            Some(Langue::Japonais)
+        );
+        let refus = conn.execute(
+            "UPDATE utilisateur SET langue = 'de' WHERE id = ?1",
+            [admin.id],
+        );
+        assert!(refus.is_err(), "code de langue hors liste refusé");
+    }
 
     fn nouveau(identifiant: &str, role: Role) -> NouvelUtilisateur {
         NouvelUtilisateur {
