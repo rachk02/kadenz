@@ -2,6 +2,8 @@
 //!
 //! `cargo run -p kadenz-pdf --example essai_facture -- <dossier>` écrit
 //! `essai-facture.pdf` (validée), `essai-brouillon.pdf` et `essai-annulee.pdf`.
+//! Deux arguments facultatifs de plus : fichiers du logo principal et du logo
+//! secondaire (PNG ou JPEG).
 //! Toutes les données sont inventées pour l'essai.
 
 use kadenz_domaine::calcul::{Taux, UNE_UNITE, calculer_totaux, total_ligne};
@@ -10,7 +12,13 @@ use kadenz_pdf::modele::{DocumentPdf, EntreprisePdf, Filigrane, LignePdf, Textes
 use kadenz_pdf::texte::Polices;
 
 fn main() {
-    let dossier = std::env::args().nth(1).unwrap_or_else(|| ".".into());
+    let arguments: Vec<String> = std::env::args().collect();
+    let dossier = arguments.get(1).cloned().unwrap_or_else(|| ".".into());
+    let lire = |rang: usize| {
+        arguments
+            .get(rang)
+            .map(|c| std::fs::read(c).expect("logo lisible"))
+    };
     let designations = [
         ("PEL-01", "Pelle", ""),
         (
@@ -61,8 +69,8 @@ fn main() {
             ifu: "IFU-ESSAI-0000".into(),
             banque1: "Banque Essai, compte 0000 0000 0000".into(),
             banque2: String::new(),
-            logo: None,
-            logo2: None,
+            logo: lire(2),
+            logo2: lire(3),
         },
         tiers: TiersPdf {
             nom: "Client Alpha".into(),
