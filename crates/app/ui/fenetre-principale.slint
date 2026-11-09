@@ -1,35 +1,121 @@
-import { AboutSlint } from "std-widgets.slint";
+import { AboutSlint, Button } from "std-widgets.slint";
+import { Champ, Titre, MessageErreur, ElementNavigation, Theme } from "composants.slint";
+import { EcranAssistant, DonneesAssistant } from "assistant.slint";
+import { EcranConnexion } from "connexion.slint";
 
-component ElementNavigation inherits Rectangle {
-    in property <string> libelle;
-    in property <bool> actif;
-    callback clique();
+export { DonneesAssistant }
 
-    height: 36px;
-    border-radius: 4px;
-    background: root.actif ? #2d3a8c : (zone.has-hover ? #e8eaf6 : transparent);
+// Écran courant, choisi par l'application au démarrage puis au fil des actions.
+export enum Ecran { demarrage-impossible, assistant, connexion, application }
+
+component PageMonCompte inherits VerticalLayout {
+    in property <string> utilisateur-nom;
+    in property <string> utilisateur-identifiant;
+    in property <string> utilisateur-role;
+
+    // Renvoie un message d'erreur, ou une chaîne vide si le changement a réussi.
+    callback changer-mot-de-passe(string, string, string) -> string;
+
+    property <string> ancien;
+    property <string> nouveau;
+    property <string> confirmation;
+    property <string> erreur;
+    property <bool> reussi;
+
+    padding: 24px;
+    spacing: 12px;
+
+    Titre {
+        text: "Mon compte";
+    }
 
     Text {
-        x: 12px;
-        text: root.libelle;
-        color: root.actif ? white : #1f2933;
-        vertical-alignment: center;
-        font-size: 14px;
+        text: root.utilisateur-nom + " (" + root.utilisateur-identifiant + "), rôle : " + root.utilisateur-role;
+        color: Theme.texte-secondaire;
     }
 
-    zone := TouchArea {
-        clicked => {
-            root.clique();
+    Text {
+        text: "Changer de mot de passe";
+        font-weight: 700;
+        color: Theme.texte;
+    }
+
+    HorizontalLayout {
+        alignment: start;
+
+        VerticalLayout {
+            width: 360px;
+            spacing: 12px;
+
+            Champ {
+                libelle: "Mot de passe actuel";
+                secret: true;
+                valeur <=> root.ancien;
+            }
+
+            Champ {
+                libelle: "Nouveau mot de passe (8 caractères au moins)";
+                secret: true;
+                valeur <=> root.nouveau;
+            }
+
+            Champ {
+                libelle: "Confirmation du nouveau mot de passe";
+                secret: true;
+                valeur <=> root.confirmation;
+            }
+
+            if root.erreur != "": MessageErreur {
+                text: root.erreur;
+            }
+
+            if root.reussi: Text {
+                text: "Mot de passe modifié.";
+                color: Theme.succes;
+            }
+
+            Button {
+                text: "Enregistrer";
+                primary: true;
+                clicked => {
+                    root.erreur = root.changer-mot-de-passe(root.ancien, root.nouveau, root.confirmation);
+                    root.reussi = root.erreur == "";
+                    if (root.reussi) {
+                        root.ancien = "";
+                        root.nouveau = "";
+                        root.confirmation = "";
+                    }
+                }
+            }
         }
     }
+
+    Rectangle { }
 }
 
 export component FenetrePrincipale inherits Window {
+    in-out property <Ecran> ecran: Ecran.demarrage-impossible;
+    in property <string> message-demarrage;
     in property <string> etat-base;
+    in property <string> nom-entreprise;
+    in property <string> utilisateur-nom;
+    in property <string> utilisateur-identifiant;
+    in property <string> utilisateur-role;
+
+    in property <string> defaut-taux-tva;
+    in property <string> defaut-taux-remise;
+    in property <string> defaut-taux-retenue;
+    in property <string> defaut-modes-paiement;
+
+    callback terminer-assistant(DonneesAssistant) -> string;
+    callback connecter(string, string) -> string;
+    callback deconnecter();
+    callback changer-mot-de-passe(string, string, string) -> string;
+
     in-out property <int> page: 0;
 
-    // Le dernier élément est l'écran "À propos", qui porte l'attribution exigée par
-    // la licence Slint Royalty-free 2.0 (cahier des charges, section 14).
+    // Les deux derniers éléments sont « Mon compte » et « À propos » ; ce dernier porte
+    // l'attribution exigée par la licence Slint Royalty-free 2.0 (cahier, section 14).
     property <[string]> pages: [
         "Tableau de bord",
         "Devis",
@@ -38,31 +124,67 @@ export component FenetrePrincipale inherits Window {
         "Livraisons",
         "Factures",
         "Paramètres",
+        "Mon compte",
         "À propos",
     ];
-    property <int> page-a-propos: 7;
+    property <int> page-compte: 7;
+    property <int> page-a-propos: 8;
 
-    title: "Kadenz";
+    title: root.nom-entreprise == "" ? "Kadenz" : root.nom-entreprise;
     preferred-width: 1200px;
     preferred-height: 760px;
     min-width: 900px;
-    min-height: 600px;
+    min-height: 640px;
     background: white;
 
-    HorizontalLayout {
+    if root.ecran == Ecran.demarrage-impossible: VerticalLayout {
+        alignment: center;
+        padding: 24px;
+        spacing: 12px;
+
+        Titre {
+            text: "Démarrage impossible";
+            horizontal-alignment: center;
+        }
+
+        MessageErreur {
+            text: root.message-demarrage;
+            horizontal-alignment: center;
+        }
+    }
+
+    if root.ecran == Ecran.assistant: EcranAssistant {
+        defaut-taux-tva: root.defaut-taux-tva;
+        defaut-taux-remise: root.defaut-taux-remise;
+        defaut-taux-retenue: root.defaut-taux-retenue;
+        defaut-modes-paiement: root.defaut-modes-paiement;
+        terminer(donnees) => {
+            root.terminer-assistant(donnees)
+        }
+    }
+
+    if root.ecran == Ecran.connexion: EcranConnexion {
+        nom-entreprise: root.nom-entreprise;
+        connecter(identifiant, mot-de-passe) => {
+            root.connecter(identifiant, mot-de-passe)
+        }
+    }
+
+    if root.ecran == Ecran.application: HorizontalLayout {
         Rectangle {
             width: 220px;
-            background: #f4f5f9;
+            background: Theme.fond-lateral;
 
             VerticalLayout {
                 padding: 12px;
                 spacing: 4px;
 
                 Text {
-                    text: "Kadenz";
-                    font-size: 18px;
+                    text: root.nom-entreprise;
+                    font-size: 16px;
                     font-weight: 700;
-                    color: #1f2933;
+                    color: Theme.texte;
+                    wrap: word-wrap;
                 }
 
                 Rectangle {
@@ -80,43 +202,61 @@ export component FenetrePrincipale inherits Window {
                 Rectangle { }
 
                 Text {
+                    text: root.utilisateur-nom + " (" + root.utilisateur-role + ")";
+                    font-size: 12px;
+                    color: Theme.texte;
+                    wrap: word-wrap;
+                }
+
+                Button {
+                    text: "Se déconnecter";
+                    clicked => {
+                        root.page = 0;
+                        root.deconnecter();
+                    }
+                }
+
+                Text {
                     text: root.etat-base;
                     font-size: 11px;
-                    color: #52606d;
+                    color: Theme.texte-secondaire;
                     wrap: word-wrap;
                 }
             }
         }
 
         Rectangle {
-            if root.page != root.page-a-propos: VerticalLayout {
+            if root.page < root.page-compte: VerticalLayout {
                 padding: 24px;
                 spacing: 12px;
 
-                Text {
+                Titre {
                     text: root.pages[root.page];
-                    font-size: 22px;
-                    font-weight: 700;
-                    color: #1f2933;
                 }
 
                 Text {
                     text: "Module en cours de construction.";
-                    color: #52606d;
+                    color: Theme.texte-secondaire;
                 }
 
                 Rectangle { }
+            }
+
+            if root.page == root.page-compte: PageMonCompte {
+                utilisateur-nom: root.utilisateur-nom;
+                utilisateur-identifiant: root.utilisateur-identifiant;
+                utilisateur-role: root.utilisateur-role;
+                changer-mot-de-passe(ancien, nouveau, confirmation) => {
+                    root.changer-mot-de-passe(ancien, nouveau, confirmation)
+                }
             }
 
             if root.page == root.page-a-propos: VerticalLayout {
                 padding: 24px;
                 spacing: 12px;
 
-                Text {
+                Titre {
                     text: "À propos";
-                    font-size: 22px;
-                    font-weight: 700;
-                    color: #1f2933;
                 }
 
                 AboutSlint { }

@@ -1,4 +1,6 @@
 -- Schéma initial de Kadenz (cahier des charges, section 11).
+-- Modifiable tant qu'aucune version n'est publiée ; figé à partir de la v0.1.0,
+-- après quoi toute évolution passe par une nouvelle migration.
 -- Montants en FCFA entiers, pourcentages en centièmes de point, quantités en millièmes,
 -- dates en TEXT ISO 8601, valeurs structurées en JSON dans des colonnes TEXT.
 
@@ -16,6 +18,7 @@ CREATE TABLE entreprise (
     banque1                   TEXT NOT NULL DEFAULT '',
     banque2                   TEXT NOT NULL DEFAULT '',
     logo_chemin               TEXT NOT NULL DEFAULT '',
+    logo2_chemin              TEXT NOT NULL DEFAULT '',
     responsable_facturation   TEXT NOT NULL DEFAULT '',
     responsable_comptabilite  TEXT NOT NULL DEFAULT ''
 ) STRICT;
@@ -23,7 +26,7 @@ CREATE TABLE entreprise (
 CREATE TABLE utilisateur (
     id                 INTEGER PRIMARY KEY,
     nom_complet        TEXT NOT NULL,
-    identifiant        TEXT NOT NULL UNIQUE,
+    identifiant        TEXT NOT NULL UNIQUE COLLATE NOCASE,
     mot_de_passe_hache TEXT NOT NULL,
     role               TEXT NOT NULL CHECK (role IN ('admin', 'comptable', 'commercial', 'consultation')),
     actif              INTEGER NOT NULL DEFAULT 1 CHECK (actif IN (0, 1)),
@@ -54,7 +57,7 @@ CREATE TABLE produit (
 
 CREATE TABLE document (
     id                        INTEGER PRIMARY KEY,
-    type                      TEXT NOT NULL CHECK (type IN ('devis', 'proforma', 'bon_commande', 'livraison', 'facture')),
+    type                      TEXT NOT NULL CHECK (type IN ('devis', 'proforma', 'bon_commande', 'livraison', 'facture', 'avoir')),
     numero                    TEXT,
     date                      TEXT NOT NULL,
     tiers_id                  INTEGER REFERENCES tiers (id),
@@ -81,6 +84,7 @@ CREATE TABLE document (
     observations              TEXT NOT NULL DEFAULT '',
     chemin_pdf                TEXT NOT NULL DEFAULT '',
     document_source_id        INTEGER REFERENCES document (id),
+    date_echeance             TEXT,
     date_creation             TEXT NOT NULL,
     date_validation           TEXT,
     date_envoi                TEXT,

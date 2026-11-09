@@ -8,3 +8,6 @@ publish.workspace = true
 [dependencies]
 kadenz-domaine.workspace = true
 rusqlite.workspace = true
+argon2.workspace = true
+chrono.workspace = true
+serde_json.workspace = true

@@ -1,0 +1,75 @@
+import { Button } from "std-widgets.slint";
+import { Champ, Titre, MessageErreur, Theme } from "composants.slint";
+
+export component EcranConnexion inherits Rectangle {
+    in property <string> nom-entreprise;
+
+    // Renvoie un message d'erreur, ou une chaîne vide si la connexion a réussi.
+    callback connecter(string, string) -> string;
+
+    property <string> identifiant;
+    property <string> mot-de-passe;
+    property <string> erreur;
+
+    function valider() {
+        root.erreur = root.connecter(root.identifiant, root.mot-de-passe);
+        if (root.erreur == "") {
+            root.mot-de-passe = "";
+        }
+    }
+
+    background: white;
+
+    VerticalLayout {
+        alignment: center;
+
+        HorizontalLayout {
+            alignment: center;
+
+            VerticalLayout {
+                width: 360px;
+                spacing: 16px;
+                padding: 24px;
+
+                Titre {
+                    text: root.nom-entreprise;
+                    wrap: word-wrap;
+                }
+
+                Text {
+                    text: "Connexion";
+                    color: Theme.texte-secondaire;
+                }
+
+                Champ {
+                    libelle: "Identifiant";
+                    valeur <=> root.identifiant;
+                    valide => {
+                        root.valider();
+                    }
+                }
+
+                Champ {
+                    libelle: "Mot de passe";
+                    secret: true;
+                    valeur <=> root.mot-de-passe;
+                    valide => {
+                        root.valider();
+                    }
+                }
+
+                if root.erreur != "": MessageErreur {
+                    text: root.erreur;
+                }
+
+                Button {
+                    text: "Se connecter";
+                    primary: true;
+                    clicked => {
+                        root.valider();
+                    }
+                }
+            }
+        }
+    }
+}

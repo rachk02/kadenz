@@ -152,7 +152,7 @@ L'identité de l'entreprise (section 5.1) est éditée dans le même écran de p
 
 ### 6.1 Règles communes
 
-**Numérotation** : format `{Préfixe}{AAAA}-{MM}-{####}`, ex. `D2026-05-0004`. Préfixes par défaut : D (Devis), P (Proforma), C (Bon de commande), L (Livraison), F (Facture), A (Avoir). Compteur par type + année + mois, incrémenté dans la transaction de validation. Au-delà de 9999 dans un mois, le numéro s'allonge sans perte.
+**Numérotation** : format `{Préfixe}{AAAA}-{MM}-{####}`, ex. `D2026-05-0004`. Préfixes par défaut : D (Devis), P (Proforma), C (Bon de commande), L (Livraison), F (Facture), A (Avoir). Compteur par type + année + mois de la date du document, incrémenté dans la transaction de validation. Au-delà de 9999 dans un mois, le numéro s'allonge sans perte.
 
 **Montants** : la devise est le FCFA, sans décimale. Tous les montants sont stockés et calculés en entiers (`i64`), jamais en nombres à virgule flottante. Les pourcentages sont stockés en centièmes de point (1800 = 18 %), ce qui permet un taux comme 2,5 % sans changer le modèle. Tout arrondi passe par une fonction unique du domaine.
 
@@ -209,6 +209,7 @@ Document lié à une Facture validée, qui la corrige ou l'annule en tout ou par
 | Bon de commande | Brouillon → Validé → Envoyé → Réception partielle → Réception complète, ou → Annulé avant toute réception |
 | Livraison | Brouillon → Validé → Livraison partielle → Livraison complète, ou → Annulé avant toute livraison |
 | Facture | Brouillon → Validé → Envoyé, ou → Annulé |
+| Avoir | Même cycle que la Facture. Montants stockés en positif ; le montant dû de la Facture d'origine est diminué des avoirs validés (jalon J5) |
 
 L'état de paiement (Facture et Bon de commande) est un axe séparé du statut de workflow (section 8).
 
@@ -408,12 +409,12 @@ Choix technique (à l'étude) : c'est la partie la plus délicate en Rust pur (m
 
 ## 18. Questions ouvertes
 
-1. **Mois du numéro** : sur la capture Excel, le bon de commande C2026-05-0003 porte la date 06/07/2026. Le mois du numéro est-il celui de la date du document, de la date de validation, ou autre ?
+1. **Mois du numéro** : tranchée le 2026-11-09, mois (et année) de la date du document.
 2. **Arrondi** : tranchée le 2026-11-09, arrondi au franc le plus proche, la moitié vers le haut.
 3. **Montant en lettres** : l'Excel mélangeait deux usages ("Soixante dix mille sept cent quarante", "Cent-cinquante mille"). Les deux orthographes sont implémentées et choisies par réglage : rectifiée de 1990 (traits d'union partout, valeur par défaut proposée) ou traditionnelle. Valeur par défaut à confirmer.
 4. **Modularité commerciale** : tranchée le 2026-11-09, modules activés par clé de licence (sections 3.2 et 15).
 5. **Avoir** : tranchée le 2026-11-09, préfixe A (section 6.7).
-6. **Conversion** : un Devis ou une Proforma peut-il être converti dès Validé, ou seulement après Envoyé ? Implémenté provisoirement : dès Validé.
+6. **Conversion** : tranchée le 2026-11-09, conversion possible dès Validé.
 7. **Quantités fractionnaires** : tranchée le 2026-11-09, oui (quantités en millièmes).
 8. **Distribution** : technologie d'installateur et signature du code (à l'étude, section 16).
 9. **Écrans non vus** : aucune capture des formulaires Devis et Proforma ni des listes Factures, Livraisons, Proforma et Devis ; leur contenu est supposé identique à la Facture et à la liste des bons de commande.

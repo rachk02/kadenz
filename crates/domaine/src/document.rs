@@ -11,15 +11,17 @@ pub enum TypeDocument {
     BonCommande,
     Livraison,
     Facture,
+    Avoir,
 }
 
 impl TypeDocument {
-    pub const TOUS: [TypeDocument; 5] = [
+    pub const TOUS: [TypeDocument; 6] = [
         TypeDocument::Devis,
         TypeDocument::Proforma,
         TypeDocument::BonCommande,
         TypeDocument::Livraison,
         TypeDocument::Facture,
+        TypeDocument::Avoir,
     ];
 
     /// Préfixe de numérotation (section 6.1).
@@ -30,6 +32,7 @@ impl TypeDocument {
             TypeDocument::BonCommande => 'C',
             TypeDocument::Livraison => 'L',
             TypeDocument::Facture => 'F',
+            TypeDocument::Avoir => 'A',
         }
     }
 
@@ -41,6 +44,7 @@ impl TypeDocument {
             TypeDocument::BonCommande => "bon_commande",
             TypeDocument::Livraison => "livraison",
             TypeDocument::Facture => "facture",
+            TypeDocument::Avoir => "avoir",
         }
     }
 
@@ -77,6 +81,7 @@ impl fmt::Display for TypeDocument {
             TypeDocument::BonCommande => "Bon de commande",
             TypeDocument::Livraison => "Bordereau de livraison",
             TypeDocument::Facture => "Facture",
+            TypeDocument::Avoir => "Avoir",
         };
         f.write_str(libelle)
     }
@@ -201,9 +206,10 @@ pub fn transitions_possibles(type_document: TypeDocument, depuis: Statut) -> &'s
         (Livraison, Valide) => &[LivraisonPartielle, LivraisonComplete, Annule],
         (Livraison, LivraisonPartielle) => &[LivraisonComplete],
 
-        (Facture, Brouillon) => &[Valide, Annule],
-        (Facture, Valide) => &[Envoye, Annule],
-        (Facture, Envoye) => &[Annule],
+        // Facture et Avoir suivent le même cycle (section 7.1).
+        (Facture | Avoir, Brouillon) => &[Valide, Annule],
+        (Facture | Avoir, Valide) => &[Envoye, Annule],
+        (Facture | Avoir, Envoye) => &[Annule],
 
         _ => &[],
     }

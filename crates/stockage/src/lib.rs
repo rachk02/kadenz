@@ -1,10 +1,25 @@
 //! Accès SQLite de Kadenz (cahier des charges, sections 1, 10.3 et 11).
 
+pub mod audit;
+pub mod comptes;
+pub mod entreprise;
+pub mod installation;
+pub mod parametres;
+
 use std::fmt;
 use std::path::Path;
 
 use kadenz_domaine::document::TypeDocument;
 use rusqlite::{Connection, params};
+
+/// Connexion à la base, ré-exportée pour que l'application n'ait pas à dépendre
+/// directement de `rusqlite`.
+pub type Connexion = Connection;
+
+/// Horodatage local au format ISO 8601, à la seconde.
+pub(crate) fn maintenant() -> String {
+    chrono::Local::now().format("%Y-%m-%dT%H:%M:%S").to_string()
+}
 
 /// Migrations embarquées, appliquées dans l'ordre. Le rang d'une migration
 /// correspond à `PRAGMA user_version` une fois appliquée. Ne jamais modifier
@@ -20,6 +35,15 @@ pub enum Erreur {
         base: u32,
         application: u32,
     },
+    /// Saisie refusée ; le message est destiné à l'utilisateur.
+    Validation(String),
+    /// Identifiant inconnu, mot de passe faux ou compte désactivé (sans préciser lequel).
+    ConnexionRefusee,
+    /// L'opération laisserait l'installation sans administrateur actif.
+    DernierAdmin,
+    /// L'installation initiale a déjà été faite.
+    DejaInstalle,
+    Hachage(String),
 }
 
 impl fmt::Display for Erreur {
@@ -27,6 +51,13 @@ impl fmt::Display for Erreur {
         match self {
             Erreur::Sqlite(e) => write!(f, "erreur de base de données : {e}"),
             Erreur::Io(e) => write!(f, "erreur de fichier : {e}"),
+            Erreur::Validation(message) => f.write_str(message),
+            Erreur::ConnexionRefusee => f.write_str("identifiant ou mot de passe incorrect"),
+            Erreur::DernierAdmin => f.write_str(
+                "impossible : l'installation doit garder au moins un administrateur actif",
+            ),
+            Erreur::DejaInstalle => f.write_str("l'installation initiale a déjà été faite"),
+            Erreur::Hachage(e) => write!(f, "erreur de hachage du mot de passe : {e}"),
             Erreur::VersionSchemaInconnue { base, application } => write!(
                 f,
                 "la base est au schéma {base}, cette version de l'application ne connaît que le schéma {application}"
@@ -40,7 +71,7 @@ impl std::error::Error for Erreur {
         match self {
             Erreur::Sqlite(e) => Some(e),
             Erreur::Io(e) => Some(e),
-            Erreur::VersionSchemaInconnue { .. } => None,
+            _ => None,
         }
     }
 }
