@@ -1,0 +1,15 @@
+[package]
+name = "kadenz"
+description = "Application desktop de gestion commerciale Kadenz."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+build = "build.rs"
+
+[dependencies]
+kadenz-domaine.workspace = true
+kadenz-stockage.workspace = true
+slint.workspace = true
+
+[build-dependencies]
+slint-build.workspace = true

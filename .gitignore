@@ -1,0 +1,6 @@
+/target
+.idea/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+docs_of_interest/

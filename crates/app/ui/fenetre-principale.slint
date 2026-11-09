@@ -1,0 +1,128 @@
+import { AboutSlint } from "std-widgets.slint";
+
+component ElementNavigation inherits Rectangle {
+    in property <string> libelle;
+    in property <bool> actif;
+    callback clique();
+
+    height: 36px;
+    border-radius: 4px;
+    background: root.actif ? #2d3a8c : (zone.has-hover ? #e8eaf6 : transparent);
+
+    Text {
+        x: 12px;
+        text: root.libelle;
+        color: root.actif ? white : #1f2933;
+        vertical-alignment: center;
+        font-size: 14px;
+    }
+
+    zone := TouchArea {
+        clicked => {
+            root.clique();
+        }
+    }
+}
+
+export component FenetrePrincipale inherits Window {
+    in property <string> etat-base;
+    in-out property <int> page: 0;
+
+    // Le dernier élément est l'écran "À propos", qui porte l'attribution exigée par
+    // la licence Slint Royalty-free 2.0 (cahier des charges, section 14).
+    property <[string]> pages: [
+        "Tableau de bord",
+        "Devis",
+        "Proforma",
+        "Bons de commande",
+        "Livraisons",
+        "Factures",
+        "Paramètres",
+        "À propos",
+    ];
+    property <int> page-a-propos: 7;
+
+    title: "Kadenz";
+    preferred-width: 1200px;
+    preferred-height: 760px;
+    min-width: 900px;
+    min-height: 600px;
+    background: white;
+
+    HorizontalLayout {
+        Rectangle {
+            width: 220px;
+            background: #f4f5f9;
+
+            VerticalLayout {
+                padding: 12px;
+                spacing: 4px;
+
+                Text {
+                    text: "Kadenz";
+                    font-size: 18px;
+                    font-weight: 700;
+                    color: #1f2933;
+                }
+
+                Rectangle {
+                    height: 8px;
+                }
+
+                for nom[i] in root.pages: ElementNavigation {
+                    libelle: nom;
+                    actif: root.page == i;
+                    clique => {
+                        root.page = i;
+                    }
+                }
+
+                Rectangle { }
+
+                Text {
+                    text: root.etat-base;
+                    font-size: 11px;
+                    color: #52606d;
+                    wrap: word-wrap;
+                }
+            }
+        }
+
+        Rectangle {
+            if root.page != root.page-a-propos: VerticalLayout {
+                padding: 24px;
+                spacing: 12px;
+
+                Text {
+                    text: root.pages[root.page];
+                    font-size: 22px;
+                    font-weight: 700;
+                    color: #1f2933;
+                }
+
+                Text {
+                    text: "Module en cours de construction.";
+                    color: #52606d;
+                }
+
+                Rectangle { }
+            }
+
+            if root.page == root.page-a-propos: VerticalLayout {
+                padding: 24px;
+                spacing: 12px;
+
+                Text {
+                    text: "À propos";
+                    font-size: 22px;
+                    font-weight: 700;
+                    color: #1f2933;
+                }
+
+                AboutSlint { }
+
+                Rectangle { }
+            }
+        }
+    }
+}
