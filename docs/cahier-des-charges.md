@@ -12,6 +12,7 @@
 | 2.6 | 2026-11-09 | Jalon J3 : périmètre livré et reports (section 19), droits des actions que la matrice ne nommait pas (section 10.1), conditions de validation (section 7.2), question 12 sur le réglage de la numérotation, identifiants jamais réutilisés (section 7.4) |
 | 2.7 | 2026-11-09 | Choix de J3 validés par l'utilisateur ; question 12 tranchée : format du compteur annuel `F2026-0001` et réglage de la numérotation (sections 5.4 et 6.1) |
 | 2.8 | 2026-11-09 | Interface en sept langues, langue choisie par compte, documents clients en français (section 13) ; résultat de l'essai PDF (section 12) |
+| 2.9 | 2026-11-09 | krilla retenue ; données de l'entreprise, textes et couleur figés à la validation ; textes par défaut repris de l'Excel (section 12) ; changement de compteur de numérotation laissé libre, avec mise en garde |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -371,11 +372,13 @@ Règles multi-pages (spécifié) :
 - Totaux, montant en lettres et signataire uniquement sur la dernière page ; s'ils ne tiennent pas sous les dernières lignes, ils passent ensemble sur une page supplémentaire, jamais coupés.
 - Filigrane « ANNULÉ » sur un document annulé ; filigrane « BROUILLON » sur l'aperçu d'un brouillon (le PDF définitif reste réservé aux documents validés).
 - Le PDF n'est généré qu'à partir d'un document Validé.
+- Réimpression identique à l'original (décision du 2026-11-09) : à la validation, les données de l'entreprise (coordonnées, RCCM, IFU, banques, logos), les textes du document et la couleur principale sont figés avec le document, comme le snapshot du tiers ; une modification ultérieure de la fiche entreprise ou des réglages ne change pas les documents déjà validés.
+- Textes par défaut, repris de l'outil Excel d'origine : titre égal au nom du type en majuscules (« FACTURE », « BON DE COMMANDE »...), libellé « Client » ou « Fournisseur », phrase « Arrêté la présente facture à la somme de <montant en lettres> francs (<montant en chiffres>) FCFA. », signataire « LA COMPTABILITE » suivi du nom du responsable. Tous réglables (section 5.4).
 - Pagination automatique.
 
-Choix technique (à l'étude) : c'est la partie la plus délicate en Rust pur (modèles, pagination, logo, polices). La bibliothèque sera choisie après un essai sur une page de facture complète.
+Choix technique (spécifié) : c'est la partie la plus délicate en Rust pur (modèles, pagination, logo, polices). La bibliothèque sera choisie après un essai sur une page de facture complète.
 
-Essai du 2026-11-09 (crate `kadenz-pdf`, données fictives) : bibliothèque krilla 0.8.2 (licence MIT ou Apache-2.0, Rust pur, sans dépendance système), polices Inter et Manrope embarquées et sous-ensemblées, logos PNG ou JPEG lus depuis des octets (deux logos vérifiés, répétés sur chaque page, transparence des PNG respectée). Le texte est façonné une fois (rustybuzz) pour être mesuré puis tracé à l'identique, ce qui rend la pagination exacte. Facture fictive de 46 lignes sur 3 pages A4 : en-tête répété, bloc tiers en page 1, en-tête du tableau répété, lignes jamais coupées, « À reporter » et « Report », totaux, montant en lettres et signataire ensemble sur la dernière page, pied de page avec « Page n/N », filigranes « BROUILLON » et « ANNULÉ » ; environ 30 Ko et 0,1 s par document en mode debug. Choix proposé, en attente de validation.
+Essai du 2026-11-09 (crate `kadenz-pdf`, données fictives) : bibliothèque krilla 0.8.2 (licence MIT ou Apache-2.0, Rust pur, sans dépendance système), polices Inter et Manrope embarquées et sous-ensemblées, logos PNG ou JPEG lus depuis des octets (deux logos vérifiés, répétés sur chaque page, transparence des PNG respectée). Le texte est façonné une fois (rustybuzz) pour être mesuré puis tracé à l'identique, ce qui rend la pagination exacte. Facture fictive de 46 lignes sur 3 pages A4 : en-tête répété, bloc tiers en page 1, en-tête du tableau répété, lignes jamais coupées, « À reporter » et « Report », totaux, montant en lettres et signataire ensemble sur la dernière page, pied de page avec « Page n/N », filigranes « BROUILLON » et « ANNULÉ » ; environ 30 Ko et 0,1 s par document en mode debug. Choix validé par l'utilisateur le 2026-11-09 : krilla est retenue.
 
 ---
 
