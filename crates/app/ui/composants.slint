@@ -1,6 +1,22 @@
 import { LineEdit } from "std-widgets.slint";
 
+// Polices de la marque (docs/marque), SIL Open Font License 1.1 : Inter pour le texte,
+// Manrope pour les titres. Instances statiques réduites au latin, embarquées dans l'exécutable.
+import "polices/Inter-Regular.ttf";
+import "polices/Inter-Medium.ttf";
+import "polices/Inter-SemiBold.ttf";
+import "polices/Inter-Bold.ttf";
+import "polices/Manrope-Bold.ttf";
+import "polices/Manrope-ExtraBold.ttf";
+
 export global Theme {
+    out property <string> police-texte: "Inter";
+    out property <string> police-titre: "Manrope";
+    // Couleurs de la marque : Indigo (accent), Nuit pour les fonds sombres, Ambre en
+    // touche d'accent (jamais en texte sur blanc ; Ambre foncé pour cet usage).
+    out property <color> nuit: #1a2259;
+    out property <color> ambre: #e3a23b;
+    out property <color> ambre-fonce: #a8650f;
     out property <color> accent: #2d3a8c;
     out property <color> accent-survol: #e8eaf6;
     out property <color> texte: #1f2933;
@@ -65,15 +81,24 @@ export global Droits {
 
 // Libellé de section dans un panneau.
 export component Section inherits Text {
+    font-family: Theme.police-titre;
     font-size: 15px;
     font-weight: 700;
     color: Theme.texte;
 }
 
 export component Titre inherits Text {
+    font-family: Theme.police-titre;
     font-size: 22px;
-    font-weight: 700;
+    font-weight: 800;
     color: Theme.texte;
+}
+
+// Symbole de la marque (docs/marque) : tuile Indigo, jambe du K en trois temps.
+// En dessous de 48 px, préférer la version réduite à jambe pleine (docs/marque/kadenz-icone-petite.svg).
+export component Symbole inherits Image {
+    source: @image-url("icones/kadenz-icone.svg");
+    image-rendering: smooth;
 }
 
 export component MessageErreur inherits Text {

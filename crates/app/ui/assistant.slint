@@ -82,256 +82,307 @@ export component EcranAssistant inherits Rectangle {
 
     background: white;
 
-    VerticalLayout {
-        alignment: center;
+    HorizontalLayout {
+        // Bandeau de marque : logo Kadenz et étapes, sur le motif Cadence (docs/marque).
+        Rectangle {
+            width: 240px;
+            background: Theme.nuit;
+            clip: true;
 
-        HorizontalLayout {
-            alignment: center;
+            Image {
+                source: @image-url("icones/motif-cadence.svg");
+                width: parent.width;
+                height: parent.height;
+                image-fit: cover;
+            }
 
             VerticalLayout {
-                width: 720px;
-                spacing: 16px;
-                padding: 24px;
+                padding: 28px;
+                spacing: 14px;
+                alignment: start;
 
-                Titre {
-                    text: "Première installation";
+                Image {
+                    source: @image-url("icones/kadenz-logo-horizontal-negatif.svg");
+                    width: 130px;
+                    height: 36px;
+                    image-fit: contain;
+                    horizontal-alignment: left;
                 }
 
-                Text {
-                    text: "Étape " + (root.etape + 1) + " sur " + root.etapes.length + " : " + root.etapes[root.etape];
-                    color: Theme.texte-secondaire;
+                Rectangle {
+                    height: 20px;
                 }
 
-                if root.etape == 0: GridLayout {
-                    spacing: 12px;
-                    Row {
-                        Champ {
-                            libelle: "Nom de l'entreprise (obligatoire)";
-                            valeur <=> root.nom;
-                        }
-
-                        Champ {
-                            libelle: "Adresse / boîte postale";
-                            valeur <=> root.adresse;
-                        }
-                    }
-
-                    Row {
-                        Champ {
-                            libelle: "Téléphone";
-                            valeur <=> root.telephone;
-                        }
-
-                        Champ {
-                            libelle: "Email";
-                            valeur <=> root.email;
-                        }
-                    }
-
-                    Row {
-                        Champ {
-                            libelle: "Site web";
-                            valeur <=> root.site-web;
-                        }
-
-                        Champ {
-                            libelle: "Localisation";
-                            valeur <=> root.localisation;
-                        }
-                    }
-
-                    Row {
-                        Champ {
-                            libelle: "Régime d'imposition";
-                            valeur <=> root.regime;
-                        }
-
-                        Champ {
-                            libelle: "RCCM";
-                            valeur <=> root.rccm;
-                        }
-                    }
-
-                    Row {
-                        Champ {
-                            libelle: "IFU";
-                            valeur <=> root.ifu;
-                        }
-
-                        Champ {
-                            libelle: "Compte bancaire 1";
-                            valeur <=> root.banque1;
-                        }
-                    }
-
-                    Row {
-                        Champ {
-                            libelle: "Compte bancaire 2";
-                            valeur <=> root.banque2;
-                        }
-
-                        Champ {
-                            libelle: "Responsable facturation";
-                            valeur <=> root.responsable-facturation;
-                        }
-                    }
-
-                    Row {
-                        Champ {
-                            libelle: "Responsable comptabilité";
-                            valeur <=> root.responsable-comptabilite;
-                        }
-                    }
-                }
-
-                if root.etape == 1: VerticalLayout {
-                    spacing: 12px;
-
-                    Text {
-                        text: "Ce compte administre l'installation : utilisateurs, droits, sauvegardes.";
-                        color: Theme.texte-secondaire;
-                        wrap: word-wrap;
-                    }
-
-                    Champ {
-                        libelle: "Nom complet";
-                        valeur <=> root.admin-nom;
-                    }
-
-                    Champ {
-                        libelle: "Identifiant de connexion";
-                        valeur <=> root.admin-identifiant;
-                    }
-
-                    Champ {
-                        libelle: "Mot de passe (8 caractères au moins)";
-                        secret: true;
-                        valeur <=> root.admin-mot-de-passe;
-                    }
-
-                    Champ {
-                        libelle: "Confirmation du mot de passe";
-                        secret: true;
-                        valeur <=> root.admin-confirmation;
-                    }
-                }
-
-                if root.etape == 2: VerticalLayout {
-                    spacing: 12px;
-
-                    Text {
-                        text: "Valeurs séparées par des points-virgules, en pourcentage (ex. 0 ; 18). Modifiables plus tard dans les paramètres.";
-                        color: Theme.texte-secondaire;
-                        wrap: word-wrap;
-                    }
-
-                    Champ {
-                        libelle: "Taux de TVA (%)";
-                        valeur <=> root.taux-tva;
-                    }
-
-                    Champ {
-                        libelle: "Taux de remise (%)";
-                        valeur <=> root.taux-remise;
-                    }
-
-                    Champ {
-                        libelle: "Taux de retenue (%)";
-                        valeur <=> root.taux-retenue;
-                    }
-
-                    Champ {
-                        libelle: "Modes de paiement";
-                        valeur <=> root.modes-paiement;
-                    }
-
-                    CheckBox {
-                        text: "Montant en lettres en orthographe traditionnelle (sinon : orthographe rectifiée de 1990)";
-                        checked <=> root.orthographe-traditionnelle;
-                    }
-                }
-
-                if root.etape == 3: VerticalLayout {
+                for nom[i] in root.etapes: HorizontalLayout {
                     spacing: 8px;
-
-                    Text {
-                        text: "Entreprise : " + root.nom;
-                        color: Theme.texte;
+                    Rectangle {
+                        width: 6px;
+                        height: 6px;
+                        y: (parent.height - self.height) / 2;
+                        background: i == root.etape ? Theme.ambre : transparent;
                     }
 
                     Text {
-                        text: "Administrateur : " + root.admin-nom + " (" + root.admin-identifiant + ")";
-                        color: Theme.texte;
-                    }
-
-                    Text {
-                        text: "TVA : " + root.taux-tva + "   Remise : " + root.taux-remise + "   Retenue : " + root.taux-retenue;
-                        color: Theme.texte;
-                    }
-
-                    Text {
-                        text: "Modes de paiement : " + root.modes-paiement;
-                        color: Theme.texte;
-                        wrap: word-wrap;
-                    }
-
-                    Text {
-                        text: "Montant en lettres : " + (root.orthographe-traditionnelle ? "orthographe traditionnelle" : "orthographe rectifiée");
-                        color: Theme.texte;
+                        text: nom;
+                        font-size: 13px;
+                        font-weight: i == root.etape ? 600 : 400;
+                        color: i == root.etape ? white : #c5cae0;
                     }
                 }
+            }
+        }
 
-                if root.erreur != "": MessageErreur {
-                    text: root.erreur;
-                }
+        VerticalLayout {
+            alignment: center;
 
-                HorizontalLayout {
-                    spacing: 8px;
-                    alignment: end;
+            HorizontalLayout {
+                alignment: center;
 
-                    if root.etape > 0: Button {
-                        text: "Précédent";
-                        clicked => {
-                            root.erreur = "";
-                            root.etape -= 1;
+                VerticalLayout {
+                    width: 720px;
+                    spacing: 16px;
+                    padding: 24px;
+
+                    Titre {
+                        text: "Première installation";
+                    }
+
+                    Text {
+                        text: "Étape " + (root.etape + 1) + " sur " + root.etapes.length + " : " + root.etapes[root.etape];
+                        color: Theme.texte-secondaire;
+                    }
+
+                    if root.etape == 0: GridLayout {
+                        spacing: 12px;
+                        Row {
+                            Champ {
+                                libelle: "Nom de l'entreprise (obligatoire)";
+                                valeur <=> root.nom;
+                            }
+
+                            Champ {
+                                libelle: "Adresse / boîte postale";
+                                valeur <=> root.adresse;
+                            }
+                        }
+
+                        Row {
+                            Champ {
+                                libelle: "Téléphone";
+                                valeur <=> root.telephone;
+                            }
+
+                            Champ {
+                                libelle: "Email";
+                                valeur <=> root.email;
+                            }
+                        }
+
+                        Row {
+                            Champ {
+                                libelle: "Site web";
+                                valeur <=> root.site-web;
+                            }
+
+                            Champ {
+                                libelle: "Localisation";
+                                valeur <=> root.localisation;
+                            }
+                        }
+
+                        Row {
+                            Champ {
+                                libelle: "Régime d'imposition";
+                                valeur <=> root.regime;
+                            }
+
+                            Champ {
+                                libelle: "RCCM";
+                                valeur <=> root.rccm;
+                            }
+                        }
+
+                        Row {
+                            Champ {
+                                libelle: "IFU";
+                                valeur <=> root.ifu;
+                            }
+
+                            Champ {
+                                libelle: "Compte bancaire 1";
+                                valeur <=> root.banque1;
+                            }
+                        }
+
+                        Row {
+                            Champ {
+                                libelle: "Compte bancaire 2";
+                                valeur <=> root.banque2;
+                            }
+
+                            Champ {
+                                libelle: "Responsable facturation";
+                                valeur <=> root.responsable-facturation;
+                            }
+                        }
+
+                        Row {
+                            Champ {
+                                libelle: "Responsable comptabilité";
+                                valeur <=> root.responsable-comptabilite;
+                            }
                         }
                     }
 
-                    if root.etape < root.etapes.length - 1: Button {
-                        text: "Suivant";
-                        primary: true;
-                        clicked => {
-                            root.suivant();
+                    if root.etape == 1: VerticalLayout {
+                        spacing: 12px;
+
+                        Text {
+                            text: "Ce compte administre l'installation : utilisateurs, droits, sauvegardes.";
+                            color: Theme.texte-secondaire;
+                            wrap: word-wrap;
+                        }
+
+                        Champ {
+                            libelle: "Nom complet";
+                            valeur <=> root.admin-nom;
+                        }
+
+                        Champ {
+                            libelle: "Identifiant de connexion";
+                            valeur <=> root.admin-identifiant;
+                        }
+
+                        Champ {
+                            libelle: "Mot de passe (8 caractères au moins)";
+                            secret: true;
+                            valeur <=> root.admin-mot-de-passe;
+                        }
+
+                        Champ {
+                            libelle: "Confirmation du mot de passe";
+                            secret: true;
+                            valeur <=> root.admin-confirmation;
                         }
                     }
 
-                    if root.etape == root.etapes.length - 1: Button {
-                        text: "Terminer l'installation";
-                        primary: true;
-                        clicked => {
-                            root.erreur = root.terminer({
-                                nom: root.nom,
-                                adresse: root.adresse,
-                                telephone: root.telephone,
-                                email: root.email,
-                                site-web: root.site-web,
-                                localisation: root.localisation,
-                                regime: root.regime,
-                                rccm: root.rccm,
-                                ifu: root.ifu,
-                                banque1: root.banque1,
-                                banque2: root.banque2,
-                                responsable-facturation: root.responsable-facturation,
-                                responsable-comptabilite: root.responsable-comptabilite,
-                                admin-nom: root.admin-nom,
-                                admin-identifiant: root.admin-identifiant,
-                                admin-mot-de-passe: root.admin-mot-de-passe,
-                                taux-tva: root.taux-tva,
-                                taux-remise: root.taux-remise,
-                                taux-retenue: root.taux-retenue,
-                                modes-paiement: root.modes-paiement,
-                                orthographe-traditionnelle: root.orthographe-traditionnelle,
-                            });
+                    if root.etape == 2: VerticalLayout {
+                        spacing: 12px;
+
+                        Text {
+                            text: "Valeurs séparées par des points-virgules, en pourcentage (ex. 0 ; 18). Modifiables plus tard dans les paramètres.";
+                            color: Theme.texte-secondaire;
+                            wrap: word-wrap;
+                        }
+
+                        Champ {
+                            libelle: "Taux de TVA (%)";
+                            valeur <=> root.taux-tva;
+                        }
+
+                        Champ {
+                            libelle: "Taux de remise (%)";
+                            valeur <=> root.taux-remise;
+                        }
+
+                        Champ {
+                            libelle: "Taux de retenue (%)";
+                            valeur <=> root.taux-retenue;
+                        }
+
+                        Champ {
+                            libelle: "Modes de paiement";
+                            valeur <=> root.modes-paiement;
+                        }
+
+                        CheckBox {
+                            text: "Montant en lettres en orthographe traditionnelle (sinon : orthographe rectifiée de 1990)";
+                            checked <=> root.orthographe-traditionnelle;
+                        }
+                    }
+
+                    if root.etape == 3: VerticalLayout {
+                        spacing: 8px;
+
+                        Text {
+                            text: "Entreprise : " + root.nom;
+                            color: Theme.texte;
+                        }
+
+                        Text {
+                            text: "Administrateur : " + root.admin-nom + " (" + root.admin-identifiant + ")";
+                            color: Theme.texte;
+                        }
+
+                        Text {
+                            text: "TVA : " + root.taux-tva + "   Remise : " + root.taux-remise + "   Retenue : " + root.taux-retenue;
+                            color: Theme.texte;
+                        }
+
+                        Text {
+                            text: "Modes de paiement : " + root.modes-paiement;
+                            color: Theme.texte;
+                            wrap: word-wrap;
+                        }
+
+                        Text {
+                            text: "Montant en lettres : " + (root.orthographe-traditionnelle ? "orthographe traditionnelle" : "orthographe rectifiée");
+                            color: Theme.texte;
+                        }
+                    }
+
+                    if root.erreur != "": MessageErreur {
+                        text: root.erreur;
+                    }
+
+                    HorizontalLayout {
+                        spacing: 8px;
+                        alignment: end;
+
+                        if root.etape > 0: Button {
+                            text: "Précédent";
+                            clicked => {
+                                root.erreur = "";
+                                root.etape -= 1;
+                            }
+                        }
+
+                        if root.etape < root.etapes.length - 1: Button {
+                            text: "Suivant";
+                            primary: true;
+                            clicked => {
+                                root.suivant();
+                            }
+                        }
+
+                        if root.etape == root.etapes.length - 1: Button {
+                            text: "Terminer l'installation";
+                            primary: true;
+                            clicked => {
+                                root.erreur = root.terminer({
+                                    nom: root.nom,
+                                    adresse: root.adresse,
+                                    telephone: root.telephone,
+                                    email: root.email,
+                                    site-web: root.site-web,
+                                    localisation: root.localisation,
+                                    regime: root.regime,
+                                    rccm: root.rccm,
+                                    ifu: root.ifu,
+                                    banque1: root.banque1,
+                                    banque2: root.banque2,
+                                    responsable-facturation: root.responsable-facturation,
+                                    responsable-comptabilite: root.responsable-comptabilite,
+                                    admin-nom: root.admin-nom,
+                                    admin-identifiant: root.admin-identifiant,
+                                    admin-mot-de-passe: root.admin-mot-de-passe,
+                                    taux-tva: root.taux-tva,
+                                    taux-remise: root.taux-remise,
+                                    taux-retenue: root.taux-retenue,
+                                    modes-paiement: root.modes-paiement,
+                                    orthographe-traditionnelle: root.orthographe-traditionnelle,
+                                });
+                            }
                         }
                     }
                 }
