@@ -4,3 +4,6 @@
 *.sqlite-wal
 *.sqlite-shm
 docs_of_interest/
+# Clés de signature des licences : jamais versionnées
+*.pem
+*.key

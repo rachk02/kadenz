@@ -4,6 +4,8 @@
 |---|---|---|
 | 1.0 | non datée | Version initiale (.NET 8, WPF, EF Core, SQLite), conservée hors dépôt (`docs_of_interest/`, non versionné) |
 | 2.0 | 2026-11-09 | Passage en Rust (Slint, rusqlite), mono-poste avec comptes et rôles, module Paiements commun Facture et Bon de commande, modularité, corrections des incohérences de la v1 |
+| 2.1 | 2026-11-09 | Tour 1 validé par l'utilisateur : socle et modules activables par clé de licence, réglages modifiables, avoir, export Excel, import CSV/Excel, licence par client, installateur et mises à jour |
+| 2.2 | 2026-11-09 | Tour 2 validé : écrans et ergonomie, fiche document, bordereaux issus des factures, règlements, relances avec lettre, volet achats, sauvegarde automatique (10 copies), licence perpétuelle signée et liée au poste, préfixe A de l'avoir, mise à jour vérifiée au démarrage |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -67,11 +69,20 @@ Les règles métier ne vivent que dans `kadenz-domaine` : l'interface et le stoc
 
 ### 3.2 Modules activables
 
-Chaque grand bloc fonctionnel (Devis, Proforma, Bons de commande, Livraisons, Factures, Paiements, Tableau de bord) est un module qui peut être activé ou désactivé par installation, via `ParametreSysteme`. Un module désactivé disparaît de la navigation ; ses données éventuelles restent en base.
+| Module | Activation |
+|---|---|
+| Socle : référentiels (entreprise, tiers, produits), administration (comptes, rôles, sauvegarde, audit), factures | Toujours actif |
+| Devis | Par clé de licence |
+| Proforma | Par clé de licence |
+| Bons de commande | Par clé de licence |
+| Livraisons | Par clé de licence |
+| Paiements (règlements Facture et Bon de commande) | Par clé de licence |
+| Tableau de bord | Par clé de licence |
+| Relances | Par clé de licence, exige le module Paiements |
+
+Les modules activés sont ceux que contient la clé de licence du client (section 15). Un module désactivé disparaît de la navigation ; ses données éventuelles restent en base et réapparaissent si le module est réactivé.
 
 Cette modularité est une modularité de configuration et de code (crates, modules activables), pas un système d'extensions chargées à l'exécution.
-
-À l'étude : faut-il vendre ou activer les modules séparément par client (clé de licence, activation) ? La réponse change la conception de l'activation.
 
 ---
 
@@ -82,6 +93,25 @@ Cette modularité est une modularité de configuration et de code (crates, modul
 - **Paiements** : règlements, registres, relances.
 - **Pilotage** : tableau de bord, rapports.
 - **Administration** : utilisateurs, droits, sauvegarde, audit (transversal aux blocs ci-dessus).
+
+### 4.1 Écrans et ergonomie (spécifié)
+
+- Barre latérale listant uniquement les modules actifs ; en-tête avec le logo et le nom de l'entreprise (comme l'Excel).
+- Connexion au démarrage (identifiant et mot de passe), déconnexion, changement de son propre mot de passe.
+- Assistant de premier lancement, dans l'ordre : clé de licence, fiche entreprise, compte Admin, taux et modes de paiement, import facultatif des produits et des tiers.
+- Chaque type de document a deux écrans : Liste (registre) et Fiche (création, consultation), comme « Création / Liste » dans l'Excel.
+- Chaque liste se filtre (numéro, tiers, période, statut, état de paiement) et se trie par colonne. Colonnes : celles de l'Excel (n°, date, tiers, montant TTC, état de paiement, mode de paiement, document), plus le statut.
+- Raccourcis clavier : Ctrl+N nouveau, Ctrl+S enregistrer, Ctrl+P imprimer, Ctrl+F rechercher.
+- Écran « À propos » accessible depuis la navigation, avec l'attribution Slint (section 14).
+
+### 4.2 Fiche document (spécifié)
+
+S'applique au Devis, à la Proforma, au Bon de commande, à la Facture et à l'Avoir :
+- En-tête : tiers choisi dans une liste avec recherche, création rapide d'un tiers absent (selon les droits), date, libellé.
+- Lignes : produit choisi par référence ou désignation, ce qui remplit la désignation et le prix ; les deux restent modifiables sur la ligne (le snapshot enregistre la valeur saisie). Ligne libre sans produit possible. Réordonner et supprimer des lignes.
+- Totaux en direct : HT, remise, TVA, retenue (Bon de commande), TTC, montant en lettres.
+- Actions selon le statut : enregistrer le brouillon, valider, marquer envoyé, annuler, dupliquer, convertir en facture (Devis et Proforma), créer un avoir (Facture), créer un bordereau (Facture), imprimer en PDF, exporter en Excel.
+- Statut et état de paiement affichés en bandeau ; historique des changements de statut consultable sur la fiche.
 
 ---
 
@@ -96,8 +126,23 @@ Fichier unique servant à la fois de fichier clients et fournisseurs : nom, adre
 ### 5.3 Produits et services
 Catalogue unique (l'Excel avait deux tables séparées Produits/Produits4) : désignation, référence (clé unique), prix, sens d'utilisation (Vente / Achat / les deux).
 
+Tiers et produits ont chacun une liste et une fiche. Une fiche déjà utilisée dans un document ne se supprime pas : elle se désactive (elle disparaît des choix, l'historique reste intact).
+
 ### 5.4 Paramètres système
-Table clé-valeur configurable : taux de TVA disponibles (0 %, 18 %), grille de remise (0/5/10/15 %), grille de retenue (0/5/10/15 %), formats de numérotation, dossiers d'export par type de document (l'Excel en avait un par type), modules activés.
+Table clé-valeur, modifiable par l'Admin sans recompiler :
+
+| Réglage | Contenu |
+|---|---|
+| Taux | Listes de taux de TVA (0 %, 18 %), de remise et de retenue (0/5/10/15 %) |
+| Modes de paiement | Liste modifiable, initialisée avec ceux de l'Excel : Espèce, Chèque, Virement bancaire, Carte bancaire, Moov money, Orange money |
+| Numérotation | Préfixe par type, remise à zéro du compteur chaque mois (comme l'Excel) ou chaque année, nombre de chiffres du rang |
+| Textes des documents | Titre par type (ex. « FACTURE DEFINITIVE »), phrase « Arrêté la présente ... à la somme de », libellé du signataire (ex. « LA COMPTABILITE »), mentions de pied de page |
+| Apparence des PDF | Couleur principale, position du logo |
+| Dossiers d'export | Un dossier par type de document (comme l'Excel) |
+| Délais | Durée de validité des devis, délai de paiement des factures (date d'échéance calculée, modifiable sur le document) |
+| Rôles | Matrice des droits par rôle (section 10.1) |
+
+L'identité de l'entreprise (section 5.1) est éditée dans le même écran de paramètres.
 
 ---
 
@@ -105,7 +150,7 @@ Table clé-valeur configurable : taux de TVA disponibles (0 %, 18 %), grille de 
 
 ### 6.1 Règles communes
 
-**Numérotation** : format `{Préfixe}{AAAA}-{MM}-{####}`, ex. `D2026-05-0004`. Préfixes : D (Devis), P (Proforma), C (Bon de commande), L (Livraison), F (Facture). Compteur par type + année + mois, incrémenté dans la transaction de validation. Au-delà de 9999 dans un mois, le numéro s'allonge sans perte.
+**Numérotation** : format `{Préfixe}{AAAA}-{MM}-{####}`, ex. `D2026-05-0004`. Préfixes par défaut : D (Devis), P (Proforma), C (Bon de commande), L (Livraison), F (Facture), A (Avoir). Compteur par type + année + mois, incrémenté dans la transaction de validation. Au-delà de 9999 dans un mois, le numéro s'allonge sans perte.
 
 **Montants** : la devise est le FCFA, sans décimale. Tous les montants sont stockés et calculés en entiers (`i64`), jamais en nombres à virgule flottante. Les pourcentages sont stockés en centièmes de point (1800 = 18 %), ce qui permet un taux comme 2,5 % sans changer le modèle. Tout arrondi passe par une fonction unique du domaine.
 
@@ -138,8 +183,17 @@ Le tiers est un Fournisseur. Utilise le catalogue produits en sens "Achat". Rete
 ### 6.5 Bordereau de livraison (L-...)
 Pas de montant. Colonnes par ligne : référence, désignation, quantité commandée, quantité livrée, observations. Zones de visa client/fournisseur et dates de réception/livraison, conservées comme champs texte en V1.
 
+Un bordereau se crée soit à partir d'une Facture (reprise des lignes et des quantités commandées, lien vers la Facture), soit vierge. Une même Facture peut recevoir plusieurs bordereaux (livraisons en plusieurs fois) ; la quantité restant à livrer par ligne tient compte des bordereaux validés précédents.
+
 ### 6.6 Facture (F-...)
-Structure identique au Devis. Document définitif, porte un état de paiement (section 8).
+Structure identique au Devis. Document définitif, porte un état de paiement (section 8). Champ date d'échéance, calculé à partir du délai de paiement paramétré.
+
+### 6.7 Avoir (A-...)
+Document lié à une Facture validée, qui la corrige ou l'annule en tout ou partie (section 7.2). Préfixe A, même format et même compteur par type, année et mois que les autres documents (ex. `A2026-05-0001`).
+
+### 6.8 Exports et imports (spécifié)
+- Export Excel des registres (listes filtrées) et des documents.
+- Import CSV ou Excel du catalogue produits et des tiers, avec aperçu et rapport d'erreurs avant enregistrement, proposé au premier lancement et dans les référentiels.
 
 ---
 
@@ -191,6 +245,8 @@ L'état de paiement (Facture et Bon de commande) est un axe séparé du statut d
 ### 7.7 Conversion entre documents
 
 - **Devis/Proforma → Facture** : copie figée des lignes dans une Facture indépendante. Le document source passe en Converti et référence la Facture créée.
+- **Facture → Bordereau(x) de livraison** : voir section 6.5.
+- **Facture → Avoir** : voir section 6.7.
 - **Bon de commande → réception** : pas de nouveau document. Les quantités reçues sont mises à jour ligne par ligne sur le Bon de commande (Non reçu / Partiel / Complet), ce qui permet des livraisons fournisseur en plusieurs fois.
 
 ---
@@ -205,14 +261,24 @@ Règles communes :
 - Un document peut recevoir plusieurs règlements (paiements échelonnés), seulement à partir du statut Validé.
 - État de paiement calculé à partir des règlements, jamais saisi : Impayé (aucun règlement), Partiel (0 < payé < montant dû), Payé (payé = montant dû).
 - Un règlement ne peut pas porter le total payé au-delà du montant dû.
-- Relances : liste des Factures envoyées, non payées, avec échéance dépassée, consultable et exportable en V1. Envoi par email hors périmètre V1.
+- Saisie depuis la fiche du document : date, montant, mode, référence ; le montant proposé par défaut est le reste à payer.
+- Un règlement saisi par erreur peut être supprimé ; la suppression est tracée dans le journal d'audit avec la valeur supprimée.
+- Registre des encaissements et des décaissements, par période et par mode de paiement.
 - Suivi fournisseurs : liste des Bons de commande non payés.
+
+Relances (module Relances) :
+- Liste des Factures échues non payées : jours de retard, reste dû ; export Excel.
+- Impression d'une lettre de relance par facture (PDF), à l'identité de l'entreprise.
+- Envoi par email hors périmètre V1.
 
 ---
 
 ## 9. Pilotage (spécifié)
 
-Indicateurs de l'Excel recalculés en direct par requête sur les tables Document, LigneDocument et Reglement : CA HT/TVA/TTC, total payé/impayé, répartition par état et par mode de paiement, tendance des ventes, top clients, dernières factures.
+Indicateurs recalculés en direct par requête sur les tables Document, LigneDocument et Reglement :
+- Ventes (repris de l'Excel) : CA HT, TVA, CA TTC, total payé, total impayé, CA par état de paiement, CA par mode de paiement, tendance des ventes, top 5 clients, 4 dernières factures.
+- Achats : total des Bons de commande, montants payés et restant dus aux fournisseurs.
+- Filtre par année ou par période (comme le filtre « DATE Années » de l'Excel).
 
 Slint n'a pas de composant graphique prêt à l'emploi : les graphiques (secteurs, courbes, barres) sont dessinés par l'application (chemins Slint ou image générée côté Rust). À l'étude : choix entre ces deux techniques.
 
@@ -221,6 +287,8 @@ Slint n'a pas de composant graphique prêt à l'emploi : les graphiques (secteur
 ## 10. Administration (spécifié)
 
 ### 10.1 Rôles et permissions
+
+Quatre rôles livrés par défaut avec la matrice ci-dessous. L'Admin peut modifier la matrice (réglage « Rôles », section 5.4) ; le droit « Gérer les utilisateurs et droits » reste toujours acquis au rôle Admin, pour qu'aucune installation ne se retrouve sans administrateur.
 
 | Action | Admin | Comptable | Commercial | Consultation |
 |---|---|---|---|---|
@@ -235,10 +303,16 @@ Slint n'a pas de composant graphique prêt à l'emploi : les graphiques (secteur
 | Sauvegarder / exporter la base | oui | non | non | non |
 
 ### 10.2 Comptes
-Mots de passe stockés hachés avec Argon2id (jamais en clair). Le premier compte Admin est créé par l'assistant de premier lancement.
+Mots de passe stockés hachés avec Argon2id (jamais en clair). Le premier compte Admin est créé par l'assistant de premier lancement. L'Admin crée et désactive les comptes et réinitialise les mots de passe.
 
 ### 10.3 Sauvegarde
-Copie horodatée de la base, déclenchable depuis l'application, dans un dossier configurable. La copie utilise l'API de sauvegarde en ligne de SQLite, et non une copie brute du fichier, qui peut produire une sauvegarde corrompue quand la base est ouverte. Pas de sauvegarde cloud en V1.
+- Copie horodatée de la base dans un dossier configurable, par l'API de sauvegarde en ligne de SQLite (jamais une copie brute du fichier, qui peut produire une sauvegarde corrompue quand la base est ouverte).
+- Sauvegarde manuelle à la demande, et sauvegarde automatique à chaque fermeture de l'application ; seules les 10 dernières sauvegardes automatiques sont conservées.
+- Restauration depuis une sauvegarde choisie, après confirmation ; la base courante est elle-même sauvegardée juste avant.
+- Pas de sauvegarde cloud en V1.
+
+### 10.4 Journal d'audit
+Consultable et filtrable par l'Admin (entité, utilisateur, période, action).
 
 ---
 
@@ -252,7 +326,7 @@ Types SQLite : `INTEGER` (identifiants, montants, pourcentages, quantités, bool
 | **Utilisateur** | Id, NomComplet, Identifiant (unique), MotDePasseHache, Role, Actif, DateCreation | |
 | **Tiers** | Id, Nom, Adresse, Telephone, Localisation, IFU, RCCM, RegimeImposition, Type, Actif | |
 | **Produit** | Id, Designation, Reference (unique), Prix, Sens, Actif | |
-| **Document** | Id, Type, Numero (unique par type, nul en Brouillon), Date, TiersId, snapshots Tiers (Nom, Adresse, IFU, RCCM, Regime), Statut, Libelle, MontantHT, MontantRemise, MontantBaseTVA, MontantTVA, MontantRetenue, MontantTTC, PourcentageRemise, PourcentageTVA, PourcentageRetenue, ModePaiement, CheminPdf, DocumentSourceId, DateCreation, DateValidation, DateEnvoi, UtilisateurCreationId, UtilisateurValidationId | Pas de colonne d'état de paiement : il est calculé |
+| **Document** | Id, Type, Numero (unique par type, nul en Brouillon), Date, TiersId, snapshots Tiers (Nom, Adresse, IFU, RCCM, Regime), Statut, Libelle, MontantHT, MontantRemise, MontantBaseTVA, MontantTVA, MontantRetenue, MontantTTC, PourcentageRemise, PourcentageTVA, PourcentageRetenue, ModePaiement, CheminPdf, DocumentSourceId, DateEcheance, DateCreation, DateValidation, DateEnvoi, UtilisateurCreationId, UtilisateurValidationId | Pas de colonne d'état de paiement : il est calculé |
 | **LigneDocument** | Id, DocumentId, ProduitId (nullable), ReferenceSnapshot, DesignationSnapshot, PrixSnapshot, Quantite, QuantiteLivree, Total, Observations, Ordre | |
 | **Reglement** | Id, DocumentId (Facture ou BC), Date, Montant, ModePaiement, Reference, UtilisateurId | |
 | **CompteurNumerotation** | TypeDocument, Annee, Mois, DernierNumero | Clé (TypeDocument, Annee, Mois) |
@@ -266,6 +340,7 @@ Types SQLite : `INTEGER` (identifiants, montants, pourcentages, quantités, bool
 Exigences (spécifié) :
 - Un seul moteur paramétré par un modèle par type de document.
 - Contenu : en-tête entreprise (logo, coordonnées, RCCM/IFU), identification du tiers, tableau des lignes, totaux, montant en lettres, pied de page (comptes bancaires, signataires).
+- Mise en page reprise de l'Excel : bande verticale de couleur à gauche, logo, bloc entreprise, bloc tiers, tableau, totaux, montant en lettres, signataire, pied de page avec adresse, RCCM, IFU, comptes bancaires, site et email. Couleur principale paramétrable.
 - Le PDF n'est généré qu'à partir d'un document Validé.
 - Pagination automatique.
 
@@ -275,7 +350,7 @@ Choix technique (à l'étude) : c'est la partie la plus délicate en Rust pur (m
 
 ## 13. Exigences non fonctionnelles (spécifié)
 
-- Windows 10/11 64 bits, fonctionnement 100 % local, exécutable natif.
+- Windows 10/11 64 bits, fonctionnement 100 % local, exécutable natif. Seule exception : la vérification facultative de mise à jour (section 16), qui échoue sans gêne hors connexion.
 - Interface et documents en français uniquement (V1).
 - Devise FCFA uniquement (V1).
 - Base stockée dans le dossier de données de l'utilisateur Windows (`%APPDATA%`).
@@ -291,7 +366,23 @@ Choix technique (à l'étude) : c'est la partie la plus délicate en Rust pur (m
 
 ---
 
-## 15. Hors périmètre V1
+## 15. Licence client et activation (spécifié)
+
+- Chaque client reçoit une clé de licence fournie par l'éditeur. Elle contient le nom du client, l'identifiant du poste et la liste des modules activés (section 3.2).
+- Licence perpétuelle : pas de date d'expiration.
+- La clé est signée numériquement par l'éditeur ; l'application ne contient que la clé publique et vérifie la signature hors ligne. Une clé modifiée ou forgée est refusée.
+- Liaison au poste : l'application affiche un identifiant de poste, que le client transmet à l'éditeur ; la clé n'est valide que sur ce poste. Un changement de PC demande une nouvelle clé.
+- La clé est saisie dans l'assistant de premier lancement et peut être remplacée plus tard (ajout de modules, changement de poste).
+- Outil éditeur séparé, jamais distribué aux clients, pour générer les clés ; la clé privée de signature reste chez l'éditeur et n'est jamais versionnée.
+- À l'étude : algorithme de signature, composition de l'identifiant de poste (assez stable pour survivre aux mises à jour Windows), comportement si la clé devient invalide (proposition : lecture seule, sans perte de données).
+
+## 16. Installation et mises à jour (spécifié, forme à l'étude)
+
+- Installateur Windows classique pour le déploiement chez le client.
+- Au démarrage, l'application vérifie s'il existe une version plus récente parmi les releases GitHub et propose de l'installer ; l'utilisateur confirme. Hors connexion, la vérification échoue sans message bloquant.
+- À l'étude : technologie d'installateur, signature du code de l'exécutable.
+
+## 17. Hors périmètre V1
 
 - Gestion de stock réelle (entrées/sorties, valorisation)
 - Envoi automatique par email
@@ -302,14 +393,14 @@ Choix technique (à l'étude) : c'est la partie la plus délicate en Rust pur (m
 
 ---
 
-## 16. Questions ouvertes
+## 18. Questions ouvertes
 
 1. **Mois du numéro** : sur la capture Excel, le bon de commande C2026-05-0003 porte la date 06/07/2026. Le mois du numéro est-il celui de la date du document, de la date de validation, ou autre ?
 2. **Arrondi** : règle d'arrondi des remises, TVA et retenues en FCFA (arrondi commercial au franc le plus proche, ou autre). Implémentée provisoirement à l'arrondi commercial, à confirmer.
 3. **Montant en lettres** : orthographe à retenir. L'Excel écrit "Soixante dix mille sept cent quarante" (70 740) mais "Cent-cinquante mille" (150 000), deux usages différents des traits d'union.
-4. **Modularité commerciale** : modules vendus ou activés séparément par client ? (section 3.2)
-5. **Avoir** : préfixe et numérotation de l'avoir sur facture.
+4. **Modularité commerciale** : tranchée le 2026-11-09, modules activés par clé de licence (sections 3.2 et 15).
+5. **Avoir** : tranchée le 2026-11-09, préfixe A (section 6.7).
 6. **Conversion** : un Devis ou une Proforma peut-il être converti dès Validé, ou seulement après Envoyé ? Implémenté provisoirement : dès Validé.
 7. **Quantités fractionnaires** : nécessaires (mètres de câble, etc.) ? Le modèle les permet.
-8. **Distribution** : installateur Windows, signature du code, mises à jour (à l'étude).
+8. **Distribution** : technologie d'installateur et signature du code (à l'étude, section 16).
 9. **Écrans non vus** : aucune capture des formulaires Devis et Proforma ni des listes Factures, Livraisons, Proforma et Devis ; leur contenu est supposé identique à la Facture et à la liste des bons de commande.
