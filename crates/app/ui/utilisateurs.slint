@@ -1,0 +1,317 @@
+// Écran Utilisateurs : comptes et matrice des droits par rôle
+// (cahier des charges, sections 10.1 et 10.2).
+
+import { Button, CheckBox, ComboBox, ScrollView, StandardTableView, TabWidget } from "std-widgets.slint";
+import { Champ, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+
+export struct CompteUi {
+    nom: string,
+    identifiant: string,
+    // Rang dans Admin, Comptable, Commercial, Consultation.
+    role: int,
+    actif: bool,
+    existe: bool,
+    // Compte de la session en cours : son rôle et son état se changent depuis un autre compte.
+    soi-meme: bool,
+}
+
+export struct LigneDroitUi {
+    libelle: string,
+    // Une case par rôle, dans l'ordre des rôles.
+    autorisations: [bool],
+    // Case non modifiable (le rôle Admin garde la gestion des utilisateurs).
+    verrous: [bool],
+}
+
+export global UtilisateursApi {
+    in property <[[StandardListViewItem]]> lignes;
+    in-out property <int> ligne-courante: -1;
+    in property <[string]> roles;
+    callback ouvrir();
+    callback selectionner(ligne: int) -> CompteUi;
+    callback nouveau() -> CompteUi;
+    callback compte-courant() -> CompteUi;
+    callback creer(nom: string, identifiant: string, role: int, mot-de-passe: string, confirmation: string) -> Retour;
+    callback changer-role(role: int) -> Retour;
+    callback basculer-actif() -> Retour;
+    callback reinitialiser(mot-de-passe: string, confirmation: string) -> Retour;
+
+    in property <[LigneDroitUi]> matrice;
+    callback ouvrir-matrice();
+    callback basculer-droit(ligne: int, colonne: int, autorise: bool);
+    callback matrice-par-defaut();
+    callback enregistrer-matrice() -> Retour;
+}
+
+component OngletComptes inherits HorizontalLayout {
+    property <CompteUi> compte;
+    property <Retour> retour;
+
+    function charger(c: CompteUi) {
+        root.compte = c;
+        nom.valeur = c.nom;
+        identifiant.valeur = c.identifiant;
+        role.current-index = c.role;
+        mot-de-passe.valeur = "";
+        confirmation.valeur = "";
+    }
+
+    init => {
+        UtilisateursApi.ouvrir();
+        root.charger(UtilisateursApi.nouveau());
+    }
+
+    padding-top: 12px;
+    spacing: 16px;
+
+    VerticalLayout {
+        spacing: 8px;
+
+        StandardTableView {
+            columns: [
+                { title: "Nom complet", min-width: 160px, horizontal-stretch: 2 },
+                { title: "Identifiant", min-width: 110px, horizontal-stretch: 1 },
+                { title: "Rôle", min-width: 110px, horizontal-stretch: 1 },
+                { title: "État", min-width: 90px, horizontal-stretch: 1 },
+            ];
+            rows: UtilisateursApi.lignes;
+            current-row <=> UtilisateursApi.ligne-courante;
+            current-row-changed(ligne) => {
+                root.retour = { };
+                root.charger(UtilisateursApi.selectionner(ligne));
+            }
+        }
+
+        HorizontalLayout {
+            alignment: start;
+
+            Button {
+                text: "Nouveau compte";
+                clicked => {
+                    root.retour = { };
+                    root.charger(UtilisateursApi.nouveau());
+                }
+            }
+        }
+    }
+
+    VerticalLayout {
+        width: 340px;
+        spacing: 10px;
+
+        Section {
+            text: root.compte.existe ? (root.compte.actif ? "Compte" : "Compte (désactivé)") : "Nouveau compte";
+        }
+
+        nom := Champ {
+            libelle: "Nom complet";
+            lecture-seule: root.compte.existe;
+        }
+
+        identifiant := Champ {
+            libelle: "Identifiant de connexion";
+            lecture-seule: root.compte.existe;
+        }
+
+        VerticalLayout {
+            spacing: 4px;
+
+            Text {
+                text: "Rôle";
+                font-size: 12px;
+                color: Theme.texte-secondaire;
+            }
+
+            role := ComboBox {
+                model: UtilisateursApi.roles;
+                enabled: !root.compte.soi-meme;
+            }
+        }
+
+        if root.compte.existe && !root.compte.soi-meme: HorizontalLayout {
+            spacing: 8px;
+            alignment: start;
+
+            Button {
+                text: "Changer le rôle";
+                enabled: role.current-index != root.compte.role;
+                clicked => {
+                    root.retour = UtilisateursApi.changer-role(role.current-index);
+                    root.charger(UtilisateursApi.compte-courant());
+                }
+            }
+
+            Button {
+                text: root.compte.actif ? "Désactiver" : "Réactiver";
+                clicked => {
+                    root.retour = UtilisateursApi.basculer-actif();
+                    root.charger(UtilisateursApi.compte-courant());
+                }
+            }
+        }
+
+        if root.compte.soi-meme: Text {
+            text: "C'est le compte de la session en cours : son rôle et son état se changent depuis un autre compte administrateur. Le mot de passe se change dans « Mon compte ».";
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        if !root.compte.soi-meme: Section {
+            text: root.compte.existe ? "Réinitialiser le mot de passe" : "Mot de passe";
+        }
+
+        mot-de-passe := Champ {
+            visible: !root.compte.soi-meme;
+            libelle: "Mot de passe (8 caractères au moins)";
+            secret: true;
+        }
+
+        confirmation := Champ {
+            visible: !root.compte.soi-meme;
+            libelle: "Confirmation";
+            secret: true;
+        }
+
+        if !root.compte.soi-meme: HorizontalLayout {
+            alignment: start;
+
+            Button {
+                text: root.compte.existe ? "Réinitialiser le mot de passe" : "Créer le compte";
+                primary: true;
+                clicked => {
+                    if (root.compte.existe) {
+                        root.retour = UtilisateursApi.reinitialiser(mot-de-passe.valeur, confirmation.valeur);
+                    } else {
+                        root.retour = UtilisateursApi.creer(nom.valeur, identifiant.valeur, role.current-index, mot-de-passe.valeur, confirmation.valeur);
+                    }
+                    if (root.retour.ok) {
+                        root.charger(UtilisateursApi.compte-courant());
+                    }
+                }
+            }
+        }
+
+        MessageRetour {
+            retour: root.retour;
+        }
+
+        Rectangle { }
+    }
+}
+
+component OngletDroits inherits ScrollView {
+    property <Retour> retour;
+
+    init => {
+        UtilisateursApi.ouvrir-matrice();
+    }
+
+    VerticalLayout {
+        padding-top: 12px;
+        spacing: 6px;
+        alignment: start;
+
+        Text {
+            text: "Cocher ce que chaque rôle peut faire. Le rôle Admin garde toujours la gestion des utilisateurs et des droits. Les contrôles s'appliquent dès l'enregistrement ; le menu des autres comptes se met à jour à leur prochaine connexion.";
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        HorizontalLayout {
+            spacing: 8px;
+            height: 32px;
+
+            Rectangle {
+                horizontal-stretch: 1;
+            }
+
+            for nom in UtilisateursApi.roles: Text {
+                width: 110px;
+                text: nom;
+                font-weight: 700;
+                color: Theme.texte;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+
+        for ligne[i] in UtilisateursApi.matrice: Rectangle {
+            height: 36px;
+            background: mod(i, 2) == 0 ? Theme.fond-lateral : transparent;
+
+            HorizontalLayout {
+                padding-left: 8px;
+                spacing: 8px;
+
+                Text {
+                    horizontal-stretch: 1;
+                    text: ligne.libelle;
+                    color: Theme.texte;
+                    vertical-alignment: center;
+                    overflow: elide;
+                }
+
+                for autorise[j] in ligne.autorisations: HorizontalLayout {
+                    width: 110px;
+                    alignment: center;
+
+                    CheckBox {
+                        checked: autorise;
+                        enabled: !ligne.verrous[j];
+                        toggled => {
+                            UtilisateursApi.basculer-droit(i, j, self.checked);
+                        }
+                    }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            padding-top: 8px;
+            spacing: 8px;
+            alignment: start;
+
+            Button {
+                text: "Enregistrer les droits";
+                primary: true;
+                clicked => {
+                    root.retour = UtilisateursApi.enregistrer-matrice();
+                }
+            }
+
+            Button {
+                text: "Revenir à la matrice du cahier des charges";
+                clicked => {
+                    root.retour = { };
+                    UtilisateursApi.matrice-par-defaut();
+                }
+            }
+
+            MessageRetour {
+                retour: root.retour;
+                vertical-alignment: center;
+            }
+        }
+    }
+}
+
+export component PageUtilisateurs inherits VerticalLayout {
+    padding: 24px;
+    spacing: 8px;
+
+    Titre {
+        text: "Utilisateurs";
+    }
+
+    TabWidget {
+        Tab {
+            title: "Comptes";
+            OngletComptes { }
+        }
+
+        Tab {
+            title: "Droits par rôle";
+            OngletDroits { }
+        }
+    }
+}

@@ -3,6 +3,7 @@
 
 mod administration;
 mod referentiels;
+mod utilisateurs;
 
 use std::cell::RefCell;
 use std::path::PathBuf;
@@ -57,6 +58,7 @@ struct Etat {
     utilisateur: Option<Utilisateur>,
     tiers: Vue<Tiers, FiltreTiers>,
     produits: Vue<Produit, FiltreProduits>,
+    comptes: Vue<Utilisateur, ()>,
 }
 
 impl Etat {
@@ -66,6 +68,7 @@ impl Etat {
             utilisateur: None,
             tiers: Vue::default(),
             produits: Vue::default(),
+            comptes: Vue::default(),
         }
     }
 }
@@ -74,7 +77,7 @@ type EtatPartage = Rc<RefCell<Etat>>;
 
 /// Droits du compte connecté et menu correspondant, relus depuis la matrice
 /// à chaque connexion (la matrice est modifiable par l'Admin).
-fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
+pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     let possede = |droit| match &etat.utilisateur {
         Some(u) => droits::possede(&etat.conn, u, droit).unwrap_or(false),
         None => false,
@@ -114,9 +117,15 @@ fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     }
     ajouter(Page::APropos, "À propos");
 
-    let premier = menu[0].clone();
-    fenetre.set_page(premier.page);
-    fenetre.set_titre_page(premier.libelle);
+    // La page en cours reste affichée si le menu la contient encore.
+    let page = fenetre.get_page();
+    let element = menu
+        .iter()
+        .find(|e| e.page == page)
+        .unwrap_or(&menu[0])
+        .clone();
+    fenetre.set_page(element.page);
+    fenetre.set_titre_page(element.libelle);
     fenetre.set_menu(ModelRc::new(VecModel::from(menu)));
 }
 
@@ -227,7 +236,9 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
         etat.utilisateur = None;
         etat.tiers = Vue::default();
         etat.produits = Vue::default();
+        etat.comptes = Vue::default();
         if let Some(f) = f.upgrade() {
+            f.set_page(Page::TableauDeBord);
             appliquer_droits(&f, &etat);
             f.set_utilisateur_nom(SharedString::new());
             f.set_utilisateur_identifiant(SharedString::new());
@@ -238,6 +249,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
 
     referentiels::brancher(fenetre, &etat);
     administration::brancher(fenetre, &etat);
+    utilisateurs::brancher(fenetre, &etat);
 
     let e = etat;
     fenetre.on_changer_mot_de_passe(move |ancien, nouveau, confirmation| {
