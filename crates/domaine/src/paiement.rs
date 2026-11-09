@@ -25,13 +25,16 @@ impl fmt::Display for EtatPaiement {
 }
 
 /// Calcule l'état de paiement à partir du montant dû et du total déjà réglé.
+/// « Payé » dès que le réglé atteint le montant dû (section 8) : une facture
+/// entièrement couverte par ses avoirs (montant dû nul) est payée, et un avoir
+/// validé après un paiement complet laisse la facture payée (trop-perçu).
 pub fn etat_paiement(montant_du: Montant, total_regle: Montant) -> EtatPaiement {
-    if total_regle <= 0 {
-        EtatPaiement::Impaye
-    } else if total_regle < montant_du {
-        EtatPaiement::Partiel
-    } else {
+    if total_regle >= montant_du {
         EtatPaiement::Paye
+    } else if total_regle <= 0 {
+        EtatPaiement::Impaye
+    } else {
+        EtatPaiement::Partiel
     }
 }
 
@@ -82,6 +85,10 @@ mod tests {
         assert_eq!(etat_paiement(100_000, 0), EtatPaiement::Impaye);
         assert_eq!(etat_paiement(100_000, 40_000), EtatPaiement::Partiel);
         assert_eq!(etat_paiement(100_000, 100_000), EtatPaiement::Paye);
+        // Facture entièrement couverte par des avoirs, rien réglé.
+        assert_eq!(etat_paiement(0, 0), EtatPaiement::Paye);
+        // Avoir validé après un paiement complet : trop-perçu.
+        assert_eq!(etat_paiement(60_000, 100_000), EtatPaiement::Paye);
     }
 
     #[test]

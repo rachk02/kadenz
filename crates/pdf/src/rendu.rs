@@ -404,6 +404,19 @@ impl<'d> Moteur<'d> {
             &date,
         );
         yd += 13.0;
+        if !self.doc.reference.is_empty() {
+            let reference = &self.doc.reference;
+            let l = p.texte.largeur(reference, 9.0);
+            t.ecrire(
+                &p.texte,
+                9.0,
+                SECONDAIRE,
+                DROITE - l,
+                base_centree(&p.texte, 9.0, yd, 13.0),
+                reference,
+            );
+            yd += 13.0;
+        }
 
         let bas = y + h_gauche.max(yd - y) + 10.0;
         t.trait_horizontal(GAUCHE, DROITE, bas, BORDURE, 0.75);
@@ -974,6 +987,11 @@ mod tests {
             ..document(30)
         };
         assert!(generer(&sans_montants, &p).unwrap().starts_with(b"%PDF-"));
+        let avoir = DocumentPdf {
+            reference: "Facture d'origine : F2026-0001".into(),
+            ..document(60)
+        };
+        assert!(generer(&avoir, &p).unwrap().starts_with(b"%PDF-"));
     }
 
     #[test]

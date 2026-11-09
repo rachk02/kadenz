@@ -14,6 +14,7 @@
 | 2.8 | 2026-11-09 | Interface en sept langues, langue choisie par compte, documents clients en français (section 13) ; résultat de l'essai PDF (section 12) |
 | 2.9 | 2026-11-09 | krilla retenue ; données de l'entreprise, textes et couleur figés à la validation ; textes par défaut repris de l'Excel (section 12) ; changement de compteur de numérotation laissé libre, avec mise en garde |
 | 2.10 | 2026-11-09 | J4 livré : aperçu et export PDF depuis l'écran Factures, textes imprimés, couleur et dossiers d'export réglables dans Paramètres (section 12, périmètre de J4) ; mise en page de droite à gauche en arabe (section 13) |
+| 2.11 | 2026-11-09 | Décisions J5 : devis ou proforma converti à la validation de la facture, avoir aux lignes reprises plafonné au TTC de la facture, facture couverte par ses avoirs inchangée, entrée de menu Avoirs ; règles de refus des documents liés ; état « Payé » pour un montant dû nul (sections 6.7, 7.1, 7.7 et 8) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -201,6 +202,14 @@ Structure identique au Devis. Document définitif, porte un état de paiement (s
 ### 6.7 Avoir (A-...)
 Document lié à une Facture validée, qui la corrige ou l'annule en tout ou partie (section 7.2). Préfixe A par défaut, même format et même règle de compteur que les autres documents (ex. `A2026-05-0001`, ou `A2026-0001` avec le compteur annuel).
 
+Règles (décisions de l'utilisateur du 2026-11-09, spécifié) :
+- Un avoir se crée seulement depuis la fiche d'une Facture Validée ou Envoyée ; il a son entrée de menu « Avoirs » et son registre.
+- Il reprend les lignes de la facture, modifiables : on retire des lignes ou baisse quantités et prix pour un avoir partiel. Il garde le client et les taux (remise, TVA) de la facture, sans quoi son montant serait incohérent avec elle.
+- À sa validation, son TTC ne peut pas dépasser le reste à créditer de la facture (TTC de la facture moins les avoirs déjà validés), et la facture doit être encore Validée ou Envoyée.
+- Une facture entièrement couverte par ses avoirs garde son statut ; son montant dû tombe à zéro.
+- Une facture qui a un avoir validé ne s'annule pas : il faut d'abord annuler l'avoir, ce qui rend son montant à la facture.
+- Le PDF de l'avoir porte la référence de la facture d'origine.
+
 ### 6.8 Exports et imports (spécifié)
 - Export Excel des registres (listes filtrées) et des documents.
 - Import CSV ou Excel du catalogue produits et des tiers, avec aperçu et rapport d'erreurs avant enregistrement, proposé au premier lancement et dans les référentiels.
@@ -222,7 +231,7 @@ Document lié à une Facture validée, qui la corrige ou l'annule en tout ou par
 | Bon de commande | Brouillon → Validé → Envoyé → Réception partielle → Réception complète, ou → Annulé avant toute réception |
 | Livraison | Brouillon → Validé → Livraison partielle → Livraison complète, ou → Annulé avant toute livraison |
 | Facture | Brouillon → Validé → Envoyé, ou → Annulé |
-| Avoir | Même cycle que la Facture. Montants stockés en positif ; le montant dû de la Facture d'origine est diminué des avoirs validés (jalon J5) |
+| Avoir | Même cycle que la Facture. Montants stockés en positif ; le montant dû de la Facture d'origine est diminué des avoirs validés (section 6.7) |
 
 L'état de paiement (Facture et Bon de commande) est un axe séparé du statut de workflow (section 8).
 
@@ -262,7 +271,8 @@ L'état de paiement (Facture et Bon de commande) est un axe séparé du statut d
 
 ### 7.7 Conversion entre documents
 
-- **Devis/Proforma → Facture** : copie figée des lignes dans une Facture indépendante. Le document source passe en Converti et référence la Facture créée.
+- **Devis/Proforma → Facture** : copie figée des lignes dans une Facture indépendante, créée en brouillon depuis un devis ou une proforma Validé ou Envoyé. Le document source passe en Converti à la validation de la facture (décision du 2026-11-09), dans la même transaction, et référence la Facture créée. Tant que la facture est en brouillon, la source indique une facture en préparation : une seconde conversion, l'annulation et la correction de la source sont refusées ; si le brouillon est supprimé, la source redevient convertible. Une facture issue d'une conversion puis annulée laisse la source en Converti : on refait un devis par duplication.
+- **Duplication** : copie d'un document en nouveau brouillon du même type (date du jour, échéance recalculée), avec référence vers l'original. En correction d'un devis ou d'une proforma Validé ou Envoyé, l'original passe en Annulé dans la même transaction (section 7.2) ; une facture se corrige par un avoir ; un avoir ne se duplique pas.
 - **Facture → Bordereau(x) de livraison** : voir section 6.5.
 - **Facture → Avoir** : voir section 6.7.
 - **Bon de commande → réception** : pas de nouveau document. Les quantités reçues sont mises à jour ligne par ligne sur le Bon de commande (Non reçu / Partiel / Complet), ce qui permet des livraisons fournisseur en plusieurs fois.
@@ -277,7 +287,7 @@ Le module Paiements s'applique à deux types de documents :
 
 Règles communes :
 - Un document peut recevoir plusieurs règlements (paiements échelonnés), seulement à partir du statut Validé.
-- État de paiement calculé à partir des règlements, jamais saisi : Impayé (aucun règlement), Partiel (0 < payé < montant dû), Payé (payé = montant dû).
+- État de paiement calculé à partir des règlements, jamais saisi : Impayé (aucun règlement), Partiel (0 < payé < montant dû), Payé (payé = montant dû). Le montant dû d'une facture est son TTC moins ses avoirs validés : une facture entièrement couverte par ses avoirs est donc Payé sans règlement, et un avoir validé après un paiement complet laisse un trop-perçu (remboursement hors périmètre V1).
 - Un règlement ne peut pas porter le total payé au-delà du montant dû.
 - Saisie depuis la fiche du document : date, montant, mode, référence ; le montant proposé par défaut est le reste à payer.
 - Un règlement saisi par erreur peut être supprimé ; la suppression est tracée dans le journal d'audit avec la valeur supprimée.

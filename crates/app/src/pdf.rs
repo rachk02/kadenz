@@ -9,11 +9,22 @@ use kadenz_domaine::lettres::en_lettres_majuscule;
 use kadenz_pdf::modele::{DocumentPdf, EntreprisePdf, Filigrane, LignePdf, TextesPdf, TiersPdf};
 use kadenz_pdf::texte::Polices;
 use kadenz_stockage::Connexion as Connection;
-use kadenz_stockage::documents::{self, Document};
+use kadenz_stockage::documents::{self, Document, NatureLien};
 use kadenz_stockage::impression;
 
 fn date(d: chrono::NaiveDate) -> String {
     d.format("%d/%m/%Y").to_string()
+}
+
+/// Référence imprimée sous la date : la facture d'origine d'un avoir.
+fn reference(d: &Document) -> String {
+    match &d.source {
+        Some(l) if l.nature == NatureLien::Avoir => match &l.numero {
+            Some(numero) => format!("Facture d'origine : {numero}"),
+            None => String::new(),
+        },
+        _ => String::new(),
+    }
 }
 
 /// Données à imprimer pour un document.
@@ -64,6 +75,7 @@ pub(crate) fn document_pdf(conn: &Connection, d: &Document) -> Result<DocumentPd
             },
         },
         numero: d.numero.clone().unwrap_or_default(),
+        reference: reference(d),
         date: date(d.saisie.date),
         echeance: d.saisie.date_echeance.map(date).unwrap_or_default(),
         libelle: d.saisie.libelle.clone(),

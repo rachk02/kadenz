@@ -87,6 +87,7 @@ fn main() {
             nom_signataire: "Nom Fictif".into(),
         },
         numero: "F2026-11-0001".into(),
+        reference: String::new(),
         date: "09/11/2026".into(),
         echeance: "09/12/2026".into(),
         libelle: "Fournitures pour le chantier d'essai".into(),

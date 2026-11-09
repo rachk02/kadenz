@@ -73,6 +73,9 @@ pub struct DocumentPdf {
     pub textes: TextesPdf,
     /// Numéro attribué à la validation ; vide sur l'aperçu d'un brouillon.
     pub numero: String,
+    /// Document de référence déjà écrit, sous la date (ex. « Facture d'origine :
+    /// F2026-0001 » sur un avoir) ; vide pour aucun.
+    pub reference: String,
     /// Dates déjà écrites (jj/mm/aaaa).
     pub date: String,
     pub echeance: String,

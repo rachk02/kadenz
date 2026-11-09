@@ -17,6 +17,12 @@
 //! annuler un document validé demande « Annuler un document validé » ; les champs
 //! administratifs d'un document validé (mode de paiement, observations) suivent
 //! le droit de brouillon du type.
+//!
+//! Documents liés (jalon J5, sections 6.7, 7.2 et 7.7) : conversion d'un devis
+//! ou d'une proforma en facture (la source passe en Converti à la validation de
+//! la facture), duplication simple ou correction (l'original est annulé), avoir
+//! créé depuis une facture validée (lignes reprises, client et taux de la
+//! facture, total des avoirs validés plafonné au TTC de la facture).
 
 use chrono::NaiveDate;
 use kadenz_domaine::calcul::{
@@ -27,6 +33,7 @@ pub use kadenz_domaine::document::{Statut, TypeDocument};
 pub use kadenz_domaine::paiement::EtatPaiement;
 use kadenz_domaine::paiement::etat_paiement;
 use kadenz_domaine::role::Droit;
+use kadenz_domaine::saisie::montant_en_texte;
 use kadenz_domaine::texte;
 use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::{Value, json};
@@ -88,6 +95,52 @@ pub struct SnapshotTiers {
     pub regime: String,
 }
 
+/// Nature du lien entre un document et sa source (migration 0004).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NatureLien {
+    /// Facture issue d'un devis ou d'une proforma.
+    Conversion,
+    /// Copie d'un devis ou d'une proforma dont l'original a été annulé.
+    Correction,
+    /// Simple duplication, l'original ne change pas.
+    Copie,
+    /// Avoir rattaché à sa facture.
+    Avoir,
+}
+
+impl NatureLien {
+    pub fn code(self) -> &'static str {
+        match self {
+            NatureLien::Conversion => "conversion",
+            NatureLien::Correction => "correction",
+            NatureLien::Copie => "copie",
+            NatureLien::Avoir => "avoir",
+        }
+    }
+
+    pub fn depuis_code(code: &str) -> Option<Self> {
+        [
+            NatureLien::Conversion,
+            NatureLien::Correction,
+            NatureLien::Copie,
+            NatureLien::Avoir,
+        ]
+        .into_iter()
+        .find(|n| n.code() == code)
+    }
+}
+
+/// Document lié, pour la navigation depuis la fiche.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Lien {
+    pub id: i64,
+    pub type_document: TypeDocument,
+    pub numero: Option<String>,
+    pub statut: Statut,
+    /// Nature du lien entre le document dérivé et sa source.
+    pub nature: NatureLien,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Document {
     pub id: i64,
@@ -102,6 +155,17 @@ pub struct Document {
     pub date_creation: String,
     pub date_validation: Option<String>,
     pub date_envoi: Option<String>,
+    /// Document dont celui-ci est issu (devis converti, original copié, facture
+    /// d'un avoir).
+    pub source: Option<Lien>,
+    /// Documents issus de celui-ci, du plus ancien au plus récent.
+    pub derives: Vec<Lien>,
+    /// Montant dû d'un document qui reçoit des règlements, une fois Validé ou
+    /// Envoyé : TTC moins les avoirs validés (section 7.1).
+    pub montant_du: Option<Montant>,
+    /// Facture Validée ou Envoyée : TTC moins les avoirs déjà validés, plafond
+    /// d'un nouvel avoir.
+    pub reste_a_crediter: Option<Montant>,
 }
 
 /// Ligne de registre.
@@ -411,7 +475,84 @@ fn ligne_vers_document(r: &rusqlite::Row<'_>) -> rusqlite::Result<Document> {
         date_creation: r.get(24)?,
         date_validation: r.get(25)?,
         date_envoi: r.get(26)?,
+        source: None,
+        derives: Vec::new(),
+        montant_du: None,
+        reste_a_crediter: None,
     })
+}
+
+fn ligne_vers_lien(r: &rusqlite::Row<'_>) -> rusqlite::Result<Lien> {
+    let nature: Option<String> = r.get(4)?;
+    Ok(Lien {
+        id: r.get(0)?,
+        type_document: lire_type(r, 1)?,
+        numero: r.get(2)?,
+        statut: lire_statut(r, 3)?,
+        nature: nature
+            .as_deref()
+            .and_then(NatureLien::depuis_code)
+            .unwrap_or(NatureLien::Copie),
+    })
+}
+
+/// Total TTC des avoirs validés (ou envoyés) d'une facture.
+fn avoirs_valides(conn: &Connection, facture_id: i64) -> Resultat<Montant> {
+    Ok(conn.query_row(
+        "SELECT COALESCE(SUM(montant_ttc), 0) FROM document
+         WHERE document_source_id = ?1 AND type = 'avoir' AND statut IN ('valide', 'envoye')",
+        [facture_id],
+        |r| r.get(0),
+    )?)
+}
+
+/// Facture brouillon issue de la conversion d'un devis ou d'une proforma.
+fn facture_en_preparation(conn: &Connection, source_id: i64) -> Resultat<Option<i64>> {
+    Ok(conn
+        .query_row(
+            "SELECT id FROM document
+             WHERE document_source_id = ?1 AND type = 'facture'
+               AND nature_source = 'conversion' AND statut = 'brouillon'
+             ORDER BY id LIMIT 1",
+            [source_id],
+            |r| r.get(0),
+        )
+        .optional()?)
+}
+
+/// Source, documents dérivés et montants liés aux avoirs.
+fn completer_liens(conn: &Connection, d: &mut Document) -> Resultat<()> {
+    d.source = conn
+        .query_row(
+            "SELECT s.id, s.type, s.numero, s.statut, d.nature_source
+             FROM document d JOIN document s ON s.id = d.document_source_id
+             WHERE d.id = ?1",
+            [d.id],
+            ligne_vers_lien,
+        )
+        .optional()?;
+    let mut requete = conn.prepare(
+        "SELECT id, type, numero, statut, nature_source FROM document
+         WHERE document_source_id = ?1 ORDER BY id",
+    )?;
+    d.derives = requete
+        .query_map([d.id], ligne_vers_lien)?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    if matches!(d.statut, Statut::Valide | Statut::Envoye) {
+        let avoirs = if d.type_document == TypeDocument::Facture {
+            avoirs_valides(conn, d.id)?
+        } else {
+            0
+        };
+        let reste = d.totaux.ttc - avoirs;
+        if d.type_document.recoit_des_reglements() {
+            d.montant_du = Some(reste);
+        }
+        if d.type_document == TypeDocument::Facture {
+            d.reste_a_crediter = Some(reste);
+        }
+    }
+    Ok(())
 }
 
 pub fn lire(conn: &Connection, id: i64) -> Resultat<Option<Document>> {
@@ -446,6 +587,7 @@ pub fn lire(conn: &Connection, id: i64) -> Resultat<Option<Document>> {
         })?
         .collect::<rusqlite::Result<Vec<_>>>()?;
     (d.saisie.lignes, d.totaux_lignes) = lignes.into_iter().unzip();
+    completer_liens(conn, &mut d)?;
     Ok(Some(d))
 }
 
@@ -473,7 +615,10 @@ pub fn lister(
     let mut requete = conn.prepare(
         "SELECT d.id, d.numero, d.date, d.tiers_nom_snapshot, d.libelle, d.montant_ttc,
                 d.statut, d.mode_paiement, d.date_echeance,
-                COALESCE((SELECT SUM(r.montant) FROM reglement r WHERE r.document_id = d.id), 0)
+                COALESCE((SELECT SUM(r.montant) FROM reglement r WHERE r.document_id = d.id), 0),
+                COALESCE((SELECT SUM(a.montant_ttc) FROM document a
+                          WHERE a.document_source_id = d.id AND a.type = 'avoir'
+                            AND a.statut IN ('valide', 'envoye')), 0)
          FROM document d
          WHERE d.type = ?1
          ORDER BY d.date DESC, d.numero IS NULL DESC, d.numero DESC, d.id DESC",
@@ -484,8 +629,9 @@ pub fn lister(
             let statut = lire_statut(r, 6)?;
             let ttc: Montant = r.get(5)?;
             let regle: Montant = r.get(9)?;
+            let avoirs: Montant = r.get(10)?;
             let etat = (recoit && matches!(statut, Statut::Valide | Statut::Envoye))
-                .then(|| etat_paiement(ttc, regle));
+                .then(|| etat_paiement(ttc - avoirs, regle));
             Ok(ResumeDocument {
                 id: r.get(0)?,
                 numero: r.get(1)?,
@@ -524,7 +670,45 @@ fn journaliser_statut(
     )
 }
 
-/// Crée un brouillon et renvoie son identifiant.
+/// Insère un brouillon, éventuellement lié à sa source. Le droit est contrôlé
+/// par l'appelant. `tiers_actuel` accepte le tiers de la source même s'il a été
+/// désactivé depuis.
+fn inserer_brouillon(
+    tx: &Connection,
+    acteur: &Utilisateur,
+    type_document: TypeDocument,
+    saisie: &Saisie,
+    source: Option<(i64, NatureLien)>,
+    tiers_actuel: Option<i64>,
+) -> Resultat<i64> {
+    let s = nettoyer(type_document, saisie)?;
+    let tiers = snapshot_tiers(tx, type_document, s.tiers_id, tiers_actuel)?;
+    tx.execute(
+        "INSERT INTO document (type, date, date_creation, utilisateur_creation_id,
+                               document_source_id, nature_source)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+        params![
+            type_document.code(),
+            date_texte(s.date),
+            maintenant(),
+            acteur.id,
+            source.map(|(id, _)| id),
+            source.map(|(_, n)| n.code()),
+        ],
+    )?;
+    let id = tx.last_insert_rowid();
+    ecrire_contenu(tx, id, type_document, &s, &tiers)?;
+    let mut valeur = json!({ "type": type_document.code(), "statut": Statut::Brouillon.code() });
+    if let Some((source_id, nature)) = source {
+        valeur["source_id"] = json!(source_id);
+        valeur["nature"] = json!(nature.code());
+    }
+    journaliser_statut(tx, id, "creation", None, valeur, acteur)?;
+    Ok(id)
+}
+
+/// Crée un brouillon et renvoie son identifiant. Un avoir ne se crée pas ici :
+/// voir `creer_avoir`.
 pub fn creer_brouillon(
     conn: &mut Connection,
     acteur: &Utilisateur,
@@ -533,30 +717,214 @@ pub fn creer_brouillon(
 ) -> Resultat<i64> {
     let tx = conn.transaction()?;
     exiger(&tx, acteur, Droit::brouillon(type_document))?;
-    let s = nettoyer(type_document, saisie)?;
-    let tiers = snapshot_tiers(&tx, type_document, s.tiers_id, None)?;
-    tx.execute(
-        "INSERT INTO document (type, date, date_creation, utilisateur_creation_id)
-         VALUES (?1, ?2, ?3, ?4)",
-        params![
-            type_document.code(),
-            date_texte(s.date),
-            maintenant(),
-            acteur.id
-        ],
-    )?;
-    let id = tx.last_insert_rowid();
-    ecrire_contenu(&tx, id, type_document, &s, &tiers)?;
-    journaliser_statut(
+    if type_document == TypeDocument::Avoir {
+        return Err(invalide(
+            "un avoir se crée depuis la fiche d'une facture validée",
+        ));
+    }
+    let id = inserer_brouillon(&tx, acteur, type_document, saisie, None, None)?;
+    tx.commit()?;
+    Ok(id)
+}
+
+/// Date du jour, pour les documents créés à partir d'un autre.
+fn aujourd_hui() -> NaiveDate {
+    chrono::Local::now().date_naive()
+}
+
+/// Échéance proposée pour un nouveau document : délai de paiement pour une
+/// facture, validité des devis pour un devis ou une proforma, rien sinon.
+fn echeance_du_type(
+    conn: &Connection,
+    type_document: TypeDocument,
+    date: NaiveDate,
+) -> Resultat<Option<NaiveDate>> {
+    let p = crate::parametres::lire(conn)?;
+    let delai = match type_document {
+        TypeDocument::Facture => p.delai_paiement_jours,
+        TypeDocument::Devis | TypeDocument::Proforma => p.validite_devis_jours,
+        _ => None,
+    };
+    Ok(echeance_par_defaut(date, delai))
+}
+
+/// Saisie d'un nouveau document reprise d'un autre : lignes copiées telles
+/// qu'enregistrées (copie figée, section 7.7), date du jour, échéance du type.
+fn saisie_reprise(conn: &Connection, d: &Document, type_cible: TypeDocument) -> Resultat<Saisie> {
+    let date = aujourd_hui();
+    let mut s = d.saisie.clone();
+    s.date = date;
+    s.date_echeance = echeance_du_type(conn, type_cible, date)?;
+    Ok(s)
+}
+
+/// Convertit un devis ou une proforma Validé ou Envoyé en facture brouillon et
+/// renvoie l'identifiant de la facture. La source passe en Converti à la
+/// validation de la facture (décision du 2026-11-09) ; tant que la facture est
+/// en brouillon, une seconde conversion est refusée.
+pub fn convertir_en_facture(
+    conn: &mut Connection,
+    acteur: &Utilisateur,
+    source_id: i64,
+) -> Resultat<i64> {
+    let tx = conn.transaction()?;
+    exiger(&tx, acteur, Droit::brouillon(TypeDocument::Facture))?;
+    let src = lire_existant(&tx, source_id)?;
+    if !src.type_document.convertible_en_facture() {
+        return Err(invalide(
+            "seuls un devis ou une proforma se convertissent en facture",
+        ));
+    }
+    if !matches!(src.statut, Statut::Valide | Statut::Envoye) {
+        return Err(invalide(format!(
+            "seul un document validé ou envoyé se convertit en facture ; celui-ci est « {} »",
+            src.statut
+        )));
+    }
+    if facture_en_preparation(&tx, source_id)?.is_some() {
+        return Err(invalide(
+            "une facture est déjà en préparation pour ce document",
+        ));
+    }
+    let s = saisie_reprise(&tx, &src, TypeDocument::Facture)?;
+    let id = inserer_brouillon(
         &tx,
-        id,
-        "creation",
-        None,
-        json!({ "type": type_document.code(), "statut": Statut::Brouillon.code() }),
         acteur,
+        TypeDocument::Facture,
+        &s,
+        Some((source_id, NatureLien::Conversion)),
+        src.saisie.tiers_id,
     )?;
     tx.commit()?;
     Ok(id)
+}
+
+/// Duplique un document en nouveau brouillon du même type et renvoie son
+/// identifiant. Avec `annuler_original`, correction d'un devis ou d'une
+/// proforma Validé ou Envoyé : l'original passe en Annulé dans la même
+/// transaction (section 7.2). Un avoir ne se duplique pas.
+pub fn dupliquer(
+    conn: &mut Connection,
+    acteur: &Utilisateur,
+    id: i64,
+    annuler_original: bool,
+) -> Resultat<i64> {
+    let tx = conn.transaction()?;
+    let d = lire_existant(&tx, id)?;
+    exiger(&tx, acteur, Droit::brouillon(d.type_document))?;
+    if d.type_document == TypeDocument::Avoir {
+        return Err(invalide(
+            "un avoir ne se duplique pas : il se crée depuis la fiche de sa facture",
+        ));
+    }
+    if annuler_original {
+        if !d.type_document.convertible_en_facture() {
+            return Err(invalide(
+                "la correction avec annulation de l'original vaut pour un devis ou une proforma ; une facture se corrige par un avoir",
+            ));
+        }
+        if !matches!(d.statut, Statut::Valide | Statut::Envoye) {
+            return Err(invalide(format!(
+                "seul un document validé ou envoyé se corrige ; celui-ci est « {} »",
+                d.statut
+            )));
+        }
+        exiger(&tx, acteur, Droit::AnnulerDocumentValide)?;
+        if facture_en_preparation(&tx, id)?.is_some() {
+            return Err(invalide(
+                "une facture est en préparation pour ce document : supprimer d'abord ce brouillon",
+            ));
+        }
+        verifier_transition(d.type_document, d.statut, Statut::Annule)
+            .map_err(|e| invalide(e.to_string()))?;
+    }
+    let nature = if annuler_original {
+        NatureLien::Correction
+    } else {
+        NatureLien::Copie
+    };
+    let s = saisie_reprise(&tx, &d, d.type_document)?;
+    let nouveau = inserer_brouillon(
+        &tx,
+        acteur,
+        d.type_document,
+        &s,
+        Some((id, nature)),
+        d.saisie.tiers_id,
+    )?;
+    if annuler_original {
+        tx.execute(
+            "UPDATE document SET statut = ?1 WHERE id = ?2",
+            params![Statut::Annule.code(), id],
+        )?;
+        journaliser_statut(
+            &tx,
+            id,
+            "annulation",
+            Some(json!({ "statut": d.statut.code() })),
+            json!({ "statut": Statut::Annule.code(), "numero": d.numero, "corrige_par": nouveau }),
+            acteur,
+        )?;
+    }
+    tx.commit()?;
+    Ok(nouveau)
+}
+
+/// Crée un avoir brouillon depuis une facture Validée ou Envoyée et renvoie son
+/// identifiant : lignes, client et taux repris de la facture (décision du
+/// 2026-11-09) ; un avoir partiel retire des lignes ou baisse quantités et prix.
+pub fn creer_avoir(conn: &mut Connection, acteur: &Utilisateur, facture_id: i64) -> Resultat<i64> {
+    let tx = conn.transaction()?;
+    exiger(&tx, acteur, Droit::brouillon(TypeDocument::Avoir))?;
+    let f = lire_existant(&tx, facture_id)?;
+    if f.type_document != TypeDocument::Facture {
+        return Err(invalide("un avoir se crée depuis une facture"));
+    }
+    if !matches!(f.statut, Statut::Valide | Statut::Envoye) {
+        return Err(invalide(format!(
+            "un avoir se crée depuis une facture validée ou envoyée ; celle-ci est « {} »",
+            f.statut
+        )));
+    }
+    if f.reste_a_crediter.unwrap_or(0) <= 0 {
+        return Err(invalide(
+            "cette facture est entièrement couverte par ses avoirs",
+        ));
+    }
+    let s = saisie_reprise(&tx, &f, TypeDocument::Avoir)?;
+    let id = inserer_brouillon(
+        &tx,
+        acteur,
+        TypeDocument::Avoir,
+        &s,
+        Some((facture_id, NatureLien::Avoir)),
+        f.saisie.tiers_id,
+    )?;
+    tx.commit()?;
+    Ok(id)
+}
+
+/// Facture d'origine d'un avoir.
+fn facture_de_l_avoir(conn: &Connection, avoir: &Document) -> Resultat<Document> {
+    let source = avoir
+        .source
+        .as_ref()
+        .ok_or_else(|| invalide("cet avoir n'est rattaché à aucune facture"))?;
+    lire_existant(conn, source.id)
+}
+
+/// Un avoir garde le client et les taux de sa facture : un autre client n'aurait
+/// pas de sens, d'autres taux rendraient son montant incohérent avec la facture.
+fn controler_avoir(facture: &Document, s: &Saisie) -> Resultat<()> {
+    if s.tiers_id != facture.saisie.tiers_id {
+        return Err(invalide("le client d'un avoir est celui de sa facture"));
+    }
+    if s.taux != facture.saisie.taux {
+        return Err(invalide(
+            "la remise et la TVA d'un avoir sont celles de sa facture",
+        ));
+    }
+    Ok(())
 }
 
 /// Remplace le contenu d'un brouillon. Pas d'audit ligne à ligne en brouillon
@@ -572,6 +940,9 @@ pub fn modifier_brouillon(
     exiger(&tx, acteur, Droit::brouillon(d.type_document))?;
     exiger_brouillon(&d)?;
     let s = nettoyer(d.type_document, saisie)?;
+    if d.type_document == TypeDocument::Avoir {
+        controler_avoir(&facture_de_l_avoir(&tx, &d)?, &s)?;
+    }
     let tiers = snapshot_tiers(&tx, d.type_document, s.tiers_id, d.saisie.tiers_id)?;
     ecrire_contenu(&tx, id, d.type_document, &s, &tiers)?;
     tx.commit()?;
@@ -638,6 +1009,46 @@ pub fn valider(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
     if s.lignes.is_empty() {
         return Err(invalide("le document doit compter au moins une ligne"));
     }
+    // Documents liés : la source d'une facture convertie doit encore pouvoir
+    // passer en Converti ; un avoir reste dans le reste à créditer de sa facture.
+    let source_convertie = match (&d.source, d.type_document) {
+        (Some(l), TypeDocument::Facture) if l.nature == NatureLien::Conversion => {
+            let src = lire_existant(&tx, l.id)?;
+            verifier_transition(src.type_document, src.statut, Statut::Converti).map_err(|_| {
+                invalide(format!(
+                    "le document d'origine est « {} » : il ne peut plus être converti",
+                    src.statut
+                ))
+            })?;
+            Some(src)
+        }
+        _ => None,
+    };
+    let facture_creditee = if d.type_document == TypeDocument::Avoir {
+        let f = facture_de_l_avoir(&tx, &d)?;
+        if !matches!(f.statut, Statut::Valide | Statut::Envoye) {
+            return Err(invalide(format!(
+                "la facture d'origine est « {} » : l'avoir ne peut plus être validé",
+                f.statut
+            )));
+        }
+        controler_avoir(&f, &s)?;
+        let montant = calculer(TypeDocument::Avoir, &s).ttc;
+        let reste = f.reste_a_crediter.unwrap_or(0);
+        if montant <= 0 {
+            return Err(invalide("le montant d'un avoir doit être positif"));
+        }
+        if montant > reste {
+            return Err(invalide(format!(
+                "le montant de l'avoir ({} FCFA) dépasse le reste à créditer de la facture ({} FCFA)",
+                montant_en_texte(montant),
+                montant_en_texte(reste)
+            )));
+        }
+        Some(f)
+    } else {
+        None
+    };
     // Contrôle du tiers (existence, type) ; le snapshot enregistré au brouillon
     // est rafraîchi une dernière fois puis figé.
     let tiers = snapshot_tiers(&tx, d.type_document, s.tiers_id, d.saisie.tiers_id)?;
@@ -679,6 +1090,30 @@ pub fn valider(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
         json!({ "statut": Statut::Valide.code(), "numero": numero, "montant_ttc": totaux.ttc }),
         acteur,
     )?;
+    if let Some(src) = source_convertie {
+        tx.execute(
+            "UPDATE document SET statut = ?1 WHERE id = ?2",
+            params![Statut::Converti.code(), src.id],
+        )?;
+        journaliser_statut(
+            &tx,
+            src.id,
+            "conversion",
+            Some(json!({ "statut": src.statut.code() })),
+            json!({ "statut": Statut::Converti.code(), "facture_id": id, "facture": numero }),
+            acteur,
+        )?;
+    }
+    if let Some(f) = facture_creditee {
+        journaliser_statut(
+            &tx,
+            f.id,
+            "avoir",
+            None,
+            json!({ "avoir_id": id, "avoir": numero, "montant_ttc": totaux.ttc }),
+            acteur,
+        )?;
+    }
     tx.commit()?;
     Ok(numero)
 }
@@ -718,6 +1153,16 @@ pub fn annuler(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
     exiger(&tx, acteur, droit)?;
     verifier_transition(d.type_document, d.statut, Statut::Annule)
         .map_err(|e| invalide(e.to_string()))?;
+    if d.type_document.convertible_en_facture() && facture_en_preparation(&tx, id)?.is_some() {
+        return Err(invalide(
+            "une facture est en préparation pour ce document : supprimer d'abord ce brouillon",
+        ));
+    }
+    if d.type_document == TypeDocument::Facture && avoirs_valides(&tx, id)? > 0 {
+        return Err(invalide(
+            "cette facture a des avoirs validés : annuler d'abord ces avoirs",
+        ));
+    }
     tx.execute(
         "UPDATE document SET statut = ?1 WHERE id = ?2",
         params![Statut::Annule.code(), id],
@@ -782,6 +1227,10 @@ fn libelle_statut(valeur: &Option<Value>) -> Option<String> {
     Statut::depuis_code(code).map(|s| s.to_string())
 }
 
+fn texte_de<'a>(valeur: &'a Option<Value>, cle: &str) -> Option<&'a str> {
+    valeur.as_ref()?.get(cle)?.as_str()
+}
+
 fn libelle_evenement(e: &EntreeLue) -> String {
     let nouveau = libelle_statut(&e.nouvelle_valeur).unwrap_or_default();
     let numero = e
@@ -798,6 +1247,14 @@ fn libelle_evenement(e: &EntreeLue) -> String {
         "modification_administrative" => {
             "Modification du mode de paiement ou des observations".to_string()
         }
+        "conversion" => match texte_de(&e.nouvelle_valeur, "facture") {
+            Some(f) => format!("Converti en facture {f}"),
+            None => "Converti en facture".to_string(),
+        },
+        "avoir" => match texte_de(&e.nouvelle_valeur, "avoir") {
+            Some(a) => format!("Avoir {a} validé"),
+            None => "Avoir validé".to_string(),
+        },
         _ => match libelle_statut(&e.ancienne_valeur) {
             Some(ancien) => format!("{ancien} vers {nouveau}"),
             None => e.action.clone(),
@@ -830,7 +1287,12 @@ pub fn etat_paiement_de(conn: &Connection, d: &Document) -> Resultat<Option<Etat
         [d.id],
         |r| r.get(0),
     )?;
-    Ok(Some(etat_paiement(d.totaux.ttc, regle)))
+    let avoirs = if d.type_document == TypeDocument::Facture {
+        avoirs_valides(conn, d.id)?
+    } else {
+        0
+    };
+    Ok(Some(etat_paiement(d.totaux.ttc - avoirs, regle)))
 }
 
 /// Date d'échéance proposée : date du document plus le délai de paiement réglé,
@@ -1289,5 +1751,226 @@ mod tests {
             echeance_par_defaut(date(2026, 5, 3), Some(30)),
             Some(date(2026, 6, 2))
         );
+    }
+
+    fn devis_valide(c: &mut Contexte) -> i64 {
+        let admin = c.admin.clone();
+        let s = saisie(c, date(2026, 5, 3));
+        let id = creer_brouillon(&mut c.conn, &admin, TypeDocument::Devis, &s).unwrap();
+        valider(&mut c.conn, &admin, id).unwrap();
+        id
+    }
+
+    fn facture_validee(c: &mut Contexte) -> i64 {
+        let admin = c.admin.clone();
+        let id = facture(c, date(2026, 5, 3));
+        valider(&mut c.conn, &admin, id).unwrap();
+        id
+    }
+
+    fn doc(c: &Contexte, id: i64) -> Document {
+        lire(&c.conn, id).unwrap().unwrap()
+    }
+
+    #[test]
+    fn conversion_a_la_validation_de_la_facture() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let devis = devis_valide(&mut c);
+        let f = convertir_en_facture(&mut c.conn, &admin, devis).unwrap();
+        let facture = doc(&c, f);
+        assert_eq!(facture.type_document, TypeDocument::Facture);
+        assert_eq!(facture.statut, Statut::Brouillon);
+        assert_eq!(facture.saisie.lignes, doc(&c, devis).saisie.lignes);
+        assert_eq!(
+            facture.saisie.taux.retenue, 0,
+            "pas de retenue sur une facture"
+        );
+        let source = facture.source.unwrap();
+        assert_eq!((source.id, source.nature), (devis, NatureLien::Conversion));
+        // La source ne change pas tant que la facture est en brouillon.
+        let d = doc(&c, devis);
+        assert_eq!(d.statut, Statut::Valide);
+        assert_eq!(d.derives.len(), 1);
+        assert!(convertir_en_facture(&mut c.conn, &admin, devis).is_err());
+        assert!(annuler(&mut c.conn, &admin, devis).is_err());
+        assert!(dupliquer(&mut c.conn, &admin, devis, true).is_err());
+        // Validation de la facture : la source passe en Converti.
+        let numero = valider(&mut c.conn, &admin, f).unwrap();
+        assert_eq!(doc(&c, devis).statut, Statut::Converti);
+        let dernier = historique(&c.conn, devis).unwrap().pop().unwrap();
+        assert_eq!(dernier.libelle, format!("Converti en facture {numero}"));
+        assert!(convertir_en_facture(&mut c.conn, &admin, devis).is_err());
+    }
+
+    #[test]
+    fn brouillon_de_facture_supprime_source_reconvertible() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let devis = devis_valide(&mut c);
+        marquer_envoye(&mut c.conn, &admin, devis).unwrap();
+        let f = convertir_en_facture(&mut c.conn, &admin, devis).unwrap();
+        supprimer_brouillon(&mut c.conn, &admin, f).unwrap();
+        assert_eq!(doc(&c, devis).statut, Statut::Envoye);
+        assert!(convertir_en_facture(&mut c.conn, &admin, devis).is_ok());
+    }
+
+    #[test]
+    fn conversion_refusee() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let s = saisie(&c, date(2026, 5, 3));
+        let brouillon = creer_brouillon(&mut c.conn, &admin, TypeDocument::Proforma, &s).unwrap();
+        assert!(convertir_en_facture(&mut c.conn, &admin, brouillon).is_err());
+        let facture = facture_validee(&mut c);
+        assert!(convertir_en_facture(&mut c.conn, &admin, facture).is_err());
+        // Source annulée entre-temps (par une voie que l'application interdit) :
+        // la validation de la facture est refusée.
+        let devis = devis_valide(&mut c);
+        let f = convertir_en_facture(&mut c.conn, &admin, devis).unwrap();
+        c.conn
+            .execute(
+                "UPDATE document SET statut = 'annule' WHERE id = ?1",
+                [devis],
+            )
+            .unwrap();
+        let e = valider(&mut c.conn, &admin, f).unwrap_err();
+        assert!(e.to_string().contains("ne peut plus être converti"), "{e}");
+        assert_eq!(doc(&c, f).statut, Statut::Brouillon);
+    }
+
+    #[test]
+    fn correction_et_copie() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let devis = devis_valide(&mut c);
+        let correction = dupliquer(&mut c.conn, &admin, devis, true).unwrap();
+        assert_eq!(doc(&c, devis).statut, Statut::Annule);
+        let n = doc(&c, correction);
+        assert_eq!(
+            (n.type_document, n.statut),
+            (TypeDocument::Devis, Statut::Brouillon)
+        );
+        assert_eq!(n.source.unwrap().nature, NatureLien::Correction);
+        assert_eq!(doc(&c, devis).derives[0].id, correction);
+
+        let facture = facture_validee(&mut c);
+        assert!(dupliquer(&mut c.conn, &admin, facture, true).is_err());
+        let copie = dupliquer(&mut c.conn, &admin, facture, false).unwrap();
+        assert_eq!(doc(&c, facture).statut, Statut::Valide);
+        assert_eq!(doc(&c, copie).source.unwrap().nature, NatureLien::Copie);
+        let avoir = creer_avoir(&mut c.conn, &admin, facture).unwrap();
+        assert!(dupliquer(&mut c.conn, &admin, avoir, false).is_err());
+    }
+
+    #[test]
+    fn avoir_plafonne_au_ttc_de_la_facture() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let facture = facture_validee(&mut c);
+        assert_eq!(doc(&c, facture).reste_a_crediter, Some(280_250));
+
+        // Avoir partiel : seulement la première ligne (Pelle, 200 000 HT).
+        let partiel = creer_avoir(&mut c.conn, &admin, facture).unwrap();
+        let mut s = doc(&c, partiel).saisie;
+        assert_eq!(s.lignes.len(), 2);
+        s.lignes.truncate(1);
+        modifier_brouillon(&mut c.conn, &admin, partiel, &s).unwrap();
+        let mut autre_client = s.clone();
+        autre_client.tiers_id = Some(c.fournisseur);
+        assert!(modifier_brouillon(&mut c.conn, &admin, partiel, &autre_client).is_err());
+        let mut autres_taux = s.clone();
+        autres_taux.taux.tva = 0;
+        assert!(modifier_brouillon(&mut c.conn, &admin, partiel, &autres_taux).is_err());
+        valider(&mut c.conn, &admin, partiel).unwrap();
+        let f = doc(&c, facture);
+        assert_eq!(f.statut, Statut::Valide);
+        assert_eq!(f.reste_a_crediter, Some(280_250 - 224_200));
+        assert_eq!(f.montant_du, Some(56_050));
+        assert!(
+            historique(&c.conn, facture)
+                .unwrap()
+                .iter()
+                .any(|e| e.libelle.starts_with("Avoir A"))
+        );
+
+        // Un second avoir complet dépasse le reste à créditer.
+        let total = creer_avoir(&mut c.conn, &admin, facture).unwrap();
+        let e = valider(&mut c.conn, &admin, total).unwrap_err();
+        assert!(e.to_string().contains("dépasse"), "{e}");
+        supprimer_brouillon(&mut c.conn, &admin, total).unwrap();
+
+        // La facture ne s'annule pas tant qu'elle a un avoir validé ; annuler
+        // l'avoir lui rend son montant.
+        assert!(annuler(&mut c.conn, &admin, facture).is_err());
+        annuler(&mut c.conn, &admin, partiel).unwrap();
+        assert_eq!(doc(&c, facture).reste_a_crediter, Some(280_250));
+        annuler(&mut c.conn, &admin, facture).unwrap();
+    }
+
+    #[test]
+    fn facture_couverte_par_ses_avoirs() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let facture = facture_validee(&mut c);
+        let avoir = creer_avoir(&mut c.conn, &admin, facture).unwrap();
+        valider(&mut c.conn, &admin, avoir).unwrap();
+        let f = doc(&c, facture);
+        assert_eq!(f.statut, Statut::Valide, "statut inchangé");
+        assert_eq!(f.montant_du, Some(0));
+        assert_eq!(
+            etat_paiement_de(&c.conn, &f).unwrap(),
+            Some(EtatPaiement::Paye)
+        );
+        let registre = lister(&c.conn, TypeDocument::Facture, &FiltreDocuments::default()).unwrap();
+        assert_eq!(registre[0].etat_paiement, Some(EtatPaiement::Paye));
+        assert!(creer_avoir(&mut c.conn, &admin, facture).is_err());
+    }
+
+    #[test]
+    fn avoir_seulement_depuis_une_facture_validee() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let s = saisie(&c, date(2026, 5, 3));
+        assert!(creer_brouillon(&mut c.conn, &admin, TypeDocument::Avoir, &s).is_err());
+        let brouillon = facture(&mut c, date(2026, 5, 3));
+        assert!(creer_avoir(&mut c.conn, &admin, brouillon).is_err());
+        let devis = devis_valide(&mut c);
+        assert!(creer_avoir(&mut c.conn, &admin, devis).is_err());
+        // Facture annulée après la création de l'avoir brouillon.
+        let facture = facture_validee(&mut c);
+        let avoir = creer_avoir(&mut c.conn, &admin, facture).unwrap();
+        annuler(&mut c.conn, &admin, facture).unwrap();
+        assert!(valider(&mut c.conn, &admin, avoir).is_err());
+    }
+
+    #[test]
+    fn client_desactive_depuis_la_source() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let devis = devis_valide(&mut c);
+        let facture = facture_validee(&mut c);
+        tiers::definir_actif(&c.conn, &admin, c.client, false).unwrap();
+        let f = convertir_en_facture(&mut c.conn, &admin, devis).unwrap();
+        valider(&mut c.conn, &admin, f).unwrap();
+        let avoir = creer_avoir(&mut c.conn, &admin, facture).unwrap();
+        valider(&mut c.conn, &admin, avoir).unwrap();
+        assert!(dupliquer(&mut c.conn, &admin, facture, false).is_ok());
+    }
+
+    #[test]
+    fn droits_des_documents_lies() {
+        let mut c = contexte();
+        let vente = c.vente.clone();
+        let devis = devis_valide(&mut c);
+        assert!(matches!(
+            convertir_en_facture(&mut c.conn, &vente, devis),
+            Err(Erreur::Interdit(Droit::BrouillonFacture))
+        ));
+        let facture = facture_validee(&mut c);
+        assert!(matches!(
+            creer_avoir(&mut c.conn, &vente, facture),
+            Err(Erreur::Interdit(Droit::BrouillonFacture))
+        ));
     }
 }

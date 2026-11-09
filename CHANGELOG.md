@@ -6,6 +6,10 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 
 ### Ajouté
 - Jalon J5, écrans : registre et fiche communs aux documents de vente, pour les Devis, les Proformas, les Factures et une nouvelle entrée de menu Avoirs (sans création directe : un avoir naît d'une facture validée) ; textes accordés au type, filtre de statut selon le type (Converti pour les devis et les proformas), validité des devis proposée comme échéance, client d'un avoir verrouillé, export PDF réservé aux factures pour l'instant.
+- Jalon J5, stockage : conversion d'un devis ou d'une proforma en facture brouillon, la source passant en Converti à la validation de la facture ; duplication simple ou correction (l'original est annulé) ; avoir créé depuis une facture validée, lignes reprises, client et taux de la facture, total des avoirs validés plafonné au TTC de la facture ; montant dû et état de paiement diminués des avoirs validés ; refus de l'annulation d'une facture qui a un avoir validé et d'un devis dont la facture est en préparation ; liens entre documents (source, documents dérivés, nature du lien, migration 0004) ; référence de la facture d'origine sur le PDF de l'avoir.
+
+### Corrigé
+- État de paiement « Payé » quand le montant dû est nul ou déjà atteint (facture couverte par ses avoirs), conformément à la section 8.
 
 ## [0.1.0] - 2026-11-09
 
