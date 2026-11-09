@@ -6,6 +6,7 @@
 | 2.0 | 2026-11-09 | Passage en Rust (Slint, rusqlite), mono-poste avec comptes et rôles, module Paiements commun Facture et Bon de commande, modularité, corrections des incohérences de la v1 |
 | 2.1 | 2026-11-09 | Tour 1 validé par l'utilisateur : socle et modules activables par clé de licence, réglages modifiables, avoir, export Excel, import CSV/Excel, licence par client, installateur et mises à jour |
 | 2.2 | 2026-11-09 | Tour 2 validé : écrans et ergonomie, fiche document, bordereaux issus des factures, règlements, relances avec lettre, volet achats, sauvegarde automatique (10 copies), licence perpétuelle signée et liée au poste, préfixe A de l'avoir, mise à jour vérifiée au démarrage |
+| 2.3 | 2026-11-09 | Règles PDF multi-pages validées (en-têtes et pieds répétés, report, filigranes, deux logos, export des registres), arrondi et quantités fractionnaires tranchés, orthographe du montant en lettres par réglage, ordre des jalons J1 à J10 validé |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -137,7 +138,8 @@ Table clé-valeur, modifiable par l'Admin sans recompiler :
 | Modes de paiement | Liste modifiable, initialisée avec ceux de l'Excel : Espèce, Chèque, Virement bancaire, Carte bancaire, Moov money, Orange money |
 | Numérotation | Préfixe par type, remise à zéro du compteur chaque mois (comme l'Excel) ou chaque année, nombre de chiffres du rang |
 | Textes des documents | Titre par type (ex. « FACTURE DEFINITIVE »), phrase « Arrêté la présente ... à la somme de », libellé du signataire (ex. « LA COMPTABILITE »), mentions de pied de page |
-| Apparence des PDF | Couleur principale, position du logo |
+| Apparence des PDF | Couleur principale, position des logos |
+| Montant en lettres | Orthographe rectifiée de 1990 ou traditionnelle |
 | Dossiers d'export | Un dossier par type de document (comme l'Excel) |
 | Délais | Durée de validité des devis, délai de paiement des factures (date d'échéance calculée, modifiable sur le document) |
 | Rôles | Matrice des droits par rôle (section 10.1) |
@@ -322,7 +324,7 @@ Types SQLite : `INTEGER` (identifiants, montants, pourcentages, quantités, bool
 
 | Entité | Champs clés | Notes |
 |---|---|---|
-| **Entreprise** | Id, Nom, Adresse, Telephone, Email, SiteWeb, Localisation, RegimeImposition, RCCM, IFU, Banque1, Banque2, LogoChemin, ResponsableFacturation, ResponsableComptabilite | Une seule ligne (contrainte Id = 1) |
+| **Entreprise** | Id, Nom, Adresse, Telephone, Email, SiteWeb, Localisation, RegimeImposition, RCCM, IFU, Banque1, Banque2, LogoChemin, Logo2Chemin, ResponsableFacturation, ResponsableComptabilite | Une seule ligne (contrainte Id = 1) |
 | **Utilisateur** | Id, NomComplet, Identifiant (unique), MotDePasseHache, Role, Actif, DateCreation | |
 | **Tiers** | Id, Nom, Adresse, Telephone, Localisation, IFU, RCCM, RegimeImposition, Type, Actif | |
 | **Produit** | Id, Designation, Reference (unique), Prix, Sens, Actif | |
@@ -341,6 +343,17 @@ Exigences (spécifié) :
 - Un seul moteur paramétré par un modèle par type de document.
 - Contenu : en-tête entreprise (logo, coordonnées, RCCM/IFU), identification du tiers, tableau des lignes, totaux, montant en lettres, pied de page (comptes bancaires, signataires).
 - Mise en page reprise de l'Excel : bande verticale de couleur à gauche, logo, bloc entreprise, bloc tiers, tableau, totaux, montant en lettres, signataire, pied de page avec adresse, RCCM, IFU, comptes bancaires, site et email. Couleur principale paramétrable.
+- Documents exportés : Devis, Proforma, Bon de commande, Bordereau de livraison, Facture, Avoir, lettre de relance. Les registres (listes filtrées, encaissements, relances) s'exportent aussi en PDF, en plus de l'export Excel.
+- Deux logos : un logo principal et un logo secondaire facultatif (certification, partenaire), comme les deux chemins de logo du réglage Excel.
+- Format A4 portrait.
+
+Règles multi-pages (spécifié) :
+- Chaque page porte un en-tête : logo(s), bloc entreprise, type et numéro du document, date. Le bloc tiers et le libellé ne figurent qu'en page 1.
+- L'en-tête du tableau des lignes se répète en haut de chaque page ; une ligne n'est jamais coupée entre deux pages.
+- Pied de page sur chaque page : adresse, RCCM, IFU, comptes bancaires, site, email, et numérotation « Page n/N ».
+- Sous-total « à reporter » en bas de chaque page sauf la dernière, et « report » en haut de la page suivante.
+- Totaux, montant en lettres et signataire uniquement sur la dernière page ; s'ils ne tiennent pas sous les dernières lignes, ils passent ensemble sur une page supplémentaire, jamais coupés.
+- Filigrane « ANNULÉ » sur un document annulé ; filigrane « BROUILLON » sur l'aperçu d'un brouillon (le PDF définitif reste réservé aux documents validés).
 - Le PDF n'est généré qu'à partir d'un document Validé.
 - Pagination automatique.
 
@@ -396,11 +409,11 @@ Choix technique (à l'étude) : c'est la partie la plus délicate en Rust pur (m
 ## 18. Questions ouvertes
 
 1. **Mois du numéro** : sur la capture Excel, le bon de commande C2026-05-0003 porte la date 06/07/2026. Le mois du numéro est-il celui de la date du document, de la date de validation, ou autre ?
-2. **Arrondi** : règle d'arrondi des remises, TVA et retenues en FCFA (arrondi commercial au franc le plus proche, ou autre). Implémentée provisoirement à l'arrondi commercial, à confirmer.
-3. **Montant en lettres** : orthographe à retenir. L'Excel écrit "Soixante dix mille sept cent quarante" (70 740) mais "Cent-cinquante mille" (150 000), deux usages différents des traits d'union.
+2. **Arrondi** : tranchée le 2026-11-09, arrondi au franc le plus proche, la moitié vers le haut.
+3. **Montant en lettres** : l'Excel mélangeait deux usages ("Soixante dix mille sept cent quarante", "Cent-cinquante mille"). Les deux orthographes sont implémentées et choisies par réglage : rectifiée de 1990 (traits d'union partout, valeur par défaut proposée) ou traditionnelle. Valeur par défaut à confirmer.
 4. **Modularité commerciale** : tranchée le 2026-11-09, modules activés par clé de licence (sections 3.2 et 15).
 5. **Avoir** : tranchée le 2026-11-09, préfixe A (section 6.7).
 6. **Conversion** : un Devis ou une Proforma peut-il être converti dès Validé, ou seulement après Envoyé ? Implémenté provisoirement : dès Validé.
-7. **Quantités fractionnaires** : nécessaires (mètres de câble, etc.) ? Le modèle les permet.
+7. **Quantités fractionnaires** : tranchée le 2026-11-09, oui (quantités en millièmes).
 8. **Distribution** : technologie d'installateur et signature du code (à l'étude, section 16).
 9. **Écrans non vus** : aucune capture des formulaires Devis et Proforma ni des listes Factures, Livraisons, Proforma et Devis ; leur contenu est supposé identique à la Facture et à la liste des bons de commande.
