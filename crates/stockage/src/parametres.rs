@@ -4,6 +4,7 @@
 //! absente retombe sur la valeur par défaut du cahier des charges.
 
 use kadenz_domaine::calcul::Pourcentage;
+use kadenz_domaine::document::TypeDocument;
 use kadenz_domaine::lettres::Orthographe;
 use kadenz_domaine::numerotation::{Numerotation, RemiseAZero};
 use kadenz_domaine::role::Droit;
@@ -23,6 +24,58 @@ const CLE_ORTHOGRAPHE: &str = "lettres.orthographe";
 const CLE_VALIDITE_DEVIS: &str = "delais.validite_devis_jours";
 const CLE_DELAI_PAIEMENT: &str = "delais.paiement_jours";
 const CLE_NUMEROTATION: &str = "numerotation";
+const CLE_TEXTES_DOCUMENTS: &str = "documents.textes";
+const CLE_COULEUR_DOCUMENTS: &str = "documents.couleur";
+
+/// Couleur principale des documents par défaut : l'Indigo de la marque.
+pub const COULEUR_PAR_DEFAUT: [u8; 3] = [0x2d, 0x3a, 0x8c];
+
+/// Textes imprimés d'un type de document (section 5.4, « Textes des documents »).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TextesDocument {
+    /// Titre imprimé, ex. « FACTURE ».
+    pub titre: String,
+    /// Début de la phrase du montant en lettres ; vide pour un document sans montants.
+    pub phrase_somme: String,
+    /// Libellé du signataire, ex. « LA COMPTABILITE » ; vide pour aucun.
+    pub signataire: String,
+}
+
+impl TextesDocument {
+    /// Valeurs par défaut reprises de l'outil Excel d'origine : titre égal au nom
+    /// du type en majuscules, phrase « Arrêté le présent ... à la somme de »,
+    /// signataire « LA COMPTABILITE ».
+    pub fn par_defaut(t: TypeDocument) -> Self {
+        let phrase = match t {
+            TypeDocument::Devis => "Arrêté le présent devis à la somme de",
+            TypeDocument::Proforma => "Arrêté la présente proforma à la somme de",
+            TypeDocument::BonCommande => "Arrêté le présent bon de commande à la somme de",
+            TypeDocument::Livraison => "",
+            TypeDocument::Facture => "Arrêté la présente facture à la somme de",
+            TypeDocument::Avoir => "Arrêté le présent avoir à la somme de",
+        };
+        TextesDocument {
+            titre: t.to_string().to_uppercase(),
+            phrase_somme: phrase.into(),
+            signataire: "LA COMPTABILITE".into(),
+        }
+    }
+}
+
+/// Couleur en texte « #rrggbb ».
+pub fn couleur_en_texte(c: [u8; 3]) -> String {
+    format!("#{:02x}{:02x}{:02x}", c[0], c[1], c[2])
+}
+
+/// Lit une couleur « #rrggbb » (le « # » est facultatif).
+pub fn couleur_depuis_texte(texte: &str) -> Option<[u8; 3]> {
+    let h = texte.trim().trim_start_matches('#');
+    if h.len() != 6 || !h.chars().all(|c| c.is_ascii_hexdigit()) {
+        return None;
+    }
+    let octet = |i: usize| u8::from_str_radix(&h[i..i + 2], 16).ok();
+    Some([octet(0)?, octet(2)?, octet(4)?])
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Parametres {
@@ -37,6 +90,10 @@ pub struct Parametres {
     pub delai_paiement_jours: Option<u32>,
     /// Préfixes, remise à zéro et nombre de chiffres des numéros (section 5.4).
     pub numerotation: Numerotation,
+    /// Textes imprimés, un jeu par type dans l'ordre de `TypeDocument::TOUS`.
+    pub textes_documents: [TextesDocument; 6],
+    /// Couleur principale des documents (bande, en-tête du tableau, titre).
+    pub couleur_documents: [u8; 3],
 }
 
 impl Default for Parametres {
@@ -60,6 +117,8 @@ impl Default for Parametres {
             validite_devis_jours: None,
             delai_paiement_jours: None,
             numerotation: Numerotation::default(),
+            textes_documents: TypeDocument::TOUS.map(TextesDocument::par_defaut),
+            couleur_documents: COULEUR_PAR_DEFAUT,
         }
     }
 }
@@ -82,6 +141,16 @@ impl Parametres {
             return Err(Erreur::Validation(
                 "au moins un mode de paiement est nécessaire".into(),
             ));
+        }
+        if let Some(t) = self
+            .textes_documents
+            .iter()
+            .position(|t| t.titre.trim().is_empty())
+        {
+            return Err(Erreur::Validation(format!(
+                "le titre imprimé du type « {} » est obligatoire",
+                TypeDocument::TOUS[t]
+            )));
         }
         self.numerotation
             .nettoyee()
@@ -112,6 +181,62 @@ fn numerotation_depuis_json(valeur: Option<Value>) -> Option<Numerotation> {
     }
     .nettoyee()
     .ok()
+}
+
+impl Parametres {
+    /// Textes imprimés d'un type de document.
+    pub fn textes(&self, t: TypeDocument) -> &TextesDocument {
+        let rang = TypeDocument::TOUS
+            .iter()
+            .position(|x| *x == t)
+            .expect("type présent dans TOUS");
+        &self.textes_documents[rang]
+    }
+}
+
+fn textes_en_json(textes: &[TextesDocument; 6]) -> Value {
+    Value::Array(
+        TypeDocument::TOUS
+            .iter()
+            .zip(textes)
+            .map(|(t, x)| {
+                json!({
+                    "type": t.code(),
+                    "titre": x.titre.trim(),
+                    "phrase_somme": x.phrase_somme.trim(),
+                    "signataire": x.signataire.trim(),
+                })
+            })
+            .collect(),
+    )
+}
+
+/// Textes enregistrés ; un type absent ou illisible garde ses valeurs par défaut.
+fn textes_depuis_json(valeur: Option<Value>) -> [TextesDocument; 6] {
+    let mut textes = TypeDocument::TOUS.map(TextesDocument::par_defaut);
+    let Some(Value::Array(elements)) = valeur else {
+        return textes;
+    };
+    for e in elements {
+        let Some(rang) = e
+            .get("type")
+            .and_then(Value::as_str)
+            .and_then(|code| TypeDocument::TOUS.iter().position(|t| t.code() == code))
+        else {
+            continue;
+        };
+        let champ = |nom: &str| e.get(nom).and_then(Value::as_str).map(String::from);
+        if let (Some(titre), Some(phrase_somme), Some(signataire)) =
+            (champ("titre"), champ("phrase_somme"), champ("signataire"))
+        {
+            textes[rang] = TextesDocument {
+                titre,
+                phrase_somme,
+                signataire,
+            };
+        }
+    }
+    textes
 }
 
 fn lire_valeur(conn: &Connection, cle: &str) -> Resultat<Option<Value>> {
@@ -167,6 +292,10 @@ pub fn lire(conn: &Connection) -> Resultat<Parametres> {
         delai_paiement_jours: jours(lire_valeur(conn, CLE_DELAI_PAIEMENT)?),
         numerotation: numerotation_depuis_json(lire_valeur(conn, CLE_NUMEROTATION)?)
             .unwrap_or(defaut.numerotation),
+        textes_documents: textes_depuis_json(lire_valeur(conn, CLE_TEXTES_DOCUMENTS)?),
+        couleur_documents: lire_valeur(conn, CLE_COULEUR_DOCUMENTS)?
+            .and_then(|v| v.as_str().and_then(couleur_depuis_texte))
+            .unwrap_or(defaut.couleur_documents),
     })
 }
 
@@ -202,6 +331,10 @@ pub(crate) fn enregistrer_sans_controle(
     ecrire_valeur(conn, CLE_VALIDITE_DEVIS, &json!(p.validite_devis_jours))?;
     ecrire_valeur(conn, CLE_DELAI_PAIEMENT, &json!(p.delai_paiement_jours))?;
     ecrire_valeur(conn, CLE_NUMEROTATION, &numerotation)?;
+    let textes = textes_en_json(&p.textes_documents);
+    let couleur = couleur_en_texte(p.couleur_documents);
+    ecrire_valeur(conn, CLE_TEXTES_DOCUMENTS, &textes)?;
+    ecrire_valeur(conn, CLE_COULEUR_DOCUMENTS, &json!(couleur))?;
     audit::journaliser(
         conn,
         Entree {
@@ -218,6 +351,8 @@ pub(crate) fn enregistrer_sans_controle(
                 "validite_devis_jours": p.validite_devis_jours,
                 "delai_paiement_jours": p.delai_paiement_jours,
                 "numerotation": numerotation,
+                "textes_documents": textes,
+                "couleur_documents": couleur,
             })),
             utilisateur_id: auteur,
         },
@@ -265,6 +400,37 @@ mod tests {
         assert_eq!(n.prefixes[4], "FA");
         p.numerotation.prefixes[4] = "D".into();
         assert!(enregistrer_sans_controle(&conn, &p, None).is_err());
+    }
+
+    #[test]
+    fn textes_et_couleur() {
+        let conn = ouvrir_en_memoire().unwrap();
+        let defaut = lire(&conn).unwrap();
+        assert_eq!(defaut.textes(TypeDocument::Facture).titre, "FACTURE");
+        assert_eq!(
+            defaut.textes(TypeDocument::BonCommande).titre,
+            "BON DE COMMANDE"
+        );
+        assert_eq!(
+            defaut.textes(TypeDocument::BonCommande).phrase_somme,
+            "Arrêté le présent bon de commande à la somme de"
+        );
+        assert_eq!(defaut.couleur_documents, COULEUR_PAR_DEFAUT);
+
+        let mut p = defaut.clone();
+        p.textes_documents[4].titre = "FACTURE DEFINITIVE".into();
+        p.couleur_documents = [0x10, 0x80, 0xff];
+        enregistrer_sans_controle(&conn, &p, None).unwrap();
+        let lu = lire(&conn).unwrap();
+        assert_eq!(lu.textes(TypeDocument::Facture).titre, "FACTURE DEFINITIVE");
+        assert_eq!(lu.couleur_documents, [0x10, 0x80, 0xff]);
+
+        p.textes_documents[0].titre = " ".into();
+        assert!(enregistrer_sans_controle(&conn, &p, None).is_err());
+        assert_eq!(couleur_depuis_texte("#2D3A8C"), Some(COULEUR_PAR_DEFAUT));
+        assert_eq!(couleur_depuis_texte("2d3a8c"), Some(COULEUR_PAR_DEFAUT));
+        assert_eq!(couleur_depuis_texte("#2d3a8"), None);
+        assert_eq!(couleur_en_texte(COULEUR_PAR_DEFAUT), "#2d3a8c");
     }
 
     #[test]

@@ -191,6 +191,7 @@ fn installation_depuis_assistant(d: &DonneesAssistant) -> Result<InstallationIni
             validite_devis_jours: None,
             delai_paiement_jours: None,
             numerotation: Default::default(),
+            ..Parametres::default()
         },
     })
 }

@@ -265,6 +265,9 @@ fn parametres_depuis_ui(u: &ParametresUi) -> Result<Parametres, String> {
             u.remise_annuelle,
             &u.chiffres,
         )?,
+        // Textes et couleur des documents : pas encore à l'écran, repris des
+        // valeurs enregistrées par l'appelant.
+        ..Parametres::default()
     })
 }
 
@@ -343,11 +346,16 @@ fn brancher_parametres(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
 
     let e = etat.clone();
     api.on_enregistrer(move |saisie| {
-        let p = match parametres_depuis_ui(&saisie) {
+        let mut p = match parametres_depuis_ui(&saisie) {
             Ok(p) => p,
             Err(message) => return retour_erreur(message),
         };
         let etat = e.borrow();
+        // Textes et couleur des documents gardés tels qu'enregistrés (pas encore à l'écran).
+        if let Ok(enregistres) = parametres::lire(&etat.conn) {
+            p.textes_documents = enregistres.textes_documents;
+            p.couleur_documents = enregistres.couleur_documents;
+        }
         let Some(acteur) = &etat.utilisateur else {
             return retour_erreur("aucune session ouverte");
         };

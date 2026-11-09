@@ -668,6 +668,8 @@ pub fn valider(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
     if modifiees != 1 {
         return Err(invalide("ce document n'est plus un brouillon"));
     }
+    // Entreprise, logos, textes et couleur figés avec le document (section 12).
+    crate::impression::figer(&tx, id, d.type_document)?;
     let totaux = calculer(d.type_document, &s);
     journaliser_statut(
         &tx,
@@ -970,6 +972,45 @@ mod tests {
         assert_eq!(d.statut, Statut::Valide);
         assert!(d.date_validation.is_some());
         assert!(valider(&mut c.conn, &admin, mai2).is_err(), "déjà validé");
+    }
+
+    #[test]
+    fn impression_figee_a_la_validation() {
+        use crate::impression::pour_document;
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        c.conn
+            .execute(
+                "INSERT OR REPLACE INTO entreprise (id, nom) VALUES (1, 'Avant')",
+                [],
+            )
+            .unwrap();
+        let validee = facture(&mut c, date(2026, 5, 3));
+        let deuxieme = facture(&mut c, date(2026, 5, 4));
+        valider(&mut c.conn, &admin, validee).unwrap();
+        valider(&mut c.conn, &admin, deuxieme).unwrap();
+        let brouillon = facture(&mut c, date(2026, 5, 5));
+
+        c.conn
+            .execute("UPDATE entreprise SET nom = 'Après' WHERE id = 1", [])
+            .unwrap();
+        let mut p = crate::parametres::lire(&c.conn).unwrap();
+        p.textes_documents[4].titre = "FACTURE DEFINITIVE".into();
+        crate::parametres::enregistrer(&c.conn, &admin, &p).unwrap();
+
+        let figee = pour_document(&c.conn, validee).unwrap();
+        assert_eq!(figee.entreprise.nom, "Avant");
+        assert_eq!(figee.textes.titre, "FACTURE");
+        let apercu = pour_document(&c.conn, brouillon).unwrap();
+        assert_eq!(apercu.entreprise.nom, "Après");
+        assert_eq!(apercu.textes.titre, "FACTURE DEFINITIVE");
+        let instantanes: i64 = c
+            .conn
+            .query_row("SELECT COUNT(*) FROM instantane_entreprise", [], |r| {
+                r.get(0)
+            })
+            .unwrap();
+        assert_eq!(instantanes, 1, "instantané identique réutilisé");
     }
 
     #[test]

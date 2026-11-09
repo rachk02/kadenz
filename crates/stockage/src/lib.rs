@@ -5,6 +5,7 @@ pub mod comptes;
 pub mod documents;
 pub mod droits;
 pub mod entreprise;
+pub mod impression;
 pub mod installation;
 pub mod parametres;
 pub mod produits;
@@ -32,6 +33,7 @@ pub(crate) fn maintenant() -> String {
 const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0001_initial.sql"),
     include_str!("migrations/0002_langue.sql"),
+    include_str!("migrations/0003_instantane_entreprise.sql"),
 ];
 
 #[derive(Debug)]
