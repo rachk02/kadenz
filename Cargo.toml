@@ -1,0 +1,20 @@
+[workspace]
+resolver = "3"
+members = ["crates/domaine", "crates/stockage", "crates/app"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace.dependencies]
+kadenz-domaine = { path = "crates/domaine" }
+kadenz-stockage = { path = "crates/stockage" }
+rusqlite = { version = "0.41.1", features = ["bundled", "backup"] }
+slint = "1.18.1"
+slint-build = "1.18.1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

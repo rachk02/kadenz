@@ -1,0 +1,10 @@
+[package]
+name = "kadenz-stockage"
+description = "Accès SQLite de Kadenz : ouverture, migrations, numérotation, sauvegarde."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+kadenz-domaine.workspace = true
+rusqlite.workspace = true
