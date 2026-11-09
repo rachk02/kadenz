@@ -192,7 +192,7 @@ pub fn transitions_possibles(type_document: TypeDocument, depuis: Statut) -> &'s
     use Statut::*;
     use TypeDocument::*;
     match (type_document, depuis) {
-        // Devis / Proforma : conversion possible dès Validé (question ouverte 6 du cahier).
+        // Devis / Proforma : conversion possible dès Validé (question 6 du cahier, tranchée).
         (Devis | Proforma, Brouillon) => &[Valide, Annule],
         (Devis | Proforma, Valide) => &[Envoye, Converti, Annule],
         (Devis | Proforma, Envoye) => &[Converti, Annule],

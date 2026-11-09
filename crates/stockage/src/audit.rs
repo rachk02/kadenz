@@ -44,3 +44,38 @@ pub fn compter(conn: &Connection, action: &str) -> Resultat<i64> {
         |r| r.get(0),
     )?)
 }
+
+/// Entrée relue du journal, avec le nom du compte qui a agi.
+#[derive(Debug, Clone, PartialEq)]
+pub struct EntreeLue {
+    pub date_action: String,
+    pub action: String,
+    pub ancienne_valeur: Option<Value>,
+    pub nouvelle_valeur: Option<Value>,
+    /// Nom complet du compte, vide si l'action n'a pas d'auteur connu.
+    pub utilisateur: String,
+}
+
+/// Entrées d'une entité, de la plus ancienne à la plus récente.
+pub fn lister_pour(conn: &Connection, entite: &str, entite_id: i64) -> Resultat<Vec<EntreeLue>> {
+    let mut requete = conn.prepare(
+        "SELECT a.date_action, a.action, a.ancienne_valeur, a.nouvelle_valeur,
+                COALESCE(u.nom_complet, '')
+         FROM audit_log a LEFT JOIN utilisateur u ON u.id = a.utilisateur_id
+         WHERE a.entite = ?1 AND a.entite_id = ?2
+         ORDER BY a.id",
+    )?;
+    let json = |t: Option<String>| t.and_then(|t| serde_json::from_str(&t).ok());
+    let entrees = requete
+        .query_map(params![entite, entite_id], |r| {
+            Ok(EntreeLue {
+                date_action: r.get(0)?,
+                action: r.get(1)?,
+                ancienne_valeur: json(r.get(2)?),
+                nouvelle_valeur: json(r.get(3)?),
+                utilisateur: r.get(4)?,
+            })
+        })?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    Ok(entrees)
+}

@@ -17,8 +17,8 @@ pub const CENT_POUR_CENT: Pourcentage = 10_000;
 
 /// Division entière arrondie : point unique de toute règle d'arrondi du domaine.
 ///
-/// Règle provisoire : arrondi commercial (demi vers l'infini), à confirmer
-/// (question ouverte 2 du cahier des charges).
+/// Arrondi au franc le plus proche, la moitié vers le haut (question 2 du cahier
+/// des charges, tranchée le 2026-11-09).
 pub fn arrondir_division(numerateur: i128, denominateur: i128) -> Montant {
     debug_assert!(denominateur > 0);
     let moitie = denominateur / 2;

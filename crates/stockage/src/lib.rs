@@ -2,6 +2,7 @@
 
 pub mod audit;
 pub mod comptes;
+pub mod documents;
 pub mod droits;
 pub mod entreprise;
 pub mod installation;

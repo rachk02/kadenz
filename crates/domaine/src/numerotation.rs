@@ -1,8 +1,8 @@
 //! Format des numéros de documents : `{Préfixe}{AAAA}-{MM}-{####}` (section 6.1).
 //!
 //! Le compteur lui-même est tenu en base (`kadenz-stockage`), dans la transaction
-//! de validation. Le choix du mois (date du document ou date de validation) reste
-//! une question ouverte du cahier des charges : l'appelant fournit année et mois.
+//! de validation. Année et mois sont ceux de la date du document (question 1 du
+//! cahier des charges, tranchée le 2026-11-09).
 
 use crate::document::TypeDocument;
 

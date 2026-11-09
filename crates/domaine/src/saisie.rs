@@ -3,7 +3,7 @@
 //! La virgule étant le séparateur décimal en français, les listes saisies sur
 //! une seule ligne sont séparées par des points-virgules : « 0 ; 18 ».
 
-use crate::calcul::{CENT_POUR_CENT, Montant, Pourcentage};
+use crate::calcul::{CENT_POUR_CENT, Montant, Pourcentage, Quantite, UNE_UNITE};
 
 /// Séparateurs de milliers possibles : espace, espace insécable (U+00A0) et espace
 /// fine insécable (U+202F), celle qu'écrit Excel en français.
@@ -84,6 +84,43 @@ pub fn pourcentage_en_texte(p: Pourcentage) -> String {
         c if c % 10 == 0 => format!("{entier},{}", c / 10),
         c => format!("{entier},{c:02}"),
     }
+}
+
+/// Lit une quantité : « 3 », « 2,5 », « 2.5 », « 1 250 ». Au plus trois décimales,
+/// strictement positive. Renvoie des millièmes (2,5 = 2500).
+pub fn quantite_depuis_texte(texte: &str) -> Option<Quantite> {
+    let nettoye: String = texte
+        .trim()
+        .chars()
+        .filter(|c| !est_separateur_milliers(*c))
+        .map(|c| if c == ',' { '.' } else { c })
+        .collect();
+    let (entier, decimales) = match nettoye.split_once('.') {
+        Some((e, d)) => (e, d),
+        None => (nettoye.as_str(), ""),
+    };
+    if entier.is_empty()
+        || decimales.len() > 3
+        || !entier.chars().all(|c| c.is_ascii_digit())
+        || !decimales.chars().all(|c| c.is_ascii_digit())
+    {
+        return None;
+    }
+    let entier: i64 = entier.parse().ok()?;
+    let decimales: i64 = format!("{decimales:0<3}").parse().ok()?;
+    let valeur = entier.checked_mul(UNE_UNITE)?.checked_add(decimales)?;
+    (valeur > 0).then_some(valeur)
+}
+
+/// Écrit une quantité avec une virgule décimale, sans zéro inutile : 2500 donne « 2,5 ».
+pub fn quantite_en_texte(q: Quantite) -> String {
+    let entier = montant_en_texte(q / UNE_UNITE);
+    let milliemes = (q % UNE_UNITE).abs();
+    if milliemes == 0 {
+        return entier;
+    }
+    let decimales = format!("{milliemes:03}");
+    format!("{entier},{}", decimales.trim_end_matches('0'))
 }
 
 /// Lit une liste de pourcentages séparés par des points-virgules, sans doublon,
@@ -170,6 +207,24 @@ mod tests {
         }
         assert_eq!(pourcentage_en_texte(250), "2,5");
         assert_eq!(pourcentage_en_texte(205), "2,05");
+    }
+
+    #[test]
+    fn quantites() {
+        assert_eq!(quantite_depuis_texte("3"), Some(3000));
+        assert_eq!(quantite_depuis_texte("2,5"), Some(2500));
+        assert_eq!(quantite_depuis_texte(" 2.125 "), Some(2125));
+        assert_eq!(quantite_depuis_texte("1 250"), Some(1_250_000));
+        for texte in ["", "0", "0,000", "2,5555", "-1", "abc", ",5"] {
+            assert_eq!(quantite_depuis_texte(texte), None, "« {texte} »");
+        }
+        assert_eq!(quantite_en_texte(3000), "3");
+        assert_eq!(quantite_en_texte(2500), "2,5");
+        assert_eq!(quantite_en_texte(2125), "2,125");
+        assert_eq!(quantite_en_texte(1_250_050), "1\u{00A0}250,05");
+        for q in [1, 1000, 2500, 2125, 1_250_050] {
+            assert_eq!(quantite_depuis_texte(&quantite_en_texte(q)), Some(q));
+        }
     }
 
     #[test]
