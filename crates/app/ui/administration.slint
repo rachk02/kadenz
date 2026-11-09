@@ -32,6 +32,14 @@ export global EntrepriseApi {
     callback retirer-logo(rang: int) -> Retour;
 }
 
+// Réglages imprimés d'un type de document, dans l'ordre des types du domaine.
+export struct TexteDocumentUi {
+    titre: string,
+    phrase: string,
+    signataire: string,
+    dossier: string,
+}
+
 export struct ParametresUi {
     taux-tva: string,
     taux-remise: string,
@@ -50,6 +58,9 @@ export struct ParametresUi {
     prefixe-avoir: string,
     remise-annuelle: bool,
     chiffres: string,
+    // Documents imprimés : un jeu de textes par type, couleur « #rrggbb ».
+    textes: [TexteDocumentUi],
+    couleur: string,
 }
 
 export global ParametresApi {
@@ -60,6 +71,12 @@ export global ParametresApi {
     callback enregistrer(parametres: ParametresUi) -> Retour;
     // Exemple de numéro de facture pour un préfixe, un compteur et un nombre de chiffres.
     pure callback exemple-numero(prefixe: string, annuelle: bool, chiffres: string) -> string;
+    // Couleur saisie « #rrggbb », transparente si elle est illisible.
+    pure callback couleur-apercu(texte: string) -> color;
+    // Choix d'un dossier ; rend le dossier actuel si l'on renonce.
+    callback choisir-dossier(actuel: string) -> string;
+    // Textes par défaut d'un type (rang dans l'ordre des types).
+    pure callback textes-par-defaut(rang: int) -> TexteDocumentUi;
 }
 
 component CadreLogo inherits VerticalLayout {
@@ -336,6 +353,27 @@ export component PageEntreprise inherits ScrollView {
 
 export component PageParametres inherits ScrollView {
     property <Retour> retour;
+    // Textes de chaque type ; le type affiché est édité dans les champs.
+    property <[TexteDocumentUi]> textes;
+    property <int> rang-texte: 0;
+    property <TexteDocumentUi> defaut;
+
+    // Recopie les champs dans le jeu du type affiché.
+    function memoriser-textes() {
+        root.textes[root.rang-texte] = {
+            titre: titre-doc.valeur,
+            phrase: phrase-doc.valeur,
+            signataire: signataire-doc.valeur,
+            dossier: dossier-doc.valeur,
+        };
+    }
+
+    function afficher-textes() {
+        titre-doc.valeur = root.textes[root.rang-texte].titre;
+        phrase-doc.valeur = root.textes[root.rang-texte].phrase;
+        signataire-doc.valeur = root.textes[root.rang-texte].signataire;
+        dossier-doc.valeur = root.textes[root.rang-texte].dossier;
+    }
 
     function charger(p: ParametresUi) {
         tva.valeur = p.taux-tva;
@@ -353,6 +391,9 @@ export component PageParametres inherits ScrollView {
         prefixe-avoir.valeur = p.prefixe-avoir;
         compteur.current-index = p.remise-annuelle ? 1 : 0;
         chiffres.valeur = p.chiffres;
+        root.textes = p.textes;
+        root.afficher-textes();
+        couleur.valeur = p.couleur;
     }
 
     init => {
@@ -508,6 +549,117 @@ export component PageParametres inherits ScrollView {
                 }
 
                 Section {
+                    text: @tr("Documents imprimés");
+                }
+
+                Text {
+                    text: @tr("Textes imprimés sur les documents remis aux clients, toujours en français. Un document validé garde les textes, la couleur et les coordonnées de l'entreprise du jour de sa validation.");
+                    color: Theme.texte-secondaire;
+                    horizontal-alignment: Theme.debut;
+                    wrap: word-wrap;
+                }
+
+                VerticalLayout {
+                    spacing: 4px;
+
+                    Text {
+                        text: @tr("Type de document");
+                        font-size: 12px;
+                        color: Theme.texte-secondaire;
+                        horizontal-alignment: Theme.debut;
+                    }
+
+                    ComboBox {
+                        model: [@tr("Devis"), @tr("Proforma"), @tr("Bon de commande"), @tr("Bordereau de livraison"), @tr("Facture"), @tr("Avoir")];
+                        current-index: root.rang-texte;
+                        selected => {
+                            root.memoriser-textes();
+                            root.rang-texte = self.current-index;
+                            root.afficher-textes();
+                        }
+                    }
+                }
+
+                titre-doc := Champ {
+                    libelle: @tr("Titre imprimé");
+                }
+
+                phrase-doc := Champ {
+                    libelle: @tr("Phrase avant le montant en lettres (vide : aucune phrase)");
+                }
+
+                signataire-doc := Champ {
+                    libelle: @tr("Signataire (vide : aucune signature)");
+                }
+
+                Rangee {
+                    spacing: 8px;
+
+                    dossier-doc := Champ {
+                        horizontal-stretch: 1;
+                        libelle: @tr("Dossier d'export (vide : choisi à chaque enregistrement)");
+                    }
+
+                    VerticalLayout {
+                        alignment: end;
+
+                        Bouton {
+                            text: @tr("Choisir le dossier");
+                            clicked => {
+                                dossier-doc.valeur = ParametresApi.choisir-dossier(dossier-doc.valeur);
+                            }
+                        }
+                    }
+                }
+
+                Rangee {
+                    alignment: start;
+
+                    Bouton {
+                        text: @tr("Textes par défaut de ce type");
+                        clicked => {
+                            root.defaut = ParametresApi.textes-par-defaut(root.rang-texte);
+                            titre-doc.valeur = root.defaut.titre;
+                            phrase-doc.valeur = root.defaut.phrase;
+                            signataire-doc.valeur = root.defaut.signataire;
+                        }
+                    }
+                }
+
+                Rangee {
+                    spacing: 8px;
+
+                    couleur := Champ {
+                        horizontal-stretch: 1;
+                        libelle: @tr("Couleur principale (code hexadécimal, par exemple #2d3a8c)");
+                    }
+
+                    VerticalLayout {
+                        alignment: end;
+
+                        Rectangle {
+                            width: 36px;
+                            height: 36px;
+                            background: ParametresApi.couleur-apercu(couleur.valeur);
+                            border-width: 1px;
+                            border-color: Theme.bordure;
+                            border-radius: 4px;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: end;
+
+                        Bouton {
+                            text: @tr("Couleur par défaut");
+                            clicked => {
+                                couleur.valeur = "#2d3a8c";
+                            }
+                        }
+                    }
+                }
+
+                Section {
                     text: @tr("Montant en lettres");
                 }
 
@@ -530,6 +682,7 @@ export component PageParametres inherits ScrollView {
                         text: @tr("Enregistrer");
                         primary: true;
                         clicked => {
+                            root.memoriser-textes();
                             root.retour = ParametresApi.enregistrer({
                                 taux-tva: tva.valeur,
                                 taux-remise: remise.valeur,
@@ -546,6 +699,8 @@ export component PageParametres inherits ScrollView {
                                 prefixe-avoir: prefixe-avoir.valeur,
                                 remise-annuelle: compteur.current-index == 1,
                                 chiffres: chiffres.valeur,
+                                textes: root.textes,
+                                couleur: couleur.valeur,
                             });
                             if (root.retour.ok) {
                                 root.charger(ParametresApi.ouvrir());
@@ -561,7 +716,7 @@ export component PageParametres inherits ScrollView {
 
                 Text {
                     horizontal-alignment: Theme.debut;
-                    text: @tr("Les textes des documents, l'apparence des PDF et les dossiers d'export se régleront ici avec le jalon du PDF (J4). La matrice des droits par rôle se règle dans l'écran Utilisateurs.");
+                    text: @tr("La matrice des droits par rôle se règle dans l'écran Utilisateurs.");
                     font-size: 12px;
                     color: Theme.texte-secondaire;
                     wrap: word-wrap;

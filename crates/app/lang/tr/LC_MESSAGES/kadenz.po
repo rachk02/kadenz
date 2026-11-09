@@ -180,6 +180,9 @@ msgstr "Her ay"
 msgid "Chiffres du rang"
 msgstr "Sıra numarası basamakları"
 
+msgid "Choisir le dossier"
+msgstr "Klasör seç"
+
 msgid "Choisir le fichier à importer"
 msgstr "İçe aktarılacak dosyayı seç"
 
@@ -288,6 +291,15 @@ msgstr "Gösterge panelini ve kayıt defterlerini görüntüle"
 msgid "Converti"
 msgstr "Dönüştürüldü"
 
+msgid "couleur des documents invalide : saisir un code hexadécimal comme #2d3a8c"
+msgstr "geçersiz belge rengi: #2d3a8c gibi onaltılık bir kod girin"
+
+msgid "Couleur par défaut"
+msgstr "Varsayılan renk"
+
+msgid "Couleur principale (code hexadécimal, par exemple #2d3a8c)"
+msgstr "Ana renk (onaltılık kod, örneğin #2d3a8c)"
+
 msgid "Création du brouillon"
 msgstr "Taslak oluşturuldu"
 
@@ -329,6 +341,15 @@ msgstr "Teklifler, proformalar, sipariş formları, irsaliyeler, faturalar ve ö
 
 msgid "document introuvable"
 msgstr "belge bulunamadı"
+
+msgid "Documents imprimés"
+msgstr "Basılı belgeler"
+
+msgid "Dossier d'export"
+msgstr "Dışa aktarma klasörü"
+
+msgid "Dossier d'export (vide : choisi à chaque enregistrement)"
+msgstr "Dışa aktarma klasörü (boş: her kayıtta seçilir)"
 
 msgid "Doublon"
 msgstr "Kopya"
@@ -569,6 +590,9 @@ msgstr "Veritabanı ({}) açılamadı: {}"
 
 msgid "la fiche entreprise n'existe pas encore"
 msgstr "şirket kartı henüz mevcut değil"
+
+msgid "La matrice des droits par rôle se règle dans l'écran Utilisateurs."
+msgstr "Role göre yetki tablosu Kullanıcılar ekranında ayarlanır."
 
 msgid "Langue de l'interface"
 msgstr "Arayüz dili"
@@ -816,6 +840,9 @@ msgstr "Ödendi"
 msgid "PDF enregistré : {}"
 msgstr "PDF kaydedildi: {}"
 
+msgid "Phrase avant le montant en lettres (vide : aucune phrase)"
+msgstr "Yazıyla tutardan önceki cümle (boş: cümle yok)"
+
 msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
 msgstr "Yazı tipleri: Inter ve Manrope, SIL Open Font License 1.1 lisansıyla."
 
@@ -984,6 +1011,9 @@ msgstr "Kullanım şekli"
 msgid "Sens des lignes sans colonne Sens :"
 msgstr "Kullanım sütunu olmayan satırların kullanımı:"
 
+msgid "Signataire (vide : aucune signature)"
+msgstr "İmzalayan (boş: imza yok)"
+
 msgid "Site web"
 msgstr "Web sitesi"
 
@@ -1032,8 +1062,20 @@ msgstr "Belgelerde önerilen oranlar"
 msgid "Terminer l'installation"
 msgstr "Kurulumu bitir"
 
+msgid "textes des documents incomplets"
+msgstr "belge metinleri eksik"
+
+msgid "Textes imprimés sur les documents remis aux clients, toujours en français. Un document validé garde les textes, la couleur et les coordonnées de l'entreprise du jour de sa validation."
+msgstr "Müşterilere verilen belgelere basılan metinler, her zaman Fransızca. Onaylanan bir belge, onaylandığı günün metinlerini, rengini ve şirket bilgilerini korur."
+
+msgid "Textes par défaut de ce type"
+msgstr "Bu türün varsayılan metinleri"
+
 msgid "Tiers"
 msgstr "Cariler"
+
+msgid "Titre imprimé"
+msgstr "Basılı başlık"
 
 msgid "Total"
 msgstr "Toplam"
@@ -1064,6 +1106,9 @@ msgstr "Tür"
 
 msgid "type"
 msgstr "tür"
+
+msgid "Type de document"
+msgstr "Belge türü"
 
 msgid "Type des lignes sans colonne Type :"
 msgstr "Tür sütunu olmayan satırların türü:"

@@ -180,6 +180,9 @@ msgstr "كل شهر"
 msgid "Chiffres du rang"
 msgstr "أرقام الترتيب"
 
+msgid "Choisir le dossier"
+msgstr "اختيار المجلد"
+
 msgid "Choisir le fichier à importer"
 msgstr "اختيار الملف المراد استيراده"
 
@@ -288,6 +291,15 @@ msgstr "الاطلاع على لوحة المتابعة والسجلات"
 msgid "Converti"
 msgstr "محوَّل"
 
+msgid "couleur des documents invalide : saisir un code hexadécimal comme #2d3a8c"
+msgstr "لون المستندات غير صالح: أدخل رمزًا سداسيًا عشريًا مثل ‎#2d3a8c"
+
+msgid "Couleur par défaut"
+msgstr "اللون الافتراضي"
+
+msgid "Couleur principale (code hexadécimal, par exemple #2d3a8c)"
+msgstr "اللون الرئيسي، رمز سداسي عشري مثل ‎#2d3a8c"
+
 msgid "Création du brouillon"
 msgstr "إنشاء المسودة"
 
@@ -329,6 +341,15 @@ msgstr "عروض الأسعار والفواتير المبدئية وأوامر
 
 msgid "document introuvable"
 msgstr "المستند غير موجود"
+
+msgid "Documents imprimés"
+msgstr "المستندات المطبوعة"
+
+msgid "Dossier d'export"
+msgstr "مجلد التصدير"
+
+msgid "Dossier d'export (vide : choisi à chaque enregistrement)"
+msgstr "مجلد التصدير (فارغ: يُختار عند كل حفظ)"
 
 msgid "Doublon"
 msgstr "مكرر"
@@ -569,6 +590,9 @@ msgstr "تعذّر فتح قاعدة البيانات ({}): {}"
 
 msgid "la fiche entreprise n'existe pas encore"
 msgstr "بطاقة الشركة غير موجودة بعد"
+
+msgid "La matrice des droits par rôle se règle dans l'écran Utilisateurs."
+msgstr "تُضبط مصفوفة الصلاحيات حسب الدور في شاشة المستخدمين."
 
 msgid "Langue de l'interface"
 msgstr "لغة الواجهة"
@@ -816,6 +840,9 @@ msgstr "مدفوع"
 msgid "PDF enregistré : {}"
 msgstr "تم حفظ ملف PDF: {}"
 
+msgid "Phrase avant le montant en lettres (vide : aucune phrase)"
+msgstr "العبارة قبل المبلغ بالحروف (فارغ: بلا عبارة)"
+
 msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
 msgstr "الخطوط: Inter وManrope، بترخيص SIL Open Font License 1.1."
 
@@ -984,6 +1011,9 @@ msgstr "نوع الاستخدام"
 msgid "Sens des lignes sans colonne Sens :"
 msgstr "استخدام الأسطر التي لا تحتوي على عمود الاستخدام:"
 
+msgid "Signataire (vide : aucune signature)"
+msgstr "الموقِّع (فارغ: بلا توقيع)"
+
 msgid "Site web"
 msgstr "الموقع الإلكتروني"
 
@@ -1032,8 +1062,20 @@ msgstr "النسب المقترحة في المستندات"
 msgid "Terminer l'installation"
 msgstr "إنهاء التثبيت"
 
+msgid "textes des documents incomplets"
+msgstr "نصوص المستندات غير مكتملة"
+
+msgid "Textes imprimés sur les documents remis aux clients, toujours en français. Un document validé garde les textes, la couleur et les coordonnées de l'entreprise du jour de sa validation."
+msgstr "النصوص المطبوعة على المستندات المسلَّمة للعملاء، بالفرنسية دائمًا. يحتفظ المستند المعتمد بالنصوص واللون وبيانات الشركة كما كانت يوم اعتماده."
+
+msgid "Textes par défaut de ce type"
+msgstr "النصوص الافتراضية لهذا النوع"
+
 msgid "Tiers"
 msgstr "الأطراف"
+
+msgid "Titre imprimé"
+msgstr "العنوان المطبوع"
 
 msgid "Total"
 msgstr "الإجمالي"
@@ -1064,6 +1106,9 @@ msgstr "النوع"
 
 msgid "type"
 msgstr "النوع"
+
+msgid "Type de document"
+msgstr "نوع المستند"
 
 msgid "Type des lignes sans colonne Type :"
 msgstr "نوع الأسطر التي لا تحتوي على عمود النوع:"

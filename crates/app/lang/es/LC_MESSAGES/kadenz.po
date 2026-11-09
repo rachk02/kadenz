@@ -180,6 +180,9 @@ msgstr "Cada mes"
 msgid "Chiffres du rang"
 msgstr "Dígitos del número de orden"
 
+msgid "Choisir le dossier"
+msgstr "Elegir la carpeta"
+
 msgid "Choisir le fichier à importer"
 msgstr "Elegir el archivo que importar"
 
@@ -288,6 +291,15 @@ msgstr "Consultar panel y registros"
 msgid "Converti"
 msgstr "Convertido"
 
+msgid "couleur des documents invalide : saisir un code hexadécimal comme #2d3a8c"
+msgstr "color de los documentos no válido: introducir un código hexadecimal como #2d3a8c"
+
+msgid "Couleur par défaut"
+msgstr "Color predeterminado"
+
+msgid "Couleur principale (code hexadécimal, par exemple #2d3a8c)"
+msgstr "Color principal (código hexadecimal, por ejemplo #2d3a8c)"
+
 msgid "Création du brouillon"
 msgstr "Creación del borrador"
 
@@ -329,6 +341,15 @@ msgstr "Presupuestos, proformas, órdenes de compra, albaranes de entrega, factu
 
 msgid "document introuvable"
 msgstr "documento no encontrado"
+
+msgid "Documents imprimés"
+msgstr "Documentos impresos"
+
+msgid "Dossier d'export"
+msgstr "Carpeta de exportación"
+
+msgid "Dossier d'export (vide : choisi à chaque enregistrement)"
+msgstr "Carpeta de exportación (vacío: se elige en cada guardado)"
 
 msgid "Doublon"
 msgstr "Duplicado"
@@ -569,6 +590,9 @@ msgstr "No se pudo abrir la base de datos ({}): {}"
 
 msgid "la fiche entreprise n'existe pas encore"
 msgstr "la ficha de empresa aún no existe"
+
+msgid "La matrice des droits par rôle se règle dans l'écran Utilisateurs."
+msgstr "La matriz de derechos por rol se configura en la pantalla Usuarios."
 
 msgid "Langue de l'interface"
 msgstr "Idioma de la interfaz"
@@ -816,6 +840,9 @@ msgstr "Pagado"
 msgid "PDF enregistré : {}"
 msgstr "PDF guardado: {}"
 
+msgid "Phrase avant le montant en lettres (vide : aucune phrase)"
+msgstr "Frase antes del importe en letras (vacío: ninguna frase)"
+
 msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
 msgstr "Fuentes: Inter y Manrope, bajo licencia SIL Open Font License 1.1."
 
@@ -984,6 +1011,9 @@ msgstr "Uso"
 msgid "Sens des lignes sans colonne Sens :"
 msgstr "Uso de las líneas sin columna Uso:"
 
+msgid "Signataire (vide : aucune signature)"
+msgstr "Firmante (vacío: ninguna firma)"
+
 msgid "Site web"
 msgstr "Sitio web"
 
@@ -1032,8 +1062,20 @@ msgstr "Tasas propuestas en los documentos"
 msgid "Terminer l'installation"
 msgstr "Finalizar la instalación"
 
+msgid "textes des documents incomplets"
+msgstr "textos de los documentos incompletos"
+
+msgid "Textes imprimés sur les documents remis aux clients, toujours en français. Un document validé garde les textes, la couleur et les coordonnées de l'entreprise du jour de sa validation."
+msgstr "Textos impresos en los documentos entregados a los clientes, siempre en francés. Un documento validado conserva los textos, el color y los datos de la empresa del día de su validación."
+
+msgid "Textes par défaut de ce type"
+msgstr "Textos predeterminados de este tipo"
+
 msgid "Tiers"
 msgstr "Terceros"
+
+msgid "Titre imprimé"
+msgstr "Título impreso"
 
 msgid "Total"
 msgstr "Total"
@@ -1064,6 +1106,9 @@ msgstr "Tipo"
 
 msgid "type"
 msgstr "tipo"
+
+msgid "Type de document"
+msgstr "Tipo de documento"
 
 msgid "Type des lignes sans colonne Type :"
 msgstr "Tipo de las líneas sin columna Tipo:"

@@ -9,14 +9,14 @@ use kadenz_domaine::lettres::{Orthographe, en_lettres};
 use kadenz_domaine::numerotation::{CHIFFRES_MAX, CHIFFRES_MIN, Numerotation, RemiseAZero};
 use kadenz_domaine::saisie;
 use kadenz_stockage::entreprise::{self, Entreprise, FormatImage, Logo};
-use kadenz_stockage::parametres::{self, Parametres};
-use slint::{ComponentHandle, Image, SharedString};
+use kadenz_stockage::parametres::{self, Parametres, TextesDocument};
+use slint::{ComponentHandle, Image, Model, ModelRc, SharedString, VecModel};
 
 use crate::referentiels::{retour_erreur, retour_ok};
 use crate::traduction::{tr, trf};
 use crate::{
     EntrepriseApi, EtatPartage, FenetrePrincipale, FicheEntrepriseUi, ParametresApi, ParametresUi,
-    Retour,
+    Retour, TexteDocumentUi,
 };
 
 // ---------------------------------------------------------------- Entreprise
@@ -219,6 +219,23 @@ fn parametres_ui(p: &Parametres) -> ParametresUi {
         prefixe_avoir: p.numerotation.prefixes[5].clone().into(),
         remise_annuelle: p.numerotation.remise == RemiseAZero::Annuelle,
         chiffres: p.numerotation.chiffres.to_string().into(),
+        textes: ModelRc::new(VecModel::from(
+            p.textes_documents
+                .iter()
+                .zip(&p.dossiers_export)
+                .map(|(t, dossier)| texte_ui(t, dossier))
+                .collect::<Vec<_>>(),
+        )),
+        couleur: parametres::couleur_en_texte(p.couleur_documents).into(),
+    }
+}
+
+fn texte_ui(t: &TextesDocument, dossier: &str) -> TexteDocumentUi {
+    TexteDocumentUi {
+        titre: t.titre.clone().into(),
+        phrase: t.phrase_somme.clone().into(),
+        signataire: t.signataire.clone().into(),
+        dossier: dossier.into(),
     }
 }
 
@@ -244,6 +261,17 @@ fn parametres_depuis_ui(u: &ParametresUi) -> Result<Parametres, String> {
             )),
         }
     };
+    let saisis: Vec<TexteDocumentUi> = u.textes.iter().collect();
+    let [devis, proforma, commande, livraison, facture, avoir] =
+        <[TexteDocumentUi; 6]>::try_from(saisis)
+            .map_err(|_| tr("textes des documents incomplets"))?;
+    let saisis = [devis, proforma, commande, livraison, facture, avoir];
+    let textes_documents = saisis.clone().map(|t| TextesDocument {
+        titre: t.titre.trim().to_string(),
+        phrase_somme: t.phrase.trim().to_string(),
+        signataire: t.signataire.trim().to_string(),
+    });
+    let dossiers = saisis.map(|t| t.dossier.trim().to_string());
     Ok(Parametres {
         taux_tva: taux("TVA", &u.taux_tva)?,
         taux_remise: taux("remise", &u.taux_remise)?,
@@ -268,9 +296,11 @@ fn parametres_depuis_ui(u: &ParametresUi) -> Result<Parametres, String> {
             u.remise_annuelle,
             &u.chiffres,
         )?,
-        // Textes et couleur des documents : pas encore à l'écran, repris des
-        // valeurs enregistrées par l'appelant.
-        ..Parametres::default()
+        textes_documents,
+        couleur_documents: parametres::couleur_depuis_texte(&u.couleur).ok_or_else(|| {
+            tr("couleur des documents invalide : saisir un code hexadécimal comme #2d3a8c")
+        })?,
+        dossiers_export: dossiers,
     })
 }
 
@@ -341,6 +371,31 @@ fn brancher_parametres(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         }
     });
 
+    api.on_couleur_apercu(|texte| {
+        parametres::couleur_depuis_texte(&texte)
+            .map(|[r, v, b]| slint::Color::from_rgb_u8(r, v, b))
+            .unwrap_or_default()
+    });
+
+    api.on_choisir_dossier(|actuel| {
+        let mut boite = rfd::FileDialog::new().set_title(tr("Dossier d'export"));
+        if !actuel.trim().is_empty() && std::path::Path::new(actuel.trim()).is_dir() {
+            boite = boite.set_directory(actuel.trim());
+        }
+        match boite.pick_folder() {
+            Some(dossier) => dossier.display().to_string().into(),
+            None => actuel,
+        }
+    });
+
+    api.on_textes_par_defaut(|rang| {
+        let t = usize::try_from(rang)
+            .ok()
+            .and_then(|rang| TypeDocument::TOUS.get(rang).copied())
+            .unwrap_or(TypeDocument::Facture);
+        texte_ui(&TextesDocument::par_defaut(t), "")
+    });
+
     let (f, e) = (fenetre.as_weak(), etat.clone());
     api.on_ouvrir(move || {
         // Exemples recalculés à chaque ouverture : ils suivent la langue du compte.
@@ -357,16 +412,11 @@ fn brancher_parametres(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
 
     let e = etat.clone();
     api.on_enregistrer(move |saisie| {
-        let mut p = match parametres_depuis_ui(&saisie) {
+        let p = match parametres_depuis_ui(&saisie) {
             Ok(p) => p,
             Err(message) => return retour_erreur(message),
         };
         let etat = e.borrow();
-        // Textes et couleur des documents gardés tels qu'enregistrés (pas encore à l'écran).
-        if let Ok(enregistres) = parametres::lire(&etat.conn) {
-            p.textes_documents = enregistres.textes_documents;
-            p.couleur_documents = enregistres.couleur_documents;
-        }
         let Some(acteur) = &etat.utilisateur else {
             return retour_erreur("aucune session ouverte");
         };
@@ -423,5 +473,28 @@ mod tests {
         u.chiffres = "4".into();
         u.prefixe_facture = "D".into();
         assert!(parametres_depuis_ui(&u).is_err(), "préfixe en double");
+    }
+
+    #[test]
+    fn documents_saisis() {
+        let mut p = Parametres::default();
+        p.dossiers_export[4] = "C:\\Factures".into();
+        let u = parametres_ui(&p);
+        assert_eq!(u.couleur, "#2d3a8c");
+        assert_eq!(parametres_depuis_ui(&u).unwrap(), p);
+
+        let mut facture = u.textes.row_data(4).unwrap();
+        facture.titre = " FACTURE DEFINITIVE ".into();
+        u.textes.set_row_data(4, facture);
+        let mut u = u;
+        u.couleur = "#1080FF".into();
+        let lu = parametres_depuis_ui(&u).unwrap();
+        assert_eq!(lu.textes_documents[4].titre, "FACTURE DEFINITIVE");
+        assert_eq!(lu.couleur_documents, [0x10, 0x80, 0xff]);
+        assert_eq!(lu.dossiers_export[4], "C:\\Factures");
+
+        u.couleur = "bleu".into();
+        assert!(parametres_depuis_ui(&u).is_err());
+        assert_eq!(parametres::COULEUR_PAR_DEFAUT, [0x2d, 0x3a, 0x8c]);
     }
 }

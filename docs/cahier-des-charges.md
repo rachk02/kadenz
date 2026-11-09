@@ -13,6 +13,7 @@
 | 2.7 | 2026-11-09 | Choix de J3 validés par l'utilisateur ; question 12 tranchée : format du compteur annuel `F2026-0001` et réglage de la numérotation (sections 5.4 et 6.1) |
 | 2.8 | 2026-11-09 | Interface en sept langues, langue choisie par compte, documents clients en français (section 13) ; résultat de l'essai PDF (section 12) |
 | 2.9 | 2026-11-09 | krilla retenue ; données de l'entreprise, textes et couleur figés à la validation ; textes par défaut repris de l'Excel (section 12) ; changement de compteur de numérotation laissé libre, avec mise en garde |
+| 2.10 | 2026-11-09 | J4 livré : aperçu et export PDF depuis l'écran Factures, textes imprimés, couleur et dossiers d'export réglables dans Paramètres (section 12, périmètre de J4) ; mise en page de droite à gauche en arabe (section 13) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -354,7 +355,7 @@ Types SQLite : `INTEGER` (identifiants, montants, pourcentages, quantités, bool
 
 ---
 
-## 12. Génération des documents PDF (à l'étude)
+## 12. Génération des documents PDF (spécifié)
 
 Exigences (spécifié) :
 - Un seul moteur paramétré par un modèle par type de document.
@@ -380,12 +381,14 @@ Choix technique (spécifié) : c'est la partie la plus délicate en Rust pur (mo
 
 Essai du 2026-11-09 (crate `kadenz-pdf`, données fictives) : bibliothèque krilla 0.8.2 (licence MIT ou Apache-2.0, Rust pur, sans dépendance système), polices Inter et Manrope embarquées et sous-ensemblées, logos PNG ou JPEG lus depuis des octets (deux logos vérifiés, répétés sur chaque page, transparence des PNG respectée). Le texte est façonné une fois (rustybuzz) pour être mesuré puis tracé à l'identique, ce qui rend la pagination exacte. Facture fictive de 46 lignes sur 3 pages A4 : en-tête répété, bloc tiers en page 1, en-tête du tableau répété, lignes jamais coupées, « À reporter » et « Report », totaux, montant en lettres et signataire ensemble sur la dernière page, pied de page avec « Page n/N », filigranes « BROUILLON » et « ANNULÉ » ; environ 30 Ko et 0,1 s par document en mode debug. Choix validé par l'utilisateur le 2026-11-09 : krilla est retenue.
 
+Livré au jalon J4 : depuis la fiche d'une facture, « Aperçu PDF » pour un brouillon (filigrane « BROUILLON », valeurs du moment) et « Exporter en PDF » pour un document validé (instantané figé à la validation, filigrane « ANNULÉ » s'il est annulé). Le nom de fichier proposé est le numéro du document ; la boîte d'enregistrement s'ouvre dans le dossier d'export du type s'il est réglé, puis le PDF s'ouvre dans la visionneuse par défaut. Un document validé avant la migration 0003 (bases d'essai antérieures à la v0.1.0) n'a pas d'instantané et s'imprime avec les valeurs du moment.
+
 ---
 
 ## 13. Exigences non fonctionnelles (spécifié)
 
 - Windows 10/11 64 bits, fonctionnement 100 % local, exécutable natif. Seule exception : la vérification facultative de mise à jour (section 16), qui échoue sans gêne hors connexion.
-- Interface en sept langues : français (langue source), anglais, arabe, japonais, chinois, turc et espagnol (décision du 2026-11-09). La langue se choisit par compte, dans Mon compte ; l'interface s'affiche en français avant la connexion et revient au français à la déconnexion. Traductions rédigées sans relecture par un locuteur natif, choix assumé de l'utilisateur. Limite connue : l'arabe s'affiche correctement, mais la disposition des écrans reste de gauche à droite (pas de mise en miroir automatique). Spécifié.
+- Interface en sept langues : français (langue source), anglais, arabe, japonais, chinois, turc et espagnol (décision du 2026-11-09). La langue se choisit par compte, dans Mon compte ; l'interface s'affiche en français avant la connexion et revient au français à la déconnexion. Traductions rédigées sans relecture par un locuteur natif, choix assumé de l'utilisateur. Mise en page de droite à gauche en arabe : menu à droite, textes alignés à droite, rangées et colonnes des tableaux inversées (tri compris), montants alignés à gauche, bascule immédiate au changement de langue. Limites connues : les cases à cocher, listes déroulantes et onglets gardent leur dessin interne de gauche à droite ; le texte des cellules de tableau reste aligné à gauche ; les documents remis aux clients restent en français. Spécifié.
 - Documents remis aux clients (PDF, montant en lettres) en français uniquement pour l'instant.
 - Devise FCFA uniquement (V1).
 - Base stockée dans le dossier de données de l'utilisateur Windows (`%APPDATA%`).
@@ -461,3 +464,5 @@ Essai du 2026-11-09 (crate `kadenz-pdf`, données fictives) : bibliothèque kril
 | J10 | Installateur, mises à jour, export Excel |
 
 **Périmètre de J3 (Factures).** Livré : registre filtrable (numéro, client, libellé, statut, état de paiement, période) et triable ; fiche avec client choisi dans une liste filtrable, date, échéance, libellé, lignes produit ou libres modifiables, réordonnées et supprimées, totaux et montant en lettres en direct ; enregistrement du brouillon, validation numérotée, marquage envoyé, annulation, suppression du brouillon, mode de paiement et observations après validation ; historique des changements de statut ; fiche en lecture seule pour les rôles sans droit. Reporté : PDF (J4) ; avoir et duplication (J5) ; bordereau depuis une facture (J6) ; règlements (J7, l'état de paiement est déjà calculé) ; export Excel (J10) ; création rapide d'un tiers depuis la fiche et raccourcis clavier (avec la fiche commune à tous les documents, J5). Le réglage de la numérotation (question 12) est livré à la suite de J3, avant la v0.1.0.
+
+**Périmètre de J4 (PDF).** Livré : crate `kadenz-pdf` (krilla) avec pagination multi-pages testée ; impression figée à la validation (données de l'entreprise, logos, textes, couleur, orthographe du montant en lettres) ; aperçu et export PDF depuis la fiche d'une facture ; dans Paramètres, par type de document : titre imprimé, phrase avant le montant en lettres, signataire, dossier d'export, avec retour aux textes par défaut ; couleur principale des documents. Reporté : PDF des autres types de documents (avec leurs écrans, J5 et J6) ; mentions de pied de page libres et position des logos (section 5.4) ; PDF des registres et lettre de relance (avec les écrans concernés) ; enregistrement du chemin du PDF exporté.

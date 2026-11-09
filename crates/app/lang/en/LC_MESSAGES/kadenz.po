@@ -180,6 +180,9 @@ msgstr "Every month"
 msgid "Chiffres du rang"
 msgstr "Sequence digits"
 
+msgid "Choisir le dossier"
+msgstr "Choose folder"
+
 msgid "Choisir le fichier à importer"
 msgstr "Choose the file to import"
 
@@ -288,6 +291,15 @@ msgstr "View dashboard and registers"
 msgid "Converti"
 msgstr "Converted"
 
+msgid "couleur des documents invalide : saisir un code hexadécimal comme #2d3a8c"
+msgstr "invalid document colour: enter a hexadecimal code such as #2d3a8c"
+
+msgid "Couleur par défaut"
+msgstr "Default colour"
+
+msgid "Couleur principale (code hexadécimal, par exemple #2d3a8c)"
+msgstr "Main colour (hexadecimal code, for example #2d3a8c)"
+
 msgid "Création du brouillon"
 msgstr "Draft created"
 
@@ -329,6 +341,15 @@ msgstr "Quotes, pro forma invoices, purchase orders, delivery notes, invoices an
 
 msgid "document introuvable"
 msgstr "document not found"
+
+msgid "Documents imprimés"
+msgstr "Printed documents"
+
+msgid "Dossier d'export"
+msgstr "Export folder"
+
+msgid "Dossier d'export (vide : choisi à chaque enregistrement)"
+msgstr "Export folder (empty: chosen at each save)"
 
 msgid "Doublon"
 msgstr "Duplicate"
@@ -569,6 +590,9 @@ msgstr "The database ({}) could not be opened: {}"
 
 msgid "la fiche entreprise n'existe pas encore"
 msgstr "the company record does not exist yet"
+
+msgid "La matrice des droits par rôle se règle dans l'écran Utilisateurs."
+msgstr "The rights matrix by role is set in the Users screen."
 
 msgid "Langue de l'interface"
 msgstr "Interface language"
@@ -816,6 +840,9 @@ msgstr "Paid"
 msgid "PDF enregistré : {}"
 msgstr "PDF saved: {}"
 
+msgid "Phrase avant le montant en lettres (vide : aucune phrase)"
+msgstr "Sentence before the amount in words (empty: no sentence)"
+
 msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
 msgstr "Fonts: Inter and Manrope, under the SIL Open Font License 1.1."
 
@@ -984,6 +1011,9 @@ msgstr "Use"
 msgid "Sens des lignes sans colonne Sens :"
 msgstr "Use of lines without a Use column:"
 
+msgid "Signataire (vide : aucune signature)"
+msgstr "Signatory (empty: no signature)"
+
 msgid "Site web"
 msgstr "Website"
 
@@ -1032,8 +1062,20 @@ msgstr "Rates offered in documents"
 msgid "Terminer l'installation"
 msgstr "Finish installation"
 
+msgid "textes des documents incomplets"
+msgstr "incomplete document texts"
+
+msgid "Textes imprimés sur les documents remis aux clients, toujours en français. Un document validé garde les textes, la couleur et les coordonnées de l'entreprise du jour de sa validation."
+msgstr "Texts printed on documents given to customers, always in French. A validated document keeps the texts, colour and company details of the day it was validated."
+
+msgid "Textes par défaut de ce type"
+msgstr "Default texts for this type"
+
 msgid "Tiers"
 msgstr "Contacts"
+
+msgid "Titre imprimé"
+msgstr "Printed title"
 
 msgid "Total"
 msgstr "Total"
@@ -1064,6 +1106,9 @@ msgstr "Type"
 
 msgid "type"
 msgstr "type"
+
+msgid "Type de document"
+msgstr "Document type"
 
 msgid "Type des lignes sans colonne Type :"
 msgstr "Type of lines without a Type column:"

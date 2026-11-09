@@ -180,6 +180,9 @@ msgstr "毎月"
 msgid "Chiffres du rang"
 msgstr "連番の桁数"
 
+msgid "Choisir le dossier"
+msgstr "フォルダーを選択"
+
 msgid "Choisir le fichier à importer"
 msgstr "取り込むファイルを選択"
 
@@ -288,6 +291,15 @@ msgstr "ダッシュボードと一覧の閲覧"
 msgid "Converti"
 msgstr "変換済み"
 
+msgid "couleur des documents invalide : saisir un code hexadécimal comme #2d3a8c"
+msgstr "文書の色が無効です：#2d3a8c のような 16 進コードを入力してください"
+
+msgid "Couleur par défaut"
+msgstr "既定の色"
+
+msgid "Couleur principale (code hexadécimal, par exemple #2d3a8c)"
+msgstr "メインカラー（16 進コード、例：#2d3a8c）"
+
 msgid "Création du brouillon"
 msgstr "下書きの作成"
 
@@ -329,6 +341,15 @@ msgstr "見積書、見積請求書、注文書、納品書、請求書、支払
 
 msgid "document introuvable"
 msgstr "書類が見つかりません。"
+
+msgid "Documents imprimés"
+msgstr "印刷する文書"
+
+msgid "Dossier d'export"
+msgstr "出力フォルダー"
+
+msgid "Dossier d'export (vide : choisi à chaque enregistrement)"
+msgstr "出力フォルダー（空欄：保存のたびに選択）"
 
 msgid "Doublon"
 msgstr "重複"
@@ -569,6 +590,9 @@ msgstr "データベース（{}）を開けませんでした：{}"
 
 msgid "la fiche entreprise n'existe pas encore"
 msgstr "会社情報がまだ登録されていません。"
+
+msgid "La matrice des droits par rôle se règle dans l'écran Utilisateurs."
+msgstr "役割ごとの権限表は「ユーザー」画面で設定します。"
 
 msgid "Langue de l'interface"
 msgstr "表示言語"
@@ -816,6 +840,9 @@ msgstr "支払済み"
 msgid "PDF enregistré : {}"
 msgstr "PDF を保存しました：{}"
 
+msgid "Phrase avant le montant en lettres (vide : aucune phrase)"
+msgstr "金額（文字表記）の前の文（空欄：文なし）"
+
 msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
 msgstr "フォント：Inter と Manrope（SIL Open Font License 1.1）。"
 
@@ -984,6 +1011,9 @@ msgstr "用途"
 msgid "Sens des lignes sans colonne Sens :"
 msgstr "「用途」列のない行の用途："
 
+msgid "Signataire (vide : aucune signature)"
+msgstr "署名者（空欄：署名なし）"
+
 msgid "Site web"
 msgstr "ウェブサイト"
 
@@ -1032,8 +1062,20 @@ msgstr "書類で選択できる率"
 msgid "Terminer l'installation"
 msgstr "セットアップを完了"
 
+msgid "textes des documents incomplets"
+msgstr "文書の文言が不完全です"
+
+msgid "Textes imprimés sur les documents remis aux clients, toujours en français. Un document validé garde les textes, la couleur et les coordonnées de l'entreprise du jour de sa validation."
+msgstr "顧客に渡す文書に印刷される文言で、常にフランス語です。確定済みの文書は、確定した日の文言、色、会社情報をそのまま保持します。"
+
+msgid "Textes par défaut de ce type"
+msgstr "この種類の既定の文言"
+
 msgid "Tiers"
 msgstr "取引先"
+
+msgid "Titre imprimé"
+msgstr "印刷タイトル"
 
 msgid "Total"
 msgstr "合計"
@@ -1064,6 +1106,9 @@ msgstr "種類"
 
 msgid "type"
 msgstr "種類"
+
+msgid "Type de document"
+msgstr "文書の種類"
 
 msgid "Type des lignes sans colonne Type :"
 msgstr "「種類」列のない行の種類："
