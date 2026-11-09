@@ -1,0 +1,135 @@
+// Panneau d'import des tiers ou des produits : aperçu ligne par ligne, puis
+// enregistrement des seules lignes valides (cahier des charges, section 6.8).
+
+import { Button, ComboBox, StandardTableView } from "std-widgets.slint";
+import { MessageRetour, Retour, Theme, Titre } from "composants.slint";
+
+export global ImportApi {
+    in property <bool> actif;
+    in property <string> titre;
+    in property <string> fichier;
+    // Message d'erreur de lecture ou d'analyse ; l'aperçu est alors vide.
+    in property <string> erreur;
+    in property <string> libelle-defaut;
+    in property <[string]> choix-defaut;
+    in-out property <int> defaut;
+    in property <[[StandardListViewItem]]> lignes;
+    in property <string> resume;
+    in property <string> colonnes;
+    in property <bool> peut-importer;
+    in-out property <Retour> retour;
+    // Cible : 0 tiers, 1 produits.
+    callback demarrer(cible: int);
+    callback choisir-fichier();
+    callback changer-defaut(rang: int);
+    callback importer();
+    callback fermer();
+}
+
+export component PanneauImport inherits Rectangle {
+    background: white;
+
+    // Les clics ne doivent pas atteindre l'écran recouvert.
+    TouchArea { }
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 12px;
+
+        Titre {
+            text: ImportApi.titre;
+        }
+
+        HorizontalLayout {
+            spacing: 8px;
+
+            Text {
+                text: ImportApi.fichier == "" ? "Aucun fichier choisi." : "Fichier : " + ImportApi.fichier;
+                color: Theme.texte;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+
+            Button {
+                text: "Choisir un autre fichier";
+                clicked => {
+                    ImportApi.choisir-fichier();
+                }
+            }
+        }
+
+        if ImportApi.erreur != "": Text {
+            text: ImportApi.erreur;
+            color: Theme.erreur;
+            wrap: word-wrap;
+        }
+
+        if ImportApi.erreur == "": HorizontalLayout {
+            spacing: 8px;
+            alignment: start;
+
+            Text {
+                text: ImportApi.libelle-defaut;
+                color: Theme.texte-secondaire;
+                vertical-alignment: center;
+            }
+
+            ComboBox {
+                width: 220px;
+                model: ImportApi.choix-defaut;
+                current-index <=> ImportApi.defaut;
+                selected => {
+                    ImportApi.changer-defaut(self.current-index);
+                }
+            }
+        }
+
+        if ImportApi.erreur == "": Text {
+            text: ImportApi.colonnes;
+            font-size: 12px;
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        StandardTableView {
+            columns: [
+                { title: "Ligne", min-width: 60px, horizontal-stretch: 0 },
+                { title: "État", min-width: 100px, horizontal-stretch: 0 },
+                { title: "Fiche", min-width: 200px, horizontal-stretch: 2 },
+                { title: "Remarque", min-width: 220px, horizontal-stretch: 3 },
+            ];
+            rows: ImportApi.lignes;
+        }
+
+        Text {
+            text: ImportApi.resume;
+            color: Theme.texte;
+            wrap: word-wrap;
+        }
+
+        HorizontalLayout {
+            spacing: 8px;
+            alignment: start;
+
+            if ImportApi.peut-importer: Button {
+                text: "Importer les fiches valides";
+                primary: true;
+                clicked => {
+                    ImportApi.importer();
+                }
+            }
+
+            Button {
+                text: ImportApi.peut-importer ? "Annuler" : "Fermer";
+                clicked => {
+                    ImportApi.fermer();
+                }
+            }
+
+            MessageRetour {
+                retour: ImportApi.retour;
+                vertical-alignment: center;
+            }
+        }
+    }
+}

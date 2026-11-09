@@ -180,7 +180,7 @@ fn fiche_tiers_depuis_ui(u: &FicheTiersUi) -> FicheTiers {
     }
 }
 
-fn afficher_tiers(fenetre: &FenetrePrincipale, etat: &mut crate::Etat) {
+pub(crate) fn afficher_tiers(fenetre: &FenetrePrincipale, etat: &mut crate::Etat) {
     let api = fenetre.global::<TiersApi>();
     match tiers::lister(&etat.conn, &etat.tiers.filtre) {
         Ok(mut lignes) => {
@@ -402,7 +402,7 @@ fn fiche_produit_depuis_ui(u: &FicheProduitUi) -> Result<FicheProduit, String> {
     })
 }
 
-fn afficher_produits(fenetre: &FenetrePrincipale, etat: &mut crate::Etat) {
+pub(crate) fn afficher_produits(fenetre: &FenetrePrincipale, etat: &mut crate::Etat) {
     let api = fenetre.global::<ProduitsApi>();
     match produits::lister(&etat.conn, &etat.produits.filtre) {
         Ok(mut lignes) => {

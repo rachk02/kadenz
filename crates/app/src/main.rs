@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod administration;
+mod import_ecran;
 mod referentiels;
 mod utilisateurs;
 
@@ -250,6 +251,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     referentiels::brancher(fenetre, &etat);
     administration::brancher(fenetre, &etat);
     utilisateurs::brancher(fenetre, &etat);
+    import_ecran::brancher(fenetre, &etat);
 
     let e = etat;
     fenetre.on_changer_mot_de_passe(move |ancien, nouveau, confirmation| {

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/domaine", "crates/stockage", "crates/app"]
+members = ["crates/domaine", "crates/stockage", "crates/import", "crates/app"]
 
 [workspace.package]
 version = "0.1.0"
@@ -10,10 +10,14 @@ publish = false
 [workspace.dependencies]
 kadenz-domaine = { path = "crates/domaine" }
 kadenz-stockage = { path = "crates/stockage" }
+kadenz-import = { path = "crates/import" }
 rusqlite = { version = "0.41.1", features = ["bundled", "backup"] }
 slint = { version = "1.18.1", features = ["raw-window-handle-06"] }
 slint-build = "1.18.1"
 rfd = { version = "0.18.0", default-features = false }
+csv = "1.4.0"
+calamine = "0.38.0"
+encoding_rs = "0.8.44"
 argon2 = "0.6.0"
 chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
 serde_json = "1.0.154"

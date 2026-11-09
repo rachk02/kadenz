@@ -5,8 +5,9 @@ import { EcranConnexion } from "connexion.slint";
 import { PageProduits, PageTiers, ProduitsApi, TiersApi } from "referentiels.slint";
 import { EntrepriseApi, PageEntreprise, PageParametres, ParametresApi } from "administration.slint";
 import { PageUtilisateurs, UtilisateursApi } from "utilisateurs.slint";
+import { ImportApi, PanneauImport } from "import.slint";
 
-export { DonneesAssistant, Droits, EntrepriseApi, ParametresApi, ProduitsApi, TiersApi, UtilisateursApi }
+export { DonneesAssistant, Droits, EntrepriseApi, ImportApi, ParametresApi, ProduitsApi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, assistant, connexion, application }
@@ -266,6 +267,9 @@ export component FenetrePrincipale inherits Window {
             if root.page == Page.parametres: PageParametres { }
 
             if root.page == Page.utilisateurs: PageUtilisateurs { }
+
+            // Recouvre l'écran Tiers ou Produits pendant un import.
+            if ImportApi.actif: PanneauImport { }
 
             if root.page == Page.mon-compte: PageMonCompte {
                 utilisateur-nom: root.utilisateur-nom;

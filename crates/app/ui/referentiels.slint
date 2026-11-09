@@ -3,6 +3,7 @@
 
 import { Button, CheckBox, ComboBox, LineEdit, StandardTableView } from "std-widgets.slint";
 import { Champ, Droits, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+import { ImportApi } from "import.slint";
 
 // Fiche telle que l'écran la manipule ; `existe` est faux pour une nouvelle fiche.
 export struct FicheTiersUi {
@@ -212,6 +213,13 @@ export component PageTiers inherits VerticalLayout {
             text: "Fiches désactivées";
             toggled => {
                 root.filtrer();
+            }
+        }
+
+        if Droits.ajouter-referentiel: Button {
+            text: "Importer";
+            clicked => {
+                ImportApi.demarrer(0);
             }
         }
 
@@ -426,6 +434,13 @@ export component PageProduits inherits VerticalLayout {
             text: "Fiches désactivées";
             toggled => {
                 root.filtrer();
+            }
+        }
+
+        if Droits.ajouter-referentiel: Button {
+            text: "Importer";
+            clicked => {
+                ImportApi.demarrer(1);
             }
         }
 

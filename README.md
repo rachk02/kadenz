@@ -16,6 +16,7 @@ La spécification de référence est le [cahier des charges](docs/cahier-des-cha
 |---|---|---|
 | `crates/domaine` | `kadenz-domaine` | Règles métier pures : statuts, calculs, numérotation, paiements, droits |
 | `crates/stockage` | `kadenz-stockage` | SQLite : ouverture, migrations, compteurs, sauvegarde |
+| `crates/import` | `kadenz-import` | Lecture des fichiers CSV et Excel à importer, aperçu ligne par ligne |
 | `crates/app` | `kadenz` | Application Slint |
 
 ## Développement

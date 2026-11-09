@@ -7,6 +7,7 @@
 | 2.1 | 2026-11-09 | Tour 1 validé par l'utilisateur : socle et modules activables par clé de licence, réglages modifiables, avoir, export Excel, import CSV/Excel, licence par client, installateur et mises à jour |
 | 2.2 | 2026-11-09 | Tour 2 validé : écrans et ergonomie, fiche document, bordereaux issus des factures, règlements, relances avec lettre, volet achats, sauvegarde automatique (10 copies), licence perpétuelle signée et liée au poste, préfixe A de l'avoir, mise à jour vérifiée au démarrage |
 | 2.3 | 2026-11-09 | Règles PDF multi-pages validées (en-têtes et pieds répétés, report, filigranes, deux logos, export des registres), arrondi et quantités fractionnaires tranchés, orthographe du montant en lettres par réglage, ordre des jalons J1 à J10 validé |
+| 2.4 | 2026-11-09 | Jalon J2 : logos de l'entreprise stockés dans la base, matrice des droits modifiable, import CSV/Excel détaillé (section 6.8), crate `kadenz-import`, feuille de route J1 à J10 reportée en section 19, question des délais par défaut ajoutée |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -61,9 +62,10 @@ Le projet est un espace de travail Cargo composé de crates aux responsabilités
 
 | Crate | Rôle | Dépend de |
 |---|---|---|
-| `kadenz-domaine` | Règles métier pures : types de documents, statuts et transitions, calculs, numérotation, état de paiement, droits par rôle. Aucune entrée/sortie, entièrement testable. | rien |
-| `kadenz-stockage` | Accès SQLite : ouverture, migrations, dépôts, compteurs de numérotation, sauvegarde. | `kadenz-domaine` |
-| `kadenz` (application) | Interface Slint, orchestration des cas d'usage. | les deux précédentes |
+| `kadenz-domaine` | Règles métier pures : types de documents, statuts et transitions, calculs, numérotation, état de paiement, droits par rôle, fiches des référentiels et leurs règles de saisie. Aucune entrée/sortie, entièrement testable. | rien |
+| `kadenz-stockage` | Accès SQLite : ouverture, migrations, dépôts, compteurs de numérotation, sauvegarde, contrôle des droits du compte qui agit. | `kadenz-domaine` |
+| `kadenz-import` | Lecture des fichiers CSV, Excel et OpenDocument à importer, reconnaissance des colonnes, aperçu ligne par ligne. Aucun accès à la base. | `kadenz-domaine` |
+| `kadenz` (application) | Interface Slint, orchestration des cas d'usage. | les trois précédentes |
 | `kadenz-pdf` (à venir) | Génération des documents PDF, voir section 12. | `kadenz-domaine` |
 
 Les règles métier ne vivent que dans `kadenz-domaine` : l'interface et le stockage ne recalculent jamais un total ni ne décident d'une transition de statut par eux-mêmes.
@@ -196,6 +198,11 @@ Document lié à une Facture validée, qui la corrige ou l'annule en tout ou par
 ### 6.8 Exports et imports (spécifié)
 - Export Excel des registres (listes filtrées) et des documents.
 - Import CSV ou Excel du catalogue produits et des tiers, avec aperçu et rapport d'erreurs avant enregistrement, proposé au premier lancement et dans les référentiels.
+  - Formats : CSV (UTF-8 ou Windows-1252, séparateur point-virgule, virgule ou tabulation détecté), Excel (xlsx, xls) et OpenDocument (ods, première feuille remplie).
+  - En-têtes reconnus sans tenir compte de la casse ni des accents, dont ceux de l'outil Excel d'origine (DÉSIGNATION, RÉFÉRENCE, PRIX ; NOM, ADRESSE/BOÎTE POSTALE, TELEPHONE, Localisation, IFU). Une colonne non reconnue est signalée et n'est pas importée.
+  - Colonnes obligatoires : Nom pour les tiers ; Désignation, Référence et Prix pour les produits. Le type (tiers) ou le sens (produits) absent du fichier est choisi à l'écran.
+  - Chaque ligne est contrôlée par les mêmes règles que la saisie : prix entier en FCFA (un prix décimal est une erreur, jamais arrondi). Un doublon (même nom de tiers, même référence de produit, en base ou plus haut dans le fichier) est signalé et ignoré.
+  - Seules les lignes valides sont enregistrées, en une seule transaction ; le bilan indique les fiches ajoutées.
 
 ---
 
@@ -418,3 +425,21 @@ Choix technique (à l'étude) : c'est la partie la plus délicate en Rust pur (m
 7. **Quantités fractionnaires** : tranchée le 2026-11-09, oui (quantités en millièmes).
 8. **Distribution** : technologie d'installateur et signature du code (à l'étude, section 16).
 9. **Écrans non vus** : aucune capture des formulaires Devis et Proforma ni des listes Factures, Livraisons, Proforma et Devis ; leur contenu est supposé identique à la Facture et à la liste des bons de commande.
+10. **Délais par défaut** : le cahier ne fixe ni durée de validité des devis ni délai de paiement des factures. Les deux réglages existent (section 5.4) et sont vides par défaut, donc sans date d'échéance calculée. Valeurs par défaut à confirmer.
+
+---
+
+## 19. Feuille de route (validée le 2026-11-09)
+
+| Jalon | Contenu |
+|---|---|
+| J1 | Socle : avoir et échéance dans le modèle de données, montant en lettres, comptes et connexion, assistant de premier lancement |
+| J2 | Référentiels : entreprise, tiers, produits, paramètres, import CSV/Excel |
+| J3 | Factures : liste, fiche, validation, numérotation, audit |
+| J4 | PDF : essai d'une bibliothèque, puis le moteur de mise en page ; publication de la release v0.1.0 |
+| J5 | Devis, proforma, conversion en facture, avoir |
+| J6 | Bons de commande et réception, bordereaux de livraison |
+| J7 | Paiements, registres, relances et lettre de relance |
+| J8 | Tableau de bord, ventes et achats |
+| J9 | Licence : outil éditeur, vérification, activation des modules |
+| J10 | Installateur, mises à jour, export Excel |
