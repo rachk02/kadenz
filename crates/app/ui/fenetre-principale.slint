@@ -1,5 +1,5 @@
 import { AboutSlint, Button } from "std-widgets.slint";
-import { Champ, Droits, Titre, MessageErreur, ElementNavigation, Theme } from "composants.slint";
+import { Champ, Droits, Titre, MessageErreur, ElementNavigation, Section, Theme } from "composants.slint";
 import { EcranAssistant, DonneesAssistant } from "assistant.slint";
 import { EcranConnexion } from "connexion.slint";
 import { PageProduits, PageTiers, ProduitsApi, TiersApi } from "referentiels.slint";
@@ -125,6 +125,7 @@ export component FenetrePrincipale inherits Window {
     in property <string> message-demarrage;
     in property <string> etat-base;
     in property <string> nom-entreprise;
+    in property <string> version-logiciel;
     in property <string> utilisateur-nom;
     in property <string> utilisateur-identifiant;
     in property <string> utilisateur-role;
@@ -148,6 +149,8 @@ export component FenetrePrincipale inherits Window {
     property <bool> page-en-construction: root.page != Page.factures && root.page != Page.tiers && root.page != Page.produits && root.page != Page.entreprise && root.page != Page.parametres && root.page != Page.utilisateurs && root.page != Page.mon-compte && root.page != Page.a-propos;
 
     title: root.nom-entreprise == "" ? "Kadenz" : root.nom-entreprise;
+    icon: @image-url("icones/kadenz-64.png");
+    default-font-family: Theme.police-texte;
     preferred-width: 1200px;
     preferred-height: 760px;
     min-width: 900px;
@@ -291,7 +294,32 @@ export component FenetrePrincipale inherits Window {
                     text: "À propos";
                 }
 
-                AboutSlint { }
+                Image {
+                    source: @image-url("icones/kadenz-logo-horizontal.svg");
+                    width: 180px;
+                    height: 50px;
+                    image-fit: contain;
+                    horizontal-alignment: left;
+                }
+
+                Text {
+                    text: "Version " + root.version-logiciel + ". Logiciel propriétaire, tous droits réservés.";
+                    color: Theme.texte-secondaire;
+                }
+
+                Section {
+                    text: "Composants tiers";
+                }
+
+                Text {
+                    text: "Polices Inter (The Inter Project Authors) et Manrope (The Manrope Project Authors), sous licence SIL Open Font License 1.1.";
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+
+                AboutSlint {
+                    max-height: 200px;
+                }
 
                 Rectangle { }
             }

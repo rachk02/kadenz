@@ -279,6 +279,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
 
 fn main() -> Result<(), slint::PlatformError> {
     let fenetre = FenetrePrincipale::new()?;
+    fenetre.set_version_logiciel(env!("CARGO_PKG_VERSION").into());
     let chemin = chemin_base();
 
     let demarrage = kadenz_stockage::ouvrir(&chemin).and_then(|conn| {

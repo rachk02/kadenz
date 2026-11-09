@@ -16,3 +16,4 @@ rfd.workspace = true
 
 [build-dependencies]
 slint-build.workspace = true
+winresource.workspace = true

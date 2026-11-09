@@ -2,7 +2,15 @@
 
 Identité de l'éditeur et du logiciel. Elle n'apparaît jamais sur les documents produits pour les clients (cahier des charges, section 1) : chaque installation garde l'identité de l'entreprise utilisatrice.
 
-Statut : **proposition à valider**.
+Statut : **validée** par l'utilisateur le 2026-11-09 et intégrée à l'application.
+
+## Dans l'application
+
+- `crates/app/ui/composants.slint` : jetons de couleur (dont `nuit`, `ambre`, `ambre-fonce`), polices `police-texte` (Inter) et `police-titre` (Manrope), composant `Symbole`.
+- `crates/app/ui/polices/` : instances statiques d'Inter et de Manrope réduites au latin, avec leurs licences OFL.
+- `crates/app/ui/icones/` : icône de la fenêtre, logos et motif Cadence.
+- `crates/app/kadenz.ico` : icône de `kadenz.exe` (16 à 256 px), intégrée par `build.rs` via `winresource`.
+- Assistant de premier lancement : bandeau de marque. Écran À propos : logo, version, mention des polices.
 
 ## Planches de présentation
 
