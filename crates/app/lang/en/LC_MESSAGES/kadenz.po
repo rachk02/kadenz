@@ -1,0 +1,1135 @@
+# Kadenz, interface en anglais ; langue source : français.
+# Fichier généré à partir des tables de traduction ; un msgid par texte affiché.
+msgid ""
+msgstr ""
+"Project-Id-Version: kadenz\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid " ; ignorées car déjà présentes au moment de l'enregistrement : {}"
+msgstr "; skipped because already present when saving: {}"
+
+msgid "(brouillon)"
+msgstr "(draft)"
+
+msgid "1 facture."
+msgstr "1 invoice."
+
+msgid "1 fiche"
+msgstr "1 record"
+
+msgid "Achat"
+msgstr "Purchase"
+
+msgid "Administrateur"
+msgstr "Administrator"
+
+msgid "Administrateur : {} ({})"
+msgstr "Administrator: {} ({})"
+
+msgid "Adresse"
+msgstr "Address"
+
+msgid "adresse"
+msgstr "address"
+
+msgid "Adresse / boîte postale"
+msgstr "Address / PO box"
+
+msgid "Adresse ou boîte postale"
+msgstr "Address or PO box"
+
+msgid "Ajouter"
+msgstr "Add"
+
+msgid "Ajouter le produit"
+msgstr "Add product"
+
+msgid "Ajouter un client, un fournisseur, un produit"
+msgstr "Add a customer, a supplier, a product"
+
+msgid "Annuler"
+msgstr "Cancel"
+
+msgid "Annuler cette facture ? Elle reste dans le registre avec son numéro, en lecture seule."
+msgstr "Cancel this invoice? It stays in the register with its number, read-only."
+
+msgid "Annuler la facture"
+msgstr "Cancel invoice"
+
+msgid "Annuler un document validé"
+msgstr "Cancel a validated document"
+
+msgid "Annulé"
+msgstr "Cancelled"
+
+msgid "Au JJ/MM/AAAA"
+msgstr "To DD/MM/YYYY"
+
+msgid "au moins un mode de paiement est nécessaire"
+msgstr "at least one payment method is required"
+
+msgid "Aucun client choisi"
+msgstr "No customer chosen"
+
+msgid "aucun compte sélectionné"
+msgstr "no account selected"
+
+msgid "Aucun fichier choisi."
+msgstr "No file chosen."
+
+msgid "Aucun logo"
+msgstr "No logo"
+
+msgid "Aucun numéro tant que la facture n'est pas validée."
+msgstr "No number until the invoice is validated."
+
+msgid "Aucune facture."
+msgstr "No invoices."
+
+msgid "Aucune fiche"
+msgstr "No records"
+
+msgid "aucune fiche ouverte"
+msgstr "no record open"
+
+msgid "aucune fiche sélectionnée"
+msgstr "no record selected"
+
+msgid "Aucune ligne."
+msgstr "No lines."
+
+msgid "aucune session ouverte"
+msgstr "no session open"
+
+msgid "Avoir"
+msgstr "Credit note"
+
+msgid "Base : {} (schéma {})"
+msgstr "Database: {} (schema {})"
+
+msgid "Base de données : SQLite, dans le domaine public."
+msgstr "Database: SQLite, in the public domain."
+
+msgid "Base TVA"
+msgstr "VAT base"
+
+msgid "Bon de commande"
+msgstr "Purchase order"
+
+msgid "Bons de commande"
+msgstr "Purchase orders"
+
+msgid "Bordereau de livraison"
+msgstr "Delivery note"
+
+msgid "Brouillon"
+msgstr "Draft"
+
+msgid "brouillon enregistré"
+msgstr "draft saved"
+
+msgid "brouillon enregistré, mais validation refusée : {}"
+msgstr "draft saved, but validation refused: {}"
+
+msgid "brouillon supprimé"
+msgstr "draft deleted"
+
+msgid "C'est le compte de la session en cours : son rôle et son état se changent depuis un autre compte administrateur. Le mot de passe se change dans « Mon compte »."
+msgstr "This is the account of the current session: its role and state are changed from another administrator account. The password is changed in \"My account\"."
+
+msgid "ce brouillon n'a pas été enregistré"
+msgstr "this draft has not been saved"
+
+msgid "Ce compte administre l'installation : utilisateurs, droits, sauvegardes."
+msgstr "This account administers the installation: users, rights, backups."
+
+msgid "ce compte n'existe plus"
+msgstr "this account no longer exists"
+
+msgid "ce produit n'existe plus"
+msgstr "this product no longer exists"
+
+msgid "ce tiers n'existe plus"
+msgstr "this contact no longer exists"
+
+msgid "Ces informations figurent en en-tête et en pied de page des documents."
+msgstr "This information appears in the header and footer of documents."
+
+msgid "cette facture n'existe plus"
+msgstr "this invoice no longer exists"
+
+msgid "Changer de mot de passe"
+msgstr "Change password"
+
+msgid "Changer le rôle"
+msgstr "Change role"
+
+msgid "Chaque année"
+msgstr "Every year"
+
+msgid "Chaque mois"
+msgstr "Every month"
+
+msgid "Chiffres du rang"
+msgstr "Sequence digits"
+
+msgid "Choisir le fichier à importer"
+msgstr "Choose the file to import"
+
+msgid "Choisir un autre fichier"
+msgstr "Choose another file"
+
+msgid "Choisir un logo"
+msgstr "Choose a logo"
+
+msgid "Choisir une image"
+msgstr "Choose an image"
+
+msgid "Client"
+msgstr "Customer"
+
+msgid "Client et fournisseur"
+msgstr "Customer and supplier"
+
+msgid "Clients"
+msgstr "Customers"
+
+msgid "Clients et fournisseurs"
+msgstr "Customers and suppliers"
+
+msgid "Cliquer sur une facture pour ouvrir sa fiche."
+msgstr "Click an invoice to open it."
+
+msgid "Cocher ce que chaque rôle peut faire. Le rôle Admin garde toujours la gestion des utilisateurs et des droits. Les contrôles s'appliquent dès l'enregistrement ; le menu des autres comptes se met à jour à leur prochaine connexion."
+msgstr "Tick what each role can do. The Admin role always keeps user and rights management. Checks apply as soon as you save; the menu of other accounts updates at their next sign-in."
+
+msgid "Colonnes ignorées, non importées : {}."
+msgstr "Ignored columns, not imported: {}."
+
+msgid "Colonnes reconnues : {}."
+msgstr "Recognized columns: {}."
+
+msgid "Commercial"
+msgstr "Sales"
+
+msgid "Composants tiers"
+msgstr "Third-party components"
+
+msgid "Comptable"
+msgstr "Accountant"
+
+msgid "Compte"
+msgstr "Account"
+
+msgid "Compte (désactivé)"
+msgstr "Account (deactivated)"
+
+msgid "Compte bancaire 1"
+msgstr "Bank account 1"
+
+msgid "Compte bancaire 2"
+msgstr "Bank account 2"
+
+msgid "compte créé"
+msgstr "account created"
+
+msgid "compte désactivé"
+msgstr "account deactivated"
+
+msgid "compte inconnu ou désactivé"
+msgstr "unknown or deactivated account"
+
+msgid "compte introuvable"
+msgstr "account not found"
+
+msgid "compte réactivé"
+msgstr "account reactivated"
+
+msgid "Comptes"
+msgstr "Accounts"
+
+msgid "Confirmation"
+msgstr "Confirmation"
+
+msgid "Confirmation du mot de passe"
+msgstr "Confirm password"
+
+msgid "Confirmation du nouveau mot de passe"
+msgstr "Confirm new password"
+
+msgid "Confirmer l'annulation"
+msgstr "Confirm cancellation"
+
+msgid "Confirmer la suppression"
+msgstr "Confirm deletion"
+
+msgid "Confirmer la validation"
+msgstr "Confirm validation"
+
+msgid "Confirmer le retrait"
+msgstr "Confirm removal"
+
+msgid "CONNEXION"
+msgstr "SIGN IN"
+
+msgid "Consultation"
+msgstr "Read-only"
+
+msgid "Consulter tableau de bord et registres"
+msgstr "View dashboard and registers"
+
+msgid "Converti"
+msgstr "Converted"
+
+msgid "Création du brouillon"
+msgstr "Draft created"
+
+msgid "Créer le compte"
+msgstr "Create account"
+
+msgid "Créer/modifier un brouillon (Devis, Proforma, BC, Livraison)"
+msgstr "Create/edit a draft (Quote, Pro forma, PO, Delivery)"
+
+msgid "Créer/modifier un brouillon Facture ou Avoir"
+msgstr "Create/edit an Invoice or Credit note draft"
+
+msgid "CSV, Excel ou OpenDocument"
+msgstr "CSV, Excel or OpenDocument"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Date (JJ/MM/AAAA)"
+msgstr "Date (DD/MM/YYYY)"
+
+msgid "Date de début de période incomplète ou illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "Start date of the period incomplete or unreadable (DD/MM/YYYY): not applied."
+
+msgid "Date de fin de période incomplète ou illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "End date of the period incomplete or unreadable (DD/MM/YYYY): not applied."
+
+msgid "date illisible : saisir la date au format JJ/MM/AAAA"
+msgstr "unreadable date: enter the date as DD/MM/YYYY"
+
+msgid "Dates de début et de fin de période incomplètes ou illisibles (JJ/MM/AAAA) : non appliquées."
+msgstr "Start and end dates of the period incomplete or unreadable (DD/MM/YYYY): not applied."
+
+msgid "Devis"
+msgstr "Quotes"
+
+msgid "Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements."
+msgstr "Quotes, pro forma invoices, purchase orders, delivery notes, invoices and payments."
+
+msgid "document introuvable"
+msgstr "document not found"
+
+msgid "Doublon"
+msgstr "Duplicate"
+
+msgid "droits enregistrés"
+msgstr "rights saved"
+
+msgid "Droits par rôle"
+msgstr "Rights by role"
+
+msgid "Du JJ/MM/AAAA"
+msgstr "From DD/MM/YYYY"
+
+msgid "délai de paiement"
+msgstr "payment term"
+
+msgid "Délai de paiement des factures"
+msgstr "Invoice payment term"
+
+msgid "Délais (en jours, laisser vide pour ne pas en fixer)"
+msgstr "Time limits (in days, leave empty for none)"
+
+msgid "Démarrage impossible"
+msgstr "Unable to start"
+
+msgid "Désactiver"
+msgstr "Deactivate"
+
+msgid "Désactivé"
+msgstr "Deactivated"
+
+msgid "Désactivée"
+msgstr "Deactivated"
+
+msgid "Désignation"
+msgstr "Description"
+
+msgid "désignation"
+msgstr "description"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "En lettres : {}"
+msgstr "In words: {}"
+
+msgid "Enregistrer"
+msgstr "Save"
+
+msgid "enregistrer d'abord la facture"
+msgstr "save the invoice first"
+
+msgid "Enregistrer le brouillon"
+msgstr "Save draft"
+
+msgid "Enregistrer le mode et les observations"
+msgstr "Save method and notes"
+
+msgid "Enregistrer les droits"
+msgstr "Save rights"
+
+msgid "Entreprise"
+msgstr "Company"
+
+msgid "Entreprise : {}"
+msgstr "Company: {}"
+
+msgid "Envoyé"
+msgstr "Sent"
+
+msgid "Erreur"
+msgstr "Error"
+
+msgid "Exemple : première facture de l'année, {}"
+msgstr "Example: first invoice of the year, {}"
+
+msgid "Exemple : première facture du mois, {}"
+msgstr "Example: first invoice of the month, {}"
+
+msgid "Exemple : {} FCFA s'écrit « {} »."
+msgstr "Example: {} FCFA is written \"{}\"."
+
+msgid "existe déjà"
+msgstr "already exists"
+
+msgid "Facture"
+msgstr "Invoice"
+
+msgid "Facture (brouillon)"
+msgstr "Invoice (draft)"
+
+msgid "facture annulée"
+msgstr "invoice cancelled"
+
+msgid "Facture annulée : lecture seule, numéro conservé."
+msgstr "Invoice cancelled: read-only, number kept."
+
+msgid "facture marquée envoyée"
+msgstr "invoice marked as sent"
+
+msgid "Facture validée : lignes et montants figés."
+msgstr "Invoice validated: lines and amounts are locked."
+
+msgid "facture validée sous le numéro {}"
+msgstr "invoice validated under number {}"
+
+msgid "Facture {}"
+msgstr "Invoice {}"
+
+msgid "Factures"
+msgstr "Invoices"
+
+msgid "Fermer"
+msgstr "Close"
+
+msgid "Fiche"
+msgstr "Record"
+
+msgid "Fiche du produit"
+msgstr "Product record"
+
+msgid "Fiche du produit (désactivée)"
+msgstr "Product record (deactivated)"
+
+msgid "Fiche du tiers"
+msgstr "Contact record"
+
+msgid "Fiche du tiers (désactivée)"
+msgstr "Contact record (deactivated)"
+
+msgid "fiche désactivée : elle est citée dans au moins un document, l'historique reste intact"
+msgstr "record deactivated: it is referred to in at least one document, history stays intact"
+
+msgid "fiche enregistrée"
+msgstr "record saved"
+
+msgid "fiche réactivée"
+msgstr "record reactivated"
+
+msgid "fiche supprimée"
+msgstr "record deleted"
+
+msgid "Fiches ajoutées : {}"
+msgstr "Records added: {}"
+
+msgid "Fiches désactivées"
+msgstr "Deactivated records"
+
+msgid "Fiches à importer : {} ; doublons ignorés : {} ; lignes en erreur : {}."
+msgstr "Records to import: {}; duplicates skipped: {}; lines with errors: {}."
+
+msgid "Fichier : {}"
+msgstr "File: {}"
+
+msgid "Filtrer les clients"
+msgstr "Filter customers"
+
+msgid "Filtrer les produits"
+msgstr "Filter products"
+
+msgid "Fournisseur"
+msgstr "Supplier"
+
+msgid "Fournisseurs"
+msgstr "Suppliers"
+
+msgid "Garder"
+msgstr "Keep"
+
+msgid "Gestion commerciale"
+msgstr "Sales management"
+
+msgid "Gestion commerciale mono-poste pour Windows : les données restent sur ce poste."
+msgstr "Single-workstation sales management for Windows: data stays on this computer."
+
+msgid "Gérer la fiche entreprise et les paramètres"
+msgstr "Manage the company record and settings"
+
+msgid "Gérer les utilisateurs et droits"
+msgstr "Manage users and rights"
+
+msgid "Historique"
+msgstr "History"
+
+msgid "Identifiant"
+msgstr "Username"
+
+msgid "Identifiant de connexion"
+msgstr "Username"
+
+msgid "identifiant ou mot de passe incorrect"
+msgstr "incorrect username or password"
+
+msgid "IFU"
+msgstr "IFU"
+
+msgid "Image PNG ou JPEG, 2 Mo au plus. Le logo principal figure à gauche de l'en-tête, le second à droite."
+msgstr "PNG or JPEG image, 2 MB maximum. The main logo appears on the left of the header, the second one on the right."
+
+msgid "Images PNG ou JPEG"
+msgstr "PNG or JPEG images"
+
+msgid "Impayé"
+msgstr "Unpaid"
+
+msgid "Importer"
+msgstr "Import"
+
+msgid "Importer des produits"
+msgstr "Import products"
+
+msgid "Importer des tiers"
+msgstr "Import contacts"
+
+msgid "Importer les fiches valides"
+msgstr "Import valid records"
+
+msgid "impossible : l'installation doit garder au moins un administrateur actif"
+msgstr "not possible: the installation must keep at least one active administrator"
+
+msgid "Interface : Slint, sous licence Slint Royalty-free 2.0."
+msgstr "Interface: Slint, under the Slint Royalty-free 2.0 license."
+
+msgid "l'identifiant est obligatoire et ne contient pas d'espace"
+msgstr "the username is required and contains no spaces"
+
+msgid "l'installation initiale a déjà été faite"
+msgstr "the initial installation has already been done"
+
+msgid "La base de données ({}) n'a pas pu être ouverte : {}"
+msgstr "The database ({}) could not be opened: {}"
+
+msgid "la fiche entreprise n'existe pas encore"
+msgstr "the company record does not exist yet"
+
+msgid "Langue de l'interface"
+msgstr "Interface language"
+
+msgid "le logo doit être une image PNG ou JPEG"
+msgstr "the logo must be a PNG or JPEG image"
+
+msgid "le montant du règlement doit être positif"
+msgstr "the payment amount must be positive"
+
+msgid "le mot de passe actuel est incorrect"
+msgstr "the current password is incorrect"
+
+msgid "le nom complet est obligatoire"
+msgstr "the full name is required"
+
+msgid "Le nom complet et l'identifiant sont obligatoires."
+msgstr "The full name and the username are required."
+
+msgid "le nom de l'entreprise est obligatoire"
+msgstr "the company name is required"
+
+msgid "Le nom de l'entreprise est obligatoire."
+msgstr "The company name is required."
+
+msgid "Le produit choisi remplit la référence, la désignation et le prix, qui restent modifiables sur la ligne. Une référence tapée puis validée par Entrée reprend le produit correspondant."
+msgstr "The chosen product fills in the reference, description and price, which can still be edited on the line. A reference typed and confirmed with Enter brings in the matching product."
+
+msgid "lecture du fichier impossible : {}"
+msgstr "unable to read the file: {}"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une facture."
+msgstr "Read-only: your role does not allow editing an invoice."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une fiche existante."
+msgstr "Read-only: your role does not allow editing an existing record."
+
+msgid "Les deux"
+msgstr "Both"
+
+msgid "les deux mots de passe ne correspondent pas"
+msgstr "the two passwords do not match"
+
+msgid "Les deux mots de passe ne correspondent pas."
+msgstr "The two passwords do not match."
+
+msgid "les deux nouveaux mots de passe ne correspondent pas"
+msgstr "the two new passwords do not match"
+
+msgid "Les textes des documents, l'apparence des PDF et les dossiers d'export se régleront ici avec le jalon du PDF (J4). La matrice des droits par rôle se règle dans l'écran Utilisateurs."
+msgstr "Document texts, PDF appearance and export folders will be set here with the PDF milestone (J4). The rights matrix by role is set in the Users screen."
+
+msgid "Libellé"
+msgstr "Description"
+
+msgid "Ligne"
+msgstr "Line"
+
+msgid "Ligne libre"
+msgstr "Free line"
+
+msgid "ligne {} : prix illisible, saisir un montant entier en FCFA"
+msgstr "line {}: unreadable price, enter a whole amount in FCFA"
+
+msgid "ligne {} : quantité illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "line {}: unreadable quantity, enter a positive number (at most 3 decimals)"
+
+msgid "Lignes"
+msgstr "Lines"
+
+msgid "Livraison complète"
+msgstr "Fully delivered"
+
+msgid "Livraison partielle"
+msgstr "Partially delivered"
+
+msgid "Livraisons"
+msgstr "Deliveries"
+
+msgid "Localisation"
+msgstr "Location"
+
+msgid "localisation"
+msgstr "location"
+
+msgid "Logiciel"
+msgstr "Software"
+
+msgid "Logiciel propriétaire, tous droits réservés."
+msgstr "Proprietary software, all rights reserved."
+
+msgid "logo enregistré"
+msgstr "logo saved"
+
+msgid "Logo principal"
+msgstr "Main logo"
+
+msgid "logo retiré"
+msgstr "logo removed"
+
+msgid "Logos"
+msgstr "Logos"
+
+msgid "Marquer envoyée"
+msgstr "Mark as sent"
+
+msgid "Mode"
+msgstr "Method"
+
+msgid "Mode de paiement"
+msgstr "Payment method"
+
+msgid "mode de paiement et observations enregistrés"
+msgstr "payment method and notes saved"
+
+msgid "Modes de paiement"
+msgstr "Payment methods"
+
+msgid "Modes de paiement : {}"
+msgstr "Payment methods: {}"
+
+msgid "Modes de paiement, séparés par des points-virgules"
+msgstr "Payment methods, separated by semicolons"
+
+msgid "Modification du mode de paiement ou des observations"
+msgstr "Payment method or notes changed"
+
+msgid "Modifier ou désactiver un client, un fournisseur, un produit"
+msgstr "Edit or deactivate a customer, a supplier, a product"
+
+msgid "Module en cours de construction."
+msgstr "Module under construction."
+
+msgid "Mon compte"
+msgstr "My account"
+
+msgid "Montant en lettres"
+msgstr "Amount in words"
+
+msgid "Montant en lettres : {}"
+msgstr "Amount in words: {}"
+
+msgid "Montant en lettres en orthographe traditionnelle (sinon : orthographe rectifiée de 1990)"
+msgstr "Amount in words in traditional spelling (otherwise: 1990 reformed spelling)"
+
+msgid "Montant HT"
+msgstr "Amount excl. tax"
+
+msgid "Montant TTC"
+msgstr "Amount incl. tax"
+
+msgid "Mot de passe"
+msgstr "Password"
+
+msgid "Mot de passe (8 caractères au moins)"
+msgstr "Password (at least 8 characters)"
+
+msgid "Mot de passe actuel"
+msgstr "Current password"
+
+msgid "Mot de passe modifié."
+msgstr "Password changed."
+
+msgid "mot de passe réinitialisé"
+msgstr "password reset"
+
+msgid "Nom"
+msgstr "Name"
+
+msgid "nom"
+msgstr "name"
+
+msgid "Nom complet"
+msgstr "Full name"
+
+msgid "Nom de l'entreprise (obligatoire)"
+msgstr "Company name (required)"
+
+msgid "nombre de chiffres du rang invalide : saisir un entier entre {} et {}"
+msgstr "invalid number of sequence digits: enter a whole number between {} and {}"
+
+msgid "Non précisé"
+msgstr "Not specified"
+
+msgid "Nouveau compte"
+msgstr "New account"
+
+msgid "Nouveau mot de passe (8 caractères au moins)"
+msgstr "New password (at least 8 characters)"
+
+msgid "Nouveau produit"
+msgstr "New product"
+
+msgid "Nouveau tiers"
+msgstr "New contact"
+
+msgid "Nouvelle facture"
+msgstr "New invoice"
+
+msgid "Numérotation des documents"
+msgstr "Document numbering"
+
+msgid "N°"
+msgstr "No."
+
+msgid "Observations"
+msgstr "Notes"
+
+msgid "orthographe rectifiée"
+msgstr "reformed spelling"
+
+msgid "Orthographe rectifiée (1990)"
+msgstr "Reformed spelling (1990)"
+
+msgid "Orthographe traditionnelle"
+msgstr "Traditional spelling"
+
+msgid "orthographe traditionnelle"
+msgstr "traditional spelling"
+
+msgid "Paiement"
+msgstr "Payment"
+
+msgid "Paiement : {}"
+msgstr "Payment: {}"
+
+msgid "Paiements"
+msgstr "Payments"
+
+msgid "Paramètres"
+msgstr "Settings"
+
+msgid "paramètres enregistrés"
+msgstr "settings saved"
+
+msgid "Partiel"
+msgstr "Partial"
+
+msgid "Payé"
+msgstr "Paid"
+
+msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
+msgstr "Fonts: Inter and Manrope, under the SIL Open Font License 1.1."
+
+msgid "Pourcentages séparés par des points-virgules, par exemple « 0 ; 18 » ou « 0 ; 2,5 ; 5 »."
+msgstr "Percentages separated by semicolons, for example \"0 ; 18\" or \"0 ; 2,5 ; 5\"."
+
+msgid "Première installation"
+msgstr "First installation"
+
+msgid "prix"
+msgstr "price"
+
+msgid "Prix (FCFA)"
+msgstr "Price (FCFA)"
+
+msgid "Prix unitaire"
+msgstr "Unit price"
+
+msgid "Prix unitaire (FCFA)"
+msgstr "Unit price (FCFA)"
+
+msgid "Produits"
+msgstr "Products"
+
+msgid "Produits et services"
+msgstr "Products and services"
+
+msgid "Proforma"
+msgstr "Pro forma"
+
+msgid "Précédent"
+msgstr "Previous"
+
+msgid "Préfixes de 1 à 6 lettres, différents d'un type à l'autre."
+msgstr "Prefixes of 1 to 6 letters, different for each type."
+
+msgid "Quantité"
+msgstr "Quantity"
+
+msgid "RCCM"
+msgstr "RCCM"
+
+msgid "Rechercher : désignation ou référence"
+msgstr "Search: description or reference"
+
+msgid "Rechercher : nom, téléphone, localisation, adresse, IFU"
+msgstr "Search: name, phone, location, address, IFU"
+
+msgid "Rechercher : numéro, client, libellé"
+msgstr "Search: number, customer, description"
+
+msgid "Remarque"
+msgstr "Note"
+
+msgid "Remise"
+msgstr "Discount"
+
+msgid "remise"
+msgstr "discount"
+
+msgid "Remise (%)"
+msgstr "Discount (%)"
+
+msgid "Remise à zéro du compteur"
+msgstr "Counter reset"
+
+msgid "Remplacer"
+msgstr "Replace"
+
+msgid "Responsable comptabilité"
+msgstr "Accounting manager"
+
+msgid "Responsable de la comptabilité"
+msgstr "Accounting manager"
+
+msgid "Responsable de la facturation"
+msgstr "Billing manager"
+
+msgid "Responsable facturation"
+msgstr "Billing manager"
+
+msgid "retenue"
+msgstr "withholding"
+
+msgid "Retenue à la source (%)"
+msgstr "Withholding tax (%)"
+
+msgid "Retirer"
+msgstr "Remove"
+
+msgid "Retirer cette fiche ? Elle est supprimée si aucun document ne la cite, sinon seulement désactivée."
+msgstr "Remove this record? It is deleted if no document refers to it, otherwise only deactivated."
+
+msgid "Retour au registre"
+msgstr "Back to the register"
+
+msgid "Revenir"
+msgstr "Go back"
+
+msgid "Revenir à la matrice du cahier des charges"
+msgstr "Restore the specification matrix"
+
+msgid "Réactiver"
+msgstr "Reactivate"
+
+msgid "Récapitulatif"
+msgstr "Summary"
+
+msgid "Réception complète"
+msgstr "Fully received"
+
+msgid "Réception partielle"
+msgstr "Partially received"
+
+msgid "Référence"
+msgstr "Reference"
+
+msgid "référence"
+msgstr "reference"
+
+msgid "Référence (unique)"
+msgstr "Reference (unique)"
+
+msgid "Régime d'imposition"
+msgstr "Tax regime"
+
+msgid "régime d'imposition"
+msgstr "tax regime"
+
+msgid "Réinitialiser le mot de passe"
+msgstr "Reset password"
+
+msgid "Rôle"
+msgstr "Role"
+
+msgid "rôle changé ; le menu de ce compte suivra à sa prochaine connexion"
+msgstr "role changed; this account's menu will follow at its next sign-in"
+
+msgid "Saisir un règlement"
+msgstr "Record a payment"
+
+msgid "Saisissez votre identifiant et votre mot de passe."
+msgstr "Enter your username and password."
+
+msgid "Sauvegarder / exporter la base"
+msgstr "Back up / export the database"
+
+msgid "Se connecter"
+msgstr "Sign in"
+
+msgid "Se déconnecter"
+msgstr "Sign out"
+
+msgid "Second logo"
+msgstr "Second logo"
+
+msgid "Sens"
+msgstr "Use"
+
+msgid "sens"
+msgstr "use"
+
+msgid "Sens d'utilisation"
+msgstr "Use"
+
+msgid "Sens des lignes sans colonne Sens :"
+msgstr "Use of lines without a Use column:"
+
+msgid "Site web"
+msgstr "Website"
+
+msgid "Statut"
+msgstr "Status"
+
+msgid "Statut : {}"
+msgstr "Status: {}"
+
+msgid "Suivant"
+msgstr "Next"
+
+msgid "Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit."
+msgstr "Delete this draft? It disappears from the register; the deletion remains recorded in the audit log."
+
+msgid "Supprimer le brouillon"
+msgstr "Delete draft"
+
+msgid "Sélectionner un produit dans la liste pour afficher sa fiche."
+msgstr "Select a product in the list to show its record."
+
+msgid "Sélectionner un tiers dans la liste pour afficher sa fiche."
+msgstr "Select a contact in the list to show its record."
+
+msgid "Tableau de bord"
+msgstr "Dashboard"
+
+msgid "Taux de remise (%)"
+msgstr "Discount rates (%)"
+
+msgid "Taux de retenue (%)"
+msgstr "Withholding rates (%)"
+
+msgid "Taux de TVA (%)"
+msgstr "VAT rates (%)"
+
+msgid "taux de {} invalides : saisir des pourcentages entre 0 et 100 séparés par des points-virgules"
+msgstr "invalid {} rates: enter percentages between 0 and 100 separated by semicolons"
+
+msgid "Taux et paiements"
+msgstr "Rates and payments"
+
+msgid "Taux proposés dans les documents"
+msgstr "Rates offered in documents"
+
+msgid "Terminer l'installation"
+msgstr "Finish installation"
+
+msgid "Tiers"
+msgstr "Contacts"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Tous les produits"
+msgstr "All products"
+
+msgid "Tous les statuts"
+msgstr "All statuses"
+
+msgid "Tous les tiers"
+msgstr "All contacts"
+
+msgid "Tout paiement"
+msgstr "Any payment"
+
+msgid "TVA"
+msgstr "VAT"
+
+msgid "TVA (%)"
+msgstr "VAT (%)"
+
+msgid "TVA : {}   Remise : {}   Retenue : {}"
+msgstr "VAT: {}   Discount: {}   Withholding: {}"
+
+msgid "Type"
+msgstr "Type"
+
+msgid "type"
+msgstr "type"
+
+msgid "Type des lignes sans colonne Type :"
+msgstr "Type of lines without a Type column:"
+
+msgid "Téléphone"
+msgstr "Phone"
+
+msgid "téléphone"
+msgstr "phone"
+
+msgid "Un changement vaut pour les validations suivantes ; les numéros déjà attribués ne changent pas. Changer de compteur en cours d'année interrompt la suite des numéros de l'année."
+msgstr "A change applies to subsequent validations; numbers already assigned do not change. Switching counters during the year breaks the sequence of that year's numbers."
+
+msgid "Utilisateurs"
+msgstr "Users"
+
+msgid "Valeurs séparées par des points-virgules, en pourcentage (ex. 0 ; 18). Modifiables plus tard dans les paramètres."
+msgstr "Values separated by semicolons, as percentages (e.g. 0 ; 18). Can be changed later in the settings."
+
+msgid "Validation"
+msgstr "Validation"
+
+msgid "Valider"
+msgstr "Validate"
+
+msgid "Valider cette facture ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "Validate this invoice? It receives its final number; its lines and amounts can no longer be changed."
+
+msgid "Valider un document"
+msgstr "Validate a document"
+
+msgid "Validité des devis"
+msgstr "Quote validity"
+
+msgid "validité des devis"
+msgstr "quote validity"
+
+msgid "Validé"
+msgstr "Validated"
+
+msgid "Vente"
+msgstr "Sale"
+
+msgid "Vente et achat"
+msgstr "Sale and purchase"
+
+msgid "Version {}"
+msgstr "Version {}"
+
+msgid "{} (désactivé)"
+msgstr "{} (deactivated)"
+
+msgid "{} ({}), rôle : {}"
+msgstr "{} ({}), role: {}"
+
+msgid "{} factures."
+msgstr "{} invoices."
+
+msgid "{} fiches"
+msgstr "{} records"
+
+msgid "{} invalide : saisir un nombre entier de jours, ou laisser vide pour ne pas en fixer"
+msgstr "invalid {}: enter a whole number of days, or leave empty for none"
+
+msgid "À importer"
+msgstr "To import"
+
+msgid "À propos"
+msgstr "About"
+
+msgid "Échéance"
+msgstr "Due date"
+
+msgid "Échéance (facultative)"
+msgstr "Due date (optional)"
+
+msgid "échéance illisible : saisir la date au format JJ/MM/AAAA, ou la laisser vide"
+msgstr "unreadable due date: enter the date as DD/MM/YYYY, or leave it empty"
+
+msgid "Étape {} sur {} : {}"
+msgstr "Step {} of {}: {}"
+
+msgid "État"
+msgstr "State"

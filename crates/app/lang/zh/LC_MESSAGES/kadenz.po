@@ -1,0 +1,1135 @@
+# Kadenz, interface en chinois ; langue source : français.
+# Fichier généré à partir des tables de traduction ; un msgid par texte affiché.
+msgid ""
+msgstr ""
+"Project-Id-Version: kadenz\n"
+"Language: zh\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid " ; ignorées car déjà présentes au moment de l'enregistrement : {}"
+msgstr "；保存时已存在而跳过：{}"
+
+msgid "(brouillon)"
+msgstr "（草稿）"
+
+msgid "1 facture."
+msgstr "1 张发票。"
+
+msgid "1 fiche"
+msgstr "1 条记录"
+
+msgid "Achat"
+msgstr "采购"
+
+msgid "Administrateur"
+msgstr "管理员"
+
+msgid "Administrateur : {} ({})"
+msgstr "管理员：{}（{}）"
+
+msgid "Adresse"
+msgstr "地址"
+
+msgid "adresse"
+msgstr "地址"
+
+msgid "Adresse / boîte postale"
+msgstr "地址 / 邮政信箱"
+
+msgid "Adresse ou boîte postale"
+msgstr "地址或邮政信箱"
+
+msgid "Ajouter"
+msgstr "添加"
+
+msgid "Ajouter le produit"
+msgstr "添加产品"
+
+msgid "Ajouter un client, un fournisseur, un produit"
+msgstr "添加客户、供应商、产品"
+
+msgid "Annuler"
+msgstr "取消"
+
+msgid "Annuler cette facture ? Elle reste dans le registre avec son numéro, en lecture seule."
+msgstr "作废此发票？它将保留编号留在登记簿中，且为只读。"
+
+msgid "Annuler la facture"
+msgstr "作废发票"
+
+msgid "Annuler un document validé"
+msgstr "作废已确认单据"
+
+msgid "Annulé"
+msgstr "已作废"
+
+msgid "Au JJ/MM/AAAA"
+msgstr "至 DD/MM/YYYY"
+
+msgid "au moins un mode de paiement est nécessaire"
+msgstr "至少需要一种付款方式。"
+
+msgid "Aucun client choisi"
+msgstr "未选择客户"
+
+msgid "aucun compte sélectionné"
+msgstr "未选择账户。"
+
+msgid "Aucun fichier choisi."
+msgstr "未选择文件。"
+
+msgid "Aucun logo"
+msgstr "无徽标"
+
+msgid "Aucun numéro tant que la facture n'est pas validée."
+msgstr "发票确认之前没有编号。"
+
+msgid "Aucune facture."
+msgstr "没有发票。"
+
+msgid "Aucune fiche"
+msgstr "没有记录"
+
+msgid "aucune fiche ouverte"
+msgstr "没有打开的记录。"
+
+msgid "aucune fiche sélectionnée"
+msgstr "未选择记录。"
+
+msgid "Aucune ligne."
+msgstr "没有明细。"
+
+msgid "aucune session ouverte"
+msgstr "没有已打开的会话。"
+
+msgid "Avoir"
+msgstr "贷项通知单"
+
+msgid "Base : {} (schéma {})"
+msgstr "数据库：{}（架构 {}）"
+
+msgid "Base de données : SQLite, dans le domaine public."
+msgstr "数据库：SQLite，属于公有领域。"
+
+msgid "Base TVA"
+msgstr "增值税税基"
+
+msgid "Bon de commande"
+msgstr "采购订单"
+
+msgid "Bons de commande"
+msgstr "采购订单"
+
+msgid "Bordereau de livraison"
+msgstr "送货单"
+
+msgid "Brouillon"
+msgstr "草稿"
+
+msgid "brouillon enregistré"
+msgstr "草稿已保存。"
+
+msgid "brouillon enregistré, mais validation refusée : {}"
+msgstr "草稿已保存，但确认被拒绝：{}"
+
+msgid "brouillon supprimé"
+msgstr "草稿已删除。"
+
+msgid "C'est le compte de la session en cours : son rôle et son état se changent depuis un autre compte administrateur. Le mot de passe se change dans « Mon compte »."
+msgstr "这是当前会话的账户：其角色和状态需由另一个管理员账户更改。密码在“我的账户”中修改。"
+
+msgid "ce brouillon n'a pas été enregistré"
+msgstr "此草稿尚未保存。"
+
+msgid "Ce compte administre l'installation : utilisateurs, droits, sauvegardes."
+msgstr "此账户负责管理本安装：用户、权限、备份。"
+
+msgid "ce compte n'existe plus"
+msgstr "此账户已不存在。"
+
+msgid "ce produit n'existe plus"
+msgstr "此产品已不存在。"
+
+msgid "ce tiers n'existe plus"
+msgstr "此往来单位已不存在。"
+
+msgid "Ces informations figurent en en-tête et en pied de page des documents."
+msgstr "这些信息显示在单据的页眉和页脚中。"
+
+msgid "cette facture n'existe plus"
+msgstr "此发票已不存在。"
+
+msgid "Changer de mot de passe"
+msgstr "修改密码"
+
+msgid "Changer le rôle"
+msgstr "更改角色"
+
+msgid "Chaque année"
+msgstr "每年"
+
+msgid "Chaque mois"
+msgstr "每月"
+
+msgid "Chiffres du rang"
+msgstr "序号位数"
+
+msgid "Choisir le fichier à importer"
+msgstr "选择要导入的文件"
+
+msgid "Choisir un autre fichier"
+msgstr "选择其他文件"
+
+msgid "Choisir un logo"
+msgstr "选择徽标"
+
+msgid "Choisir une image"
+msgstr "选择图片"
+
+msgid "Client"
+msgstr "客户"
+
+msgid "Client et fournisseur"
+msgstr "客户兼供应商"
+
+msgid "Clients"
+msgstr "客户"
+
+msgid "Clients et fournisseurs"
+msgstr "客户和供应商"
+
+msgid "Cliquer sur une facture pour ouvrir sa fiche."
+msgstr "点击发票即可打开其详情。"
+
+msgid "Cocher ce que chaque rôle peut faire. Le rôle Admin garde toujours la gestion des utilisateurs et des droits. Les contrôles s'appliquent dès l'enregistrement ; le menu des autres comptes se met à jour à leur prochaine connexion."
+msgstr "勾选每个角色可执行的操作。Admin 角色始终保留用户和权限管理。保存后立即生效；其他账户的菜单将在其下次登录时更新。"
+
+msgid "Colonnes ignorées, non importées : {}."
+msgstr "已忽略、未导入的列：{}。"
+
+msgid "Colonnes reconnues : {}."
+msgstr "已识别的列：{}。"
+
+msgid "Commercial"
+msgstr "销售"
+
+msgid "Composants tiers"
+msgstr "第三方组件"
+
+msgid "Comptable"
+msgstr "会计"
+
+msgid "Compte"
+msgstr "账户"
+
+msgid "Compte (désactivé)"
+msgstr "账户（已停用）"
+
+msgid "Compte bancaire 1"
+msgstr "银行账户 1"
+
+msgid "Compte bancaire 2"
+msgstr "银行账户 2"
+
+msgid "compte créé"
+msgstr "账户已创建。"
+
+msgid "compte désactivé"
+msgstr "账户已停用。"
+
+msgid "compte inconnu ou désactivé"
+msgstr "账户不存在或已停用。"
+
+msgid "compte introuvable"
+msgstr "找不到账户。"
+
+msgid "compte réactivé"
+msgstr "账户已重新启用。"
+
+msgid "Comptes"
+msgstr "账户"
+
+msgid "Confirmation"
+msgstr "确认"
+
+msgid "Confirmation du mot de passe"
+msgstr "确认密码"
+
+msgid "Confirmation du nouveau mot de passe"
+msgstr "确认新密码"
+
+msgid "Confirmer l'annulation"
+msgstr "确认作废"
+
+msgid "Confirmer la suppression"
+msgstr "确认删除"
+
+msgid "Confirmer la validation"
+msgstr "确认此操作"
+
+msgid "Confirmer le retrait"
+msgstr "确认移除"
+
+msgid "CONNEXION"
+msgstr "登录"
+
+msgid "Consultation"
+msgstr "查看"
+
+msgid "Consulter tableau de bord et registres"
+msgstr "查看仪表板和登记簿"
+
+msgid "Converti"
+msgstr "已转换"
+
+msgid "Création du brouillon"
+msgstr "创建草稿"
+
+msgid "Créer le compte"
+msgstr "创建账户"
+
+msgid "Créer/modifier un brouillon (Devis, Proforma, BC, Livraison)"
+msgstr "创建/修改草稿（报价单、形式发票、采购订单、送货单）"
+
+msgid "Créer/modifier un brouillon Facture ou Avoir"
+msgstr "创建/修改发票或贷项通知单草稿"
+
+msgid "CSV, Excel ou OpenDocument"
+msgstr "CSV、Excel 或 OpenDocument"
+
+msgid "Date"
+msgstr "日期"
+
+msgid "Date (JJ/MM/AAAA)"
+msgstr "日期（DD/MM/YYYY）"
+
+msgid "Date de début de période incomplète ou illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "期间开始日期不完整或无法识别（DD/MM/YYYY）：未应用。"
+
+msgid "Date de fin de période incomplète ou illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "期间结束日期不完整或无法识别（DD/MM/YYYY）：未应用。"
+
+msgid "date illisible : saisir la date au format JJ/MM/AAAA"
+msgstr "日期无法识别：请按 DD/MM/YYYY 格式输入。"
+
+msgid "Dates de début et de fin de période incomplètes ou illisibles (JJ/MM/AAAA) : non appliquées."
+msgstr "期间开始和结束日期不完整或无法识别（DD/MM/YYYY）：未应用。"
+
+msgid "Devis"
+msgstr "报价单"
+
+msgid "Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements."
+msgstr "报价单、形式发票、采购订单、送货单、发票和付款。"
+
+msgid "document introuvable"
+msgstr "找不到单据。"
+
+msgid "Doublon"
+msgstr "重复"
+
+msgid "droits enregistrés"
+msgstr "权限已保存。"
+
+msgid "Droits par rôle"
+msgstr "按角色划分的权限"
+
+msgid "Du JJ/MM/AAAA"
+msgstr "从 DD/MM/YYYY"
+
+msgid "délai de paiement"
+msgstr "付款期限"
+
+msgid "Délai de paiement des factures"
+msgstr "发票付款期限"
+
+msgid "Délais (en jours, laisser vide pour ne pas en fixer)"
+msgstr "期限（天数，留空表示不设定）"
+
+msgid "Démarrage impossible"
+msgstr "无法启动"
+
+msgid "Désactiver"
+msgstr "停用"
+
+msgid "Désactivé"
+msgstr "已停用"
+
+msgid "Désactivée"
+msgstr "已停用"
+
+msgid "Désignation"
+msgstr "品名"
+
+msgid "désignation"
+msgstr "品名"
+
+msgid "Email"
+msgstr "电子邮件"
+
+msgid "En lettres : {}"
+msgstr "大写：{}"
+
+msgid "Enregistrer"
+msgstr "保存"
+
+msgid "enregistrer d'abord la facture"
+msgstr "请先保存发票。"
+
+msgid "Enregistrer le brouillon"
+msgstr "保存草稿"
+
+msgid "Enregistrer le mode et les observations"
+msgstr "保存付款方式和备注"
+
+msgid "Enregistrer les droits"
+msgstr "保存权限"
+
+msgid "Entreprise"
+msgstr "公司"
+
+msgid "Entreprise : {}"
+msgstr "公司：{}"
+
+msgid "Envoyé"
+msgstr "已发送"
+
+msgid "Erreur"
+msgstr "错误"
+
+msgid "Exemple : première facture de l'année, {}"
+msgstr "示例：本年第一张发票，{}"
+
+msgid "Exemple : première facture du mois, {}"
+msgstr "示例：本月第一张发票，{}"
+
+msgid "Exemple : {} FCFA s'écrit « {} »."
+msgstr "示例：{} FCFA 写作“{}”。"
+
+msgid "existe déjà"
+msgstr "已存在"
+
+msgid "Facture"
+msgstr "发票"
+
+msgid "Facture (brouillon)"
+msgstr "发票（草稿）"
+
+msgid "facture annulée"
+msgstr "发票已作废。"
+
+msgid "Facture annulée : lecture seule, numéro conservé."
+msgstr "发票已作废：只读，编号保留。"
+
+msgid "facture marquée envoyée"
+msgstr "发票已标记为已发送。"
+
+msgid "Facture validée : lignes et montants figés."
+msgstr "发票已确认：明细和金额已锁定。"
+
+msgid "facture validée sous le numéro {}"
+msgstr "发票已确认，编号为 {}。"
+
+msgid "Facture {}"
+msgstr "发票 {}"
+
+msgid "Factures"
+msgstr "发票"
+
+msgid "Fermer"
+msgstr "关闭"
+
+msgid "Fiche"
+msgstr "记录"
+
+msgid "Fiche du produit"
+msgstr "产品详情"
+
+msgid "Fiche du produit (désactivée)"
+msgstr "产品详情（已停用）"
+
+msgid "Fiche du tiers"
+msgstr "往来单位详情"
+
+msgid "Fiche du tiers (désactivée)"
+msgstr "往来单位详情（已停用）"
+
+msgid "fiche désactivée : elle est citée dans au moins un document, l'historique reste intact"
+msgstr "记录已停用：至少有一张单据引用了它，历史记录保持不变。"
+
+msgid "fiche enregistrée"
+msgstr "记录已保存。"
+
+msgid "fiche réactivée"
+msgstr "记录已重新启用。"
+
+msgid "fiche supprimée"
+msgstr "记录已删除。"
+
+msgid "Fiches ajoutées : {}"
+msgstr "已添加记录：{}"
+
+msgid "Fiches désactivées"
+msgstr "已停用记录"
+
+msgid "Fiches à importer : {} ; doublons ignorés : {} ; lignes en erreur : {}."
+msgstr "待导入记录：{}；已跳过的重复项：{}；出错的行：{}。"
+
+msgid "Fichier : {}"
+msgstr "文件：{}"
+
+msgid "Filtrer les clients"
+msgstr "筛选客户"
+
+msgid "Filtrer les produits"
+msgstr "筛选产品"
+
+msgid "Fournisseur"
+msgstr "供应商"
+
+msgid "Fournisseurs"
+msgstr "供应商"
+
+msgid "Garder"
+msgstr "保留"
+
+msgid "Gestion commerciale"
+msgstr "商务管理"
+
+msgid "Gestion commerciale mono-poste pour Windows : les données restent sur ce poste."
+msgstr "适用于 Windows 的单机商务管理：数据保留在本机上。"
+
+msgid "Gérer la fiche entreprise et les paramètres"
+msgstr "管理公司信息和设置"
+
+msgid "Gérer les utilisateurs et droits"
+msgstr "管理用户和权限"
+
+msgid "Historique"
+msgstr "历史记录"
+
+msgid "Identifiant"
+msgstr "用户名"
+
+msgid "Identifiant de connexion"
+msgstr "登录用户名"
+
+msgid "identifiant ou mot de passe incorrect"
+msgstr "用户名或密码不正确。"
+
+msgid "IFU"
+msgstr "IFU"
+
+msgid "Image PNG ou JPEG, 2 Mo au plus. Le logo principal figure à gauche de l'en-tête, le second à droite."
+msgstr "PNG 或 JPEG 图片，最大 2 MB。主徽标显示在页眉左侧，第二个徽标显示在右侧。"
+
+msgid "Images PNG ou JPEG"
+msgstr "PNG 或 JPEG 图片"
+
+msgid "Impayé"
+msgstr "未付款"
+
+msgid "Importer"
+msgstr "导入"
+
+msgid "Importer des produits"
+msgstr "导入产品"
+
+msgid "Importer des tiers"
+msgstr "导入往来单位"
+
+msgid "Importer les fiches valides"
+msgstr "导入有效记录"
+
+msgid "impossible : l'installation doit garder au moins un administrateur actif"
+msgstr "无法执行：本安装必须保留至少一个有效的管理员。"
+
+msgid "Interface : Slint, sous licence Slint Royalty-free 2.0."
+msgstr "界面：Slint，采用 Slint Royalty-free 2.0 许可证。"
+
+msgid "l'identifiant est obligatoire et ne contient pas d'espace"
+msgstr "用户名为必填项，且不能包含空格。"
+
+msgid "l'installation initiale a déjà été faite"
+msgstr "初始安装已完成。"
+
+msgid "La base de données ({}) n'a pas pu être ouverte : {}"
+msgstr "无法打开数据库（{}）：{}"
+
+msgid "la fiche entreprise n'existe pas encore"
+msgstr "公司信息尚未创建。"
+
+msgid "Langue de l'interface"
+msgstr "界面语言"
+
+msgid "le logo doit être une image PNG ou JPEG"
+msgstr "徽标必须是 PNG 或 JPEG 图片。"
+
+msgid "le montant du règlement doit être positif"
+msgstr "付款金额必须为正数。"
+
+msgid "le mot de passe actuel est incorrect"
+msgstr "当前密码不正确。"
+
+msgid "le nom complet est obligatoire"
+msgstr "全名为必填项。"
+
+msgid "Le nom complet et l'identifiant sont obligatoires."
+msgstr "全名和用户名为必填项。"
+
+msgid "le nom de l'entreprise est obligatoire"
+msgstr "公司名称为必填项。"
+
+msgid "Le nom de l'entreprise est obligatoire."
+msgstr "公司名称为必填项。"
+
+msgid "Le produit choisi remplit la référence, la désignation et le prix, qui restent modifiables sur la ligne. Une référence tapée puis validée par Entrée reprend le produit correspondant."
+msgstr "所选产品会填入编码、品名和价格，这些内容在明细中仍可修改。输入编码并按回车确认，即可调入对应产品。"
+
+msgid "lecture du fichier impossible : {}"
+msgstr "无法读取文件：{}"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une facture."
+msgstr "只读：您的角色无权修改发票。"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une fiche existante."
+msgstr "只读：您的角色无权修改现有记录。"
+
+msgid "Les deux"
+msgstr "两者"
+
+msgid "les deux mots de passe ne correspondent pas"
+msgstr "两次输入的密码不一致。"
+
+msgid "Les deux mots de passe ne correspondent pas."
+msgstr "两次输入的密码不一致。"
+
+msgid "les deux nouveaux mots de passe ne correspondent pas"
+msgstr "两次输入的新密码不一致。"
+
+msgid "Les textes des documents, l'apparence des PDF et les dossiers d'export se régleront ici avec le jalon du PDF (J4). La matrice des droits par rôle se règle dans l'écran Utilisateurs."
+msgstr "单据文本、PDF 外观和导出文件夹将在 PDF 里程碑（J4）中于此处设置。按角色划分的权限矩阵在“用户”界面中设置。"
+
+msgid "Libellé"
+msgstr "摘要"
+
+msgid "Ligne"
+msgstr "行"
+
+msgid "Ligne libre"
+msgstr "自由明细"
+
+msgid "ligne {} : prix illisible, saisir un montant entier en FCFA"
+msgstr "第 {} 行：价格无法识别，请输入以 FCFA 计的整数金额。"
+
+msgid "ligne {} : quantité illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "第 {} 行：数量无法识别，请输入正数（最多 3 位小数）。"
+
+msgid "Lignes"
+msgstr "明细"
+
+msgid "Livraison complète"
+msgstr "全部送货"
+
+msgid "Livraison partielle"
+msgstr "部分送货"
+
+msgid "Livraisons"
+msgstr "送货"
+
+msgid "Localisation"
+msgstr "位置"
+
+msgid "localisation"
+msgstr "位置"
+
+msgid "Logiciel"
+msgstr "软件"
+
+msgid "Logiciel propriétaire, tous droits réservés."
+msgstr "专有软件，保留所有权利。"
+
+msgid "logo enregistré"
+msgstr "徽标已保存。"
+
+msgid "Logo principal"
+msgstr "主徽标"
+
+msgid "logo retiré"
+msgstr "徽标已移除。"
+
+msgid "Logos"
+msgstr "徽标"
+
+msgid "Marquer envoyée"
+msgstr "标记为已发送"
+
+msgid "Mode"
+msgstr "方式"
+
+msgid "Mode de paiement"
+msgstr "付款方式"
+
+msgid "mode de paiement et observations enregistrés"
+msgstr "付款方式和备注已保存。"
+
+msgid "Modes de paiement"
+msgstr "付款方式"
+
+msgid "Modes de paiement : {}"
+msgstr "付款方式：{}"
+
+msgid "Modes de paiement, séparés par des points-virgules"
+msgstr "付款方式，用分号分隔"
+
+msgid "Modification du mode de paiement ou des observations"
+msgstr "修改付款方式或备注"
+
+msgid "Modifier ou désactiver un client, un fournisseur, un produit"
+msgstr "修改或停用客户、供应商、产品"
+
+msgid "Module en cours de construction."
+msgstr "模块正在建设中。"
+
+msgid "Mon compte"
+msgstr "我的账户"
+
+msgid "Montant en lettres"
+msgstr "金额大写"
+
+msgid "Montant en lettres : {}"
+msgstr "金额大写：{}"
+
+msgid "Montant en lettres en orthographe traditionnelle (sinon : orthographe rectifiée de 1990)"
+msgstr "金额大写采用传统拼写（否则：1990 年修订拼写）"
+
+msgid "Montant HT"
+msgstr "不含税金额"
+
+msgid "Montant TTC"
+msgstr "含税金额"
+
+msgid "Mot de passe"
+msgstr "密码"
+
+msgid "Mot de passe (8 caractères au moins)"
+msgstr "密码（至少 8 个字符）"
+
+msgid "Mot de passe actuel"
+msgstr "当前密码"
+
+msgid "Mot de passe modifié."
+msgstr "密码已修改。"
+
+msgid "mot de passe réinitialisé"
+msgstr "密码已重置。"
+
+msgid "Nom"
+msgstr "名称"
+
+msgid "nom"
+msgstr "名称"
+
+msgid "Nom complet"
+msgstr "全名"
+
+msgid "Nom de l'entreprise (obligatoire)"
+msgstr "公司名称（必填）"
+
+msgid "nombre de chiffres du rang invalide : saisir un entier entre {} et {}"
+msgstr "序号位数无效：请输入 {} 到 {} 之间的整数。"
+
+msgid "Non précisé"
+msgstr "未指定"
+
+msgid "Nouveau compte"
+msgstr "新建账户"
+
+msgid "Nouveau mot de passe (8 caractères au moins)"
+msgstr "新密码（至少 8 个字符）"
+
+msgid "Nouveau produit"
+msgstr "新建产品"
+
+msgid "Nouveau tiers"
+msgstr "新建往来单位"
+
+msgid "Nouvelle facture"
+msgstr "新建发票"
+
+msgid "Numérotation des documents"
+msgstr "单据编号"
+
+msgid "N°"
+msgstr "编号"
+
+msgid "Observations"
+msgstr "备注"
+
+msgid "orthographe rectifiée"
+msgstr "修订拼写"
+
+msgid "Orthographe rectifiée (1990)"
+msgstr "修订拼写（1990 年）"
+
+msgid "Orthographe traditionnelle"
+msgstr "传统拼写"
+
+msgid "orthographe traditionnelle"
+msgstr "传统拼写"
+
+msgid "Paiement"
+msgstr "付款"
+
+msgid "Paiement : {}"
+msgstr "付款：{}"
+
+msgid "Paiements"
+msgstr "付款"
+
+msgid "Paramètres"
+msgstr "设置"
+
+msgid "paramètres enregistrés"
+msgstr "设置已保存。"
+
+msgid "Partiel"
+msgstr "部分付款"
+
+msgid "Payé"
+msgstr "已付款"
+
+msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
+msgstr "字体：Inter 和 Manrope，采用 SIL Open Font License 1.1 许可证。"
+
+msgid "Pourcentages séparés par des points-virgules, par exemple « 0 ; 18 » ou « 0 ; 2,5 ; 5 »."
+msgstr "用分号分隔的百分比，例如“0 ; 18”或“0 ; 2,5 ; 5”。"
+
+msgid "Première installation"
+msgstr "首次安装"
+
+msgid "prix"
+msgstr "价格"
+
+msgid "Prix (FCFA)"
+msgstr "价格（FCFA）"
+
+msgid "Prix unitaire"
+msgstr "单价"
+
+msgid "Prix unitaire (FCFA)"
+msgstr "单价（FCFA）"
+
+msgid "Produits"
+msgstr "产品"
+
+msgid "Produits et services"
+msgstr "产品和服务"
+
+msgid "Proforma"
+msgstr "形式发票"
+
+msgid "Précédent"
+msgstr "上一步"
+
+msgid "Préfixes de 1 à 6 lettres, différents d'un type à l'autre."
+msgstr "1 至 6 个字母的前缀，各类型之间不得相同。"
+
+msgid "Quantité"
+msgstr "数量"
+
+msgid "RCCM"
+msgstr "RCCM"
+
+msgid "Rechercher : désignation ou référence"
+msgstr "搜索：品名或编码"
+
+msgid "Rechercher : nom, téléphone, localisation, adresse, IFU"
+msgstr "搜索：名称、电话、位置、地址、IFU"
+
+msgid "Rechercher : numéro, client, libellé"
+msgstr "搜索：编号、客户、摘要"
+
+msgid "Remarque"
+msgstr "备注"
+
+msgid "Remise"
+msgstr "折扣"
+
+msgid "remise"
+msgstr "折扣"
+
+msgid "Remise (%)"
+msgstr "折扣 (%)"
+
+msgid "Remise à zéro du compteur"
+msgstr "计数器归零"
+
+msgid "Remplacer"
+msgstr "替换"
+
+msgid "Responsable comptabilité"
+msgstr "会计负责人"
+
+msgid "Responsable de la comptabilité"
+msgstr "会计负责人"
+
+msgid "Responsable de la facturation"
+msgstr "开票负责人"
+
+msgid "Responsable facturation"
+msgstr "开票负责人"
+
+msgid "retenue"
+msgstr "预扣"
+
+msgid "Retenue à la source (%)"
+msgstr "预扣税 (%)"
+
+msgid "Retirer"
+msgstr "移除"
+
+msgid "Retirer cette fiche ? Elle est supprimée si aucun document ne la cite, sinon seulement désactivée."
+msgstr "移除此记录？如果没有单据引用它，将被删除；否则仅停用。"
+
+msgid "Retour au registre"
+msgstr "返回登记簿"
+
+msgid "Revenir"
+msgstr "返回"
+
+msgid "Revenir à la matrice du cahier des charges"
+msgstr "恢复规格书中的矩阵"
+
+msgid "Réactiver"
+msgstr "重新启用"
+
+msgid "Récapitulatif"
+msgstr "摘要"
+
+msgid "Réception complète"
+msgstr "全部收货"
+
+msgid "Réception partielle"
+msgstr "部分收货"
+
+msgid "Référence"
+msgstr "编码"
+
+msgid "référence"
+msgstr "编码"
+
+msgid "Référence (unique)"
+msgstr "编码（唯一）"
+
+msgid "Régime d'imposition"
+msgstr "税制"
+
+msgid "régime d'imposition"
+msgstr "税制"
+
+msgid "Réinitialiser le mot de passe"
+msgstr "重置密码"
+
+msgid "Rôle"
+msgstr "角色"
+
+msgid "rôle changé ; le menu de ce compte suivra à sa prochaine connexion"
+msgstr "角色已更改；此账户的菜单将在其下次登录时更新。"
+
+msgid "Saisir un règlement"
+msgstr "登记付款"
+
+msgid "Saisissez votre identifiant et votre mot de passe."
+msgstr "请输入用户名和密码。"
+
+msgid "Sauvegarder / exporter la base"
+msgstr "备份/导出数据库"
+
+msgid "Se connecter"
+msgstr "登录"
+
+msgid "Se déconnecter"
+msgstr "退出登录"
+
+msgid "Second logo"
+msgstr "第二个徽标"
+
+msgid "Sens"
+msgstr "用途"
+
+msgid "sens"
+msgstr "用途"
+
+msgid "Sens d'utilisation"
+msgstr "用途"
+
+msgid "Sens des lignes sans colonne Sens :"
+msgstr "无“用途”列的行的用途："
+
+msgid "Site web"
+msgstr "网站"
+
+msgid "Statut"
+msgstr "状态"
+
+msgid "Statut : {}"
+msgstr "状态：{}"
+
+msgid "Suivant"
+msgstr "下一步"
+
+msgid "Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit."
+msgstr "删除此草稿？它将从登记簿中消失；删除操作会记录在审计日志中。"
+
+msgid "Supprimer le brouillon"
+msgstr "删除草稿"
+
+msgid "Sélectionner un produit dans la liste pour afficher sa fiche."
+msgstr "在列表中选择产品以查看其详情。"
+
+msgid "Sélectionner un tiers dans la liste pour afficher sa fiche."
+msgstr "在列表中选择往来单位以查看其详情。"
+
+msgid "Tableau de bord"
+msgstr "仪表板"
+
+msgid "Taux de remise (%)"
+msgstr "折扣率 (%)"
+
+msgid "Taux de retenue (%)"
+msgstr "预扣税率 (%)"
+
+msgid "Taux de TVA (%)"
+msgstr "增值税税率 (%)"
+
+msgid "taux de {} invalides : saisir des pourcentages entre 0 et 100 séparés par des points-virgules"
+msgstr "{}税率无效：请输入 0 到 100 之间、以分号分隔的百分比。"
+
+msgid "Taux et paiements"
+msgstr "税率与付款"
+
+msgid "Taux proposés dans les documents"
+msgstr "单据中可选的税率"
+
+msgid "Terminer l'installation"
+msgstr "完成安装"
+
+msgid "Tiers"
+msgstr "往来单位"
+
+msgid "Total"
+msgstr "合计"
+
+msgid "Tous les produits"
+msgstr "全部产品"
+
+msgid "Tous les statuts"
+msgstr "全部状态"
+
+msgid "Tous les tiers"
+msgstr "全部往来单位"
+
+msgid "Tout paiement"
+msgstr "全部付款状态"
+
+msgid "TVA"
+msgstr "增值税"
+
+msgid "TVA (%)"
+msgstr "增值税 (%)"
+
+msgid "TVA : {}   Remise : {}   Retenue : {}"
+msgstr "增值税：{}   折扣：{}   预扣税：{}"
+
+msgid "Type"
+msgstr "类型"
+
+msgid "type"
+msgstr "类型"
+
+msgid "Type des lignes sans colonne Type :"
+msgstr "无“类型”列的行的类型："
+
+msgid "Téléphone"
+msgstr "电话"
+
+msgid "téléphone"
+msgstr "电话"
+
+msgid "Un changement vaut pour les validations suivantes ; les numéros déjà attribués ne changent pas. Changer de compteur en cours d'année interrompt la suite des numéros de l'année."
+msgstr "更改适用于此后的确认；已分配的编号不会改变。年中更换计数器会中断当年的编号序列。"
+
+msgid "Utilisateurs"
+msgstr "用户"
+
+msgid "Valeurs séparées par des points-virgules, en pourcentage (ex. 0 ; 18). Modifiables plus tard dans les paramètres."
+msgstr "用分号分隔的百分比数值（例如 0 ; 18）。以后可在设置中修改。"
+
+msgid "Validation"
+msgstr "确认"
+
+msgid "Valider"
+msgstr "确认"
+
+msgid "Valider cette facture ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "确认此发票？它将获得正式编号，其明细和金额将无法再修改。"
+
+msgid "Valider un document"
+msgstr "确认单据"
+
+msgid "Validité des devis"
+msgstr "报价单有效期"
+
+msgid "validité des devis"
+msgstr "报价单有效期"
+
+msgid "Validé"
+msgstr "已确认"
+
+msgid "Vente"
+msgstr "销售"
+
+msgid "Vente et achat"
+msgstr "销售和采购"
+
+msgid "Version {}"
+msgstr "版本 {}"
+
+msgid "{} (désactivé)"
+msgstr "{}（已停用）"
+
+msgid "{} ({}), rôle : {}"
+msgstr "{}（{}），角色：{}"
+
+msgid "{} factures."
+msgstr "{} 张发票。"
+
+msgid "{} fiches"
+msgstr "{} 条记录"
+
+msgid "{} invalide : saisir un nombre entier de jours, ou laisser vide pour ne pas en fixer"
+msgstr "{}无效：请输入整数天数，或留空表示不设定。"
+
+msgid "À importer"
+msgstr "待导入"
+
+msgid "À propos"
+msgstr "关于"
+
+msgid "Échéance"
+msgstr "到期日"
+
+msgid "Échéance (facultative)"
+msgstr "到期日（可选）"
+
+msgid "échéance illisible : saisir la date au format JJ/MM/AAAA, ou la laisser vide"
+msgstr "到期日无法识别：请按 DD/MM/YYYY 格式输入，或留空。"
+
+msgid "Étape {} sur {} : {}"
+msgstr "第 {} 步，共 {} 步：{}"
+
+msgid "État"
+msgstr "状态"

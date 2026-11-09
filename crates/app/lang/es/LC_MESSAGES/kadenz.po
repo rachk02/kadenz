@@ -1,0 +1,1135 @@
+# Kadenz, interface en espagnol ; langue source : français.
+# Fichier généré à partir des tables de traduction ; un msgid par texte affiché.
+msgid ""
+msgstr ""
+"Project-Id-Version: kadenz\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid " ; ignorées car déjà présentes au moment de l'enregistrement : {}"
+msgstr "; omitidas por estar ya presentes al guardar: {}"
+
+msgid "(brouillon)"
+msgstr "(borrador)"
+
+msgid "1 facture."
+msgstr "1 factura."
+
+msgid "1 fiche"
+msgstr "1 ficha"
+
+msgid "Achat"
+msgstr "Compra"
+
+msgid "Administrateur"
+msgstr "Administrador"
+
+msgid "Administrateur : {} ({})"
+msgstr "Administrador: {} ({})"
+
+msgid "Adresse"
+msgstr "Dirección"
+
+msgid "adresse"
+msgstr "dirección"
+
+msgid "Adresse / boîte postale"
+msgstr "Dirección / apartado postal"
+
+msgid "Adresse ou boîte postale"
+msgstr "Dirección o apartado postal"
+
+msgid "Ajouter"
+msgstr "Añadir"
+
+msgid "Ajouter le produit"
+msgstr "Añadir el producto"
+
+msgid "Ajouter un client, un fournisseur, un produit"
+msgstr "Añadir un cliente, un proveedor, un producto"
+
+msgid "Annuler"
+msgstr "Cancelar"
+
+msgid "Annuler cette facture ? Elle reste dans le registre avec son numéro, en lecture seule."
+msgstr "¿Anular esta factura? Permanece en el registro con su número, en solo lectura."
+
+msgid "Annuler la facture"
+msgstr "Anular la factura"
+
+msgid "Annuler un document validé"
+msgstr "Anular un documento validado"
+
+msgid "Annulé"
+msgstr "Anulado"
+
+msgid "Au JJ/MM/AAAA"
+msgstr "Hasta DD/MM/AAAA"
+
+msgid "au moins un mode de paiement est nécessaire"
+msgstr "se necesita al menos una forma de pago"
+
+msgid "Aucun client choisi"
+msgstr "Ningún cliente elegido"
+
+msgid "aucun compte sélectionné"
+msgstr "ninguna cuenta seleccionada"
+
+msgid "Aucun fichier choisi."
+msgstr "Ningún archivo elegido."
+
+msgid "Aucun logo"
+msgstr "Sin logotipo"
+
+msgid "Aucun numéro tant que la facture n'est pas validée."
+msgstr "Sin número mientras la factura no esté validada."
+
+msgid "Aucune facture."
+msgstr "Ninguna factura."
+
+msgid "Aucune fiche"
+msgstr "Ninguna ficha"
+
+msgid "aucune fiche ouverte"
+msgstr "ninguna ficha abierta"
+
+msgid "aucune fiche sélectionnée"
+msgstr "ninguna ficha seleccionada"
+
+msgid "Aucune ligne."
+msgstr "Ninguna línea."
+
+msgid "aucune session ouverte"
+msgstr "ninguna sesión abierta"
+
+msgid "Avoir"
+msgstr "Nota de crédito"
+
+msgid "Base : {} (schéma {})"
+msgstr "Base de datos: {} (esquema {})"
+
+msgid "Base de données : SQLite, dans le domaine public."
+msgstr "Base de datos: SQLite, de dominio público."
+
+msgid "Base TVA"
+msgstr "Base imponible del IVA"
+
+msgid "Bon de commande"
+msgstr "Orden de compra"
+
+msgid "Bons de commande"
+msgstr "Órdenes de compra"
+
+msgid "Bordereau de livraison"
+msgstr "Albarán de entrega"
+
+msgid "Brouillon"
+msgstr "Borrador"
+
+msgid "brouillon enregistré"
+msgstr "borrador guardado"
+
+msgid "brouillon enregistré, mais validation refusée : {}"
+msgstr "borrador guardado, pero validación rechazada: {}"
+
+msgid "brouillon supprimé"
+msgstr "borrador eliminado"
+
+msgid "C'est le compte de la session en cours : son rôle et son état se changent depuis un autre compte administrateur. Le mot de passe se change dans « Mon compte »."
+msgstr "Es la cuenta de la sesión en curso: su rol y su estado se cambian desde otra cuenta de administrador. La contraseña se cambia en «Mi cuenta»."
+
+msgid "ce brouillon n'a pas été enregistré"
+msgstr "este borrador no se ha guardado"
+
+msgid "Ce compte administre l'installation : utilisateurs, droits, sauvegardes."
+msgstr "Esta cuenta administra la instalación: usuarios, derechos, copias de seguridad."
+
+msgid "ce compte n'existe plus"
+msgstr "esta cuenta ya no existe"
+
+msgid "ce produit n'existe plus"
+msgstr "este producto ya no existe"
+
+msgid "ce tiers n'existe plus"
+msgstr "este tercero ya no existe"
+
+msgid "Ces informations figurent en en-tête et en pied de page des documents."
+msgstr "Esta información aparece en el encabezado y el pie de página de los documentos."
+
+msgid "cette facture n'existe plus"
+msgstr "esta factura ya no existe"
+
+msgid "Changer de mot de passe"
+msgstr "Cambiar la contraseña"
+
+msgid "Changer le rôle"
+msgstr "Cambiar el rol"
+
+msgid "Chaque année"
+msgstr "Cada año"
+
+msgid "Chaque mois"
+msgstr "Cada mes"
+
+msgid "Chiffres du rang"
+msgstr "Dígitos del número de orden"
+
+msgid "Choisir le fichier à importer"
+msgstr "Elegir el archivo que importar"
+
+msgid "Choisir un autre fichier"
+msgstr "Elegir otro archivo"
+
+msgid "Choisir un logo"
+msgstr "Elegir un logotipo"
+
+msgid "Choisir une image"
+msgstr "Elegir una imagen"
+
+msgid "Client"
+msgstr "Cliente"
+
+msgid "Client et fournisseur"
+msgstr "Cliente y proveedor"
+
+msgid "Clients"
+msgstr "Clientes"
+
+msgid "Clients et fournisseurs"
+msgstr "Clientes y proveedores"
+
+msgid "Cliquer sur une facture pour ouvrir sa fiche."
+msgstr "Haga clic en una factura para abrir su ficha."
+
+msgid "Cocher ce que chaque rôle peut faire. Le rôle Admin garde toujours la gestion des utilisateurs et des droits. Les contrôles s'appliquent dès l'enregistrement ; le menu des autres comptes se met à jour à leur prochaine connexion."
+msgstr "Marque lo que puede hacer cada rol. El rol Admin conserva siempre la gestión de usuarios y derechos. Los controles se aplican al guardar; el menú de las demás cuentas se actualiza en su próximo inicio de sesión."
+
+msgid "Colonnes ignorées, non importées : {}."
+msgstr "Columnas ignoradas, no importadas: {}."
+
+msgid "Colonnes reconnues : {}."
+msgstr "Columnas reconocidas: {}."
+
+msgid "Commercial"
+msgstr "Comercial"
+
+msgid "Composants tiers"
+msgstr "Componentes de terceros"
+
+msgid "Comptable"
+msgstr "Contable"
+
+msgid "Compte"
+msgstr "Cuenta"
+
+msgid "Compte (désactivé)"
+msgstr "Cuenta (desactivada)"
+
+msgid "Compte bancaire 1"
+msgstr "Cuenta bancaria 1"
+
+msgid "Compte bancaire 2"
+msgstr "Cuenta bancaria 2"
+
+msgid "compte créé"
+msgstr "cuenta creada"
+
+msgid "compte désactivé"
+msgstr "cuenta desactivada"
+
+msgid "compte inconnu ou désactivé"
+msgstr "cuenta desconocida o desactivada"
+
+msgid "compte introuvable"
+msgstr "cuenta no encontrada"
+
+msgid "compte réactivé"
+msgstr "cuenta reactivada"
+
+msgid "Comptes"
+msgstr "Cuentas"
+
+msgid "Confirmation"
+msgstr "Confirmación"
+
+msgid "Confirmation du mot de passe"
+msgstr "Confirmación de la contraseña"
+
+msgid "Confirmation du nouveau mot de passe"
+msgstr "Confirmación de la nueva contraseña"
+
+msgid "Confirmer l'annulation"
+msgstr "Confirmar la anulación"
+
+msgid "Confirmer la suppression"
+msgstr "Confirmar la eliminación"
+
+msgid "Confirmer la validation"
+msgstr "Confirmar la validación"
+
+msgid "Confirmer le retrait"
+msgstr "Confirmar la retirada"
+
+msgid "CONNEXION"
+msgstr "INICIO DE SESIÓN"
+
+msgid "Consultation"
+msgstr "Consulta"
+
+msgid "Consulter tableau de bord et registres"
+msgstr "Consultar panel y registros"
+
+msgid "Converti"
+msgstr "Convertido"
+
+msgid "Création du brouillon"
+msgstr "Creación del borrador"
+
+msgid "Créer le compte"
+msgstr "Crear la cuenta"
+
+msgid "Créer/modifier un brouillon (Devis, Proforma, BC, Livraison)"
+msgstr "Crear/modificar un borrador (Presupuesto, Proforma, OC, Entrega)"
+
+msgid "Créer/modifier un brouillon Facture ou Avoir"
+msgstr "Crear/modificar un borrador de Factura o Nota de crédito"
+
+msgid "CSV, Excel ou OpenDocument"
+msgstr "CSV, Excel u OpenDocument"
+
+msgid "Date"
+msgstr "Fecha"
+
+msgid "Date (JJ/MM/AAAA)"
+msgstr "Fecha (DD/MM/AAAA)"
+
+msgid "Date de début de période incomplète ou illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "Fecha de inicio del periodo incompleta o ilegible (DD/MM/AAAA): no aplicada."
+
+msgid "Date de fin de période incomplète ou illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "Fecha de fin del periodo incompleta o ilegible (DD/MM/AAAA): no aplicada."
+
+msgid "date illisible : saisir la date au format JJ/MM/AAAA"
+msgstr "fecha ilegible: introduzca la fecha con el formato DD/MM/AAAA"
+
+msgid "Dates de début et de fin de période incomplètes ou illisibles (JJ/MM/AAAA) : non appliquées."
+msgstr "Fechas de inicio y fin del periodo incompletas o ilegibles (DD/MM/AAAA): no aplicadas."
+
+msgid "Devis"
+msgstr "Presupuestos"
+
+msgid "Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements."
+msgstr "Presupuestos, proformas, órdenes de compra, albaranes de entrega, facturas y pagos."
+
+msgid "document introuvable"
+msgstr "documento no encontrado"
+
+msgid "Doublon"
+msgstr "Duplicado"
+
+msgid "droits enregistrés"
+msgstr "derechos guardados"
+
+msgid "Droits par rôle"
+msgstr "Derechos por rol"
+
+msgid "Du JJ/MM/AAAA"
+msgstr "Desde DD/MM/AAAA"
+
+msgid "délai de paiement"
+msgstr "plazo de pago"
+
+msgid "Délai de paiement des factures"
+msgstr "Plazo de pago de las facturas"
+
+msgid "Délais (en jours, laisser vide pour ne pas en fixer)"
+msgstr "Plazos (en días, dejar vacío para no fijarlos)"
+
+msgid "Démarrage impossible"
+msgstr "Inicio imposible"
+
+msgid "Désactiver"
+msgstr "Desactivar"
+
+msgid "Désactivé"
+msgstr "Desactivado"
+
+msgid "Désactivée"
+msgstr "Desactivada"
+
+msgid "Désignation"
+msgstr "Descripción"
+
+msgid "désignation"
+msgstr "descripción"
+
+msgid "Email"
+msgstr "Correo electrónico"
+
+msgid "En lettres : {}"
+msgstr "En letras: {}"
+
+msgid "Enregistrer"
+msgstr "Guardar"
+
+msgid "enregistrer d'abord la facture"
+msgstr "guarde primero la factura"
+
+msgid "Enregistrer le brouillon"
+msgstr "Guardar el borrador"
+
+msgid "Enregistrer le mode et les observations"
+msgstr "Guardar la forma de pago y las observaciones"
+
+msgid "Enregistrer les droits"
+msgstr "Guardar los derechos"
+
+msgid "Entreprise"
+msgstr "Empresa"
+
+msgid "Entreprise : {}"
+msgstr "Empresa: {}"
+
+msgid "Envoyé"
+msgstr "Enviado"
+
+msgid "Erreur"
+msgstr "Error"
+
+msgid "Exemple : première facture de l'année, {}"
+msgstr "Ejemplo: primera factura del año, {}"
+
+msgid "Exemple : première facture du mois, {}"
+msgstr "Ejemplo: primera factura del mes, {}"
+
+msgid "Exemple : {} FCFA s'écrit « {} »."
+msgstr "Ejemplo: {} FCFA se escribe «{}»."
+
+msgid "existe déjà"
+msgstr "ya existe"
+
+msgid "Facture"
+msgstr "Factura"
+
+msgid "Facture (brouillon)"
+msgstr "Factura (borrador)"
+
+msgid "facture annulée"
+msgstr "factura anulada"
+
+msgid "Facture annulée : lecture seule, numéro conservé."
+msgstr "Factura anulada: solo lectura, número conservado."
+
+msgid "facture marquée envoyée"
+msgstr "factura marcada como enviada"
+
+msgid "Facture validée : lignes et montants figés."
+msgstr "Factura validada: líneas e importes fijados."
+
+msgid "facture validée sous le numéro {}"
+msgstr "factura validada con el número {}"
+
+msgid "Facture {}"
+msgstr "Factura {}"
+
+msgid "Factures"
+msgstr "Facturas"
+
+msgid "Fermer"
+msgstr "Cerrar"
+
+msgid "Fiche"
+msgstr "Ficha"
+
+msgid "Fiche du produit"
+msgstr "Ficha del producto"
+
+msgid "Fiche du produit (désactivée)"
+msgstr "Ficha del producto (desactivada)"
+
+msgid "Fiche du tiers"
+msgstr "Ficha del tercero"
+
+msgid "Fiche du tiers (désactivée)"
+msgstr "Ficha del tercero (desactivada)"
+
+msgid "fiche désactivée : elle est citée dans au moins un document, l'historique reste intact"
+msgstr "ficha desactivada: aparece en al menos un documento, el historial queda intacto"
+
+msgid "fiche enregistrée"
+msgstr "ficha guardada"
+
+msgid "fiche réactivée"
+msgstr "ficha reactivada"
+
+msgid "fiche supprimée"
+msgstr "ficha eliminada"
+
+msgid "Fiches ajoutées : {}"
+msgstr "Fichas añadidas: {}"
+
+msgid "Fiches désactivées"
+msgstr "Fichas desactivadas"
+
+msgid "Fiches à importer : {} ; doublons ignorés : {} ; lignes en erreur : {}."
+msgstr "Fichas que importar: {}; duplicados omitidos: {}; líneas con error: {}."
+
+msgid "Fichier : {}"
+msgstr "Archivo: {}"
+
+msgid "Filtrer les clients"
+msgstr "Filtrar los clientes"
+
+msgid "Filtrer les produits"
+msgstr "Filtrar los productos"
+
+msgid "Fournisseur"
+msgstr "Proveedor"
+
+msgid "Fournisseurs"
+msgstr "Proveedores"
+
+msgid "Garder"
+msgstr "Conservar"
+
+msgid "Gestion commerciale"
+msgstr "Gestión comercial"
+
+msgid "Gestion commerciale mono-poste pour Windows : les données restent sur ce poste."
+msgstr "Gestión comercial monopuesto para Windows: los datos permanecen en este equipo."
+
+msgid "Gérer la fiche entreprise et les paramètres"
+msgstr "Gestionar la ficha de empresa y la configuración"
+
+msgid "Gérer les utilisateurs et droits"
+msgstr "Gestionar usuarios y derechos"
+
+msgid "Historique"
+msgstr "Historial"
+
+msgid "Identifiant"
+msgstr "Identificador"
+
+msgid "Identifiant de connexion"
+msgstr "Identificador de conexión"
+
+msgid "identifiant ou mot de passe incorrect"
+msgstr "identificador o contraseña incorrectos"
+
+msgid "IFU"
+msgstr "IFU"
+
+msgid "Image PNG ou JPEG, 2 Mo au plus. Le logo principal figure à gauche de l'en-tête, le second à droite."
+msgstr "Imagen PNG o JPEG, 2 MB como máximo. El logotipo principal aparece a la izquierda del encabezado y el segundo a la derecha."
+
+msgid "Images PNG ou JPEG"
+msgstr "Imágenes PNG o JPEG"
+
+msgid "Impayé"
+msgstr "Impagado"
+
+msgid "Importer"
+msgstr "Importar"
+
+msgid "Importer des produits"
+msgstr "Importar productos"
+
+msgid "Importer des tiers"
+msgstr "Importar terceros"
+
+msgid "Importer les fiches valides"
+msgstr "Importar las fichas válidas"
+
+msgid "impossible : l'installation doit garder au moins un administrateur actif"
+msgstr "imposible: la instalación debe conservar al menos un administrador activo"
+
+msgid "Interface : Slint, sous licence Slint Royalty-free 2.0."
+msgstr "Interfaz: Slint, bajo licencia Slint Royalty-free 2.0."
+
+msgid "l'identifiant est obligatoire et ne contient pas d'espace"
+msgstr "el identificador es obligatorio y no contiene espacios"
+
+msgid "l'installation initiale a déjà été faite"
+msgstr "la instalación inicial ya se ha realizado"
+
+msgid "La base de données ({}) n'a pas pu être ouverte : {}"
+msgstr "No se pudo abrir la base de datos ({}): {}"
+
+msgid "la fiche entreprise n'existe pas encore"
+msgstr "la ficha de empresa aún no existe"
+
+msgid "Langue de l'interface"
+msgstr "Idioma de la interfaz"
+
+msgid "le logo doit être une image PNG ou JPEG"
+msgstr "el logotipo debe ser una imagen PNG o JPEG"
+
+msgid "le montant du règlement doit être positif"
+msgstr "el importe del pago debe ser positivo"
+
+msgid "le mot de passe actuel est incorrect"
+msgstr "la contraseña actual es incorrecta"
+
+msgid "le nom complet est obligatoire"
+msgstr "el nombre completo es obligatorio"
+
+msgid "Le nom complet et l'identifiant sont obligatoires."
+msgstr "El nombre completo y el identificador son obligatorios."
+
+msgid "le nom de l'entreprise est obligatoire"
+msgstr "el nombre de la empresa es obligatorio"
+
+msgid "Le nom de l'entreprise est obligatoire."
+msgstr "El nombre de la empresa es obligatorio."
+
+msgid "Le produit choisi remplit la référence, la désignation et le prix, qui restent modifiables sur la ligne. Une référence tapée puis validée par Entrée reprend le produit correspondant."
+msgstr "El producto elegido rellena la referencia, la descripción y el precio, que siguen siendo modificables en la línea. Una referencia escrita y validada con Intro recupera el producto correspondiente."
+
+msgid "lecture du fichier impossible : {}"
+msgstr "no se puede leer el archivo: {}"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une facture."
+msgstr "Solo lectura: su rol no permite modificar una factura."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une fiche existante."
+msgstr "Solo lectura: su rol no permite modificar una ficha existente."
+
+msgid "Les deux"
+msgstr "Ambos"
+
+msgid "les deux mots de passe ne correspondent pas"
+msgstr "las dos contraseñas no coinciden"
+
+msgid "Les deux mots de passe ne correspondent pas."
+msgstr "Las dos contraseñas no coinciden."
+
+msgid "les deux nouveaux mots de passe ne correspondent pas"
+msgstr "las dos contraseñas nuevas no coinciden"
+
+msgid "Les textes des documents, l'apparence des PDF et les dossiers d'export se régleront ici avec le jalon du PDF (J4). La matrice des droits par rôle se règle dans l'écran Utilisateurs."
+msgstr "Los textos de los documentos, el aspecto de los PDF y las carpetas de exportación se configurarán aquí con el hito del PDF (J4). La matriz de derechos por rol se configura en la pantalla Usuarios."
+
+msgid "Libellé"
+msgstr "Concepto"
+
+msgid "Ligne"
+msgstr "Línea"
+
+msgid "Ligne libre"
+msgstr "Línea libre"
+
+msgid "ligne {} : prix illisible, saisir un montant entier en FCFA"
+msgstr "línea {}: precio ilegible, introduzca un importe entero en FCFA"
+
+msgid "ligne {} : quantité illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "línea {}: cantidad ilegible, introduzca un número positivo (3 decimales como máximo)"
+
+msgid "Lignes"
+msgstr "Líneas"
+
+msgid "Livraison complète"
+msgstr "Entrega completa"
+
+msgid "Livraison partielle"
+msgstr "Entrega parcial"
+
+msgid "Livraisons"
+msgstr "Entregas"
+
+msgid "Localisation"
+msgstr "Ubicación"
+
+msgid "localisation"
+msgstr "ubicación"
+
+msgid "Logiciel"
+msgstr "Software"
+
+msgid "Logiciel propriétaire, tous droits réservés."
+msgstr "Software propietario, todos los derechos reservados."
+
+msgid "logo enregistré"
+msgstr "logotipo guardado"
+
+msgid "Logo principal"
+msgstr "Logotipo principal"
+
+msgid "logo retiré"
+msgstr "logotipo quitado"
+
+msgid "Logos"
+msgstr "Logotipos"
+
+msgid "Marquer envoyée"
+msgstr "Marcar como enviada"
+
+msgid "Mode"
+msgstr "Forma"
+
+msgid "Mode de paiement"
+msgstr "Forma de pago"
+
+msgid "mode de paiement et observations enregistrés"
+msgstr "forma de pago y observaciones guardadas"
+
+msgid "Modes de paiement"
+msgstr "Formas de pago"
+
+msgid "Modes de paiement : {}"
+msgstr "Formas de pago: {}"
+
+msgid "Modes de paiement, séparés par des points-virgules"
+msgstr "Formas de pago, separadas por punto y coma"
+
+msgid "Modification du mode de paiement ou des observations"
+msgstr "Modificación de la forma de pago o de las observaciones"
+
+msgid "Modifier ou désactiver un client, un fournisseur, un produit"
+msgstr "Modificar o desactivar un cliente, un proveedor, un producto"
+
+msgid "Module en cours de construction."
+msgstr "Módulo en construcción."
+
+msgid "Mon compte"
+msgstr "Mi cuenta"
+
+msgid "Montant en lettres"
+msgstr "Importe en letras"
+
+msgid "Montant en lettres : {}"
+msgstr "Importe en letras: {}"
+
+msgid "Montant en lettres en orthographe traditionnelle (sinon : orthographe rectifiée de 1990)"
+msgstr "Importe en letras con ortografía tradicional (si no: ortografía rectificada de 1990)"
+
+msgid "Montant HT"
+msgstr "Importe sin impuestos"
+
+msgid "Montant TTC"
+msgstr "Importe con impuestos"
+
+msgid "Mot de passe"
+msgstr "Contraseña"
+
+msgid "Mot de passe (8 caractères au moins)"
+msgstr "Contraseña (8 caracteres como mínimo)"
+
+msgid "Mot de passe actuel"
+msgstr "Contraseña actual"
+
+msgid "Mot de passe modifié."
+msgstr "Contraseña modificada."
+
+msgid "mot de passe réinitialisé"
+msgstr "contraseña restablecida"
+
+msgid "Nom"
+msgstr "Nombre"
+
+msgid "nom"
+msgstr "nombre"
+
+msgid "Nom complet"
+msgstr "Nombre completo"
+
+msgid "Nom de l'entreprise (obligatoire)"
+msgstr "Nombre de la empresa (obligatorio)"
+
+msgid "nombre de chiffres du rang invalide : saisir un entier entre {} et {}"
+msgstr "número de dígitos del número de orden no válido: introduzca un entero entre {} y {}"
+
+msgid "Non précisé"
+msgstr "No especificado"
+
+msgid "Nouveau compte"
+msgstr "Nueva cuenta"
+
+msgid "Nouveau mot de passe (8 caractères au moins)"
+msgstr "Nueva contraseña (8 caracteres como mínimo)"
+
+msgid "Nouveau produit"
+msgstr "Nuevo producto"
+
+msgid "Nouveau tiers"
+msgstr "Nuevo tercero"
+
+msgid "Nouvelle facture"
+msgstr "Nueva factura"
+
+msgid "Numérotation des documents"
+msgstr "Numeración de los documentos"
+
+msgid "N°"
+msgstr "N.º"
+
+msgid "Observations"
+msgstr "Observaciones"
+
+msgid "orthographe rectifiée"
+msgstr "ortografía rectificada"
+
+msgid "Orthographe rectifiée (1990)"
+msgstr "Ortografía rectificada (1990)"
+
+msgid "Orthographe traditionnelle"
+msgstr "Ortografía tradicional"
+
+msgid "orthographe traditionnelle"
+msgstr "ortografía tradicional"
+
+msgid "Paiement"
+msgstr "Pago"
+
+msgid "Paiement : {}"
+msgstr "Pago: {}"
+
+msgid "Paiements"
+msgstr "Pagos"
+
+msgid "Paramètres"
+msgstr "Configuración"
+
+msgid "paramètres enregistrés"
+msgstr "configuración guardada"
+
+msgid "Partiel"
+msgstr "Parcial"
+
+msgid "Payé"
+msgstr "Pagado"
+
+msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
+msgstr "Fuentes: Inter y Manrope, bajo licencia SIL Open Font License 1.1."
+
+msgid "Pourcentages séparés par des points-virgules, par exemple « 0 ; 18 » ou « 0 ; 2,5 ; 5 »."
+msgstr "Porcentajes separados por punto y coma, por ejemplo «0 ; 18» o «0 ; 2,5 ; 5»."
+
+msgid "Première installation"
+msgstr "Primera instalación"
+
+msgid "prix"
+msgstr "precio"
+
+msgid "Prix (FCFA)"
+msgstr "Precio (FCFA)"
+
+msgid "Prix unitaire"
+msgstr "Precio unitario"
+
+msgid "Prix unitaire (FCFA)"
+msgstr "Precio unitario (FCFA)"
+
+msgid "Produits"
+msgstr "Productos"
+
+msgid "Produits et services"
+msgstr "Productos y servicios"
+
+msgid "Proforma"
+msgstr "Proforma"
+
+msgid "Précédent"
+msgstr "Anterior"
+
+msgid "Préfixes de 1 à 6 lettres, différents d'un type à l'autre."
+msgstr "Prefijos de 1 a 6 letras, distintos para cada tipo."
+
+msgid "Quantité"
+msgstr "Cantidad"
+
+msgid "RCCM"
+msgstr "RCCM"
+
+msgid "Rechercher : désignation ou référence"
+msgstr "Buscar: descripción o referencia"
+
+msgid "Rechercher : nom, téléphone, localisation, adresse, IFU"
+msgstr "Buscar: nombre, teléfono, ubicación, dirección, IFU"
+
+msgid "Rechercher : numéro, client, libellé"
+msgstr "Buscar: número, cliente, concepto"
+
+msgid "Remarque"
+msgstr "Observación"
+
+msgid "Remise"
+msgstr "Descuento"
+
+msgid "remise"
+msgstr "descuento"
+
+msgid "Remise (%)"
+msgstr "Descuento (%)"
+
+msgid "Remise à zéro du compteur"
+msgstr "Reinicio del contador"
+
+msgid "Remplacer"
+msgstr "Reemplazar"
+
+msgid "Responsable comptabilité"
+msgstr "Responsable de contabilidad"
+
+msgid "Responsable de la comptabilité"
+msgstr "Responsable de contabilidad"
+
+msgid "Responsable de la facturation"
+msgstr "Responsable de facturación"
+
+msgid "Responsable facturation"
+msgstr "Responsable de facturación"
+
+msgid "retenue"
+msgstr "retención"
+
+msgid "Retenue à la source (%)"
+msgstr "Retención en la fuente (%)"
+
+msgid "Retirer"
+msgstr "Quitar"
+
+msgid "Retirer cette fiche ? Elle est supprimée si aucun document ne la cite, sinon seulement désactivée."
+msgstr "¿Quitar esta ficha? Se elimina si ningún documento la cita; si no, solo se desactiva."
+
+msgid "Retour au registre"
+msgstr "Volver al registro"
+
+msgid "Revenir"
+msgstr "Volver"
+
+msgid "Revenir à la matrice du cahier des charges"
+msgstr "Volver a la matriz del pliego de condiciones"
+
+msgid "Réactiver"
+msgstr "Reactivar"
+
+msgid "Récapitulatif"
+msgstr "Resumen"
+
+msgid "Réception complète"
+msgstr "Recepción completa"
+
+msgid "Réception partielle"
+msgstr "Recepción parcial"
+
+msgid "Référence"
+msgstr "Referencia"
+
+msgid "référence"
+msgstr "referencia"
+
+msgid "Référence (unique)"
+msgstr "Referencia (única)"
+
+msgid "Régime d'imposition"
+msgstr "Régimen fiscal"
+
+msgid "régime d'imposition"
+msgstr "régimen fiscal"
+
+msgid "Réinitialiser le mot de passe"
+msgstr "Restablecer la contraseña"
+
+msgid "Rôle"
+msgstr "Rol"
+
+msgid "rôle changé ; le menu de ce compte suivra à sa prochaine connexion"
+msgstr "rol cambiado; el menú de esta cuenta se actualizará en su próximo inicio de sesión"
+
+msgid "Saisir un règlement"
+msgstr "Registrar un pago"
+
+msgid "Saisissez votre identifiant et votre mot de passe."
+msgstr "Introduzca su identificador y su contraseña."
+
+msgid "Sauvegarder / exporter la base"
+msgstr "Guardar / exportar la base"
+
+msgid "Se connecter"
+msgstr "Iniciar sesión"
+
+msgid "Se déconnecter"
+msgstr "Cerrar sesión"
+
+msgid "Second logo"
+msgstr "Segundo logotipo"
+
+msgid "Sens"
+msgstr "Uso"
+
+msgid "sens"
+msgstr "uso"
+
+msgid "Sens d'utilisation"
+msgstr "Uso"
+
+msgid "Sens des lignes sans colonne Sens :"
+msgstr "Uso de las líneas sin columna Uso:"
+
+msgid "Site web"
+msgstr "Sitio web"
+
+msgid "Statut"
+msgstr "Estado"
+
+msgid "Statut : {}"
+msgstr "Estado: {}"
+
+msgid "Suivant"
+msgstr "Siguiente"
+
+msgid "Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit."
+msgstr "¿Eliminar este borrador? Desaparece del registro; la eliminación queda registrada en el registro de auditoría."
+
+msgid "Supprimer le brouillon"
+msgstr "Eliminar el borrador"
+
+msgid "Sélectionner un produit dans la liste pour afficher sa fiche."
+msgstr "Seleccione un producto en la lista para mostrar su ficha."
+
+msgid "Sélectionner un tiers dans la liste pour afficher sa fiche."
+msgstr "Seleccione un tercero en la lista para mostrar su ficha."
+
+msgid "Tableau de bord"
+msgstr "Panel"
+
+msgid "Taux de remise (%)"
+msgstr "Tasas de descuento (%)"
+
+msgid "Taux de retenue (%)"
+msgstr "Tasas de retención (%)"
+
+msgid "Taux de TVA (%)"
+msgstr "Tasas de IVA (%)"
+
+msgid "taux de {} invalides : saisir des pourcentages entre 0 et 100 séparés par des points-virgules"
+msgstr "tasas de {} no válidas: introduzca porcentajes entre 0 y 100 separados por punto y coma"
+
+msgid "Taux et paiements"
+msgstr "Tasas y pagos"
+
+msgid "Taux proposés dans les documents"
+msgstr "Tasas propuestas en los documentos"
+
+msgid "Terminer l'installation"
+msgstr "Finalizar la instalación"
+
+msgid "Tiers"
+msgstr "Terceros"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Tous les produits"
+msgstr "Todos los productos"
+
+msgid "Tous les statuts"
+msgstr "Todos los estados"
+
+msgid "Tous les tiers"
+msgstr "Todos los terceros"
+
+msgid "Tout paiement"
+msgstr "Cualquier pago"
+
+msgid "TVA"
+msgstr "IVA"
+
+msgid "TVA (%)"
+msgstr "IVA (%)"
+
+msgid "TVA : {}   Remise : {}   Retenue : {}"
+msgstr "IVA: {}   Descuento: {}   Retención: {}"
+
+msgid "Type"
+msgstr "Tipo"
+
+msgid "type"
+msgstr "tipo"
+
+msgid "Type des lignes sans colonne Type :"
+msgstr "Tipo de las líneas sin columna Tipo:"
+
+msgid "Téléphone"
+msgstr "Teléfono"
+
+msgid "téléphone"
+msgstr "teléfono"
+
+msgid "Un changement vaut pour les validations suivantes ; les numéros déjà attribués ne changent pas. Changer de compteur en cours d'année interrompt la suite des numéros de l'année."
+msgstr "Un cambio se aplica a las validaciones siguientes; los números ya asignados no cambian. Cambiar de contador a mitad de año interrumpe la serie de números del año."
+
+msgid "Utilisateurs"
+msgstr "Usuarios"
+
+msgid "Valeurs séparées par des points-virgules, en pourcentage (ex. 0 ; 18). Modifiables plus tard dans les paramètres."
+msgstr "Valores separados por punto y coma, en porcentaje (p. ej. 0 ; 18). Se pueden modificar más tarde en la configuración."
+
+msgid "Validation"
+msgstr "Validación"
+
+msgid "Valider"
+msgstr "Validar"
+
+msgid "Valider cette facture ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "¿Validar esta factura? Recibe su número definitivo; sus líneas e importes ya no podrán modificarse."
+
+msgid "Valider un document"
+msgstr "Validar un documento"
+
+msgid "Validité des devis"
+msgstr "Validez de los presupuestos"
+
+msgid "validité des devis"
+msgstr "validez de los presupuestos"
+
+msgid "Validé"
+msgstr "Validado"
+
+msgid "Vente"
+msgstr "Venta"
+
+msgid "Vente et achat"
+msgstr "Venta y compra"
+
+msgid "Version {}"
+msgstr "Versión {}"
+
+msgid "{} (désactivé)"
+msgstr "{} (desactivado)"
+
+msgid "{} ({}), rôle : {}"
+msgstr "{} ({}), rol: {}"
+
+msgid "{} factures."
+msgstr "{} facturas."
+
+msgid "{} fiches"
+msgstr "{} fichas"
+
+msgid "{} invalide : saisir un nombre entier de jours, ou laisser vide pour ne pas en fixer"
+msgstr "{} no válido: introduzca un número entero de días, o déjelo vacío para no fijarlo"
+
+msgid "À importer"
+msgstr "Para importar"
+
+msgid "À propos"
+msgstr "Acerca de"
+
+msgid "Échéance"
+msgstr "Vencimiento"
+
+msgid "Échéance (facultative)"
+msgstr "Vencimiento (opcional)"
+
+msgid "échéance illisible : saisir la date au format JJ/MM/AAAA, ou la laisser vide"
+msgstr "vencimiento ilegible: introduzca la fecha con el formato DD/MM/AAAA, o déjelo vacío"
+
+msgid "Étape {} sur {} : {}"
+msgstr "Paso {} de {}: {}"
+
+msgid "État"
+msgstr "Estado"

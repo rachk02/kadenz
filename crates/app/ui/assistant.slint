@@ -40,7 +40,7 @@ export component EcranAssistant inherits Rectangle {
     // Renvoie un message d'erreur, ou une chaîne vide si l'installation a réussi.
     callback terminer(DonneesAssistant) -> string;
 
-    property <[string]> etapes: ["Entreprise", "Administrateur", "Taux et paiements", "Récapitulatif"];
+    property <[string]> etapes: [@tr("Entreprise"), @tr("Administrateur"), @tr("Taux et paiements"), @tr("Récapitulatif")];
     property <int> etape: 0;
     property <string> erreur;
 
@@ -69,11 +69,11 @@ export component EcranAssistant inherits Rectangle {
 
     function suivant() {
         if (root.etape == 0 && root.nom == "") {
-            root.erreur = "Le nom de l'entreprise est obligatoire.";
+            root.erreur = @tr("Le nom de l'entreprise est obligatoire.");
         } else if (root.etape == 1 && (root.admin-nom == "" || root.admin-identifiant == "")) {
-            root.erreur = "Le nom complet et l'identifiant sont obligatoires.";
+            root.erreur = @tr("Le nom complet et l'identifiant sont obligatoires.");
         } else if (root.etape == 1 && root.admin-mot-de-passe != root.admin-confirmation) {
-            root.erreur = "Les deux mots de passe ne correspondent pas.";
+            root.erreur = @tr("Les deux mots de passe ne correspondent pas.");
         } else {
             root.erreur = "";
             root.etape += 1;
@@ -144,11 +144,11 @@ export component EcranAssistant inherits Rectangle {
                     padding: 24px;
 
                     Titre {
-                        text: "Première installation";
+                        text: @tr("Première installation");
                     }
 
                     Text {
-                        text: "Étape " + (root.etape + 1) + " sur " + root.etapes.length + " : " + root.etapes[root.etape];
+                        text: @tr("Étape {} sur {} : {}", root.etape + 1, root.etapes.length, root.etapes[root.etape]);
                         color: Theme.texte-secondaire;
                     }
 
@@ -156,79 +156,79 @@ export component EcranAssistant inherits Rectangle {
                         spacing: 12px;
                         Row {
                             Champ {
-                                libelle: "Nom de l'entreprise (obligatoire)";
+                                libelle: @tr("Nom de l'entreprise (obligatoire)");
                                 valeur <=> root.nom;
                             }
 
                             Champ {
-                                libelle: "Adresse / boîte postale";
+                                libelle: @tr("Adresse / boîte postale");
                                 valeur <=> root.adresse;
                             }
                         }
 
                         Row {
                             Champ {
-                                libelle: "Téléphone";
+                                libelle: @tr("Téléphone");
                                 valeur <=> root.telephone;
                             }
 
                             Champ {
-                                libelle: "Email";
+                                libelle: @tr("Email");
                                 valeur <=> root.email;
                             }
                         }
 
                         Row {
                             Champ {
-                                libelle: "Site web";
+                                libelle: @tr("Site web");
                                 valeur <=> root.site-web;
                             }
 
                             Champ {
-                                libelle: "Localisation";
+                                libelle: @tr("Localisation");
                                 valeur <=> root.localisation;
                             }
                         }
 
                         Row {
                             Champ {
-                                libelle: "Régime d'imposition";
+                                libelle: @tr("Régime d'imposition");
                                 valeur <=> root.regime;
                             }
 
                             Champ {
-                                libelle: "RCCM";
+                                libelle: @tr("RCCM");
                                 valeur <=> root.rccm;
                             }
                         }
 
                         Row {
                             Champ {
-                                libelle: "IFU";
+                                libelle: @tr("IFU");
                                 valeur <=> root.ifu;
                             }
 
                             Champ {
-                                libelle: "Compte bancaire 1";
+                                libelle: @tr("Compte bancaire 1");
                                 valeur <=> root.banque1;
                             }
                         }
 
                         Row {
                             Champ {
-                                libelle: "Compte bancaire 2";
+                                libelle: @tr("Compte bancaire 2");
                                 valeur <=> root.banque2;
                             }
 
                             Champ {
-                                libelle: "Responsable facturation";
+                                libelle: @tr("Responsable facturation");
                                 valeur <=> root.responsable-facturation;
                             }
                         }
 
                         Row {
                             Champ {
-                                libelle: "Responsable comptabilité";
+                                libelle: @tr("Responsable comptabilité");
                                 valeur <=> root.responsable-comptabilite;
                             }
                         }
@@ -238,29 +238,29 @@ export component EcranAssistant inherits Rectangle {
                         spacing: 12px;
 
                         Text {
-                            text: "Ce compte administre l'installation : utilisateurs, droits, sauvegardes.";
+                            text: @tr("Ce compte administre l'installation : utilisateurs, droits, sauvegardes.");
                             color: Theme.texte-secondaire;
                             wrap: word-wrap;
                         }
 
                         Champ {
-                            libelle: "Nom complet";
+                            libelle: @tr("Nom complet");
                             valeur <=> root.admin-nom;
                         }
 
                         Champ {
-                            libelle: "Identifiant de connexion";
+                            libelle: @tr("Identifiant de connexion");
                             valeur <=> root.admin-identifiant;
                         }
 
                         Champ {
-                            libelle: "Mot de passe (8 caractères au moins)";
+                            libelle: @tr("Mot de passe (8 caractères au moins)");
                             secret: true;
                             valeur <=> root.admin-mot-de-passe;
                         }
 
                         Champ {
-                            libelle: "Confirmation du mot de passe";
+                            libelle: @tr("Confirmation du mot de passe");
                             secret: true;
                             valeur <=> root.admin-confirmation;
                         }
@@ -270,33 +270,33 @@ export component EcranAssistant inherits Rectangle {
                         spacing: 12px;
 
                         Text {
-                            text: "Valeurs séparées par des points-virgules, en pourcentage (ex. 0 ; 18). Modifiables plus tard dans les paramètres.";
+                            text: @tr("Valeurs séparées par des points-virgules, en pourcentage (ex. 0 ; 18). Modifiables plus tard dans les paramètres.");
                             color: Theme.texte-secondaire;
                             wrap: word-wrap;
                         }
 
                         Champ {
-                            libelle: "Taux de TVA (%)";
+                            libelle: @tr("Taux de TVA (%)");
                             valeur <=> root.taux-tva;
                         }
 
                         Champ {
-                            libelle: "Taux de remise (%)";
+                            libelle: @tr("Taux de remise (%)");
                             valeur <=> root.taux-remise;
                         }
 
                         Champ {
-                            libelle: "Taux de retenue (%)";
+                            libelle: @tr("Taux de retenue (%)");
                             valeur <=> root.taux-retenue;
                         }
 
                         Champ {
-                            libelle: "Modes de paiement";
+                            libelle: @tr("Modes de paiement");
                             valeur <=> root.modes-paiement;
                         }
 
                         CheckBox {
-                            text: "Montant en lettres en orthographe traditionnelle (sinon : orthographe rectifiée de 1990)";
+                            text: @tr("Montant en lettres en orthographe traditionnelle (sinon : orthographe rectifiée de 1990)");
                             checked <=> root.orthographe-traditionnelle;
                         }
                     }
@@ -305,28 +305,28 @@ export component EcranAssistant inherits Rectangle {
                         spacing: 8px;
 
                         Text {
-                            text: "Entreprise : " + root.nom;
+                            text: @tr("Entreprise : {}", root.nom);
                             color: Theme.texte;
                         }
 
                         Text {
-                            text: "Administrateur : " + root.admin-nom + " (" + root.admin-identifiant + ")";
+                            text: @tr("Administrateur : {} ({})", root.admin-nom, root.admin-identifiant);
                             color: Theme.texte;
                         }
 
                         Text {
-                            text: "TVA : " + root.taux-tva + "   Remise : " + root.taux-remise + "   Retenue : " + root.taux-retenue;
+                            text: @tr("TVA : {}   Remise : {}   Retenue : {}", root.taux-tva, root.taux-remise, root.taux-retenue);
                             color: Theme.texte;
                         }
 
                         Text {
-                            text: "Modes de paiement : " + root.modes-paiement;
+                            text: @tr("Modes de paiement : {}", root.modes-paiement);
                             color: Theme.texte;
                             wrap: word-wrap;
                         }
 
                         Text {
-                            text: "Montant en lettres : " + (root.orthographe-traditionnelle ? "orthographe traditionnelle" : "orthographe rectifiée");
+                            text: @tr("Montant en lettres : {}", root.orthographe-traditionnelle ? @tr("orthographe traditionnelle") : @tr("orthographe rectifiée"));
                             color: Theme.texte;
                         }
                     }
@@ -340,7 +340,7 @@ export component EcranAssistant inherits Rectangle {
                         alignment: end;
 
                         if root.etape > 0: Bouton {
-                            text: "Précédent";
+                            text: @tr("Précédent");
                             clicked => {
                                 root.erreur = "";
                                 root.etape -= 1;
@@ -348,7 +348,7 @@ export component EcranAssistant inherits Rectangle {
                         }
 
                         if root.etape < root.etapes.length - 1: Bouton {
-                            text: "Suivant";
+                            text: @tr("Suivant");
                             primary: true;
                             clicked => {
                                 root.suivant();
@@ -356,7 +356,7 @@ export component EcranAssistant inherits Rectangle {
                         }
 
                         if root.etape == root.etapes.length - 1: Bouton {
-                            text: "Terminer l'installation";
+                            text: @tr("Terminer l'installation");
                             primary: true;
                             clicked => {
                                 root.erreur = root.terminer({

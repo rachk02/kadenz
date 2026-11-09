@@ -44,14 +44,14 @@ export component PanneauImport inherits Rectangle {
             spacing: 8px;
 
             Text {
-                text: ImportApi.fichier == "" ? "Aucun fichier choisi." : "Fichier : " + ImportApi.fichier;
+                text: ImportApi.fichier == "" ? @tr("Aucun fichier choisi.") : @tr("Fichier : {}", ImportApi.fichier);
                 color: Theme.texte;
                 vertical-alignment: center;
                 overflow: elide;
             }
 
             Bouton {
-                text: "Choisir un autre fichier";
+                text: @tr("Choisir un autre fichier");
                 clicked => {
                     ImportApi.choisir-fichier();
                 }
@@ -93,10 +93,10 @@ export component PanneauImport inherits Rectangle {
 
         StandardTableView {
             columns: [
-                { title: "Ligne", min-width: 60px, horizontal-stretch: 0 },
-                { title: "État", min-width: 100px, horizontal-stretch: 0 },
-                { title: "Fiche", min-width: 200px, horizontal-stretch: 2 },
-                { title: "Remarque", min-width: 220px, horizontal-stretch: 3 },
+                { title: @tr("Ligne"), min-width: 60px, horizontal-stretch: 0 },
+                { title: @tr("État"), min-width: 100px, horizontal-stretch: 0 },
+                { title: @tr("Fiche"), min-width: 200px, horizontal-stretch: 2 },
+                { title: @tr("Remarque"), min-width: 220px, horizontal-stretch: 3 },
             ];
             rows: ImportApi.lignes;
         }
@@ -112,7 +112,7 @@ export component PanneauImport inherits Rectangle {
             alignment: start;
 
             if ImportApi.peut-importer: Bouton {
-                text: "Importer les fiches valides";
+                text: @tr("Importer les fiches valides");
                 primary: true;
                 clicked => {
                     ImportApi.importer();
@@ -120,7 +120,7 @@ export component PanneauImport inherits Rectangle {
             }
 
             Bouton {
-                text: ImportApi.peut-importer ? "Annuler" : "Fermer";
+                text: ImportApi.peut-importer ? @tr("Annuler") : @tr("Fermer");
                 clicked => {
                     ImportApi.fermer();
                 }

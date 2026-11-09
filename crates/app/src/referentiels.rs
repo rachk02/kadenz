@@ -13,6 +13,8 @@ use kadenz_stockage::tiers::{self, FicheTiers, FiltreTiers, Tiers, TypeTiers};
 use kadenz_stockage::{Erreur, Retrait};
 use slint::{ComponentHandle, ModelRc, SharedString, StandardListViewItem, VecModel};
 
+use crate::traduction::{tr, trf};
+
 use crate::{
     EtatPartage, FenetrePrincipale, FicheProduitUi, FicheTiersUi, ProduitsApi, Retour, TiersApi,
     phrase,
@@ -67,9 +69,9 @@ pub(crate) fn modele_lignes(lignes: Vec<Vec<String>>) -> ModelRc<ModelRc<Standar
 
 fn resume(nombre: usize) -> SharedString {
     match nombre {
-        0 => "Aucune fiche".into(),
-        1 => "1 fiche".into(),
-        n => format!("{n} fiches").into(),
+        0 => tr("Aucune fiche").into(),
+        1 => tr("1 fiche").into(),
+        n => trf("{} fiches", &[&n]).into(),
     }
 }
 
@@ -77,7 +79,7 @@ fn etat_fiche(actif: bool) -> String {
     if actif {
         String::new()
     } else {
-        "Désactivée".into()
+        tr("Désactivée")
     }
 }
 
@@ -107,7 +109,7 @@ fn cellules_tiers(t: &Tiers) -> Vec<String> {
     let f = &t.fiche;
     vec![
         f.nom.clone(),
-        type_court(f.type_tiers).into(),
+        tr(type_court(f.type_tiers)),
         f.telephone.clone(),
         f.localisation.clone(),
         f.ifu.clone(),
@@ -350,7 +352,7 @@ fn cellules_produit(p: &Produit) -> Vec<String> {
         f.reference.clone(),
         f.designation.clone(),
         saisie::montant_en_texte(f.prix),
-        f.sens.to_string(),
+        tr(&f.sens.to_string()),
         etat_fiche(p.actif),
     ]
 }

@@ -121,13 +121,13 @@ component Registre inherits VerticalLayout {
         spacing: 8px;
 
         Titre {
-            text: "Factures";
+            text: @tr("Factures");
         }
 
         Rectangle { }
 
         if FacturesApi.peut-creer: Bouton {
-            text: "Nouvelle facture";
+            text: @tr("Nouvelle facture");
             primary: true;
             clicked => {
                 FacturesApi.nouvelle();
@@ -139,7 +139,7 @@ component Registre inherits VerticalLayout {
         spacing: 8px;
 
         recherche := LineEdit {
-            placeholder-text: "Rechercher : numéro, client, libellé";
+            placeholder-text: @tr("Rechercher : numéro, client, libellé");
             edited => {
                 root.filtrer();
             }
@@ -147,7 +147,7 @@ component Registre inherits VerticalLayout {
 
         statut := ComboBox {
             width: 150px;
-            model: ["Tous les statuts", "Brouillon", "Validé", "Envoyé", "Annulé"];
+            model: [@tr("Tous les statuts"), @tr("Brouillon"), @tr("Validé"), @tr("Envoyé"), @tr("Annulé")];
             selected => {
                 root.filtrer();
             }
@@ -155,7 +155,7 @@ component Registre inherits VerticalLayout {
 
         paiement := ComboBox {
             width: 160px;
-            model: ["Tout paiement", "Impayé", "Partiel", "Payé"];
+            model: [@tr("Tout paiement"), @tr("Impayé"), @tr("Partiel"), @tr("Payé")];
             selected => {
                 root.filtrer();
             }
@@ -163,7 +163,7 @@ component Registre inherits VerticalLayout {
 
         du := LineEdit {
             width: 120px;
-            placeholder-text: "Du JJ/MM/AAAA";
+            placeholder-text: @tr("Du JJ/MM/AAAA");
             edited => {
                 root.filtrer();
             }
@@ -171,7 +171,7 @@ component Registre inherits VerticalLayout {
 
         au := LineEdit {
             width: 120px;
-            placeholder-text: "Au JJ/MM/AAAA";
+            placeholder-text: @tr("Au JJ/MM/AAAA");
             edited => {
                 root.filtrer();
             }
@@ -185,15 +185,15 @@ component Registre inherits VerticalLayout {
 
     StandardTableView {
         columns: [
-            { title: "N°", min-width: 110px, horizontal-stretch: 1 },
-            { title: "Date", min-width: 85px, horizontal-stretch: 0 },
-            { title: "Client", min-width: 130px, horizontal-stretch: 2 },
-            { title: "Libellé", min-width: 110px, horizontal-stretch: 2 },
-            { title: "Montant TTC", min-width: 100px, horizontal-stretch: 1 },
-            { title: "Statut", min-width: 80px, horizontal-stretch: 0 },
-            { title: "Paiement", min-width: 85px, horizontal-stretch: 0 },
-            { title: "Mode", min-width: 100px, horizontal-stretch: 1 },
-            { title: "Échéance", min-width: 85px, horizontal-stretch: 0 },
+            { title: @tr("N°"), min-width: 110px, horizontal-stretch: 1 },
+            { title: @tr("Date"), min-width: 85px, horizontal-stretch: 0 },
+            { title: @tr("Client"), min-width: 130px, horizontal-stretch: 2 },
+            { title: @tr("Libellé"), min-width: 110px, horizontal-stretch: 2 },
+            { title: @tr("Montant TTC"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Statut"), min-width: 80px, horizontal-stretch: 0 },
+            { title: @tr("Paiement"), min-width: 85px, horizontal-stretch: 0 },
+            { title: @tr("Mode"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Échéance"), min-width: 85px, horizontal-stretch: 0 },
         ];
         rows: FacturesApi.registre;
         current-row <=> FacturesApi.ligne-courante;
@@ -209,7 +209,7 @@ component Registre inherits VerticalLayout {
     }
 
     Text {
-        text: FacturesApi.resume + " Cliquer sur une facture pour ouvrir sa fiche.";
+        text: FacturesApi.resume + " " + @tr("Cliquer sur une facture pour ouvrir sa fiche.");
         font-size: 12px;
         color: Theme.texte-secondaire;
     }
@@ -314,7 +314,7 @@ component Fiche inherits ScrollView {
             spacing: 12px;
 
             Bouton {
-                text: "Retour au registre";
+                text: @tr("Retour au registre");
                 clicked => {
                     FacturesApi.fermer-fiche();
                 }
@@ -340,14 +340,14 @@ component Fiche inherits ScrollView {
                 spacing: 24px;
 
                 Text {
-                    text: "Statut : " + root.fiche.statut;
+                    text: @tr("Statut : {}", root.fiche.statut);
                     font-weight: 700;
                     color: Theme.texte;
                     vertical-alignment: center;
                 }
 
                 if root.fiche.paiement != "": Text {
-                    text: "Paiement : " + root.fiche.paiement;
+                    text: @tr("Paiement : {}", root.fiche.paiement);
                     color: Theme.texte;
                     vertical-alignment: center;
                 }
@@ -355,7 +355,7 @@ component Fiche inherits ScrollView {
                 Rectangle { }
 
                 if root.fiche.brouillon: Text {
-                    text: "Aucun numéro tant que la facture n'est pas validée.";
+                    text: @tr("Aucun numéro tant que la facture n'est pas validée.");
                     color: Theme.texte-secondaire;
                     vertical-alignment: center;
                 }
@@ -371,7 +371,7 @@ component Fiche inherits ScrollView {
                 horizontal-stretch: 2;
 
                 Etiquette {
-                    text: "Client";
+                    text: @tr("Client");
                 }
 
                 HorizontalLayout {
@@ -379,7 +379,7 @@ component Fiche inherits ScrollView {
 
                     if root.fiche.modifiable: recherche-client := LineEdit {
                         width: 160px;
-                        placeholder-text: "Filtrer les clients";
+                        placeholder-text: @tr("Filtrer les clients");
                         edited(texte) => {
                             client.current-index = FacturesApi.filtrer-clients(texte, client.current-index);
                             root.fiche.tiers-detail = FacturesApi.client-choisi(client.current-index);
@@ -408,7 +408,7 @@ component Fiche inherits ScrollView {
                 alignment: start;
 
                 date := Champ {
-                    libelle: "Date (JJ/MM/AAAA)";
+                    libelle: @tr("Date (JJ/MM/AAAA)");
                     lecture-seule: !root.fiche.modifiable;
                     modifie(texte) => {
                         echeance.valeur = FacturesApi.echeance-apres-date(root.date-precedente, texte, echeance.valeur);
@@ -422,47 +422,47 @@ component Fiche inherits ScrollView {
                 alignment: start;
 
                 echeance := Champ {
-                    libelle: "Échéance (facultative)";
+                    libelle: @tr("Échéance (facultative)");
                     lecture-seule: !root.fiche.modifiable;
                 }
             }
         }
 
         libelle := Champ {
-            libelle: "Libellé";
+            libelle: @tr("Libellé");
             lecture-seule: !root.fiche.modifiable;
         }
 
         // Lignes.
         Section {
-            text: "Lignes";
+            text: @tr("Lignes");
         }
 
         HorizontalLayout {
             spacing: 8px;
 
             Etiquette {
-                text: "Référence";
+                text: @tr("Référence");
                 width: 120px;
             }
 
             Etiquette {
-                text: "Désignation";
+                text: @tr("Désignation");
                 horizontal-stretch: 1;
             }
 
             Etiquette {
-                text: "Prix unitaire";
+                text: @tr("Prix unitaire");
                 width: 110px;
             }
 
             Etiquette {
-                text: "Quantité";
+                text: @tr("Quantité");
                 width: 80px;
             }
 
             Etiquette {
-                text: "Total";
+                text: @tr("Total");
                 width: 110px;
                 horizontal-alignment: right;
             }
@@ -546,7 +546,7 @@ component Fiche inherits ScrollView {
         }
 
         if FacturesApi.lignes.length == 0: Text {
-            text: "Aucune ligne.";
+            text: @tr("Aucune ligne.");
             color: Theme.texte-secondaire;
         }
 
@@ -555,7 +555,7 @@ component Fiche inherits ScrollView {
 
             recherche-produit := LineEdit {
                 width: 200px;
-                placeholder-text: "Filtrer les produits";
+                placeholder-text: @tr("Filtrer les produits");
                 edited(texte) => {
                     FacturesApi.filtrer-produits(texte);
                     produit.current-index = 0;
@@ -568,7 +568,7 @@ component Fiche inherits ScrollView {
             }
 
             Bouton {
-                text: "Ajouter le produit";
+                text: @tr("Ajouter le produit");
                 enabled: FacturesApi.produits.length > 0;
                 clicked => {
                     FacturesApi.ajouter-produit(produit.current-index);
@@ -577,7 +577,7 @@ component Fiche inherits ScrollView {
             }
 
             Bouton {
-                text: "Ligne libre";
+                text: @tr("Ligne libre");
                 clicked => {
                     FacturesApi.ajouter-ligne-libre();
                 }
@@ -585,7 +585,7 @@ component Fiche inherits ScrollView {
         }
 
         if root.fiche.modifiable: Text {
-            text: "Le produit choisi remplit la référence, la désignation et le prix, qui restent modifiables sur la ligne. Une référence tapée puis validée par Entrée reprend le produit correspondant.";
+            text: @tr("Le produit choisi remplit la référence, la désignation et le prix, qui restent modifiables sur la ligne. Une référence tapée puis validée par Entrée reprend le produit correspondant.");
             font-size: 12px;
             color: Theme.texte-secondaire;
             wrap: word-wrap;
@@ -606,7 +606,7 @@ component Fiche inherits ScrollView {
                         spacing: 4px;
 
                         Etiquette {
-                            text: "Remise";
+                            text: @tr("Remise");
                         }
 
                         remise := ComboBox {
@@ -622,7 +622,7 @@ component Fiche inherits ScrollView {
                         spacing: 4px;
 
                         Etiquette {
-                            text: "TVA";
+                            text: @tr("TVA");
                         }
 
                         tva := ComboBox {
@@ -639,7 +639,7 @@ component Fiche inherits ScrollView {
                     spacing: 4px;
 
                     Etiquette {
-                        text: "Mode de paiement";
+                        text: @tr("Mode de paiement");
                     }
 
                     mode := ComboBox {
@@ -649,7 +649,7 @@ component Fiche inherits ScrollView {
                 }
 
                 observations := Champ {
-                    libelle: "Observations";
+                    libelle: @tr("Observations");
                     lecture-seule: !(root.fiche.modifiable || root.fiche.admin-modifiable);
                 }
             }
@@ -659,27 +659,27 @@ component Fiche inherits ScrollView {
                 horizontal-stretch: 1;
 
                 LigneTotal {
-                    libelle: "Montant HT";
+                    libelle: @tr("Montant HT");
                     valeur: FacturesApi.totaux.ht;
                 }
 
                 LigneTotal {
-                    libelle: "Remise";
+                    libelle: @tr("Remise");
                     valeur: FacturesApi.totaux.remise;
                 }
 
                 LigneTotal {
-                    libelle: "Base TVA";
+                    libelle: @tr("Base TVA");
                     valeur: FacturesApi.totaux.base-tva;
                 }
 
                 LigneTotal {
-                    libelle: "TVA";
+                    libelle: @tr("TVA");
                     valeur: FacturesApi.totaux.tva;
                 }
 
                 LigneTotal {
-                    libelle: "Montant TTC";
+                    libelle: @tr("Montant TTC");
                     valeur: FacturesApi.totaux.ttc;
                     fort: true;
                 }
@@ -699,7 +699,7 @@ component Fiche inherits ScrollView {
             alignment: start;
 
             if root.fiche.modifiable: Bouton {
-                text: "Enregistrer le brouillon";
+                text: @tr("Enregistrer le brouillon");
                 primary: !root.fiche.peut-valider;
                 clicked => {
                     root.confirmation = 0;
@@ -709,7 +709,7 @@ component Fiche inherits ScrollView {
             }
 
             if root.fiche.peut-valider: Bouton {
-                text: "Valider";
+                text: @tr("Valider");
                 primary: true;
                 clicked => {
                     root.retour = { };
@@ -718,7 +718,7 @@ component Fiche inherits ScrollView {
             }
 
             if root.fiche.admin-modifiable: Bouton {
-                text: "Enregistrer le mode et les observations";
+                text: @tr("Enregistrer le mode et les observations");
                 clicked => {
                     root.confirmation = 0;
                     root.retour = FacturesApi.enregistrer-administratif(mode.current-index, observations.valeur);
@@ -727,7 +727,7 @@ component Fiche inherits ScrollView {
             }
 
             if root.fiche.peut-envoyer: Bouton {
-                text: "Marquer envoyée";
+                text: @tr("Marquer envoyée");
                 clicked => {
                     root.confirmation = 0;
                     root.retour = FacturesApi.marquer-envoye();
@@ -736,7 +736,7 @@ component Fiche inherits ScrollView {
             }
 
             if root.fiche.peut-annuler: Bouton {
-                text: "Annuler la facture";
+                text: @tr("Annuler la facture");
                 clicked => {
                     root.retour = { };
                     root.confirmation = 2;
@@ -744,7 +744,7 @@ component Fiche inherits ScrollView {
             }
 
             if root.fiche.peut-supprimer: Bouton {
-                text: "Supprimer le brouillon";
+                text: @tr("Supprimer le brouillon");
                 clicked => {
                     root.retour = { };
                     root.confirmation = 3;
@@ -756,7 +756,7 @@ component Fiche inherits ScrollView {
             spacing: 8px;
 
             Text {
-                text: root.confirmation == 1 ? "Valider cette facture ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés." : (root.confirmation == 2 ? "Annuler cette facture ? Elle reste dans le registre avec son numéro, en lecture seule." : "Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit.");
+                text: root.confirmation == 1 ? @tr("Valider cette facture ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés.") : (root.confirmation == 2 ? @tr("Annuler cette facture ? Elle reste dans le registre avec son numéro, en lecture seule.") : @tr("Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit."));
                 color: Theme.texte;
                 wrap: word-wrap;
             }
@@ -766,7 +766,7 @@ component Fiche inherits ScrollView {
                 alignment: start;
 
                 Bouton {
-                    text: root.confirmation == 1 ? "Confirmer la validation" : (root.confirmation == 2 ? "Confirmer l'annulation" : "Confirmer la suppression");
+                    text: root.confirmation == 1 ? @tr("Confirmer la validation") : (root.confirmation == 2 ? @tr("Confirmer l'annulation") : @tr("Confirmer la suppression"));
                     primary: true;
                     clicked => {
                         if (root.confirmation == 1) {
@@ -782,7 +782,7 @@ component Fiche inherits ScrollView {
                 }
 
                 Bouton {
-                    text: "Revenir";
+                    text: @tr("Revenir");
                     clicked => {
                         root.confirmation = 0;
                     }
@@ -795,19 +795,19 @@ component Fiche inherits ScrollView {
         }
 
         if !root.fiche.modifiable && !root.fiche.admin-modifiable && !root.fiche.annule: Text {
-            text: root.fiche.brouillon ? "Lecture seule : votre rôle ne permet pas de modifier une facture." : "Facture validée : lignes et montants figés.";
+            text: root.fiche.brouillon ? @tr("Lecture seule : votre rôle ne permet pas de modifier une facture.") : @tr("Facture validée : lignes et montants figés.");
             color: Theme.texte-secondaire;
             wrap: word-wrap;
         }
 
         if root.fiche.annule: Text {
-            text: "Facture annulée : lecture seule, numéro conservé.";
+            text: @tr("Facture annulée : lecture seule, numéro conservé.");
             color: Theme.texte-secondaire;
         }
 
         // Historique des changements de statut.
         if FacturesApi.historique.length > 0: Section {
-            text: "Historique";
+            text: @tr("Historique");
         }
 
         for evenement in FacturesApi.historique: HorizontalLayout {

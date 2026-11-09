@@ -13,6 +13,7 @@ use kadenz_stockage::parametres::{self, Parametres};
 use slint::{ComponentHandle, Image, SharedString};
 
 use crate::referentiels::{retour_erreur, retour_ok};
+use crate::traduction::{tr, trf};
 use crate::{
     EntrepriseApi, EtatPartage, FenetrePrincipale, FicheEntrepriseUi, ParametresApi, ParametresUi,
     Retour,
@@ -148,8 +149,8 @@ fn brancher_entreprise(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         // Le dialogue est modal et tourne sa propre boucle de messages : aucun
         // emprunt de l'état ne doit être tenu pendant qu'il est ouvert.
         let choix = rfd::FileDialog::new()
-            .set_title("Choisir un logo")
-            .add_filter("Images PNG ou JPEG", &["png", "jpg", "jpeg"])
+            .set_title(tr("Choisir un logo"))
+            .add_filter(tr("Images PNG ou JPEG"), &["png", "jpg", "jpeg"])
             .set_parent(&f.window().window_handle())
             .pick_file();
         let Some(chemin) = choix else {
@@ -158,7 +159,7 @@ fn brancher_entreprise(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let octets = match std::fs::read(&chemin) {
             Ok(octets) => octets,
             Err(erreur) => {
-                return retour_erreur(format!("lecture du fichier impossible : {erreur}"));
+                return retour_erreur(trf("lecture du fichier impossible : {}", &[&erreur]));
             }
         };
         let etat = e.borrow();
@@ -224,8 +225,9 @@ fn parametres_ui(p: &Parametres) -> ParametresUi {
 fn parametres_depuis_ui(u: &ParametresUi) -> Result<Parametres, String> {
     let taux = |libelle: &str, texte: &SharedString| {
         saisie::liste_pourcentages_depuis_texte(texte).ok_or_else(|| {
-            format!(
-                "taux de {libelle} invalides : saisir des pourcentages entre 0 et 100 séparés par des points-virgules"
+            trf(
+                "taux de {} invalides : saisir des pourcentages entre 0 et 100 séparés par des points-virgules",
+                &[&tr(libelle)],
             )
         })
     };
@@ -236,8 +238,9 @@ fn parametres_depuis_ui(u: &ParametresUi) -> Result<Parametres, String> {
         }
         match texte.parse::<u32>() {
             Ok(j) if j > 0 => Ok(Some(j)),
-            _ => Err(format!(
-                "{libelle} invalide : saisir un nombre entier de jours, ou laisser vide pour ne pas en fixer"
+            _ => Err(trf(
+                "{} invalide : saisir un nombre entier de jours, ou laisser vide pour ne pas en fixer",
+                &[&tr(libelle)],
             )),
         }
     };
@@ -278,8 +281,9 @@ fn numerotation_depuis_ui(
     chiffres: &str,
 ) -> Result<Numerotation, String> {
     let chiffres = chiffres.trim().parse::<u8>().map_err(|_| {
-        format!(
-            "nombre de chiffres du rang invalide : saisir un entier entre {CHIFFRES_MIN} et {CHIFFRES_MAX}"
+        trf(
+            "nombre de chiffres du rang invalide : saisir un entier entre {} et {}",
+            &[&CHIFFRES_MIN, &CHIFFRES_MAX],
         )
     })?;
     Numerotation {
@@ -296,15 +300,16 @@ fn numerotation_depuis_ui(
 
 fn brancher_parametres(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
     let api = fenetre.global::<ParametresApi>();
+    // Le montant en lettres reste en français : c'est celui des documents.
     let exemple = |o| {
-        format!(
+        trf(
             "Exemple : {} FCFA s'écrit « {} ».",
-            saisie::montant_en_texte(EXEMPLE_MONTANT),
-            en_lettres(EXEMPLE_MONTANT, o)
+            &[
+                &saisie::montant_en_texte(EXEMPLE_MONTANT),
+                &en_lettres(EXEMPLE_MONTANT, o),
+            ],
         )
     };
-    api.set_exemple_rectifiee(exemple(Orthographe::Rectifiee).into());
-    api.set_exemple_traditionnelle(exemple(Orthographe::Traditionnelle).into());
 
     api.on_exemple_numero(|prefixe, annuelle, chiffres| {
         let mut prefixes = Numerotation::default().prefixes.map(SharedString::from);
@@ -327,17 +332,23 @@ fn brancher_parametres(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                     1,
                 );
                 if annuelle {
-                    format!("Exemple : première facture de l'année, {numero}").into()
+                    trf("Exemple : première facture de l'année, {}", &[&numero]).into()
                 } else {
-                    format!("Exemple : première facture du mois, {numero}").into()
+                    trf("Exemple : première facture du mois, {}", &[&numero]).into()
                 }
             }
             Err(message) => message.into(),
         }
     });
 
-    let e = etat.clone();
+    let (f, e) = (fenetre.as_weak(), etat.clone());
     api.on_ouvrir(move || {
+        // Exemples recalculés à chaque ouverture : ils suivent la langue du compte.
+        if let Some(f) = f.upgrade() {
+            let api = f.global::<ParametresApi>();
+            api.set_exemple_rectifiee(exemple(Orthographe::Rectifiee).into());
+            api.set_exemple_traditionnelle(exemple(Orthographe::Traditionnelle).into());
+        }
         let etat = e.borrow();
         parametres::lire(&etat.conn)
             .map(|p| parametres_ui(&p))

@@ -15,6 +15,7 @@ use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 use crate::referentiels::{
     afficher_produits, afficher_tiers, modele_lignes, retour_erreur, retour_ok,
 };
+use crate::traduction::{tr, trf};
 use crate::{EtatPartage, FenetrePrincipale, ImportApi, Retour, phrase};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -46,39 +47,33 @@ fn cellules<F>(ligne: &LigneAnalysee<F>) -> Vec<String> {
     };
     vec![
         ligne.numero.to_string(),
-        etat.into(),
+        tr(etat),
         ligne.libelle.clone(),
         phrase(remarque).to_string(),
     ]
-}
-
-fn pluriel(n: usize, singulier: &str, pluriel: &str) -> String {
-    format!("{n} {}", if n > 1 { pluriel } else { singulier })
 }
 
 fn afficher_apercu<F: Clone>(api: &ImportApi, a: &Analyse<F>) {
     api.set_lignes(modele_lignes(a.lignes.iter().map(cellules).collect()));
     let (valides, doublons, erreurs) = a.comptes();
     api.set_resume(
-        format!(
-            "{} à importer, {} ignoré{}, {} en erreur.",
-            pluriel(valides, "fiche", "fiches"),
-            pluriel(doublons, "doublon", "doublons"),
-            if doublons > 1 { "s" } else { "" },
-            pluriel(erreurs, "ligne", "lignes"),
+        trf(
+            "Fiches à importer : {} ; doublons ignorés : {} ; lignes en erreur : {}.",
+            &[&valides, &doublons, &erreurs],
         )
         .into(),
     );
     let reconnues: Vec<String> = a
         .colonnes_reconnues
         .iter()
-        .map(|(entete, champ)| format!("{entete} ({champ})"))
+        .map(|(entete, champ)| format!("{entete} ({})", tr(champ)))
         .collect();
-    let mut colonnes = format!("Colonnes reconnues : {}.", reconnues.join(", "));
+    let mut colonnes = trf("Colonnes reconnues : {}.", &[&reconnues.join(", ")]);
     if !a.colonnes_ignorees.is_empty() {
-        colonnes.push_str(&format!(
-            " Colonnes ignorées, non importées : {}.",
-            a.colonnes_ignorees.join(", ")
+        colonnes.push(' ');
+        colonnes.push_str(&trf(
+            "Colonnes ignorées, non importées : {}.",
+            &[&a.colonnes_ignorees.join(", ")],
         ));
     }
     api.set_colonnes(colonnes.into());
@@ -148,9 +143,9 @@ fn analyser(api: &ImportApi, conn: &Connexion, import: &mut ImportEnCours) {
 /// lit le fichier choisi et prépare l'aperçu.
 fn choisir_et_analyser(fenetre: &FenetrePrincipale, etat: &EtatPartage, import: &Partage) {
     let choix = rfd::FileDialog::new()
-        .set_title("Choisir le fichier à importer")
+        .set_title(tr("Choisir le fichier à importer"))
         .add_filter(
-            "CSV, Excel ou OpenDocument",
+            tr("CSV, Excel ou OpenDocument"),
             &["csv", "txt", "xlsx", "xlsm", "xls", "ods"],
         )
         .set_parent(&fenetre.window().window_handle())
@@ -186,17 +181,11 @@ fn nom_de_fichier(chemin: &Path) -> String {
 }
 
 fn message_bilan(bilan: &BilanImport) -> String {
-    let mut message = format!(
-        "{} ajoutée{}",
-        pluriel(bilan.ajoutees, "fiche", "fiches"),
-        if bilan.ajoutees > 1 { "s" } else { "" }
-    );
+    let mut message = trf("Fiches ajoutées : {}", &[&bilan.ajoutees]);
     if !bilan.ignorees.is_empty() {
-        message.push_str(&format!(
-            ", {} ignorée{} car déjà présente{} au moment de l'enregistrement",
-            bilan.ignorees.len(),
-            if bilan.ignorees.len() > 1 { "s" } else { "" },
-            if bilan.ignorees.len() > 1 { "s" } else { "" },
+        message.push_str(&trf(
+            " ; ignorées car déjà présentes au moment de l'enregistrement : {}",
+            &[&bilan.ignorees.len()],
         ));
     }
     message
@@ -220,19 +209,22 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         } else {
             Cible::Tiers
         };
-        let (titre, libelle, choix): (&str, &str, Vec<SharedString>) = match cible {
+        let (titre, libelle, choix): (String, String, Vec<SharedString>) = match cible {
             Cible::Tiers => (
-                "Importer des tiers",
-                "Type des lignes sans colonne Type :",
+                tr("Importer des tiers"),
+                tr("Type des lignes sans colonne Type :"),
                 TypeTiers::TOUS
                     .iter()
-                    .map(|t| t.to_string().into())
+                    .map(|t| tr(&t.to_string()).into())
                     .collect(),
             ),
             Cible::Produits => (
-                "Importer des produits",
-                "Sens des lignes sans colonne Sens :",
-                Sens::TOUS.iter().map(|s| s.to_string().into()).collect(),
+                tr("Importer des produits"),
+                tr("Sens des lignes sans colonne Sens :"),
+                Sens::TOUS
+                    .iter()
+                    .map(|s| tr(&s.to_string()).into())
+                    .collect(),
             ),
         };
         *i.borrow_mut() = ImportEnCours {

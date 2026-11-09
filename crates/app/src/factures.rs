@@ -25,6 +25,7 @@ use kadenz_stockage::{Connexion, droits, parametres};
 use slint::{ComponentHandle, Model, ModelRc, SharedString, VecModel};
 
 use crate::referentiels::{Vue, modele_lignes, retour_erreur, retour_ok};
+use crate::traduction::{tr, trf};
 use crate::{
     Etat, EtatPartage, EvenementUi, FacturesApi, FenetrePrincipale, FicheFactureUi, LigneFactureUi,
     Retour, TotauxUi,
@@ -93,13 +94,15 @@ fn modele_textes(textes: impl IntoIterator<Item = String>) -> ModelRc<SharedStri
 
 fn cellules(d: &ResumeDocument) -> Vec<String> {
     vec![
-        d.numero.clone().unwrap_or_else(|| "(brouillon)".into()),
+        d.numero.clone().unwrap_or_else(|| tr("(brouillon)")),
         date_en_texte(d.date),
         d.tiers_nom.clone(),
         d.libelle.clone(),
         saisie::montant_en_texte(d.montant_ttc),
-        d.statut.to_string(),
-        d.etat_paiement.map(|e| e.to_string()).unwrap_or_default(),
+        tr(&d.statut.to_string()),
+        d.etat_paiement
+            .map(|e| tr(&e.to_string()))
+            .unwrap_or_default(),
         d.mode_paiement.clone(),
         d.date_echeance.map(date_en_texte).unwrap_or_default(),
     ]
@@ -138,9 +141,9 @@ fn afficher_registre(f: &FenetrePrincipale, etat: &mut Etat) {
             api.set_registre(modele_lignes(lignes.iter().map(cellules).collect()));
             api.set_resume(
                 match lignes.len() {
-                    0 => "Aucune facture.".to_string(),
-                    1 => "1 facture.".to_string(),
-                    n => format!("{n} factures."),
+                    0 => tr("Aucune facture."),
+                    1 => tr("1 facture."),
+                    n => trf("{} factures.", &[&n]),
                 }
                 .into(),
             );
@@ -207,7 +210,12 @@ fn totaux_ui(t: &Totaux, orthographe: Orthographe) -> TotauxUi {
         base_tva: m(t.base_tva),
         tva: m(t.tva),
         ttc: m(t.ttc),
-        lettres: format!("En lettres : {}", en_lettres_majuscule(t.ttc, orthographe)).into(),
+        // Le montant en lettres reste en français : il est repris tel quel sur le document.
+        lettres: trf(
+            "En lettres : {}",
+            &[&en_lettres_majuscule(t.ttc, orthographe)],
+        )
+        .into(),
     }
 }
 
@@ -228,7 +236,7 @@ fn liste_clients(
     )
     .unwrap_or_default();
     let mut ids = vec![None];
-    let mut noms = vec!["Aucun client choisi".to_string()];
+    let mut noms = vec![tr("Aucun client choisi")];
     for t in tous {
         let garde = garder.contains(&Some(t.id));
         let propose = t.actif && t.fiche.type_tiers.est_client() && contient(&t.fiche.nom, texte);
@@ -237,7 +245,7 @@ fn liste_clients(
             noms.push(if t.actif {
                 t.fiche.nom
             } else {
-                format!("{} (désactivé)", t.fiche.nom)
+                trf("{} (désactivé)", &[&t.fiche.nom])
             });
         }
     }
@@ -336,7 +344,7 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
     )));
     api.set_modes_paiement(modele_textes(modes.iter().map(|m| {
         if m.is_empty() {
-            "Non précisé".to_string()
+            tr("Non précisé")
         } else {
             m.clone()
         }
@@ -368,7 +376,7 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
             .map(|e| EvenementUi {
                 date: horodatage_en_texte(&e.date_action).into(),
                 utilisateur: e.utilisateur.into(),
-                libelle: e.libelle.into(),
+                libelle: tr(&e.libelle).into(),
             })
             .collect::<Vec<_>>(),
     )));
@@ -377,22 +385,22 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
         Some(d) => documents::etat_paiement_de(&etat.conn, d)
             .ok()
             .flatten()
-            .map(|e: EtatPaiement| e.to_string())
+            .map(|e: EtatPaiement| tr(&e.to_string()))
             .unwrap_or_default(),
         None => String::new(),
     };
     let titre = match &document {
         Some(Document {
             numero: Some(n), ..
-        }) => format!("Facture {n}"),
-        Some(_) => "Facture (brouillon)".to_string(),
-        None => "Nouvelle facture".to_string(),
+        }) => trf("Facture {}", &[n]),
+        Some(_) => tr("Facture (brouillon)"),
+        None => tr("Nouvelle facture"),
     };
     let valide_ou_envoye = matches!(statut, Statut::Valide | Statut::Envoye);
     let fiche = FicheFactureUi {
         existe: document.is_some(),
         titre: titre.into(),
-        statut: statut.to_string().into(),
+        statut: tr(&statut.to_string()).into(),
         paiement: paiement.into(),
         brouillon,
         annule: statut == Statut::Annule,
@@ -451,11 +459,15 @@ fn lignes_saisies(e: &EditionFacture) -> Result<Vec<LigneSaisie>, String> {
         .map(|(rang, l)| {
             let n = rang + 1;
             let prix = saisie::montant_depuis_texte(&l.prix).ok_or_else(|| {
-                format!("ligne {n} : prix illisible, saisir un montant entier en FCFA")
+                trf(
+                    "ligne {} : prix illisible, saisir un montant entier en FCFA",
+                    &[&n],
+                )
             })?;
             let quantite = saisie::quantite_depuis_texte(&l.quantite).ok_or_else(|| {
-                format!(
-                    "ligne {n} : quantité illisible, saisir un nombre positif (3 décimales au plus)"
+                trf(
+                    "ligne {} : quantité illisible, saisir un nombre positif (3 décimales au plus)",
+                    &[&n],
                 )
             })?;
             Ok(LigneSaisie {
@@ -613,13 +625,13 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         };
         let mut etat = e.borrow_mut();
         let mut erreurs = Vec::new();
-        let mut periode = |texte: &str, libelle: &str| {
+        let mut periode = |texte: &str, libelle: &'static str| {
             if texte.trim().is_empty() {
                 None
             } else {
                 let d = date_depuis_texte(texte);
                 if d.is_none() {
-                    erreurs.push(libelle.to_string());
+                    erreurs.push(libelle);
                 }
                 d
             }
@@ -643,14 +655,20 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             au: periode(&au, "fin"),
         };
         afficher_registre(&f, &mut etat);
-        if erreurs.is_empty() {
-            SharedString::new()
-        } else {
-            format!(
-                "Date de {} de période incomplète ou illisible (JJ/MM/AAAA) : non appliquée.",
-                erreurs.join(" et de ")
+        match erreurs.as_slice() {
+            [] => SharedString::new(),
+            ["début"] => tr(
+                "Date de début de période incomplète ou illisible (JJ/MM/AAAA) : non appliquée.",
             )
-            .into()
+            .into(),
+            [_] => tr(
+                "Date de fin de période incomplète ou illisible (JJ/MM/AAAA) : non appliquée.",
+            )
+            .into(),
+            _ => tr(
+                "Dates de début et de fin de période incomplètes ou illisibles (JJ/MM/AAAA) : non appliquées.",
+            )
+            .into(),
         }
     });
 
@@ -894,9 +912,10 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let rechargement = ouvrir_fiche(&f, &mut etat, Some(id));
         afficher_registre(&f, &mut etat);
         match (resultat, rechargement) {
-            (Ok(numero), Ok(())) => retour_ok(format!("facture validée sous le numéro {numero}")),
-            (Err(erreur), _) => retour_erreur(format!(
-                "brouillon enregistré, mais validation refusée : {erreur}"
+            (Ok(numero), Ok(())) => retour_ok(trf("facture validée sous le numéro {}", &[&numero])),
+            (Err(erreur), _) => retour_erreur(trf(
+                "brouillon enregistré, mais validation refusée : {}",
+                &[&tr(&erreur.to_string())],
             )),
             (Ok(_), Err(message)) => retour_erreur(message),
         }

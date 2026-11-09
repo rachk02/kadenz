@@ -10,8 +10,12 @@ import "polices/Manrope-Bold.ttf";
 import "polices/Manrope-ExtraBold.ttf";
 
 export global Theme {
-    out property <string> police-texte: "Inter";
-    out property <string> police-titre: "Manrope";
+    // Interface en chinois : Inter et Manrope n'ont pas les idéogrammes, et la police
+    // de secours choisie par Windows est japonaise, sans les caractères simplifiés.
+    // Microsoft YaHei, livrée avec Windows, couvre le chinois simplifié et le latin.
+    in property <bool> chinois: false;
+    out property <string> police-texte: root.chinois ? "Microsoft YaHei UI" : "Inter";
+    out property <string> police-titre: root.chinois ? "Microsoft YaHei UI" : "Manrope";
     // Couleurs de la marque : Indigo (accent), Nuit pour les fonds sombres, Ambre en
     // touche d'accent (jamais en texte sur blanc ; Ambre foncé pour cet usage).
     out property <color> nuit: #1a2259;

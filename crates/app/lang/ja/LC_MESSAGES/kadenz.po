@@ -1,0 +1,1135 @@
+# Kadenz, interface en japonais ; langue source : français.
+# Fichier généré à partir des tables de traduction ; un msgid par texte affiché.
+msgid ""
+msgstr ""
+"Project-Id-Version: kadenz\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid " ; ignorées car déjà présentes au moment de l'enregistrement : {}"
+msgstr "、保存時にすでに存在したためスキップ：{}"
+
+msgid "(brouillon)"
+msgstr "（下書き）"
+
+msgid "1 facture."
+msgstr "請求書 1 件。"
+
+msgid "1 fiche"
+msgstr "1 件"
+
+msgid "Achat"
+msgstr "仕入"
+
+msgid "Administrateur"
+msgstr "管理者"
+
+msgid "Administrateur : {} ({})"
+msgstr "管理者：{}（{}）"
+
+msgid "Adresse"
+msgstr "住所"
+
+msgid "adresse"
+msgstr "住所"
+
+msgid "Adresse / boîte postale"
+msgstr "住所 / 私書箱"
+
+msgid "Adresse ou boîte postale"
+msgstr "住所または私書箱"
+
+msgid "Ajouter"
+msgstr "追加"
+
+msgid "Ajouter le produit"
+msgstr "商品を追加"
+
+msgid "Ajouter un client, un fournisseur, un produit"
+msgstr "顧客・仕入先・商品の追加"
+
+msgid "Annuler"
+msgstr "キャンセル"
+
+msgid "Annuler cette facture ? Elle reste dans le registre avec son numéro, en lecture seule."
+msgstr "この請求書を取り消しますか？番号付きのまま一覧に残り、読み取り専用になります。"
+
+msgid "Annuler la facture"
+msgstr "請求書を取り消す"
+
+msgid "Annuler un document validé"
+msgstr "確定済みの書類を取り消す"
+
+msgid "Annulé"
+msgstr "取消済み"
+
+msgid "Au JJ/MM/AAAA"
+msgstr "終了 DD/MM/YYYY"
+
+msgid "au moins un mode de paiement est nécessaire"
+msgstr "支払方法が少なくとも 1 つ必要です。"
+
+msgid "Aucun client choisi"
+msgstr "顧客が選択されていません"
+
+msgid "aucun compte sélectionné"
+msgstr "アカウントが選択されていません。"
+
+msgid "Aucun fichier choisi."
+msgstr "ファイルが選択されていません。"
+
+msgid "Aucun logo"
+msgstr "ロゴなし"
+
+msgid "Aucun numéro tant que la facture n'est pas validée."
+msgstr "請求書が確定されるまで番号は付きません。"
+
+msgid "Aucune facture."
+msgstr "請求書はありません。"
+
+msgid "Aucune fiche"
+msgstr "レコードなし"
+
+msgid "aucune fiche ouverte"
+msgstr "開いているレコードがありません。"
+
+msgid "aucune fiche sélectionnée"
+msgstr "レコードが選択されていません。"
+
+msgid "Aucune ligne."
+msgstr "明細がありません。"
+
+msgid "aucune session ouverte"
+msgstr "ログインしていません。"
+
+msgid "Avoir"
+msgstr "クレジットノート"
+
+msgid "Base : {} (schéma {})"
+msgstr "データベース：{}（スキーマ {}）"
+
+msgid "Base de données : SQLite, dans le domaine public."
+msgstr "データベース：SQLite（パブリックドメイン）。"
+
+msgid "Base TVA"
+msgstr "課税対象額"
+
+msgid "Bon de commande"
+msgstr "注文書"
+
+msgid "Bons de commande"
+msgstr "注文書"
+
+msgid "Bordereau de livraison"
+msgstr "納品書"
+
+msgid "Brouillon"
+msgstr "下書き"
+
+msgid "brouillon enregistré"
+msgstr "下書きを保存しました。"
+
+msgid "brouillon enregistré, mais validation refusée : {}"
+msgstr "下書きは保存しましたが、確定できませんでした：{}"
+
+msgid "brouillon supprimé"
+msgstr "下書きを削除しました。"
+
+msgid "C'est le compte de la session en cours : son rôle et son état se changent depuis un autre compte administrateur. Le mot de passe se change dans « Mon compte »."
+msgstr "これは現在のセッションのアカウントです。役割と状態は別の管理者アカウントから変更します。パスワードは「マイアカウント」で変更します。"
+
+msgid "ce brouillon n'a pas été enregistré"
+msgstr "この下書きは保存されていません。"
+
+msgid "Ce compte administre l'installation : utilisateurs, droits, sauvegardes."
+msgstr "このアカウントでインストールを管理します（ユーザー、権限、バックアップ）。"
+
+msgid "ce compte n'existe plus"
+msgstr "このアカウントはもう存在しません。"
+
+msgid "ce produit n'existe plus"
+msgstr "この商品はもう存在しません。"
+
+msgid "ce tiers n'existe plus"
+msgstr "この取引先はもう存在しません。"
+
+msgid "Ces informations figurent en en-tête et en pied de page des documents."
+msgstr "この情報は書類のヘッダーとフッターに表示されます。"
+
+msgid "cette facture n'existe plus"
+msgstr "この請求書はもう存在しません。"
+
+msgid "Changer de mot de passe"
+msgstr "パスワードの変更"
+
+msgid "Changer le rôle"
+msgstr "役割を変更"
+
+msgid "Chaque année"
+msgstr "毎年"
+
+msgid "Chaque mois"
+msgstr "毎月"
+
+msgid "Chiffres du rang"
+msgstr "連番の桁数"
+
+msgid "Choisir le fichier à importer"
+msgstr "取り込むファイルを選択"
+
+msgid "Choisir un autre fichier"
+msgstr "別のファイルを選択"
+
+msgid "Choisir un logo"
+msgstr "ロゴを選択"
+
+msgid "Choisir une image"
+msgstr "画像を選択"
+
+msgid "Client"
+msgstr "顧客"
+
+msgid "Client et fournisseur"
+msgstr "顧客と仕入先"
+
+msgid "Clients"
+msgstr "顧客"
+
+msgid "Clients et fournisseurs"
+msgstr "顧客と仕入先"
+
+msgid "Cliquer sur une facture pour ouvrir sa fiche."
+msgstr "請求書をクリックすると詳細が開きます。"
+
+msgid "Cocher ce que chaque rôle peut faire. Le rôle Admin garde toujours la gestion des utilisateurs et des droits. Les contrôles s'appliquent dès l'enregistrement ; le menu des autres comptes se met à jour à leur prochaine connexion."
+msgstr "各役割にできることをチェックします。Admin 役割は常にユーザーと権限の管理を保持します。チェックは保存した時点で適用され、他のアカウントのメニューは次回ログイン時に更新されます。"
+
+msgid "Colonnes ignorées, non importées : {}."
+msgstr "無視された列（取り込まれません）：{}。"
+
+msgid "Colonnes reconnues : {}."
+msgstr "認識された列：{}。"
+
+msgid "Commercial"
+msgstr "営業"
+
+msgid "Composants tiers"
+msgstr "サードパーティ製コンポーネント"
+
+msgid "Comptable"
+msgstr "経理"
+
+msgid "Compte"
+msgstr "アカウント"
+
+msgid "Compte (désactivé)"
+msgstr "アカウント（無効）"
+
+msgid "Compte bancaire 1"
+msgstr "銀行口座 1"
+
+msgid "Compte bancaire 2"
+msgstr "銀行口座 2"
+
+msgid "compte créé"
+msgstr "アカウントを作成しました。"
+
+msgid "compte désactivé"
+msgstr "アカウントを無効化しました。"
+
+msgid "compte inconnu ou désactivé"
+msgstr "不明または無効なアカウントです。"
+
+msgid "compte introuvable"
+msgstr "アカウントが見つかりません。"
+
+msgid "compte réactivé"
+msgstr "アカウントを再有効化しました。"
+
+msgid "Comptes"
+msgstr "アカウント"
+
+msgid "Confirmation"
+msgstr "確認"
+
+msgid "Confirmation du mot de passe"
+msgstr "パスワードの確認"
+
+msgid "Confirmation du nouveau mot de passe"
+msgstr "新しいパスワードの確認"
+
+msgid "Confirmer l'annulation"
+msgstr "取り消しを確定"
+
+msgid "Confirmer la suppression"
+msgstr "削除を確定"
+
+msgid "Confirmer la validation"
+msgstr "確定する"
+
+msgid "Confirmer le retrait"
+msgstr "削除を確定"
+
+msgid "CONNEXION"
+msgstr "ログイン"
+
+msgid "Consultation"
+msgstr "閲覧"
+
+msgid "Consulter tableau de bord et registres"
+msgstr "ダッシュボードと一覧の閲覧"
+
+msgid "Converti"
+msgstr "変換済み"
+
+msgid "Création du brouillon"
+msgstr "下書きの作成"
+
+msgid "Créer le compte"
+msgstr "アカウントを作成"
+
+msgid "Créer/modifier un brouillon (Devis, Proforma, BC, Livraison)"
+msgstr "下書きの作成・変更（見積書、見積請求書、注文書、納品書）"
+
+msgid "Créer/modifier un brouillon Facture ou Avoir"
+msgstr "請求書・クレジットノートの下書きの作成・変更"
+
+msgid "CSV, Excel ou OpenDocument"
+msgstr "CSV、Excel、OpenDocument"
+
+msgid "Date"
+msgstr "日付"
+
+msgid "Date (JJ/MM/AAAA)"
+msgstr "日付（DD/MM/YYYY）"
+
+msgid "Date de début de période incomplète ou illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "期間の開始日が不完全か読み取れません（DD/MM/YYYY）。適用されません。"
+
+msgid "Date de fin de période incomplète ou illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "期間の終了日が不完全か読み取れません（DD/MM/YYYY）。適用されません。"
+
+msgid "date illisible : saisir la date au format JJ/MM/AAAA"
+msgstr "日付を読み取れません。DD/MM/YYYY の形式で入力してください。"
+
+msgid "Dates de début et de fin de période incomplètes ou illisibles (JJ/MM/AAAA) : non appliquées."
+msgstr "期間の開始日と終了日が不完全か読み取れません（DD/MM/YYYY）。適用されません。"
+
+msgid "Devis"
+msgstr "見積書"
+
+msgid "Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements."
+msgstr "見積書、見積請求書、注文書、納品書、請求書、支払い。"
+
+msgid "document introuvable"
+msgstr "書類が見つかりません。"
+
+msgid "Doublon"
+msgstr "重複"
+
+msgid "droits enregistrés"
+msgstr "権限を保存しました。"
+
+msgid "Droits par rôle"
+msgstr "役割ごとの権限"
+
+msgid "Du JJ/MM/AAAA"
+msgstr "開始 DD/MM/YYYY"
+
+msgid "délai de paiement"
+msgstr "支払期限"
+
+msgid "Délai de paiement des factures"
+msgstr "請求書の支払期限"
+
+msgid "Délais (en jours, laisser vide pour ne pas en fixer)"
+msgstr "期限（日数。設定しない場合は空欄）"
+
+msgid "Démarrage impossible"
+msgstr "起動できません"
+
+msgid "Désactiver"
+msgstr "無効化"
+
+msgid "Désactivé"
+msgstr "無効"
+
+msgid "Désactivée"
+msgstr "無効"
+
+msgid "Désignation"
+msgstr "品名"
+
+msgid "désignation"
+msgstr "品名"
+
+msgid "Email"
+msgstr "メール"
+
+msgid "En lettres : {}"
+msgstr "文字表記：{}"
+
+msgid "Enregistrer"
+msgstr "保存"
+
+msgid "enregistrer d'abord la facture"
+msgstr "先に請求書を保存してください。"
+
+msgid "Enregistrer le brouillon"
+msgstr "下書きを保存"
+
+msgid "Enregistrer le mode et les observations"
+msgstr "支払方法と備考を保存"
+
+msgid "Enregistrer les droits"
+msgstr "権限を保存"
+
+msgid "Entreprise"
+msgstr "会社"
+
+msgid "Entreprise : {}"
+msgstr "会社：{}"
+
+msgid "Envoyé"
+msgstr "送付済み"
+
+msgid "Erreur"
+msgstr "エラー"
+
+msgid "Exemple : première facture de l'année, {}"
+msgstr "例：年の最初の請求書、{}"
+
+msgid "Exemple : première facture du mois, {}"
+msgstr "例：月の最初の請求書、{}"
+
+msgid "Exemple : {} FCFA s'écrit « {} »."
+msgstr "例：{} FCFA は「{}」と書きます。"
+
+msgid "existe déjà"
+msgstr "すでに存在します"
+
+msgid "Facture"
+msgstr "請求書"
+
+msgid "Facture (brouillon)"
+msgstr "請求書（下書き）"
+
+msgid "facture annulée"
+msgstr "請求書を取り消しました。"
+
+msgid "Facture annulée : lecture seule, numéro conservé."
+msgstr "取消済みの請求書：読み取り専用、番号は保持されます。"
+
+msgid "facture marquée envoyée"
+msgstr "請求書を送付済みにしました。"
+
+msgid "Facture validée : lignes et montants figés."
+msgstr "確定済みの請求書：明細と金額は固定されています。"
+
+msgid "facture validée sous le numéro {}"
+msgstr "請求書を番号 {} で確定しました。"
+
+msgid "Facture {}"
+msgstr "請求書 {}"
+
+msgid "Factures"
+msgstr "請求書"
+
+msgid "Fermer"
+msgstr "閉じる"
+
+msgid "Fiche"
+msgstr "レコード"
+
+msgid "Fiche du produit"
+msgstr "商品の詳細"
+
+msgid "Fiche du produit (désactivée)"
+msgstr "商品の詳細（無効）"
+
+msgid "Fiche du tiers"
+msgstr "取引先の詳細"
+
+msgid "Fiche du tiers (désactivée)"
+msgstr "取引先の詳細（無効）"
+
+msgid "fiche désactivée : elle est citée dans au moins un document, l'historique reste intact"
+msgstr "レコードを無効化しました。少なくとも 1 件の書類で使われているため、履歴はそのまま残ります。"
+
+msgid "fiche enregistrée"
+msgstr "レコードを保存しました。"
+
+msgid "fiche réactivée"
+msgstr "レコードを再有効化しました。"
+
+msgid "fiche supprimée"
+msgstr "レコードを削除しました。"
+
+msgid "Fiches ajoutées : {}"
+msgstr "追加したレコード：{}"
+
+msgid "Fiches désactivées"
+msgstr "無効なレコード"
+
+msgid "Fiches à importer : {} ; doublons ignorés : {} ; lignes en erreur : {}."
+msgstr "取り込むレコード：{}、スキップした重複：{}、エラーのある行：{}。"
+
+msgid "Fichier : {}"
+msgstr "ファイル：{}"
+
+msgid "Filtrer les clients"
+msgstr "顧客を絞り込む"
+
+msgid "Filtrer les produits"
+msgstr "商品を絞り込む"
+
+msgid "Fournisseur"
+msgstr "仕入先"
+
+msgid "Fournisseurs"
+msgstr "仕入先"
+
+msgid "Garder"
+msgstr "残す"
+
+msgid "Gestion commerciale"
+msgstr "販売管理"
+
+msgid "Gestion commerciale mono-poste pour Windows : les données restent sur ce poste."
+msgstr "Windows 用の単一端末向け販売管理：データはこのパソコンに保存されます。"
+
+msgid "Gérer la fiche entreprise et les paramètres"
+msgstr "会社情報と設定の管理"
+
+msgid "Gérer les utilisateurs et droits"
+msgstr "ユーザーと権限の管理"
+
+msgid "Historique"
+msgstr "履歴"
+
+msgid "Identifiant"
+msgstr "ユーザー ID"
+
+msgid "Identifiant de connexion"
+msgstr "ログイン ID"
+
+msgid "identifiant ou mot de passe incorrect"
+msgstr "ユーザー ID またはパスワードが正しくありません。"
+
+msgid "IFU"
+msgstr "IFU"
+
+msgid "Image PNG ou JPEG, 2 Mo au plus. Le logo principal figure à gauche de l'en-tête, le second à droite."
+msgstr "PNG または JPEG 画像、最大 2 MB。メインロゴはヘッダーの左側、2 つ目のロゴは右側に表示されます。"
+
+msgid "Images PNG ou JPEG"
+msgstr "PNG または JPEG 画像"
+
+msgid "Impayé"
+msgstr "未払い"
+
+msgid "Importer"
+msgstr "取り込み"
+
+msgid "Importer des produits"
+msgstr "商品の取り込み"
+
+msgid "Importer des tiers"
+msgstr "取引先の取り込み"
+
+msgid "Importer les fiches valides"
+msgstr "有効なレコードを取り込む"
+
+msgid "impossible : l'installation doit garder au moins un administrateur actif"
+msgstr "できません。少なくとも 1 人の有効な管理者が必要です。"
+
+msgid "Interface : Slint, sous licence Slint Royalty-free 2.0."
+msgstr "インターフェース：Slint（Slint Royalty-free 2.0 ライセンス）。"
+
+msgid "l'identifiant est obligatoire et ne contient pas d'espace"
+msgstr "ユーザー ID は必須で、空白を含められません。"
+
+msgid "l'installation initiale a déjà été faite"
+msgstr "初回セットアップはすでに完了しています。"
+
+msgid "La base de données ({}) n'a pas pu être ouverte : {}"
+msgstr "データベース（{}）を開けませんでした：{}"
+
+msgid "la fiche entreprise n'existe pas encore"
+msgstr "会社情報がまだ登録されていません。"
+
+msgid "Langue de l'interface"
+msgstr "表示言語"
+
+msgid "le logo doit être une image PNG ou JPEG"
+msgstr "ロゴは PNG または JPEG 画像にしてください。"
+
+msgid "le montant du règlement doit être positif"
+msgstr "入金額は正の値にしてください。"
+
+msgid "le mot de passe actuel est incorrect"
+msgstr "現在のパスワードが正しくありません。"
+
+msgid "le nom complet est obligatoire"
+msgstr "氏名は必須です。"
+
+msgid "Le nom complet et l'identifiant sont obligatoires."
+msgstr "氏名とユーザー ID は必須です。"
+
+msgid "le nom de l'entreprise est obligatoire"
+msgstr "会社名は必須です。"
+
+msgid "Le nom de l'entreprise est obligatoire."
+msgstr "会社名は必須です。"
+
+msgid "Le produit choisi remplit la référence, la désignation et le prix, qui restent modifiables sur la ligne. Une référence tapée puis validée par Entrée reprend le produit correspondant."
+msgstr "選択した商品で品番、品名、価格が入力され、明細上で変更できます。品番を入力して Enter で確定すると、該当する商品が読み込まれます。"
+
+msgid "lecture du fichier impossible : {}"
+msgstr "ファイルを読み込めません：{}"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une facture."
+msgstr "読み取り専用：あなたの役割では請求書を変更できません。"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une fiche existante."
+msgstr "読み取り専用：あなたの役割では既存のレコードを変更できません。"
+
+msgid "Les deux"
+msgstr "両方"
+
+msgid "les deux mots de passe ne correspondent pas"
+msgstr "2 つのパスワードが一致しません。"
+
+msgid "Les deux mots de passe ne correspondent pas."
+msgstr "2 つのパスワードが一致しません。"
+
+msgid "les deux nouveaux mots de passe ne correspondent pas"
+msgstr "2 つの新しいパスワードが一致しません。"
+
+msgid "Les textes des documents, l'apparence des PDF et les dossiers d'export se régleront ici avec le jalon du PDF (J4). La matrice des droits par rôle se règle dans l'écran Utilisateurs."
+msgstr "書類の文面、PDF の外観、エクスポート先フォルダーは PDF マイルストーン（J4）でここに設定できるようになります。役割ごとの権限表は「ユーザー」画面で設定します。"
+
+msgid "Libellé"
+msgstr "件名"
+
+msgid "Ligne"
+msgstr "行"
+
+msgid "Ligne libre"
+msgstr "自由入力の明細"
+
+msgid "ligne {} : prix illisible, saisir un montant entier en FCFA"
+msgstr "{} 行目：価格を読み取れません。FCFA の整数金額を入力してください。"
+
+msgid "ligne {} : quantité illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "{} 行目：数量を読み取れません。正の数を入力してください（小数点以下 3 桁まで）。"
+
+msgid "Lignes"
+msgstr "明細"
+
+msgid "Livraison complète"
+msgstr "納品完了"
+
+msgid "Livraison partielle"
+msgstr "一部納品"
+
+msgid "Livraisons"
+msgstr "納品"
+
+msgid "Localisation"
+msgstr "所在地"
+
+msgid "localisation"
+msgstr "所在地"
+
+msgid "Logiciel"
+msgstr "ソフトウェア"
+
+msgid "Logiciel propriétaire, tous droits réservés."
+msgstr "プロプライエタリソフトウェア。無断転載を禁じます。"
+
+msgid "logo enregistré"
+msgstr "ロゴを保存しました。"
+
+msgid "Logo principal"
+msgstr "メインロゴ"
+
+msgid "logo retiré"
+msgstr "ロゴを削除しました。"
+
+msgid "Logos"
+msgstr "ロゴ"
+
+msgid "Marquer envoyée"
+msgstr "送付済みにする"
+
+msgid "Mode"
+msgstr "方法"
+
+msgid "Mode de paiement"
+msgstr "支払方法"
+
+msgid "mode de paiement et observations enregistrés"
+msgstr "支払方法と備考を保存しました。"
+
+msgid "Modes de paiement"
+msgstr "支払方法"
+
+msgid "Modes de paiement : {}"
+msgstr "支払方法：{}"
+
+msgid "Modes de paiement, séparés par des points-virgules"
+msgstr "支払方法（セミコロン区切り）"
+
+msgid "Modification du mode de paiement ou des observations"
+msgstr "支払方法または備考の変更"
+
+msgid "Modifier ou désactiver un client, un fournisseur, un produit"
+msgstr "顧客・仕入先・商品の変更・無効化"
+
+msgid "Module en cours de construction."
+msgstr "このモジュールは準備中です。"
+
+msgid "Mon compte"
+msgstr "マイアカウント"
+
+msgid "Montant en lettres"
+msgstr "金額の文字表記"
+
+msgid "Montant en lettres : {}"
+msgstr "金額の文字表記：{}"
+
+msgid "Montant en lettres en orthographe traditionnelle (sinon : orthographe rectifiée de 1990)"
+msgstr "金額の文字表記を従来の綴りにする（オフの場合：1990 年改訂綴り）"
+
+msgid "Montant HT"
+msgstr "税抜金額"
+
+msgid "Montant TTC"
+msgstr "税込金額"
+
+msgid "Mot de passe"
+msgstr "パスワード"
+
+msgid "Mot de passe (8 caractères au moins)"
+msgstr "パスワード（8 文字以上）"
+
+msgid "Mot de passe actuel"
+msgstr "現在のパスワード"
+
+msgid "Mot de passe modifié."
+msgstr "パスワードを変更しました。"
+
+msgid "mot de passe réinitialisé"
+msgstr "パスワードをリセットしました。"
+
+msgid "Nom"
+msgstr "名前"
+
+msgid "nom"
+msgstr "名前"
+
+msgid "Nom complet"
+msgstr "氏名"
+
+msgid "Nom de l'entreprise (obligatoire)"
+msgstr "会社名（必須）"
+
+msgid "nombre de chiffres du rang invalide : saisir un entier entre {} et {}"
+msgstr "連番の桁数が無効です。{}～{} の整数を入力してください。"
+
+msgid "Non précisé"
+msgstr "指定なし"
+
+msgid "Nouveau compte"
+msgstr "新規アカウント"
+
+msgid "Nouveau mot de passe (8 caractères au moins)"
+msgstr "新しいパスワード（8 文字以上）"
+
+msgid "Nouveau produit"
+msgstr "新規商品"
+
+msgid "Nouveau tiers"
+msgstr "新規取引先"
+
+msgid "Nouvelle facture"
+msgstr "新規請求書"
+
+msgid "Numérotation des documents"
+msgstr "書類の採番"
+
+msgid "N°"
+msgstr "番号"
+
+msgid "Observations"
+msgstr "備考"
+
+msgid "orthographe rectifiée"
+msgstr "改訂綴り"
+
+msgid "Orthographe rectifiée (1990)"
+msgstr "1990 年改訂綴り"
+
+msgid "Orthographe traditionnelle"
+msgstr "従来の綴り"
+
+msgid "orthographe traditionnelle"
+msgstr "従来の綴り"
+
+msgid "Paiement"
+msgstr "支払状況"
+
+msgid "Paiement : {}"
+msgstr "支払状況：{}"
+
+msgid "Paiements"
+msgstr "支払い"
+
+msgid "Paramètres"
+msgstr "設定"
+
+msgid "paramètres enregistrés"
+msgstr "設定を保存しました。"
+
+msgid "Partiel"
+msgstr "一部入金"
+
+msgid "Payé"
+msgstr "支払済み"
+
+msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
+msgstr "フォント：Inter と Manrope（SIL Open Font License 1.1）。"
+
+msgid "Pourcentages séparés par des points-virgules, par exemple « 0 ; 18 » ou « 0 ; 2,5 ; 5 »."
+msgstr "セミコロンで区切ったパーセント。例：「0 ; 18」または「0 ; 2,5 ; 5」。"
+
+msgid "Première installation"
+msgstr "初回セットアップ"
+
+msgid "prix"
+msgstr "価格"
+
+msgid "Prix (FCFA)"
+msgstr "価格（FCFA）"
+
+msgid "Prix unitaire"
+msgstr "単価"
+
+msgid "Prix unitaire (FCFA)"
+msgstr "単価（FCFA）"
+
+msgid "Produits"
+msgstr "商品"
+
+msgid "Produits et services"
+msgstr "商品とサービス"
+
+msgid "Proforma"
+msgstr "見積請求書"
+
+msgid "Précédent"
+msgstr "戻る"
+
+msgid "Préfixes de 1 à 6 lettres, différents d'un type à l'autre."
+msgstr "1～6 文字の接頭辞（種類ごとに異なるもの）。"
+
+msgid "Quantité"
+msgstr "数量"
+
+msgid "RCCM"
+msgstr "RCCM"
+
+msgid "Rechercher : désignation ou référence"
+msgstr "検索：品名または品番"
+
+msgid "Rechercher : nom, téléphone, localisation, adresse, IFU"
+msgstr "検索：名前、電話番号、所在地、住所、IFU"
+
+msgid "Rechercher : numéro, client, libellé"
+msgstr "検索：番号、顧客、件名"
+
+msgid "Remarque"
+msgstr "備考"
+
+msgid "Remise"
+msgstr "値引き"
+
+msgid "remise"
+msgstr "値引き"
+
+msgid "Remise (%)"
+msgstr "値引き (%)"
+
+msgid "Remise à zéro du compteur"
+msgstr "カウンターのリセット"
+
+msgid "Remplacer"
+msgstr "置き換え"
+
+msgid "Responsable comptabilité"
+msgstr "経理担当者"
+
+msgid "Responsable de la comptabilité"
+msgstr "経理担当者"
+
+msgid "Responsable de la facturation"
+msgstr "請求担当者"
+
+msgid "Responsable facturation"
+msgstr "請求担当者"
+
+msgid "retenue"
+msgstr "源泉徴収"
+
+msgid "Retenue à la source (%)"
+msgstr "源泉徴収 (%)"
+
+msgid "Retirer"
+msgstr "削除"
+
+msgid "Retirer cette fiche ? Elle est supprimée si aucun document ne la cite, sinon seulement désactivée."
+msgstr "このレコードを削除しますか？どの書類にも使われていなければ削除され、使われていれば無効化のみ行われます。"
+
+msgid "Retour au registre"
+msgstr "一覧に戻る"
+
+msgid "Revenir"
+msgstr "戻る"
+
+msgid "Revenir à la matrice du cahier des charges"
+msgstr "仕様書の権限表に戻す"
+
+msgid "Réactiver"
+msgstr "再有効化"
+
+msgid "Récapitulatif"
+msgstr "概要"
+
+msgid "Réception complète"
+msgstr "受領完了"
+
+msgid "Réception partielle"
+msgstr "一部受領"
+
+msgid "Référence"
+msgstr "品番"
+
+msgid "référence"
+msgstr "品番"
+
+msgid "Référence (unique)"
+msgstr "品番（一意）"
+
+msgid "Régime d'imposition"
+msgstr "課税制度"
+
+msgid "régime d'imposition"
+msgstr "課税制度"
+
+msgid "Réinitialiser le mot de passe"
+msgstr "パスワードをリセット"
+
+msgid "Rôle"
+msgstr "役割"
+
+msgid "rôle changé ; le menu de ce compte suivra à sa prochaine connexion"
+msgstr "役割を変更しました。このアカウントのメニューは次回ログイン時に反映されます。"
+
+msgid "Saisir un règlement"
+msgstr "入金を登録"
+
+msgid "Saisissez votre identifiant et votre mot de passe."
+msgstr "ユーザー ID とパスワードを入力してください。"
+
+msgid "Sauvegarder / exporter la base"
+msgstr "データベースのバックアップ・エクスポート"
+
+msgid "Se connecter"
+msgstr "ログイン"
+
+msgid "Se déconnecter"
+msgstr "ログアウト"
+
+msgid "Second logo"
+msgstr "2 つ目のロゴ"
+
+msgid "Sens"
+msgstr "用途"
+
+msgid "sens"
+msgstr "用途"
+
+msgid "Sens d'utilisation"
+msgstr "用途"
+
+msgid "Sens des lignes sans colonne Sens :"
+msgstr "「用途」列のない行の用途："
+
+msgid "Site web"
+msgstr "ウェブサイト"
+
+msgid "Statut"
+msgstr "ステータス"
+
+msgid "Statut : {}"
+msgstr "ステータス：{}"
+
+msgid "Suivant"
+msgstr "次へ"
+
+msgid "Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit."
+msgstr "この下書きを削除しますか？一覧から消えますが、削除の記録は監査ログに残ります。"
+
+msgid "Supprimer le brouillon"
+msgstr "下書きを削除"
+
+msgid "Sélectionner un produit dans la liste pour afficher sa fiche."
+msgstr "一覧から商品を選ぶと詳細が表示されます。"
+
+msgid "Sélectionner un tiers dans la liste pour afficher sa fiche."
+msgstr "一覧から取引先を選ぶと詳細が表示されます。"
+
+msgid "Tableau de bord"
+msgstr "ダッシュボード"
+
+msgid "Taux de remise (%)"
+msgstr "値引き率 (%)"
+
+msgid "Taux de retenue (%)"
+msgstr "源泉徴収率 (%)"
+
+msgid "Taux de TVA (%)"
+msgstr "付加価値税率 (%)"
+
+msgid "taux de {} invalides : saisir des pourcentages entre 0 et 100 séparés par des points-virgules"
+msgstr "{}の率が無効です。0～100 のパーセントをセミコロンで区切って入力してください。"
+
+msgid "Taux et paiements"
+msgstr "税率と支払い"
+
+msgid "Taux proposés dans les documents"
+msgstr "書類で選択できる率"
+
+msgid "Terminer l'installation"
+msgstr "セットアップを完了"
+
+msgid "Tiers"
+msgstr "取引先"
+
+msgid "Total"
+msgstr "合計"
+
+msgid "Tous les produits"
+msgstr "すべての商品"
+
+msgid "Tous les statuts"
+msgstr "すべてのステータス"
+
+msgid "Tous les tiers"
+msgstr "すべての取引先"
+
+msgid "Tout paiement"
+msgstr "すべての支払状況"
+
+msgid "TVA"
+msgstr "付加価値税"
+
+msgid "TVA (%)"
+msgstr "付加価値税 (%)"
+
+msgid "TVA : {}   Remise : {}   Retenue : {}"
+msgstr "付加価値税：{}   値引き：{}   源泉徴収：{}"
+
+msgid "Type"
+msgstr "種類"
+
+msgid "type"
+msgstr "種類"
+
+msgid "Type des lignes sans colonne Type :"
+msgstr "「種類」列のない行の種類："
+
+msgid "Téléphone"
+msgstr "電話番号"
+
+msgid "téléphone"
+msgstr "電話番号"
+
+msgid "Un changement vaut pour les validations suivantes ; les numéros déjà attribués ne changent pas. Changer de compteur en cours d'année interrompt la suite des numéros de l'année."
+msgstr "変更は以降の確定に適用され、すでに付与された番号は変わりません。年の途中でカウンターを変更すると、その年の番号の連続性が途切れます。"
+
+msgid "Utilisateurs"
+msgstr "ユーザー"
+
+msgid "Valeurs séparées par des points-virgules, en pourcentage (ex. 0 ; 18). Modifiables plus tard dans les paramètres."
+msgstr "セミコロンで区切ったパーセント値（例：0 ; 18）。後から設定で変更できます。"
+
+msgid "Validation"
+msgstr "確定"
+
+msgid "Valider"
+msgstr "確定"
+
+msgid "Valider cette facture ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "この請求書を確定しますか？最終番号が付与され、明細と金額は変更できなくなります。"
+
+msgid "Valider un document"
+msgstr "書類を確定"
+
+msgid "Validité des devis"
+msgstr "見積書の有効期間"
+
+msgid "validité des devis"
+msgstr "見積書の有効期間"
+
+msgid "Validé"
+msgstr "確定済み"
+
+msgid "Vente"
+msgstr "販売"
+
+msgid "Vente et achat"
+msgstr "販売と仕入"
+
+msgid "Version {}"
+msgstr "バージョン {}"
+
+msgid "{} (désactivé)"
+msgstr "{}（無効）"
+
+msgid "{} ({}), rôle : {}"
+msgstr "{}（{}）、役割：{}"
+
+msgid "{} factures."
+msgstr "請求書 {} 件。"
+
+msgid "{} fiches"
+msgstr "{} 件"
+
+msgid "{} invalide : saisir un nombre entier de jours, ou laisser vide pour ne pas en fixer"
+msgstr "{}が無効です。日数を整数で入力するか、設定しない場合は空欄にしてください。"
+
+msgid "À importer"
+msgstr "取り込み対象"
+
+msgid "À propos"
+msgstr "このソフトについて"
+
+msgid "Échéance"
+msgstr "支払期日"
+
+msgid "Échéance (facultative)"
+msgstr "支払期日（任意）"
+
+msgid "échéance illisible : saisir la date au format JJ/MM/AAAA, ou la laisser vide"
+msgstr "支払期日を読み取れません。DD/MM/YYYY の形式で入力するか、空欄にしてください。"
+
+msgid "Étape {} sur {} : {}"
+msgstr "ステップ {} / {}：{}"
+
+msgid "État"
+msgstr "状態"

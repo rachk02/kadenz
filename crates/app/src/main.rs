@@ -5,12 +5,14 @@ mod administration;
 mod factures;
 mod import_ecran;
 mod referentiels;
+mod traduction;
 mod utilisateurs;
 
 use std::cell::RefCell;
 use std::path::PathBuf;
 use std::rc::Rc;
 
+use kadenz_domaine::langue::Langue;
 use kadenz_domaine::lettres::Orthographe;
 use kadenz_domaine::role::Droit;
 use kadenz_domaine::saisie;
@@ -42,14 +44,15 @@ fn chemin_base() -> PathBuf {
 }
 
 /// Met la première lettre d'un message en majuscule et termine par un point.
+/// Le message est d'abord traduit dans la langue choisie (traduction::tr).
 fn phrase(message: impl std::fmt::Display) -> SharedString {
-    let texte = message.to_string();
+    let texte = traduction::tr(&message.to_string());
     let mut caracteres = texte.chars();
     let mut s: String = match caracteres.next() {
         Some(c) => c.to_uppercase().chain(caracteres).collect(),
         None => return SharedString::new(),
     };
-    if !s.ends_with('.') {
+    if !s.ends_with(['.', '。', '!', '?', '؟']) {
         s.push('.');
     }
     s.into()
@@ -94,55 +97,69 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     d.set_gerer_parametres(possede(Droit::GererParametres));
     d.set_gerer_utilisateurs(possede(Droit::GererUtilisateurs));
 
+    // Les libellés et les icônes du menu sont dans fenetre-principale.slint.
     let mut menu = Vec::new();
-    let mut ajouter = |page, libelle: &str| {
-        menu.push(ElementMenu {
-            page,
-            libelle: libelle.into(),
-        })
-    };
     if possede(Droit::Consulter) {
-        ajouter(Page::TableauDeBord, "Tableau de bord");
-        ajouter(Page::Devis, "Devis");
-        ajouter(Page::Proforma, "Proforma");
-        ajouter(Page::BonsCommande, "Bons de commande");
-        ajouter(Page::Livraisons, "Livraisons");
-        ajouter(Page::Factures, "Factures");
-        ajouter(Page::Tiers, "Tiers");
-        ajouter(Page::Produits, "Produits");
+        menu.extend([
+            Page::TableauDeBord,
+            Page::Devis,
+            Page::Proforma,
+            Page::BonsCommande,
+            Page::Livraisons,
+            Page::Factures,
+            Page::Tiers,
+            Page::Produits,
+        ]);
     }
     if possede(Droit::GererParametres) {
-        ajouter(Page::Entreprise, "Entreprise");
-        ajouter(Page::Parametres, "Paramètres");
+        menu.extend([Page::Entreprise, Page::Parametres]);
     }
     if possede(Droit::GererUtilisateurs) {
-        ajouter(Page::Utilisateurs, "Utilisateurs");
+        menu.push(Page::Utilisateurs);
     }
     if etat.utilisateur.is_some() {
-        ajouter(Page::MonCompte, "Mon compte");
+        menu.push(Page::MonCompte);
     }
-    ajouter(Page::APropos, "À propos");
+    menu.push(Page::APropos);
 
     // La page en cours reste affichée si le menu la contient encore.
     let page = fenetre.get_page();
-    let element = menu
-        .iter()
-        .find(|e| e.page == page)
-        .unwrap_or(&menu[0])
-        .clone();
-    fenetre.set_page(element.page);
-    fenetre.set_titre_page(element.libelle);
+    fenetre.set_page(if menu.contains(&page) { page } else { menu[0] });
     fenetre.set_menu(ModelRc::new(VecModel::from(menu)));
 }
 
+/// Réglages d'affichage propres à la langue retenue (code de traduction::choisir).
+fn appliquer_langue(fenetre: &FenetrePrincipale, code: &str) {
+    fenetre.global::<Theme>().set_chinois(code == "zh");
+}
+
 fn afficher_session(fenetre: &FenetrePrincipale, etat: &Etat) {
+    // Recalculé ici pour suivre la langue du compte.
+    let chemin = etat.conn.path().unwrap_or_default().to_string();
+    let afficher_etat_base = || {
+        fenetre.set_etat_base(
+            traduction::trf(
+                "Base : {} (schéma {})",
+                &[&chemin, &kadenz_stockage::version_schema_application()],
+            )
+            .into(),
+        );
+    };
     if let Some(u) = &etat.utilisateur {
+        // Langue du compte, avant tout texte construit ici.
+        appliquer_langue(fenetre, traduction::choisir(u.langue.code()));
+        let rang = Langue::TOUTES
+            .iter()
+            .position(|l| *l == u.langue)
+            .unwrap_or(0);
+        fenetre.set_utilisateur_langue(rang as i32);
         fenetre.set_utilisateur_nom(u.nom_complet.as_str().into());
         fenetre.set_utilisateur_identifiant(u.identifiant.as_str().into());
-        fenetre.set_utilisateur_role(u.role.to_string().into());
+        fenetre.set_utilisateur_role(traduction::tr(&u.role.to_string()).into());
         appliquer_droits(fenetre, etat);
         fenetre.set_ecran(Ecran::Application);
     }
+    afficher_etat_base();
     if let Ok(Some(e)) = entreprise::lire(&etat.conn) {
         fenetre.set_nom_entreprise(e.nom.into());
     }
@@ -151,8 +168,9 @@ fn afficher_session(fenetre: &FenetrePrincipale, etat: &Etat) {
 fn installation_depuis_assistant(d: &DonneesAssistant) -> Result<InstallationInitiale, String> {
     let taux = |libelle: &str, texte: &SharedString| {
         saisie::liste_pourcentages_depuis_texte(texte).ok_or_else(|| {
-            format!(
-                "taux de {libelle} invalides : saisir des pourcentages entre 0 et 100 séparés par des points-virgules"
+            traduction::trf(
+                "taux de {} invalides : saisir des pourcentages entre 0 et 100 séparés par des points-virgules",
+                &[&traduction::tr(libelle)],
             )
         })
     };
@@ -247,12 +265,15 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
         etat.comptes = Vue::default();
         etat.factures = factures::Registre::default();
         etat.facture = None;
+        let langue = traduction::choisir_demarrage();
         if let Some(f) = f.upgrade() {
+            appliquer_langue(&f, langue);
             f.set_page(Page::TableauDeBord);
             appliquer_droits(&f, &etat);
             f.set_utilisateur_nom(SharedString::new());
             f.set_utilisateur_identifiant(SharedString::new());
             f.set_utilisateur_role(SharedString::new());
+            afficher_session(&f, &etat);
             f.set_ecran(Ecran::Connexion);
         }
     });
@@ -262,6 +283,34 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     utilisateurs::brancher(fenetre, &etat);
     import_ecran::brancher(fenetre, &etat);
     factures::brancher(fenetre, &etat);
+
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    fenetre.on_changer_langue(move |rang| {
+        let Some(langue) = usize::try_from(rang)
+            .ok()
+            .and_then(|r| Langue::TOUTES.get(r).copied())
+        else {
+            return SharedString::new();
+        };
+        let mut etat = e.borrow_mut();
+        let Some(utilisateur) = etat.utilisateur.clone() else {
+            return phrase("aucune session ouverte");
+        };
+        let resultat = comptes::changer_langue(&etat.conn, &utilisateur, langue);
+        if resultat.is_ok()
+            && let Some(u) = etat.utilisateur.as_mut()
+        {
+            u.langue = langue;
+        }
+        // Dans tous les cas, l'écran reprend la langue enregistrée du compte.
+        if let Some(f) = f.upgrade() {
+            afficher_session(&f, &etat);
+        }
+        match resultat {
+            Ok(()) => SharedString::new(),
+            Err(erreur) => phrase(erreur),
+        }
+    });
 
     let e = etat;
     fenetre.on_changer_mot_de_passe(move |ancien, nouveau, confirmation| {
@@ -281,6 +330,9 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
 
 fn main() -> Result<(), slint::PlatformError> {
     let fenetre = FenetrePrincipale::new()?;
+    // Interface en français au démarrage, quelle que soit la langue de Windows, jusqu'à
+    // la connexion d'un compte (voir traduction::choisir_demarrage).
+    appliquer_langue(&fenetre, traduction::choisir_demarrage());
     fenetre.set_version_logiciel(env!("CARGO_PKG_VERSION").into());
     let chemin = chemin_base();
 
@@ -291,14 +343,6 @@ fn main() -> Result<(), slint::PlatformError> {
 
     match demarrage {
         Ok((conn, ecran)) => {
-            fenetre.set_etat_base(
-                format!(
-                    "Base : {} (schéma {})",
-                    chemin.display(),
-                    kadenz_stockage::version_schema_application()
-                )
-                .into(),
-            );
             let etat = Rc::new(RefCell::new(Etat::nouveau(conn)));
             afficher_session(&fenetre, &etat.borrow());
             fenetre.set_ecran(match ecran {
@@ -309,9 +353,9 @@ fn main() -> Result<(), slint::PlatformError> {
         }
         Err(erreur) => {
             fenetre.set_message_demarrage(
-                format!(
-                    "La base de données ({}) n'a pas pu être ouverte : {erreur}",
-                    chemin.display()
+                traduction::trf(
+                    "La base de données ({}) n'a pas pu être ouverte : {}",
+                    &[&chemin.display(), &traduction::tr(&erreur.to_string())],
                 )
                 .into(),
             );

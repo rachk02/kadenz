@@ -1,0 +1,1135 @@
+# Kadenz, interface en turc ; langue source : français.
+# Fichier généré à partir des tables de traduction ; un msgid par texte affiché.
+msgid ""
+msgstr ""
+"Project-Id-Version: kadenz\n"
+"Language: tr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid " ; ignorées car déjà présentes au moment de l'enregistrement : {}"
+msgstr "; kaydetme sırasında zaten mevcut olduğu için atlananlar: {}"
+
+msgid "(brouillon)"
+msgstr "(taslak)"
+
+msgid "1 facture."
+msgstr "1 fatura."
+
+msgid "1 fiche"
+msgstr "1 kayıt"
+
+msgid "Achat"
+msgstr "Alış"
+
+msgid "Administrateur"
+msgstr "Yönetici"
+
+msgid "Administrateur : {} ({})"
+msgstr "Yönetici: {} ({})"
+
+msgid "Adresse"
+msgstr "Adres"
+
+msgid "adresse"
+msgstr "adres"
+
+msgid "Adresse / boîte postale"
+msgstr "Adres / posta kutusu"
+
+msgid "Adresse ou boîte postale"
+msgstr "Adres veya posta kutusu"
+
+msgid "Ajouter"
+msgstr "Ekle"
+
+msgid "Ajouter le produit"
+msgstr "Ürünü ekle"
+
+msgid "Ajouter un client, un fournisseur, un produit"
+msgstr "Müşteri, tedarikçi, ürün ekle"
+
+msgid "Annuler"
+msgstr "İptal"
+
+msgid "Annuler cette facture ? Elle reste dans le registre avec son numéro, en lecture seule."
+msgstr "Bu fatura iptal edilsin mi? Numarasıyla kayıt defterinde salt okunur olarak kalır."
+
+msgid "Annuler la facture"
+msgstr "Faturayı iptal et"
+
+msgid "Annuler un document validé"
+msgstr "Onaylı belgeyi iptal et"
+
+msgid "Annulé"
+msgstr "İptal edildi"
+
+msgid "Au JJ/MM/AAAA"
+msgstr "Bitiş GG/AA/YYYY"
+
+msgid "au moins un mode de paiement est nécessaire"
+msgstr "en az bir ödeme yöntemi gereklidir"
+
+msgid "Aucun client choisi"
+msgstr "Müşteri seçilmedi"
+
+msgid "aucun compte sélectionné"
+msgstr "hesap seçilmedi"
+
+msgid "Aucun fichier choisi."
+msgstr "Dosya seçilmedi."
+
+msgid "Aucun logo"
+msgstr "Logo yok"
+
+msgid "Aucun numéro tant que la facture n'est pas validée."
+msgstr "Fatura onaylanana kadar numara verilmez."
+
+msgid "Aucune facture."
+msgstr "Fatura yok."
+
+msgid "Aucune fiche"
+msgstr "Kayıt yok"
+
+msgid "aucune fiche ouverte"
+msgstr "açık kayıt yok"
+
+msgid "aucune fiche sélectionnée"
+msgstr "kayıt seçilmedi"
+
+msgid "Aucune ligne."
+msgstr "Satır yok."
+
+msgid "aucune session ouverte"
+msgstr "açık oturum yok"
+
+msgid "Avoir"
+msgstr "İade faturası"
+
+msgid "Base : {} (schéma {})"
+msgstr "Veritabanı: {} (şema {})"
+
+msgid "Base de données : SQLite, dans le domaine public."
+msgstr "Veritabanı: SQLite, kamu malı."
+
+msgid "Base TVA"
+msgstr "KDV matrahı"
+
+msgid "Bon de commande"
+msgstr "Sipariş formu"
+
+msgid "Bons de commande"
+msgstr "Sipariş formları"
+
+msgid "Bordereau de livraison"
+msgstr "İrsaliye"
+
+msgid "Brouillon"
+msgstr "Taslak"
+
+msgid "brouillon enregistré"
+msgstr "taslak kaydedildi"
+
+msgid "brouillon enregistré, mais validation refusée : {}"
+msgstr "taslak kaydedildi, ancak onay reddedildi: {}"
+
+msgid "brouillon supprimé"
+msgstr "taslak silindi"
+
+msgid "C'est le compte de la session en cours : son rôle et son état se changent depuis un autre compte administrateur. Le mot de passe se change dans « Mon compte »."
+msgstr "Bu, geçerli oturumun hesabıdır: rolü ve durumu başka bir yönetici hesabından değiştirilir. Parola \"Hesabım\" bölümünden değiştirilir."
+
+msgid "ce brouillon n'a pas été enregistré"
+msgstr "bu taslak kaydedilmedi"
+
+msgid "Ce compte administre l'installation : utilisateurs, droits, sauvegardes."
+msgstr "Bu hesap kurulumu yönetir: kullanıcılar, yetkiler, yedeklemeler."
+
+msgid "ce compte n'existe plus"
+msgstr "bu hesap artık mevcut değil"
+
+msgid "ce produit n'existe plus"
+msgstr "bu ürün artık mevcut değil"
+
+msgid "ce tiers n'existe plus"
+msgstr "bu cari artık mevcut değil"
+
+msgid "Ces informations figurent en en-tête et en pied de page des documents."
+msgstr "Bu bilgiler belgelerin üst ve alt bilgisinde yer alır."
+
+msgid "cette facture n'existe plus"
+msgstr "bu fatura artık mevcut değil"
+
+msgid "Changer de mot de passe"
+msgstr "Parolayı değiştir"
+
+msgid "Changer le rôle"
+msgstr "Rolü değiştir"
+
+msgid "Chaque année"
+msgstr "Her yıl"
+
+msgid "Chaque mois"
+msgstr "Her ay"
+
+msgid "Chiffres du rang"
+msgstr "Sıra numarası basamakları"
+
+msgid "Choisir le fichier à importer"
+msgstr "İçe aktarılacak dosyayı seç"
+
+msgid "Choisir un autre fichier"
+msgstr "Başka dosya seç"
+
+msgid "Choisir un logo"
+msgstr "Logo seç"
+
+msgid "Choisir une image"
+msgstr "Görsel seç"
+
+msgid "Client"
+msgstr "Müşteri"
+
+msgid "Client et fournisseur"
+msgstr "Müşteri ve tedarikçi"
+
+msgid "Clients"
+msgstr "Müşteriler"
+
+msgid "Clients et fournisseurs"
+msgstr "Müşteriler ve tedarikçiler"
+
+msgid "Cliquer sur une facture pour ouvrir sa fiche."
+msgstr "Kartını açmak için bir faturaya tıklayın."
+
+msgid "Cocher ce que chaque rôle peut faire. Le rôle Admin garde toujours la gestion des utilisateurs et des droits. Les contrôles s'appliquent dès l'enregistrement ; le menu des autres comptes se met à jour à leur prochaine connexion."
+msgstr "Her rolün neler yapabileceğini işaretleyin. Admin rolü kullanıcı ve yetki yönetimini her zaman korur. Denetimler kaydedildiği anda uygulanır; diğer hesapların menüsü bir sonraki girişlerinde güncellenir."
+
+msgid "Colonnes ignorées, non importées : {}."
+msgstr "Yok sayılan, içe aktarılmayan sütunlar: {}."
+
+msgid "Colonnes reconnues : {}."
+msgstr "Tanınan sütunlar: {}."
+
+msgid "Commercial"
+msgstr "Satış"
+
+msgid "Composants tiers"
+msgstr "Üçüncü taraf bileşenler"
+
+msgid "Comptable"
+msgstr "Muhasebeci"
+
+msgid "Compte"
+msgstr "Hesap"
+
+msgid "Compte (désactivé)"
+msgstr "Hesap (devre dışı)"
+
+msgid "Compte bancaire 1"
+msgstr "Banka hesabı 1"
+
+msgid "Compte bancaire 2"
+msgstr "Banka hesabı 2"
+
+msgid "compte créé"
+msgstr "hesap oluşturuldu"
+
+msgid "compte désactivé"
+msgstr "hesap devre dışı bırakıldı"
+
+msgid "compte inconnu ou désactivé"
+msgstr "bilinmeyen veya devre dışı hesap"
+
+msgid "compte introuvable"
+msgstr "hesap bulunamadı"
+
+msgid "compte réactivé"
+msgstr "hesap yeniden etkinleştirildi"
+
+msgid "Comptes"
+msgstr "Hesaplar"
+
+msgid "Confirmation"
+msgstr "Onay"
+
+msgid "Confirmation du mot de passe"
+msgstr "Parola onayı"
+
+msgid "Confirmation du nouveau mot de passe"
+msgstr "Yeni parolanın onayı"
+
+msgid "Confirmer l'annulation"
+msgstr "İptali doğrula"
+
+msgid "Confirmer la suppression"
+msgstr "Silmeyi doğrula"
+
+msgid "Confirmer la validation"
+msgstr "Onaylamayı doğrula"
+
+msgid "Confirmer le retrait"
+msgstr "Kaldırmayı doğrula"
+
+msgid "CONNEXION"
+msgstr "GİRİŞ"
+
+msgid "Consultation"
+msgstr "Görüntüleme"
+
+msgid "Consulter tableau de bord et registres"
+msgstr "Gösterge panelini ve kayıt defterlerini görüntüle"
+
+msgid "Converti"
+msgstr "Dönüştürüldü"
+
+msgid "Création du brouillon"
+msgstr "Taslak oluşturuldu"
+
+msgid "Créer le compte"
+msgstr "Hesabı oluştur"
+
+msgid "Créer/modifier un brouillon (Devis, Proforma, BC, Livraison)"
+msgstr "Taslak oluştur/değiştir (Teklif, Proforma, SF, Teslimat)"
+
+msgid "Créer/modifier un brouillon Facture ou Avoir"
+msgstr "Fatura veya İade faturası taslağı oluştur/değiştir"
+
+msgid "CSV, Excel ou OpenDocument"
+msgstr "CSV, Excel veya OpenDocument"
+
+msgid "Date"
+msgstr "Tarih"
+
+msgid "Date (JJ/MM/AAAA)"
+msgstr "Tarih (GG/AA/YYYY)"
+
+msgid "Date de début de période incomplète ou illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "Dönem başlangıç tarihi eksik veya okunamıyor (GG/AA/YYYY): uygulanmadı."
+
+msgid "Date de fin de période incomplète ou illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "Dönem bitiş tarihi eksik veya okunamıyor (GG/AA/YYYY): uygulanmadı."
+
+msgid "date illisible : saisir la date au format JJ/MM/AAAA"
+msgstr "tarih okunamadı: tarihi GG/AA/YYYY biçiminde girin"
+
+msgid "Dates de début et de fin de période incomplètes ou illisibles (JJ/MM/AAAA) : non appliquées."
+msgstr "Dönem başlangıç ve bitiş tarihleri eksik veya okunamıyor (GG/AA/YYYY): uygulanmadı."
+
+msgid "Devis"
+msgstr "Teklifler"
+
+msgid "Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements."
+msgstr "Teklifler, proformalar, sipariş formları, irsaliyeler, faturalar ve ödemeler."
+
+msgid "document introuvable"
+msgstr "belge bulunamadı"
+
+msgid "Doublon"
+msgstr "Kopya"
+
+msgid "droits enregistrés"
+msgstr "yetkiler kaydedildi"
+
+msgid "Droits par rôle"
+msgstr "Role göre yetkiler"
+
+msgid "Du JJ/MM/AAAA"
+msgstr "Başlangıç GG/AA/YYYY"
+
+msgid "délai de paiement"
+msgstr "ödeme süresi"
+
+msgid "Délai de paiement des factures"
+msgstr "Fatura ödeme süresi"
+
+msgid "Délais (en jours, laisser vide pour ne pas en fixer)"
+msgstr "Süreler (gün olarak, belirlememek için boş bırakın)"
+
+msgid "Démarrage impossible"
+msgstr "Başlatılamıyor"
+
+msgid "Désactiver"
+msgstr "Devre dışı bırak"
+
+msgid "Désactivé"
+msgstr "Devre dışı"
+
+msgid "Désactivée"
+msgstr "Devre dışı"
+
+msgid "Désignation"
+msgstr "Tanım"
+
+msgid "désignation"
+msgstr "tanım"
+
+msgid "Email"
+msgstr "E-posta"
+
+msgid "En lettres : {}"
+msgstr "Yazıyla: {}"
+
+msgid "Enregistrer"
+msgstr "Kaydet"
+
+msgid "enregistrer d'abord la facture"
+msgstr "önce faturayı kaydedin"
+
+msgid "Enregistrer le brouillon"
+msgstr "Taslağı kaydet"
+
+msgid "Enregistrer le mode et les observations"
+msgstr "Yöntemi ve notları kaydet"
+
+msgid "Enregistrer les droits"
+msgstr "Yetkileri kaydet"
+
+msgid "Entreprise"
+msgstr "Şirket"
+
+msgid "Entreprise : {}"
+msgstr "Şirket: {}"
+
+msgid "Envoyé"
+msgstr "Gönderildi"
+
+msgid "Erreur"
+msgstr "Hata"
+
+msgid "Exemple : première facture de l'année, {}"
+msgstr "Örnek: yılın ilk faturası, {}"
+
+msgid "Exemple : première facture du mois, {}"
+msgstr "Örnek: ayın ilk faturası, {}"
+
+msgid "Exemple : {} FCFA s'écrit « {} »."
+msgstr "Örnek: {} FCFA, \"{}\" olarak yazılır."
+
+msgid "existe déjà"
+msgstr "zaten mevcut"
+
+msgid "Facture"
+msgstr "Fatura"
+
+msgid "Facture (brouillon)"
+msgstr "Fatura (taslak)"
+
+msgid "facture annulée"
+msgstr "fatura iptal edildi"
+
+msgid "Facture annulée : lecture seule, numéro conservé."
+msgstr "Fatura iptal edildi: salt okunur, numara korundu."
+
+msgid "facture marquée envoyée"
+msgstr "fatura gönderildi olarak işaretlendi"
+
+msgid "Facture validée : lignes et montants figés."
+msgstr "Fatura onaylandı: satırlar ve tutarlar sabitlendi."
+
+msgid "facture validée sous le numéro {}"
+msgstr "fatura {} numarasıyla onaylandı"
+
+msgid "Facture {}"
+msgstr "Fatura {}"
+
+msgid "Factures"
+msgstr "Faturalar"
+
+msgid "Fermer"
+msgstr "Kapat"
+
+msgid "Fiche"
+msgstr "Kayıt"
+
+msgid "Fiche du produit"
+msgstr "Ürün kartı"
+
+msgid "Fiche du produit (désactivée)"
+msgstr "Ürün kartı (devre dışı)"
+
+msgid "Fiche du tiers"
+msgstr "Cari kartı"
+
+msgid "Fiche du tiers (désactivée)"
+msgstr "Cari kartı (devre dışı)"
+
+msgid "fiche désactivée : elle est citée dans au moins un document, l'historique reste intact"
+msgstr "kayıt devre dışı bırakıldı: en az bir belgede geçiyor, geçmiş korunuyor"
+
+msgid "fiche enregistrée"
+msgstr "kayıt kaydedildi"
+
+msgid "fiche réactivée"
+msgstr "kayıt yeniden etkinleştirildi"
+
+msgid "fiche supprimée"
+msgstr "kayıt silindi"
+
+msgid "Fiches ajoutées : {}"
+msgstr "Eklenen kayıtlar: {}"
+
+msgid "Fiches désactivées"
+msgstr "Devre dışı kayıtlar"
+
+msgid "Fiches à importer : {} ; doublons ignorés : {} ; lignes en erreur : {}."
+msgstr "İçe aktarılacak kayıtlar: {}; atlanan kopyalar: {}; hatalı satırlar: {}."
+
+msgid "Fichier : {}"
+msgstr "Dosya: {}"
+
+msgid "Filtrer les clients"
+msgstr "Müşterileri filtrele"
+
+msgid "Filtrer les produits"
+msgstr "Ürünleri filtrele"
+
+msgid "Fournisseur"
+msgstr "Tedarikçi"
+
+msgid "Fournisseurs"
+msgstr "Tedarikçiler"
+
+msgid "Garder"
+msgstr "Koru"
+
+msgid "Gestion commerciale"
+msgstr "Ticari yönetim"
+
+msgid "Gestion commerciale mono-poste pour Windows : les données restent sur ce poste."
+msgstr "Windows için tek istasyonlu ticari yönetim: veriler bu bilgisayarda kalır."
+
+msgid "Gérer la fiche entreprise et les paramètres"
+msgstr "Şirket kartını ve ayarları yönet"
+
+msgid "Gérer les utilisateurs et droits"
+msgstr "Kullanıcıları ve yetkileri yönet"
+
+msgid "Historique"
+msgstr "Geçmiş"
+
+msgid "Identifiant"
+msgstr "Kullanıcı adı"
+
+msgid "Identifiant de connexion"
+msgstr "Kullanıcı adı"
+
+msgid "identifiant ou mot de passe incorrect"
+msgstr "kullanıcı adı veya parola yanlış"
+
+msgid "IFU"
+msgstr "IFU"
+
+msgid "Image PNG ou JPEG, 2 Mo au plus. Le logo principal figure à gauche de l'en-tête, le second à droite."
+msgstr "PNG veya JPEG görsel, en fazla 2 MB. Ana logo üst bilginin solunda, ikinci logo sağında yer alır."
+
+msgid "Images PNG ou JPEG"
+msgstr "PNG veya JPEG görseller"
+
+msgid "Impayé"
+msgstr "Ödenmedi"
+
+msgid "Importer"
+msgstr "İçe aktar"
+
+msgid "Importer des produits"
+msgstr "Ürün içe aktar"
+
+msgid "Importer des tiers"
+msgstr "Cari içe aktar"
+
+msgid "Importer les fiches valides"
+msgstr "Geçerli kayıtları içe aktar"
+
+msgid "impossible : l'installation doit garder au moins un administrateur actif"
+msgstr "mümkün değil: kurulumda en az bir etkin yönetici kalmalıdır"
+
+msgid "Interface : Slint, sous licence Slint Royalty-free 2.0."
+msgstr "Arayüz: Slint, Slint Royalty-free 2.0 lisansıyla."
+
+msgid "l'identifiant est obligatoire et ne contient pas d'espace"
+msgstr "kullanıcı adı zorunludur ve boşluk içermez"
+
+msgid "l'installation initiale a déjà été faite"
+msgstr "ilk kurulum zaten yapıldı"
+
+msgid "La base de données ({}) n'a pas pu être ouverte : {}"
+msgstr "Veritabanı ({}) açılamadı: {}"
+
+msgid "la fiche entreprise n'existe pas encore"
+msgstr "şirket kartı henüz mevcut değil"
+
+msgid "Langue de l'interface"
+msgstr "Arayüz dili"
+
+msgid "le logo doit être une image PNG ou JPEG"
+msgstr "logo PNG veya JPEG görsel olmalıdır"
+
+msgid "le montant du règlement doit être positif"
+msgstr "ödeme tutarı pozitif olmalıdır"
+
+msgid "le mot de passe actuel est incorrect"
+msgstr "mevcut parola yanlış"
+
+msgid "le nom complet est obligatoire"
+msgstr "ad soyad zorunludur"
+
+msgid "Le nom complet et l'identifiant sont obligatoires."
+msgstr "Ad soyad ve kullanıcı adı zorunludur."
+
+msgid "le nom de l'entreprise est obligatoire"
+msgstr "şirket adı zorunludur"
+
+msgid "Le nom de l'entreprise est obligatoire."
+msgstr "Şirket adı zorunludur."
+
+msgid "Le produit choisi remplit la référence, la désignation et le prix, qui restent modifiables sur la ligne. Une référence tapée puis validée par Entrée reprend le produit correspondant."
+msgstr "Seçilen ürün referansı, tanımı ve fiyatı doldurur; bunlar satırda değiştirilebilir. Yazılıp Enter ile onaylanan bir referans ilgili ürünü getirir."
+
+msgid "lecture du fichier impossible : {}"
+msgstr "dosya okunamadı: {}"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une facture."
+msgstr "Salt okunur: rolünüz fatura değiştirmeye izin vermiyor."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une fiche existante."
+msgstr "Salt okunur: rolünüz mevcut bir kaydı değiştirmeye izin vermiyor."
+
+msgid "Les deux"
+msgstr "Her ikisi"
+
+msgid "les deux mots de passe ne correspondent pas"
+msgstr "iki parola eşleşmiyor"
+
+msgid "Les deux mots de passe ne correspondent pas."
+msgstr "İki parola eşleşmiyor."
+
+msgid "les deux nouveaux mots de passe ne correspondent pas"
+msgstr "iki yeni parola eşleşmiyor"
+
+msgid "Les textes des documents, l'apparence des PDF et les dossiers d'export se régleront ici avec le jalon du PDF (J4). La matrice des droits par rôle se règle dans l'écran Utilisateurs."
+msgstr "Belge metinleri, PDF görünümü ve dışa aktarma klasörleri PDF aşamasıyla (J4) burada ayarlanacak. Role göre yetki matrisi Kullanıcılar ekranında ayarlanır."
+
+msgid "Libellé"
+msgstr "Açıklama"
+
+msgid "Ligne"
+msgstr "Satır"
+
+msgid "Ligne libre"
+msgstr "Serbest satır"
+
+msgid "ligne {} : prix illisible, saisir un montant entier en FCFA"
+msgstr "satır {}: fiyat okunamadı, FCFA cinsinden tam sayı bir tutar girin"
+
+msgid "ligne {} : quantité illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "satır {}: miktar okunamadı, pozitif bir sayı girin (en fazla 3 ondalık)"
+
+msgid "Lignes"
+msgstr "Satırlar"
+
+msgid "Livraison complète"
+msgstr "Tamamen teslim edildi"
+
+msgid "Livraison partielle"
+msgstr "Kısmi teslim edildi"
+
+msgid "Livraisons"
+msgstr "Teslimatlar"
+
+msgid "Localisation"
+msgstr "Konum"
+
+msgid "localisation"
+msgstr "konum"
+
+msgid "Logiciel"
+msgstr "Yazılım"
+
+msgid "Logiciel propriétaire, tous droits réservés."
+msgstr "Tescilli yazılım, tüm hakları saklıdır."
+
+msgid "logo enregistré"
+msgstr "logo kaydedildi"
+
+msgid "Logo principal"
+msgstr "Ana logo"
+
+msgid "logo retiré"
+msgstr "logo kaldırıldı"
+
+msgid "Logos"
+msgstr "Logolar"
+
+msgid "Marquer envoyée"
+msgstr "Gönderildi olarak işaretle"
+
+msgid "Mode"
+msgstr "Yöntem"
+
+msgid "Mode de paiement"
+msgstr "Ödeme yöntemi"
+
+msgid "mode de paiement et observations enregistrés"
+msgstr "ödeme yöntemi ve notlar kaydedildi"
+
+msgid "Modes de paiement"
+msgstr "Ödeme yöntemleri"
+
+msgid "Modes de paiement : {}"
+msgstr "Ödeme yöntemleri: {}"
+
+msgid "Modes de paiement, séparés par des points-virgules"
+msgstr "Ödeme yöntemleri, noktalı virgülle ayrılmış"
+
+msgid "Modification du mode de paiement ou des observations"
+msgstr "Ödeme yöntemi veya notlar değiştirildi"
+
+msgid "Modifier ou désactiver un client, un fournisseur, un produit"
+msgstr "Müşteri, tedarikçi, ürün değiştir veya devre dışı bırak"
+
+msgid "Module en cours de construction."
+msgstr "Modül yapım aşamasında."
+
+msgid "Mon compte"
+msgstr "Hesabım"
+
+msgid "Montant en lettres"
+msgstr "Yazıyla tutar"
+
+msgid "Montant en lettres : {}"
+msgstr "Yazıyla tutar: {}"
+
+msgid "Montant en lettres en orthographe traditionnelle (sinon : orthographe rectifiée de 1990)"
+msgstr "Yazıyla tutar geleneksel yazımla (aksi halde: 1990 düzeltilmiş yazım)"
+
+msgid "Montant HT"
+msgstr "Vergiler hariç tutar"
+
+msgid "Montant TTC"
+msgstr "Vergiler dahil tutar"
+
+msgid "Mot de passe"
+msgstr "Parola"
+
+msgid "Mot de passe (8 caractères au moins)"
+msgstr "Parola (en az 8 karakter)"
+
+msgid "Mot de passe actuel"
+msgstr "Mevcut parola"
+
+msgid "Mot de passe modifié."
+msgstr "Parola değiştirildi."
+
+msgid "mot de passe réinitialisé"
+msgstr "parola sıfırlandı"
+
+msgid "Nom"
+msgstr "Ad"
+
+msgid "nom"
+msgstr "ad"
+
+msgid "Nom complet"
+msgstr "Ad soyad"
+
+msgid "Nom de l'entreprise (obligatoire)"
+msgstr "Şirket adı (zorunlu)"
+
+msgid "nombre de chiffres du rang invalide : saisir un entier entre {} et {}"
+msgstr "geçersiz sıra numarası basamak sayısı: {} ile {} arasında bir tam sayı girin"
+
+msgid "Non précisé"
+msgstr "Belirtilmedi"
+
+msgid "Nouveau compte"
+msgstr "Yeni hesap"
+
+msgid "Nouveau mot de passe (8 caractères au moins)"
+msgstr "Yeni parola (en az 8 karakter)"
+
+msgid "Nouveau produit"
+msgstr "Yeni ürün"
+
+msgid "Nouveau tiers"
+msgstr "Yeni cari"
+
+msgid "Nouvelle facture"
+msgstr "Yeni fatura"
+
+msgid "Numérotation des documents"
+msgstr "Belge numaralandırma"
+
+msgid "N°"
+msgstr "No."
+
+msgid "Observations"
+msgstr "Notlar"
+
+msgid "orthographe rectifiée"
+msgstr "düzeltilmiş yazım"
+
+msgid "Orthographe rectifiée (1990)"
+msgstr "Düzeltilmiş yazım (1990)"
+
+msgid "Orthographe traditionnelle"
+msgstr "Geleneksel yazım"
+
+msgid "orthographe traditionnelle"
+msgstr "geleneksel yazım"
+
+msgid "Paiement"
+msgstr "Ödeme"
+
+msgid "Paiement : {}"
+msgstr "Ödeme: {}"
+
+msgid "Paiements"
+msgstr "Ödemeler"
+
+msgid "Paramètres"
+msgstr "Ayarlar"
+
+msgid "paramètres enregistrés"
+msgstr "ayarlar kaydedildi"
+
+msgid "Partiel"
+msgstr "Kısmi"
+
+msgid "Payé"
+msgstr "Ödendi"
+
+msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
+msgstr "Yazı tipleri: Inter ve Manrope, SIL Open Font License 1.1 lisansıyla."
+
+msgid "Pourcentages séparés par des points-virgules, par exemple « 0 ; 18 » ou « 0 ; 2,5 ; 5 »."
+msgstr "Noktalı virgülle ayrılmış yüzdeler, örneğin \"0 ; 18\" veya \"0 ; 2,5 ; 5\"."
+
+msgid "Première installation"
+msgstr "İlk kurulum"
+
+msgid "prix"
+msgstr "fiyat"
+
+msgid "Prix (FCFA)"
+msgstr "Fiyat (FCFA)"
+
+msgid "Prix unitaire"
+msgstr "Birim fiyat"
+
+msgid "Prix unitaire (FCFA)"
+msgstr "Birim fiyat (FCFA)"
+
+msgid "Produits"
+msgstr "Ürünler"
+
+msgid "Produits et services"
+msgstr "Ürünler ve hizmetler"
+
+msgid "Proforma"
+msgstr "Proforma"
+
+msgid "Précédent"
+msgstr "Önceki"
+
+msgid "Préfixes de 1 à 6 lettres, différents d'un type à l'autre."
+msgstr "1 ile 6 harf arasında, her tür için farklı önekler."
+
+msgid "Quantité"
+msgstr "Miktar"
+
+msgid "RCCM"
+msgstr "RCCM"
+
+msgid "Rechercher : désignation ou référence"
+msgstr "Ara: tanım veya referans"
+
+msgid "Rechercher : nom, téléphone, localisation, adresse, IFU"
+msgstr "Ara: ad, telefon, konum, adres, IFU"
+
+msgid "Rechercher : numéro, client, libellé"
+msgstr "Ara: numara, müşteri, açıklama"
+
+msgid "Remarque"
+msgstr "Not"
+
+msgid "Remise"
+msgstr "İndirim"
+
+msgid "remise"
+msgstr "indirim"
+
+msgid "Remise (%)"
+msgstr "İndirim (%)"
+
+msgid "Remise à zéro du compteur"
+msgstr "Sayacın sıfırlanması"
+
+msgid "Remplacer"
+msgstr "Değiştir"
+
+msgid "Responsable comptabilité"
+msgstr "Muhasebe sorumlusu"
+
+msgid "Responsable de la comptabilité"
+msgstr "Muhasebe sorumlusu"
+
+msgid "Responsable de la facturation"
+msgstr "Faturalama sorumlusu"
+
+msgid "Responsable facturation"
+msgstr "Faturalama sorumlusu"
+
+msgid "retenue"
+msgstr "stopaj"
+
+msgid "Retenue à la source (%)"
+msgstr "Stopaj (%)"
+
+msgid "Retirer"
+msgstr "Kaldır"
+
+msgid "Retirer cette fiche ? Elle est supprimée si aucun document ne la cite, sinon seulement désactivée."
+msgstr "Bu kayıt kaldırılsın mı? Hiçbir belge ona atıf yapmıyorsa silinir, aksi halde yalnızca devre dışı bırakılır."
+
+msgid "Retour au registre"
+msgstr "Kayıt defterine dön"
+
+msgid "Revenir"
+msgstr "Geri dön"
+
+msgid "Revenir à la matrice du cahier des charges"
+msgstr "Şartnamedeki matrise dön"
+
+msgid "Réactiver"
+msgstr "Yeniden etkinleştir"
+
+msgid "Récapitulatif"
+msgstr "Özet"
+
+msgid "Réception complète"
+msgstr "Tamamen teslim alındı"
+
+msgid "Réception partielle"
+msgstr "Kısmi teslim alındı"
+
+msgid "Référence"
+msgstr "Referans"
+
+msgid "référence"
+msgstr "referans"
+
+msgid "Référence (unique)"
+msgstr "Referans (benzersiz)"
+
+msgid "Régime d'imposition"
+msgstr "Vergi rejimi"
+
+msgid "régime d'imposition"
+msgstr "vergi rejimi"
+
+msgid "Réinitialiser le mot de passe"
+msgstr "Parolayı sıfırla"
+
+msgid "Rôle"
+msgstr "Rol"
+
+msgid "rôle changé ; le menu de ce compte suivra à sa prochaine connexion"
+msgstr "rol değiştirildi; bu hesabın menüsü bir sonraki girişte güncellenecek"
+
+msgid "Saisir un règlement"
+msgstr "Ödeme gir"
+
+msgid "Saisissez votre identifiant et votre mot de passe."
+msgstr "Kullanıcı adınızı ve parolanızı girin."
+
+msgid "Sauvegarder / exporter la base"
+msgstr "Veritabanını yedekle / dışa aktar"
+
+msgid "Se connecter"
+msgstr "Giriş yap"
+
+msgid "Se déconnecter"
+msgstr "Çıkış yap"
+
+msgid "Second logo"
+msgstr "İkinci logo"
+
+msgid "Sens"
+msgstr "Kullanım"
+
+msgid "sens"
+msgstr "kullanım"
+
+msgid "Sens d'utilisation"
+msgstr "Kullanım şekli"
+
+msgid "Sens des lignes sans colonne Sens :"
+msgstr "Kullanım sütunu olmayan satırların kullanımı:"
+
+msgid "Site web"
+msgstr "Web sitesi"
+
+msgid "Statut"
+msgstr "Durum"
+
+msgid "Statut : {}"
+msgstr "Durum: {}"
+
+msgid "Suivant"
+msgstr "Sonraki"
+
+msgid "Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit."
+msgstr "Bu taslak silinsin mi? Kayıt defterinden kaybolur; silme işlemi denetim günlüğünde kayıtlı kalır."
+
+msgid "Supprimer le brouillon"
+msgstr "Taslağı sil"
+
+msgid "Sélectionner un produit dans la liste pour afficher sa fiche."
+msgstr "Kartını görmek için listeden bir ürün seçin."
+
+msgid "Sélectionner un tiers dans la liste pour afficher sa fiche."
+msgstr "Kartını görmek için listeden bir cari seçin."
+
+msgid "Tableau de bord"
+msgstr "Gösterge paneli"
+
+msgid "Taux de remise (%)"
+msgstr "İndirim oranları (%)"
+
+msgid "Taux de retenue (%)"
+msgstr "Stopaj oranları (%)"
+
+msgid "Taux de TVA (%)"
+msgstr "KDV oranları (%)"
+
+msgid "taux de {} invalides : saisir des pourcentages entre 0 et 100 séparés par des points-virgules"
+msgstr "geçersiz {} oranları: 0 ile 100 arasında, noktalı virgülle ayrılmış yüzdeler girin"
+
+msgid "Taux et paiements"
+msgstr "Oranlar ve ödemeler"
+
+msgid "Taux proposés dans les documents"
+msgstr "Belgelerde önerilen oranlar"
+
+msgid "Terminer l'installation"
+msgstr "Kurulumu bitir"
+
+msgid "Tiers"
+msgstr "Cariler"
+
+msgid "Total"
+msgstr "Toplam"
+
+msgid "Tous les produits"
+msgstr "Tüm ürünler"
+
+msgid "Tous les statuts"
+msgstr "Tüm durumlar"
+
+msgid "Tous les tiers"
+msgstr "Tüm cariler"
+
+msgid "Tout paiement"
+msgstr "Tüm ödemeler"
+
+msgid "TVA"
+msgstr "KDV"
+
+msgid "TVA (%)"
+msgstr "KDV (%)"
+
+msgid "TVA : {}   Remise : {}   Retenue : {}"
+msgstr "KDV: {}   İndirim: {}   Stopaj: {}"
+
+msgid "Type"
+msgstr "Tür"
+
+msgid "type"
+msgstr "tür"
+
+msgid "Type des lignes sans colonne Type :"
+msgstr "Tür sütunu olmayan satırların türü:"
+
+msgid "Téléphone"
+msgstr "Telefon"
+
+msgid "téléphone"
+msgstr "telefon"
+
+msgid "Un changement vaut pour les validations suivantes ; les numéros déjà attribués ne changent pas. Changer de compteur en cours d'année interrompt la suite des numéros de l'année."
+msgstr "Değişiklik sonraki onaylar için geçerlidir; verilmiş numaralar değişmez. Yıl içinde sayaç değiştirmek o yılın numara dizisini keser."
+
+msgid "Utilisateurs"
+msgstr "Kullanıcılar"
+
+msgid "Valeurs séparées par des points-virgules, en pourcentage (ex. 0 ; 18). Modifiables plus tard dans les paramètres."
+msgstr "Noktalı virgülle ayrılmış yüzde değerleri (örn. 0 ; 18). Daha sonra ayarlardan değiştirilebilir."
+
+msgid "Validation"
+msgstr "Onay"
+
+msgid "Valider"
+msgstr "Onayla"
+
+msgid "Valider cette facture ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "Bu fatura onaylansın mı? Kesin numarasını alır; satırları ve tutarları artık değiştirilemez."
+
+msgid "Valider un document"
+msgstr "Belge onayla"
+
+msgid "Validité des devis"
+msgstr "Teklif geçerliliği"
+
+msgid "validité des devis"
+msgstr "teklif geçerliliği"
+
+msgid "Validé"
+msgstr "Onaylandı"
+
+msgid "Vente"
+msgstr "Satış"
+
+msgid "Vente et achat"
+msgstr "Satış ve alış"
+
+msgid "Version {}"
+msgstr "Sürüm {}"
+
+msgid "{} (désactivé)"
+msgstr "{} (devre dışı)"
+
+msgid "{} ({}), rôle : {}"
+msgstr "{} ({}), rol: {}"
+
+msgid "{} factures."
+msgstr "{} fatura."
+
+msgid "{} fiches"
+msgstr "{} kayıt"
+
+msgid "{} invalide : saisir un nombre entier de jours, ou laisser vide pour ne pas en fixer"
+msgstr "geçersiz {}: tam sayı olarak gün girin veya belirlememek için boş bırakın"
+
+msgid "À importer"
+msgstr "İçe aktarılacak"
+
+msgid "À propos"
+msgstr "Hakkında"
+
+msgid "Échéance"
+msgstr "Vade"
+
+msgid "Échéance (facultative)"
+msgstr "Vade (isteğe bağlı)"
+
+msgid "échéance illisible : saisir la date au format JJ/MM/AAAA, ou la laisser vide"
+msgstr "vade okunamadı: tarihi GG/AA/YYYY biçiminde girin veya boş bırakın"
+
+msgid "Étape {} sur {} : {}"
+msgstr "Adım {} / {}: {}"
+
+msgid "État"
+msgstr "Durum"

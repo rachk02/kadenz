@@ -9,6 +9,7 @@ use kadenz_stockage::droits;
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 
 use crate::referentiels::{modele_lignes, retour_erreur, retour_ok};
+use crate::traduction::tr;
 use crate::{
     CompteUi, EtatPartage, FenetrePrincipale, LigneDroitUi, UtilisateursApi, appliquer_droits,
     phrase,
@@ -43,6 +44,12 @@ fn compte_ui(u: Option<&Utilisateur>, session: Option<&Utilisateur>) -> CompteUi
 
 fn afficher_comptes(fenetre: &FenetrePrincipale, etat: &mut crate::Etat) {
     let api = fenetre.global::<UtilisateursApi>();
+    // Relus à chaque ouverture : ils suivent la langue du compte connecté.
+    let roles: Vec<SharedString> = Role::TOUS
+        .iter()
+        .map(|r| tr(&r.to_string()).into())
+        .collect();
+    api.set_roles(ModelRc::new(VecModel::from(roles)));
     match comptes::lister(&etat.conn) {
         Ok(lignes) => {
             let cellules = lignes
@@ -51,11 +58,11 @@ fn afficher_comptes(fenetre: &FenetrePrincipale, etat: &mut crate::Etat) {
                     vec![
                         u.nom_complet.clone(),
                         u.identifiant.clone(),
-                        u.role.to_string(),
+                        tr(&u.role.to_string()),
                         if u.actif {
                             String::new()
                         } else {
-                            "Désactivé".into()
+                            tr("Désactivé")
                         },
                     ]
                 })
@@ -84,8 +91,6 @@ fn verifier_confirmation(mot_de_passe: &str, confirmation: &str) -> Result<(), S
 
 fn brancher_comptes(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
     let api = fenetre.global::<UtilisateursApi>();
-    let roles: Vec<SharedString> = Role::TOUS.iter().map(|r| r.to_string().into()).collect();
-    api.set_roles(ModelRc::new(VecModel::from(roles)));
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
     api.on_ouvrir(move || {
@@ -226,7 +231,7 @@ fn afficher_matrice(fenetre: &FenetrePrincipale, m: &MatriceDroits) {
                 .map(|&r| r == Role::Admin && droit == Droit::GererUtilisateurs)
                 .collect();
             LigneDroitUi {
-                libelle: droit.to_string().into(),
+                libelle: tr(&droit.to_string()).into(),
                 autorisations: ModelRc::new(VecModel::from(autorisations)),
                 verrous: ModelRc::new(VecModel::from(verrous)),
             }

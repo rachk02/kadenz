@@ -1,5 +1,13 @@
 fn main() {
-    slint_build::compile("ui/fenetre-principale.slint").expect("compilation de l'interface Slint");
+    // Traductions de l'interface (src/traduction.rs) : lang/<code>/LC_MESSAGES/kadenz.po,
+    // embarquées dans l'exécutable. Le français est la langue source, sans contexte
+    // de traduction : un même texte a la même traduction dans tous les écrans.
+    println!("cargo:rerun-if-changed=lang");
+    let configuration = slint_build::CompilerConfiguration::new()
+        .with_bundled_translations("lang")
+        .with_default_translation_context(slint_build::DefaultTranslationContext::None);
+    slint_build::compile_with_config("ui/fenetre-principale.slint", configuration)
+        .expect("compilation de l'interface Slint");
 
     // Icône de kadenz.exe (docs/marque) : ressource Windows intégrée à l'exécutable,
     // visible dans l'Explorateur, sur le bureau et dans la barre des tâches.

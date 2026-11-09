@@ -83,7 +83,7 @@ component ActionsFiche inherits VerticalLayout {
         alignment: start;
 
         if root.modifiable: Bouton {
-            text: root.existe ? "Enregistrer" : "Ajouter";
+            text: root.existe ? @tr("Enregistrer") : @tr("Ajouter");
             primary: true;
             clicked => {
                 root.confirmer = false;
@@ -92,14 +92,14 @@ component ActionsFiche inherits VerticalLayout {
         }
 
         if root.existe && root.actif && root.peut-retirer && !root.confirmer: Bouton {
-            text: "Retirer";
+            text: @tr("Retirer");
             clicked => {
                 root.confirmer = true;
             }
         }
 
         if root.existe && !root.actif && root.peut-retirer: Bouton {
-            text: "Réactiver";
+            text: @tr("Réactiver");
             clicked => {
                 root.reactiver();
             }
@@ -107,7 +107,7 @@ component ActionsFiche inherits VerticalLayout {
     }
 
     if root.existe && !root.modifiable: Text {
-        text: "Lecture seule : votre rôle ne permet pas de modifier une fiche existante.";
+        text: @tr("Lecture seule : votre rôle ne permet pas de modifier une fiche existante.");
         color: Theme.texte-secondaire;
         wrap: word-wrap;
     }
@@ -116,7 +116,7 @@ component ActionsFiche inherits VerticalLayout {
         spacing: 8px;
 
         Text {
-            text: "Retirer cette fiche ? Elle est supprimée si aucun document ne la cite, sinon seulement désactivée.";
+            text: @tr("Retirer cette fiche ? Elle est supprimée si aucun document ne la cite, sinon seulement désactivée.");
             wrap: word-wrap;
             color: Theme.texte;
         }
@@ -126,7 +126,7 @@ component ActionsFiche inherits VerticalLayout {
             alignment: start;
 
             Bouton {
-                text: "Confirmer le retrait";
+                text: @tr("Confirmer le retrait");
                 clicked => {
                     root.confirmer = false;
                     root.retirer();
@@ -134,7 +134,7 @@ component ActionsFiche inherits VerticalLayout {
             }
 
             Bouton {
-                text: "Garder";
+                text: @tr("Garder");
                 clicked => {
                     root.confirmer = false;
                 }
@@ -188,14 +188,14 @@ export component PageTiers inherits VerticalLayout {
     spacing: 12px;
 
     Titre {
-        text: "Tiers";
+        text: @tr("Tiers");
     }
 
     HorizontalLayout {
         spacing: 8px;
 
         recherche := LineEdit {
-            placeholder-text: "Rechercher : nom, téléphone, localisation, adresse, IFU";
+            placeholder-text: @tr("Rechercher : nom, téléphone, localisation, adresse, IFU");
             edited => {
                 root.filtrer();
             }
@@ -203,28 +203,28 @@ export component PageTiers inherits VerticalLayout {
 
         filtre-type := ComboBox {
             width: 200px;
-            model: ["Tous les tiers", "Clients", "Fournisseurs", "Clients et fournisseurs"];
+            model: [@tr("Tous les tiers"), @tr("Clients"), @tr("Fournisseurs"), @tr("Clients et fournisseurs")];
             selected => {
                 root.filtrer();
             }
         }
 
         inactifs := CheckBox {
-            text: "Fiches désactivées";
+            text: @tr("Fiches désactivées");
             toggled => {
                 root.filtrer();
             }
         }
 
         if Droits.ajouter-referentiel: Bouton {
-            text: "Importer";
+            text: @tr("Importer");
             clicked => {
                 ImportApi.demarrer(0);
             }
         }
 
         if Droits.ajouter-referentiel: Bouton {
-            text: "Nouveau tiers";
+            text: @tr("Nouveau tiers");
             clicked => {
                 root.retour = { };
                 root.charger(TiersApi.nouvelle());
@@ -240,12 +240,12 @@ export component PageTiers inherits VerticalLayout {
 
             StandardTableView {
                 columns: [
-                    { title: "Nom", min-width: 160px, horizontal-stretch: 3 },
-                    { title: "Type", min-width: 100px, horizontal-stretch: 1 },
-                    { title: "Téléphone", min-width: 100px, horizontal-stretch: 1 },
-                    { title: "Localisation", min-width: 110px, horizontal-stretch: 1 },
-                    { title: "IFU", min-width: 90px, horizontal-stretch: 1 },
-                    { title: "État", min-width: 90px, horizontal-stretch: 1 },
+                    { title: @tr("Nom"), min-width: 160px, horizontal-stretch: 3 },
+                    { title: @tr("Type"), min-width: 100px, horizontal-stretch: 1 },
+                    { title: @tr("Téléphone"), min-width: 100px, horizontal-stretch: 1 },
+                    { title: @tr("Localisation"), min-width: 110px, horizontal-stretch: 1 },
+                    { title: @tr("IFU"), min-width: 90px, horizontal-stretch: 1 },
+                    { title: @tr("État"), min-width: 90px, horizontal-stretch: 1 },
                 ];
                 rows: TiersApi.lignes;
                 current-row <=> TiersApi.ligne-courante;
@@ -273,16 +273,16 @@ export component PageTiers inherits VerticalLayout {
             spacing: 10px;
 
             Section {
-                text: root.fiche.existe ? (root.fiche.actif ? "Fiche du tiers" : "Fiche du tiers (désactivée)") : (Droits.ajouter-referentiel ? "Nouveau tiers" : "Fiche du tiers");
+                text: root.fiche.existe ? (root.fiche.actif ? @tr("Fiche du tiers") : @tr("Fiche du tiers (désactivée)")) : (Droits.ajouter-referentiel ? @tr("Nouveau tiers") : @tr("Fiche du tiers"));
             }
 
             nom := Champ {
-                libelle: "Nom";
+                libelle: @tr("Nom");
                 lecture-seule: !root.modifiable;
             }
 
             adresse := Champ {
-                libelle: "Adresse ou boîte postale";
+                libelle: @tr("Adresse ou boîte postale");
                 lecture-seule: !root.modifiable;
             }
 
@@ -291,31 +291,31 @@ export component PageTiers inherits VerticalLayout {
 
                 Row {
                     telephone := Champ {
-                        libelle: "Téléphone";
+                        libelle: @tr("Téléphone");
                         lecture-seule: !root.modifiable;
                     }
 
                     localisation := Champ {
-                        libelle: "Localisation";
+                        libelle: @tr("Localisation");
                         lecture-seule: !root.modifiable;
                     }
                 }
 
                 Row {
                     ifu := Champ {
-                        libelle: "IFU";
+                        libelle: @tr("IFU");
                         lecture-seule: !root.modifiable;
                     }
 
                     rccm := Champ {
-                        libelle: "RCCM";
+                        libelle: @tr("RCCM");
                         lecture-seule: !root.modifiable;
                     }
                 }
 
                 Row {
                     regime := Champ {
-                        libelle: "Régime d'imposition";
+                        libelle: @tr("Régime d'imposition");
                         lecture-seule: !root.modifiable;
                     }
 
@@ -323,13 +323,13 @@ export component PageTiers inherits VerticalLayout {
                         spacing: 4px;
 
                         Text {
-                            text: "Type";
+                            text: @tr("Type");
                             font-size: 12px;
                             color: Theme.texte-secondaire;
                         }
 
                         type-tiers := ComboBox {
-                            model: ["Client", "Fournisseur", "Client et fournisseur"];
+                            model: [@tr("Client"), @tr("Fournisseur"), @tr("Client et fournisseur")];
                             enabled: root.modifiable;
                         }
                     }
@@ -362,7 +362,7 @@ export component PageTiers inherits VerticalLayout {
             }
 
             if !root.fiche.existe && !Droits.ajouter-referentiel: Text {
-                text: "Sélectionner un tiers dans la liste pour afficher sa fiche.";
+                text: @tr("Sélectionner un tiers dans la liste pour afficher sa fiche.");
                 color: Theme.texte-secondaire;
                 wrap: word-wrap;
             }
@@ -409,14 +409,14 @@ export component PageProduits inherits VerticalLayout {
     spacing: 12px;
 
     Titre {
-        text: "Produits et services";
+        text: @tr("Produits et services");
     }
 
     HorizontalLayout {
         spacing: 8px;
 
         recherche := LineEdit {
-            placeholder-text: "Rechercher : désignation ou référence";
+            placeholder-text: @tr("Rechercher : désignation ou référence");
             edited => {
                 root.filtrer();
             }
@@ -424,28 +424,28 @@ export component PageProduits inherits VerticalLayout {
 
         filtre-sens := ComboBox {
             width: 200px;
-            model: ["Tous les produits", "Vente", "Achat", "Vente et achat"];
+            model: [@tr("Tous les produits"), @tr("Vente"), @tr("Achat"), @tr("Vente et achat")];
             selected => {
                 root.filtrer();
             }
         }
 
         inactifs := CheckBox {
-            text: "Fiches désactivées";
+            text: @tr("Fiches désactivées");
             toggled => {
                 root.filtrer();
             }
         }
 
         if Droits.ajouter-referentiel: Bouton {
-            text: "Importer";
+            text: @tr("Importer");
             clicked => {
                 ImportApi.demarrer(1);
             }
         }
 
         if Droits.ajouter-referentiel: Bouton {
-            text: "Nouveau produit";
+            text: @tr("Nouveau produit");
             clicked => {
                 root.retour = { };
                 root.charger(ProduitsApi.nouvelle());
@@ -461,11 +461,11 @@ export component PageProduits inherits VerticalLayout {
 
             StandardTableView {
                 columns: [
-                    { title: "Référence", min-width: 110px, horizontal-stretch: 1 },
-                    { title: "Désignation", min-width: 180px, horizontal-stretch: 3 },
-                    { title: "Prix (FCFA)", min-width: 110px, horizontal-stretch: 1 },
-                    { title: "Sens", min-width: 120px, horizontal-stretch: 1 },
-                    { title: "État", min-width: 90px, horizontal-stretch: 1 },
+                    { title: @tr("Référence"), min-width: 110px, horizontal-stretch: 1 },
+                    { title: @tr("Désignation"), min-width: 180px, horizontal-stretch: 3 },
+                    { title: @tr("Prix (FCFA)"), min-width: 110px, horizontal-stretch: 1 },
+                    { title: @tr("Sens"), min-width: 120px, horizontal-stretch: 1 },
+                    { title: @tr("État"), min-width: 90px, horizontal-stretch: 1 },
                 ];
                 rows: ProduitsApi.lignes;
                 current-row <=> ProduitsApi.ligne-courante;
@@ -493,11 +493,11 @@ export component PageProduits inherits VerticalLayout {
             spacing: 10px;
 
             Section {
-                text: root.fiche.existe ? (root.fiche.actif ? "Fiche du produit" : "Fiche du produit (désactivée)") : (Droits.ajouter-referentiel ? "Nouveau produit" : "Fiche du produit");
+                text: root.fiche.existe ? (root.fiche.actif ? @tr("Fiche du produit") : @tr("Fiche du produit (désactivée)")) : (Droits.ajouter-referentiel ? @tr("Nouveau produit") : @tr("Fiche du produit"));
             }
 
             designation := Champ {
-                libelle: "Désignation";
+                libelle: @tr("Désignation");
                 lecture-seule: !root.modifiable;
             }
 
@@ -506,12 +506,12 @@ export component PageProduits inherits VerticalLayout {
 
                 Row {
                     reference := Champ {
-                        libelle: "Référence (unique)";
+                        libelle: @tr("Référence (unique)");
                         lecture-seule: !root.modifiable;
                     }
 
                     prix := Champ {
-                        libelle: "Prix unitaire (FCFA)";
+                        libelle: @tr("Prix unitaire (FCFA)");
                         lecture-seule: !root.modifiable;
                     }
                 }
@@ -521,13 +521,13 @@ export component PageProduits inherits VerticalLayout {
                 spacing: 4px;
 
                 Text {
-                    text: "Sens d'utilisation";
+                    text: @tr("Sens d'utilisation");
                     font-size: 12px;
                     color: Theme.texte-secondaire;
                 }
 
                 sens := ComboBox {
-                    model: ["Vente", "Achat", "Vente et achat"];
+                    model: [@tr("Vente"), @tr("Achat"), @tr("Vente et achat")];
                     enabled: root.modifiable;
                 }
             }
@@ -558,7 +558,7 @@ export component PageProduits inherits VerticalLayout {
             }
 
             if !root.fiche.existe && !Droits.ajouter-referentiel: Text {
-                text: "Sélectionner un produit dans la liste pour afficher sa fiche.";
+                text: @tr("Sélectionner un produit dans la liste pour afficher sa fiche.");
                 color: Theme.texte-secondaire;
                 wrap: word-wrap;
             }

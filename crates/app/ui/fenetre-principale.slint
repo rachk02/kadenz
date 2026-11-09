@@ -1,4 +1,4 @@
-import { AboutSlint } from "std-widgets.slint";
+import { AboutSlint, ComboBox } from "std-widgets.slint";
 import { Bouton, Champ, Droits, Titre, MessageErreur, ElementNavigation, Section, Theme } from "composants.slint";
 import { EcranAssistant, DonneesAssistant } from "assistant.slint";
 import { EcranConnexion } from "connexion.slint";
@@ -8,7 +8,7 @@ import { PageUtilisateurs, UtilisateursApi } from "utilisateurs.slint";
 import { ImportApi, PanneauImport } from "import.slint";
 import { FacturesApi, PageFactures } from "factures.slint";
 
-export { DonneesAssistant, Droits, EntrepriseApi, FacturesApi, ImportApi, ParametresApi, ProduitsApi, TiersApi, UtilisateursApi }
+export { DonneesAssistant, Droits, Theme, EntrepriseApi, FacturesApi, ImportApi, ParametresApi, ProduitsApi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, assistant, connexion, application }
@@ -30,18 +30,19 @@ export enum Page {
     a-propos,
 }
 
-export struct ElementMenu {
-    page: Page,
-    libelle: string,
-}
-
 component PageMonCompte inherits VerticalLayout {
     in property <string> utilisateur-nom;
     in property <string> utilisateur-identifiant;
     in property <string> utilisateur-role;
 
-    // Renvoie un message d'erreur, ou une chaîne vide si le changement a réussi.
+    // Rang de la langue du compte, dans l'ordre de Langue::TOUTES (domaine).
+    in-out property <int> langue;
+
+    // Renvoient un message d'erreur, ou une chaîne vide si le changement a réussi.
     callback changer-mot-de-passe(string, string, string) -> string;
+    callback changer-langue(int) -> string;
+
+    property <string> erreur-langue;
 
     property <string> ancien;
     property <string> nouveau;
@@ -53,16 +54,41 @@ component PageMonCompte inherits VerticalLayout {
     spacing: 12px;
 
     Titre {
-        text: "Mon compte";
+        text: @tr("Mon compte");
     }
 
     Text {
-        text: root.utilisateur-nom + " (" + root.utilisateur-identifiant + "), rôle : " + root.utilisateur-role;
+        text: @tr("{} ({}), rôle : {}", root.utilisateur-nom, root.utilisateur-identifiant, root.utilisateur-role);
         color: Theme.texte-secondaire;
     }
 
     Text {
-        text: "Changer de mot de passe";
+        text: @tr("Langue de l'interface");
+        font-weight: 700;
+        color: Theme.texte;
+    }
+
+    HorizontalLayout {
+        alignment: start;
+
+        // Chaque langue est écrite dans sa propre langue, pour être reconnue
+        // quelle que soit celle de l'interface.
+        ComboBox {
+            width: 220px;
+            model: ["Français", "English", "العربية", "日本語", "中文", "Türkçe", "Español"];
+            current-index <=> root.langue;
+            selected => {
+                root.erreur-langue = root.changer-langue(self.current-index);
+            }
+        }
+    }
+
+    if root.erreur-langue != "": MessageErreur {
+        text: root.erreur-langue;
+    }
+
+    Text {
+        text: @tr("Changer de mot de passe");
         font-weight: 700;
         color: Theme.texte;
     }
@@ -75,19 +101,19 @@ component PageMonCompte inherits VerticalLayout {
             spacing: 12px;
 
             Champ {
-                libelle: "Mot de passe actuel";
+                libelle: @tr("Mot de passe actuel");
                 secret: true;
                 valeur <=> root.ancien;
             }
 
             Champ {
-                libelle: "Nouveau mot de passe (8 caractères au moins)";
+                libelle: @tr("Nouveau mot de passe (8 caractères au moins)");
                 secret: true;
                 valeur <=> root.nouveau;
             }
 
             Champ {
-                libelle: "Confirmation du nouveau mot de passe";
+                libelle: @tr("Confirmation du nouveau mot de passe");
                 secret: true;
                 valeur <=> root.confirmation;
             }
@@ -97,12 +123,12 @@ component PageMonCompte inherits VerticalLayout {
             }
 
             if root.reussi: Text {
-                text: "Mot de passe modifié.";
+                text: @tr("Mot de passe modifié.");
                 color: Theme.succes;
             }
 
             Bouton {
-                text: "Enregistrer";
+                text: @tr("Enregistrer");
                 primary: true;
                 clicked => {
                     root.erreur = root.changer-mot-de-passe(root.ancien, root.nouveau, root.confirmation);
@@ -129,6 +155,7 @@ export component FenetrePrincipale inherits Window {
     in property <string> utilisateur-nom;
     in property <string> utilisateur-identifiant;
     in property <string> utilisateur-role;
+    in-out property <int> utilisateur-langue;
 
     in property <string> defaut-taux-tva;
     in property <string> defaut-taux-remise;
@@ -139,14 +166,32 @@ export component FenetrePrincipale inherits Window {
     callback connecter(string, string) -> string;
     callback deconnecter();
     callback changer-mot-de-passe(string, string, string) -> string;
+    callback changer-langue(int) -> string;
 
     // Construit par l'application à chaque connexion. « À propos » y figure toujours :
     // il porte l'attribution exigée par la licence Slint Royalty-free 2.0 (cahier, section 14).
-    in property <[ElementMenu]> menu;
+    in property <[Page]> menu;
     in-out property <Page> page: Page.tableau-de-bord;
-    in-out property <string> titre-page: "Tableau de bord";
 
     property <bool> page-en-construction: root.page != Page.factures && root.page != Page.tiers && root.page != Page.produits && root.page != Page.entreprise && root.page != Page.parametres && root.page != Page.utilisateurs && root.page != Page.mon-compte && root.page != Page.a-propos;
+
+    // Libellé de chaque page, dans la langue choisie : calculé ici et non stocké,
+    // pour suivre un changement de langue sans reconstruire le menu.
+    pure function libelle-page(p: Page) -> string {
+        if (p == Page.tableau-de-bord) { return @tr("Tableau de bord"); }
+        if (p == Page.devis) { return @tr("Devis"); }
+        if (p == Page.proforma) { return @tr("Proforma"); }
+        if (p == Page.bons-commande) { return @tr("Bons de commande"); }
+        if (p == Page.livraisons) { return @tr("Livraisons"); }
+        if (p == Page.factures) { return @tr("Factures"); }
+        if (p == Page.tiers) { return @tr("Tiers"); }
+        if (p == Page.produits) { return @tr("Produits"); }
+        if (p == Page.entreprise) { return @tr("Entreprise"); }
+        if (p == Page.parametres) { return @tr("Paramètres"); }
+        if (p == Page.utilisateurs) { return @tr("Utilisateurs"); }
+        if (p == Page.mon-compte) { return @tr("Mon compte"); }
+        return @tr("À propos");
+    }
 
     // Icône Kadenz de chaque entrée du menu (ui/icones/menu).
     pure function icone-page(p: Page) -> image {
@@ -180,7 +225,7 @@ export component FenetrePrincipale inherits Window {
         spacing: 12px;
 
         Titre {
-            text: "Démarrage impossible";
+            text: @tr("Démarrage impossible");
             horizontal-alignment: center;
         }
 
@@ -230,12 +275,11 @@ export component FenetrePrincipale inherits Window {
                 }
 
                 for element in root.menu: ElementNavigation {
-                    libelle: element.libelle;
-                    icone: root.icone-page(element.page);
-                    actif: root.page == element.page;
+                    libelle: root.libelle-page(element);
+                    icone: root.icone-page(element);
+                    actif: root.page == element;
                     clique => {
-                        root.page = element.page;
-                        root.titre-page = element.libelle;
+                        root.page = element;
                     }
                 }
 
@@ -249,7 +293,7 @@ export component FenetrePrincipale inherits Window {
                 }
 
                 Bouton {
-                    text: "Se déconnecter";
+                    text: @tr("Se déconnecter");
                     clicked => {
                         root.deconnecter();
                     }
@@ -270,11 +314,11 @@ export component FenetrePrincipale inherits Window {
                 spacing: 12px;
 
                 Titre {
-                    text: root.titre-page;
+                    text: root.libelle-page(root.page);
                 }
 
                 Text {
-                    text: "Module en cours de construction.";
+                    text: @tr("Module en cours de construction.");
                     color: Theme.texte-secondaire;
                 }
 
@@ -300,8 +344,12 @@ export component FenetrePrincipale inherits Window {
                 utilisateur-nom: root.utilisateur-nom;
                 utilisateur-identifiant: root.utilisateur-identifiant;
                 utilisateur-role: root.utilisateur-role;
+                langue <=> root.utilisateur-langue;
                 changer-mot-de-passe(ancien, nouveau, confirmation) => {
                     root.changer-mot-de-passe(ancien, nouveau, confirmation)
+                }
+                changer-langue(rang) => {
+                    root.changer-langue(rang)
                 }
             }
 

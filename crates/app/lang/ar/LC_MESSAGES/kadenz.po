@@ -1,0 +1,1135 @@
+# Kadenz, interface en arabe ; langue source : français.
+# Fichier généré à partir des tables de traduction ; un msgid par texte affiché.
+msgid ""
+msgstr ""
+"Project-Id-Version: kadenz\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5);\n"
+
+msgid " ; ignorées car déjà présentes au moment de l'enregistrement : {}"
+msgstr "؛ المتجاهلة لوجودها مسبقًا عند الحفظ: {}"
+
+msgid "(brouillon)"
+msgstr "(مسودة)"
+
+msgid "1 facture."
+msgstr "فاتورة واحدة."
+
+msgid "1 fiche"
+msgstr "بطاقة واحدة"
+
+msgid "Achat"
+msgstr "شراء"
+
+msgid "Administrateur"
+msgstr "المسؤول"
+
+msgid "Administrateur : {} ({})"
+msgstr "المسؤول: {} ({})"
+
+msgid "Adresse"
+msgstr "العنوان"
+
+msgid "adresse"
+msgstr "العنوان"
+
+msgid "Adresse / boîte postale"
+msgstr "العنوان / صندوق البريد"
+
+msgid "Adresse ou boîte postale"
+msgstr "العنوان أو صندوق البريد"
+
+msgid "Ajouter"
+msgstr "إضافة"
+
+msgid "Ajouter le produit"
+msgstr "إضافة المنتج"
+
+msgid "Ajouter un client, un fournisseur, un produit"
+msgstr "إضافة عميل أو مورد أو منتج"
+
+msgid "Annuler"
+msgstr "إلغاء"
+
+msgid "Annuler cette facture ? Elle reste dans le registre avec son numéro, en lecture seule."
+msgstr "هل تريد إلغاء هذه الفاتورة؟ ستبقى في السجل برقمها، للقراءة فقط."
+
+msgid "Annuler la facture"
+msgstr "إلغاء الفاتورة"
+
+msgid "Annuler un document validé"
+msgstr "إلغاء مستند معتمد"
+
+msgid "Annulé"
+msgstr "ملغى"
+
+msgid "Au JJ/MM/AAAA"
+msgstr "إلى يوم/شهر/سنة"
+
+msgid "au moins un mode de paiement est nécessaire"
+msgstr "يلزم وجود طريقة دفع واحدة على الأقل"
+
+msgid "Aucun client choisi"
+msgstr "لم يُختر أي عميل"
+
+msgid "aucun compte sélectionné"
+msgstr "لم يُحدَّد أي حساب"
+
+msgid "Aucun fichier choisi."
+msgstr "لم يُختر أي ملف."
+
+msgid "Aucun logo"
+msgstr "لا يوجد شعار"
+
+msgid "Aucun numéro tant que la facture n'est pas validée."
+msgstr "لا يُسند رقم ما دامت الفاتورة غير معتمدة."
+
+msgid "Aucune facture."
+msgstr "لا توجد فواتير."
+
+msgid "Aucune fiche"
+msgstr "لا توجد بطاقات"
+
+msgid "aucune fiche ouverte"
+msgstr "لا توجد بطاقة مفتوحة"
+
+msgid "aucune fiche sélectionnée"
+msgstr "لم تُحدَّد أي بطاقة"
+
+msgid "Aucune ligne."
+msgstr "لا توجد بنود."
+
+msgid "aucune session ouverte"
+msgstr "لا توجد جلسة مفتوحة"
+
+msgid "Avoir"
+msgstr "إشعار دائن"
+
+msgid "Base : {} (schéma {})"
+msgstr "قاعدة البيانات: {} (المخطط {})"
+
+msgid "Base de données : SQLite, dans le domaine public."
+msgstr "قاعدة البيانات: SQLite، ضمن الملك العام."
+
+msgid "Base TVA"
+msgstr "وعاء ضريبة القيمة المضافة"
+
+msgid "Bon de commande"
+msgstr "أمر الشراء"
+
+msgid "Bons de commande"
+msgstr "أوامر الشراء"
+
+msgid "Bordereau de livraison"
+msgstr "إشعار التسليم"
+
+msgid "Brouillon"
+msgstr "مسودة"
+
+msgid "brouillon enregistré"
+msgstr "تم حفظ المسودة"
+
+msgid "brouillon enregistré, mais validation refusée : {}"
+msgstr "حُفظت المسودة، لكن رُفض الاعتماد: {}"
+
+msgid "brouillon supprimé"
+msgstr "تم حذف المسودة"
+
+msgid "C'est le compte de la session en cours : son rôle et son état se changent depuis un autre compte administrateur. Le mot de passe se change dans « Mon compte »."
+msgstr "هذا حساب الجلسة الحالية: يُغيَّر دوره وحالته من حساب مسؤول آخر. وتُغيَّر كلمة المرور من «حسابي»."
+
+msgid "ce brouillon n'a pas été enregistré"
+msgstr "لم تُحفظ هذه المسودة"
+
+msgid "Ce compte administre l'installation : utilisateurs, droits, sauvegardes."
+msgstr "يدير هذا الحساب التثبيت: المستخدمون والصلاحيات والنسخ الاحتياطية."
+
+msgid "ce compte n'existe plus"
+msgstr "هذا الحساب لم يعد موجودًا"
+
+msgid "ce produit n'existe plus"
+msgstr "هذا المنتج لم يعد موجودًا"
+
+msgid "ce tiers n'existe plus"
+msgstr "هذا الطرف لم يعد موجودًا"
+
+msgid "Ces informations figurent en en-tête et en pied de page des documents."
+msgstr "تظهر هذه المعلومات في رأس المستندات وتذييلها."
+
+msgid "cette facture n'existe plus"
+msgstr "هذه الفاتورة لم تعد موجودة"
+
+msgid "Changer de mot de passe"
+msgstr "تغيير كلمة المرور"
+
+msgid "Changer le rôle"
+msgstr "تغيير الدور"
+
+msgid "Chaque année"
+msgstr "كل سنة"
+
+msgid "Chaque mois"
+msgstr "كل شهر"
+
+msgid "Chiffres du rang"
+msgstr "أرقام الترتيب"
+
+msgid "Choisir le fichier à importer"
+msgstr "اختيار الملف المراد استيراده"
+
+msgid "Choisir un autre fichier"
+msgstr "اختيار ملف آخر"
+
+msgid "Choisir un logo"
+msgstr "اختيار شعار"
+
+msgid "Choisir une image"
+msgstr "اختيار صورة"
+
+msgid "Client"
+msgstr "العميل"
+
+msgid "Client et fournisseur"
+msgstr "عميل ومورد"
+
+msgid "Clients"
+msgstr "العملاء"
+
+msgid "Clients et fournisseurs"
+msgstr "العملاء والموردون"
+
+msgid "Cliquer sur une facture pour ouvrir sa fiche."
+msgstr "انقر على فاتورة لفتح بطاقتها."
+
+msgid "Cocher ce que chaque rôle peut faire. Le rôle Admin garde toujours la gestion des utilisateurs et des droits. Les contrôles s'appliquent dès l'enregistrement ; le menu des autres comptes se met à jour à leur prochaine connexion."
+msgstr "حدد ما يمكن لكل دور القيام به. يحتفظ دور Admin دائمًا بإدارة المستخدمين والصلاحيات. تُطبَّق الضوابط فور الحفظ، وتُحدَّث قائمة الحسابات الأخرى عند تسجيل دخولها التالي."
+
+msgid "Colonnes ignorées, non importées : {}."
+msgstr "أعمدة متجاهلة لم تُستورد: {}."
+
+msgid "Colonnes reconnues : {}."
+msgstr "الأعمدة المعروفة: {}."
+
+msgid "Commercial"
+msgstr "التجاري"
+
+msgid "Composants tiers"
+msgstr "مكونات خارجية"
+
+msgid "Comptable"
+msgstr "المحاسب"
+
+msgid "Compte"
+msgstr "الحساب"
+
+msgid "Compte (désactivé)"
+msgstr "الحساب (معطَّل)"
+
+msgid "Compte bancaire 1"
+msgstr "الحساب المصرفي 1"
+
+msgid "Compte bancaire 2"
+msgstr "الحساب المصرفي 2"
+
+msgid "compte créé"
+msgstr "تم إنشاء الحساب"
+
+msgid "compte désactivé"
+msgstr "تم تعطيل الحساب"
+
+msgid "compte inconnu ou désactivé"
+msgstr "حساب غير معروف أو معطَّل"
+
+msgid "compte introuvable"
+msgstr "الحساب غير موجود"
+
+msgid "compte réactivé"
+msgstr "أُعيد تفعيل الحساب"
+
+msgid "Comptes"
+msgstr "الحسابات"
+
+msgid "Confirmation"
+msgstr "التأكيد"
+
+msgid "Confirmation du mot de passe"
+msgstr "تأكيد كلمة المرور"
+
+msgid "Confirmation du nouveau mot de passe"
+msgstr "تأكيد كلمة المرور الجديدة"
+
+msgid "Confirmer l'annulation"
+msgstr "تأكيد الإلغاء"
+
+msgid "Confirmer la suppression"
+msgstr "تأكيد الحذف"
+
+msgid "Confirmer la validation"
+msgstr "تأكيد الاعتماد"
+
+msgid "Confirmer le retrait"
+msgstr "تأكيد الإزالة"
+
+msgid "CONNEXION"
+msgstr "تسجيل الدخول"
+
+msgid "Consultation"
+msgstr "الاطلاع"
+
+msgid "Consulter tableau de bord et registres"
+msgstr "الاطلاع على لوحة المتابعة والسجلات"
+
+msgid "Converti"
+msgstr "محوَّل"
+
+msgid "Création du brouillon"
+msgstr "إنشاء المسودة"
+
+msgid "Créer le compte"
+msgstr "إنشاء الحساب"
+
+msgid "Créer/modifier un brouillon (Devis, Proforma, BC, Livraison)"
+msgstr "إنشاء/تعديل مسودة (عرض سعر، فاتورة مبدئية، أمر شراء، تسليم)"
+
+msgid "Créer/modifier un brouillon Facture ou Avoir"
+msgstr "إنشاء/تعديل مسودة فاتورة أو إشعار دائن"
+
+msgid "CSV, Excel ou OpenDocument"
+msgstr "CSV أو Excel أو OpenDocument"
+
+msgid "Date"
+msgstr "التاريخ"
+
+msgid "Date (JJ/MM/AAAA)"
+msgstr "التاريخ (يوم/شهر/سنة)"
+
+msgid "Date de début de période incomplète ou illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "تاريخ بداية الفترة ناقص أو غير مقروء (يوم/شهر/سنة): لم يُطبَّق."
+
+msgid "Date de fin de période incomplète ou illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "تاريخ نهاية الفترة ناقص أو غير مقروء (يوم/شهر/سنة): لم يُطبَّق."
+
+msgid "date illisible : saisir la date au format JJ/MM/AAAA"
+msgstr "التاريخ غير مقروء: أدخل التاريخ بصيغة يوم/شهر/سنة"
+
+msgid "Dates de début et de fin de période incomplètes ou illisibles (JJ/MM/AAAA) : non appliquées."
+msgstr "تاريخا بداية الفترة ونهايتها ناقصان أو غير مقروءين (يوم/شهر/سنة): لم يُطبَّقا."
+
+msgid "Devis"
+msgstr "عروض الأسعار"
+
+msgid "Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements."
+msgstr "عروض الأسعار والفواتير المبدئية وأوامر الشراء وإشعارات التسليم والفواتير والمدفوعات."
+
+msgid "document introuvable"
+msgstr "المستند غير موجود"
+
+msgid "Doublon"
+msgstr "مكرر"
+
+msgid "droits enregistrés"
+msgstr "تم حفظ الصلاحيات"
+
+msgid "Droits par rôle"
+msgstr "الصلاحيات حسب الدور"
+
+msgid "Du JJ/MM/AAAA"
+msgstr "من يوم/شهر/سنة"
+
+msgid "délai de paiement"
+msgstr "مهلة الدفع"
+
+msgid "Délai de paiement des factures"
+msgstr "مهلة دفع الفواتير"
+
+msgid "Délais (en jours, laisser vide pour ne pas en fixer)"
+msgstr "المهل (بالأيام، اتركها فارغة لعدم تحديدها)"
+
+msgid "Démarrage impossible"
+msgstr "تعذّر بدء التشغيل"
+
+msgid "Désactiver"
+msgstr "تعطيل"
+
+msgid "Désactivé"
+msgstr "معطَّل"
+
+msgid "Désactivée"
+msgstr "معطَّلة"
+
+msgid "Désignation"
+msgstr "الوصف"
+
+msgid "désignation"
+msgstr "الوصف"
+
+msgid "Email"
+msgstr "البريد الإلكتروني"
+
+msgid "En lettres : {}"
+msgstr "بالحروف: {}"
+
+msgid "Enregistrer"
+msgstr "حفظ"
+
+msgid "enregistrer d'abord la facture"
+msgstr "احفظ الفاتورة أولًا"
+
+msgid "Enregistrer le brouillon"
+msgstr "حفظ المسودة"
+
+msgid "Enregistrer le mode et les observations"
+msgstr "حفظ الطريقة والملاحظات"
+
+msgid "Enregistrer les droits"
+msgstr "حفظ الصلاحيات"
+
+msgid "Entreprise"
+msgstr "الشركة"
+
+msgid "Entreprise : {}"
+msgstr "الشركة: {}"
+
+msgid "Envoyé"
+msgstr "مُرسل"
+
+msgid "Erreur"
+msgstr "خطأ"
+
+msgid "Exemple : première facture de l'année, {}"
+msgstr "مثال: أول فاتورة في السنة، {}"
+
+msgid "Exemple : première facture du mois, {}"
+msgstr "مثال: أول فاتورة في الشهر، {}"
+
+msgid "Exemple : {} FCFA s'écrit « {} »."
+msgstr "مثال: يُكتب {} فرنك CFA هكذا «{}»."
+
+msgid "existe déjà"
+msgstr "موجود مسبقًا"
+
+msgid "Facture"
+msgstr "فاتورة"
+
+msgid "Facture (brouillon)"
+msgstr "فاتورة (مسودة)"
+
+msgid "facture annulée"
+msgstr "أُلغيت الفاتورة"
+
+msgid "Facture annulée : lecture seule, numéro conservé."
+msgstr "فاتورة ملغاة: للقراءة فقط، مع الاحتفاظ بالرقم."
+
+msgid "facture marquée envoyée"
+msgstr "وُضعت على الفاتورة علامة مُرسلة"
+
+msgid "Facture validée : lignes et montants figés."
+msgstr "فاتورة معتمدة: البنود والمبالغ مثبتة."
+
+msgid "facture validée sous le numéro {}"
+msgstr "اعتُمدت الفاتورة برقم {}"
+
+msgid "Facture {}"
+msgstr "الفاتورة {}"
+
+msgid "Factures"
+msgstr "الفواتير"
+
+msgid "Fermer"
+msgstr "إغلاق"
+
+msgid "Fiche"
+msgstr "البطاقة"
+
+msgid "Fiche du produit"
+msgstr "بطاقة المنتج"
+
+msgid "Fiche du produit (désactivée)"
+msgstr "بطاقة المنتج (معطَّلة)"
+
+msgid "Fiche du tiers"
+msgstr "بطاقة الطرف"
+
+msgid "Fiche du tiers (désactivée)"
+msgstr "بطاقة الطرف (معطَّلة)"
+
+msgid "fiche désactivée : elle est citée dans au moins un document, l'historique reste intact"
+msgstr "عُطِّلت البطاقة: فهي مذكورة في مستند واحد على الأقل، ويبقى السجل التاريخي سليمًا"
+
+msgid "fiche enregistrée"
+msgstr "تم حفظ البطاقة"
+
+msgid "fiche réactivée"
+msgstr "أُعيد تفعيل البطاقة"
+
+msgid "fiche supprimée"
+msgstr "حُذفت البطاقة"
+
+msgid "Fiches ajoutées : {}"
+msgstr "البطاقات المضافة: {}"
+
+msgid "Fiches désactivées"
+msgstr "البطاقات المعطَّلة"
+
+msgid "Fiches à importer : {} ; doublons ignorés : {} ; lignes en erreur : {}."
+msgstr "البطاقات المراد استيرادها: {}؛ المكررات المتجاهلة: {}؛ الأسطر الخاطئة: {}."
+
+msgid "Fichier : {}"
+msgstr "الملف: {}"
+
+msgid "Filtrer les clients"
+msgstr "تصفية العملاء"
+
+msgid "Filtrer les produits"
+msgstr "تصفية المنتجات"
+
+msgid "Fournisseur"
+msgstr "المورد"
+
+msgid "Fournisseurs"
+msgstr "الموردون"
+
+msgid "Garder"
+msgstr "الإبقاء"
+
+msgid "Gestion commerciale"
+msgstr "الإدارة التجارية"
+
+msgid "Gestion commerciale mono-poste pour Windows : les données restent sur ce poste."
+msgstr "إدارة تجارية لجهاز واحد على Windows: تبقى البيانات على هذا الجهاز."
+
+msgid "Gérer la fiche entreprise et les paramètres"
+msgstr "إدارة بطاقة الشركة والإعدادات"
+
+msgid "Gérer les utilisateurs et droits"
+msgstr "إدارة المستخدمين والصلاحيات"
+
+msgid "Historique"
+msgstr "السجل التاريخي"
+
+msgid "Identifiant"
+msgstr "اسم المستخدم"
+
+msgid "Identifiant de connexion"
+msgstr "اسم المستخدم"
+
+msgid "identifiant ou mot de passe incorrect"
+msgstr "اسم المستخدم أو كلمة المرور غير صحيحة"
+
+msgid "IFU"
+msgstr "IFU"
+
+msgid "Image PNG ou JPEG, 2 Mo au plus. Le logo principal figure à gauche de l'en-tête, le second à droite."
+msgstr "صورة PNG أو JPEG، بحجم أقصاه 2 ميغابايت. يظهر الشعار الرئيسي على يسار الرأس، والثاني على يمينه."
+
+msgid "Images PNG ou JPEG"
+msgstr "صور PNG أو JPEG"
+
+msgid "Impayé"
+msgstr "غير مدفوع"
+
+msgid "Importer"
+msgstr "استيراد"
+
+msgid "Importer des produits"
+msgstr "استيراد منتجات"
+
+msgid "Importer des tiers"
+msgstr "استيراد أطراف"
+
+msgid "Importer les fiches valides"
+msgstr "استيراد البطاقات الصالحة"
+
+msgid "impossible : l'installation doit garder au moins un administrateur actif"
+msgstr "غير ممكن: يجب أن يبقى في التثبيت مسؤول نشط واحد على الأقل"
+
+msgid "Interface : Slint, sous licence Slint Royalty-free 2.0."
+msgstr "الواجهة: Slint، بترخيص Slint Royalty-free 2.0."
+
+msgid "l'identifiant est obligatoire et ne contient pas d'espace"
+msgstr "اسم المستخدم إلزامي ولا يحتوي على مسافات"
+
+msgid "l'installation initiale a déjà été faite"
+msgstr "تم التثبيت الأولي من قبل"
+
+msgid "La base de données ({}) n'a pas pu être ouverte : {}"
+msgstr "تعذّر فتح قاعدة البيانات ({}): {}"
+
+msgid "la fiche entreprise n'existe pas encore"
+msgstr "بطاقة الشركة غير موجودة بعد"
+
+msgid "Langue de l'interface"
+msgstr "لغة الواجهة"
+
+msgid "le logo doit être une image PNG ou JPEG"
+msgstr "يجب أن يكون الشعار صورة PNG أو JPEG"
+
+msgid "le montant du règlement doit être positif"
+msgstr "يجب أن يكون مبلغ الدفعة موجبًا"
+
+msgid "le mot de passe actuel est incorrect"
+msgstr "كلمة المرور الحالية غير صحيحة"
+
+msgid "le nom complet est obligatoire"
+msgstr "الاسم الكامل إلزامي"
+
+msgid "Le nom complet et l'identifiant sont obligatoires."
+msgstr "الاسم الكامل واسم المستخدم إلزاميان."
+
+msgid "le nom de l'entreprise est obligatoire"
+msgstr "اسم الشركة إلزامي"
+
+msgid "Le nom de l'entreprise est obligatoire."
+msgstr "اسم الشركة إلزامي."
+
+msgid "Le produit choisi remplit la référence, la désignation et le prix, qui restent modifiables sur la ligne. Une référence tapée puis validée par Entrée reprend le produit correspondant."
+msgstr "يملأ المنتج المختار المرجع والوصف والسعر، وتبقى قابلة للتعديل في البند. وإذا كُتب مرجع ثم أُكِّد بمفتاح الإدخال، يُستدعى المنتج المطابق."
+
+msgid "lecture du fichier impossible : {}"
+msgstr "تعذّرت قراءة الملف: {}"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une facture."
+msgstr "للقراءة فقط: لا يسمح دورك بتعديل فاتورة."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une fiche existante."
+msgstr "للقراءة فقط: لا يسمح دورك بتعديل بطاقة موجودة."
+
+msgid "Les deux"
+msgstr "كلاهما"
+
+msgid "les deux mots de passe ne correspondent pas"
+msgstr "كلمتا المرور غير متطابقتين"
+
+msgid "Les deux mots de passe ne correspondent pas."
+msgstr "كلمتا المرور غير متطابقتين."
+
+msgid "les deux nouveaux mots de passe ne correspondent pas"
+msgstr "كلمتا المرور الجديدتان غير متطابقتين"
+
+msgid "Les textes des documents, l'apparence des PDF et les dossiers d'export se régleront ici avec le jalon du PDF (J4). La matrice des droits par rôle se règle dans l'écran Utilisateurs."
+msgstr "ستُضبط نصوص المستندات ومظهر ملفات PDF ومجلدات التصدير هنا مع مرحلة PDF (J4). وتُضبط مصفوفة الصلاحيات حسب الدور في شاشة المستخدمين."
+
+msgid "Libellé"
+msgstr "البيان"
+
+msgid "Ligne"
+msgstr "السطر"
+
+msgid "Ligne libre"
+msgstr "بند حر"
+
+msgid "ligne {} : prix illisible, saisir un montant entier en FCFA"
+msgstr "السطر {}: السعر غير مقروء، أدخل مبلغًا صحيحًا بالفرنك CFA"
+
+msgid "ligne {} : quantité illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "السطر {}: الكمية غير مقروءة، أدخل عددًا موجبًا (3 منازل عشرية على الأكثر)"
+
+msgid "Lignes"
+msgstr "البنود"
+
+msgid "Livraison complète"
+msgstr "تسليم كامل"
+
+msgid "Livraison partielle"
+msgstr "تسليم جزئي"
+
+msgid "Livraisons"
+msgstr "التسليمات"
+
+msgid "Localisation"
+msgstr "الموقع"
+
+msgid "localisation"
+msgstr "الموقع"
+
+msgid "Logiciel"
+msgstr "البرنامج"
+
+msgid "Logiciel propriétaire, tous droits réservés."
+msgstr "برنامج مملوك، جميع الحقوق محفوظة."
+
+msgid "logo enregistré"
+msgstr "تم حفظ الشعار"
+
+msgid "Logo principal"
+msgstr "الشعار الرئيسي"
+
+msgid "logo retiré"
+msgstr "تمت إزالة الشعار"
+
+msgid "Logos"
+msgstr "الشعارات"
+
+msgid "Marquer envoyée"
+msgstr "وضع علامة مُرسلة"
+
+msgid "Mode"
+msgstr "الطريقة"
+
+msgid "Mode de paiement"
+msgstr "طريقة الدفع"
+
+msgid "mode de paiement et observations enregistrés"
+msgstr "تم حفظ طريقة الدفع والملاحظات"
+
+msgid "Modes de paiement"
+msgstr "طرق الدفع"
+
+msgid "Modes de paiement : {}"
+msgstr "طرق الدفع: {}"
+
+msgid "Modes de paiement, séparés par des points-virgules"
+msgstr "طرق الدفع، مفصولة بفواصل منقوطة"
+
+msgid "Modification du mode de paiement ou des observations"
+msgstr "تعديل طريقة الدفع أو الملاحظات"
+
+msgid "Modifier ou désactiver un client, un fournisseur, un produit"
+msgstr "تعديل أو تعطيل عميل أو مورد أو منتج"
+
+msgid "Module en cours de construction."
+msgstr "الوحدة قيد الإنشاء."
+
+msgid "Mon compte"
+msgstr "حسابي"
+
+msgid "Montant en lettres"
+msgstr "المبلغ بالحروف"
+
+msgid "Montant en lettres : {}"
+msgstr "المبلغ بالحروف: {}"
+
+msgid "Montant en lettres en orthographe traditionnelle (sinon : orthographe rectifiée de 1990)"
+msgstr "المبلغ بالحروف بالإملاء التقليدي (وإلا: الإملاء المعدَّل لعام 1990)"
+
+msgid "Montant HT"
+msgstr "المبلغ دون الضرائب"
+
+msgid "Montant TTC"
+msgstr "المبلغ شامل الضرائب"
+
+msgid "Mot de passe"
+msgstr "كلمة المرور"
+
+msgid "Mot de passe (8 caractères au moins)"
+msgstr "كلمة المرور (8 أحرف على الأقل)"
+
+msgid "Mot de passe actuel"
+msgstr "كلمة المرور الحالية"
+
+msgid "Mot de passe modifié."
+msgstr "تم تغيير كلمة المرور."
+
+msgid "mot de passe réinitialisé"
+msgstr "أُعيد تعيين كلمة المرور"
+
+msgid "Nom"
+msgstr "الاسم"
+
+msgid "nom"
+msgstr "الاسم"
+
+msgid "Nom complet"
+msgstr "الاسم الكامل"
+
+msgid "Nom de l'entreprise (obligatoire)"
+msgstr "اسم الشركة (إلزامي)"
+
+msgid "nombre de chiffres du rang invalide : saisir un entier entre {} et {}"
+msgstr "عدد أرقام الترتيب غير صالح: أدخل عددًا صحيحًا بين {} و{}"
+
+msgid "Non précisé"
+msgstr "غير محدد"
+
+msgid "Nouveau compte"
+msgstr "حساب جديد"
+
+msgid "Nouveau mot de passe (8 caractères au moins)"
+msgstr "كلمة المرور الجديدة (8 أحرف على الأقل)"
+
+msgid "Nouveau produit"
+msgstr "منتج جديد"
+
+msgid "Nouveau tiers"
+msgstr "طرف جديد"
+
+msgid "Nouvelle facture"
+msgstr "فاتورة جديدة"
+
+msgid "Numérotation des documents"
+msgstr "ترقيم المستندات"
+
+msgid "N°"
+msgstr "الرقم"
+
+msgid "Observations"
+msgstr "ملاحظات"
+
+msgid "orthographe rectifiée"
+msgstr "الإملاء المعدَّل"
+
+msgid "Orthographe rectifiée (1990)"
+msgstr "الإملاء المعدَّل (1990)"
+
+msgid "Orthographe traditionnelle"
+msgstr "الإملاء التقليدي"
+
+msgid "orthographe traditionnelle"
+msgstr "الإملاء التقليدي"
+
+msgid "Paiement"
+msgstr "الدفع"
+
+msgid "Paiement : {}"
+msgstr "الدفع: {}"
+
+msgid "Paiements"
+msgstr "المدفوعات"
+
+msgid "Paramètres"
+msgstr "الإعدادات"
+
+msgid "paramètres enregistrés"
+msgstr "تم حفظ الإعدادات"
+
+msgid "Partiel"
+msgstr "جزئي"
+
+msgid "Payé"
+msgstr "مدفوع"
+
+msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
+msgstr "الخطوط: Inter وManrope، بترخيص SIL Open Font License 1.1."
+
+msgid "Pourcentages séparés par des points-virgules, par exemple « 0 ; 18 » ou « 0 ; 2,5 ; 5 »."
+msgstr "نسب مئوية مفصولة بفواصل منقوطة، مثل «0 ; 18» أو «0 ; 2,5 ; 5»."
+
+msgid "Première installation"
+msgstr "التثبيت الأول"
+
+msgid "prix"
+msgstr "السعر"
+
+msgid "Prix (FCFA)"
+msgstr "السعر (فرنك CFA)"
+
+msgid "Prix unitaire"
+msgstr "سعر الوحدة"
+
+msgid "Prix unitaire (FCFA)"
+msgstr "سعر الوحدة (فرنك CFA)"
+
+msgid "Produits"
+msgstr "المنتجات"
+
+msgid "Produits et services"
+msgstr "المنتجات والخدمات"
+
+msgid "Proforma"
+msgstr "الفاتورة المبدئية"
+
+msgid "Précédent"
+msgstr "السابق"
+
+msgid "Préfixes de 1 à 6 lettres, différents d'un type à l'autre."
+msgstr "بادئات من حرف إلى 6 أحرف، مختلفة من نوع لآخر."
+
+msgid "Quantité"
+msgstr "الكمية"
+
+msgid "RCCM"
+msgstr "RCCM"
+
+msgid "Rechercher : désignation ou référence"
+msgstr "بحث: الوصف أو المرجع"
+
+msgid "Rechercher : nom, téléphone, localisation, adresse, IFU"
+msgstr "بحث: الاسم، الهاتف، الموقع، العنوان، IFU"
+
+msgid "Rechercher : numéro, client, libellé"
+msgstr "بحث: الرقم، العميل، البيان"
+
+msgid "Remarque"
+msgstr "ملاحظة"
+
+msgid "Remise"
+msgstr "الخصم"
+
+msgid "remise"
+msgstr "الخصم"
+
+msgid "Remise (%)"
+msgstr "الخصم (%)"
+
+msgid "Remise à zéro du compteur"
+msgstr "إعادة تصفير العداد"
+
+msgid "Remplacer"
+msgstr "استبدال"
+
+msgid "Responsable comptabilité"
+msgstr "مسؤول المحاسبة"
+
+msgid "Responsable de la comptabilité"
+msgstr "مسؤول المحاسبة"
+
+msgid "Responsable de la facturation"
+msgstr "مسؤول الفوترة"
+
+msgid "Responsable facturation"
+msgstr "مسؤول الفوترة"
+
+msgid "retenue"
+msgstr "الاقتطاع"
+
+msgid "Retenue à la source (%)"
+msgstr "الاقتطاع من المصدر (%)"
+
+msgid "Retirer"
+msgstr "إزالة"
+
+msgid "Retirer cette fiche ? Elle est supprimée si aucun document ne la cite, sinon seulement désactivée."
+msgstr "هل تريد إزالة هذه البطاقة؟ تُحذف إذا لم يذكرها أي مستند، وإلا فتُعطَّل فقط."
+
+msgid "Retour au registre"
+msgstr "العودة إلى السجل"
+
+msgid "Revenir"
+msgstr "رجوع"
+
+msgid "Revenir à la matrice du cahier des charges"
+msgstr "العودة إلى مصفوفة دفتر الشروط"
+
+msgid "Réactiver"
+msgstr "إعادة التفعيل"
+
+msgid "Récapitulatif"
+msgstr "الملخص"
+
+msgid "Réception complète"
+msgstr "استلام كامل"
+
+msgid "Réception partielle"
+msgstr "استلام جزئي"
+
+msgid "Référence"
+msgstr "المرجع"
+
+msgid "référence"
+msgstr "المرجع"
+
+msgid "Référence (unique)"
+msgstr "المرجع (فريد)"
+
+msgid "Régime d'imposition"
+msgstr "النظام الضريبي"
+
+msgid "régime d'imposition"
+msgstr "النظام الضريبي"
+
+msgid "Réinitialiser le mot de passe"
+msgstr "إعادة تعيين كلمة المرور"
+
+msgid "Rôle"
+msgstr "الدور"
+
+msgid "rôle changé ; le menu de ce compte suivra à sa prochaine connexion"
+msgstr "تم تغيير الدور؛ ستتبعه قائمة هذا الحساب عند تسجيل دخوله التالي"
+
+msgid "Saisir un règlement"
+msgstr "تسجيل دفعة"
+
+msgid "Saisissez votre identifiant et votre mot de passe."
+msgstr "أدخل اسم المستخدم وكلمة المرور."
+
+msgid "Sauvegarder / exporter la base"
+msgstr "نسخ قاعدة البيانات احتياطيًا / تصديرها"
+
+msgid "Se connecter"
+msgstr "تسجيل الدخول"
+
+msgid "Se déconnecter"
+msgstr "تسجيل الخروج"
+
+msgid "Second logo"
+msgstr "الشعار الثاني"
+
+msgid "Sens"
+msgstr "الاستخدام"
+
+msgid "sens"
+msgstr "الاستخدام"
+
+msgid "Sens d'utilisation"
+msgstr "نوع الاستخدام"
+
+msgid "Sens des lignes sans colonne Sens :"
+msgstr "استخدام الأسطر التي لا تحتوي على عمود الاستخدام:"
+
+msgid "Site web"
+msgstr "الموقع الإلكتروني"
+
+msgid "Statut"
+msgstr "الحالة"
+
+msgid "Statut : {}"
+msgstr "الحالة: {}"
+
+msgid "Suivant"
+msgstr "التالي"
+
+msgid "Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit."
+msgstr "هل تريد حذف هذه المسودة؟ ستختفي من السجل، ويبقى الحذف مسجلًا في سجل التدقيق."
+
+msgid "Supprimer le brouillon"
+msgstr "حذف المسودة"
+
+msgid "Sélectionner un produit dans la liste pour afficher sa fiche."
+msgstr "اختر منتجًا من القائمة لعرض بطاقته."
+
+msgid "Sélectionner un tiers dans la liste pour afficher sa fiche."
+msgstr "اختر طرفًا من القائمة لعرض بطاقته."
+
+msgid "Tableau de bord"
+msgstr "لوحة المتابعة"
+
+msgid "Taux de remise (%)"
+msgstr "نسب الخصم (%)"
+
+msgid "Taux de retenue (%)"
+msgstr "نسب الاقتطاع (%)"
+
+msgid "Taux de TVA (%)"
+msgstr "نسب ضريبة القيمة المضافة (%)"
+
+msgid "taux de {} invalides : saisir des pourcentages entre 0 et 100 séparés par des points-virgules"
+msgstr "نسب {} غير صالحة: أدخل نسبًا مئوية بين 0 و100 مفصولة بفواصل منقوطة"
+
+msgid "Taux et paiements"
+msgstr "النسب والمدفوعات"
+
+msgid "Taux proposés dans les documents"
+msgstr "النسب المقترحة في المستندات"
+
+msgid "Terminer l'installation"
+msgstr "إنهاء التثبيت"
+
+msgid "Tiers"
+msgstr "الأطراف"
+
+msgid "Total"
+msgstr "الإجمالي"
+
+msgid "Tous les produits"
+msgstr "كل المنتجات"
+
+msgid "Tous les statuts"
+msgstr "كل الحالات"
+
+msgid "Tous les tiers"
+msgstr "كل الأطراف"
+
+msgid "Tout paiement"
+msgstr "كل حالات الدفع"
+
+msgid "TVA"
+msgstr "ضريبة القيمة المضافة"
+
+msgid "TVA (%)"
+msgstr "ضريبة القيمة المضافة (%)"
+
+msgid "TVA : {}   Remise : {}   Retenue : {}"
+msgstr "ضريبة القيمة المضافة: {}   الخصم: {}   الاقتطاع: {}"
+
+msgid "Type"
+msgstr "النوع"
+
+msgid "type"
+msgstr "النوع"
+
+msgid "Type des lignes sans colonne Type :"
+msgstr "نوع الأسطر التي لا تحتوي على عمود النوع:"
+
+msgid "Téléphone"
+msgstr "الهاتف"
+
+msgid "téléphone"
+msgstr "الهاتف"
+
+msgid "Un changement vaut pour les validations suivantes ; les numéros déjà attribués ne changent pas. Changer de compteur en cours d'année interrompt la suite des numéros de l'année."
+msgstr "يسري التغيير على عمليات الاعتماد اللاحقة؛ ولا تتغير الأرقام المسندة سابقًا. تغيير العداد خلال السنة يقطع تسلسل أرقام تلك السنة."
+
+msgid "Utilisateurs"
+msgstr "المستخدمون"
+
+msgid "Valeurs séparées par des points-virgules, en pourcentage (ex. 0 ; 18). Modifiables plus tard dans les paramètres."
+msgstr "قيم مفصولة بفواصل منقوطة، بالنسبة المئوية (مثلًا 0 ; 18). يمكن تعديلها لاحقًا في الإعدادات."
+
+msgid "Validation"
+msgstr "الاعتماد"
+
+msgid "Valider"
+msgstr "اعتماد"
+
+msgid "Valider cette facture ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "هل تريد اعتماد هذه الفاتورة؟ ستحصل على رقمها النهائي، ولن يعود بالإمكان تعديل بنودها ومبالغها."
+
+msgid "Valider un document"
+msgstr "اعتماد مستند"
+
+msgid "Validité des devis"
+msgstr "صلاحية عروض الأسعار"
+
+msgid "validité des devis"
+msgstr "صلاحية عروض الأسعار"
+
+msgid "Validé"
+msgstr "معتمد"
+
+msgid "Vente"
+msgstr "بيع"
+
+msgid "Vente et achat"
+msgstr "بيع وشراء"
+
+msgid "Version {}"
+msgstr "الإصدار {}"
+
+msgid "{} (désactivé)"
+msgstr "{} (معطَّل)"
+
+msgid "{} ({}), rôle : {}"
+msgstr "{} ({})، الدور: {}"
+
+msgid "{} factures."
+msgstr "عدد الفواتير: {}."
+
+msgid "{} fiches"
+msgstr "عدد البطاقات: {}"
+
+msgid "{} invalide : saisir un nombre entier de jours, ou laisser vide pour ne pas en fixer"
+msgstr "{} غير صالحة: أدخل عددًا صحيحًا من الأيام، أو اتركها فارغة لعدم تحديدها"
+
+msgid "À importer"
+msgstr "للاستيراد"
+
+msgid "À propos"
+msgstr "حول البرنامج"
+
+msgid "Échéance"
+msgstr "تاريخ الاستحقاق"
+
+msgid "Échéance (facultative)"
+msgstr "تاريخ الاستحقاق (اختياري)"
+
+msgid "échéance illisible : saisir la date au format JJ/MM/AAAA, ou la laisser vide"
+msgstr "تاريخ الاستحقاق غير مقروء: أدخل التاريخ بصيغة يوم/شهر/سنة، أو اتركه فارغًا"
+
+msgid "Étape {} sur {} : {}"
+msgstr "الخطوة {} من {}: {}"
+
+msgid "État"
+msgstr "الحالة"

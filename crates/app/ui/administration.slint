@@ -94,7 +94,7 @@ component CadreLogo inherits VerticalLayout {
         }
 
         if !root.present: Text {
-            text: "Aucun logo";
+            text: @tr("Aucun logo");
             color: Theme.texte-secondaire;
             horizontal-alignment: center;
             vertical-alignment: center;
@@ -106,14 +106,14 @@ component CadreLogo inherits VerticalLayout {
         alignment: start;
 
         Bouton {
-            text: root.present ? "Remplacer" : "Choisir une image";
+            text: root.present ? @tr("Remplacer") : @tr("Choisir une image");
             clicked => {
                 root.choisir();
             }
         }
 
         if root.present: Bouton {
-            text: "Retirer";
+            text: @tr("Retirer");
             clicked => {
                 root.retirer();
             }
@@ -174,11 +174,11 @@ export component PageEntreprise inherits ScrollView {
         alignment: start;
 
         Titre {
-            text: "Entreprise";
+            text: @tr("Entreprise");
         }
 
         Text {
-            text: "Ces informations figurent en en-tête et en pied de page des documents.";
+            text: @tr("Ces informations figurent en en-tête et en pied de page des documents.");
             color: Theme.texte-secondaire;
         }
 
@@ -191,68 +191,68 @@ export component PageEntreprise inherits ScrollView {
 
                 Row {
                     nom := Champ {
-                        libelle: "Nom";
+                        libelle: @tr("Nom");
                         colspan: 2;
                     }
                 }
 
                 Row {
                     adresse := Champ {
-                        libelle: "Adresse";
+                        libelle: @tr("Adresse");
                     }
 
                     localisation := Champ {
-                        libelle: "Localisation";
+                        libelle: @tr("Localisation");
                     }
                 }
 
                 Row {
                     telephone := Champ {
-                        libelle: "Téléphone";
+                        libelle: @tr("Téléphone");
                     }
 
                     email := Champ {
-                        libelle: "Email";
+                        libelle: @tr("Email");
                     }
                 }
 
                 Row {
                     site-web := Champ {
-                        libelle: "Site web";
+                        libelle: @tr("Site web");
                     }
 
                     regime := Champ {
-                        libelle: "Régime d'imposition";
+                        libelle: @tr("Régime d'imposition");
                     }
                 }
 
                 Row {
                     rccm := Champ {
-                        libelle: "RCCM";
+                        libelle: @tr("RCCM");
                     }
 
                     ifu := Champ {
-                        libelle: "IFU";
+                        libelle: @tr("IFU");
                     }
                 }
 
                 Row {
                     banque1 := Champ {
-                        libelle: "Compte bancaire 1";
+                        libelle: @tr("Compte bancaire 1");
                     }
 
                     banque2 := Champ {
-                        libelle: "Compte bancaire 2";
+                        libelle: @tr("Compte bancaire 2");
                     }
                 }
 
                 Row {
                     responsable-facturation := Champ {
-                        libelle: "Responsable de la facturation";
+                        libelle: @tr("Responsable de la facturation");
                     }
 
                     responsable-comptabilite := Champ {
-                        libelle: "Responsable de la comptabilité";
+                        libelle: @tr("Responsable de la comptabilité");
                     }
                 }
 
@@ -263,7 +263,7 @@ export component PageEntreprise inherits ScrollView {
                         alignment: start;
 
                         Bouton {
-                            text: "Enregistrer";
+                            text: @tr("Enregistrer");
                             primary: true;
                             clicked => {
                                 root.retour = EntrepriseApi.enregistrer(root.saisie());
@@ -284,17 +284,17 @@ export component PageEntreprise inherits ScrollView {
                 alignment: start;
 
                 Section {
-                    text: "Logos";
+                    text: @tr("Logos");
                 }
 
                 Text {
-                    text: "Image PNG ou JPEG, 2 Mo au plus. Le logo principal figure à gauche de l'en-tête, le second à droite.";
+                    text: @tr("Image PNG ou JPEG, 2 Mo au plus. Le logo principal figure à gauche de l'en-tête, le second à droite.");
                     color: Theme.texte-secondaire;
                     wrap: word-wrap;
                 }
 
                 CadreLogo {
-                    libelle: "Logo principal";
+                    libelle: @tr("Logo principal");
                     source: EntrepriseApi.logo-principal;
                     present: EntrepriseApi.a-logo-principal;
                     retour: root.retour-logo-principal;
@@ -307,7 +307,7 @@ export component PageEntreprise inherits ScrollView {
                 }
 
                 CadreLogo {
-                    libelle: "Second logo";
+                    libelle: @tr("Second logo");
                     source: EntrepriseApi.logo-secondaire;
                     present: EntrepriseApi.a-logo-secondaire;
                     retour: root.retour-logo-secondaire;
@@ -354,7 +354,7 @@ export component PageParametres inherits ScrollView {
         alignment: start;
 
         Titre {
-            text: "Paramètres";
+            text: @tr("Paramètres");
         }
 
         HorizontalLayout {
@@ -365,48 +365,48 @@ export component PageParametres inherits ScrollView {
                 spacing: 12px;
 
                 Section {
-                    text: "Taux proposés dans les documents";
+                    text: @tr("Taux proposés dans les documents");
                 }
 
                 Text {
-                    text: "Pourcentages séparés par des points-virgules, par exemple « 0 ; 18 » ou « 0 ; 2,5 ; 5 ».";
+                    text: @tr("Pourcentages séparés par des points-virgules, par exemple « 0 ; 18 » ou « 0 ; 2,5 ; 5 ».");
                     color: Theme.texte-secondaire;
                     wrap: word-wrap;
                 }
 
                 tva := Champ {
-                    libelle: "TVA (%)";
+                    libelle: @tr("TVA (%)");
                 }
 
                 remise := Champ {
-                    libelle: "Remise (%)";
+                    libelle: @tr("Remise (%)");
                 }
 
                 retenue := Champ {
-                    libelle: "Retenue à la source (%)";
+                    libelle: @tr("Retenue à la source (%)");
                 }
 
                 Section {
-                    text: "Paiements";
+                    text: @tr("Paiements");
                 }
 
                 modes := Champ {
-                    libelle: "Modes de paiement, séparés par des points-virgules";
+                    libelle: @tr("Modes de paiement, séparés par des points-virgules");
                 }
 
                 Section {
-                    text: "Délais (en jours, laisser vide pour ne pas en fixer)";
+                    text: @tr("Délais (en jours, laisser vide pour ne pas en fixer)");
                 }
 
                 HorizontalLayout {
                     spacing: 12px;
 
                     validite := Champ {
-                        libelle: "Validité des devis";
+                        libelle: @tr("Validité des devis");
                     }
 
                     delai := Champ {
-                        libelle: "Délai de paiement des factures";
+                        libelle: @tr("Délai de paiement des factures");
                     }
                 }
 
@@ -490,11 +490,11 @@ export component PageParametres inherits ScrollView {
                 }
 
                 Section {
-                    text: "Montant en lettres";
+                    text: @tr("Montant en lettres");
                 }
 
                 orthographe := ComboBox {
-                    model: ["Orthographe rectifiée (1990)", "Orthographe traditionnelle"];
+                    model: [@tr("Orthographe rectifiée (1990)"), @tr("Orthographe traditionnelle")];
                 }
 
                 Text {
@@ -508,7 +508,7 @@ export component PageParametres inherits ScrollView {
                     alignment: start;
 
                     Bouton {
-                        text: "Enregistrer";
+                        text: @tr("Enregistrer");
                         primary: true;
                         clicked => {
                             root.retour = ParametresApi.enregistrer({
@@ -541,7 +541,7 @@ export component PageParametres inherits ScrollView {
                 }
 
                 Text {
-                    text: "Les textes des documents, l'apparence des PDF et les dossiers d'export se régleront ici avec le jalon du PDF (J4). La matrice des droits par rôle se règle dans l'écran Utilisateurs.";
+                    text: @tr("Les textes des documents, l'apparence des PDF et les dossiers d'export se régleront ici avec le jalon du PDF (J4). La matrice des droits par rôle se règle dans l'écran Utilisateurs.");
                     font-size: 12px;
                     color: Theme.texte-secondaire;
                     wrap: word-wrap;

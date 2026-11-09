@@ -69,10 +69,10 @@ component OngletComptes inherits HorizontalLayout {
 
         StandardTableView {
             columns: [
-                { title: "Nom complet", min-width: 160px, horizontal-stretch: 2 },
-                { title: "Identifiant", min-width: 110px, horizontal-stretch: 1 },
-                { title: "Rôle", min-width: 110px, horizontal-stretch: 1 },
-                { title: "État", min-width: 90px, horizontal-stretch: 1 },
+                { title: @tr("Nom complet"), min-width: 160px, horizontal-stretch: 2 },
+                { title: @tr("Identifiant"), min-width: 110px, horizontal-stretch: 1 },
+                { title: @tr("Rôle"), min-width: 110px, horizontal-stretch: 1 },
+                { title: @tr("État"), min-width: 90px, horizontal-stretch: 1 },
             ];
             rows: UtilisateursApi.lignes;
             current-row <=> UtilisateursApi.ligne-courante;
@@ -86,7 +86,7 @@ component OngletComptes inherits HorizontalLayout {
             alignment: start;
 
             Bouton {
-                text: "Nouveau compte";
+                text: @tr("Nouveau compte");
                 clicked => {
                     root.retour = { };
                     root.charger(UtilisateursApi.nouveau());
@@ -100,16 +100,16 @@ component OngletComptes inherits HorizontalLayout {
         spacing: 10px;
 
         Section {
-            text: root.compte.existe ? (root.compte.actif ? "Compte" : "Compte (désactivé)") : "Nouveau compte";
+            text: root.compte.existe ? (root.compte.actif ? @tr("Compte") : @tr("Compte (désactivé)")) : @tr("Nouveau compte");
         }
 
         nom := Champ {
-            libelle: "Nom complet";
+            libelle: @tr("Nom complet");
             lecture-seule: root.compte.existe;
         }
 
         identifiant := Champ {
-            libelle: "Identifiant de connexion";
+            libelle: @tr("Identifiant de connexion");
             lecture-seule: root.compte.existe;
         }
 
@@ -117,7 +117,7 @@ component OngletComptes inherits HorizontalLayout {
             spacing: 4px;
 
             Text {
-                text: "Rôle";
+                text: @tr("Rôle");
                 font-size: 12px;
                 color: Theme.texte-secondaire;
             }
@@ -133,7 +133,7 @@ component OngletComptes inherits HorizontalLayout {
             alignment: start;
 
             Bouton {
-                text: "Changer le rôle";
+                text: @tr("Changer le rôle");
                 enabled: role.current-index != root.compte.role;
                 clicked => {
                     root.retour = UtilisateursApi.changer-role(role.current-index);
@@ -142,7 +142,7 @@ component OngletComptes inherits HorizontalLayout {
             }
 
             Bouton {
-                text: root.compte.actif ? "Désactiver" : "Réactiver";
+                text: root.compte.actif ? @tr("Désactiver") : @tr("Réactiver");
                 clicked => {
                     root.retour = UtilisateursApi.basculer-actif();
                     root.charger(UtilisateursApi.compte-courant());
@@ -151,24 +151,24 @@ component OngletComptes inherits HorizontalLayout {
         }
 
         if root.compte.soi-meme: Text {
-            text: "C'est le compte de la session en cours : son rôle et son état se changent depuis un autre compte administrateur. Le mot de passe se change dans « Mon compte ».";
+            text: @tr("C'est le compte de la session en cours : son rôle et son état se changent depuis un autre compte administrateur. Le mot de passe se change dans « Mon compte ».");
             color: Theme.texte-secondaire;
             wrap: word-wrap;
         }
 
         if !root.compte.soi-meme: Section {
-            text: root.compte.existe ? "Réinitialiser le mot de passe" : "Mot de passe";
+            text: root.compte.existe ? @tr("Réinitialiser le mot de passe") : @tr("Mot de passe");
         }
 
         mot-de-passe := Champ {
             visible: !root.compte.soi-meme;
-            libelle: "Mot de passe (8 caractères au moins)";
+            libelle: @tr("Mot de passe (8 caractères au moins)");
             secret: true;
         }
 
         confirmation := Champ {
             visible: !root.compte.soi-meme;
-            libelle: "Confirmation";
+            libelle: @tr("Confirmation");
             secret: true;
         }
 
@@ -176,7 +176,7 @@ component OngletComptes inherits HorizontalLayout {
             alignment: start;
 
             Bouton {
-                text: root.compte.existe ? "Réinitialiser le mot de passe" : "Créer le compte";
+                text: root.compte.existe ? @tr("Réinitialiser le mot de passe") : @tr("Créer le compte");
                 primary: true;
                 clicked => {
                     if (root.compte.existe) {
@@ -212,7 +212,7 @@ component OngletDroits inherits ScrollView {
         alignment: start;
 
         Text {
-            text: "Cocher ce que chaque rôle peut faire. Le rôle Admin garde toujours la gestion des utilisateurs et des droits. Les contrôles s'appliquent dès l'enregistrement ; le menu des autres comptes se met à jour à leur prochaine connexion.";
+            text: @tr("Cocher ce que chaque rôle peut faire. Le rôle Admin garde toujours la gestion des utilisateurs et des droits. Les contrôles s'appliquent dès l'enregistrement ; le menu des autres comptes se met à jour à leur prochaine connexion.");
             color: Theme.texte-secondaire;
             wrap: word-wrap;
         }
@@ -272,7 +272,7 @@ component OngletDroits inherits ScrollView {
             alignment: start;
 
             Bouton {
-                text: "Enregistrer les droits";
+                text: @tr("Enregistrer les droits");
                 primary: true;
                 clicked => {
                     root.retour = UtilisateursApi.enregistrer-matrice();
@@ -280,7 +280,7 @@ component OngletDroits inherits ScrollView {
             }
 
             Bouton {
-                text: "Revenir à la matrice du cahier des charges";
+                text: @tr("Revenir à la matrice du cahier des charges");
                 clicked => {
                     root.retour = { };
                     UtilisateursApi.matrice-par-defaut();
@@ -300,17 +300,17 @@ export component PageUtilisateurs inherits VerticalLayout {
     spacing: 8px;
 
     Titre {
-        text: "Utilisateurs";
+        text: @tr("Utilisateurs");
     }
 
     TabWidget {
         Tab {
-            title: "Comptes";
+            title: @tr("Comptes");
             OngletComptes { }
         }
 
         Tab {
-            title: "Droits par rôle";
+            title: @tr("Droits par rôle");
             OngletDroits { }
         }
     }
