@@ -3,8 +3,9 @@ import { Champ, Droits, Titre, MessageErreur, ElementNavigation, Theme } from "c
 import { EcranAssistant, DonneesAssistant } from "assistant.slint";
 import { EcranConnexion } from "connexion.slint";
 import { PageProduits, PageTiers, ProduitsApi, TiersApi } from "referentiels.slint";
+import { EntrepriseApi, PageEntreprise, PageParametres, ParametresApi } from "administration.slint";
 
-export { DonneesAssistant, Droits, ProduitsApi, TiersApi }
+export { DonneesAssistant, Droits, EntrepriseApi, ParametresApi, ProduitsApi, TiersApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, assistant, connexion, application }
@@ -141,7 +142,7 @@ export component FenetrePrincipale inherits Window {
     in-out property <Page> page: Page.tableau-de-bord;
     in-out property <string> titre-page: "Tableau de bord";
 
-    property <bool> page-en-construction: root.page != Page.tiers && root.page != Page.produits && root.page != Page.mon-compte && root.page != Page.a-propos;
+    property <bool> page-en-construction: root.page != Page.tiers && root.page != Page.produits && root.page != Page.entreprise && root.page != Page.parametres && root.page != Page.mon-compte && root.page != Page.a-propos;
 
     title: root.nom-entreprise == "" ? "Kadenz" : root.nom-entreprise;
     preferred-width: 1200px;
@@ -258,6 +259,10 @@ export component FenetrePrincipale inherits Window {
             if root.page == Page.tiers: PageTiers { }
 
             if root.page == Page.produits: PageProduits { }
+
+            if root.page == Page.entreprise: PageEntreprise { }
+
+            if root.page == Page.parametres: PageParametres { }
 
             if root.page == Page.mon-compte: PageMonCompte {
                 utilisateur-nom: root.utilisateur-nom;

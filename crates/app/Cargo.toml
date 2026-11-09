@@ -10,6 +10,7 @@ build = "build.rs"
 kadenz-domaine.workspace = true
 kadenz-stockage.workspace = true
 slint.workspace = true
+rfd.workspace = true
 
 [build-dependencies]
 slint-build.workspace = true

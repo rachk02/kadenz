@@ -1,6 +1,7 @@
 // En version optimisée, pas de console Windows derrière la fenêtre.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod administration;
 mod referentiels;
 
 use std::cell::RefCell;
@@ -236,6 +237,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     });
 
     referentiels::brancher(fenetre, &etat);
+    administration::brancher(fenetre, &etat);
 
     let e = etat;
     fenetre.on_changer_mot_de_passe(move |ancien, nouveau, confirmation| {

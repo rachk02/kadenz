@@ -1,0 +1,446 @@
+// Écrans d'administration : fiche entreprise et logos, paramètres système
+// (cahier des charges, sections 5.1 et 5.4).
+
+import { Button, ComboBox, ScrollView } from "std-widgets.slint";
+import { Champ, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+
+export struct FicheEntrepriseUi {
+    nom: string,
+    adresse: string,
+    telephone: string,
+    email: string,
+    site-web: string,
+    localisation: string,
+    regime: string,
+    rccm: string,
+    ifu: string,
+    banque1: string,
+    banque2: string,
+    responsable-facturation: string,
+    responsable-comptabilite: string,
+}
+
+export global EntrepriseApi {
+    in property <image> logo-principal;
+    in property <image> logo-secondaire;
+    in property <bool> a-logo-principal;
+    in property <bool> a-logo-secondaire;
+    callback ouvrir() -> FicheEntrepriseUi;
+    callback enregistrer(fiche: FicheEntrepriseUi) -> Retour;
+    // Rang du logo : 0 principal, 1 secondaire.
+    callback choisir-logo(rang: int) -> Retour;
+    callback retirer-logo(rang: int) -> Retour;
+}
+
+export struct ParametresUi {
+    taux-tva: string,
+    taux-remise: string,
+    taux-retenue: string,
+    modes-paiement: string,
+    // 0 rectifiée (1990), 1 traditionnelle.
+    orthographe: int,
+    validite-devis: string,
+    delai-paiement: string,
+}
+
+export global ParametresApi {
+    // Exemples d'écriture d'un même montant dans les deux orthographes.
+    in property <string> exemple-rectifiee;
+    in property <string> exemple-traditionnelle;
+    callback ouvrir() -> ParametresUi;
+    callback enregistrer(parametres: ParametresUi) -> Retour;
+}
+
+component CadreLogo inherits VerticalLayout {
+    in property <string> libelle;
+    in property <image> source;
+    in property <bool> present;
+    in property <Retour> retour;
+    callback choisir();
+    callback retirer();
+
+    spacing: 8px;
+
+    Text {
+        text: root.libelle;
+        font-size: 12px;
+        color: Theme.texte-secondaire;
+    }
+
+    Rectangle {
+        height: 110px;
+        border-width: 1px;
+        border-color: Theme.bordure;
+        border-radius: 4px;
+
+        if root.present: Image {
+            x: 8px;
+            y: 8px;
+            width: parent.width - 16px;
+            height: parent.height - 16px;
+            source: root.source;
+            image-fit: contain;
+        }
+
+        if !root.present: Text {
+            text: "Aucun logo";
+            color: Theme.texte-secondaire;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+
+    HorizontalLayout {
+        spacing: 8px;
+        alignment: start;
+
+        Button {
+            text: root.present ? "Remplacer" : "Choisir une image";
+            clicked => {
+                root.choisir();
+            }
+        }
+
+        if root.present: Button {
+            text: "Retirer";
+            clicked => {
+                root.retirer();
+            }
+        }
+    }
+
+    if root.retour.message != "": MessageRetour {
+        retour: root.retour;
+    }
+}
+
+export component PageEntreprise inherits ScrollView {
+    property <Retour> retour;
+    property <Retour> retour-logo-principal;
+    property <Retour> retour-logo-secondaire;
+
+    function charger(f: FicheEntrepriseUi) {
+        nom.valeur = f.nom;
+        adresse.valeur = f.adresse;
+        telephone.valeur = f.telephone;
+        email.valeur = f.email;
+        site-web.valeur = f.site-web;
+        localisation.valeur = f.localisation;
+        regime.valeur = f.regime;
+        rccm.valeur = f.rccm;
+        ifu.valeur = f.ifu;
+        banque1.valeur = f.banque1;
+        banque2.valeur = f.banque2;
+        responsable-facturation.valeur = f.responsable-facturation;
+        responsable-comptabilite.valeur = f.responsable-comptabilite;
+    }
+
+    function saisie() -> FicheEntrepriseUi {
+        {
+            nom: nom.valeur,
+            adresse: adresse.valeur,
+            telephone: telephone.valeur,
+            email: email.valeur,
+            site-web: site-web.valeur,
+            localisation: localisation.valeur,
+            regime: regime.valeur,
+            rccm: rccm.valeur,
+            ifu: ifu.valeur,
+            banque1: banque1.valeur,
+            banque2: banque2.valeur,
+            responsable-facturation: responsable-facturation.valeur,
+            responsable-comptabilite: responsable-comptabilite.valeur,
+        }
+    }
+
+    init => {
+        root.charger(EntrepriseApi.ouvrir());
+    }
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 12px;
+        alignment: start;
+
+        Titre {
+            text: "Entreprise";
+        }
+
+        Text {
+            text: "Ces informations figurent en en-tête et en pied de page des documents.";
+            color: Theme.texte-secondaire;
+        }
+
+        HorizontalLayout {
+            spacing: 32px;
+
+            GridLayout {
+                spacing: 12px;
+                horizontal-stretch: 2;
+
+                Row {
+                    nom := Champ {
+                        libelle: "Nom";
+                        colspan: 2;
+                    }
+                }
+
+                Row {
+                    adresse := Champ {
+                        libelle: "Adresse";
+                    }
+
+                    localisation := Champ {
+                        libelle: "Localisation";
+                    }
+                }
+
+                Row {
+                    telephone := Champ {
+                        libelle: "Téléphone";
+                    }
+
+                    email := Champ {
+                        libelle: "Email";
+                    }
+                }
+
+                Row {
+                    site-web := Champ {
+                        libelle: "Site web";
+                    }
+
+                    regime := Champ {
+                        libelle: "Régime d'imposition";
+                    }
+                }
+
+                Row {
+                    rccm := Champ {
+                        libelle: "RCCM";
+                    }
+
+                    ifu := Champ {
+                        libelle: "IFU";
+                    }
+                }
+
+                Row {
+                    banque1 := Champ {
+                        libelle: "Compte bancaire 1";
+                    }
+
+                    banque2 := Champ {
+                        libelle: "Compte bancaire 2";
+                    }
+                }
+
+                Row {
+                    responsable-facturation := Champ {
+                        libelle: "Responsable de la facturation";
+                    }
+
+                    responsable-comptabilite := Champ {
+                        libelle: "Responsable de la comptabilité";
+                    }
+                }
+
+                Row {
+                    HorizontalLayout {
+                        colspan: 2;
+                        spacing: 12px;
+                        alignment: start;
+
+                        Button {
+                            text: "Enregistrer";
+                            primary: true;
+                            clicked => {
+                                root.retour = EntrepriseApi.enregistrer(root.saisie());
+                            }
+                        }
+
+                        MessageRetour {
+                            retour: root.retour;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+            }
+
+            VerticalLayout {
+                width: 280px;
+                spacing: 16px;
+                alignment: start;
+
+                Section {
+                    text: "Logos";
+                }
+
+                Text {
+                    text: "Image PNG ou JPEG, 2 Mo au plus. Le logo principal figure à gauche de l'en-tête, le second à droite.";
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+
+                CadreLogo {
+                    libelle: "Logo principal";
+                    source: EntrepriseApi.logo-principal;
+                    present: EntrepriseApi.a-logo-principal;
+                    retour: root.retour-logo-principal;
+                    choisir => {
+                        root.retour-logo-principal = EntrepriseApi.choisir-logo(0);
+                    }
+                    retirer => {
+                        root.retour-logo-principal = EntrepriseApi.retirer-logo(0);
+                    }
+                }
+
+                CadreLogo {
+                    libelle: "Second logo";
+                    source: EntrepriseApi.logo-secondaire;
+                    present: EntrepriseApi.a-logo-secondaire;
+                    retour: root.retour-logo-secondaire;
+                    choisir => {
+                        root.retour-logo-secondaire = EntrepriseApi.choisir-logo(1);
+                    }
+                    retirer => {
+                        root.retour-logo-secondaire = EntrepriseApi.retirer-logo(1);
+                    }
+                }
+            }
+        }
+    }
+}
+
+export component PageParametres inherits ScrollView {
+    property <Retour> retour;
+
+    function charger(p: ParametresUi) {
+        tva.valeur = p.taux-tva;
+        remise.valeur = p.taux-remise;
+        retenue.valeur = p.taux-retenue;
+        modes.valeur = p.modes-paiement;
+        orthographe.current-index = p.orthographe;
+        validite.valeur = p.validite-devis;
+        delai.valeur = p.delai-paiement;
+    }
+
+    init => {
+        root.charger(ParametresApi.ouvrir());
+    }
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 12px;
+        alignment: start;
+
+        Titre {
+            text: "Paramètres";
+        }
+
+        HorizontalLayout {
+            alignment: start;
+
+            VerticalLayout {
+                width: 560px;
+                spacing: 12px;
+
+                Section {
+                    text: "Taux proposés dans les documents";
+                }
+
+                Text {
+                    text: "Pourcentages séparés par des points-virgules, par exemple « 0 ; 18 » ou « 0 ; 2,5 ; 5 ».";
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+
+                tva := Champ {
+                    libelle: "TVA (%)";
+                }
+
+                remise := Champ {
+                    libelle: "Remise (%)";
+                }
+
+                retenue := Champ {
+                    libelle: "Retenue à la source (%)";
+                }
+
+                Section {
+                    text: "Paiements";
+                }
+
+                modes := Champ {
+                    libelle: "Modes de paiement, séparés par des points-virgules";
+                }
+
+                Section {
+                    text: "Délais (en jours, laisser vide pour ne pas en fixer)";
+                }
+
+                HorizontalLayout {
+                    spacing: 12px;
+
+                    validite := Champ {
+                        libelle: "Validité des devis";
+                    }
+
+                    delai := Champ {
+                        libelle: "Délai de paiement des factures";
+                    }
+                }
+
+                Section {
+                    text: "Montant en lettres";
+                }
+
+                orthographe := ComboBox {
+                    model: ["Orthographe rectifiée (1990)", "Orthographe traditionnelle"];
+                }
+
+                Text {
+                    text: orthographe.current-index == 0 ? ParametresApi.exemple-rectifiee : ParametresApi.exemple-traditionnelle;
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+
+                HorizontalLayout {
+                    spacing: 12px;
+                    alignment: start;
+
+                    Button {
+                        text: "Enregistrer";
+                        primary: true;
+                        clicked => {
+                            root.retour = ParametresApi.enregistrer({
+                                taux-tva: tva.valeur,
+                                taux-remise: remise.valeur,
+                                taux-retenue: retenue.valeur,
+                                modes-paiement: modes.valeur,
+                                orthographe: orthographe.current-index,
+                                validite-devis: validite.valeur,
+                                delai-paiement: delai.valeur,
+                            });
+                            if (root.retour.ok) {
+                                root.charger(ParametresApi.ouvrir());
+                            }
+                        }
+                    }
+
+                    MessageRetour {
+                        retour: root.retour;
+                        vertical-alignment: center;
+                    }
+                }
+
+                Text {
+                    text: "La numérotation, les textes des documents, l'apparence des PDF et les dossiers d'export se régleront ici avec les jalons des factures (J3) et du PDF (J4). La matrice des droits par rôle se réglera dans l'écran Utilisateurs.";
+                    font-size: 12px;
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+            }
+        }
+    }
+}
