@@ -8,6 +8,7 @@
 | 2.2 | 2026-11-09 | Tour 2 validé : écrans et ergonomie, fiche document, bordereaux issus des factures, règlements, relances avec lettre, volet achats, sauvegarde automatique (10 copies), licence perpétuelle signée et liée au poste, préfixe A de l'avoir, mise à jour vérifiée au démarrage |
 | 2.3 | 2026-11-09 | Règles PDF multi-pages validées (en-têtes et pieds répétés, report, filigranes, deux logos, export des registres), arrondi et quantités fractionnaires tranchés, orthographe du montant en lettres par réglage, ordre des jalons J1 à J10 validé |
 | 2.4 | 2026-11-09 | Jalon J2 : logos de l'entreprise stockés dans la base, matrice des droits modifiable, import CSV/Excel détaillé (section 6.8), crate `kadenz-import`, feuille de route J1 à J10 reportée en section 19, question des délais par défaut ajoutée |
+| 2.5 | 2026-11-09 | Questions 3 (orthographe rectifiée par défaut), 10 (délais vides par défaut) et 11 (import dans l'assistant reporté) tranchées |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -418,14 +419,15 @@ Choix technique (à l'étude) : c'est la partie la plus délicate en Rust pur (m
 
 1. **Mois du numéro** : tranchée le 2026-11-09, mois (et année) de la date du document.
 2. **Arrondi** : tranchée le 2026-11-09, arrondi au franc le plus proche, la moitié vers le haut.
-3. **Montant en lettres** : l'Excel mélangeait deux usages ("Soixante dix mille sept cent quarante", "Cent-cinquante mille"). Les deux orthographes sont implémentées et choisies par réglage : rectifiée de 1990 (traits d'union partout, valeur par défaut proposée) ou traditionnelle. Valeur par défaut à confirmer.
+3. **Montant en lettres** : tranchée le 2026-11-09, orthographe rectifiée de 1990 (traits d'union partout) par défaut ; l'orthographe traditionnelle reste disponible par réglage. L'Excel mélangeait les deux usages ("Soixante dix mille sept cent quarante", "Cent-cinquante mille").
 4. **Modularité commerciale** : tranchée le 2026-11-09, modules activés par clé de licence (sections 3.2 et 15).
 5. **Avoir** : tranchée le 2026-11-09, préfixe A (section 6.7).
 6. **Conversion** : tranchée le 2026-11-09, conversion possible dès Validé.
 7. **Quantités fractionnaires** : tranchée le 2026-11-09, oui (quantités en millièmes).
 8. **Distribution** : technologie d'installateur et signature du code (à l'étude, section 16).
 9. **Écrans non vus** : aucune capture des formulaires Devis et Proforma ni des listes Factures, Livraisons, Proforma et Devis ; leur contenu est supposé identique à la Facture et à la liste des bons de commande.
-10. **Délais par défaut** : le cahier ne fixe ni durée de validité des devis ni délai de paiement des factures. Les deux réglages existent (section 5.4) et sont vides par défaut, donc sans date d'échéance calculée. Valeurs par défaut à confirmer.
+10. **Délais par défaut** : tranchée le 2026-11-09, la durée de validité des devis et le délai de paiement des factures restent vides par défaut (réglages de la section 5.4) ; aucune date d'échéance n'est calculée tant que l'entreprise ne les renseigne pas.
+11. **Import dans l'assistant** : tranchée le 2026-11-09, l'étape d'import des tiers et des produits dans l'assistant de premier lancement est reportée ; l'import reste disponible depuis les écrans Tiers et Produits.
 
 ---
 
