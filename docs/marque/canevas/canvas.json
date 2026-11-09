@@ -1,0 +1,100 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Couleurs.dc.html": {
+      "h": 760,
+      "title": "04 Color System",
+      "w": 1200,
+      "x": 0,
+      "y": 880
+    },
+    "Logomark.dc.html": {
+      "h": 760,
+      "title": "02 Logomark",
+      "w": 1200,
+      "x": 1280,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "h": 760,
+      "title": "01 Primary logo",
+      "w": 1200,
+      "x": 0,
+      "y": 0
+    },
+    "Mockups.dc.html": {
+      "h": 760,
+      "title": "09 Brand Mockups",
+      "w": 1200,
+      "x": 2560,
+      "y": 1760
+    },
+    "Motif.dc.html": {
+      "h": 760,
+      "title": "05 Brand Pattern",
+      "w": 1200,
+      "x": 1280,
+      "y": 880
+    },
+    "Papeterie.dc.html": {
+      "h": 760,
+      "title": "08 Stationery design",
+      "w": 1200,
+      "x": 1280,
+      "y": 1760
+    },
+    "Signaletique.dc.html": {
+      "h": 760,
+      "title": "07 Signage design",
+      "w": 1200,
+      "x": 0,
+      "y": 1760
+    },
+    "Ton.dc.html": {
+      "h": 760,
+      "title": "03 Tone & Mood",
+      "w": 1200,
+      "x": 2560,
+      "y": 0
+    },
+    "Typographie.dc.html": {
+      "h": 760,
+      "title": "06 Typography",
+      "w": 1200,
+      "x": 2560,
+      "y": 880
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-11-09T13:40:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "titre": {
+      "kind": "title1",
+      "maxW": 3760,
+      "text": "Kadenz, identité de marque (proposition)",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Logomark.dc.html",
+    "Ton.dc.html",
+    "Couleurs.dc.html",
+    "Motif.dc.html",
+    "Typographie.dc.html",
+    "Signaletique.dc.html",
+    "Papeterie.dc.html",
+    "Mockups.dc.html"
+  ],
+  "pages": [],
+  "title": "Kadenz - identité de marque"
+}

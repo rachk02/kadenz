@@ -2,7 +2,19 @@
 
 Identité de l'éditeur et du logiciel. Elle n'apparaît jamais sur les documents produits pour les clients (cahier des charges, section 1) : chaque installation garde l'identité de l'entreprise utilisatrice.
 
-Statut : **proposition à valider**. Planches de présentation (9 points) sur le canevas de design partagé en conversation.
+Statut : **proposition à valider**.
+
+## Planches de présentation
+
+Les 9 planches (primary logo, logomark, tone & mood, color system, brand pattern, typography, signage, stationery, brand mockups) sont dans `planches/` et s'ouvrent sans compte ni connexion :
+
+- `planches/index.html` : les 9 planches sur une page, à ouvrir dans un navigateur ;
+- `planches/kadenz-identite.pdf` : une planche par page ;
+- `planches/images/` : une image PNG par planche (2400 x 1520 px) ;
+- `planches/01-primary-logo.html` à `09-brand-mockups.html` : chaque planche seule ;
+- `planches/polices/` : Inter et Manrope en WOFF2, avec leur licence OFL.
+
+`canevas/` conserve les sources d'origine du canevas de design (fichiers `.dc.html` et `canvas.json`), pour le réimporter dans un éditeur de canevas au besoin.
 
 ## Symbole
 
