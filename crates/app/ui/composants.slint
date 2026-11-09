@@ -155,26 +155,29 @@ export component Bouton inherits Rectangle {
         overflow: elide;
     }
 
-    zone := TouchArea {
-        width: parent.width;
-        height: parent.height;
-        enabled: root.enabled;
-        mouse-cursor: pointer;
-        clicked => {
-            root.clicked();
-        }
-    }
-
+    // Le TouchArea est à l'intérieur du FocusScope : un FocusScope placé au-dessus
+    // capterait le premier appui pour prendre le focus, et le clic serait perdu.
     clavier := FocusScope {
         width: parent.width;
         height: parent.height;
         enabled: root.enabled;
+        focus-on-click: false;
         key-pressed(evenement) => {
             if (evenement.text == Key.Return || evenement.text == " ") {
                 root.clicked();
                 return accept;
             }
             return reject;
+        }
+
+        zone := TouchArea {
+            width: parent.width;
+            height: parent.height;
+            enabled: root.enabled;
+            mouse-cursor: pointer;
+            clicked => {
+                root.clicked();
+            }
         }
     }
 }
@@ -184,8 +187,11 @@ export component MessageErreur inherits Text {
     wrap: word-wrap;
 }
 
+// Entrée du menu latéral : icône Kadenz (ui/icones/menu, traits droits) et libellé.
+// L'entrée active est sur fond Indigo, avec un repère Ambre à gauche.
 export component ElementNavigation inherits Rectangle {
     in property <string> libelle;
+    in property <image> icone;
     in property <bool> actif;
     callback clique();
 
@@ -193,12 +199,37 @@ export component ElementNavigation inherits Rectangle {
     border-radius: 4px;
     background: root.actif ? Theme.accent : (zone.has-hover ? Theme.accent-survol : transparent);
 
-    Text {
+    accessible-role: button;
+    accessible-label: root.libelle;
+    accessible-action-default => {
+        root.clique();
+    }
+
+    Rectangle {
+        x: 0px;
+        width: 3px;
+        height: 18px;
+        background: Theme.ambre;
+        visible: root.actif;
+    }
+
+    Image {
         x: 12px;
+        width: 18px;
+        height: 18px;
+        source: root.icone;
+        colorize: root.actif ? white : Theme.texte-secondaire;
+    }
+
+    Text {
+        x: 40px;
+        width: parent.width - 48px;
         text: root.libelle;
         color: root.actif ? white : Theme.texte;
+        font-weight: root.actif ? 600 : 400;
         vertical-alignment: center;
         font-size: 14px;
+        overflow: elide;
     }
 
     zone := TouchArea {

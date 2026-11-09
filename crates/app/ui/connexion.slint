@@ -1,7 +1,10 @@
 import { Bouton, Champ, Titre, MessageErreur, Theme } from "composants.slint";
 
+// Écran de connexion : panneau de marque Kadenz à gauche (logo, motif Cadence),
+// formulaire à droite sous le nom de l'entreprise qui utilise l'installation.
 export component EcranConnexion inherits Rectangle {
     in property <string> nom-entreprise;
+    in property <string> version-logiciel;
 
     // Renvoie un message d'erreur, ou une chaîne vide si la connexion a réussi.
     callback connecter(string, string) -> string;
@@ -19,53 +22,143 @@ export component EcranConnexion inherits Rectangle {
 
     background: white;
 
-    VerticalLayout {
-        alignment: center;
+    HorizontalLayout {
+        Rectangle {
+            width: max(340px, min(460px, root.width * 0.4));
+            background: Theme.nuit;
+            clip: true;
 
-        HorizontalLayout {
-            alignment: center;
+            Image {
+                width: parent.width;
+                height: parent.height;
+                source: @image-url("icones/motif-cadence.svg");
+                image-fit: cover;
+            }
 
             VerticalLayout {
-                width: 360px;
-                spacing: 16px;
-                padding: 24px;
+                padding: 40px;
+                spacing: 14px;
 
-                Titre {
-                    text: root.nom-entreprise;
+                Image {
+                    width: 150px;
+                    height: 40px;
+                    source: @image-url("icones/kadenz-logo-horizontal-negatif.svg");
+                    image-fit: contain;
+                    horizontal-alignment: left;
+                }
+
+                Rectangle { }
+
+                // Les trois temps de la marque, en Ambre pour le dernier.
+                VerticalLayout {
+                    spacing: 6px;
+                    Rectangle {
+                        width: 56px;
+                        height: 4px;
+                        background: white;
+                    }
+
+                    Rectangle {
+                        x: 10px;
+                        width: 56px;
+                        height: 4px;
+                        background: white;
+                    }
+
+                    Rectangle {
+                        x: 20px;
+                        width: 56px;
+                        height: 4px;
+                        background: Theme.ambre;
+                    }
+                }
+
+                Text {
+                    text: @tr("Gestion commerciale");
+                    color: white;
+                    font-family: Theme.police-titre;
+                    font-size: 30px;
+                    font-weight: 800;
                     wrap: word-wrap;
                 }
 
                 Text {
-                    text: "Connexion";
-                    color: Theme.texte-secondaire;
+                    text: @tr("Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements.");
+                    color: #c5cae0;
+                    font-size: 14px;
+                    wrap: word-wrap;
                 }
 
-                Champ {
-                    libelle: "Identifiant";
-                    valeur <=> root.identifiant;
-                    valide => {
-                        root.valider();
+                Rectangle {
+                    height: 24px;
+                }
+
+                Text {
+                    text: @tr("Version {}", root.version-logiciel);
+                    color: #9aa3c7;
+                    font-size: 12px;
+                }
+            }
+        }
+
+        VerticalLayout {
+            alignment: center;
+
+            HorizontalLayout {
+                alignment: center;
+
+                VerticalLayout {
+                    width: 360px;
+                    spacing: 16px;
+                    padding: 24px;
+
+                    Text {
+                        text: @tr("CONNEXION");
+                        font-family: Theme.police-titre;
+                        font-size: 12px;
+                        font-weight: 800;
+                        letter-spacing: 1px;
+                        color: Theme.accent;
                     }
-                }
 
-                Champ {
-                    libelle: "Mot de passe";
-                    secret: true;
-                    valeur <=> root.mot-de-passe;
-                    valide => {
-                        root.valider();
+                    Titre {
+                        text: root.nom-entreprise;
+                        wrap: word-wrap;
                     }
-                }
 
-                if root.erreur != "": MessageErreur {
-                    text: root.erreur;
-                }
+                    Text {
+                        text: @tr("Saisissez votre identifiant et votre mot de passe.");
+                        color: Theme.texte-secondaire;
+                        wrap: word-wrap;
+                    }
 
-                Bouton {
-                    text: "Se connecter";
-                    primary: true;
-                    clicked => {
-                        root.valider();
+                    Champ {
+                        libelle: @tr("Identifiant");
+                        valeur <=> root.identifiant;
+                        valide => {
+                            root.valider();
+                        }
+                    }
+
+                    Champ {
+                        libelle: @tr("Mot de passe");
+                        secret: true;
+                        valeur <=> root.mot-de-passe;
+                        valide => {
+                            root.valider();
+                        }
+                    }
+
+                    if root.erreur != "": MessageErreur {
+                        text: root.erreur;
+                    }
+
+                    Bouton {
+                        text: @tr("Se connecter");
+                        primary: true;
+                        clicked => {
+                            root.valider();
+                        }
                     }
                 }
             }

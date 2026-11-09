@@ -148,6 +148,23 @@ export component FenetrePrincipale inherits Window {
 
     property <bool> page-en-construction: root.page != Page.factures && root.page != Page.tiers && root.page != Page.produits && root.page != Page.entreprise && root.page != Page.parametres && root.page != Page.utilisateurs && root.page != Page.mon-compte && root.page != Page.a-propos;
 
+    // Icône Kadenz de chaque entrée du menu (ui/icones/menu).
+    pure function icone-page(p: Page) -> image {
+        if (p == Page.tableau-de-bord) { return @image-url("icones/menu/tableau-de-bord.svg"); }
+        if (p == Page.devis) { return @image-url("icones/menu/devis.svg"); }
+        if (p == Page.proforma) { return @image-url("icones/menu/proforma.svg"); }
+        if (p == Page.bons-commande) { return @image-url("icones/menu/bons-commande.svg"); }
+        if (p == Page.livraisons) { return @image-url("icones/menu/livraisons.svg"); }
+        if (p == Page.factures) { return @image-url("icones/menu/factures.svg"); }
+        if (p == Page.tiers) { return @image-url("icones/menu/tiers.svg"); }
+        if (p == Page.produits) { return @image-url("icones/menu/produits.svg"); }
+        if (p == Page.entreprise) { return @image-url("icones/menu/entreprise.svg"); }
+        if (p == Page.parametres) { return @image-url("icones/menu/parametres.svg"); }
+        if (p == Page.utilisateurs) { return @image-url("icones/menu/utilisateurs.svg"); }
+        if (p == Page.mon-compte) { return @image-url("icones/menu/mon-compte.svg"); }
+        return @image-url("icones/menu/a-propos.svg");
+    }
+
     title: root.nom-entreprise == "" ? "Kadenz" : root.nom-entreprise;
     icon: @image-url("icones/kadenz-64.png");
     default-font-family: Theme.police-texte;
@@ -185,6 +202,7 @@ export component FenetrePrincipale inherits Window {
 
     if root.ecran == Ecran.connexion: EcranConnexion {
         nom-entreprise: root.nom-entreprise;
+        version-logiciel: root.version-logiciel;
         connecter(identifiant, mot-de-passe) => {
             root.connecter(identifiant, mot-de-passe)
         }
@@ -213,6 +231,7 @@ export component FenetrePrincipale inherits Window {
 
                 for element in root.menu: ElementNavigation {
                     libelle: element.libelle;
+                    icone: root.icone-page(element.page);
                     actif: root.page == element.page;
                     clique => {
                         root.page = element.page;
@@ -288,37 +307,131 @@ export component FenetrePrincipale inherits Window {
 
             if root.page == Page.a-propos: VerticalLayout {
                 padding: 24px;
-                spacing: 12px;
+                spacing: 20px;
 
                 Titre {
-                    text: "À propos";
+                    text: @tr("À propos");
                 }
 
-                Image {
-                    source: @image-url("icones/kadenz-logo-horizontal.svg");
-                    width: 180px;
-                    height: 50px;
-                    image-fit: contain;
-                    horizontal-alignment: left;
+                // Bandeau de marque : logo, motif Cadence, rôle du logiciel.
+                Rectangle {
+                    height: 168px;
+                    border-radius: 4px;
+                    background: Theme.nuit;
+                    clip: true;
+
+                    Image {
+                        x: parent.width - self.width;
+                        width: min(360px, parent.width / 2);
+                        height: parent.height;
+                        source: @image-url("icones/motif-cadence.svg");
+                        image-fit: cover;
+                    }
+
+                    VerticalLayout {
+                        padding: 28px;
+                        spacing: 10px;
+                        alignment: center;
+
+                        Image {
+                            width: 170px;
+                            height: 46px;
+                            source: @image-url("icones/kadenz-logo-horizontal-negatif.svg");
+                            image-fit: contain;
+                            horizontal-alignment: left;
+                        }
+
+                        Text {
+                            text: @tr("Gestion commerciale");
+                            color: white;
+                            font-family: Theme.police-titre;
+                            font-size: 20px;
+                            font-weight: 800;
+                        }
+
+                        Text {
+                            text: @tr("Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements.");
+                            color: #c5cae0;
+                            font-size: 13px;
+                            wrap: word-wrap;
+                        }
+                    }
                 }
 
-                Text {
-                    text: "Version " + root.version-logiciel + ". Logiciel propriétaire, tous droits réservés.";
-                    color: Theme.texte-secondaire;
-                }
+                HorizontalLayout {
+                    spacing: 20px;
 
-                Section {
-                    text: "Composants tiers";
-                }
+                    Rectangle {
+                        border-width: 1px;
+                        border-color: Theme.bordure;
+                        border-radius: 4px;
 
-                Text {
-                    text: "Polices Inter (The Inter Project Authors) et Manrope (The Manrope Project Authors), sous licence SIL Open Font License 1.1.";
-                    color: Theme.texte-secondaire;
-                    wrap: word-wrap;
-                }
+                        VerticalLayout {
+                            padding: 20px;
+                            spacing: 10px;
+                            alignment: start;
 
-                AboutSlint {
-                    max-height: 200px;
+                            Section {
+                                text: @tr("Logiciel");
+                            }
+
+                            Text {
+                                text: @tr("Version {}", root.version-logiciel);
+                                color: Theme.texte;
+                                font-weight: 600;
+                            }
+
+                            Text {
+                                text: @tr("Logiciel propriétaire, tous droits réservés.");
+                                color: Theme.texte-secondaire;
+                                wrap: word-wrap;
+                            }
+
+                            Text {
+                                text: @tr("Gestion commerciale mono-poste pour Windows : les données restent sur ce poste.");
+                                color: Theme.texte-secondaire;
+                                wrap: word-wrap;
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        border-width: 1px;
+                        border-color: Theme.bordure;
+                        border-radius: 4px;
+
+                        VerticalLayout {
+                            padding: 20px;
+                            spacing: 10px;
+                            alignment: start;
+
+                            Section {
+                                text: @tr("Composants tiers");
+                            }
+
+                            Text {
+                                text: @tr("Interface : Slint, sous licence Slint Royalty-free 2.0.");
+                                color: Theme.texte-secondaire;
+                                wrap: word-wrap;
+                            }
+
+                            Text {
+                                text: @tr("Polices : Inter et Manrope, sous licence SIL Open Font License 1.1.");
+                                color: Theme.texte-secondaire;
+                                wrap: word-wrap;
+                            }
+
+                            Text {
+                                text: @tr("Base de données : SQLite, dans le domaine public.");
+                                color: Theme.texte-secondaire;
+                                wrap: word-wrap;
+                            }
+
+                            AboutSlint {
+                                max-height: 110px;
+                            }
+                        }
+                    }
                 }
 
                 Rectangle { }
