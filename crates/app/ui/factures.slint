@@ -1,0 +1,835 @@
+// Écran Factures : registre filtrable, puis fiche en pleine page (cahier des
+// charges, sections 4.1, 4.2, 6.6 et 7). Tous les calculs et les contrôles sont
+// faits par l'application : cet écran ne fait qu'afficher et transmettre la saisie.
+
+import { Button, CheckBox, ComboBox, LineEdit, ScrollView, StandardTableView } from "std-widgets.slint";
+import { Champ, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+
+export struct LigneFactureUi {
+    // 0 pour une ligne libre, sans produit d'origine.
+    produit-id: int,
+    reference: string,
+    designation: string,
+    prix: string,
+    quantite: string,
+    total: string,
+}
+
+export struct FicheFactureUi {
+    existe: bool,
+    titre: string,
+    statut: string,
+    paiement: string,
+    brouillon: bool,
+    annule: bool,
+    date: string,
+    echeance: string,
+    libelle: string,
+    observations: string,
+    client-index: int,
+    tiers-detail: string,
+    remise-index: int,
+    tva-index: int,
+    mode-index: int,
+    modifiable: bool,
+    admin-modifiable: bool,
+    peut-valider: bool,
+    peut-envoyer: bool,
+    peut-annuler: bool,
+    peut-supprimer: bool,
+}
+
+export struct TotauxUi {
+    ht: string,
+    remise: string,
+    base-tva: string,
+    tva: string,
+    ttc: string,
+    lettres: string,
+}
+
+export struct EvenementUi {
+    date: string,
+    utilisateur: string,
+    libelle: string,
+}
+
+export global FacturesApi {
+    // Registre.
+    in property <[[StandardListViewItem]]> registre;
+    in property <string> resume;
+    in-out property <int> ligne-courante: -1;
+    in property <bool> peut-creer;
+    in property <bool> fiche-ouverte;
+    callback ouvrir();
+    // Statut : 0 tous, 1 brouillon, 2 validé, 3 envoyé, 4 annulé.
+    // Paiement : 0 tous, 1 impayé, 2 partiel, 3 payé.
+    // Renvoie un message si une date de période est illisible.
+    callback filtrer(texte: string, statut: int, paiement: int, du: string, au: string) -> string;
+    callback trier(colonne: int, croissant: bool);
+    callback selectionner(ligne: int);
+    callback nouvelle();
+    callback fermer-fiche();
+
+    // Fiche. La version augmente à chaque rechargement de la fiche par l'application :
+    // l'écran recharge alors ses champs, et seulement dans ce cas (une saisie refusée
+    // reste affichée telle quelle pour être corrigée).
+    in property <int> version-fiche;
+    callback fiche-courante() -> FicheFactureUi;
+    in property <[string]> clients;
+    in property <[string]> taux-remise;
+    in property <[string]> taux-tva;
+    in property <[string]> modes-paiement;
+    in property <[string]> produits;
+    in property <[LigneFactureUi]> lignes;
+    in property <TotauxUi> totaux;
+    in property <[EvenementUi]> historique;
+    // Renvoie le nouveau rang du client choisi dans la liste filtrée.
+    callback filtrer-clients(texte: string, rang-courant: int) -> int;
+    // Renvoie les coordonnées du client choisi.
+    callback client-choisi(rang: int) -> string;
+    callback filtrer-produits(texte: string);
+    callback ajouter-produit(rang: int);
+    callback ajouter-ligne-libre();
+    // Référence saisie sur une ligne : reprend le produit s'il existe.
+    callback reference-saisie(ligne: int);
+    callback deplacer-ligne(ligne: int, sens: int);
+    callback supprimer-ligne(ligne: int);
+    callback recalculer(remise: int, tva: int);
+    callback enregistrer(fiche: FicheFactureUi) -> Retour;
+    callback valider(fiche: FicheFactureUi) -> Retour;
+    callback marquer-envoye() -> Retour;
+    callback annuler-document() -> Retour;
+    callback supprimer() -> Retour;
+    callback enregistrer-administratif(mode: int, observations: string) -> Retour;
+}
+
+component Registre inherits VerticalLayout {
+    property <string> erreur-filtre;
+
+    function filtrer() {
+        root.erreur-filtre = FacturesApi.filtrer(recherche.text, statut.current-index, paiement.current-index, du.text, au.text);
+    }
+
+    padding: 24px;
+    spacing: 12px;
+
+    HorizontalLayout {
+        spacing: 8px;
+
+        Titre {
+            text: "Factures";
+        }
+
+        Rectangle { }
+
+        if FacturesApi.peut-creer: Button {
+            text: "Nouvelle facture";
+            primary: true;
+            clicked => {
+                FacturesApi.nouvelle();
+            }
+        }
+    }
+
+    HorizontalLayout {
+        spacing: 8px;
+
+        recherche := LineEdit {
+            placeholder-text: "Rechercher : numéro, client, libellé";
+            edited => {
+                root.filtrer();
+            }
+        }
+
+        statut := ComboBox {
+            width: 150px;
+            model: ["Tous les statuts", "Brouillon", "Validé", "Envoyé", "Annulé"];
+            selected => {
+                root.filtrer();
+            }
+        }
+
+        paiement := ComboBox {
+            width: 160px;
+            model: ["Tout paiement", "Impayé", "Partiel", "Payé"];
+            selected => {
+                root.filtrer();
+            }
+        }
+
+        du := LineEdit {
+            width: 120px;
+            placeholder-text: "Du JJ/MM/AAAA";
+            edited => {
+                root.filtrer();
+            }
+        }
+
+        au := LineEdit {
+            width: 120px;
+            placeholder-text: "Au JJ/MM/AAAA";
+            edited => {
+                root.filtrer();
+            }
+        }
+    }
+
+    if root.erreur-filtre != "": Text {
+        text: root.erreur-filtre;
+        color: Theme.erreur;
+    }
+
+    StandardTableView {
+        columns: [
+            { title: "N°", min-width: 110px, horizontal-stretch: 1 },
+            { title: "Date", min-width: 85px, horizontal-stretch: 0 },
+            { title: "Client", min-width: 130px, horizontal-stretch: 2 },
+            { title: "Libellé", min-width: 110px, horizontal-stretch: 2 },
+            { title: "Montant TTC", min-width: 100px, horizontal-stretch: 1 },
+            { title: "Statut", min-width: 80px, horizontal-stretch: 0 },
+            { title: "Paiement", min-width: 85px, horizontal-stretch: 0 },
+            { title: "Mode", min-width: 100px, horizontal-stretch: 1 },
+            { title: "Échéance", min-width: 85px, horizontal-stretch: 0 },
+        ];
+        rows: FacturesApi.registre;
+        current-row <=> FacturesApi.ligne-courante;
+        current-row-changed(ligne) => {
+            FacturesApi.selectionner(ligne);
+        }
+        sort-ascending(colonne) => {
+            FacturesApi.trier(colonne, true);
+        }
+        sort-descending(colonne) => {
+            FacturesApi.trier(colonne, false);
+        }
+    }
+
+    Text {
+        text: FacturesApi.resume + " Cliquer sur une facture pour ouvrir sa fiche.";
+        font-size: 12px;
+        color: Theme.texte-secondaire;
+    }
+
+    init => {
+        root.filtrer();
+    }
+}
+
+// Libellé et valeur alignés à droite, pour le bloc des totaux.
+component LigneTotal inherits HorizontalLayout {
+    in property <string> libelle;
+    in property <string> valeur;
+    in property <bool> fort;
+
+    spacing: 12px;
+
+    Text {
+        text: root.libelle;
+        horizontal-stretch: 1;
+        horizontal-alignment: right;
+        color: Theme.texte-secondaire;
+        font-weight: root.fort ? 700 : 400;
+    }
+
+    Text {
+        text: root.valeur;
+        width: 140px;
+        horizontal-alignment: right;
+        color: Theme.texte;
+        font-weight: root.fort ? 700 : 400;
+    }
+}
+
+component Etiquette inherits Text {
+    font-size: 12px;
+    color: Theme.texte-secondaire;
+}
+
+component PetitBouton inherits Button {
+    width: 36px;
+}
+
+component Fiche inherits ScrollView {
+    property <FicheFactureUi> fiche;
+    property <Retour> retour;
+    // 0 aucune, 1 valider, 2 annuler, 3 supprimer.
+    property <int> confirmation: 0;
+    property <int> version-chargee: -1;
+
+    function charger(f: FicheFactureUi) {
+        root.version-chargee = FacturesApi.version-fiche;
+        root.fiche = f;
+        root.confirmation = 0;
+        date.valeur = f.date;
+        echeance.valeur = f.echeance;
+        libelle.valeur = f.libelle;
+        observations.valeur = f.observations;
+        client.current-index = f.client-index;
+        remise.current-index = f.remise-index;
+        tva.current-index = f.tva-index;
+        mode.current-index = f.mode-index;
+    }
+
+    function saisie() -> FicheFactureUi {
+        {
+            existe: root.fiche.existe,
+            date: date.valeur,
+            echeance: echeance.valeur,
+            libelle: libelle.valeur,
+            observations: observations.valeur,
+            client-index: client.current-index,
+            remise-index: remise.current-index,
+            tva-index: tva.current-index,
+            mode-index: mode.current-index,
+        }
+    }
+
+    function recharger-si-besoin() {
+        if (FacturesApi.fiche-ouverte && FacturesApi.version-fiche != root.version-chargee) {
+            root.charger(FacturesApi.fiche-courante());
+        }
+    }
+
+    function recalculer() {
+        FacturesApi.recalculer(remise.current-index, tva.current-index);
+    }
+
+    init => {
+        root.charger(FacturesApi.fiche-courante());
+    }
+
+    VerticalLayout {
+        width: root.visible-width;
+        padding: 24px;
+        spacing: 14px;
+        alignment: start;
+
+        HorizontalLayout {
+            spacing: 12px;
+
+            Button {
+                text: "Retour au registre";
+                clicked => {
+                    FacturesApi.fermer-fiche();
+                }
+            }
+
+            Titre {
+                text: root.fiche.titre;
+                vertical-alignment: center;
+            }
+
+            Rectangle { }
+        }
+
+        // Bandeau : statut et état de paiement.
+        Rectangle {
+            height: 36px;
+            border-radius: 4px;
+            background: root.fiche.annule ? #fdecea : (root.fiche.brouillon ? #fff4e5 : Theme.accent-survol);
+
+            HorizontalLayout {
+                padding-left: 12px;
+                padding-right: 12px;
+                spacing: 24px;
+
+                Text {
+                    text: "Statut : " + root.fiche.statut;
+                    font-weight: 700;
+                    color: Theme.texte;
+                    vertical-alignment: center;
+                }
+
+                if root.fiche.paiement != "": Text {
+                    text: "Paiement : " + root.fiche.paiement;
+                    color: Theme.texte;
+                    vertical-alignment: center;
+                }
+
+                Rectangle { }
+
+                if root.fiche.brouillon: Text {
+                    text: "Aucun numéro tant que la facture n'est pas validée.";
+                    color: Theme.texte-secondaire;
+                    vertical-alignment: center;
+                }
+            }
+        }
+
+        // En-tête : client, dates, libellé.
+        HorizontalLayout {
+            spacing: 16px;
+
+            VerticalLayout {
+                spacing: 4px;
+                horizontal-stretch: 2;
+
+                Etiquette {
+                    text: "Client";
+                }
+
+                HorizontalLayout {
+                    spacing: 8px;
+
+                    if root.fiche.modifiable: recherche-client := LineEdit {
+                        width: 160px;
+                        placeholder-text: "Filtrer les clients";
+                        edited(texte) => {
+                            client.current-index = FacturesApi.filtrer-clients(texte, client.current-index);
+                            root.fiche.tiers-detail = FacturesApi.client-choisi(client.current-index);
+                        }
+                    }
+
+                    client := ComboBox {
+                        model: FacturesApi.clients;
+                        enabled: root.fiche.modifiable;
+                        selected => {
+                            root.fiche.tiers-detail = FacturesApi.client-choisi(self.current-index);
+                        }
+                    }
+                }
+
+                Text {
+                    text: root.fiche.tiers-detail;
+                    font-size: 12px;
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+            }
+
+            VerticalLayout {
+                horizontal-stretch: 1;
+                alignment: start;
+
+                date := Champ {
+                    libelle: "Date (JJ/MM/AAAA)";
+                    lecture-seule: !root.fiche.modifiable;
+                }
+            }
+
+            VerticalLayout {
+                horizontal-stretch: 1;
+                alignment: start;
+
+                echeance := Champ {
+                    libelle: "Échéance (facultative)";
+                    lecture-seule: !root.fiche.modifiable;
+                }
+            }
+        }
+
+        libelle := Champ {
+            libelle: "Libellé";
+            lecture-seule: !root.fiche.modifiable;
+        }
+
+        // Lignes.
+        Section {
+            text: "Lignes";
+        }
+
+        HorizontalLayout {
+            spacing: 8px;
+
+            Etiquette {
+                text: "Référence";
+                width: 120px;
+            }
+
+            Etiquette {
+                text: "Désignation";
+                horizontal-stretch: 1;
+            }
+
+            Etiquette {
+                text: "Prix unitaire";
+                width: 110px;
+            }
+
+            Etiquette {
+                text: "Quantité";
+                width: 80px;
+            }
+
+            Etiquette {
+                text: "Total";
+                width: 110px;
+                horizontal-alignment: right;
+            }
+
+            if root.fiche.modifiable: Rectangle {
+                width: 124px;
+            }
+        }
+
+        for ligne[i] in FacturesApi.lignes: HorizontalLayout {
+            spacing: 8px;
+
+            LineEdit {
+                width: 120px;
+                text <=> ligne.reference;
+                read-only: !root.fiche.modifiable;
+                accepted => {
+                    FacturesApi.reference-saisie(i);
+                    root.recalculer();
+                }
+            }
+
+            LineEdit {
+                horizontal-stretch: 1;
+                text <=> ligne.designation;
+                read-only: !root.fiche.modifiable;
+            }
+
+            LineEdit {
+                width: 110px;
+                text <=> ligne.prix;
+                read-only: !root.fiche.modifiable;
+                horizontal-alignment: right;
+                edited => {
+                    root.recalculer();
+                }
+            }
+
+            LineEdit {
+                width: 80px;
+                text <=> ligne.quantite;
+                read-only: !root.fiche.modifiable;
+                horizontal-alignment: right;
+                edited => {
+                    root.recalculer();
+                }
+            }
+
+            Text {
+                width: 110px;
+                text: ligne.total;
+                horizontal-alignment: right;
+                vertical-alignment: center;
+                color: Theme.texte;
+            }
+
+            if root.fiche.modifiable: PetitBouton {
+                text: "↑";
+                enabled: i > 0;
+                clicked => {
+                    FacturesApi.deplacer-ligne(i, -1);
+                }
+            }
+
+            if root.fiche.modifiable: PetitBouton {
+                text: "↓";
+                enabled: i < FacturesApi.lignes.length - 1;
+                clicked => {
+                    FacturesApi.deplacer-ligne(i, 1);
+                }
+            }
+
+            if root.fiche.modifiable: PetitBouton {
+                text: "×";
+                clicked => {
+                    FacturesApi.supprimer-ligne(i);
+                    root.recalculer();
+                }
+            }
+        }
+
+        if FacturesApi.lignes.length == 0: Text {
+            text: "Aucune ligne.";
+            color: Theme.texte-secondaire;
+        }
+
+        if root.fiche.modifiable: HorizontalLayout {
+            spacing: 8px;
+
+            recherche-produit := LineEdit {
+                width: 200px;
+                placeholder-text: "Filtrer les produits";
+                edited(texte) => {
+                    FacturesApi.filtrer-produits(texte);
+                    produit.current-index = 0;
+                }
+            }
+
+            produit := ComboBox {
+                horizontal-stretch: 1;
+                model: FacturesApi.produits;
+            }
+
+            Button {
+                text: "Ajouter le produit";
+                enabled: FacturesApi.produits.length > 0;
+                clicked => {
+                    FacturesApi.ajouter-produit(produit.current-index);
+                    root.recalculer();
+                }
+            }
+
+            Button {
+                text: "Ligne libre";
+                clicked => {
+                    FacturesApi.ajouter-ligne-libre();
+                }
+            }
+        }
+
+        if root.fiche.modifiable: Text {
+            text: "Le produit choisi remplit la référence, la désignation et le prix, qui restent modifiables sur la ligne. Une référence tapée puis validée par Entrée reprend le produit correspondant.";
+            font-size: 12px;
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        // Taux, paiement et totaux.
+        HorizontalLayout {
+            spacing: 24px;
+
+            VerticalLayout {
+                spacing: 10px;
+                width: 320px;
+
+                HorizontalLayout {
+                    spacing: 12px;
+
+                    VerticalLayout {
+                        spacing: 4px;
+
+                        Etiquette {
+                            text: "Remise";
+                        }
+
+                        remise := ComboBox {
+                            model: FacturesApi.taux-remise;
+                            enabled: root.fiche.modifiable;
+                            selected => {
+                                root.recalculer();
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        spacing: 4px;
+
+                        Etiquette {
+                            text: "TVA";
+                        }
+
+                        tva := ComboBox {
+                            model: FacturesApi.taux-tva;
+                            enabled: root.fiche.modifiable;
+                            selected => {
+                                root.recalculer();
+                            }
+                        }
+                    }
+                }
+
+                VerticalLayout {
+                    spacing: 4px;
+
+                    Etiquette {
+                        text: "Mode de paiement";
+                    }
+
+                    mode := ComboBox {
+                        model: FacturesApi.modes-paiement;
+                        enabled: root.fiche.modifiable || root.fiche.admin-modifiable;
+                    }
+                }
+
+                observations := Champ {
+                    libelle: "Observations";
+                    lecture-seule: !(root.fiche.modifiable || root.fiche.admin-modifiable);
+                }
+            }
+
+            VerticalLayout {
+                spacing: 6px;
+                horizontal-stretch: 1;
+
+                LigneTotal {
+                    libelle: "Montant HT";
+                    valeur: FacturesApi.totaux.ht;
+                }
+
+                LigneTotal {
+                    libelle: "Remise";
+                    valeur: FacturesApi.totaux.remise;
+                }
+
+                LigneTotal {
+                    libelle: "Base TVA";
+                    valeur: FacturesApi.totaux.base-tva;
+                }
+
+                LigneTotal {
+                    libelle: "TVA";
+                    valeur: FacturesApi.totaux.tva;
+                }
+
+                LigneTotal {
+                    libelle: "Montant TTC";
+                    valeur: FacturesApi.totaux.ttc;
+                    fort: true;
+                }
+
+                Text {
+                    text: FacturesApi.totaux.lettres;
+                    horizontal-alignment: right;
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+            }
+        }
+
+        // Actions selon le statut.
+        HorizontalLayout {
+            spacing: 8px;
+            alignment: start;
+
+            if root.fiche.modifiable: Button {
+                text: "Enregistrer le brouillon";
+                primary: !root.fiche.peut-valider;
+                clicked => {
+                    root.confirmation = 0;
+                    root.retour = FacturesApi.enregistrer(root.saisie());
+                    root.recharger-si-besoin();
+                }
+            }
+
+            if root.fiche.peut-valider: Button {
+                text: "Valider";
+                primary: true;
+                clicked => {
+                    root.retour = { };
+                    root.confirmation = 1;
+                }
+            }
+
+            if root.fiche.admin-modifiable: Button {
+                text: "Enregistrer le mode et les observations";
+                clicked => {
+                    root.confirmation = 0;
+                    root.retour = FacturesApi.enregistrer-administratif(mode.current-index, observations.valeur);
+                    root.recharger-si-besoin();
+                }
+            }
+
+            if root.fiche.peut-envoyer: Button {
+                text: "Marquer envoyée";
+                clicked => {
+                    root.confirmation = 0;
+                    root.retour = FacturesApi.marquer-envoye();
+                    root.recharger-si-besoin();
+                }
+            }
+
+            if root.fiche.peut-annuler: Button {
+                text: "Annuler la facture";
+                clicked => {
+                    root.retour = { };
+                    root.confirmation = 2;
+                }
+            }
+
+            if root.fiche.peut-supprimer: Button {
+                text: "Supprimer le brouillon";
+                clicked => {
+                    root.retour = { };
+                    root.confirmation = 3;
+                }
+            }
+        }
+
+        if root.confirmation != 0: VerticalLayout {
+            spacing: 8px;
+
+            Text {
+                text: root.confirmation == 1 ? "Valider cette facture ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés." : (root.confirmation == 2 ? "Annuler cette facture ? Elle reste dans le registre avec son numéro, en lecture seule." : "Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit.");
+                color: Theme.texte;
+                wrap: word-wrap;
+            }
+
+            HorizontalLayout {
+                spacing: 8px;
+                alignment: start;
+
+                Button {
+                    text: root.confirmation == 1 ? "Confirmer la validation" : (root.confirmation == 2 ? "Confirmer l'annulation" : "Confirmer la suppression");
+                    primary: true;
+                    clicked => {
+                        if (root.confirmation == 1) {
+                            root.retour = FacturesApi.valider(root.saisie());
+                        } else if (root.confirmation == 2) {
+                            root.retour = FacturesApi.annuler-document();
+                        } else {
+                            root.retour = FacturesApi.supprimer();
+                        }
+                        root.confirmation = 0;
+                        root.recharger-si-besoin();
+                    }
+                }
+
+                Button {
+                    text: "Revenir";
+                    clicked => {
+                        root.confirmation = 0;
+                    }
+                }
+            }
+        }
+
+        if root.retour.message != "": MessageRetour {
+            retour: root.retour;
+        }
+
+        if !root.fiche.modifiable && !root.fiche.admin-modifiable && !root.fiche.annule: Text {
+            text: root.fiche.brouillon ? "Lecture seule : votre rôle ne permet pas de modifier une facture." : "Facture validée : lignes et montants figés.";
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        if root.fiche.annule: Text {
+            text: "Facture annulée : lecture seule, numéro conservé.";
+            color: Theme.texte-secondaire;
+        }
+
+        // Historique des changements de statut.
+        if FacturesApi.historique.length > 0: Section {
+            text: "Historique";
+        }
+
+        for evenement in FacturesApi.historique: HorizontalLayout {
+            spacing: 12px;
+
+            Text {
+                text: evenement.date;
+                width: 140px;
+                color: Theme.texte-secondaire;
+            }
+
+            Text {
+                text: evenement.libelle;
+                horizontal-stretch: 1;
+                color: Theme.texte;
+            }
+
+            Text {
+                text: evenement.utilisateur;
+                width: 200px;
+                color: Theme.texte-secondaire;
+            }
+        }
+    }
+}
+
+export component PageFactures inherits Rectangle {
+    init => {
+        FacturesApi.ouvrir();
+    }
+
+    if !FacturesApi.fiche-ouverte: Registre { }
+
+    if FacturesApi.fiche-ouverte: Fiche { }
+}

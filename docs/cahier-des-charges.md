@@ -9,6 +9,7 @@
 | 2.3 | 2026-11-09 | Règles PDF multi-pages validées (en-têtes et pieds répétés, report, filigranes, deux logos, export des registres), arrondi et quantités fractionnaires tranchés, orthographe du montant en lettres par réglage, ordre des jalons J1 à J10 validé |
 | 2.4 | 2026-11-09 | Jalon J2 : logos de l'entreprise stockés dans la base, matrice des droits modifiable, import CSV/Excel détaillé (section 6.8), crate `kadenz-import`, feuille de route J1 à J10 reportée en section 19, question des délais par défaut ajoutée |
 | 2.5 | 2026-11-09 | Questions 3 (orthographe rectifiée par défaut), 10 (délais vides par défaut) et 11 (import dans l'assistant reporté) tranchées |
+| 2.6 | 2026-11-09 | Jalon J3 : périmètre livré et reports (section 19), droits des actions que la matrice ne nommait pas (section 10.1), conditions de validation (section 7.2), question 12 sur le réglage de la numérotation |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -225,6 +226,7 @@ L'état de paiement (Facture et Bon de commande) est un axe séparé du statut d
 
 - **Brouillon** : entièrement modifiable (tiers, lignes, quantités, remise, TVA, retenue). Recalcul des totaux à chaque changement. Aucun numéro attribué.
 - **Validé** : le numéro est attribué à ce moment précis, jamais avant, pour éviter les trous de séquence dus aux brouillons abandonnés. Lignes et montants figés. Seuls les champs administratifs restent modifiables (mode de paiement, observations).
+- **Conditions de validation** : un tiers choisi et au moins une ligne ; chaque ligne a une désignation, un prix entier positif ou nul et une quantité positive. Les totaux sont recalculés dans la transaction de validation, et le snapshot du tiers est repris une dernière fois de sa fiche avant d'être figé.
 - **Envoyé** : comme Validé, avec horodatage de la date d'envoi.
 - **Correction d'un document Validé ou Envoyé** : jamais d'édition directe des lignes ou montants.
   - Pour une Facture : émission d'un avoir lié (nouveau document référençant l'original), conformément aux usages comptables.
@@ -312,6 +314,8 @@ Quatre rôles livrés par défaut avec la matrice ci-dessous. L'Admin peut modif
 | Gérer les utilisateurs et droits | oui | non | non | non |
 | Consulter tableau de bord / registres | oui | oui | oui | oui |
 | Sauvegarder / exporter la base | oui | non | non | non |
+
+Actions que la matrice ne nomme pas (choix du 2026-11-09, jalon J3) : supprimer ou annuler un brouillon et modifier les champs administratifs d'un document validé (mode de paiement, observations) suivent le droit de brouillon du type de document ; marquer un document envoyé suit « Valider un document ».
 
 ### 10.2 Comptes
 Mots de passe stockés hachés avec Argon2id (jamais en clair). Le premier compte Admin est créé par l'assistant de premier lancement. L'Admin crée et désactive les comptes et réinitialise les mots de passe.
@@ -428,6 +432,7 @@ Choix technique (à l'étude) : c'est la partie la plus délicate en Rust pur (m
 9. **Écrans non vus** : aucune capture des formulaires Devis et Proforma ni des listes Factures, Livraisons, Proforma et Devis ; leur contenu est supposé identique à la Facture et à la liste des bons de commande.
 10. **Délais par défaut** : tranchée le 2026-11-09, la durée de validité des devis et le délai de paiement des factures restent vides par défaut (réglages de la section 5.4) ; aucune date d'échéance n'est calculée tant que l'entreprise ne les renseigne pas.
 11. **Import dans l'assistant** : tranchée le 2026-11-09, l'étape d'import des tiers et des produits dans l'assistant de premier lancement est reportée ; l'import reste disponible depuis les écrans Tiers et Produits.
+12. **Réglage de la numérotation** : la section 5.4 prévoit un préfixe par type, une remise à zéro mensuelle ou annuelle et un nombre de chiffres réglables, mais ne dit pas à quoi ressemble un numéro à compteur annuel (le format `{Préfixe}{AAAA}-{MM}-{####}` contient le mois). En attendant la décision, la numérotation suit le format par défaut de la section 6.1, sans réglage.
 
 ---
 
@@ -445,3 +450,5 @@ Choix technique (à l'étude) : c'est la partie la plus délicate en Rust pur (m
 | J8 | Tableau de bord, ventes et achats |
 | J9 | Licence : outil éditeur, vérification, activation des modules |
 | J10 | Installateur, mises à jour, export Excel |
+
+**Périmètre de J3 (Factures).** Livré : registre filtrable (numéro, client, libellé, statut, état de paiement, période) et triable ; fiche avec client choisi dans une liste filtrable, date, échéance, libellé, lignes produit ou libres modifiables, réordonnées et supprimées, totaux et montant en lettres en direct ; enregistrement du brouillon, validation numérotée, marquage envoyé, annulation, suppression du brouillon, mode de paiement et observations après validation ; historique des changements de statut ; fiche en lecture seule pour les rôles sans droit. Reporté : PDF (J4) ; avoir et duplication (J5) ; bordereau depuis une facture (J6) ; règlements (J7, l'état de paiement est déjà calculé) ; export Excel (J10) ; création rapide d'un tiers depuis la fiche et raccourcis clavier (avec la fiche commune à tous les documents, J5) ; réglage de la numérotation (question 12).

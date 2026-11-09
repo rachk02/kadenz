@@ -813,6 +813,22 @@ pub fn historique(conn: &Connection, id: i64) -> Resultat<Vec<Evenement>> {
         .collect())
 }
 
+/// État de paiement d'un document : seulement pour un type qui reçoit des
+/// règlements, une fois Validé ou Envoyé (section 8).
+pub fn etat_paiement_de(conn: &Connection, d: &Document) -> Resultat<Option<EtatPaiement>> {
+    if !d.type_document.recoit_des_reglements()
+        || !matches!(d.statut, Statut::Valide | Statut::Envoye)
+    {
+        return Ok(None);
+    }
+    let regle: Montant = conn.query_row(
+        "SELECT COALESCE(SUM(montant), 0) FROM reglement WHERE document_id = ?1",
+        [d.id],
+        |r| r.get(0),
+    )?;
+    Ok(Some(etat_paiement(d.totaux.ttc, regle)))
+}
+
 /// Date d'échéance proposée : date du document plus le délai de paiement réglé,
 /// rien si aucun délai n'est réglé (question 10 du cahier).
 pub fn echeance_par_defaut(date: NaiveDate, delai_jours: Option<u32>) -> Option<NaiveDate> {

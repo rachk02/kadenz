@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod administration;
+mod factures;
 mod import_ecran;
 mod referentiels;
 mod utilisateurs;
@@ -60,6 +61,8 @@ struct Etat {
     tiers: Vue<Tiers, FiltreTiers>,
     produits: Vue<Produit, FiltreProduits>,
     comptes: Vue<Utilisateur, ()>,
+    factures: factures::Registre,
+    facture: Option<factures::EditionFacture>,
 }
 
 impl Etat {
@@ -70,6 +73,8 @@ impl Etat {
             tiers: Vue::default(),
             produits: Vue::default(),
             comptes: Vue::default(),
+            factures: factures::Registre::default(),
+            facture: None,
         }
     }
 }
@@ -238,6 +243,8 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
         etat.tiers = Vue::default();
         etat.produits = Vue::default();
         etat.comptes = Vue::default();
+        etat.factures = factures::Registre::default();
+        etat.facture = None;
         if let Some(f) = f.upgrade() {
             f.set_page(Page::TableauDeBord);
             appliquer_droits(&f, &etat);
@@ -252,6 +259,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     administration::brancher(fenetre, &etat);
     utilisateurs::brancher(fenetre, &etat);
     import_ecran::brancher(fenetre, &etat);
+    factures::brancher(fenetre, &etat);
 
     let e = etat;
     fenetre.on_changer_mot_de_passe(move |ancien, nouveau, confirmation| {
