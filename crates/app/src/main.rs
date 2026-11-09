@@ -1,18 +1,26 @@
 // En version optimisée, pas de console Windows derrière la fenêtre.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod referentiels;
+
 use std::cell::RefCell;
 use std::path::PathBuf;
 use std::rc::Rc;
 
 use kadenz_domaine::lettres::Orthographe;
+use kadenz_domaine::role::Droit;
 use kadenz_domaine::saisie;
 use kadenz_stockage::Connexion;
 use kadenz_stockage::comptes::{self, EtatInstallation, NouvelUtilisateur, Utilisateur};
+use kadenz_stockage::droits;
 use kadenz_stockage::entreprise::{self, Entreprise};
 use kadenz_stockage::installation::{self, InstallationInitiale};
 use kadenz_stockage::parametres::Parametres;
-use slint::SharedString;
+use kadenz_stockage::produits::{FiltreProduits, Produit};
+use kadenz_stockage::tiers::{FiltreTiers, Tiers};
+use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
+
+use crate::referentiels::Vue;
 
 slint::include_modules!();
 
@@ -46,15 +54,77 @@ fn phrase(message: impl std::fmt::Display) -> SharedString {
 struct Etat {
     conn: Connexion,
     utilisateur: Option<Utilisateur>,
+    tiers: Vue<Tiers, FiltreTiers>,
+    produits: Vue<Produit, FiltreProduits>,
+}
+
+impl Etat {
+    fn nouveau(conn: Connexion) -> Self {
+        Etat {
+            conn,
+            utilisateur: None,
+            tiers: Vue::default(),
+            produits: Vue::default(),
+        }
+    }
 }
 
 type EtatPartage = Rc<RefCell<Etat>>;
+
+/// Droits du compte connecté et menu correspondant, relus depuis la matrice
+/// à chaque connexion (la matrice est modifiable par l'Admin).
+fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
+    let possede = |droit| match &etat.utilisateur {
+        Some(u) => droits::possede(&etat.conn, u, droit).unwrap_or(false),
+        None => false,
+    };
+    let d = fenetre.global::<Droits>();
+    d.set_ajouter_referentiel(possede(Droit::AjouterReferentiel));
+    d.set_modifier_referentiel(possede(Droit::ModifierReferentiel));
+    d.set_gerer_parametres(possede(Droit::GererParametres));
+    d.set_gerer_utilisateurs(possede(Droit::GererUtilisateurs));
+
+    let mut menu = Vec::new();
+    let mut ajouter = |page, libelle: &str| {
+        menu.push(ElementMenu {
+            page,
+            libelle: libelle.into(),
+        })
+    };
+    if possede(Droit::Consulter) {
+        ajouter(Page::TableauDeBord, "Tableau de bord");
+        ajouter(Page::Devis, "Devis");
+        ajouter(Page::Proforma, "Proforma");
+        ajouter(Page::BonsCommande, "Bons de commande");
+        ajouter(Page::Livraisons, "Livraisons");
+        ajouter(Page::Factures, "Factures");
+        ajouter(Page::Tiers, "Tiers");
+        ajouter(Page::Produits, "Produits");
+    }
+    if possede(Droit::GererParametres) {
+        ajouter(Page::Entreprise, "Entreprise");
+        ajouter(Page::Parametres, "Paramètres");
+    }
+    if possede(Droit::GererUtilisateurs) {
+        ajouter(Page::Utilisateurs, "Utilisateurs");
+    }
+    if etat.utilisateur.is_some() {
+        ajouter(Page::MonCompte, "Mon compte");
+    }
+    ajouter(Page::APropos, "À propos");
+
+    let premier = menu[0].clone();
+    fenetre.set_page(premier.page);
+    fenetre.set_titre_page(premier.libelle);
+    fenetre.set_menu(ModelRc::new(VecModel::from(menu)));
+}
 
 fn afficher_session(fenetre: &FenetrePrincipale, etat: &Etat) {
     if let Some(u) = &etat.utilisateur {
         fenetre.set_utilisateur_nom(u.nom_complet.as_str().into());
         fenetre.set_utilisateur_identifiant(u.identifiant.as_str().into());
         fenetre.set_utilisateur_role(u.role.to_string().into());
+        appliquer_droits(fenetre, etat);
         fenetre.set_ecran(Ecran::Application);
     }
     if let Ok(Some(e)) = entreprise::lire(&etat.conn) {
@@ -152,14 +222,20 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
     fenetre.on_deconnecter(move || {
-        e.borrow_mut().utilisateur = None;
+        let mut etat = e.borrow_mut();
+        etat.utilisateur = None;
+        etat.tiers = Vue::default();
+        etat.produits = Vue::default();
         if let Some(f) = f.upgrade() {
+            appliquer_droits(&f, &etat);
             f.set_utilisateur_nom(SharedString::new());
             f.set_utilisateur_identifiant(SharedString::new());
             f.set_utilisateur_role(SharedString::new());
             f.set_ecran(Ecran::Connexion);
         }
     });
+
+    referentiels::brancher(fenetre, &etat);
 
     let e = etat;
     fenetre.on_changer_mot_de_passe(move |ancien, nouveau, confirmation| {
@@ -196,10 +272,7 @@ fn main() -> Result<(), slint::PlatformError> {
                 )
                 .into(),
             );
-            let etat = Rc::new(RefCell::new(Etat {
-                conn,
-                utilisateur: None,
-            }));
+            let etat = Rc::new(RefCell::new(Etat::nouveau(conn)));
             afficher_session(&fenetre, &etat.borrow());
             fenetre.set_ecran(match ecran {
                 EtatInstallation::AssistantRequis => Ecran::Assistant,

@@ -1,12 +1,35 @@
 import { AboutSlint, Button } from "std-widgets.slint";
-import { Champ, Titre, MessageErreur, ElementNavigation, Theme } from "composants.slint";
+import { Champ, Droits, Titre, MessageErreur, ElementNavigation, Theme } from "composants.slint";
 import { EcranAssistant, DonneesAssistant } from "assistant.slint";
 import { EcranConnexion } from "connexion.slint";
+import { PageProduits, PageTiers, ProduitsApi, TiersApi } from "referentiels.slint";
 
-export { DonneesAssistant }
+export { DonneesAssistant, Droits, ProduitsApi, TiersApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, assistant, connexion, application }
+
+// Pages de l'application ; le menu n'affiche que celles que les droits du compte ouvrent.
+export enum Page {
+    tableau-de-bord,
+    devis,
+    proforma,
+    bons-commande,
+    livraisons,
+    factures,
+    tiers,
+    produits,
+    entreprise,
+    parametres,
+    utilisateurs,
+    mon-compte,
+    a-propos,
+}
+
+export struct ElementMenu {
+    page: Page,
+    libelle: string,
+}
 
 component PageMonCompte inherits VerticalLayout {
     in property <string> utilisateur-nom;
@@ -112,23 +135,13 @@ export component FenetrePrincipale inherits Window {
     callback deconnecter();
     callback changer-mot-de-passe(string, string, string) -> string;
 
-    in-out property <int> page: 0;
+    // Construit par l'application à chaque connexion. « À propos » y figure toujours :
+    // il porte l'attribution exigée par la licence Slint Royalty-free 2.0 (cahier, section 14).
+    in property <[ElementMenu]> menu;
+    in-out property <Page> page: Page.tableau-de-bord;
+    in-out property <string> titre-page: "Tableau de bord";
 
-    // Les deux derniers éléments sont « Mon compte » et « À propos » ; ce dernier porte
-    // l'attribution exigée par la licence Slint Royalty-free 2.0 (cahier, section 14).
-    property <[string]> pages: [
-        "Tableau de bord",
-        "Devis",
-        "Proforma",
-        "Bons de commande",
-        "Livraisons",
-        "Factures",
-        "Paramètres",
-        "Mon compte",
-        "À propos",
-    ];
-    property <int> page-compte: 7;
-    property <int> page-a-propos: 8;
+    property <bool> page-en-construction: root.page != Page.tiers && root.page != Page.produits && root.page != Page.mon-compte && root.page != Page.a-propos;
 
     title: root.nom-entreprise == "" ? "Kadenz" : root.nom-entreprise;
     preferred-width: 1200px;
@@ -191,11 +204,12 @@ export component FenetrePrincipale inherits Window {
                     height: 8px;
                 }
 
-                for nom[i] in root.pages: ElementNavigation {
-                    libelle: nom;
-                    actif: root.page == i;
+                for element in root.menu: ElementNavigation {
+                    libelle: element.libelle;
+                    actif: root.page == element.page;
                     clique => {
-                        root.page = i;
+                        root.page = element.page;
+                        root.titre-page = element.libelle;
                     }
                 }
 
@@ -211,7 +225,6 @@ export component FenetrePrincipale inherits Window {
                 Button {
                     text: "Se déconnecter";
                     clicked => {
-                        root.page = 0;
                         root.deconnecter();
                     }
                 }
@@ -226,12 +239,12 @@ export component FenetrePrincipale inherits Window {
         }
 
         Rectangle {
-            if root.page < root.page-compte: VerticalLayout {
+            if root.page-en-construction: VerticalLayout {
                 padding: 24px;
                 spacing: 12px;
 
                 Titre {
-                    text: root.pages[root.page];
+                    text: root.titre-page;
                 }
 
                 Text {
@@ -242,7 +255,11 @@ export component FenetrePrincipale inherits Window {
                 Rectangle { }
             }
 
-            if root.page == root.page-compte: PageMonCompte {
+            if root.page == Page.tiers: PageTiers { }
+
+            if root.page == Page.produits: PageProduits { }
+
+            if root.page == Page.mon-compte: PageMonCompte {
                 utilisateur-nom: root.utilisateur-nom;
                 utilisateur-identifiant: root.utilisateur-identifiant;
                 utilisateur-role: root.utilisateur-role;
@@ -251,7 +268,7 @@ export component FenetrePrincipale inherits Window {
                 }
             }
 
-            if root.page == root.page-a-propos: VerticalLayout {
+            if root.page == Page.a-propos: VerticalLayout {
                 padding: 24px;
                 spacing: 12px;
 

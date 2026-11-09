@@ -15,7 +15,9 @@ export global Theme {
 export component Champ inherits VerticalLayout {
     in property <string> libelle;
     in property <bool> secret: false;
+    in property <bool> lecture-seule: false;
     in-out property <string> valeur <=> saisie.text;
+    callback modifie(string);
     callback valide();
 
     spacing: 4px;
@@ -28,10 +30,44 @@ export component Champ inherits VerticalLayout {
 
     saisie := LineEdit {
         input-type: root.secret ? InputType.password : InputType.text;
+        read-only: root.lecture-seule;
+        edited(texte) => {
+            root.modifie(texte);
+        }
         accepted => {
             root.valide();
         }
     }
+}
+
+// Résultat d'une action, renvoyé par l'application : message vide si rien à dire.
+export struct Retour {
+    ok: bool,
+    message: string,
+}
+
+// Message de résultat, vert en cas de succès, rouge sinon.
+export component MessageRetour inherits Text {
+    in property <Retour> retour;
+    text: root.retour.message;
+    color: root.retour.ok ? Theme.succes : Theme.erreur;
+    wrap: word-wrap;
+    visible: root.retour.message != "";
+}
+
+// Droits du compte connecté, recalculés à chaque connexion depuis la matrice.
+export global Droits {
+    in property <bool> ajouter-referentiel;
+    in property <bool> modifier-referentiel;
+    in property <bool> gerer-parametres;
+    in property <bool> gerer-utilisateurs;
+}
+
+// Libellé de section dans un panneau.
+export component Section inherits Text {
+    font-size: 15px;
+    font-weight: 700;
+    color: Theme.texte;
 }
 
 export component Titre inherits Text {

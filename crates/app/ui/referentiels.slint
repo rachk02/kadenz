@@ -1,0 +1,554 @@
+// Écrans des référentiels Tiers et Produits (cahier des charges, sections 5.2 et 5.3).
+// Une liste filtrable et triable à gauche, la fiche sélectionnée à droite.
+
+import { Button, CheckBox, ComboBox, LineEdit, StandardTableView } from "std-widgets.slint";
+import { Champ, Droits, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+
+// Fiche telle que l'écran la manipule ; `existe` est faux pour une nouvelle fiche.
+export struct FicheTiersUi {
+    nom: string,
+    adresse: string,
+    telephone: string,
+    localisation: string,
+    ifu: string,
+    rccm: string,
+    regime: string,
+    // Rang dans « Client, Fournisseur, Client et fournisseur ».
+    type-tiers: int,
+    actif: bool,
+    existe: bool,
+}
+
+export struct FicheProduitUi {
+    designation: string,
+    reference: string,
+    prix: string,
+    // Rang dans « Vente, Achat, Vente et achat ».
+    sens: int,
+    actif: bool,
+    existe: bool,
+}
+
+// Données et actions de l'écran Tiers, fournies par l'application.
+export global TiersApi {
+    in property <[[StandardListViewItem]]> lignes;
+    in property <string> resume;
+    in-out property <int> ligne-courante: -1;
+    callback ouvrir();
+    // Type : 0 tous, 1 clients, 2 fournisseurs, 3 les deux seulement.
+    callback filtrer(texte: string, type-tiers: int, inactifs: bool);
+    callback trier(colonne: int, croissant: bool);
+    callback selectionner(ligne: int) -> FicheTiersUi;
+    callback nouvelle() -> FicheTiersUi;
+    callback fiche-courante() -> FicheTiersUi;
+    callback enregistrer(fiche: FicheTiersUi) -> Retour;
+    callback retirer() -> Retour;
+    callback reactiver() -> Retour;
+}
+
+export global ProduitsApi {
+    in property <[[StandardListViewItem]]> lignes;
+    in property <string> resume;
+    in-out property <int> ligne-courante: -1;
+    callback ouvrir();
+    // Sens : 0 tous, 1 vente, 2 achat, 3 les deux seulement.
+    callback filtrer(texte: string, sens: int, inactifs: bool);
+    callback trier(colonne: int, croissant: bool);
+    callback selectionner(ligne: int) -> FicheProduitUi;
+    callback nouvelle() -> FicheProduitUi;
+    callback fiche-courante() -> FicheProduitUi;
+    callback enregistrer(fiche: FicheProduitUi) -> Retour;
+    callback retirer() -> Retour;
+    callback reactiver() -> Retour;
+}
+
+// Boutons communs du bas de fiche : enregistrer, retirer (avec confirmation), réactiver.
+component ActionsFiche inherits VerticalLayout {
+    in property <bool> existe;
+    in property <bool> actif;
+    in property <bool> modifiable;
+    in property <bool> peut-retirer;
+    callback enregistrer();
+    callback retirer();
+    callback reactiver();
+
+    property <bool> confirmer: false;
+
+    spacing: 8px;
+    vertical-stretch: 0;
+
+    HorizontalLayout {
+        spacing: 8px;
+        alignment: start;
+
+        if root.modifiable: Button {
+            text: root.existe ? "Enregistrer" : "Ajouter";
+            primary: true;
+            clicked => {
+                root.confirmer = false;
+                root.enregistrer();
+            }
+        }
+
+        if root.existe && root.actif && root.peut-retirer && !root.confirmer: Button {
+            text: "Retirer";
+            clicked => {
+                root.confirmer = true;
+            }
+        }
+
+        if root.existe && !root.actif && root.peut-retirer: Button {
+            text: "Réactiver";
+            clicked => {
+                root.reactiver();
+            }
+        }
+    }
+
+    if root.existe && !root.modifiable: Text {
+        text: "Lecture seule : votre rôle ne permet pas de modifier une fiche existante.";
+        color: Theme.texte-secondaire;
+        wrap: word-wrap;
+    }
+
+    if root.confirmer: VerticalLayout {
+        spacing: 8px;
+
+        Text {
+            text: "Retirer cette fiche ? Elle est supprimée si aucun document ne la cite, sinon seulement désactivée.";
+            wrap: word-wrap;
+            color: Theme.texte;
+        }
+
+        HorizontalLayout {
+            spacing: 8px;
+            alignment: start;
+
+            Button {
+                text: "Confirmer le retrait";
+                clicked => {
+                    root.confirmer = false;
+                    root.retirer();
+                }
+            }
+
+            Button {
+                text: "Garder";
+                clicked => {
+                    root.confirmer = false;
+                }
+            }
+        }
+    }
+}
+
+export component PageTiers inherits VerticalLayout {
+    property <FicheTiersUi> fiche;
+    property <Retour> retour;
+    property <bool> modifiable: root.fiche.existe ? Droits.modifier-referentiel : Droits.ajouter-referentiel;
+
+    function charger(f: FicheTiersUi) {
+        root.fiche = f;
+        nom.valeur = f.nom;
+        adresse.valeur = f.adresse;
+        telephone.valeur = f.telephone;
+        localisation.valeur = f.localisation;
+        ifu.valeur = f.ifu;
+        rccm.valeur = f.rccm;
+        regime.valeur = f.regime;
+        type-tiers.current-index = f.type-tiers;
+    }
+
+    function saisie() -> FicheTiersUi {
+        {
+            nom: nom.valeur,
+            adresse: adresse.valeur,
+            telephone: telephone.valeur,
+            localisation: localisation.valeur,
+            ifu: ifu.valeur,
+            rccm: rccm.valeur,
+            regime: regime.valeur,
+            type-tiers: type-tiers.current-index,
+            actif: root.fiche.actif,
+            existe: root.fiche.existe,
+        }
+    }
+
+    function filtrer() {
+        TiersApi.filtrer(recherche.text, filtre-type.current-index, inactifs.checked);
+    }
+
+    init => {
+        TiersApi.ouvrir();
+        root.charger(TiersApi.nouvelle());
+    }
+
+    padding: 24px;
+    spacing: 12px;
+
+    Titre {
+        text: "Tiers";
+    }
+
+    HorizontalLayout {
+        spacing: 8px;
+
+        recherche := LineEdit {
+            placeholder-text: "Rechercher : nom, téléphone, localisation, adresse, IFU";
+            edited => {
+                root.filtrer();
+            }
+        }
+
+        filtre-type := ComboBox {
+            width: 200px;
+            model: ["Tous les tiers", "Clients", "Fournisseurs", "Clients et fournisseurs"];
+            selected => {
+                root.filtrer();
+            }
+        }
+
+        inactifs := CheckBox {
+            text: "Fiches désactivées";
+            toggled => {
+                root.filtrer();
+            }
+        }
+
+        if Droits.ajouter-referentiel: Button {
+            text: "Nouveau tiers";
+            clicked => {
+                root.retour = { };
+                root.charger(TiersApi.nouvelle());
+            }
+        }
+    }
+
+    HorizontalLayout {
+        spacing: 16px;
+
+        VerticalLayout {
+            spacing: 4px;
+
+            StandardTableView {
+                columns: [
+                    { title: "Nom", min-width: 160px, horizontal-stretch: 3 },
+                    { title: "Type", min-width: 100px, horizontal-stretch: 1 },
+                    { title: "Téléphone", min-width: 100px, horizontal-stretch: 1 },
+                    { title: "Localisation", min-width: 110px, horizontal-stretch: 1 },
+                    { title: "IFU", min-width: 90px, horizontal-stretch: 1 },
+                    { title: "État", min-width: 90px, horizontal-stretch: 1 },
+                ];
+                rows: TiersApi.lignes;
+                current-row <=> TiersApi.ligne-courante;
+                current-row-changed(ligne) => {
+                    root.retour = { };
+                    root.charger(TiersApi.selectionner(ligne));
+                }
+                sort-ascending(colonne) => {
+                    TiersApi.trier(colonne, true);
+                }
+                sort-descending(colonne) => {
+                    TiersApi.trier(colonne, false);
+                }
+            }
+
+            Text {
+                text: TiersApi.resume;
+                font-size: 12px;
+                color: Theme.texte-secondaire;
+            }
+        }
+
+        VerticalLayout {
+            width: 360px;
+            spacing: 10px;
+
+            Section {
+                text: root.fiche.existe ? (root.fiche.actif ? "Fiche du tiers" : "Fiche du tiers (désactivée)") : (Droits.ajouter-referentiel ? "Nouveau tiers" : "Fiche du tiers");
+            }
+
+            nom := Champ {
+                libelle: "Nom";
+                lecture-seule: !root.modifiable;
+            }
+
+            adresse := Champ {
+                libelle: "Adresse ou boîte postale";
+                lecture-seule: !root.modifiable;
+            }
+
+            GridLayout {
+                spacing: 10px;
+
+                Row {
+                    telephone := Champ {
+                        libelle: "Téléphone";
+                        lecture-seule: !root.modifiable;
+                    }
+
+                    localisation := Champ {
+                        libelle: "Localisation";
+                        lecture-seule: !root.modifiable;
+                    }
+                }
+
+                Row {
+                    ifu := Champ {
+                        libelle: "IFU";
+                        lecture-seule: !root.modifiable;
+                    }
+
+                    rccm := Champ {
+                        libelle: "RCCM";
+                        lecture-seule: !root.modifiable;
+                    }
+                }
+
+                Row {
+                    regime := Champ {
+                        libelle: "Régime d'imposition";
+                        lecture-seule: !root.modifiable;
+                    }
+
+                    VerticalLayout {
+                        spacing: 4px;
+
+                        Text {
+                            text: "Type";
+                            font-size: 12px;
+                            color: Theme.texte-secondaire;
+                        }
+
+                        type-tiers := ComboBox {
+                            model: ["Client", "Fournisseur", "Client et fournisseur"];
+                            enabled: root.modifiable;
+                        }
+                    }
+                }
+            }
+
+            ActionsFiche {
+                existe: root.fiche.existe;
+                actif: root.fiche.actif;
+                modifiable: root.modifiable;
+                peut-retirer: Droits.modifier-referentiel;
+                enregistrer => {
+                    root.retour = TiersApi.enregistrer(root.saisie());
+                    if (root.retour.ok) {
+                        root.charger(TiersApi.fiche-courante());
+                    }
+                }
+                retirer => {
+                    root.retour = TiersApi.retirer();
+                    root.charger(TiersApi.fiche-courante());
+                }
+                reactiver => {
+                    root.retour = TiersApi.reactiver();
+                    root.charger(TiersApi.fiche-courante());
+                }
+            }
+
+            MessageRetour {
+                retour: root.retour;
+            }
+
+            if !root.fiche.existe && !Droits.ajouter-referentiel: Text {
+                text: "Sélectionner un tiers dans la liste pour afficher sa fiche.";
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+
+            Rectangle { }
+        }
+    }
+}
+
+export component PageProduits inherits VerticalLayout {
+    property <FicheProduitUi> fiche;
+    property <Retour> retour;
+    property <bool> modifiable: root.fiche.existe ? Droits.modifier-referentiel : Droits.ajouter-referentiel;
+
+    function charger(f: FicheProduitUi) {
+        root.fiche = f;
+        designation.valeur = f.designation;
+        reference.valeur = f.reference;
+        prix.valeur = f.prix;
+        sens.current-index = f.sens;
+    }
+
+    function saisie() -> FicheProduitUi {
+        {
+            designation: designation.valeur,
+            reference: reference.valeur,
+            prix: prix.valeur,
+            sens: sens.current-index,
+            actif: root.fiche.actif,
+            existe: root.fiche.existe,
+        }
+    }
+
+    function filtrer() {
+        ProduitsApi.filtrer(recherche.text, filtre-sens.current-index, inactifs.checked);
+    }
+
+    init => {
+        ProduitsApi.ouvrir();
+        root.charger(ProduitsApi.nouvelle());
+    }
+
+    padding: 24px;
+    spacing: 12px;
+
+    Titre {
+        text: "Produits et services";
+    }
+
+    HorizontalLayout {
+        spacing: 8px;
+
+        recherche := LineEdit {
+            placeholder-text: "Rechercher : désignation ou référence";
+            edited => {
+                root.filtrer();
+            }
+        }
+
+        filtre-sens := ComboBox {
+            width: 200px;
+            model: ["Tous les produits", "Vente", "Achat", "Vente et achat"];
+            selected => {
+                root.filtrer();
+            }
+        }
+
+        inactifs := CheckBox {
+            text: "Fiches désactivées";
+            toggled => {
+                root.filtrer();
+            }
+        }
+
+        if Droits.ajouter-referentiel: Button {
+            text: "Nouveau produit";
+            clicked => {
+                root.retour = { };
+                root.charger(ProduitsApi.nouvelle());
+            }
+        }
+    }
+
+    HorizontalLayout {
+        spacing: 16px;
+
+        VerticalLayout {
+            spacing: 4px;
+
+            StandardTableView {
+                columns: [
+                    { title: "Référence", min-width: 110px, horizontal-stretch: 1 },
+                    { title: "Désignation", min-width: 180px, horizontal-stretch: 3 },
+                    { title: "Prix (FCFA)", min-width: 110px, horizontal-stretch: 1 },
+                    { title: "Sens", min-width: 120px, horizontal-stretch: 1 },
+                    { title: "État", min-width: 90px, horizontal-stretch: 1 },
+                ];
+                rows: ProduitsApi.lignes;
+                current-row <=> ProduitsApi.ligne-courante;
+                current-row-changed(ligne) => {
+                    root.retour = { };
+                    root.charger(ProduitsApi.selectionner(ligne));
+                }
+                sort-ascending(colonne) => {
+                    ProduitsApi.trier(colonne, true);
+                }
+                sort-descending(colonne) => {
+                    ProduitsApi.trier(colonne, false);
+                }
+            }
+
+            Text {
+                text: ProduitsApi.resume;
+                font-size: 12px;
+                color: Theme.texte-secondaire;
+            }
+        }
+
+        VerticalLayout {
+            width: 360px;
+            spacing: 10px;
+
+            Section {
+                text: root.fiche.existe ? (root.fiche.actif ? "Fiche du produit" : "Fiche du produit (désactivée)") : (Droits.ajouter-referentiel ? "Nouveau produit" : "Fiche du produit");
+            }
+
+            designation := Champ {
+                libelle: "Désignation";
+                lecture-seule: !root.modifiable;
+            }
+
+            GridLayout {
+                spacing: 10px;
+
+                Row {
+                    reference := Champ {
+                        libelle: "Référence (unique)";
+                        lecture-seule: !root.modifiable;
+                    }
+
+                    prix := Champ {
+                        libelle: "Prix unitaire (FCFA)";
+                        lecture-seule: !root.modifiable;
+                    }
+                }
+            }
+
+            VerticalLayout {
+                spacing: 4px;
+
+                Text {
+                    text: "Sens d'utilisation";
+                    font-size: 12px;
+                    color: Theme.texte-secondaire;
+                }
+
+                sens := ComboBox {
+                    model: ["Vente", "Achat", "Vente et achat"];
+                    enabled: root.modifiable;
+                }
+            }
+
+            ActionsFiche {
+                existe: root.fiche.existe;
+                actif: root.fiche.actif;
+                modifiable: root.modifiable;
+                peut-retirer: Droits.modifier-referentiel;
+                enregistrer => {
+                    root.retour = ProduitsApi.enregistrer(root.saisie());
+                    if (root.retour.ok) {
+                        root.charger(ProduitsApi.fiche-courante());
+                    }
+                }
+                retirer => {
+                    root.retour = ProduitsApi.retirer();
+                    root.charger(ProduitsApi.fiche-courante());
+                }
+                reactiver => {
+                    root.retour = ProduitsApi.reactiver();
+                    root.charger(ProduitsApi.fiche-courante());
+                }
+            }
+
+            MessageRetour {
+                retour: root.retour;
+            }
+
+            if !root.fiche.existe && !Droits.ajouter-referentiel: Text {
+                text: "Sélectionner un produit dans la liste pour afficher sa fiche.";
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+
+            Rectangle { }
+        }
+    }
+}
