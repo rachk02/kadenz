@@ -4,6 +4,8 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 
 ## [Non publié]
 
+## [0.1.0] - 2026-11-09
+
 ### Ajouté
 - Cahier des charges v2.0 (Rust, Slint, SQLite, mono-poste avec comptes et rôles).
 - `kadenz-domaine` : statuts et transitions, calculs en entiers, numérotation, état de paiement, droits par rôle.
