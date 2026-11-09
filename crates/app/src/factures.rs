@@ -943,7 +943,16 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             Ok(resultat) => resultat,
             Err(message) => return retour_erreur(message),
         };
-        let Some(chemin) = rfd::FileDialog::new()
+        // Dossier d'export du type de document s'il est réglé et existe encore.
+        let dossier = parametres::lire(&etat.conn)
+            .ok()
+            .map(|p| p.dossier_export(TYPE).to_string())
+            .filter(|d| !d.is_empty() && std::path::Path::new(d).is_dir());
+        let mut boite = rfd::FileDialog::new();
+        if let Some(dossier) = dossier {
+            boite = boite.set_directory(dossier);
+        }
+        let Some(chemin) = boite
             .set_title(crate::traduction::tr("Enregistrer le PDF"))
             .set_file_name(&nom)
             .add_filter("PDF", &["pdf"])

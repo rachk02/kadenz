@@ -26,6 +26,7 @@ const CLE_DELAI_PAIEMENT: &str = "delais.paiement_jours";
 const CLE_NUMEROTATION: &str = "numerotation";
 const CLE_TEXTES_DOCUMENTS: &str = "documents.textes";
 const CLE_COULEUR_DOCUMENTS: &str = "documents.couleur";
+const CLE_DOSSIERS_EXPORT: &str = "documents.dossiers";
 
 /// Couleur principale des documents par défaut : l'Indigo de la marque.
 pub const COULEUR_PAR_DEFAUT: [u8; 3] = [0x2d, 0x3a, 0x8c];
@@ -94,6 +95,9 @@ pub struct Parametres {
     pub textes_documents: [TextesDocument; 6],
     /// Couleur principale des documents (bande, en-tête du tableau, titre).
     pub couleur_documents: [u8; 3],
+    /// Dossier proposé à l'enregistrement d'un PDF, un par type dans l'ordre de
+    /// `TypeDocument::TOUS` ; vide pour laisser le choix au système.
+    pub dossiers_export: [String; 6],
 }
 
 impl Default for Parametres {
@@ -119,6 +123,7 @@ impl Default for Parametres {
             numerotation: Numerotation::default(),
             textes_documents: TypeDocument::TOUS.map(TextesDocument::par_defaut),
             couleur_documents: COULEUR_PAR_DEFAUT,
+            dossiers_export: Default::default(),
         }
     }
 }
@@ -192,6 +197,39 @@ impl Parametres {
             .expect("type présent dans TOUS");
         &self.textes_documents[rang]
     }
+
+    /// Dossier d'export d'un type de document ; vide s'il n'est pas réglé.
+    pub fn dossier_export(&self, t: TypeDocument) -> &str {
+        let rang = TypeDocument::TOUS
+            .iter()
+            .position(|x| *x == t)
+            .expect("type présent dans TOUS");
+        self.dossiers_export[rang].trim()
+    }
+}
+
+fn dossiers_en_json(dossiers: &[String; 6]) -> Value {
+    Value::Object(
+        TypeDocument::TOUS
+            .iter()
+            .zip(dossiers)
+            .filter(|(_, d)| !d.trim().is_empty())
+            .map(|(t, d)| (t.code().to_string(), json!(d.trim())))
+            .collect(),
+    )
+}
+
+/// Dossiers enregistrés, par code de type ; un type absent reste sans dossier.
+fn dossiers_depuis_json(valeur: Option<Value>) -> [String; 6] {
+    let mut dossiers: [String; 6] = Default::default();
+    if let Some(Value::Object(m)) = valeur {
+        for (rang, t) in TypeDocument::TOUS.iter().enumerate() {
+            if let Some(d) = m.get(t.code()).and_then(Value::as_str) {
+                dossiers[rang] = d.to_string();
+            }
+        }
+    }
+    dossiers
 }
 
 fn textes_en_json(textes: &[TextesDocument; 6]) -> Value {
@@ -296,6 +334,7 @@ pub fn lire(conn: &Connection) -> Resultat<Parametres> {
         couleur_documents: lire_valeur(conn, CLE_COULEUR_DOCUMENTS)?
             .and_then(|v| v.as_str().and_then(couleur_depuis_texte))
             .unwrap_or(defaut.couleur_documents),
+        dossiers_export: dossiers_depuis_json(lire_valeur(conn, CLE_DOSSIERS_EXPORT)?),
     })
 }
 
@@ -335,6 +374,8 @@ pub(crate) fn enregistrer_sans_controle(
     let couleur = couleur_en_texte(p.couleur_documents);
     ecrire_valeur(conn, CLE_TEXTES_DOCUMENTS, &textes)?;
     ecrire_valeur(conn, CLE_COULEUR_DOCUMENTS, &json!(couleur))?;
+    let dossiers = dossiers_en_json(&p.dossiers_export);
+    ecrire_valeur(conn, CLE_DOSSIERS_EXPORT, &dossiers)?;
     audit::journaliser(
         conn,
         Entree {
@@ -353,6 +394,7 @@ pub(crate) fn enregistrer_sans_controle(
                 "numerotation": numerotation,
                 "textes_documents": textes,
                 "couleur_documents": couleur,
+                "dossiers_export": dossiers,
             })),
             utilisateur_id: auteur,
         },
@@ -431,6 +473,21 @@ mod tests {
         assert_eq!(couleur_depuis_texte("2d3a8c"), Some(COULEUR_PAR_DEFAUT));
         assert_eq!(couleur_depuis_texte("#2d3a8"), None);
         assert_eq!(couleur_en_texte(COULEUR_PAR_DEFAUT), "#2d3a8c");
+    }
+
+    #[test]
+    fn dossiers_export() {
+        let conn = ouvrir_en_memoire().unwrap();
+        let mut p = lire(&conn).unwrap();
+        assert_eq!(p.dossier_export(TypeDocument::Facture), "");
+        p.dossiers_export[4] = "  C:\\Documents\\Factures ".into();
+        enregistrer_sans_controle(&conn, &p, None).unwrap();
+        let lu = lire(&conn).unwrap();
+        assert_eq!(
+            lu.dossier_export(TypeDocument::Facture),
+            "C:\\Documents\\Factures"
+        );
+        assert_eq!(lu.dossier_export(TypeDocument::Devis), "");
     }
 
     #[test]
