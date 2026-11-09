@@ -1,8 +1,8 @@
 // Panneau d'import des tiers ou des produits : aperçu ligne par ligne, puis
 // enregistrement des seules lignes valides (cahier des charges, section 6.8).
 
-import { Button, ComboBox, StandardTableView } from "std-widgets.slint";
-import { MessageRetour, Retour, Theme, Titre } from "composants.slint";
+import { ComboBox, StandardTableView } from "std-widgets.slint";
+import { Bouton, MessageRetour, Retour, Theme, Titre } from "composants.slint";
 
 export global ImportApi {
     in property <bool> actif;
@@ -50,7 +50,7 @@ export component PanneauImport inherits Rectangle {
                 overflow: elide;
             }
 
-            Button {
+            Bouton {
                 text: "Choisir un autre fichier";
                 clicked => {
                     ImportApi.choisir-fichier();
@@ -111,7 +111,7 @@ export component PanneauImport inherits Rectangle {
             spacing: 8px;
             alignment: start;
 
-            if ImportApi.peut-importer: Button {
+            if ImportApi.peut-importer: Bouton {
                 text: "Importer les fiches valides";
                 primary: true;
                 clicked => {
@@ -119,7 +119,7 @@ export component PanneauImport inherits Rectangle {
                 }
             }
 
-            Button {
+            Bouton {
                 text: ImportApi.peut-importer ? "Annuler" : "Fermer";
                 clicked => {
                     ImportApi.fermer();

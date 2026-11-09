@@ -1,8 +1,8 @@
 // Écrans des référentiels Tiers et Produits (cahier des charges, sections 5.2 et 5.3).
 // Une liste filtrable et triable à gauche, la fiche sélectionnée à droite.
 
-import { Button, CheckBox, ComboBox, LineEdit, StandardTableView } from "std-widgets.slint";
-import { Champ, Droits, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+import { CheckBox, ComboBox, LineEdit, StandardTableView } from "std-widgets.slint";
+import { Bouton, Champ, Droits, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
 import { ImportApi } from "import.slint";
 
 // Fiche telle que l'écran la manipule ; `existe` est faux pour une nouvelle fiche.
@@ -82,7 +82,7 @@ component ActionsFiche inherits VerticalLayout {
         spacing: 8px;
         alignment: start;
 
-        if root.modifiable: Button {
+        if root.modifiable: Bouton {
             text: root.existe ? "Enregistrer" : "Ajouter";
             primary: true;
             clicked => {
@@ -91,14 +91,14 @@ component ActionsFiche inherits VerticalLayout {
             }
         }
 
-        if root.existe && root.actif && root.peut-retirer && !root.confirmer: Button {
+        if root.existe && root.actif && root.peut-retirer && !root.confirmer: Bouton {
             text: "Retirer";
             clicked => {
                 root.confirmer = true;
             }
         }
 
-        if root.existe && !root.actif && root.peut-retirer: Button {
+        if root.existe && !root.actif && root.peut-retirer: Bouton {
             text: "Réactiver";
             clicked => {
                 root.reactiver();
@@ -125,7 +125,7 @@ component ActionsFiche inherits VerticalLayout {
             spacing: 8px;
             alignment: start;
 
-            Button {
+            Bouton {
                 text: "Confirmer le retrait";
                 clicked => {
                     root.confirmer = false;
@@ -133,7 +133,7 @@ component ActionsFiche inherits VerticalLayout {
                 }
             }
 
-            Button {
+            Bouton {
                 text: "Garder";
                 clicked => {
                     root.confirmer = false;
@@ -216,14 +216,14 @@ export component PageTiers inherits VerticalLayout {
             }
         }
 
-        if Droits.ajouter-referentiel: Button {
+        if Droits.ajouter-referentiel: Bouton {
             text: "Importer";
             clicked => {
                 ImportApi.demarrer(0);
             }
         }
 
-        if Droits.ajouter-referentiel: Button {
+        if Droits.ajouter-referentiel: Bouton {
             text: "Nouveau tiers";
             clicked => {
                 root.retour = { };
@@ -437,14 +437,14 @@ export component PageProduits inherits VerticalLayout {
             }
         }
 
-        if Droits.ajouter-referentiel: Button {
+        if Droits.ajouter-referentiel: Bouton {
             text: "Importer";
             clicked => {
                 ImportApi.demarrer(1);
             }
         }
 
-        if Droits.ajouter-referentiel: Button {
+        if Droits.ajouter-referentiel: Bouton {
             text: "Nouveau produit";
             clicked => {
                 root.retour = { };

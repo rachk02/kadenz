@@ -1,8 +1,8 @@
 // Écran Utilisateurs : comptes et matrice des droits par rôle
 // (cahier des charges, sections 10.1 et 10.2).
 
-import { Button, CheckBox, ComboBox, ScrollView, StandardTableView, TabWidget } from "std-widgets.slint";
-import { Champ, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+import { CheckBox, ComboBox, ScrollView, StandardTableView, TabWidget } from "std-widgets.slint";
+import { Bouton, Champ, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct CompteUi {
     nom: string,
@@ -85,7 +85,7 @@ component OngletComptes inherits HorizontalLayout {
         HorizontalLayout {
             alignment: start;
 
-            Button {
+            Bouton {
                 text: "Nouveau compte";
                 clicked => {
                     root.retour = { };
@@ -132,7 +132,7 @@ component OngletComptes inherits HorizontalLayout {
             spacing: 8px;
             alignment: start;
 
-            Button {
+            Bouton {
                 text: "Changer le rôle";
                 enabled: role.current-index != root.compte.role;
                 clicked => {
@@ -141,7 +141,7 @@ component OngletComptes inherits HorizontalLayout {
                 }
             }
 
-            Button {
+            Bouton {
                 text: root.compte.actif ? "Désactiver" : "Réactiver";
                 clicked => {
                     root.retour = UtilisateursApi.basculer-actif();
@@ -175,7 +175,7 @@ component OngletComptes inherits HorizontalLayout {
         if !root.compte.soi-meme: HorizontalLayout {
             alignment: start;
 
-            Button {
+            Bouton {
                 text: root.compte.existe ? "Réinitialiser le mot de passe" : "Créer le compte";
                 primary: true;
                 clicked => {
@@ -271,7 +271,7 @@ component OngletDroits inherits ScrollView {
             spacing: 8px;
             alignment: start;
 
-            Button {
+            Bouton {
                 text: "Enregistrer les droits";
                 primary: true;
                 clicked => {
@@ -279,7 +279,7 @@ component OngletDroits inherits ScrollView {
                 }
             }
 
-            Button {
+            Bouton {
                 text: "Revenir à la matrice du cahier des charges";
                 clicked => {
                     root.retour = { };

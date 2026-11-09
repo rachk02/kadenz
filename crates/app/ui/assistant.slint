@@ -3,8 +3,8 @@
 // tiers se fait depuis les écrans Tiers et Produits ; l'étape d'import facultative
 // de l'assistant reste à ajouter.
 
-import { Button, CheckBox } from "std-widgets.slint";
-import { Champ, Titre, MessageErreur, Theme } from "composants.slint";
+import { CheckBox } from "std-widgets.slint";
+import { Bouton, Champ, Titre, MessageErreur, Theme } from "composants.slint";
 
 export struct DonneesAssistant {
     nom: string,
@@ -339,7 +339,7 @@ export component EcranAssistant inherits Rectangle {
                         spacing: 8px;
                         alignment: end;
 
-                        if root.etape > 0: Button {
+                        if root.etape > 0: Bouton {
                             text: "Précédent";
                             clicked => {
                                 root.erreur = "";
@@ -347,7 +347,7 @@ export component EcranAssistant inherits Rectangle {
                             }
                         }
 
-                        if root.etape < root.etapes.length - 1: Button {
+                        if root.etape < root.etapes.length - 1: Bouton {
                             text: "Suivant";
                             primary: true;
                             clicked => {
@@ -355,7 +355,7 @@ export component EcranAssistant inherits Rectangle {
                             }
                         }
 
-                        if root.etape == root.etapes.length - 1: Button {
+                        if root.etape == root.etapes.length - 1: Bouton {
                             text: "Terminer l'installation";
                             primary: true;
                             clicked => {

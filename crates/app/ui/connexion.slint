@@ -1,5 +1,4 @@
-import { Button } from "std-widgets.slint";
-import { Champ, Titre, MessageErreur, Theme } from "composants.slint";
+import { Bouton, Champ, Titre, MessageErreur, Theme } from "composants.slint";
 
 export component EcranConnexion inherits Rectangle {
     in property <string> nom-entreprise;
@@ -62,7 +61,7 @@ export component EcranConnexion inherits Rectangle {
                     text: root.erreur;
                 }
 
-                Button {
+                Bouton {
                     text: "Se connecter";
                     primary: true;
                     clicked => {

@@ -1,8 +1,8 @@
 // Écrans d'administration : fiche entreprise et logos, paramètres système
 // (cahier des charges, sections 5.1 et 5.4).
 
-import { Button, ComboBox, ScrollView } from "std-widgets.slint";
-import { Champ, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+import { ComboBox, ScrollView } from "std-widgets.slint";
+import { Bouton, Champ, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct FicheEntrepriseUi {
     nom: string,
@@ -94,14 +94,14 @@ component CadreLogo inherits VerticalLayout {
         spacing: 8px;
         alignment: start;
 
-        Button {
+        Bouton {
             text: root.present ? "Remplacer" : "Choisir une image";
             clicked => {
                 root.choisir();
             }
         }
 
-        if root.present: Button {
+        if root.present: Bouton {
             text: "Retirer";
             clicked => {
                 root.retirer();
@@ -251,7 +251,7 @@ export component PageEntreprise inherits ScrollView {
                         spacing: 12px;
                         alignment: start;
 
-                        Button {
+                        Bouton {
                             text: "Enregistrer";
                             primary: true;
                             clicked => {
@@ -409,7 +409,7 @@ export component PageParametres inherits ScrollView {
                     spacing: 12px;
                     alignment: start;
 
-                    Button {
+                    Bouton {
                         text: "Enregistrer";
                         primary: true;
                         clicked => {

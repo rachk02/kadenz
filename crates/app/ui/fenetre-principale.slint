@@ -1,5 +1,5 @@
-import { AboutSlint, Button } from "std-widgets.slint";
-import { Champ, Droits, Titre, MessageErreur, ElementNavigation, Section, Theme } from "composants.slint";
+import { AboutSlint } from "std-widgets.slint";
+import { Bouton, Champ, Droits, Titre, MessageErreur, ElementNavigation, Section, Theme } from "composants.slint";
 import { EcranAssistant, DonneesAssistant } from "assistant.slint";
 import { EcranConnexion } from "connexion.slint";
 import { PageProduits, PageTiers, ProduitsApi, TiersApi } from "referentiels.slint";
@@ -101,7 +101,7 @@ component PageMonCompte inherits VerticalLayout {
                 color: Theme.succes;
             }
 
-            Button {
+            Bouton {
                 text: "Enregistrer";
                 primary: true;
                 clicked => {
@@ -229,7 +229,7 @@ export component FenetrePrincipale inherits Window {
                     wrap: word-wrap;
                 }
 
-                Button {
+                Bouton {
                     text: "Se déconnecter";
                     clicked => {
                         root.deconnecter();

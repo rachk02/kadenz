@@ -2,8 +2,8 @@
 // charges, sections 4.1, 4.2, 6.6 et 7). Tous les calculs et les contrôles sont
 // faits par l'application : cet écran ne fait qu'afficher et transmettre la saisie.
 
-import { Button, CheckBox, ComboBox, LineEdit, ScrollView, StandardTableView } from "std-widgets.slint";
-import { Champ, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+import { CheckBox, ComboBox, LineEdit, ScrollView, StandardTableView } from "std-widgets.slint";
+import { Bouton, Champ, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct LigneFactureUi {
     // 0 pour une ligne libre, sans produit d'origine.
@@ -126,7 +126,7 @@ component Registre inherits VerticalLayout {
 
         Rectangle { }
 
-        if FacturesApi.peut-creer: Button {
+        if FacturesApi.peut-creer: Bouton {
             text: "Nouvelle facture";
             primary: true;
             clicked => {
@@ -249,7 +249,7 @@ component Etiquette inherits Text {
     color: Theme.texte-secondaire;
 }
 
-component PetitBouton inherits Button {
+component PetitBouton inherits Bouton {
     width: 36px;
 }
 
@@ -313,7 +313,7 @@ component Fiche inherits ScrollView {
         HorizontalLayout {
             spacing: 12px;
 
-            Button {
+            Bouton {
                 text: "Retour au registre";
                 clicked => {
                     FacturesApi.fermer-fiche();
@@ -567,7 +567,7 @@ component Fiche inherits ScrollView {
                 model: FacturesApi.produits;
             }
 
-            Button {
+            Bouton {
                 text: "Ajouter le produit";
                 enabled: FacturesApi.produits.length > 0;
                 clicked => {
@@ -576,7 +576,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            Button {
+            Bouton {
                 text: "Ligne libre";
                 clicked => {
                     FacturesApi.ajouter-ligne-libre();
@@ -698,7 +698,7 @@ component Fiche inherits ScrollView {
             spacing: 8px;
             alignment: start;
 
-            if root.fiche.modifiable: Button {
+            if root.fiche.modifiable: Bouton {
                 text: "Enregistrer le brouillon";
                 primary: !root.fiche.peut-valider;
                 clicked => {
@@ -708,7 +708,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            if root.fiche.peut-valider: Button {
+            if root.fiche.peut-valider: Bouton {
                 text: "Valider";
                 primary: true;
                 clicked => {
@@ -717,7 +717,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            if root.fiche.admin-modifiable: Button {
+            if root.fiche.admin-modifiable: Bouton {
                 text: "Enregistrer le mode et les observations";
                 clicked => {
                     root.confirmation = 0;
@@ -726,7 +726,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            if root.fiche.peut-envoyer: Button {
+            if root.fiche.peut-envoyer: Bouton {
                 text: "Marquer envoyée";
                 clicked => {
                     root.confirmation = 0;
@@ -735,7 +735,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            if root.fiche.peut-annuler: Button {
+            if root.fiche.peut-annuler: Bouton {
                 text: "Annuler la facture";
                 clicked => {
                     root.retour = { };
@@ -743,7 +743,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            if root.fiche.peut-supprimer: Button {
+            if root.fiche.peut-supprimer: Bouton {
                 text: "Supprimer le brouillon";
                 clicked => {
                     root.retour = { };
@@ -765,7 +765,7 @@ component Fiche inherits ScrollView {
                 spacing: 8px;
                 alignment: start;
 
-                Button {
+                Bouton {
                     text: root.confirmation == 1 ? "Confirmer la validation" : (root.confirmation == 2 ? "Confirmer l'annulation" : "Confirmer la suppression");
                     primary: true;
                     clicked => {
@@ -781,7 +781,7 @@ component Fiche inherits ScrollView {
                     }
                 }
 
-                Button {
+                Bouton {
                     text: "Revenir";
                     clicked => {
                         root.confirmation = 0;

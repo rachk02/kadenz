@@ -101,6 +101,84 @@ export component Symbole inherits Image {
     image-rendering: smooth;
 }
 
+// Bouton aux couleurs de la marque, à la place du Button standard (dont l'accent suit
+// celui de Windows). Même interface : text, primary, enabled, clicked.
+// Principal : fond Indigo, texte blanc. Secondaire : fond blanc, bordure, texte Encre.
+// Clavier : Tab pour l'atteindre, Entrée ou Espace pour l'activer.
+export component Bouton inherits Rectangle {
+    in property <string> text;
+    in property <bool> primary: false;
+    in property <bool> enabled: true;
+    callback clicked();
+
+    min-width: max(72px, etiquette.preferred-width + 24px);
+    preferred-width: etiquette.preferred-width + 32px;
+    min-height: 32px;
+    preferred-height: 32px;
+    horizontal-stretch: 0;
+    vertical-stretch: 0;
+    border-radius: 4px;
+    border-width: root.primary ? 0px : 1px;
+    border-color: Theme.bordure;
+    background: !root.enabled ? (root.primary ? #9aa3c7 : Theme.fond-lateral)
+        : root.primary ? (zone.pressed ? #1f2866 : zone.has-hover ? #25307a : Theme.accent)
+        : (zone.pressed ? #dfe2f1 : zone.has-hover ? Theme.accent-survol : white);
+
+    accessible-role: button;
+    accessible-label: root.text;
+    accessible-enabled: root.enabled;
+    accessible-action-default => {
+        root.clicked();
+    }
+
+    // Anneau de focus, visible quand le bouton est atteint au clavier.
+    Rectangle {
+        x: -3px;
+        y: -3px;
+        width: parent.width + 6px;
+        height: parent.height + 6px;
+        border-radius: 6px;
+        border-width: 2px;
+        border-color: Theme.accent;
+        visible: clavier.has-focus;
+    }
+
+    etiquette := Text {
+        width: parent.width;
+        height: parent.height;
+        text: root.text;
+        font-size: 13px;
+        font-weight: root.primary ? 600 : 500;
+        color: !root.enabled ? (root.primary ? white : #9aa3b5) : root.primary ? white : Theme.texte;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        overflow: elide;
+    }
+
+    zone := TouchArea {
+        width: parent.width;
+        height: parent.height;
+        enabled: root.enabled;
+        mouse-cursor: pointer;
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    clavier := FocusScope {
+        width: parent.width;
+        height: parent.height;
+        enabled: root.enabled;
+        key-pressed(evenement) => {
+            if (evenement.text == Key.Return || evenement.text == " ") {
+                root.clicked();
+                return accept;
+            }
+            return reject;
+        }
+    }
+}
+
 export component MessageErreur inherits Text {
     color: Theme.erreur;
     wrap: word-wrap;
