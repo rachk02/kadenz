@@ -24,7 +24,6 @@ use kadenz_domaine::calcul::{
 };
 use kadenz_domaine::document::verifier_transition;
 pub use kadenz_domaine::document::{Statut, TypeDocument};
-use kadenz_domaine::numerotation::formater_numero;
 pub use kadenz_domaine::paiement::EtatPaiement;
 use kadenz_domaine::paiement::etat_paiement;
 use kadenz_domaine::role::Droit;
@@ -648,8 +647,11 @@ pub fn valider(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
     let annee = u16::try_from(s.date.year())
         .map_err(|_| invalide("année de la date du document hors limites"))?;
     let mois = s.date.month() as u8;
-    let rang = crate::prochain_rang(&tx, d.type_document, annee, mois)?;
-    let numero = formater_numero(d.type_document, annee, mois, rang);
+    // Réglage de la numérotation lu dans la transaction : préfixe, remise à zéro
+    // mensuelle ou annuelle (compteur au mois 0), nombre de chiffres.
+    let reglage = crate::parametres::lire(&tx)?.numerotation;
+    let rang = crate::prochain_rang(&tx, d.type_document, annee, reglage.mois_du_compteur(mois))?;
+    let numero = reglage.formater(d.type_document, annee, mois, rang);
     let modifiees = tx.execute(
         "UPDATE document SET statut = ?1, numero = ?2, date_validation = ?3,
                              utilisateur_validation_id = ?4
@@ -968,6 +970,28 @@ mod tests {
         assert_eq!(d.statut, Statut::Valide);
         assert!(d.date_validation.is_some());
         assert!(valider(&mut c.conn, &admin, mai2).is_err(), "déjà validé");
+    }
+
+    #[test]
+    fn numerotation_annuelle_reglee() {
+        use kadenz_domaine::numerotation::RemiseAZero;
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let mai = facture(&mut c, date(2026, 5, 3));
+        assert_eq!(valider(&mut c.conn, &admin, mai).unwrap(), "F2026-05-0001");
+
+        let mut p = crate::parametres::lire(&c.conn).unwrap();
+        p.numerotation.remise = RemiseAZero::Annuelle;
+        crate::parametres::enregistrer(&c.conn, &admin, &p).unwrap();
+        let juin = facture(&mut c, date(2026, 6, 1));
+        let dec = facture(&mut c, date(2026, 12, 30));
+        let an_suivant = facture(&mut c, date(2027, 1, 2));
+        assert_eq!(valider(&mut c.conn, &admin, juin).unwrap(), "F2026-0001");
+        assert_eq!(valider(&mut c.conn, &admin, dec).unwrap(), "F2026-0002");
+        assert_eq!(
+            valider(&mut c.conn, &admin, an_suivant).unwrap(),
+            "F2027-0001"
+        );
     }
 
     #[test]

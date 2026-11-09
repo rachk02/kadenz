@@ -5,6 +5,7 @@
 
 use kadenz_domaine::calcul::Pourcentage;
 use kadenz_domaine::lettres::Orthographe;
+use kadenz_domaine::numerotation::{Numerotation, RemiseAZero};
 use kadenz_domaine::role::Droit;
 use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::{Value, json};
@@ -21,6 +22,7 @@ const CLE_MODES_PAIEMENT: &str = "paiement.modes";
 const CLE_ORTHOGRAPHE: &str = "lettres.orthographe";
 const CLE_VALIDITE_DEVIS: &str = "delais.validite_devis_jours";
 const CLE_DELAI_PAIEMENT: &str = "delais.paiement_jours";
+const CLE_NUMEROTATION: &str = "numerotation";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Parametres {
@@ -33,6 +35,8 @@ pub struct Parametres {
     pub validite_devis_jours: Option<u32>,
     /// Délai de paiement des factures, en jours (date d'échéance). Pas de valeur par défaut.
     pub delai_paiement_jours: Option<u32>,
+    /// Préfixes, remise à zéro et nombre de chiffres des numéros (section 5.4).
+    pub numerotation: Numerotation,
 }
 
 impl Default for Parametres {
@@ -55,6 +59,7 @@ impl Default for Parametres {
             orthographe: Orthographe::default(),
             validite_devis_jours: None,
             delai_paiement_jours: None,
+            numerotation: Numerotation::default(),
         }
     }
 }
@@ -78,8 +83,35 @@ impl Parametres {
                 "au moins un mode de paiement est nécessaire".into(),
             ));
         }
+        self.numerotation
+            .nettoyee()
+            .map_err(|e| Erreur::Validation(e.to_string()))?;
         Ok(())
     }
+}
+
+fn numerotation_en_json(n: &Numerotation) -> Value {
+    json!({
+        "prefixes": n.prefixes,
+        "remise": n.remise.code(),
+        "chiffres": n.chiffres,
+    })
+}
+
+/// Valeur illisible ou incomplète : retour au réglage par défaut, comme pour une clé absente.
+fn numerotation_depuis_json(valeur: Option<Value>) -> Option<Numerotation> {
+    let v = valeur?;
+    let prefixes: Vec<String> = liste_textes(v.get("prefixes").cloned())?;
+    let prefixes: [String; 6] = prefixes.try_into().ok()?;
+    let remise = RemiseAZero::depuis_code(v.get("remise")?.as_str()?)?;
+    let chiffres = u8::try_from(v.get("chiffres")?.as_u64()?).ok()?;
+    Numerotation {
+        prefixes,
+        remise,
+        chiffres,
+    }
+    .nettoyee()
+    .ok()
 }
 
 fn lire_valeur(conn: &Connection, cle: &str) -> Resultat<Option<Value>> {
@@ -133,6 +165,8 @@ pub fn lire(conn: &Connection) -> Resultat<Parametres> {
             .unwrap_or(defaut.orthographe),
         validite_devis_jours: jours(lire_valeur(conn, CLE_VALIDITE_DEVIS)?),
         delai_paiement_jours: jours(lire_valeur(conn, CLE_DELAI_PAIEMENT)?),
+        numerotation: numerotation_depuis_json(lire_valeur(conn, CLE_NUMEROTATION)?)
+            .unwrap_or(defaut.numerotation),
     })
 }
 
@@ -149,6 +183,11 @@ pub(crate) fn enregistrer_sans_controle(
     auteur: Option<i64>,
 ) -> Resultat<()> {
     p.valider()?;
+    let numerotation = numerotation_en_json(
+        &p.numerotation
+            .nettoyee()
+            .map_err(|e| Erreur::Validation(e.to_string()))?,
+    );
     let modes: Vec<&str> = p
         .modes_paiement
         .iter()
@@ -162,6 +201,7 @@ pub(crate) fn enregistrer_sans_controle(
     ecrire_valeur(conn, CLE_ORTHOGRAPHE, &json!(p.orthographe.code()))?;
     ecrire_valeur(conn, CLE_VALIDITE_DEVIS, &json!(p.validite_devis_jours))?;
     ecrire_valeur(conn, CLE_DELAI_PAIEMENT, &json!(p.delai_paiement_jours))?;
+    ecrire_valeur(conn, CLE_NUMEROTATION, &numerotation)?;
     audit::journaliser(
         conn,
         Entree {
@@ -177,6 +217,7 @@ pub(crate) fn enregistrer_sans_controle(
                 "orthographe": p.orthographe.code(),
                 "validite_devis_jours": p.validite_devis_jours,
                 "delai_paiement_jours": p.delai_paiement_jours,
+                "numerotation": numerotation,
             })),
             utilisateur_id: auteur,
         },
@@ -208,6 +249,22 @@ mod tests {
         assert_eq!(lu.taux_tva, vec![0, 250, 1800]);
         assert_eq!(lu.modes_paiement, vec!["Espèce", "Chèque"]);
         assert_eq!(lu.orthographe, Orthographe::Traditionnelle);
+    }
+
+    #[test]
+    fn numerotation_aller_retour() {
+        let conn = ouvrir_en_memoire().unwrap();
+        let mut p = Parametres::default();
+        p.numerotation.remise = RemiseAZero::Annuelle;
+        p.numerotation.chiffres = 5;
+        p.numerotation.prefixes[4] = " fa ".into();
+        enregistrer_sans_controle(&conn, &p, None).unwrap();
+        let n = lire(&conn).unwrap().numerotation;
+        assert_eq!(n.remise, RemiseAZero::Annuelle);
+        assert_eq!(n.chiffres, 5);
+        assert_eq!(n.prefixes[4], "FA");
+        p.numerotation.prefixes[4] = "D".into();
+        assert!(enregistrer_sans_controle(&conn, &p, None).is_err());
     }
 
     #[test]

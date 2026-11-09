@@ -41,6 +41,15 @@ export struct ParametresUi {
     orthographe: int,
     validite-devis: string,
     delai-paiement: string,
+    // Numérotation : préfixes par type, compteur annuel (sinon mensuel), chiffres du rang.
+    prefixe-devis: string,
+    prefixe-proforma: string,
+    prefixe-commande: string,
+    prefixe-livraison: string,
+    prefixe-facture: string,
+    prefixe-avoir: string,
+    remise-annuelle: bool,
+    chiffres: string,
 }
 
 export global ParametresApi {
@@ -49,6 +58,8 @@ export global ParametresApi {
     in property <string> exemple-traditionnelle;
     callback ouvrir() -> ParametresUi;
     callback enregistrer(parametres: ParametresUi) -> Retour;
+    // Exemple de numéro de facture pour un préfixe, un compteur et un nombre de chiffres.
+    pure callback exemple-numero(prefixe: string, annuelle: bool, chiffres: string) -> string;
 }
 
 component CadreLogo inherits VerticalLayout {
@@ -323,6 +334,14 @@ export component PageParametres inherits ScrollView {
         orthographe.current-index = p.orthographe;
         validite.valeur = p.validite-devis;
         delai.valeur = p.delai-paiement;
+        prefixe-devis.valeur = p.prefixe-devis;
+        prefixe-proforma.valeur = p.prefixe-proforma;
+        prefixe-commande.valeur = p.prefixe-commande;
+        prefixe-livraison.valeur = p.prefixe-livraison;
+        prefixe-facture.valeur = p.prefixe-facture;
+        prefixe-avoir.valeur = p.prefixe-avoir;
+        compteur.current-index = p.remise-annuelle ? 1 : 0;
+        chiffres.valeur = p.chiffres;
     }
 
     init => {
@@ -392,6 +411,85 @@ export component PageParametres inherits ScrollView {
                 }
 
                 Section {
+                    text: @tr("Numérotation des documents");
+                }
+
+                Text {
+                    text: @tr("Préfixes de 1 à 6 lettres, différents d'un type à l'autre.");
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+
+                HorizontalLayout {
+                    spacing: 8px;
+
+                    prefixe-devis := Champ {
+                        libelle: @tr("Devis");
+                    }
+
+                    prefixe-proforma := Champ {
+                        libelle: @tr("Proforma");
+                    }
+
+                    prefixe-commande := Champ {
+                        libelle: @tr("Bon de commande");
+                    }
+                }
+
+                HorizontalLayout {
+                    spacing: 8px;
+
+                    prefixe-livraison := Champ {
+                        libelle: @tr("Bordereau de livraison");
+                    }
+
+                    prefixe-facture := Champ {
+                        libelle: @tr("Facture");
+                    }
+
+                    prefixe-avoir := Champ {
+                        libelle: @tr("Avoir");
+                    }
+                }
+
+                HorizontalLayout {
+                    spacing: 12px;
+
+                    VerticalLayout {
+                        spacing: 4px;
+                        horizontal-stretch: 2;
+
+                        Text {
+                            text: @tr("Remise à zéro du compteur");
+                            font-size: 12px;
+                            color: Theme.texte-secondaire;
+                        }
+
+                        compteur := ComboBox {
+                            model: [@tr("Chaque mois"), @tr("Chaque année")];
+                        }
+                    }
+
+                    chiffres := Champ {
+                        horizontal-stretch: 1;
+                        libelle: @tr("Chiffres du rang");
+                    }
+                }
+
+                Text {
+                    text: ParametresApi.exemple-numero(prefixe-facture.valeur, compteur.current-index == 1, chiffres.valeur);
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+
+                Text {
+                    text: @tr("Un changement vaut pour les validations suivantes ; les numéros déjà attribués ne changent pas. Changer de compteur en cours d'année interrompt la suite des numéros de l'année.");
+                    font-size: 12px;
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+
+                Section {
                     text: "Montant en lettres";
                 }
 
@@ -421,6 +519,14 @@ export component PageParametres inherits ScrollView {
                                 orthographe: orthographe.current-index,
                                 validite-devis: validite.valeur,
                                 delai-paiement: delai.valeur,
+                                prefixe-devis: prefixe-devis.valeur,
+                                prefixe-proforma: prefixe-proforma.valeur,
+                                prefixe-commande: prefixe-commande.valeur,
+                                prefixe-livraison: prefixe-livraison.valeur,
+                                prefixe-facture: prefixe-facture.valeur,
+                                prefixe-avoir: prefixe-avoir.valeur,
+                                remise-annuelle: compteur.current-index == 1,
+                                chiffres: chiffres.valeur,
                             });
                             if (root.retour.ok) {
                                 root.charger(ParametresApi.ouvrir());
@@ -435,7 +541,7 @@ export component PageParametres inherits ScrollView {
                 }
 
                 Text {
-                    text: "Les textes des documents, l'apparence des PDF et les dossiers d'export se régleront ici avec le jalon du PDF (J4). La numérotation suit pour l'instant le format par défaut (F2026-05-0001, compteur mensuel) ; son réglage attend une décision (question 12 du cahier des charges). La matrice des droits par rôle se règle dans l'écran Utilisateurs.";
+                    text: "Les textes des documents, l'apparence des PDF et les dossiers d'export se régleront ici avec le jalon du PDF (J4). La matrice des droits par rôle se règle dans l'écran Utilisateurs.";
                     font-size: 12px;
                     color: Theme.texte-secondaire;
                     wrap: word-wrap;

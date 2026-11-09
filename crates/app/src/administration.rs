@@ -3,7 +3,10 @@
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 
+use chrono::Datelike;
+use kadenz_domaine::document::TypeDocument;
 use kadenz_domaine::lettres::{Orthographe, en_lettres};
+use kadenz_domaine::numerotation::{CHIFFRES_MAX, CHIFFRES_MIN, Numerotation, RemiseAZero};
 use kadenz_domaine::saisie;
 use kadenz_stockage::entreprise::{self, Entreprise, FormatImage, Logo};
 use kadenz_stockage::parametres::{self, Parametres};
@@ -207,6 +210,14 @@ fn parametres_ui(p: &Parametres) -> ParametresUi {
         },
         validite_devis: jours(p.validite_devis_jours),
         delai_paiement: jours(p.delai_paiement_jours),
+        prefixe_devis: p.numerotation.prefixes[0].clone().into(),
+        prefixe_proforma: p.numerotation.prefixes[1].clone().into(),
+        prefixe_commande: p.numerotation.prefixes[2].clone().into(),
+        prefixe_livraison: p.numerotation.prefixes[3].clone().into(),
+        prefixe_facture: p.numerotation.prefixes[4].clone().into(),
+        prefixe_avoir: p.numerotation.prefixes[5].clone().into(),
+        remise_annuelle: p.numerotation.remise == RemiseAZero::Annuelle,
+        chiffres: p.numerotation.chiffres.to_string().into(),
     }
 }
 
@@ -242,7 +253,42 @@ fn parametres_depuis_ui(u: &ParametresUi) -> Result<Parametres, String> {
         },
         validite_devis_jours: jours("validité des devis", &u.validite_devis)?,
         delai_paiement_jours: jours("délai de paiement", &u.delai_paiement)?,
+        numerotation: numerotation_depuis_ui(
+            [
+                &u.prefixe_devis,
+                &u.prefixe_proforma,
+                &u.prefixe_commande,
+                &u.prefixe_livraison,
+                &u.prefixe_facture,
+                &u.prefixe_avoir,
+            ],
+            u.remise_annuelle,
+            &u.chiffres,
+        )?,
     })
+}
+
+/// Réglage de numérotation saisi, contrôlé par le domaine.
+fn numerotation_depuis_ui(
+    prefixes: [&SharedString; 6],
+    annuelle: bool,
+    chiffres: &str,
+) -> Result<Numerotation, String> {
+    let chiffres = chiffres.trim().parse::<u8>().map_err(|_| {
+        format!(
+            "nombre de chiffres du rang invalide : saisir un entier entre {CHIFFRES_MIN} et {CHIFFRES_MAX}"
+        )
+    })?;
+    Numerotation {
+        prefixes: prefixes.map(|p| p.to_string()),
+        remise: if annuelle {
+            RemiseAZero::Annuelle
+        } else {
+            RemiseAZero::Mensuelle
+        },
+        chiffres,
+    }
+    .nettoyee()
 }
 
 fn brancher_parametres(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
@@ -256,6 +302,36 @@ fn brancher_parametres(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
     };
     api.set_exemple_rectifiee(exemple(Orthographe::Rectifiee).into());
     api.set_exemple_traditionnelle(exemple(Orthographe::Traditionnelle).into());
+
+    api.on_exemple_numero(|prefixe, annuelle, chiffres| {
+        let mut prefixes = Numerotation::default().prefixes.map(SharedString::from);
+        prefixes[4] = prefixe;
+        let refs = [
+            &prefixes[0],
+            &prefixes[1],
+            &prefixes[2],
+            &prefixes[3],
+            &prefixes[4],
+            &prefixes[5],
+        ];
+        match numerotation_depuis_ui(refs, annuelle, &chiffres) {
+            Ok(n) => {
+                let aujourd_hui = chrono::Local::now().date_naive();
+                let numero = n.formater(
+                    TypeDocument::Facture,
+                    u16::try_from(aujourd_hui.year()).unwrap_or(0),
+                    aujourd_hui.month() as u8,
+                    1,
+                );
+                if annuelle {
+                    format!("Exemple : première facture de l'année, {numero}").into()
+                } else {
+                    format!("Exemple : première facture du mois, {numero}").into()
+                }
+            }
+            Err(message) => message.into(),
+        }
+    });
 
     let e = etat.clone();
     api.on_ouvrir(move || {
@@ -307,5 +383,26 @@ mod tests {
         u.validite_devis = "".into();
         u.taux_tva = "18 ; 120".into();
         assert!(parametres_depuis_ui(&u).is_err());
+    }
+
+    #[test]
+    fn numerotation_saisie() {
+        let mut p = Parametres::default();
+        p.numerotation.remise = RemiseAZero::Annuelle;
+        let mut u = parametres_ui(&p);
+        assert!(u.remise_annuelle);
+        assert_eq!(parametres_depuis_ui(&u).unwrap(), p);
+        u.prefixe_facture = " fa ".into();
+        u.chiffres = "5".into();
+        let n = parametres_depuis_ui(&u).unwrap().numerotation;
+        assert_eq!(n.prefixes[4], "FA");
+        assert_eq!(n.chiffres, 5);
+        for invalide in ["", "0", "10", "x"] {
+            u.chiffres = invalide.into();
+            assert!(parametres_depuis_ui(&u).is_err(), "{invalide}");
+        }
+        u.chiffres = "4".into();
+        u.prefixe_facture = "D".into();
+        assert!(parametres_depuis_ui(&u).is_err(), "préfixe en double");
     }
 }

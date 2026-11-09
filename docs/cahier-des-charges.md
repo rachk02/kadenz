@@ -10,6 +10,7 @@
 | 2.4 | 2026-11-09 | Jalon J2 : logos de l'entreprise stockés dans la base, matrice des droits modifiable, import CSV/Excel détaillé (section 6.8), crate `kadenz-import`, feuille de route J1 à J10 reportée en section 19, question des délais par défaut ajoutée |
 | 2.5 | 2026-11-09 | Questions 3 (orthographe rectifiée par défaut), 10 (délais vides par défaut) et 11 (import dans l'assistant reporté) tranchées |
 | 2.6 | 2026-11-09 | Jalon J3 : périmètre livré et reports (section 19), droits des actions que la matrice ne nommait pas (section 10.1), conditions de validation (section 7.2), question 12 sur le réglage de la numérotation, identifiants jamais réutilisés (section 7.4) |
+| 2.7 | 2026-11-09 | Choix de J3 validés par l'utilisateur ; question 12 tranchée : format du compteur annuel `F2026-0001` et réglage de la numérotation (sections 5.4 et 6.1) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -140,7 +141,7 @@ Table clé-valeur, modifiable par l'Admin sans recompiler :
 |---|---|
 | Taux | Listes de taux de TVA (0 %, 18 %), de remise et de retenue (0/5/10/15 %) |
 | Modes de paiement | Liste modifiable, initialisée avec ceux de l'Excel : Espèce, Chèque, Virement bancaire, Carte bancaire, Moov money, Orange money |
-| Numérotation | Préfixe par type, remise à zéro du compteur chaque mois (comme l'Excel) ou chaque année, nombre de chiffres du rang |
+| Numérotation | Préfixe par type (1 à 6 lettres non accentuées, distinctes d'un type à l'autre), remise à zéro du compteur chaque mois (comme l'Excel, par défaut) ou chaque année, nombre de chiffres du rang (1 à 9, 4 par défaut) |
 | Textes des documents | Titre par type (ex. « FACTURE DEFINITIVE »), phrase « Arrêté la présente ... à la somme de », libellé du signataire (ex. « LA COMPTABILITE »), mentions de pied de page |
 | Apparence des PDF | Couleur principale, position des logos |
 | Montant en lettres | Orthographe rectifiée de 1990 ou traditionnelle |
@@ -156,7 +157,7 @@ L'identité de l'entreprise (section 5.1) est éditée dans le même écran de p
 
 ### 6.1 Règles communes
 
-**Numérotation** : format `{Préfixe}{AAAA}-{MM}-{####}`, ex. `D2026-05-0004`. Préfixes par défaut : D (Devis), P (Proforma), C (Bon de commande), L (Livraison), F (Facture), A (Avoir). Compteur par type + année + mois de la date du document, incrémenté dans la transaction de validation. Au-delà de 9999 dans un mois, le numéro s'allonge sans perte.
+**Numérotation** : avec le compteur mensuel (par défaut), format `{Préfixe}{AAAA}-{MM}-{####}`, ex. `D2026-05-0004`, compteur par type + année + mois de la date du document ; avec le compteur annuel, format `{Préfixe}{AAAA}-{####}`, ex. `F2026-0001`, compteur par type + année de la date du document. Préfixes par défaut : D (Devis), P (Proforma), C (Bon de commande), L (Livraison), F (Facture), A (Avoir). Le compteur est incrémenté dans la transaction de validation. Au-delà du nombre de chiffres réglé (`9999` par défaut), le numéro s'allonge sans perte. Un changement de réglage vaut pour les validations suivantes ; les numéros déjà attribués ne changent pas.
 
 **Montants** : la devise est le FCFA, sans décimale. Tous les montants sont stockés et calculés en entiers (`i64`), jamais en nombres à virgule flottante. Les pourcentages sont stockés en centièmes de point (1800 = 18 %), ce qui permet un taux comme 2,5 % sans changer le modèle. Tout arrondi passe par une fonction unique du domaine.
 
@@ -195,7 +196,7 @@ Un bordereau se crée soit à partir d'une Facture (reprise des lignes et des qu
 Structure identique au Devis. Document définitif, porte un état de paiement (section 8). Champ date d'échéance, calculé à partir du délai de paiement paramétré.
 
 ### 6.7 Avoir (A-...)
-Document lié à une Facture validée, qui la corrige ou l'annule en tout ou partie (section 7.2). Préfixe A, même format et même compteur par type, année et mois que les autres documents (ex. `A2026-05-0001`).
+Document lié à une Facture validée, qui la corrige ou l'annule en tout ou partie (section 7.2). Préfixe A par défaut, même format et même règle de compteur que les autres documents (ex. `A2026-05-0001`, ou `A2026-0001` avec le compteur annuel).
 
 ### 6.8 Exports et imports (spécifié)
 - Export Excel des registres (listes filtrées) et des documents.
@@ -433,7 +434,7 @@ Choix technique (à l'étude) : c'est la partie la plus délicate en Rust pur (m
 9. **Écrans non vus** : aucune capture des formulaires Devis et Proforma ni des listes Factures, Livraisons, Proforma et Devis ; leur contenu est supposé identique à la Facture et à la liste des bons de commande.
 10. **Délais par défaut** : tranchée le 2026-11-09, la durée de validité des devis et le délai de paiement des factures restent vides par défaut (réglages de la section 5.4) ; aucune date d'échéance n'est calculée tant que l'entreprise ne les renseigne pas.
 11. **Import dans l'assistant** : tranchée le 2026-11-09, l'étape d'import des tiers et des produits dans l'assistant de premier lancement est reportée ; l'import reste disponible depuis les écrans Tiers et Produits.
-12. **Réglage de la numérotation** : la section 5.4 prévoit un préfixe par type, une remise à zéro mensuelle ou annuelle et un nombre de chiffres réglables, mais ne dit pas à quoi ressemble un numéro à compteur annuel (le format `{Préfixe}{AAAA}-{MM}-{####}` contient le mois). En attendant la décision, la numérotation suit le format par défaut de la section 6.1, sans réglage.
+12. **Réglage de la numérotation** : tranchée le 2026-11-09, un numéro à compteur annuel s'écrit `{Préfixe}{AAAA}-{rang}`, ex. `F2026-0001` (section 6.1) ; le réglage complet de la section 5.4 est livré.
 
 ---
 
@@ -452,4 +453,4 @@ Choix technique (à l'étude) : c'est la partie la plus délicate en Rust pur (m
 | J9 | Licence : outil éditeur, vérification, activation des modules |
 | J10 | Installateur, mises à jour, export Excel |
 
-**Périmètre de J3 (Factures).** Livré : registre filtrable (numéro, client, libellé, statut, état de paiement, période) et triable ; fiche avec client choisi dans une liste filtrable, date, échéance, libellé, lignes produit ou libres modifiables, réordonnées et supprimées, totaux et montant en lettres en direct ; enregistrement du brouillon, validation numérotée, marquage envoyé, annulation, suppression du brouillon, mode de paiement et observations après validation ; historique des changements de statut ; fiche en lecture seule pour les rôles sans droit. Reporté : PDF (J4) ; avoir et duplication (J5) ; bordereau depuis une facture (J6) ; règlements (J7, l'état de paiement est déjà calculé) ; export Excel (J10) ; création rapide d'un tiers depuis la fiche et raccourcis clavier (avec la fiche commune à tous les documents, J5) ; réglage de la numérotation (question 12).
+**Périmètre de J3 (Factures).** Livré : registre filtrable (numéro, client, libellé, statut, état de paiement, période) et triable ; fiche avec client choisi dans une liste filtrable, date, échéance, libellé, lignes produit ou libres modifiables, réordonnées et supprimées, totaux et montant en lettres en direct ; enregistrement du brouillon, validation numérotée, marquage envoyé, annulation, suppression du brouillon, mode de paiement et observations après validation ; historique des changements de statut ; fiche en lecture seule pour les rôles sans droit. Reporté : PDF (J4) ; avoir et duplication (J5) ; bordereau depuis une facture (J6) ; règlements (J7, l'état de paiement est déjà calculé) ; export Excel (J10) ; création rapide d'un tiers depuis la fiche et raccourcis clavier (avec la fiche commune à tous les documents, J5). Le réglage de la numérotation (question 12) est livré à la suite de J3, avant la v0.1.0.

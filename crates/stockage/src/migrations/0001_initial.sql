@@ -143,7 +143,8 @@ END;
 CREATE TABLE compteur_numerotation (
     type_document  TEXT NOT NULL,
     annee          INTEGER NOT NULL,
-    mois           INTEGER NOT NULL CHECK (mois BETWEEN 1 AND 12),
+    -- 1 à 12 pour un compteur mensuel, 0 pour le compteur unique de l'année (remise annuelle).
+    mois           INTEGER NOT NULL CHECK (mois BETWEEN 0 AND 12),
     dernier_numero INTEGER NOT NULL,
     PRIMARY KEY (type_document, annee, mois)
 ) STRICT;
