@@ -4,6 +4,9 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 
 ## [Non publié]
 
+### Ajouté
+- Jalon J5, écrans : registre et fiche communs aux documents de vente, pour les Devis, les Proformas, les Factures et une nouvelle entrée de menu Avoirs (sans création directe : un avoir naît d'une facture validée) ; textes accordés au type, filtre de statut selon le type (Converti pour les devis et les proformas), validité des devis proposée comme échéance, client d'un avoir verrouillé, export PDF réservé aux factures pour l'instant.
+
 ## [0.1.0] - 2026-11-09
 
 ### Ajouté

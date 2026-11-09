@@ -1196,3 +1196,174 @@ msgstr "الخطوة {} من {}: {}"
 
 msgid "État"
 msgstr "الحالة"
+
+msgid "Avoirs"
+msgstr "الإشعارات الدائنة"
+
+msgid "Nouveau devis"
+msgstr "عرض أسعار جديد"
+
+msgid "Cliquer sur un devis pour ouvrir sa fiche."
+msgstr "انقر على عرض أسعار لفتح بطاقته."
+
+msgid "Aucun numéro tant que le devis n'est pas validé."
+msgstr "لا يُسند رقم ما دام عرض الأسعار غير معتمد."
+
+msgid "Marquer envoyé"
+msgstr "وضع علامة: أُرسل"
+
+msgid "Annuler le devis"
+msgstr "إلغاء عرض الأسعار"
+
+msgid "Valider ce devis ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "اعتماد عرض الأسعار هذا؟ يحصل على رقمه النهائي، ولن يمكن تعديل بنوده ومبالغه بعد ذلك."
+
+msgid "Annuler ce devis ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "إلغاء عرض الأسعار هذا؟ يبقى في السجل برقمه، للقراءة فقط."
+
+msgid "Nouvelle proforma"
+msgstr "فاتورة مبدئية جديدة"
+
+msgid "Cliquer sur une proforma pour ouvrir sa fiche."
+msgstr "انقر على فاتورة مبدئية لفتح بطاقتها."
+
+msgid "Aucun numéro tant que la proforma n'est pas validée."
+msgstr "لا يُسند رقم ما دامت الفاتورة المبدئية غير معتمدة."
+
+msgid "Annuler la proforma"
+msgstr "إلغاء الفاتورة المبدئية"
+
+msgid "Valider cette proforma ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "اعتماد هذه الفاتورة المبدئية؟ تحصل على رقمها النهائي، ولن يمكن تعديل بنودها ومبالغها بعد ذلك."
+
+msgid "Annuler cette proforma ? Elle reste dans le registre avec son numéro, en lecture seule."
+msgstr "إلغاء هذه الفاتورة المبدئية؟ تبقى في السجل برقمها، للقراءة فقط."
+
+msgid "Cliquer sur un avoir pour ouvrir sa fiche."
+msgstr "انقر على إشعار دائن لفتح بطاقته."
+
+msgid "Aucun numéro tant que l'avoir n'est pas validé."
+msgstr "لا يُسند رقم ما دام الإشعار الدائن غير معتمد."
+
+msgid "Annuler l'avoir"
+msgstr "إلغاء الإشعار الدائن"
+
+msgid "Valider cet avoir ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "اعتماد هذا الإشعار الدائن؟ يحصل على رقمه النهائي، ولن يمكن تعديل بنوده ومبالغه بعد ذلك."
+
+msgid "Annuler cet avoir ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "إلغاء هذا الإشعار الدائن؟ يبقى في السجل برقمه، للقراءة فقط."
+
+msgid "Validité (facultative)"
+msgstr "الصلاحية (اختياري)"
+
+msgid "Aucun devis."
+msgstr "لا توجد عروض أسعار."
+
+msgid "1 devis."
+msgstr "عرض أسعار واحد."
+
+msgid "{} devis."
+msgstr "عدد عروض الأسعار: {}."
+
+msgid "Aucune proforma."
+msgstr "لا توجد فواتير مبدئية."
+
+msgid "1 proforma."
+msgstr "فاتورة مبدئية واحدة."
+
+msgid "{} proformas."
+msgstr "عدد الفواتير المبدئية: {}."
+
+msgid "Aucun avoir."
+msgstr "لا توجد إشعارات دائنة."
+
+msgid "1 avoir."
+msgstr "إشعار دائن واحد."
+
+msgid "{} avoirs."
+msgstr "عدد الإشعارات الدائنة: {}."
+
+msgid "Devis (brouillon)"
+msgstr "عرض أسعار (مسودة)"
+
+msgid "Proforma (brouillon)"
+msgstr "فاتورة مبدئية (مسودة)"
+
+msgid "Avoir (brouillon)"
+msgstr "إشعار دائن (مسودة)"
+
+msgid "Devis {}"
+msgstr "عرض أسعار {}"
+
+msgid "Proforma {}"
+msgstr "فاتورة مبدئية {}"
+
+msgid "Avoir {}"
+msgstr "إشعار دائن {}"
+
+msgid "Devis converti en facture : lecture seule."
+msgstr "عرض أسعار حُوِّل إلى فاتورة: للقراءة فقط."
+
+msgid "Proforma convertie en facture : lecture seule."
+msgstr "فاتورة مبدئية حُوِّلت إلى فاتورة: للقراءة فقط."
+
+msgid "Devis annulé : lecture seule, numéro conservé."
+msgstr "عرض أسعار ملغى: للقراءة فقط، ويُحتفظ برقمه."
+
+msgid "Proforma annulée : lecture seule, numéro conservé."
+msgstr "فاتورة مبدئية ملغاة: للقراءة فقط، ويُحتفظ برقمها."
+
+msgid "Avoir annulé : lecture seule, numéro conservé."
+msgstr "إشعار دائن ملغى: للقراءة فقط، ويُحتفظ برقمه."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un devis."
+msgstr "للقراءة فقط: لا يسمح دورك بتعديل عرض أسعار."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une proforma."
+msgstr "للقراءة فقط: لا يسمح دورك بتعديل فاتورة مبدئية."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un avoir."
+msgstr "للقراءة فقط: لا يسمح دورك بتعديل إشعار دائن."
+
+msgid "Devis validé : lignes et montants figés."
+msgstr "عرض أسعار معتمد: البنود والمبالغ مثبّتة."
+
+msgid "Proforma validée : lignes et montants figés."
+msgstr "فاتورة مبدئية معتمدة: البنود والمبالغ مثبّتة."
+
+msgid "Avoir validé : lignes et montants figés."
+msgstr "إشعار دائن معتمد: البنود والمبالغ مثبّتة."
+
+msgid "devis marqué envoyé"
+msgstr "وُضعت على عرض الأسعار علامة: أُرسل"
+
+msgid "proforma marquée envoyée"
+msgstr "وُضعت على الفاتورة المبدئية علامة: أُرسلت"
+
+msgid "avoir marqué envoyé"
+msgstr "وُضعت على الإشعار الدائن علامة: أُرسل"
+
+msgid "devis annulé"
+msgstr "أُلغي عرض الأسعار"
+
+msgid "proforma annulée"
+msgstr "أُلغيت الفاتورة المبدئية"
+
+msgid "avoir annulé"
+msgstr "أُلغي الإشعار الدائن"
+
+msgid "devis validé sous le numéro {}"
+msgstr "اعتُمد عرض الأسعار برقم {}"
+
+msgid "proforma validée sous le numéro {}"
+msgstr "اعتُمدت الفاتورة المبدئية برقم {}"
+
+msgid "avoir validé sous le numéro {}"
+msgstr "اعتُمد الإشعار الدائن برقم {}"
+
+msgid "ce document n'existe plus"
+msgstr "هذا المستند لم يعد موجودًا"
+
+msgid "enregistrer d'abord le document"
+msgstr "احفظ المستند أولًا"

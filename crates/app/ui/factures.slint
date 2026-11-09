@@ -1,6 +1,7 @@
-// Écran Factures : registre filtrable, puis fiche en pleine page (cahier des
-// charges, sections 4.1, 4.2, 6.6 et 7). Tous les calculs et les contrôles sont
-// faits par l'application : cet écran ne fait qu'afficher et transmettre la saisie.
+// Écran commun des documents de vente (Devis, Proforma, Facture, Avoir) : registre
+// filtrable, puis fiche en pleine page (cahier des charges, sections 4.1, 4.2, 6 et 7).
+// Tous les calculs et les contrôles sont faits par l'application, qui fournit aussi
+// les textes propres au type : cet écran ne fait qu'afficher et transmettre la saisie.
 
 import { CheckBox, ComboBox, LineEdit, ScrollView, StandardTableView } from "std-widgets.slint";
 import { Bouton, Champ, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
@@ -32,11 +33,29 @@ export struct FicheFactureUi {
     tva-index: int,
     mode-index: int,
     modifiable: bool,
+    // Faux pour un avoir : son client est celui de la facture d'origine.
+    client-modifiable: bool,
     admin-modifiable: bool,
     peut-valider: bool,
     peut-envoyer: bool,
     peut-annuler: bool,
     peut-supprimer: bool,
+    // Explication affichée sous les actions quand la fiche n'est pas modifiable
+    // (lecture seule, document figé, annulé, converti) ; vide sinon.
+    note: string,
+}
+
+// Textes propres au type de document (accord du genre compris), traduits par l'application.
+export struct TextesDocumentUi {
+    titre: string,
+    nouveau: string,
+    aide-registre: string,
+    sans-numero: string,
+    libelle-echeance: string,
+    marquer-envoye: string,
+    annuler: string,
+    confirmer-validation: string,
+    confirmer-annulation: string,
 }
 
 export struct TotauxUi {
@@ -61,9 +80,16 @@ export global FacturesApi {
     in-out property <int> ligne-courante: -1;
     in property <bool> peut-creer;
     in property <bool> fiche-ouverte;
-    callback ouvrir();
-    // Statut : 0 tous, 1 brouillon, 2 validé, 3 envoyé, 4 annulé.
-    // Paiement : 0 tous, 1 impayé, 2 partiel, 3 payé.
+    in property <TextesDocumentUi> textes;
+    // Choix du filtre de statut (le premier est « tous ») ; dépend du type.
+    in property <[string]> statuts;
+    // Filtre et bandeau de paiement : seulement pour un type qui reçoit des règlements.
+    in property <bool> avec-paiement;
+    // PDF disponible pour ce type.
+    in property <bool> avec-pdf;
+    // Rang du type dans TypeDocument::TOUS.
+    callback ouvrir(type-document: int);
+    // Statut : rang dans `statuts`. Paiement : 0 tous, 1 impayé, 2 partiel, 3 payé.
     // Renvoie un message si une date de période est illisible.
     callback filtrer(texte: string, statut: int, paiement: int, du: string, au: string) -> string;
     callback trier(colonne: int, croissant: bool);
@@ -114,7 +140,7 @@ component Registre inherits VerticalLayout {
     property <string> erreur-filtre;
 
     function filtrer() {
-        root.erreur-filtre = FacturesApi.filtrer(recherche.text, statut.current-index, paiement.current-index, du.text, au.text);
+        root.erreur-filtre = FacturesApi.filtrer(recherche.text, statut.current-index, FacturesApi.avec-paiement ? paiement.current-index : 0, du.text, au.text);
     }
 
     padding: 24px;
@@ -124,13 +150,13 @@ component Registre inherits VerticalLayout {
         spacing: 8px;
 
         Titre {
-            text: @tr("Factures");
+            text: FacturesApi.textes.titre;
         }
 
         Rectangle { }
 
         if FacturesApi.peut-creer: Bouton {
-            text: @tr("Nouvelle facture");
+            text: FacturesApi.textes.nouveau;
             primary: true;
             clicked => {
                 FacturesApi.nouvelle();
@@ -150,14 +176,15 @@ component Registre inherits VerticalLayout {
 
         statut := ComboBox {
             width: 150px;
-            model: [@tr("Tous les statuts"), @tr("Brouillon"), @tr("Validé"), @tr("Envoyé"), @tr("Annulé")];
+            model: FacturesApi.statuts;
             selected => {
                 root.filtrer();
             }
         }
 
         paiement := ComboBox {
-            width: 160px;
+            visible: FacturesApi.avec-paiement;
+            width: FacturesApi.avec-paiement ? 160px : 0px;
             model: [@tr("Tout paiement"), @tr("Impayé"), @tr("Partiel"), @tr("Payé")];
             selected => {
                 root.filtrer();
@@ -225,7 +252,7 @@ component Registre inherits VerticalLayout {
 
     Text {
         horizontal-alignment: Theme.debut;
-        text: FacturesApi.resume + " " + @tr("Cliquer sur une facture pour ouvrir sa fiche.");
+        text: FacturesApi.resume + " " + FacturesApi.textes.aide-registre;
         font-size: 12px;
         color: Theme.texte-secondaire;
     }
@@ -374,7 +401,7 @@ component Fiche inherits ScrollView {
 
                 if root.fiche.brouillon: Text {
                     horizontal-alignment: Theme.debut;
-                    text: @tr("Aucun numéro tant que la facture n'est pas validée.");
+                    text: FacturesApi.textes.sans-numero;
                     color: Theme.texte-secondaire;
                     vertical-alignment: center;
                 }
@@ -399,7 +426,7 @@ component Fiche inherits ScrollView {
                 Rangee {
                     spacing: 8px;
 
-                    if root.fiche.modifiable: recherche-client := LineEdit {
+                    if root.fiche.client-modifiable: recherche-client := LineEdit {
                         width: 160px;
                         placeholder-text: @tr("Filtrer les clients");
                         edited(texte) => {
@@ -410,7 +437,7 @@ component Fiche inherits ScrollView {
 
                     client := ComboBox {
                         model: FacturesApi.clients;
-                        enabled: root.fiche.modifiable;
+                        enabled: root.fiche.client-modifiable;
                         selected => {
                             root.fiche.tiers-detail = FacturesApi.client-choisi(self.current-index);
                         }
@@ -449,7 +476,7 @@ component Fiche inherits ScrollView {
                 alignment: start;
 
                 echeance := Champ {
-                    libelle: @tr("Échéance (facultative)");
+                    libelle: FacturesApi.textes.libelle-echeance;
                     lecture-seule: !root.fiche.modifiable;
                 }
             }
@@ -761,7 +788,7 @@ component Fiche inherits ScrollView {
             }
 
             if root.fiche.peut-envoyer: Bouton {
-                text: @tr("Marquer envoyée");
+                text: FacturesApi.textes.marquer-envoye;
                 clicked => {
                     root.confirmation = 0;
                     root.retour = FacturesApi.marquer-envoye();
@@ -770,14 +797,14 @@ component Fiche inherits ScrollView {
             }
 
             if root.fiche.peut-annuler: Bouton {
-                text: @tr("Annuler la facture");
+                text: FacturesApi.textes.annuler;
                 clicked => {
                     root.retour = { };
                     root.confirmation = 2;
                 }
             }
 
-            if root.fiche.existe: Bouton {
+            if root.fiche.existe && FacturesApi.avec-pdf: Bouton {
                 text: root.fiche.brouillon ? @tr("Aperçu PDF") : @tr("Exporter en PDF");
                 clicked => {
                     root.confirmation = 0;
@@ -799,7 +826,7 @@ component Fiche inherits ScrollView {
 
             Text {
                 horizontal-alignment: Theme.debut;
-                text: root.confirmation == 1 ? @tr("Valider cette facture ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés.") : (root.confirmation == 2 ? @tr("Annuler cette facture ? Elle reste dans le registre avec son numéro, en lecture seule.") : @tr("Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit."));
+                text: root.confirmation == 1 ? FacturesApi.textes.confirmer-validation : (root.confirmation == 2 ? FacturesApi.textes.confirmer-annulation : @tr("Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit."));
                 color: Theme.texte;
                 wrap: word-wrap;
             }
@@ -837,17 +864,11 @@ component Fiche inherits ScrollView {
             retour: root.retour;
         }
 
-        if !root.fiche.modifiable && !root.fiche.admin-modifiable && !root.fiche.annule: Text {
+        if root.fiche.note != "": Text {
             horizontal-alignment: Theme.debut;
-            text: root.fiche.brouillon ? @tr("Lecture seule : votre rôle ne permet pas de modifier une facture.") : @tr("Facture validée : lignes et montants figés.");
+            text: root.fiche.note;
             color: Theme.texte-secondaire;
             wrap: word-wrap;
-        }
-
-        if root.fiche.annule: Text {
-            horizontal-alignment: Theme.debut;
-            text: @tr("Facture annulée : lecture seule, numéro conservé.");
-            color: Theme.texte-secondaire;
         }
 
         // Historique des changements de statut.
@@ -883,8 +904,11 @@ component Fiche inherits ScrollView {
 }
 
 export component PageFactures inherits Rectangle {
+    // Rang du type dans TypeDocument::TOUS (0 devis, 1 proforma, 4 facture, 5 avoir).
+    in property <int> type-document;
+
     init => {
-        FacturesApi.ouvrir();
+        FacturesApi.ouvrir(root.type-document);
     }
 
     if !FacturesApi.fiche-ouverte: Registre { }

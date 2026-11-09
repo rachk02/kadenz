@@ -1196,3 +1196,174 @@ msgstr "Step {} of {}: {}"
 
 msgid "État"
 msgstr "State"
+
+msgid "Avoirs"
+msgstr "Credit notes"
+
+msgid "Nouveau devis"
+msgstr "New quote"
+
+msgid "Cliquer sur un devis pour ouvrir sa fiche."
+msgstr "Click a quote to open it."
+
+msgid "Aucun numéro tant que le devis n'est pas validé."
+msgstr "No number until the quote is validated."
+
+msgid "Marquer envoyé"
+msgstr "Mark as sent"
+
+msgid "Annuler le devis"
+msgstr "Cancel the quote"
+
+msgid "Valider ce devis ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "Validate this quote? It receives its final number; its lines and amounts can no longer be changed."
+
+msgid "Annuler ce devis ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "Cancel this quote? It stays in the register with its number, read-only."
+
+msgid "Nouvelle proforma"
+msgstr "New pro forma"
+
+msgid "Cliquer sur une proforma pour ouvrir sa fiche."
+msgstr "Click a pro forma to open it."
+
+msgid "Aucun numéro tant que la proforma n'est pas validée."
+msgstr "No number until the pro forma is validated."
+
+msgid "Annuler la proforma"
+msgstr "Cancel the pro forma"
+
+msgid "Valider cette proforma ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "Validate this pro forma? It receives its final number; its lines and amounts can no longer be changed."
+
+msgid "Annuler cette proforma ? Elle reste dans le registre avec son numéro, en lecture seule."
+msgstr "Cancel this pro forma? It stays in the register with its number, read-only."
+
+msgid "Cliquer sur un avoir pour ouvrir sa fiche."
+msgstr "Click a credit note to open it."
+
+msgid "Aucun numéro tant que l'avoir n'est pas validé."
+msgstr "No number until the credit note is validated."
+
+msgid "Annuler l'avoir"
+msgstr "Cancel the credit note"
+
+msgid "Valider cet avoir ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "Validate this credit note? It receives its final number; its lines and amounts can no longer be changed."
+
+msgid "Annuler cet avoir ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "Cancel this credit note? It stays in the register with its number, read-only."
+
+msgid "Validité (facultative)"
+msgstr "Valid until (optional)"
+
+msgid "Aucun devis."
+msgstr "No quotes."
+
+msgid "1 devis."
+msgstr "1 quote."
+
+msgid "{} devis."
+msgstr "{} quotes."
+
+msgid "Aucune proforma."
+msgstr "No pro formas."
+
+msgid "1 proforma."
+msgstr "1 pro forma."
+
+msgid "{} proformas."
+msgstr "{} pro formas."
+
+msgid "Aucun avoir."
+msgstr "No credit notes."
+
+msgid "1 avoir."
+msgstr "1 credit note."
+
+msgid "{} avoirs."
+msgstr "{} credit notes."
+
+msgid "Devis (brouillon)"
+msgstr "Quote (draft)"
+
+msgid "Proforma (brouillon)"
+msgstr "Pro forma (draft)"
+
+msgid "Avoir (brouillon)"
+msgstr "Credit note (draft)"
+
+msgid "Devis {}"
+msgstr "Quote {}"
+
+msgid "Proforma {}"
+msgstr "Pro forma {}"
+
+msgid "Avoir {}"
+msgstr "Credit note {}"
+
+msgid "Devis converti en facture : lecture seule."
+msgstr "Quote converted into an invoice: read-only."
+
+msgid "Proforma convertie en facture : lecture seule."
+msgstr "Pro forma converted into an invoice: read-only."
+
+msgid "Devis annulé : lecture seule, numéro conservé."
+msgstr "Cancelled quote: read-only, number kept."
+
+msgid "Proforma annulée : lecture seule, numéro conservé."
+msgstr "Cancelled pro forma: read-only, number kept."
+
+msgid "Avoir annulé : lecture seule, numéro conservé."
+msgstr "Cancelled credit note: read-only, number kept."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un devis."
+msgstr "Read-only: your role does not allow editing a quote."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une proforma."
+msgstr "Read-only: your role does not allow editing a pro forma."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un avoir."
+msgstr "Read-only: your role does not allow editing a credit note."
+
+msgid "Devis validé : lignes et montants figés."
+msgstr "Validated quote: lines and amounts locked."
+
+msgid "Proforma validée : lignes et montants figés."
+msgstr "Validated pro forma: lines and amounts locked."
+
+msgid "Avoir validé : lignes et montants figés."
+msgstr "Validated credit note: lines and amounts locked."
+
+msgid "devis marqué envoyé"
+msgstr "quote marked as sent"
+
+msgid "proforma marquée envoyée"
+msgstr "pro forma marked as sent"
+
+msgid "avoir marqué envoyé"
+msgstr "credit note marked as sent"
+
+msgid "devis annulé"
+msgstr "quote cancelled"
+
+msgid "proforma annulée"
+msgstr "pro forma cancelled"
+
+msgid "avoir annulé"
+msgstr "credit note cancelled"
+
+msgid "devis validé sous le numéro {}"
+msgstr "quote validated with number {}"
+
+msgid "proforma validée sous le numéro {}"
+msgstr "pro forma validated with number {}"
+
+msgid "avoir validé sous le numéro {}"
+msgstr "credit note validated with number {}"
+
+msgid "ce document n'existe plus"
+msgstr "this document no longer exists"
+
+msgid "enregistrer d'abord le document"
+msgstr "save the document first"

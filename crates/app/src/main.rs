@@ -19,6 +19,7 @@ use kadenz_domaine::role::Droit;
 use kadenz_domaine::saisie;
 use kadenz_stockage::Connexion;
 use kadenz_stockage::comptes::{self, EtatInstallation, NouvelUtilisateur, Utilisateur};
+use kadenz_stockage::documents::TypeDocument;
 use kadenz_stockage::droits;
 use kadenz_stockage::entreprise::{self, Entreprise};
 use kadenz_stockage::installation::{self, InstallationInitiale};
@@ -67,6 +68,8 @@ struct Etat {
     comptes: Vue<Utilisateur, ()>,
     factures: factures::Registre,
     facture: Option<factures::EditionFacture>,
+    /// Type de document de l'écran commun des documents de vente.
+    type_document: TypeDocument,
 }
 
 impl Etat {
@@ -79,6 +82,7 @@ impl Etat {
             comptes: Vue::default(),
             factures: factures::Registre::default(),
             facture: None,
+            type_document: TypeDocument::Facture,
         }
     }
 }
@@ -108,6 +112,7 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
             Page::BonsCommande,
             Page::Livraisons,
             Page::Factures,
+            Page::Avoirs,
             Page::Tiers,
             Page::Produits,
         ]);

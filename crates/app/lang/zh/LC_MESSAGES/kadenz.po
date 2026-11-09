@@ -1196,3 +1196,174 @@ msgstr "第 {} 步，共 {} 步：{}"
 
 msgid "État"
 msgstr "状态"
+
+msgid "Avoirs"
+msgstr "贷项通知单"
+
+msgid "Nouveau devis"
+msgstr "新建报价单"
+
+msgid "Cliquer sur un devis pour ouvrir sa fiche."
+msgstr "点击报价单以打开其详情。"
+
+msgid "Aucun numéro tant que le devis n'est pas validé."
+msgstr "报价单确认前没有编号。"
+
+msgid "Marquer envoyé"
+msgstr "标记为已发送"
+
+msgid "Annuler le devis"
+msgstr "作废报价单"
+
+msgid "Valider ce devis ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "确认此报价单？它将获得正式编号，其明细和金额将不能再修改。"
+
+msgid "Annuler ce devis ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "作废此报价单？它将保留编号，以只读方式留在登记簿中。"
+
+msgid "Nouvelle proforma"
+msgstr "新建形式发票"
+
+msgid "Cliquer sur une proforma pour ouvrir sa fiche."
+msgstr "点击形式发票以打开其详情。"
+
+msgid "Aucun numéro tant que la proforma n'est pas validée."
+msgstr "形式发票确认前没有编号。"
+
+msgid "Annuler la proforma"
+msgstr "作废形式发票"
+
+msgid "Valider cette proforma ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "确认此形式发票？它将获得正式编号，其明细和金额将不能再修改。"
+
+msgid "Annuler cette proforma ? Elle reste dans le registre avec son numéro, en lecture seule."
+msgstr "作废此形式发票？它将保留编号，以只读方式留在登记簿中。"
+
+msgid "Cliquer sur un avoir pour ouvrir sa fiche."
+msgstr "点击贷项通知单以打开其详情。"
+
+msgid "Aucun numéro tant que l'avoir n'est pas validé."
+msgstr "贷项通知单确认前没有编号。"
+
+msgid "Annuler l'avoir"
+msgstr "作废贷项通知单"
+
+msgid "Valider cet avoir ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "确认此贷项通知单？它将获得正式编号，其明细和金额将不能再修改。"
+
+msgid "Annuler cet avoir ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "作废此贷项通知单？它将保留编号，以只读方式留在登记簿中。"
+
+msgid "Validité (facultative)"
+msgstr "有效期（可选）"
+
+msgid "Aucun devis."
+msgstr "没有报价单。"
+
+msgid "1 devis."
+msgstr "1 张报价单。"
+
+msgid "{} devis."
+msgstr "{} 张报价单。"
+
+msgid "Aucune proforma."
+msgstr "没有形式发票。"
+
+msgid "1 proforma."
+msgstr "1 张形式发票。"
+
+msgid "{} proformas."
+msgstr "{} 张形式发票。"
+
+msgid "Aucun avoir."
+msgstr "没有贷项通知单。"
+
+msgid "1 avoir."
+msgstr "1 张贷项通知单。"
+
+msgid "{} avoirs."
+msgstr "{} 张贷项通知单。"
+
+msgid "Devis (brouillon)"
+msgstr "报价单（草稿）"
+
+msgid "Proforma (brouillon)"
+msgstr "形式发票（草稿）"
+
+msgid "Avoir (brouillon)"
+msgstr "贷项通知单（草稿）"
+
+msgid "Devis {}"
+msgstr "报价单 {}"
+
+msgid "Proforma {}"
+msgstr "形式发票 {}"
+
+msgid "Avoir {}"
+msgstr "贷项通知单 {}"
+
+msgid "Devis converti en facture : lecture seule."
+msgstr "报价单已转为发票：只读。"
+
+msgid "Proforma convertie en facture : lecture seule."
+msgstr "形式发票已转为发票：只读。"
+
+msgid "Devis annulé : lecture seule, numéro conservé."
+msgstr "已作废的报价单：只读，编号保留。"
+
+msgid "Proforma annulée : lecture seule, numéro conservé."
+msgstr "已作废的形式发票：只读，编号保留。"
+
+msgid "Avoir annulé : lecture seule, numéro conservé."
+msgstr "已作废的贷项通知单：只读，编号保留。"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un devis."
+msgstr "只读：您的角色不允许修改报价单。"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une proforma."
+msgstr "只读：您的角色不允许修改形式发票。"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un avoir."
+msgstr "只读：您的角色不允许修改贷项通知单。"
+
+msgid "Devis validé : lignes et montants figés."
+msgstr "已确认的报价单：明细和金额已锁定。"
+
+msgid "Proforma validée : lignes et montants figés."
+msgstr "已确认的形式发票：明细和金额已锁定。"
+
+msgid "Avoir validé : lignes et montants figés."
+msgstr "已确认的贷项通知单：明细和金额已锁定。"
+
+msgid "devis marqué envoyé"
+msgstr "报价单已标记为已发送"
+
+msgid "proforma marquée envoyée"
+msgstr "形式发票已标记为已发送"
+
+msgid "avoir marqué envoyé"
+msgstr "贷项通知单已标记为已发送"
+
+msgid "devis annulé"
+msgstr "报价单已作废"
+
+msgid "proforma annulée"
+msgstr "形式发票已作废"
+
+msgid "avoir annulé"
+msgstr "贷项通知单已作废"
+
+msgid "devis validé sous le numéro {}"
+msgstr "报价单已确认，编号 {}"
+
+msgid "proforma validée sous le numéro {}"
+msgstr "形式发票已确认，编号 {}"
+
+msgid "avoir validé sous le numéro {}"
+msgstr "贷项通知单已确认，编号 {}"
+
+msgid "ce document n'existe plus"
+msgstr "此文档已不存在"
+
+msgid "enregistrer d'abord le document"
+msgstr "请先保存文档"

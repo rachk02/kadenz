@@ -21,6 +21,7 @@ export enum Page {
     bons-commande,
     livraisons,
     factures,
+    avoirs,
     tiers,
     produits,
     entreprise,
@@ -177,7 +178,7 @@ export component FenetrePrincipale inherits Window {
     in property <[Page]> menu;
     in-out property <Page> page: Page.tableau-de-bord;
 
-    property <bool> page-en-construction: root.page != Page.factures && root.page != Page.tiers && root.page != Page.produits && root.page != Page.entreprise && root.page != Page.parametres && root.page != Page.utilisateurs && root.page != Page.mon-compte && root.page != Page.a-propos;
+    property <bool> page-en-construction: root.page != Page.devis && root.page != Page.proforma && root.page != Page.factures && root.page != Page.avoirs && root.page != Page.tiers && root.page != Page.produits && root.page != Page.entreprise && root.page != Page.parametres && root.page != Page.utilisateurs && root.page != Page.mon-compte && root.page != Page.a-propos;
 
     // Libellé de chaque page, dans la langue choisie : calculé ici et non stocké,
     // pour suivre un changement de langue sans reconstruire le menu.
@@ -188,6 +189,7 @@ export component FenetrePrincipale inherits Window {
         if (p == Page.bons-commande) { return @tr("Bons de commande"); }
         if (p == Page.livraisons) { return @tr("Livraisons"); }
         if (p == Page.factures) { return @tr("Factures"); }
+        if (p == Page.avoirs) { return @tr("Avoirs"); }
         if (p == Page.tiers) { return @tr("Tiers"); }
         if (p == Page.produits) { return @tr("Produits"); }
         if (p == Page.entreprise) { return @tr("Entreprise"); }
@@ -205,6 +207,7 @@ export component FenetrePrincipale inherits Window {
         if (p == Page.bons-commande) { return @image-url("icones/menu/bons-commande.svg"); }
         if (p == Page.livraisons) { return @image-url("icones/menu/livraisons.svg"); }
         if (p == Page.factures) { return @image-url("icones/menu/factures.svg"); }
+        if (p == Page.avoirs) { return @image-url("icones/menu/avoirs.svg"); }
         if (p == Page.tiers) { return @image-url("icones/menu/tiers.svg"); }
         if (p == Page.produits) { return @image-url("icones/menu/produits.svg"); }
         if (p == Page.entreprise) { return @image-url("icones/menu/entreprise.svg"); }
@@ -334,7 +337,23 @@ export component FenetrePrincipale inherits Window {
                 Rectangle { }
             }
 
-            if root.page == Page.factures: PageFactures { }
+            // Un écran commun pour les documents de vente ; le type est le rang dans
+            // TypeDocument::TOUS (0 devis, 1 proforma, 4 facture, 5 avoir).
+            if root.page == Page.devis: PageFactures {
+                type-document: 0;
+            }
+
+            if root.page == Page.proforma: PageFactures {
+                type-document: 1;
+            }
+
+            if root.page == Page.factures: PageFactures {
+                type-document: 4;
+            }
+
+            if root.page == Page.avoirs: PageFactures {
+                type-document: 5;
+            }
 
             if root.page == Page.tiers: PageTiers { }
 

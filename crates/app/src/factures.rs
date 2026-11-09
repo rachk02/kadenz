@@ -1,4 +1,6 @@
-//! Écran Factures : registre et fiche (cahier des charges, sections 4.1, 4.2, 6.6, 7).
+//! Écran commun des documents de vente : Devis, Proforma, Facture et Avoir, chacun
+//! avec son registre et sa fiche (cahier des charges, sections 4.1, 4.2, 6, 7).
+//! Le type affiché est `Etat::type_document`, choisi à l'ouverture de la page.
 //!
 //! La fiche garde ici l'identifiant du document et les listes affichées (clients,
 //! produits, taux, modes) : un rang choisi à l'écran est converti en valeur tout
@@ -16,8 +18,7 @@ use kadenz_domaine::saisie;
 use kadenz_domaine::texte::{cle_comparaison, contient};
 use kadenz_stockage::comptes::Utilisateur;
 use kadenz_stockage::documents::{
-    self, Document, EtatPaiement, FiltreDocuments, LigneSaisie, ResumeDocument, Saisie, Statut,
-    TypeDocument,
+    self, EtatPaiement, FiltreDocuments, LigneSaisie, ResumeDocument, Saisie, Statut, TypeDocument,
 };
 use kadenz_stockage::produits::{self, FiltreProduits, Produit};
 use kadenz_stockage::tiers::{self, FiltreTiers};
@@ -28,10 +29,8 @@ use crate::referentiels::{Vue, modele_lignes, retour_erreur, retour_ok};
 use crate::traduction::{tr, trf};
 use crate::{
     Etat, EtatPartage, EvenementUi, FacturesApi, FenetrePrincipale, FicheFactureUi, LigneFactureUi,
-    Retour, TotauxUi,
+    Retour, TextesDocumentUi, TotauxUi,
 };
-
-const TYPE: TypeDocument = TypeDocument::Facture;
 
 /// Fiche ouverte : document éventuel et correspondance rang affiché vers valeur.
 pub(crate) struct EditionFacture {
@@ -47,7 +46,9 @@ pub(crate) struct EditionFacture {
     modes: Vec<String>,
     lignes: Rc<VecModel<LigneFactureUi>>,
     orthographe: Orthographe,
-    delai_paiement_jours: Option<u32>,
+    /// Délai de l'échéance proposée : validité des devis pour un devis ou une
+    /// proforma, délai de paiement pour une facture, aucun pour un avoir.
+    delai_echeance_jours: Option<u32>,
     /// Derniers rangs de remise et de TVA choisis, pour recalculer les totaux
     /// quand une ligne est supprimée (le bouton disparaît avec sa ligne).
     remise_rang: i32,
@@ -88,6 +89,200 @@ fn pourcentage_libelle(p: Pourcentage) -> SharedString {
 fn modele_textes(textes: impl IntoIterator<Item = String>) -> ModelRc<SharedString> {
     let v: Vec<SharedString> = textes.into_iter().map(SharedString::from).collect();
     ModelRc::new(VecModel::from(v))
+}
+
+// ---------------------------------------------------------------- Textes par type
+//
+// Chaque texte est un littéral dans `tr(...)` : le test de couverture des
+// traductions les retrouve ainsi tous. Le genre suit le type (un devis, une proforma).
+
+fn textes_type(t: TypeDocument) -> TextesDocumentUi {
+    let (titre, nouveau, aide, sans_numero, envoye, annuler, validation, annulation) = match t {
+        TypeDocument::Devis => (
+            tr("Devis"),
+            tr("Nouveau devis"),
+            tr("Cliquer sur un devis pour ouvrir sa fiche."),
+            tr("Aucun numéro tant que le devis n'est pas validé."),
+            tr("Marquer envoyé"),
+            tr("Annuler le devis"),
+            tr(
+                "Valider ce devis ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés.",
+            ),
+            tr("Annuler ce devis ? Il reste dans le registre avec son numéro, en lecture seule."),
+        ),
+        TypeDocument::Proforma => (
+            tr("Proforma"),
+            tr("Nouvelle proforma"),
+            tr("Cliquer sur une proforma pour ouvrir sa fiche."),
+            tr("Aucun numéro tant que la proforma n'est pas validée."),
+            tr("Marquer envoyée"),
+            tr("Annuler la proforma"),
+            tr(
+                "Valider cette proforma ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés.",
+            ),
+            tr(
+                "Annuler cette proforma ? Elle reste dans le registre avec son numéro, en lecture seule.",
+            ),
+        ),
+        TypeDocument::Avoir => (
+            tr("Avoirs"),
+            String::new(),
+            tr("Cliquer sur un avoir pour ouvrir sa fiche."),
+            tr("Aucun numéro tant que l'avoir n'est pas validé."),
+            tr("Marquer envoyé"),
+            tr("Annuler l'avoir"),
+            tr(
+                "Valider cet avoir ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés.",
+            ),
+            tr("Annuler cet avoir ? Il reste dans le registre avec son numéro, en lecture seule."),
+        ),
+        _ => (
+            tr("Factures"),
+            tr("Nouvelle facture"),
+            tr("Cliquer sur une facture pour ouvrir sa fiche."),
+            tr("Aucun numéro tant que la facture n'est pas validée."),
+            tr("Marquer envoyée"),
+            tr("Annuler la facture"),
+            tr(
+                "Valider cette facture ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés.",
+            ),
+            tr(
+                "Annuler cette facture ? Elle reste dans le registre avec son numéro, en lecture seule.",
+            ),
+        ),
+    };
+    let echeance = if t.convertible_en_facture() {
+        tr("Validité (facultative)")
+    } else {
+        tr("Échéance (facultative)")
+    };
+    TextesDocumentUi {
+        titre: titre.into(),
+        nouveau: nouveau.into(),
+        aide_registre: aide.into(),
+        sans_numero: sans_numero.into(),
+        libelle_echeance: echeance.into(),
+        marquer_envoye: envoye.into(),
+        annuler: annuler.into(),
+        confirmer_validation: validation.into(),
+        confirmer_annulation: annulation.into(),
+    }
+}
+
+/// Bilan du registre : « Aucun devis. », « 1 devis. », « 3 devis. »
+fn resume_registre(t: TypeDocument, n: usize) -> String {
+    match (t, n) {
+        (TypeDocument::Devis, 0) => tr("Aucun devis."),
+        (TypeDocument::Devis, 1) => tr("1 devis."),
+        (TypeDocument::Devis, n) => trf("{} devis.", &[&n]),
+        (TypeDocument::Proforma, 0) => tr("Aucune proforma."),
+        (TypeDocument::Proforma, 1) => tr("1 proforma."),
+        (TypeDocument::Proforma, n) => trf("{} proformas.", &[&n]),
+        (TypeDocument::Avoir, 0) => tr("Aucun avoir."),
+        (TypeDocument::Avoir, 1) => tr("1 avoir."),
+        (TypeDocument::Avoir, n) => trf("{} avoirs.", &[&n]),
+        (_, 0) => tr("Aucune facture."),
+        (_, 1) => tr("1 facture."),
+        (_, n) => trf("{} factures.", &[&n]),
+    }
+}
+
+/// Titre de la fiche : numéro, brouillon ou nouveau document.
+fn titre_fiche(t: TypeDocument, numero: Option<&str>, existe: bool) -> String {
+    match (t, numero, existe) {
+        (TypeDocument::Devis, Some(n), _) => trf("Devis {}", &[&n]),
+        (TypeDocument::Devis, None, true) => tr("Devis (brouillon)"),
+        (TypeDocument::Devis, None, false) => tr("Nouveau devis"),
+        (TypeDocument::Proforma, Some(n), _) => trf("Proforma {}", &[&n]),
+        (TypeDocument::Proforma, None, true) => tr("Proforma (brouillon)"),
+        (TypeDocument::Proforma, None, false) => tr("Nouvelle proforma"),
+        (TypeDocument::Avoir, Some(n), _) => trf("Avoir {}", &[&n]),
+        (TypeDocument::Avoir, None, _) => tr("Avoir (brouillon)"),
+        (_, Some(n), _) => trf("Facture {}", &[&n]),
+        (_, None, true) => tr("Facture (brouillon)"),
+        (_, None, false) => tr("Nouvelle facture"),
+    }
+}
+
+/// Explication affichée sous les actions d'une fiche non modifiable.
+fn note_fiche(t: TypeDocument, statut: Statut, modifiable: bool, admin_modifiable: bool) -> String {
+    use TypeDocument::{Avoir, Devis, Proforma};
+    match (t, statut) {
+        (Devis, Statut::Converti) => tr("Devis converti en facture : lecture seule."),
+        (Proforma, Statut::Converti) => tr("Proforma convertie en facture : lecture seule."),
+        (Devis, Statut::Annule) => tr("Devis annulé : lecture seule, numéro conservé."),
+        (Proforma, Statut::Annule) => tr("Proforma annulée : lecture seule, numéro conservé."),
+        (Avoir, Statut::Annule) => tr("Avoir annulé : lecture seule, numéro conservé."),
+        (_, Statut::Annule) => tr("Facture annulée : lecture seule, numéro conservé."),
+        _ if modifiable || admin_modifiable => String::new(),
+        (Devis, Statut::Brouillon) => {
+            tr("Lecture seule : votre rôle ne permet pas de modifier un devis.")
+        }
+        (Proforma, Statut::Brouillon) => {
+            tr("Lecture seule : votre rôle ne permet pas de modifier une proforma.")
+        }
+        (Avoir, Statut::Brouillon) => {
+            tr("Lecture seule : votre rôle ne permet pas de modifier un avoir.")
+        }
+        (_, Statut::Brouillon) => {
+            tr("Lecture seule : votre rôle ne permet pas de modifier une facture.")
+        }
+        (Devis, _) => tr("Devis validé : lignes et montants figés."),
+        (Proforma, _) => tr("Proforma validée : lignes et montants figés."),
+        (Avoir, _) => tr("Avoir validé : lignes et montants figés."),
+        _ => tr("Facture validée : lignes et montants figés."),
+    }
+}
+
+/// Message après une validation réussie.
+fn message_validation(t: TypeDocument, numero: &str) -> String {
+    match t {
+        TypeDocument::Devis => trf("devis validé sous le numéro {}", &[&numero]),
+        TypeDocument::Proforma => trf("proforma validée sous le numéro {}", &[&numero]),
+        TypeDocument::Avoir => trf("avoir validé sous le numéro {}", &[&numero]),
+        _ => trf("facture validée sous le numéro {}", &[&numero]),
+    }
+}
+
+fn message_envoi(t: TypeDocument) -> String {
+    match t {
+        TypeDocument::Devis => tr("devis marqué envoyé"),
+        TypeDocument::Proforma => tr("proforma marquée envoyée"),
+        TypeDocument::Avoir => tr("avoir marqué envoyé"),
+        _ => tr("facture marquée envoyée"),
+    }
+}
+
+fn message_annulation(t: TypeDocument) -> String {
+    match t {
+        TypeDocument::Devis => tr("devis annulé"),
+        TypeDocument::Proforma => tr("proforma annulée"),
+        TypeDocument::Avoir => tr("avoir annulé"),
+        _ => tr("facture annulée"),
+    }
+}
+
+/// Statuts proposés par le filtre du registre ; `None` est « tous les statuts ».
+fn statuts_filtre(t: TypeDocument) -> Vec<Option<Statut>> {
+    let mut statuts = vec![
+        None,
+        Some(Statut::Brouillon),
+        Some(Statut::Valide),
+        Some(Statut::Envoye),
+    ];
+    if t.convertible_en_facture() {
+        statuts.push(Some(Statut::Converti));
+    }
+    statuts.push(Some(Statut::Annule));
+    statuts
+}
+
+/// Type d'après son rang dans `TypeDocument::TOUS` ; la facture par défaut.
+fn type_au_rang(rang: i32) -> TypeDocument {
+    usize::try_from(rang)
+        .ok()
+        .and_then(|r| TypeDocument::TOUS.get(r).copied())
+        .unwrap_or(TypeDocument::Facture)
 }
 
 // ---------------------------------------------------------------- Registre
@@ -133,20 +328,14 @@ fn trier(lignes: &mut [ResumeDocument], colonne: i32, croissant: bool) {
 
 fn afficher_registre(f: &FenetrePrincipale, etat: &mut Etat) {
     let api = f.global::<FacturesApi>();
-    match documents::lister(&etat.conn, TYPE, &etat.factures.filtre) {
+    let t = etat.type_document;
+    match documents::lister(&etat.conn, t, &etat.factures.filtre) {
         Ok(mut lignes) => {
             if let Some((colonne, croissant)) = etat.factures.tri {
                 trier(&mut lignes, colonne, croissant);
             }
             api.set_registre(modele_lignes(lignes.iter().map(cellules).collect()));
-            api.set_resume(
-                match lignes.len() {
-                    0 => tr("Aucune facture."),
-                    1 => tr("1 facture."),
-                    n => trf("{} factures.", &[&n]),
-                }
-                .into(),
-            );
+            api.set_resume(resume_registre(t, lignes.len()).into());
             etat.factures.lignes = lignes;
         }
         Err(e) => api.set_resume(crate::phrase(e)),
@@ -274,7 +463,7 @@ fn afficher_produits(api: &FacturesApi, liste: &[Produit]) {
     })));
 }
 
-/// Prépare la fiche d'un document existant, ou d'une nouvelle facture.
+/// Prépare la fiche d'un document existant, ou d'un nouveau document du type affiché.
 fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Result<(), String> {
     let api = f.global::<FacturesApi>();
     let p = parametres::lire(&etat.conn).map_err(|e| e.to_string())?;
@@ -282,14 +471,22 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
         Some(id) => Some(
             documents::lire(&etat.conn, id)
                 .map_err(|e| e.to_string())?
-                .ok_or("cette facture n'existe plus")?,
+                .ok_or("ce document n'existe plus")?,
         ),
         None => None,
+    };
+    let t = document
+        .as_ref()
+        .map_or(etat.type_document, |d| d.type_document);
+    let delai_echeance = match t {
+        TypeDocument::Devis | TypeDocument::Proforma => p.validite_devis_jours,
+        TypeDocument::Facture => p.delai_paiement_jours,
+        _ => None,
     };
     let aujourd_hui = chrono::Local::now().date_naive();
     let saisie_doc = document.as_ref().map_or_else(
         || Saisie {
-            date_echeance: documents::echeance_par_defaut(aujourd_hui, p.delai_paiement_jours),
+            date_echeance: documents::echeance_par_defaut(aujourd_hui, delai_echeance),
             taux: Taux {
                 remise: p.taux_remise.first().copied().unwrap_or(0),
                 tva: p.taux_tva.first().copied().unwrap_or(0),
@@ -301,11 +498,13 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
     );
     let statut = document.as_ref().map_or(Statut::Brouillon, |d| d.statut);
     let brouillon = statut == Statut::Brouillon;
-    let droit_brouillon = possede(etat, Droit::brouillon(TYPE));
+    let droit_brouillon = possede(etat, Droit::brouillon(t));
     let modifiable = brouillon && droit_brouillon;
+    // Le client d'un avoir est celui de la facture d'origine : jamais choisi à l'écran.
+    let client_modifiable = modifiable && t != TypeDocument::Avoir;
 
     // Clients : liste modifiable, ou seulement le nom figé du document.
-    let (clients, noms, client_index, detail) = if modifiable {
+    let (clients, noms, client_index, detail) = if client_modifiable {
         let (ids, noms) = liste_clients(&etat.conn, "", &[saisie_doc.tiers_id]);
         let rang = ids
             .iter()
@@ -389,14 +588,13 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
             .unwrap_or_default(),
         None => String::new(),
     };
-    let titre = match &document {
-        Some(Document {
-            numero: Some(n), ..
-        }) => trf("Facture {}", &[n]),
-        Some(_) => tr("Facture (brouillon)"),
-        None => tr("Nouvelle facture"),
-    };
+    let titre = titre_fiche(
+        t,
+        document.as_ref().and_then(|d| d.numero.as_deref()),
+        document.is_some(),
+    );
     let valide_ou_envoye = matches!(statut, Statut::Valide | Statut::Envoye);
+    let admin_modifiable = valide_ou_envoye && droit_brouillon;
     let fiche = FicheFactureUi {
         existe: document.is_some(),
         titre: titre.into(),
@@ -418,11 +616,13 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
         tva_index,
         mode_index,
         modifiable,
-        admin_modifiable: valide_ou_envoye && droit_brouillon,
+        client_modifiable,
+        admin_modifiable,
         peut_valider: modifiable && possede(etat, Droit::ValiderDocument),
         peut_envoyer: statut == Statut::Valide && possede(etat, Droit::ValiderDocument),
         peut_annuler: valide_ou_envoye && possede(etat, Droit::AnnulerDocumentValide),
         peut_supprimer: document.is_some() && modifiable,
+        note: note_fiche(t, statut, modifiable, admin_modifiable).into(),
     };
     etat.facture = Some(EditionFacture {
         id,
@@ -434,7 +634,7 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
         modes,
         lignes,
         orthographe: p.orthographe,
-        delai_paiement_jours: p.delai_paiement_jours,
+        delai_echeance_jours: delai_echeance,
         remise_rang: remise_index,
         tva_rang: tva_index,
         fiche,
@@ -521,9 +721,8 @@ fn enregistrer_brouillon(
         Some(id) => documents::modifier_brouillon(&mut etat.conn, acteur, id, &s)
             .map(|()| id)
             .map_err(|e| e.to_string()),
-        None => {
-            documents::creer_brouillon(&mut etat.conn, acteur, TYPE, &s).map_err(|e| e.to_string())
-        }
+        None => documents::creer_brouillon(&mut etat.conn, acteur, etat.type_document, &s)
+            .map_err(|e| e.to_string()),
     }
 }
 
@@ -538,7 +737,7 @@ fn agir(
         return retour_erreur("aucune session ouverte");
     };
     let Some(id) = etat.facture.as_ref().and_then(|e| e.id) else {
-        return retour_erreur("enregistrer d'abord la facture");
+        return retour_erreur("enregistrer d'abord le document");
     };
     match action(&mut etat, &acteur, id) {
         Ok(message) => {
@@ -608,13 +807,26 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
     let api = fenetre.global::<FacturesApi>();
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
-    api.on_ouvrir(move || {
+    api.on_ouvrir(move |rang| {
         let Some(f) = f.upgrade() else { return };
         let mut etat = e.borrow_mut();
+        let t = type_au_rang(rang);
+        etat.type_document = t;
         etat.factures = Registre::default();
         etat.facture = None;
         let api = f.global::<FacturesApi>();
-        api.set_peut_creer(possede(&etat, Droit::brouillon(TYPE)));
+        api.set_textes(textes_type(t));
+        api.set_statuts(modele_textes(statuts_filtre(t).into_iter().map(
+            |s| match s {
+                Some(s) => tr(&s.to_string()),
+                None => tr("Tous les statuts"),
+            },
+        )));
+        api.set_avec_paiement(t.recoit_des_reglements());
+        // PDF : seule la facture a son modèle pour l'instant.
+        api.set_avec_pdf(t == TypeDocument::Facture);
+        // Un avoir naît toujours d'une facture validée, jamais d'une page vierge.
+        api.set_peut_creer(t != TypeDocument::Avoir && possede(&etat, Droit::brouillon(t)));
         api.set_fiche_ouverte(false);
     });
 
@@ -636,15 +848,10 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 d
             }
         };
+        let statut = au_rang(&statuts_filtre(etat.type_document), statut).flatten();
         etat.factures.filtre = FiltreDocuments {
             texte: texte.to_string(),
-            statut: match statut {
-                1 => Some(Statut::Brouillon),
-                2 => Some(Statut::Valide),
-                3 => Some(Statut::Envoye),
-                4 => Some(Statut::Annule),
-                _ => None,
-            },
+            statut,
             etat_paiement: match paiement {
                 1 => Some(EtatPaiement::Impaye),
                 2 => Some(EtatPaiement::Partiel),
@@ -866,7 +1073,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             .borrow()
             .facture
             .as_ref()
-            .and_then(|ed| ed.delai_paiement_jours);
+            .and_then(|ed| ed.delai_echeance_jours);
         echeance_apres_date(delai, &precedente, &date, &echeance)
             .map(SharedString::from)
             .unwrap_or(echeance)
@@ -907,12 +1114,13 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             Ok(id) => id,
             Err(message) => return retour_erreur(message),
         };
+        let t = etat.type_document;
         let resultat = documents::valider(&mut etat.conn, &acteur, id);
         // La fiche est rechargée dans tous les cas : le brouillon a été enregistré.
         let rechargement = ouvrir_fiche(&f, &mut etat, Some(id));
         afficher_registre(&f, &mut etat);
         match (resultat, rechargement) {
-            (Ok(numero), Ok(())) => retour_ok(trf("facture validée sous le numéro {}", &[&numero])),
+            (Ok(numero), Ok(())) => retour_ok(message_validation(t, &numero)),
             (Err(erreur), _) => retour_erreur(trf(
                 "brouillon enregistré, mais validation refusée : {}",
                 &[&tr(&erreur.to_string())],
@@ -928,7 +1136,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         };
         agir(&f, &e, |etat, acteur, id| {
             documents::marquer_envoye(&mut etat.conn, acteur, id)
-                .map(|()| "facture marquée envoyée".to_string())
+                .map(|()| message_envoi(etat.type_document))
                 .map_err(|e| e.to_string())
         })
     });
@@ -937,7 +1145,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
     api.on_exporter_pdf(move || {
         let etat = e.borrow();
         let Some(id) = etat.facture.as_ref().and_then(|ed| ed.id) else {
-            return retour_erreur("enregistrer d'abord la facture");
+            return retour_erreur("enregistrer d'abord le document");
         };
         let (octets, nom) = match crate::pdf::generer(&etat.conn, id) {
             Ok(resultat) => resultat,
@@ -946,7 +1154,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         // Dossier d'export du type de document s'il est réglé et existe encore.
         let dossier = parametres::lire(&etat.conn)
             .ok()
-            .map(|p| p.dossier_export(TYPE).to_string())
+            .map(|p| p.dossier_export(etat.type_document).to_string())
             .filter(|d| !d.is_empty() && std::path::Path::new(d).is_dir());
         let mut boite = rfd::FileDialog::new();
         if let Some(dossier) = dossier {
@@ -981,7 +1189,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         };
         agir(&f, &e, |etat, acteur, id| {
             documents::annuler(&mut etat.conn, acteur, id)
-                .map(|()| "facture annulée".to_string())
+                .map(|()| message_annulation(etat.type_document))
                 .map_err(|e| e.to_string())
         })
     });

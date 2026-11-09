@@ -1196,3 +1196,174 @@ msgstr "Paso {} de {}: {}"
 
 msgid "État"
 msgstr "Estado"
+
+msgid "Avoirs"
+msgstr "Notas de crédito"
+
+msgid "Nouveau devis"
+msgstr "Nuevo presupuesto"
+
+msgid "Cliquer sur un devis pour ouvrir sa fiche."
+msgstr "Hacer clic en un presupuesto para abrir su ficha."
+
+msgid "Aucun numéro tant que le devis n'est pas validé."
+msgstr "Sin número mientras el presupuesto no esté validado."
+
+msgid "Marquer envoyé"
+msgstr "Marcar como enviado"
+
+msgid "Annuler le devis"
+msgstr "Anular el presupuesto"
+
+msgid "Valider ce devis ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "¿Validar este presupuesto? Recibe su número definitivo; sus líneas e importes ya no podrán modificarse."
+
+msgid "Annuler ce devis ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "¿Anular este presupuesto? Permanece en el registro con su número, en solo lectura."
+
+msgid "Nouvelle proforma"
+msgstr "Nueva proforma"
+
+msgid "Cliquer sur une proforma pour ouvrir sa fiche."
+msgstr "Hacer clic en una proforma para abrir su ficha."
+
+msgid "Aucun numéro tant que la proforma n'est pas validée."
+msgstr "Sin número mientras la proforma no esté validada."
+
+msgid "Annuler la proforma"
+msgstr "Anular la proforma"
+
+msgid "Valider cette proforma ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "¿Validar esta proforma? Recibe su número definitivo; sus líneas e importes ya no podrán modificarse."
+
+msgid "Annuler cette proforma ? Elle reste dans le registre avec son numéro, en lecture seule."
+msgstr "¿Anular esta proforma? Permanece en el registro con su número, en solo lectura."
+
+msgid "Cliquer sur un avoir pour ouvrir sa fiche."
+msgstr "Hacer clic en una nota de crédito para abrir su ficha."
+
+msgid "Aucun numéro tant que l'avoir n'est pas validé."
+msgstr "Sin número mientras la nota de crédito no esté validada."
+
+msgid "Annuler l'avoir"
+msgstr "Anular la nota de crédito"
+
+msgid "Valider cet avoir ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "¿Validar esta nota de crédito? Recibe su número definitivo; sus líneas e importes ya no podrán modificarse."
+
+msgid "Annuler cet avoir ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "¿Anular esta nota de crédito? Permanece en el registro con su número, en solo lectura."
+
+msgid "Validité (facultative)"
+msgstr "Validez (opcional)"
+
+msgid "Aucun devis."
+msgstr "Ningún presupuesto."
+
+msgid "1 devis."
+msgstr "1 presupuesto."
+
+msgid "{} devis."
+msgstr "{} presupuestos."
+
+msgid "Aucune proforma."
+msgstr "Ninguna proforma."
+
+msgid "1 proforma."
+msgstr "1 proforma."
+
+msgid "{} proformas."
+msgstr "{} proformas."
+
+msgid "Aucun avoir."
+msgstr "Ninguna nota de crédito."
+
+msgid "1 avoir."
+msgstr "1 nota de crédito."
+
+msgid "{} avoirs."
+msgstr "{} notas de crédito."
+
+msgid "Devis (brouillon)"
+msgstr "Presupuesto (borrador)"
+
+msgid "Proforma (brouillon)"
+msgstr "Proforma (borrador)"
+
+msgid "Avoir (brouillon)"
+msgstr "Nota de crédito (borrador)"
+
+msgid "Devis {}"
+msgstr "Presupuesto {}"
+
+msgid "Proforma {}"
+msgstr "Proforma {}"
+
+msgid "Avoir {}"
+msgstr "Nota de crédito {}"
+
+msgid "Devis converti en facture : lecture seule."
+msgstr "Presupuesto convertido en factura: solo lectura."
+
+msgid "Proforma convertie en facture : lecture seule."
+msgstr "Proforma convertida en factura: solo lectura."
+
+msgid "Devis annulé : lecture seule, numéro conservé."
+msgstr "Presupuesto anulado: solo lectura, número conservado."
+
+msgid "Proforma annulée : lecture seule, numéro conservé."
+msgstr "Proforma anulada: solo lectura, número conservado."
+
+msgid "Avoir annulé : lecture seule, numéro conservé."
+msgstr "Nota de crédito anulada: solo lectura, número conservado."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un devis."
+msgstr "Solo lectura: su rol no permite modificar un presupuesto."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une proforma."
+msgstr "Solo lectura: su rol no permite modificar una proforma."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un avoir."
+msgstr "Solo lectura: su rol no permite modificar una nota de crédito."
+
+msgid "Devis validé : lignes et montants figés."
+msgstr "Presupuesto validado: líneas e importes fijados."
+
+msgid "Proforma validée : lignes et montants figés."
+msgstr "Proforma validada: líneas e importes fijados."
+
+msgid "Avoir validé : lignes et montants figés."
+msgstr "Nota de crédito validada: líneas e importes fijados."
+
+msgid "devis marqué envoyé"
+msgstr "presupuesto marcado como enviado"
+
+msgid "proforma marquée envoyée"
+msgstr "proforma marcada como enviada"
+
+msgid "avoir marqué envoyé"
+msgstr "nota de crédito marcada como enviada"
+
+msgid "devis annulé"
+msgstr "presupuesto anulado"
+
+msgid "proforma annulée"
+msgstr "proforma anulada"
+
+msgid "avoir annulé"
+msgstr "nota de crédito anulada"
+
+msgid "devis validé sous le numéro {}"
+msgstr "presupuesto validado con el número {}"
+
+msgid "proforma validée sous le numéro {}"
+msgstr "proforma validada con el número {}"
+
+msgid "avoir validé sous le numéro {}"
+msgstr "nota de crédito validada con el número {}"
+
+msgid "ce document n'existe plus"
+msgstr "este documento ya no existe"
+
+msgid "enregistrer d'abord le document"
+msgstr "guardar primero el documento"

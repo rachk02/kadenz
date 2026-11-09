@@ -1196,3 +1196,174 @@ msgstr "Adım {} / {}: {}"
 
 msgid "État"
 msgstr "Durum"
+
+msgid "Avoirs"
+msgstr "İade faturaları"
+
+msgid "Nouveau devis"
+msgstr "Yeni teklif"
+
+msgid "Cliquer sur un devis pour ouvrir sa fiche."
+msgstr "Kartını açmak için bir teklife tıklayın."
+
+msgid "Aucun numéro tant que le devis n'est pas validé."
+msgstr "Teklif onaylanana kadar numara verilmez."
+
+msgid "Marquer envoyé"
+msgstr "Gönderildi olarak işaretle"
+
+msgid "Annuler le devis"
+msgstr "Teklifi iptal et"
+
+msgid "Valider ce devis ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "Bu teklif onaylansın mı? Kesin numarasını alır; satırları ve tutarları artık değiştirilemez."
+
+msgid "Annuler ce devis ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "Bu teklif iptal edilsin mi? Numarasıyla kayıtta salt okunur olarak kalır."
+
+msgid "Nouvelle proforma"
+msgstr "Yeni proforma"
+
+msgid "Cliquer sur une proforma pour ouvrir sa fiche."
+msgstr "Kartını açmak için bir proformaya tıklayın."
+
+msgid "Aucun numéro tant que la proforma n'est pas validée."
+msgstr "Proforma onaylanana kadar numara verilmez."
+
+msgid "Annuler la proforma"
+msgstr "Proformayı iptal et"
+
+msgid "Valider cette proforma ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "Bu proforma onaylansın mı? Kesin numarasını alır; satırları ve tutarları artık değiştirilemez."
+
+msgid "Annuler cette proforma ? Elle reste dans le registre avec son numéro, en lecture seule."
+msgstr "Bu proforma iptal edilsin mi? Numarasıyla kayıtta salt okunur olarak kalır."
+
+msgid "Cliquer sur un avoir pour ouvrir sa fiche."
+msgstr "Kartını açmak için bir iade faturasına tıklayın."
+
+msgid "Aucun numéro tant que l'avoir n'est pas validé."
+msgstr "İade faturası onaylanana kadar numara verilmez."
+
+msgid "Annuler l'avoir"
+msgstr "İade faturasını iptal et"
+
+msgid "Valider cet avoir ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "Bu iade faturası onaylansın mı? Kesin numarasını alır; satırları ve tutarları artık değiştirilemez."
+
+msgid "Annuler cet avoir ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "Bu iade faturası iptal edilsin mi? Numarasıyla kayıtta salt okunur olarak kalır."
+
+msgid "Validité (facultative)"
+msgstr "Geçerlilik (isteğe bağlı)"
+
+msgid "Aucun devis."
+msgstr "Teklif yok."
+
+msgid "1 devis."
+msgstr "1 teklif."
+
+msgid "{} devis."
+msgstr "{} teklif."
+
+msgid "Aucune proforma."
+msgstr "Proforma yok."
+
+msgid "1 proforma."
+msgstr "1 proforma."
+
+msgid "{} proformas."
+msgstr "{} proforma."
+
+msgid "Aucun avoir."
+msgstr "İade faturası yok."
+
+msgid "1 avoir."
+msgstr "1 iade faturası."
+
+msgid "{} avoirs."
+msgstr "{} iade faturası."
+
+msgid "Devis (brouillon)"
+msgstr "Teklif (taslak)"
+
+msgid "Proforma (brouillon)"
+msgstr "Proforma (taslak)"
+
+msgid "Avoir (brouillon)"
+msgstr "İade faturası (taslak)"
+
+msgid "Devis {}"
+msgstr "Teklif {}"
+
+msgid "Proforma {}"
+msgstr "Proforma {}"
+
+msgid "Avoir {}"
+msgstr "İade faturası {}"
+
+msgid "Devis converti en facture : lecture seule."
+msgstr "Faturaya dönüştürülen teklif: salt okunur."
+
+msgid "Proforma convertie en facture : lecture seule."
+msgstr "Faturaya dönüştürülen proforma: salt okunur."
+
+msgid "Devis annulé : lecture seule, numéro conservé."
+msgstr "İptal edilen teklif: salt okunur, numara korunur."
+
+msgid "Proforma annulée : lecture seule, numéro conservé."
+msgstr "İptal edilen proforma: salt okunur, numara korunur."
+
+msgid "Avoir annulé : lecture seule, numéro conservé."
+msgstr "İptal edilen iade faturası: salt okunur, numara korunur."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un devis."
+msgstr "Salt okunur: rolünüz teklif değiştirmeye izin vermiyor."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une proforma."
+msgstr "Salt okunur: rolünüz proforma değiştirmeye izin vermiyor."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un avoir."
+msgstr "Salt okunur: rolünüz iade faturası değiştirmeye izin vermiyor."
+
+msgid "Devis validé : lignes et montants figés."
+msgstr "Onaylanan teklif: satırlar ve tutarlar sabitlendi."
+
+msgid "Proforma validée : lignes et montants figés."
+msgstr "Onaylanan proforma: satırlar ve tutarlar sabitlendi."
+
+msgid "Avoir validé : lignes et montants figés."
+msgstr "Onaylanan iade faturası: satırlar ve tutarlar sabitlendi."
+
+msgid "devis marqué envoyé"
+msgstr "teklif gönderildi olarak işaretlendi"
+
+msgid "proforma marquée envoyée"
+msgstr "proforma gönderildi olarak işaretlendi"
+
+msgid "avoir marqué envoyé"
+msgstr "iade faturası gönderildi olarak işaretlendi"
+
+msgid "devis annulé"
+msgstr "teklif iptal edildi"
+
+msgid "proforma annulée"
+msgstr "proforma iptal edildi"
+
+msgid "avoir annulé"
+msgstr "iade faturası iptal edildi"
+
+msgid "devis validé sous le numéro {}"
+msgstr "teklif {} numarasıyla onaylandı"
+
+msgid "proforma validée sous le numéro {}"
+msgstr "proforma {} numarasıyla onaylandı"
+
+msgid "avoir validé sous le numéro {}"
+msgstr "iade faturası {} numarasıyla onaylandı"
+
+msgid "ce document n'existe plus"
+msgstr "bu belge artık yok"
+
+msgid "enregistrer d'abord le document"
+msgstr "önce belgeyi kaydedin"

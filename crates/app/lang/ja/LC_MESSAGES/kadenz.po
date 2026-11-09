@@ -1196,3 +1196,174 @@ msgstr "ステップ {} / {}：{}"
 
 msgid "État"
 msgstr "状態"
+
+msgid "Avoirs"
+msgstr "クレジットノート"
+
+msgid "Nouveau devis"
+msgstr "新しい見積書"
+
+msgid "Cliquer sur un devis pour ouvrir sa fiche."
+msgstr "見積書をクリックすると詳細が開きます。"
+
+msgid "Aucun numéro tant que le devis n'est pas validé."
+msgstr "見積書が確定されるまで番号はありません。"
+
+msgid "Marquer envoyé"
+msgstr "送付済みにする"
+
+msgid "Annuler le devis"
+msgstr "見積書を取り消す"
+
+msgid "Valider ce devis ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "この見積書を確定しますか？確定番号が付き、明細と金額は変更できなくなります。"
+
+msgid "Annuler ce devis ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "この見積書を取り消しますか？番号を保ったまま、読み取り専用で台帳に残ります。"
+
+msgid "Nouvelle proforma"
+msgstr "新しい見積請求書"
+
+msgid "Cliquer sur une proforma pour ouvrir sa fiche."
+msgstr "見積請求書をクリックすると詳細が開きます。"
+
+msgid "Aucun numéro tant que la proforma n'est pas validée."
+msgstr "見積請求書が確定されるまで番号はありません。"
+
+msgid "Annuler la proforma"
+msgstr "見積請求書を取り消す"
+
+msgid "Valider cette proforma ? Elle reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "この見積請求書を確定しますか？確定番号が付き、明細と金額は変更できなくなります。"
+
+msgid "Annuler cette proforma ? Elle reste dans le registre avec son numéro, en lecture seule."
+msgstr "この見積請求書を取り消しますか？番号を保ったまま、読み取り専用で台帳に残ります。"
+
+msgid "Cliquer sur un avoir pour ouvrir sa fiche."
+msgstr "クレジットノートをクリックすると詳細が開きます。"
+
+msgid "Aucun numéro tant que l'avoir n'est pas validé."
+msgstr "クレジットノートが確定されるまで番号はありません。"
+
+msgid "Annuler l'avoir"
+msgstr "クレジットノートを取り消す"
+
+msgid "Valider cet avoir ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "このクレジットノートを確定しますか？確定番号が付き、明細と金額は変更できなくなります。"
+
+msgid "Annuler cet avoir ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "このクレジットノートを取り消しますか？番号を保ったまま、読み取り専用で台帳に残ります。"
+
+msgid "Validité (facultative)"
+msgstr "有効期限（任意）"
+
+msgid "Aucun devis."
+msgstr "見積書はありません。"
+
+msgid "1 devis."
+msgstr "見積書 1 件。"
+
+msgid "{} devis."
+msgstr "見積書 {} 件。"
+
+msgid "Aucune proforma."
+msgstr "見積請求書はありません。"
+
+msgid "1 proforma."
+msgstr "見積請求書 1 件。"
+
+msgid "{} proformas."
+msgstr "見積請求書 {} 件。"
+
+msgid "Aucun avoir."
+msgstr "クレジットノートはありません。"
+
+msgid "1 avoir."
+msgstr "クレジットノート 1 件。"
+
+msgid "{} avoirs."
+msgstr "クレジットノート {} 件。"
+
+msgid "Devis (brouillon)"
+msgstr "見積書（下書き）"
+
+msgid "Proforma (brouillon)"
+msgstr "見積請求書（下書き）"
+
+msgid "Avoir (brouillon)"
+msgstr "クレジットノート（下書き）"
+
+msgid "Devis {}"
+msgstr "見積書 {}"
+
+msgid "Proforma {}"
+msgstr "見積請求書 {}"
+
+msgid "Avoir {}"
+msgstr "クレジットノート {}"
+
+msgid "Devis converti en facture : lecture seule."
+msgstr "請求書に変換された見積書：読み取り専用です。"
+
+msgid "Proforma convertie en facture : lecture seule."
+msgstr "請求書に変換された見積請求書：読み取り専用です。"
+
+msgid "Devis annulé : lecture seule, numéro conservé."
+msgstr "取り消された見積書：読み取り専用、番号は保持されます。"
+
+msgid "Proforma annulée : lecture seule, numéro conservé."
+msgstr "取り消された見積請求書：読み取り専用、番号は保持されます。"
+
+msgid "Avoir annulé : lecture seule, numéro conservé."
+msgstr "取り消されたクレジットノート：読み取り専用、番号は保持されます。"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un devis."
+msgstr "読み取り専用：あなたの役割では見積書を変更できません。"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier une proforma."
+msgstr "読み取り専用：あなたの役割では見積請求書を変更できません。"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un avoir."
+msgstr "読み取り専用：あなたの役割ではクレジットノートを変更できません。"
+
+msgid "Devis validé : lignes et montants figés."
+msgstr "確定済みの見積書：明細と金額は固定されています。"
+
+msgid "Proforma validée : lignes et montants figés."
+msgstr "確定済みの見積請求書：明細と金額は固定されています。"
+
+msgid "Avoir validé : lignes et montants figés."
+msgstr "確定済みのクレジットノート：明細と金額は固定されています。"
+
+msgid "devis marqué envoyé"
+msgstr "見積書を送付済みにしました"
+
+msgid "proforma marquée envoyée"
+msgstr "見積請求書を送付済みにしました"
+
+msgid "avoir marqué envoyé"
+msgstr "クレジットノートを送付済みにしました"
+
+msgid "devis annulé"
+msgstr "見積書を取り消しました"
+
+msgid "proforma annulée"
+msgstr "見積請求書を取り消しました"
+
+msgid "avoir annulé"
+msgstr "クレジットノートを取り消しました"
+
+msgid "devis validé sous le numéro {}"
+msgstr "見積書を番号 {} で確定しました"
+
+msgid "proforma validée sous le numéro {}"
+msgstr "見積請求書を番号 {} で確定しました"
+
+msgid "avoir validé sous le numéro {}"
+msgstr "クレジットノートを番号 {} で確定しました"
+
+msgid "ce document n'existe plus"
+msgstr "この文書はもう存在しません"
+
+msgid "enregistrer d'abord le document"
+msgstr "先に文書を保存してください"
