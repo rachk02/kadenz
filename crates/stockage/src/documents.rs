@@ -1001,6 +1001,10 @@ mod tests {
         let figee = pour_document(&c.conn, validee).unwrap();
         assert_eq!(figee.entreprise.nom, "Avant");
         assert_eq!(figee.textes.titre, "FACTURE");
+        assert_eq!(
+            figee.orthographe,
+            kadenz_domaine::lettres::Orthographe::default()
+        );
         let apercu = pour_document(&c.conn, brouillon).unwrap();
         assert_eq!(apercu.entreprise.nom, "Après");
         assert_eq!(apercu.textes.titre, "FACTURE DEFINITIVE");

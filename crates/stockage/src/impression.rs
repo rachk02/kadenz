@@ -7,6 +7,7 @@
 //! avec les valeurs du moment.
 
 use kadenz_domaine::document::TypeDocument;
+use kadenz_domaine::lettres::Orthographe;
 use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::{Value, json};
 
@@ -21,6 +22,8 @@ pub struct Impression {
     pub logo2: Option<Vec<u8>>,
     pub textes: TextesDocument,
     pub couleur: [u8; 3],
+    /// Orthographe du montant en lettres.
+    pub orthographe: Orthographe,
 }
 
 /// Valeurs du moment pour un type de document (aperçu d'un brouillon).
@@ -32,6 +35,7 @@ pub fn courante(conn: &Connection, t: TypeDocument) -> Resultat<Impression> {
         logo2: entreprise::lire_logo(conn, Logo::Secondaire)?,
         textes: p.textes(t).clone(),
         couleur: p.couleur_documents,
+        orthographe: p.orthographe,
     })
 }
 
@@ -55,6 +59,7 @@ fn en_json(i: &Impression) -> Value {
         "phrase_somme": i.textes.phrase_somme,
         "signataire": i.textes.signataire,
         "couleur": couleur_en_texte(i.couleur),
+        "orthographe": i.orthographe.code(),
     })
 }
 
@@ -89,6 +94,7 @@ fn depuis_json(v: &Value, logo: Option<Vec<u8>>, logo2: Option<Vec<u8>>) -> Impr
             signataire: t("signataire"),
         },
         couleur: couleur_depuis_texte(&t("couleur")).unwrap_or(parametres::COULEUR_PAR_DEFAUT),
+        orthographe: Orthographe::depuis_code(&t("orthographe")).unwrap_or_default(),
     }
 }
 
