@@ -47,7 +47,8 @@ pub struct TextesPdf {
     pub titre: String,
     /// Libellé du bloc tiers : « Client » ou « Fournisseur ».
     pub libelle_tiers: String,
-    /// Phrase qui précède le montant en lettres ; vide pour ne rien imprimer.
+    /// Début de la phrase du montant, ex. « Arrêté la présente facture à la somme de » ;
+    /// suivie de « <lettres> francs (<chiffres>) FCFA. » (modèle de l'outil Excel).
     pub phrase_somme: String,
     /// Libellé du signataire, ex. « LA COMPTABILITE » ; vide pour aucun.
     pub signataire: String,
@@ -83,7 +84,8 @@ pub struct DocumentPdf {
     pub avec_montants: bool,
     pub taux: Taux,
     pub totaux: Totaux,
-    /// Montant TTC en lettres, déjà écrit selon l'orthographe réglée.
+    /// Montant TTC en lettres, déjà écrit selon l'orthographe réglée, avec majuscule
+    /// initiale (en_lettres_majuscule).
     pub montant_en_lettres: String,
     pub filigrane: Filigrane,
     /// Couleur principale (bande, en-tête du tableau, titre).

@@ -64,6 +64,18 @@ fn taux(p: Pourcentage) -> String {
     format!("{}\u{00A0}%", pourcentage_en_texte(p))
 }
 
+/// Phrase du montant en lettres, sur le modèle de l'outil Excel d'origine :
+/// « {phrase} {lettres} francs ({chiffres}) FCFA. » ; sans phrase, les lettres
+/// seules suivies des chiffres.
+fn phrase_somme(phrase: &str, lettres: &str, ttc: Montant) -> String {
+    let fin = format!("{lettres} francs ({}) FCFA.", montant(ttc));
+    if phrase.trim().is_empty() {
+        fin
+    } else {
+        format!("{} {fin}", phrase.trim())
+    }
+}
+
 /// Surface de tracé, ou rien quand on ne fait que mesurer.
 struct Toile<'a, 'b> {
     s: Option<&'a mut Surface<'b>>,
@@ -687,22 +699,11 @@ impl<'d> Moteur<'d> {
             bas = bas.max(yo);
         }
 
-        // Montant en lettres.
+        // Montant en lettres, dans la phrase de l'outil Excel d'origine :
+        // « Arrêté le présent ... à la somme de <lettres> francs (<chiffres>) FCFA. »
         if d.avec_montants && !d.montant_en_lettres.is_empty() {
             bas += 12.0;
-            if !d.textes.phrase_somme.is_empty() {
-                bas += self.paragraphe(
-                    t,
-                    &p.texte,
-                    9.0,
-                    12.0,
-                    ENCRE,
-                    GAUCHE,
-                    bas,
-                    UTILE,
-                    &format!("{} :", d.textes.phrase_somme),
-                );
-            }
+            let phrase = phrase_somme(&d.textes.phrase_somme, &d.montant_en_lettres, d.totaux.ttc);
             bas += self.paragraphe(
                 t,
                 &p.texte_gras,
@@ -712,7 +713,7 @@ impl<'d> Moteur<'d> {
                 GAUCHE,
                 bas,
                 UTILE,
-                &d.montant_en_lettres,
+                &phrase,
             );
         }
 
@@ -973,6 +974,19 @@ mod tests {
             ..document(30)
         };
         assert!(generer(&sans_montants, &p).unwrap().starts_with(b"%PDF-"));
+    }
+
+    #[test]
+    fn phrase_du_montant() {
+        assert_eq!(
+            phrase_somme(
+                "Arrêté la présente facture à la somme de",
+                "Mille deux cents",
+                1_200
+            ),
+            "Arrêté la présente facture à la somme de Mille deux cents francs (1\u{a0}200) FCFA."
+        );
+        assert_eq!(phrase_somme(" ", "Cent", 100), "Cent francs (100) FCFA.");
     }
 
     #[test]
