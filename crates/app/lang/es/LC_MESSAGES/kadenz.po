@@ -292,7 +292,7 @@ msgid "Converti"
 msgstr "Convertido"
 
 msgid "couleur des documents invalide : saisir un code hexadécimal comme #2d3a8c"
-msgstr "color de los documentos no válido: introducir un código hexadecimal como #2d3a8c"
+msgstr "color de los documentos no válido: introduzca un código hexadecimal como #2d3a8c"
 
 msgid "Couleur par défaut"
 msgstr "Color predeterminado"
