@@ -17,8 +17,9 @@ CREATE TABLE entreprise (
     ifu                       TEXT NOT NULL DEFAULT '',
     banque1                   TEXT NOT NULL DEFAULT '',
     banque2                   TEXT NOT NULL DEFAULT '',
-    logo_chemin               TEXT NOT NULL DEFAULT '',
-    logo2_chemin              TEXT NOT NULL DEFAULT '',
+    -- Logos stockés dans la base (PNG ou JPEG) : ils suivent sauvegardes et restaurations.
+    logo                      BLOB,
+    logo2                     BLOB,
     responsable_facturation   TEXT NOT NULL DEFAULT '',
     responsable_comptabilite  TEXT NOT NULL DEFAULT ''
 ) STRICT;
@@ -49,7 +50,7 @@ CREATE TABLE tiers (
 CREATE TABLE produit (
     id          INTEGER PRIMARY KEY,
     designation TEXT NOT NULL,
-    reference   TEXT NOT NULL UNIQUE,
+    reference   TEXT NOT NULL UNIQUE COLLATE NOCASE,
     prix        INTEGER NOT NULL CHECK (prix >= 0),
     sens        TEXT NOT NULL CHECK (sens IN ('vente', 'achat', 'les_deux')),
     actif       INTEGER NOT NULL DEFAULT 1 CHECK (actif IN (0, 1))

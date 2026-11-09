@@ -2,6 +2,7 @@
 
 pub mod audit;
 pub mod comptes;
+pub mod droits;
 pub mod entreprise;
 pub mod installation;
 pub mod parametres;
@@ -10,6 +11,7 @@ use std::fmt;
 use std::path::Path;
 
 use kadenz_domaine::document::TypeDocument;
+use kadenz_domaine::role::Droit;
 use rusqlite::{Connection, params};
 
 /// Connexion à la base, ré-exportée pour que l'application n'ait pas à dépendre
@@ -44,6 +46,8 @@ pub enum Erreur {
     /// L'installation initiale a déjà été faite.
     DejaInstalle,
     Hachage(String),
+    /// Le compte qui agit n'a pas le droit demandé.
+    Interdit(Droit),
 }
 
 impl fmt::Display for Erreur {
@@ -58,6 +62,9 @@ impl fmt::Display for Erreur {
             ),
             Erreur::DejaInstalle => f.write_str("l'installation initiale a déjà été faite"),
             Erreur::Hachage(e) => write!(f, "erreur de hachage du mot de passe : {e}"),
+            Erreur::Interdit(droit) => {
+                write!(f, "action non autorisée pour votre rôle : « {droit} »")
+            }
             Erreur::VersionSchemaInconnue { base, application } => write!(
                 f,
                 "la base est au schéma {base}, cette version de l'application ne connaît que le schéma {application}"

@@ -3,7 +3,54 @@
 //! La virgule étant le séparateur décimal en français, les listes saisies sur
 //! une seule ligne sont séparées par des points-virgules : « 0 ; 18 ».
 
-use crate::calcul::{CENT_POUR_CENT, Pourcentage};
+use crate::calcul::{CENT_POUR_CENT, Montant, Pourcentage};
+
+/// Séparateurs de milliers possibles : espace, espace insécable (U+00A0) et espace
+/// fine insécable (U+202F), celle qu'écrit Excel en français.
+fn est_separateur_milliers(c: char) -> bool {
+    matches!(c, ' ' | '\u{00A0}' | '\u{202F}')
+}
+
+/// Lit un montant en FCFA : « 485000 », « 485 000 », « 485 000,00 CFA », « 1 250 000 FCFA ».
+/// Des centimes nuls (« ,00 ») sont acceptés ; des centimes non nuls sont refusés,
+/// le FCFA n'ayant pas de subdivision. Les montants négatifs sont refusés.
+pub fn montant_depuis_texte(texte: &str) -> Option<Montant> {
+    let mut t = texte.trim();
+    for devise in ["FCFA", "CFA", "F"] {
+        if let Some(reste) = t.strip_suffix(devise) {
+            t = reste.trim_end_matches(est_separateur_milliers);
+            break;
+        }
+    }
+    let (entier, decimales) = match t.split_once([',', '.']) {
+        Some((e, d)) => (e, d),
+        None => (t, ""),
+    };
+    if !decimales.chars().all(|c| c == '0') {
+        return None;
+    }
+    let chiffres: String = entier
+        .chars()
+        .filter(|c| !est_separateur_milliers(*c))
+        .collect();
+    if chiffres.is_empty() || !chiffres.chars().all(|c| c.is_ascii_digit()) {
+        return None;
+    }
+    chiffres.parse().ok()
+}
+
+/// Écrit un montant avec des espaces insécables entre les milliers : « 1 250 000 ».
+pub fn montant_en_texte(m: Montant) -> String {
+    let chiffres = m.unsigned_abs().to_string();
+    let mut s = String::new();
+    for (i, c) in chiffres.chars().enumerate() {
+        if i > 0 && (chiffres.len() - i).is_multiple_of(3) {
+            s.push('\u{00A0}');
+        }
+        s.push(c);
+    }
+    if m < 0 { format!("-{s}") } else { s }
+}
 
 /// Lit un pourcentage saisi : « 18 », « 18 % », « 2,5 », « 2.5 ». Au plus deux
 /// décimales, entre 0 et 100 %. Renvoie des centièmes de point (18 % = 1800).
@@ -76,6 +123,28 @@ pub fn liste_libelles_depuis_texte(texte: &str) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn montants() {
+        assert_eq!(montant_depuis_texte("485000"), Some(485_000));
+        assert_eq!(montant_depuis_texte("485 000"), Some(485_000));
+        assert_eq!(montant_depuis_texte("485\u{202F}000,00 CFA"), Some(485_000));
+        assert_eq!(
+            montant_depuis_texte("1\u{00A0}250\u{00A0}000,00\u{00A0}CFA"),
+            Some(1_250_000)
+        );
+        assert_eq!(montant_depuis_texte("4 500 000 FCFA"), Some(4_500_000));
+        assert_eq!(montant_depuis_texte("0"), Some(0));
+        for invalide in ["", "abc", "12,50", "-5", "1 2a", "CFA", "12.5"] {
+            assert_eq!(montant_depuis_texte(invalide), None, "« {invalide} »");
+        }
+        assert_eq!(montant_en_texte(1_250_000), "1\u{00A0}250\u{00A0}000");
+        assert_eq!(montant_en_texte(485), "485");
+        assert_eq!(
+            montant_depuis_texte(&montant_en_texte(65_000)),
+            Some(65_000)
+        );
+    }
 
     #[test]
     fn pourcentages_valides() {

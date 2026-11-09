@@ -85,7 +85,6 @@ fn installation_depuis_assistant(d: &DonneesAssistant) -> Result<InstallationIni
             banque2: d.banque2.to_string(),
             responsable_facturation: d.responsable_facturation.to_string(),
             responsable_comptabilite: d.responsable_comptabilite.to_string(),
-            ..Default::default()
         },
         admin: NouvelUtilisateur {
             nom_complet: d.admin_nom.to_string(),
@@ -103,6 +102,8 @@ fn installation_depuis_assistant(d: &DonneesAssistant) -> Result<InstallationIni
             } else {
                 Orthographe::Rectifiee
             },
+            validite_devis_jours: None,
+            delai_paiement_jours: None,
         },
     })
 }

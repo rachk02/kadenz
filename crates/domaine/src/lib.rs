@@ -8,5 +8,6 @@ pub mod document;
 pub mod lettres;
 pub mod numerotation;
 pub mod paiement;
+pub mod referentiel;
 pub mod role;
 pub mod saisie;

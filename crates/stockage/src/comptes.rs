@@ -4,11 +4,12 @@
 use argon2::Argon2;
 use argon2::password_hash::phc::PasswordHash;
 use argon2::password_hash::{PasswordHasher, PasswordVerifier};
-use kadenz_domaine::role::Role;
+use kadenz_domaine::role::{Droit, Role};
 use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::json;
 
 use crate::audit::{self, Entree};
+use crate::droits::exiger;
 use crate::{Erreur, Resultat, maintenant};
 
 pub const LONGUEUR_MIN_MOT_DE_PASSE: usize = 8;
@@ -120,8 +121,18 @@ pub fn lister(conn: &Connection) -> Resultat<Vec<Utilisateur>> {
     Ok(utilisateurs)
 }
 
-/// Crée un compte. `auteur` : compte qui fait la création (aucun pendant l'installation).
+/// Création d'un compte par un administrateur.
 pub fn creer(
+    conn: &Connection,
+    acteur: &Utilisateur,
+    nouveau: &NouvelUtilisateur,
+) -> Resultat<Utilisateur> {
+    exiger(conn, acteur, Droit::GererUtilisateurs)?;
+    creer_sans_controle(conn, nouveau, Some(acteur.id))
+}
+
+/// Création sans contrôle de droit : réservée à l'installation initiale.
+pub(crate) fn creer_sans_controle(
     conn: &Connection,
     nouveau: &NouvelUtilisateur,
     auteur: Option<i64>,
@@ -250,11 +261,18 @@ pub fn changer_mot_de_passe(
 /// Réinitialisation par un administrateur.
 pub fn reinitialiser_mot_de_passe(
     conn: &Connection,
+    acteur: &Utilisateur,
     id: i64,
     nouveau: &str,
-    auteur: i64,
 ) -> Resultat<()> {
-    enregistrer_mot_de_passe(conn, id, nouveau, "reinitialisation_mot_de_passe", auteur)
+    exiger(conn, acteur, Droit::GererUtilisateurs)?;
+    enregistrer_mot_de_passe(
+        conn,
+        id,
+        nouveau,
+        "reinitialisation_mot_de_passe",
+        acteur.id,
+    )
 }
 
 fn enregistrer_mot_de_passe(
@@ -297,7 +315,14 @@ fn lire_existant(conn: &Connection, id: i64) -> Resultat<Utilisateur> {
     lire(conn, id)?.ok_or_else(|| Erreur::Validation("compte introuvable".into()))
 }
 
-pub fn definir_actif(conn: &Connection, id: i64, actif: bool, auteur: i64) -> Resultat<()> {
+pub fn definir_actif(
+    conn: &Connection,
+    acteur: &Utilisateur,
+    id: i64,
+    actif: bool,
+) -> Resultat<()> {
+    exiger(conn, acteur, Droit::GererUtilisateurs)?;
+    let auteur = acteur.id;
     let cible = lire_existant(conn, id)?;
     if cible.actif == actif {
         return Ok(());
@@ -322,7 +347,9 @@ pub fn definir_actif(conn: &Connection, id: i64, actif: bool, auteur: i64) -> Re
     )
 }
 
-pub fn changer_role(conn: &Connection, id: i64, role: Role, auteur: i64) -> Resultat<()> {
+pub fn changer_role(conn: &Connection, acteur: &Utilisateur, id: i64, role: Role) -> Resultat<()> {
+    exiger(conn, acteur, Droit::GererUtilisateurs)?;
+    let auteur = acteur.id;
     let cible = lire_existant(conn, id)?;
     if cible.role == role {
         return Ok(());
@@ -361,6 +388,10 @@ mod tests {
         }
     }
 
+    fn installer_admin(conn: &Connection) -> Utilisateur {
+        creer_sans_controle(conn, &nouveau("admin", Role::Admin), None).unwrap()
+    }
+
     #[test]
     fn assistant_tant_qu_aucun_admin_actif() {
         let conn = ouvrir_en_memoire().unwrap();
@@ -368,13 +399,13 @@ mod tests {
             etat_installation(&conn).unwrap(),
             EtatInstallation::AssistantRequis
         );
-        creer(&conn, &nouveau("compta", Role::Comptable), None).unwrap();
+        creer_sans_controle(&conn, &nouveau("compta", Role::Comptable), None).unwrap();
         assert_eq!(
             etat_installation(&conn).unwrap(),
             EtatInstallation::AssistantRequis,
             "un compte non administrateur ne suffit pas"
         );
-        creer(&conn, &nouveau("admin", Role::Admin), None).unwrap();
+        installer_admin(&conn);
         assert_eq!(
             etat_installation(&conn).unwrap(),
             EtatInstallation::ConnexionRequise
@@ -384,7 +415,7 @@ mod tests {
     #[test]
     fn connexion() {
         let conn = ouvrir_en_memoire().unwrap();
-        let admin = creer(&conn, &nouveau("admin", Role::Admin), None).unwrap();
+        let admin = installer_admin(&conn);
         let ok = connecter(&conn, " admin ", "motdepasse1").unwrap();
         assert_eq!(ok, admin);
         assert!(matches!(
@@ -401,20 +432,39 @@ mod tests {
     #[test]
     fn identifiant_insensible_a_la_casse() {
         let conn = ouvrir_en_memoire().unwrap();
-        creer(&conn, &nouveau("Admin", Role::Admin), None).unwrap();
+        let admin = creer_sans_controle(&conn, &nouveau("Admin", Role::Admin), None).unwrap();
         assert!(connecter(&conn, "admin", "motdepasse1").is_ok());
         assert!(matches!(
-            creer(&conn, &nouveau("ADMIN", Role::Commercial), None),
+            creer(&conn, &admin, &nouveau("ADMIN", Role::Commercial)),
             Err(Erreur::Validation(_))
+        ));
+    }
+
+    #[test]
+    fn seul_l_admin_gere_les_comptes() {
+        let conn = ouvrir_en_memoire().unwrap();
+        let admin = installer_admin(&conn);
+        let compta = creer(&conn, &admin, &nouveau("compta", Role::Comptable)).unwrap();
+        assert!(matches!(
+            creer(&conn, &compta, &nouveau("autre", Role::Commercial)),
+            Err(Erreur::Interdit(Droit::GererUtilisateurs))
+        ));
+        assert!(matches!(
+            definir_actif(&conn, &compta, admin.id, false),
+            Err(Erreur::Interdit(_))
+        ));
+        assert!(matches!(
+            reinitialiser_mot_de_passe(&conn, &compta, admin.id, "piratage1"),
+            Err(Erreur::Interdit(_))
         ));
     }
 
     #[test]
     fn compte_desactive_refuse() {
         let conn = ouvrir_en_memoire().unwrap();
-        let admin = creer(&conn, &nouveau("admin", Role::Admin), None).unwrap();
-        let commercial = creer(&conn, &nouveau("vente", Role::Commercial), Some(admin.id)).unwrap();
-        definir_actif(&conn, commercial.id, false, admin.id).unwrap();
+        let admin = installer_admin(&conn);
+        let commercial = creer(&conn, &admin, &nouveau("vente", Role::Commercial)).unwrap();
+        definir_actif(&conn, &admin, commercial.id, false).unwrap();
         assert!(matches!(
             connecter(&conn, "vente", "motdepasse1"),
             Err(Erreur::ConnexionRefusee)
@@ -427,19 +477,19 @@ mod tests {
         let mut court = nouveau("admin", Role::Admin);
         court.mot_de_passe = "court".into();
         assert!(matches!(
-            creer(&conn, &court, None),
+            creer_sans_controle(&conn, &court, None),
             Err(Erreur::Validation(_))
         ));
         let mut espace = nouveau("un admin", Role::Admin);
         espace.identifiant = "un admin".into();
         assert!(matches!(
-            creer(&conn, &espace, None),
+            creer_sans_controle(&conn, &espace, None),
             Err(Erreur::Validation(_))
         ));
         let mut sans_nom = nouveau("admin", Role::Admin);
         sans_nom.nom_complet = "  ".into();
         assert!(matches!(
-            creer(&conn, &sans_nom, None),
+            creer_sans_controle(&conn, &sans_nom, None),
             Err(Erreur::Validation(_))
         ));
     }
@@ -447,21 +497,26 @@ mod tests {
     #[test]
     fn garde_du_dernier_admin() {
         let conn = ouvrir_en_memoire().unwrap();
-        let a1 = creer(&conn, &nouveau("a1", Role::Admin), None).unwrap();
+        let a1 = creer_sans_controle(&conn, &nouveau("a1", Role::Admin), None).unwrap();
         assert!(matches!(
-            definir_actif(&conn, a1.id, false, a1.id),
+            definir_actif(&conn, &a1, a1.id, false),
             Err(Erreur::DernierAdmin)
         ));
         assert!(matches!(
-            changer_role(&conn, a1.id, Role::Comptable, a1.id),
+            changer_role(&conn, &a1, a1.id, Role::Comptable),
             Err(Erreur::DernierAdmin)
         ));
 
-        let a2 = creer(&conn, &nouveau("a2", Role::Admin), Some(a1.id)).unwrap();
-        changer_role(&conn, a1.id, Role::Comptable, a2.id).unwrap();
+        let a2 = creer(&conn, &a1, &nouveau("a2", Role::Admin)).unwrap();
+        changer_role(&conn, &a2, a1.id, Role::Comptable).unwrap();
         assert!(matches!(
-            definir_actif(&conn, a2.id, false, a2.id),
+            definir_actif(&conn, &a2, a2.id, false),
             Err(Erreur::DernierAdmin)
+        ));
+        // a1 n'est plus administrateur : ses droits sont relus en base.
+        assert!(matches!(
+            creer(&conn, &a1, &nouveau("a3", Role::Admin)),
+            Err(Erreur::Interdit(_))
         ));
         assert_eq!(audit::compter(&conn, "changement_role").unwrap(), 1);
     }
@@ -469,7 +524,7 @@ mod tests {
     #[test]
     fn mots_de_passe() {
         let conn = ouvrir_en_memoire().unwrap();
-        let admin = creer(&conn, &nouveau("admin", Role::Admin), None).unwrap();
+        let admin = installer_admin(&conn);
         assert!(matches!(
             changer_mot_de_passe(&conn, admin.id, "mauvais", "nouveaumdp1"),
             Err(Erreur::Validation(_))
@@ -478,15 +533,15 @@ mod tests {
         assert!(connecter(&conn, "admin", "motdepasse1").is_err());
         assert!(connecter(&conn, "admin", "nouveaumdp1").is_ok());
 
-        let vente = creer(&conn, &nouveau("vente", Role::Commercial), Some(admin.id)).unwrap();
-        reinitialiser_mot_de_passe(&conn, vente.id, "provisoire1", admin.id).unwrap();
+        let vente = creer(&conn, &admin, &nouveau("vente", Role::Commercial)).unwrap();
+        reinitialiser_mot_de_passe(&conn, &admin, vente.id, "provisoire1").unwrap();
         assert!(connecter(&conn, "vente", "provisoire1").is_ok());
     }
 
     #[test]
     fn mot_de_passe_jamais_en_clair() {
         let conn = ouvrir_en_memoire().unwrap();
-        creer(&conn, &nouveau("admin", Role::Admin), None).unwrap();
+        installer_admin(&conn);
         let hache: String = conn
             .query_row("SELECT mot_de_passe_hache FROM utilisateur", [], |r| {
                 r.get(0)

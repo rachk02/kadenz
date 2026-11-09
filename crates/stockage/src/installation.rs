@@ -31,9 +31,9 @@ pub fn installer(conn: &mut Connection, init: &InstallationInitiale) -> Resultat
         role: Role::Admin,
         ..init.admin.clone()
     };
-    let admin = comptes::creer(&tx, &admin, None)?;
-    entreprise::enregistrer(&tx, &init.entreprise, Some(admin.id))?;
-    parametres::enregistrer(&tx, &init.parametres, Some(admin.id))?;
+    let admin = comptes::creer_sans_controle(&tx, &admin, None)?;
+    entreprise::enregistrer_sans_controle(&tx, &init.entreprise, Some(admin.id))?;
+    parametres::enregistrer_sans_controle(&tx, &init.parametres, Some(admin.id))?;
     audit::journaliser(
         &tx,
         Entree {

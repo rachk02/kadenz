@@ -325,7 +325,7 @@ Types SQLite : `INTEGER` (identifiants, montants, pourcentages, quantités, bool
 
 | Entité | Champs clés | Notes |
 |---|---|---|
-| **Entreprise** | Id, Nom, Adresse, Telephone, Email, SiteWeb, Localisation, RegimeImposition, RCCM, IFU, Banque1, Banque2, LogoChemin, Logo2Chemin, ResponsableFacturation, ResponsableComptabilite | Une seule ligne (contrainte Id = 1) |
+| **Entreprise** | Id, Nom, Adresse, Telephone, Email, SiteWeb, Localisation, RegimeImposition, RCCM, IFU, Banque1, Banque2, Logo, Logo2, ResponsableFacturation, ResponsableComptabilite | Une seule ligne (contrainte Id = 1). Les deux logos sont stockés dans la base (BLOB PNG ou JPEG, 2 Mo au plus), la base reste ainsi autonome pour la sauvegarde |
 | **Utilisateur** | Id, NomComplet, Identifiant (unique), MotDePasseHache, Role, Actif, DateCreation | |
 | **Tiers** | Id, Nom, Adresse, Telephone, Localisation, IFU, RCCM, RegimeImposition, Type, Actif | |
 | **Produit** | Id, Designation, Reference (unique), Prix, Sens, Actif | |

@@ -5,10 +5,13 @@
 
 use kadenz_domaine::calcul::Pourcentage;
 use kadenz_domaine::lettres::Orthographe;
+use kadenz_domaine::role::Droit;
 use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::{Value, json};
 
 use crate::audit::{self, Entree};
+use crate::comptes::Utilisateur;
+use crate::droits::exiger;
 use crate::{Erreur, Resultat};
 
 const CLE_TAUX_TVA: &str = "taux.tva";
@@ -16,6 +19,8 @@ const CLE_TAUX_REMISE: &str = "taux.remise";
 const CLE_TAUX_RETENUE: &str = "taux.retenue";
 const CLE_MODES_PAIEMENT: &str = "paiement.modes";
 const CLE_ORTHOGRAPHE: &str = "lettres.orthographe";
+const CLE_VALIDITE_DEVIS: &str = "delais.validite_devis_jours";
+const CLE_DELAI_PAIEMENT: &str = "delais.paiement_jours";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Parametres {
@@ -24,6 +29,10 @@ pub struct Parametres {
     pub taux_retenue: Vec<Pourcentage>,
     pub modes_paiement: Vec<String>,
     pub orthographe: Orthographe,
+    /// Durée de validité des devis, en jours. Pas de valeur par défaut dans le cahier.
+    pub validite_devis_jours: Option<u32>,
+    /// Délai de paiement des factures, en jours (date d'échéance). Pas de valeur par défaut.
+    pub delai_paiement_jours: Option<u32>,
 }
 
 impl Default for Parametres {
@@ -44,6 +53,8 @@ impl Default for Parametres {
             .map(String::from)
             .to_vec(),
             orthographe: Orthographe::default(),
+            validite_devis_jours: None,
+            delai_paiement_jours: None,
         }
     }
 }
@@ -95,6 +106,10 @@ fn liste_entiers(valeur: Option<Value>) -> Option<Vec<i64>> {
     valeur?.as_array()?.iter().map(Value::as_i64).collect()
 }
 
+fn jours(valeur: Option<Value>) -> Option<u32> {
+    valeur?.as_u64().and_then(|j| u32::try_from(j).ok())
+}
+
 fn liste_textes(valeur: Option<Value>) -> Option<Vec<String>> {
     valeur?
         .as_array()?
@@ -116,10 +131,23 @@ pub fn lire(conn: &Connection) -> Resultat<Parametres> {
         orthographe: lire_valeur(conn, CLE_ORTHOGRAPHE)?
             .and_then(|v| v.as_str().and_then(Orthographe::depuis_code))
             .unwrap_or(defaut.orthographe),
+        validite_devis_jours: jours(lire_valeur(conn, CLE_VALIDITE_DEVIS)?),
+        delai_paiement_jours: jours(lire_valeur(conn, CLE_DELAI_PAIEMENT)?),
     })
 }
 
-pub fn enregistrer(conn: &Connection, p: &Parametres, auteur: Option<i64>) -> Resultat<()> {
+/// Réservé au droit « Gérer la fiche entreprise et les paramètres ».
+pub fn enregistrer(conn: &Connection, acteur: &Utilisateur, p: &Parametres) -> Resultat<()> {
+    exiger(conn, acteur, Droit::GererParametres)?;
+    enregistrer_sans_controle(conn, p, Some(acteur.id))
+}
+
+/// Écriture sans contrôle de droit : réservée à l'installation initiale.
+pub(crate) fn enregistrer_sans_controle(
+    conn: &Connection,
+    p: &Parametres,
+    auteur: Option<i64>,
+) -> Resultat<()> {
     p.valider()?;
     let modes: Vec<&str> = p
         .modes_paiement
@@ -132,6 +160,8 @@ pub fn enregistrer(conn: &Connection, p: &Parametres, auteur: Option<i64>) -> Re
     ecrire_valeur(conn, CLE_TAUX_RETENUE, &json!(p.taux_retenue))?;
     ecrire_valeur(conn, CLE_MODES_PAIEMENT, &json!(modes))?;
     ecrire_valeur(conn, CLE_ORTHOGRAPHE, &json!(p.orthographe.code()))?;
+    ecrire_valeur(conn, CLE_VALIDITE_DEVIS, &json!(p.validite_devis_jours))?;
+    ecrire_valeur(conn, CLE_DELAI_PAIEMENT, &json!(p.delai_paiement_jours))?;
     audit::journaliser(
         conn,
         Entree {
@@ -145,6 +175,8 @@ pub fn enregistrer(conn: &Connection, p: &Parametres, auteur: Option<i64>) -> Re
                 "taux_retenue": p.taux_retenue,
                 "modes_paiement": modes,
                 "orthographe": p.orthographe.code(),
+                "validite_devis_jours": p.validite_devis_jours,
+                "delai_paiement_jours": p.delai_paiement_jours,
             })),
             utilisateur_id: auteur,
         },
@@ -171,7 +203,7 @@ mod tests {
             orthographe: Orthographe::Traditionnelle,
             ..Default::default()
         };
-        enregistrer(&conn, &p, None).unwrap();
+        enregistrer_sans_controle(&conn, &p, None).unwrap();
         let lu = lire(&conn).unwrap();
         assert_eq!(lu.taux_tva, vec![0, 250, 1800]);
         assert_eq!(lu.modes_paiement, vec!["Espèce", "Chèque"]);
@@ -185,11 +217,11 @@ mod tests {
             taux_tva: vec![],
             ..Default::default()
         };
-        assert!(enregistrer(&conn, &sans_tva, None).is_err());
+        assert!(enregistrer_sans_controle(&conn, &sans_tva, None).is_err());
         let sans_mode = Parametres {
             modes_paiement: vec![" ".into()],
             ..Default::default()
         };
-        assert!(enregistrer(&conn, &sans_mode, None).is_err());
+        assert!(enregistrer_sans_controle(&conn, &sans_mode, None).is_err());
     }
 }
