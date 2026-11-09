@@ -6,6 +6,8 @@ pub mod droits;
 pub mod entreprise;
 pub mod installation;
 pub mod parametres;
+pub mod produits;
+pub mod tiers;
 
 use std::fmt;
 use std::path::Path;
@@ -96,6 +98,23 @@ impl From<std::io::Error> for Erreur {
 }
 
 pub type Resultat<T> = Result<T, Erreur>;
+
+/// Issue du retrait d'une fiche de référentiel (section 5.3).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Retrait {
+    /// Aucun document ne la citait : elle a été supprimée.
+    Supprimee,
+    /// Un document la cite : elle a seulement été désactivée.
+    Desactivee,
+}
+
+/// Bilan d'un import de fiches.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct BilanImport {
+    pub ajoutees: usize,
+    /// Rang (à partir de 0) de chaque fiche ignorée, avec la raison.
+    pub ignorees: Vec<(usize, String)>,
+}
 
 /// Ouvre (ou crée) la base au chemin donné et applique les migrations en attente.
 pub fn ouvrir(chemin: &Path) -> Resultat<Connection> {
