@@ -4,7 +4,7 @@
 //! désactiver ou retirer demande « modifier » (section 10.1, le rôle Commercial
 //! n'a que l'ajout).
 
-use kadenz_domaine::referentiel::TypeTiers;
+pub use kadenz_domaine::referentiel::{FicheTiers, TypeTiers};
 use kadenz_domaine::role::Droit;
 use kadenz_domaine::texte;
 use rusqlite::{Connection, OptionalExtension, params};
@@ -15,64 +15,17 @@ use crate::comptes::Utilisateur;
 use crate::droits::exiger;
 use crate::{BilanImport, Erreur, Resultat, Retrait};
 
-/// Contenu modifiable d'une fiche tiers.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct FicheTiers {
-    pub nom: String,
-    pub adresse: String,
-    pub telephone: String,
-    pub localisation: String,
-    pub ifu: String,
-    pub rccm: String,
-    pub regime_imposition: String,
-    pub type_tiers: TypeTiers,
-}
-
-impl FicheTiers {
-    /// Fiche vide du type donné.
-    pub fn vide(type_tiers: TypeTiers) -> Self {
-        FicheTiers {
-            nom: String::new(),
-            adresse: String::new(),
-            telephone: String::new(),
-            localisation: String::new(),
-            ifu: String::new(),
-            rccm: String::new(),
-            regime_imposition: String::new(),
-            type_tiers,
-        }
-    }
-
-    fn nettoyee(&self) -> Resultat<FicheTiers> {
-        let t = |s: &String| s.trim().to_string();
-        let f = FicheTiers {
-            nom: t(&self.nom),
-            adresse: t(&self.adresse),
-            telephone: t(&self.telephone),
-            localisation: t(&self.localisation),
-            ifu: t(&self.ifu),
-            rccm: t(&self.rccm),
-            regime_imposition: t(&self.regime_imposition),
-            type_tiers: self.type_tiers,
-        };
-        if f.nom.is_empty() {
-            return Err(Erreur::Validation("le nom du tiers est obligatoire".into()));
-        }
-        Ok(f)
-    }
-
-    fn en_json(&self) -> Value {
-        json!({
-            "nom": self.nom,
-            "adresse": self.adresse,
-            "telephone": self.telephone,
-            "localisation": self.localisation,
-            "ifu": self.ifu,
-            "rccm": self.rccm,
-            "regime_imposition": self.regime_imposition,
-            "type": self.type_tiers.code(),
-        })
-    }
+fn en_json(f: &FicheTiers) -> Value {
+    json!({
+        "nom": f.nom,
+        "adresse": f.adresse,
+        "telephone": f.telephone,
+        "localisation": f.localisation,
+        "ifu": f.ifu,
+        "rccm": f.rccm,
+        "regime_imposition": f.regime_imposition,
+        "type": f.type_tiers.code(),
+    })
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -190,7 +143,7 @@ fn inserer(conn: &Connection, f: &FicheTiers, auteur: i64) -> Resultat<Tiers> {
             entite_id: id,
             action: "creation",
             ancienne_valeur: None,
-            nouvelle_valeur: Some(f.en_json()),
+            nouvelle_valeur: Some(en_json(f)),
             utilisateur_id: Some(auteur),
         },
     )?;
@@ -203,7 +156,11 @@ fn inserer(conn: &Connection, f: &FicheTiers, auteur: i64) -> Resultat<Tiers> {
 
 pub fn creer(conn: &Connection, acteur: &Utilisateur, fiche: &FicheTiers) -> Resultat<Tiers> {
     exiger(conn, acteur, Droit::AjouterReferentiel)?;
-    inserer(conn, &fiche.nettoyee()?, acteur.id)
+    inserer(
+        conn,
+        &fiche.nettoyee().map_err(Erreur::Validation)?,
+        acteur.id,
+    )
 }
 
 pub fn modifier(
@@ -213,7 +170,7 @@ pub fn modifier(
     fiche: &FicheTiers,
 ) -> Resultat<()> {
     exiger(conn, acteur, Droit::ModifierReferentiel)?;
-    let f = fiche.nettoyee()?;
+    let f = fiche.nettoyee().map_err(Erreur::Validation)?;
     let ancien = lire_existant(conn, id)?;
     conn.execute(
         "UPDATE tiers SET nom = ?1, adresse = ?2, telephone = ?3, localisation = ?4, ifu = ?5,
@@ -237,8 +194,8 @@ pub fn modifier(
             entite: "tiers",
             entite_id: id,
             action: "modification",
-            ancienne_valeur: Some(ancien.fiche.en_json()),
-            nouvelle_valeur: Some(f.en_json()),
+            ancienne_valeur: Some(en_json(&ancien.fiche)),
+            nouvelle_valeur: Some(en_json(&f)),
             utilisateur_id: Some(acteur.id),
         },
     )
@@ -296,7 +253,7 @@ pub fn retirer(conn: &Connection, acteur: &Utilisateur, id: i64) -> Resultat<Ret
             entite: "tiers",
             entite_id: id,
             action: "suppression",
-            ancienne_valeur: Some(ancien.fiche.en_json()),
+            ancienne_valeur: Some(en_json(&ancien.fiche)),
             nouvelle_valeur: None,
             utilisateur_id: Some(acteur.id),
         },

@@ -3,8 +3,7 @@
 //! La référence est unique sans tenir compte de la casse. Mêmes droits que les
 //! tiers : « ajouter » pour créer et importer, « modifier » pour le reste.
 
-use kadenz_domaine::calcul::Montant;
-use kadenz_domaine::referentiel::Sens;
+pub use kadenz_domaine::referentiel::{FicheProduit, Sens};
 use kadenz_domaine::role::Droit;
 use kadenz_domaine::texte;
 use rusqlite::{Connection, OptionalExtension, params};
@@ -15,46 +14,13 @@ use crate::comptes::Utilisateur;
 use crate::droits::exiger;
 use crate::{BilanImport, Erreur, Resultat, Retrait};
 
-/// Contenu modifiable d'une fiche produit.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct FicheProduit {
-    pub designation: String,
-    pub reference: String,
-    /// Prix unitaire en FCFA.
-    pub prix: Montant,
-    pub sens: Sens,
-}
-
-impl FicheProduit {
-    fn nettoyee(&self) -> Resultat<FicheProduit> {
-        let f = FicheProduit {
-            designation: self.designation.trim().to_string(),
-            reference: self.reference.trim().to_string(),
-            prix: self.prix,
-            sens: self.sens,
-        };
-        if f.designation.is_empty() {
-            return Err(Erreur::Validation("la désignation est obligatoire".into()));
-        }
-        if f.reference.is_empty() {
-            return Err(Erreur::Validation("la référence est obligatoire".into()));
-        }
-        if f.prix < 0 {
-            return Err(Erreur::Validation(
-                "le prix ne peut pas être négatif".into(),
-            ));
-        }
-        Ok(f)
-    }
-
-    fn en_json(&self) -> Value {
-        json!({
-            "designation": self.designation,
-            "reference": self.reference,
-            "prix": self.prix,
-            "sens": self.sens.code(),
-        })
-    }
+fn en_json(f: &FicheProduit) -> Value {
+    json!({
+        "designation": f.designation,
+        "reference": f.reference,
+        "prix": f.prix,
+        "sens": f.sens.code(),
+    })
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -175,7 +141,7 @@ fn inserer(conn: &Connection, f: &FicheProduit, auteur: i64) -> Resultat<Produit
             entite_id: id,
             action: "creation",
             ancienne_valeur: None,
-            nouvelle_valeur: Some(f.en_json()),
+            nouvelle_valeur: Some(en_json(f)),
             utilisateur_id: Some(auteur),
         },
     )?;
@@ -188,7 +154,7 @@ fn inserer(conn: &Connection, f: &FicheProduit, auteur: i64) -> Resultat<Produit
 
 pub fn creer(conn: &Connection, acteur: &Utilisateur, fiche: &FicheProduit) -> Resultat<Produit> {
     exiger(conn, acteur, Droit::AjouterReferentiel)?;
-    let f = fiche.nettoyee()?;
+    let f = fiche.nettoyee().map_err(Erreur::Validation)?;
     reference_prise(conn, &f.reference, None)?;
     inserer(conn, &f, acteur.id)
 }
@@ -200,7 +166,7 @@ pub fn modifier(
     fiche: &FicheProduit,
 ) -> Resultat<()> {
     exiger(conn, acteur, Droit::ModifierReferentiel)?;
-    let f = fiche.nettoyee()?;
+    let f = fiche.nettoyee().map_err(Erreur::Validation)?;
     let ancien = lire_existant(conn, id)?;
     reference_prise(conn, &f.reference, Some(id))?;
     conn.execute(
@@ -213,8 +179,8 @@ pub fn modifier(
             entite: "produit",
             entite_id: id,
             action: "modification",
-            ancienne_valeur: Some(ancien.fiche.en_json()),
-            nouvelle_valeur: Some(f.en_json()),
+            ancienne_valeur: Some(en_json(&ancien.fiche)),
+            nouvelle_valeur: Some(en_json(&f)),
             utilisateur_id: Some(acteur.id),
         },
     )
@@ -271,7 +237,7 @@ pub fn retirer(conn: &Connection, acteur: &Utilisateur, id: i64) -> Resultat<Ret
             entite: "produit",
             entite_id: id,
             action: "suppression",
-            ancienne_valeur: Some(ancien.fiche.en_json()),
+            ancienne_valeur: Some(en_json(&ancien.fiche)),
             nouvelle_valeur: None,
             utilisateur_id: Some(acteur.id),
         },
