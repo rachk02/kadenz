@@ -46,6 +46,11 @@ pub(crate) struct EditionFacture {
     modes: Vec<String>,
     lignes: Rc<VecModel<LigneFactureUi>>,
     orthographe: Orthographe,
+    delai_paiement_jours: Option<u32>,
+    /// Derniers rangs de remise et de TVA choisis, pour recalculer les totaux
+    /// quand une ligne est supprimée (le bouton disparaît avec sa ligne).
+    remise_rang: i32,
+    tva_rang: i32,
     fiche: FicheFactureUi,
 }
 
@@ -57,9 +62,14 @@ pub(crate) fn date_en_texte(d: NaiveDate) -> String {
     d.format("%d/%m/%Y").to_string()
 }
 
-/// Lit une date JJ/MM/AAAA (aussi avec des tirets ou des points).
+/// Lit une date JJ/MM/AAAA (aussi avec des tirets ou des points). L'année doit
+/// avoir quatre chiffres : « 10/05/20 », en cours de frappe, n'est pas une date.
 pub(crate) fn date_depuis_texte(texte: &str) -> Option<NaiveDate> {
     let t = texte.trim().replace(['-', '.'], "/");
+    let annee = t.rsplit('/').next()?;
+    if annee.len() != 4 || !annee.chars().all(|c| c.is_ascii_digit()) {
+        return None;
+    }
     NaiveDate::parse_from_str(&t, "%d/%m/%Y").ok()
 }
 
@@ -416,6 +426,9 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
         modes,
         lignes,
         orthographe: p.orthographe,
+        delai_paiement_jours: p.delai_paiement_jours,
+        remise_rang: remise_index,
+        tva_rang: tva_index,
         fiche,
     });
     api.set_version_fiche(api.get_version_fiche().wrapping_add(1));
@@ -557,6 +570,26 @@ fn recalculer(api: &FacturesApi, e: &EditionFacture, remise: i32, tva: i32) {
         &calculer_totaux(valeurs, taux, false),
         e.orthographe,
     ));
+}
+
+/// Échéance à afficher après un changement de date (voir `echeance-apres-date`).
+fn echeance_apres_date(
+    delai: Option<u32>,
+    date_precedente: &str,
+    date: &str,
+    echeance: &str,
+) -> Option<String> {
+    let ancienne_auto = date_depuis_texte(date_precedente)
+        .and_then(|d| documents::echeance_par_defaut(d, delai))
+        .map(date_en_texte);
+    let automatique =
+        echeance.trim().is_empty() || ancienne_auto.as_deref() == Some(echeance.trim());
+    if !automatique || delai.is_none() {
+        return None;
+    }
+    // Date en cours de frappe : l'échéance automatique est gardée telle quelle.
+    let nouvelle = date_depuis_texte(date)?;
+    documents::echeance_par_defaut(nouvelle, delai).map(date_en_texte)
 }
 
 pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
@@ -782,22 +815,43 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         }
     });
 
-    let e = etat.clone();
+    let (f, e) = (fenetre.as_weak(), etat.clone());
     api.on_supprimer_ligne(move |ligne| {
+        let Some(f) = f.upgrade() else { return };
         let etat = e.borrow();
         if let (Some(edition), Ok(rang)) = (etat.facture.as_ref(), usize::try_from(ligne))
             && rang < edition.lignes.row_count()
         {
             edition.lignes.remove(rang);
+            recalculer(
+                &f.global::<FacturesApi>(),
+                edition,
+                edition.remise_rang,
+                edition.tva_rang,
+            );
         }
     });
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
     api.on_recalculer(move |remise, tva| {
         let Some(f) = f.upgrade() else { return };
-        if let Some(edition) = e.borrow().facture.as_ref() {
+        if let Some(edition) = e.borrow_mut().facture.as_mut() {
+            edition.remise_rang = remise;
+            edition.tva_rang = tva;
             recalculer(&f.global::<FacturesApi>(), edition, remise, tva);
         }
+    });
+
+    let e = etat.clone();
+    api.on_echeance_apres_date(move |precedente, date, echeance| {
+        let delai = e
+            .borrow()
+            .facture
+            .as_ref()
+            .and_then(|ed| ed.delai_paiement_jours);
+        echeance_apres_date(delai, &precedente, &date, &echeance)
+            .map(SharedString::from)
+            .unwrap_or(echeance)
     });
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
@@ -924,10 +978,31 @@ mod tests {
         assert_eq!(date_depuis_texte("12.05.2026"), Some(d));
         assert_eq!(date_depuis_texte("31/02/2026"), None);
         assert_eq!(date_depuis_texte("2026-05-12"), None);
+        assert_eq!(date_depuis_texte("12/05/20"), None);
         assert_eq!(date_en_texte(d), "12/05/2026");
         assert_eq!(
             horodatage_en_texte("2026-05-12T09:30:00"),
             "12/05/2026 09:30"
+        );
+    }
+
+    #[test]
+    fn echeance_suit_la_date_tant_qu_elle_est_automatique() {
+        let suivre =
+            |precedente, date, echeance| echeance_apres_date(Some(30), precedente, date, echeance);
+        // Échéance automatique (date + 30 jours) : elle suit la nouvelle date.
+        assert_eq!(
+            suivre("01/05/2026", "10/05/2026", "31/05/2026").as_deref(),
+            Some("09/06/2026")
+        );
+        // Échéance saisie à la main : gardée.
+        assert_eq!(suivre("01/05/2026", "10/05/2026", "15/07/2026"), None);
+        // Date incomplète pendant la frappe : rien ne change.
+        assert_eq!(suivre("01/05/2026", "10/05/20", "31/05/2026"), None);
+        // Sans délai réglé : jamais de calcul.
+        assert_eq!(
+            echeance_apres_date(None, "01/05/2026", "10/05/2026", ""),
+            None
         );
     }
 

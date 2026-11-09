@@ -1073,6 +1073,30 @@ mod tests {
     }
 
     #[test]
+    fn identifiant_jamais_reutilise_apres_suppression() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let supprime = facture(&mut c, date(2026, 5, 3));
+        supprimer_brouillon(&mut c.conn, &admin, supprime).unwrap();
+        let nouveau = facture(&mut c, date(2026, 5, 4));
+        assert_ne!(nouveau, supprime);
+        let libelles: Vec<String> = historique(&c.conn, nouveau)
+            .unwrap()
+            .into_iter()
+            .map(|e| e.libelle)
+            .collect();
+        assert_eq!(libelles, ["Création du brouillon"]);
+
+        // Même règle pour un tiers retiré puis recréé.
+        let mut fiche = FicheTiers::vide(TypeTiers::Client);
+        fiche.nom = "Client éphémère".into();
+        let retire = tiers::creer(&c.conn, &admin, &fiche).unwrap().id;
+        tiers::retirer(&c.conn, &admin, retire).unwrap();
+        fiche.nom = "Client suivant".into();
+        assert_ne!(tiers::creer(&c.conn, &admin, &fiche).unwrap().id, retire);
+    }
+
+    #[test]
     fn droits_du_commercial() {
         let mut c = contexte();
         let vente = c.vente.clone();

@@ -9,7 +9,7 @@
 | 2.3 | 2026-11-09 | Règles PDF multi-pages validées (en-têtes et pieds répétés, report, filigranes, deux logos, export des registres), arrondi et quantités fractionnaires tranchés, orthographe du montant en lettres par réglage, ordre des jalons J1 à J10 validé |
 | 2.4 | 2026-11-09 | Jalon J2 : logos de l'entreprise stockés dans la base, matrice des droits modifiable, import CSV/Excel détaillé (section 6.8), crate `kadenz-import`, feuille de route J1 à J10 reportée en section 19, question des délais par défaut ajoutée |
 | 2.5 | 2026-11-09 | Questions 3 (orthographe rectifiée par défaut), 10 (délais vides par défaut) et 11 (import dans l'assistant reporté) tranchées |
-| 2.6 | 2026-11-09 | Jalon J3 : périmètre livré et reports (section 19), droits des actions que la matrice ne nommait pas (section 10.1), conditions de validation (section 7.2), question 12 sur le réglage de la numérotation |
+| 2.6 | 2026-11-09 | Jalon J3 : périmètre livré et reports (section 19), droits des actions que la matrice ne nommait pas (section 10.1), conditions de validation (section 7.2), question 12 sur le réglage de la numérotation, identifiants jamais réutilisés (section 7.4) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -243,6 +243,7 @@ L'état de paiement (Facture et Bon de commande) est un axe séparé du statut d
 - Toute transition de statut est journalisée : utilisateur, date et heure, ancien statut, nouveau statut.
 - La table d'audit est en ajout seul : des déclencheurs SQLite refusent toute modification et toute suppression, la règle ne repose donc pas sur le seul code applicatif.
 - Granularité minimale : qui a créé, validé, annulé, et quand. Pas d'audit frappe par frappe en Brouillon.
+- Les identifiants des documents, tiers, produits et règlements ne sont jamais réutilisés (`AUTOINCREMENT`) : l'historique d'une ligne supprimée ne se mêle pas à celui d'une nouvelle.
 
 ### 7.5 Sessions et utilisateurs
 

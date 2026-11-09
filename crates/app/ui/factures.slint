@@ -96,6 +96,9 @@ export global FacturesApi {
     callback deplacer-ligne(ligne: int, sens: int);
     callback supprimer-ligne(ligne: int);
     callback recalculer(remise: int, tva: int);
+    // Échéance après un changement de date : recalculée si elle valait la date
+    // précédente plus le délai de paiement réglé, gardée sinon.
+    callback echeance-apres-date(date-precedente: string, date: string, echeance: string) -> string;
     callback enregistrer(fiche: FicheFactureUi) -> Retour;
     callback valider(fiche: FicheFactureUi) -> Retour;
     callback marquer-envoye() -> Retour;
@@ -256,12 +259,14 @@ component Fiche inherits ScrollView {
     // 0 aucune, 1 valider, 2 annuler, 3 supprimer.
     property <int> confirmation: 0;
     property <int> version-chargee: -1;
+    property <string> date-precedente;
 
     function charger(f: FicheFactureUi) {
         root.version-chargee = FacturesApi.version-fiche;
         root.fiche = f;
         root.confirmation = 0;
         date.valeur = f.date;
+        root.date-precedente = f.date;
         echeance.valeur = f.echeance;
         libelle.valeur = f.libelle;
         observations.valeur = f.observations;
@@ -405,6 +410,10 @@ component Fiche inherits ScrollView {
                 date := Champ {
                     libelle: "Date (JJ/MM/AAAA)";
                     lecture-seule: !root.fiche.modifiable;
+                    modifie(texte) => {
+                        echeance.valeur = FacturesApi.echeance-apres-date(root.date-precedente, texte, echeance.valeur);
+                        root.date-precedente = texte;
+                    }
                 }
             }
 
@@ -528,9 +537,10 @@ component Fiche inherits ScrollView {
 
             if root.fiche.modifiable: PetitBouton {
                 text: "×";
+                // Les totaux sont recalculés par l'application : cette ligne,
+                // et donc ce gestionnaire, disparaît avec la suppression.
                 clicked => {
                     FacturesApi.supprimer-ligne(i);
-                    root.recalculer();
                 }
             }
         }

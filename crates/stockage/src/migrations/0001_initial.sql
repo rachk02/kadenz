@@ -3,6 +3,9 @@
 -- après quoi toute évolution passe par une nouvelle migration.
 -- Montants en FCFA entiers, pourcentages en centièmes de point, quantités en millièmes,
 -- dates en TEXT ISO 8601, valeurs structurées en JSON dans des colonnes TEXT.
+-- AUTOINCREMENT sur les tables dont les lignes peuvent être supprimées et sont citées
+-- par le journal d'audit : un identifiant n'y est jamais réutilisé, l'historique d'une
+-- fiche ou d'un document supprimé ne se mêle pas à celui d'un nouveau.
 
 CREATE TABLE entreprise (
     id                        INTEGER PRIMARY KEY CHECK (id = 1),
@@ -35,7 +38,7 @@ CREATE TABLE utilisateur (
 ) STRICT;
 
 CREATE TABLE tiers (
-    id                INTEGER PRIMARY KEY,
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
     nom               TEXT NOT NULL,
     adresse           TEXT NOT NULL DEFAULT '',
     telephone         TEXT NOT NULL DEFAULT '',
@@ -48,7 +51,7 @@ CREATE TABLE tiers (
 ) STRICT;
 
 CREATE TABLE produit (
-    id          INTEGER PRIMARY KEY,
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
     designation TEXT NOT NULL,
     reference   TEXT NOT NULL UNIQUE COLLATE NOCASE,
     prix        INTEGER NOT NULL CHECK (prix >= 0),
@@ -57,7 +60,7 @@ CREATE TABLE produit (
 ) STRICT;
 
 CREATE TABLE document (
-    id                        INTEGER PRIMARY KEY,
+    id                        INTEGER PRIMARY KEY AUTOINCREMENT,
     type                      TEXT NOT NULL CHECK (type IN ('devis', 'proforma', 'bon_commande', 'livraison', 'facture', 'avoir')),
     numero                    TEXT,
     date                      TEXT NOT NULL,
@@ -118,7 +121,7 @@ CREATE TABLE ligne_document (
 CREATE INDEX ligne_par_document ON ligne_document (document_id, ordre);
 
 CREATE TABLE reglement (
-    id             INTEGER PRIMARY KEY,
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
     document_id    INTEGER NOT NULL REFERENCES document (id),
     date           TEXT NOT NULL,
     montant        INTEGER NOT NULL CHECK (montant > 0),
