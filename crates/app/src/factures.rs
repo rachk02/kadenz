@@ -933,6 +933,38 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         })
     });
 
+    let e = etat.clone();
+    api.on_exporter_pdf(move || {
+        let etat = e.borrow();
+        let Some(id) = etat.facture.as_ref().and_then(|ed| ed.id) else {
+            return retour_erreur("enregistrer d'abord la facture");
+        };
+        let (octets, nom) = match crate::pdf::generer(&etat.conn, id) {
+            Ok(resultat) => resultat,
+            Err(message) => return retour_erreur(message),
+        };
+        let Some(chemin) = rfd::FileDialog::new()
+            .set_title(crate::traduction::tr("Enregistrer le PDF"))
+            .set_file_name(&nom)
+            .add_filter("PDF", &["pdf"])
+            .save_file()
+        else {
+            return Retour::default();
+        };
+        if let Err(erreur) = std::fs::write(&chemin, &octets) {
+            return retour_erreur(crate::traduction::trf(
+                "écriture du PDF impossible : {}",
+                &[&erreur],
+            ));
+        }
+        // Ouvre le PDF dans la visionneuse par défaut de Windows.
+        let _ = std::process::Command::new("explorer").arg(&chemin).spawn();
+        retour_ok(crate::traduction::trf(
+            "PDF enregistré : {}",
+            &[&chemin.display()],
+        ))
+    });
+
     let (f, e) = (fenetre.as_weak(), etat.clone());
     api.on_annuler_document(move || {
         let Some(f) = f.upgrade() else {

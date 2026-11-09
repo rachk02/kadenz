@@ -66,6 +66,9 @@ msgstr "Cancel a validated document"
 msgid "Annulé"
 msgstr "Cancelled"
 
+msgid "Aperçu PDF"
+msgstr "PDF preview"
+
 msgid "Au JJ/MM/AAAA"
 msgstr "To DD/MM/YYYY"
 
@@ -384,6 +387,9 @@ msgstr "Save draft"
 msgid "Enregistrer le mode et les observations"
 msgstr "Save method and notes"
 
+msgid "Enregistrer le PDF"
+msgstr "Save the PDF"
+
 msgid "Enregistrer les droits"
 msgstr "Save rights"
 
@@ -410,6 +416,9 @@ msgstr "Example: {} FCFA is written \"{}\"."
 
 msgid "existe déjà"
 msgstr "already exists"
+
+msgid "Exporter en PDF"
+msgstr "Export to PDF"
 
 msgid "Facture"
 msgstr "Invoice"
@@ -663,6 +672,9 @@ msgstr "logo removed"
 msgid "Logos"
 msgstr "Logos"
 
+msgid "ltr"
+msgstr "ltr"
+
 msgid "Marquer envoyée"
 msgstr "Mark as sent"
 
@@ -800,6 +812,9 @@ msgstr "Partial"
 
 msgid "Payé"
 msgstr "Paid"
+
+msgid "PDF enregistré : {}"
+msgstr "PDF saved: {}"
 
 msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
 msgstr "Fonts: Inter and Manrope, under the SIL Open Font License 1.1."
@@ -1127,6 +1142,9 @@ msgstr "Due date (optional)"
 
 msgid "échéance illisible : saisir la date au format JJ/MM/AAAA, ou la laisser vide"
 msgstr "unreadable due date: enter the date as DD/MM/YYYY, or leave it empty"
+
+msgid "écriture du PDF impossible : {}"
+msgstr "unable to write the PDF: {}"
 
 msgid "Étape {} sur {} : {}"
 msgstr "Step {} of {}: {}"

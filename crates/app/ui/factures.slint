@@ -105,6 +105,9 @@ export global FacturesApi {
     callback annuler-document() -> Retour;
     callback supprimer() -> Retour;
     callback enregistrer-administratif(mode: int, observations: string) -> Retour;
+    // PDF du document enregistré : aperçu filigrané pour un brouillon, document
+    // définitif une fois validé, filigrane « ANNULÉ » s'il est annulé.
+    callback exporter-pdf() -> Retour;
 }
 
 component Registre inherits VerticalLayout {
@@ -740,6 +743,14 @@ component Fiche inherits ScrollView {
                 clicked => {
                     root.retour = { };
                     root.confirmation = 2;
+                }
+            }
+
+            if root.fiche.existe: Bouton {
+                text: root.fiche.brouillon ? @tr("Aperçu PDF") : @tr("Exporter en PDF");
+                clicked => {
+                    root.confirmation = 0;
+                    root.retour = FacturesApi.exporter-pdf();
                 }
             }
 

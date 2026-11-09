@@ -4,6 +4,7 @@
 mod administration;
 mod factures;
 mod import_ecran;
+mod pdf;
 mod referentiels;
 mod traduction;
 mod utilisateurs;

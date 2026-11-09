@@ -66,6 +66,9 @@ msgstr "Anular un documento validado"
 msgid "Annulé"
 msgstr "Anulado"
 
+msgid "Aperçu PDF"
+msgstr "Vista previa PDF"
+
 msgid "Au JJ/MM/AAAA"
 msgstr "Hasta DD/MM/AAAA"
 
@@ -384,6 +387,9 @@ msgstr "Guardar el borrador"
 msgid "Enregistrer le mode et les observations"
 msgstr "Guardar la forma de pago y las observaciones"
 
+msgid "Enregistrer le PDF"
+msgstr "Guardar el PDF"
+
 msgid "Enregistrer les droits"
 msgstr "Guardar los derechos"
 
@@ -410,6 +416,9 @@ msgstr "Ejemplo: {} FCFA se escribe «{}»."
 
 msgid "existe déjà"
 msgstr "ya existe"
+
+msgid "Exporter en PDF"
+msgstr "Exportar a PDF"
 
 msgid "Facture"
 msgstr "Factura"
@@ -663,6 +672,9 @@ msgstr "logotipo quitado"
 msgid "Logos"
 msgstr "Logotipos"
 
+msgid "ltr"
+msgstr "ltr"
+
 msgid "Marquer envoyée"
 msgstr "Marcar como enviada"
 
@@ -800,6 +812,9 @@ msgstr "Parcial"
 
 msgid "Payé"
 msgstr "Pagado"
+
+msgid "PDF enregistré : {}"
+msgstr "PDF guardado: {}"
 
 msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
 msgstr "Fuentes: Inter y Manrope, bajo licencia SIL Open Font License 1.1."
@@ -1127,6 +1142,9 @@ msgstr "Vencimiento (opcional)"
 
 msgid "échéance illisible : saisir la date au format JJ/MM/AAAA, ou la laisser vide"
 msgstr "vencimiento ilegible: introduzca la fecha con el formato DD/MM/AAAA, o déjelo vacío"
+
+msgid "écriture du PDF impossible : {}"
+msgstr "no se puede escribir el PDF: {}"
 
 msgid "Étape {} sur {} : {}"
 msgstr "Paso {} de {}: {}"

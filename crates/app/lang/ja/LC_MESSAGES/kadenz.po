@@ -66,6 +66,9 @@ msgstr "確定済みの書類を取り消す"
 msgid "Annulé"
 msgstr "取消済み"
 
+msgid "Aperçu PDF"
+msgstr "PDF プレビュー"
+
 msgid "Au JJ/MM/AAAA"
 msgstr "終了 DD/MM/YYYY"
 
@@ -384,6 +387,9 @@ msgstr "下書きを保存"
 msgid "Enregistrer le mode et les observations"
 msgstr "支払方法と備考を保存"
 
+msgid "Enregistrer le PDF"
+msgstr "PDF を保存"
+
 msgid "Enregistrer les droits"
 msgstr "権限を保存"
 
@@ -410,6 +416,9 @@ msgstr "例：{} FCFA は「{}」と書きます。"
 
 msgid "existe déjà"
 msgstr "すでに存在します"
+
+msgid "Exporter en PDF"
+msgstr "PDF に書き出す"
 
 msgid "Facture"
 msgstr "請求書"
@@ -663,6 +672,9 @@ msgstr "ロゴを削除しました。"
 msgid "Logos"
 msgstr "ロゴ"
 
+msgid "ltr"
+msgstr "ltr"
+
 msgid "Marquer envoyée"
 msgstr "送付済みにする"
 
@@ -800,6 +812,9 @@ msgstr "一部入金"
 
 msgid "Payé"
 msgstr "支払済み"
+
+msgid "PDF enregistré : {}"
+msgstr "PDF を保存しました：{}"
 
 msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
 msgstr "フォント：Inter と Manrope（SIL Open Font License 1.1）。"
@@ -1127,6 +1142,9 @@ msgstr "支払期日（任意）"
 
 msgid "échéance illisible : saisir la date au format JJ/MM/AAAA, ou la laisser vide"
 msgstr "支払期日を読み取れません。DD/MM/YYYY の形式で入力するか、空欄にしてください。"
+
+msgid "écriture du PDF impossible : {}"
+msgstr "PDF を書き込めません：{}"
 
 msgid "Étape {} sur {} : {}"
 msgstr "ステップ {} / {}：{}"

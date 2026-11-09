@@ -66,6 +66,9 @@ msgstr "Onaylı belgeyi iptal et"
 msgid "Annulé"
 msgstr "İptal edildi"
 
+msgid "Aperçu PDF"
+msgstr "PDF önizleme"
+
 msgid "Au JJ/MM/AAAA"
 msgstr "Bitiş GG/AA/YYYY"
 
@@ -384,6 +387,9 @@ msgstr "Taslağı kaydet"
 msgid "Enregistrer le mode et les observations"
 msgstr "Yöntemi ve notları kaydet"
 
+msgid "Enregistrer le PDF"
+msgstr "PDF'yi kaydet"
+
 msgid "Enregistrer les droits"
 msgstr "Yetkileri kaydet"
 
@@ -410,6 +416,9 @@ msgstr "Örnek: {} FCFA, \"{}\" olarak yazılır."
 
 msgid "existe déjà"
 msgstr "zaten mevcut"
+
+msgid "Exporter en PDF"
+msgstr "PDF olarak dışa aktar"
 
 msgid "Facture"
 msgstr "Fatura"
@@ -663,6 +672,9 @@ msgstr "logo kaldırıldı"
 msgid "Logos"
 msgstr "Logolar"
 
+msgid "ltr"
+msgstr "ltr"
+
 msgid "Marquer envoyée"
 msgstr "Gönderildi olarak işaretle"
 
@@ -800,6 +812,9 @@ msgstr "Kısmi"
 
 msgid "Payé"
 msgstr "Ödendi"
+
+msgid "PDF enregistré : {}"
+msgstr "PDF kaydedildi: {}"
 
 msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
 msgstr "Yazı tipleri: Inter ve Manrope, SIL Open Font License 1.1 lisansıyla."
@@ -1127,6 +1142,9 @@ msgstr "Vade (isteğe bağlı)"
 
 msgid "échéance illisible : saisir la date au format JJ/MM/AAAA, ou la laisser vide"
 msgstr "vade okunamadı: tarihi GG/AA/YYYY biçiminde girin veya boş bırakın"
+
+msgid "écriture du PDF impossible : {}"
+msgstr "PDF yazılamadı: {}"
 
 msgid "Étape {} sur {} : {}"
 msgstr "Adım {} / {}: {}"

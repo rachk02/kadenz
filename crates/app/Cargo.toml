@@ -10,6 +10,7 @@ build = "build.rs"
 kadenz-domaine.workspace = true
 kadenz-stockage.workspace = true
 kadenz-import.workspace = true
+kadenz-pdf.workspace = true
 slint.workspace = true
 chrono.workspace = true
 rfd.workspace = true

@@ -66,6 +66,9 @@ msgstr "作废已确认单据"
 msgid "Annulé"
 msgstr "已作废"
 
+msgid "Aperçu PDF"
+msgstr "PDF 预览"
+
 msgid "Au JJ/MM/AAAA"
 msgstr "至 DD/MM/YYYY"
 
@@ -384,6 +387,9 @@ msgstr "保存草稿"
 msgid "Enregistrer le mode et les observations"
 msgstr "保存付款方式和备注"
 
+msgid "Enregistrer le PDF"
+msgstr "保存 PDF"
+
 msgid "Enregistrer les droits"
 msgstr "保存权限"
 
@@ -410,6 +416,9 @@ msgstr "示例：{} FCFA 写作“{}”。"
 
 msgid "existe déjà"
 msgstr "已存在"
+
+msgid "Exporter en PDF"
+msgstr "导出为 PDF"
 
 msgid "Facture"
 msgstr "发票"
@@ -663,6 +672,9 @@ msgstr "徽标已移除。"
 msgid "Logos"
 msgstr "徽标"
 
+msgid "ltr"
+msgstr "ltr"
+
 msgid "Marquer envoyée"
 msgstr "标记为已发送"
 
@@ -800,6 +812,9 @@ msgstr "部分付款"
 
 msgid "Payé"
 msgstr "已付款"
+
+msgid "PDF enregistré : {}"
+msgstr "PDF 已保存：{}"
 
 msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
 msgstr "字体：Inter 和 Manrope，采用 SIL Open Font License 1.1 许可证。"
@@ -1127,6 +1142,9 @@ msgstr "到期日（可选）"
 
 msgid "échéance illisible : saisir la date au format JJ/MM/AAAA, ou la laisser vide"
 msgstr "到期日无法识别：请按 DD/MM/YYYY 格式输入，或留空。"
+
+msgid "écriture du PDF impossible : {}"
+msgstr "无法写入 PDF：{}"
 
 msgid "Étape {} sur {} : {}"
 msgstr "第 {} 步，共 {} 步：{}"
