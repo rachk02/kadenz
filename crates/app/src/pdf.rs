@@ -7,7 +7,7 @@
 use kadenz_domaine::calcul::{Montant, Taux, UNE_UNITE, calculer_totaux};
 use kadenz_domaine::document::{Statut, TypeDocument};
 use kadenz_domaine::lettres::en_lettres_majuscule;
-use kadenz_domaine::mise_en_page::{Marges, MiseEnPage, MiseEnPageAnalysee};
+use kadenz_domaine::mise_en_page::{BasDeDocument, Marges, MiseEnPage, MiseEnPageAnalysee};
 use kadenz_domaine::saisie::montant_en_texte;
 use kadenz_pdf::modele::{
     ColonnePdf, DocumentPdf, EntreprisePdf, Filigrane, LettrePdf, LignePdf, ListePdf, LivraisonPdf,
@@ -133,6 +133,7 @@ pub(crate) fn document_pdf(conn: &Connection, d: &Document) -> Result<DocumentPd
         filigrane,
         couleur: i.couleur,
         mise_en_page: i.mise_en_page.clone(),
+        bas: i.bas.clone(),
     })
 }
 
@@ -380,10 +381,15 @@ pub(crate) fn liste_relances(conn: &Connection) -> Result<(Vec<u8>, String), Str
     Ok((octets, format!("Relances-{}.pdf", jour.format("%Y-%m-%d"))))
 }
 
-/// Facture d'exemple de l'aperçu des réglages d'impression : données de
-/// l'entreprise, textes et couleur du moment, lignes génériques.
-fn facture_exemple(conn: &Connection, mep: MiseEnPageAnalysee) -> Result<DocumentPdf, String> {
-    let i = impression::courante(conn, TypeDocument::Facture).map_err(texte_erreur)?;
+/// Document d'exemple de l'aperçu des réglages d'impression, du type demandé :
+/// données de l'entreprise, textes et couleur du moment, lignes génériques.
+fn document_exemple(
+    conn: &Connection,
+    t: TypeDocument,
+    mep: MiseEnPageAnalysee,
+    bas: &BasDeDocument,
+) -> Result<DocumentPdf, String> {
+    let i = impression::courante(conn, t).map_err(texte_erreur)?;
     let lignes: Vec<LignePdf> = (1..=3)
         .map(|k| {
             let prix = 10_000 * k;
@@ -393,6 +399,7 @@ fn facture_exemple(conn: &Connection, mep: MiseEnPageAnalysee) -> Result<Documen
                 designation: format!("Article d'exemple {k}"),
                 prix,
                 quantite,
+                quantite_livree: quantite,
                 total: kadenz_domaine::calcul::total_ligne(prix, quantite),
                 ..Default::default()
             }
@@ -401,41 +408,54 @@ fn facture_exemple(conn: &Connection, mep: MiseEnPageAnalysee) -> Result<Documen
     let taux = Taux {
         remise: 0,
         tva: 1800,
-        retenue: 0,
+        retenue: if t.retenue_applicable() { 500 } else { 0 },
     };
-    let totaux = calculer_totaux(lignes.iter().map(|l| (l.prix, l.quantite)), taux, false);
+    let totaux = calculer_totaux(
+        lignes.iter().map(|l| (l.prix, l.quantite)),
+        taux,
+        t.retenue_applicable(),
+    );
+    let libelle_tiers = if t == TypeDocument::BonCommande {
+        "Fournisseur"
+    } else {
+        "Client"
+    };
     Ok(DocumentPdf {
         entreprise: entreprise_pdf(&i.entreprise, i.logo.clone(), i.logo2.clone()),
         tiers: TiersPdf {
-            nom: "Client d'exemple".into(),
+            nom: format!("{libelle_tiers} d'exemple"),
             ..Default::default()
         },
         textes: TextesPdf {
             titre: i.textes.titre.clone(),
-            libelle_tiers: "Client".into(),
+            libelle_tiers: libelle_tiers.into(),
             phrase_somme: i.textes.phrase_somme.clone(),
             signataire: i.textes.signataire.clone(),
-            nom_signataire: String::new(),
+            nom_signataire: i.entreprise.responsable_comptabilite.clone(),
         },
         date: date(aujourd_hui()),
         lignes,
-        avec_montants: true,
+        avec_montants: t.a_des_montants(),
         taux,
         totaux,
         montant_en_lettres: en_lettres_majuscule(totaux.ttc, i.orthographe),
         couleur: i.couleur,
         mise_en_page: mep,
+        bas: bas.clone(),
         ..Default::default()
     })
 }
 
-/// Aperçu des réglages d'impression (non enregistrés) : première page de la
-/// facture d'exemple, rendue en image RGBA de `largeur_px` pixels de large.
+/// Aperçu des réglages d'impression (non enregistrés) : première page d'un
+/// document d'exemple du type `t`, avec le bas `bas`, rendue en image RGBA de
+/// `largeur_px` pixels de large.
 /// Renvoie les pixels, la largeur et la hauteur ; un markup invalide renvoie le
 /// message traduisible de l'analyse.
 pub(crate) fn apercu_mise_en_page(
     conn: &Connection,
     m: &MiseEnPage,
+    bas: &BasDeDocument,
+    t: TypeDocument,
     largeur_px: u32,
 ) -> Result<(Vec<u8>, u32, u32), String> {
     use hayro::hayro_interpret::InterpreterSettings;
@@ -445,7 +465,7 @@ pub(crate) fn apercu_mise_en_page(
     let mep = m
         .analyser()
         .map_err(|e| texte_erreur(kadenz_stockage::Erreur::from(e)))?;
-    let doc = facture_exemple(conn, mep)?;
+    let doc = document_exemple(conn, t, mep, bas)?;
     let octets = kadenz_pdf::generer(&doc, &Polices::embarquees())?;
     let pdf = Pdf::new(octets).map_err(|e| format!("{e:?}"))?;
     let pages = pdf.pages();
@@ -572,7 +592,10 @@ mod tests {
     #[test]
     fn apercu_et_calibrage() {
         let conn = kadenz_stockage::ouvrir_en_memoire().unwrap();
-        let (pixels, l, h) = apercu_mise_en_page(&conn, &MiseEnPage::default(), 600).unwrap();
+        let bas = BasDeDocument::default();
+        let facture = TypeDocument::Facture;
+        let (pixels, l, h) =
+            apercu_mise_en_page(&conn, &MiseEnPage::default(), &bas, facture, 600).unwrap();
         assert_eq!(l, 600);
         assert!((840..=860).contains(&h), "proportions A4 : {h}");
         assert_eq!(pixels.len(), (l * h * 4) as usize);
@@ -584,7 +607,11 @@ mod tests {
             pied: "**gras".into(),
             ..MiseEnPage::default()
         };
-        assert!(apercu_mise_en_page(&conn, &faux, 600).is_err());
+        assert!(apercu_mise_en_page(&conn, &faux, &bas, facture, 600).is_err());
+        for t in [TypeDocument::Livraison, TypeDocument::BonCommande] {
+            let b = BasDeDocument::par_defaut(t);
+            assert!(apercu_mise_en_page(&conn, &MiseEnPage::default(), &b, t, 300).is_ok());
+        }
         assert!(
             feuille_calibrage(&Marges::default())
                 .unwrap()

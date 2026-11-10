@@ -26,6 +26,7 @@
 | 2.20 | 2026-11-10 | Attribution de Slint par le badge « Made with Slint » du README du dépôt public à la place du composant AboutSlint, retiré de l'écran « À propos » à la demande de l'utilisateur (section 14) |
 | 2.21 | 2026-11-10 | Règles de calcul du tableau de bord et graphiques par chemins Slint validés par l'utilisateur (section 9) ; bande verticale de couleur retirée des PDF (section 12) ; réglages d'impression spécifiés (en-tête et pied de page libres, gabarits, papier pré-imprimé, marges et calibrage) pour un nouveau jalon J8b inséré avant J9 (sections 5.4, 12, 18 et 19) |
 | 2.22 | 2026-11-10 | Jalon J8b, domaine, stockage et PDF : règles de rendu des zones d'en-tête et de pied de page, des gabarits et des marges, appliquées aussi aux lettres de relance et aux listes (section 12, provisoires, à confirmer avec les questions 13 à 16) |
+| 2.23 | 2026-11-10 | Bas des documents réglable par type (lignes de totaux, montant en lettres, visas, dates, signataire) et style du pied de page au choix, décisions de l'utilisateur d'après ses modèles Excel du bon de commande et du bordereau (section 12) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -432,6 +433,15 @@ Règles de rendu (provisoires, jalon J8b, en attente de confirmation par l'utili
 - Tailles : la première ligne de texte de l'en-tête prend la taille du nom de l'entreprise, les suivantes celle des coordonnées ; le pied de page est en petit corps. Le gras utilise la police grasse ; l'italique est la police droite penchée (aucune police italique n'est embarquée).
 - Gabarits : Classique, la mise en page d'origine ; Compact, un en-tête plus dense (corps et logos réduits, espacements resserrés), le corps du document inchangé ; Papier pré-imprimé, sans zones d'en-tête ni de pied ni logos, mais avec le titre, le numéro et la date, le bloc du client, « Page n/N » et le filigrane, qui sont des données du document et non de l'en-tête de l'entreprise.
 - Portée : les réglages s'appliquent aux documents commerciaux, à la lettre de relance et aux listes imprimées (registre des règlements, relances), qui partagent l'en-tête et le pied de page.
+
+Bas des documents (décision de l'utilisateur du 2026-11-10, d'après ses modèles Excel du bon de commande et du bordereau ; jalon J8b) :
+- Réglé par type de document, au droit « Gérer les paramètres », et figé dans l'instantané avec le reste de l'impression.
+- Éléments à cocher : chaque ligne de totaux (montant HT, remise, base TVA, TVA, retenue, montant TTC), montant en lettres, visa du client, visa du fournisseur, date de réception, date de livraison, signataire et son nom. Les totaux se calculent toujours automatiquement ; seules les lignes cochées s'impriment.
+- Option « masquer les lignes à zéro » : une ligne de total nulle ne s'imprime pas, la base TVA non plus quand elle égale le montant HT (aucune remise) ; le montant TTC reste toujours imprimé s'il est coché.
+- Les totaux peuvent s'imprimer sur un bordereau de livraison : ce sont ceux du document (quantités commandées, aux prix et taux repris de la facture).
+- Mise en page (provisoire) : totaux à droite, observations à gauche, phrase du montant en lettres, puis les visas et les dates en cases sur deux colonnes (client à gauche avec la date de réception, fournisseur à droite avec la date de livraison), le signataire et son nom sous la colonne de droite.
+- Réglage d'origine : documents à montants, toutes les lignes de totaux (lignes à zéro masquées), montant en lettres et signataire ; bordereau, visas, dates et signataire, sans totaux.
+- Style du pied de page au choix : discret (trait fin gris, mentions en gris) ou accentué (trait épais de la couleur principale sur toute la largeur, mentions en gras).
 
 Choix technique (spécifié) : c'est la partie la plus délicate en Rust pur (modèles, pagination, logo, polices). La bibliothèque sera choisie après un essai sur une page de facture complète.
 

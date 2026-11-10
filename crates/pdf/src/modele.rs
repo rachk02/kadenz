@@ -3,7 +3,7 @@
 //! partir du document validé, de la fiche entreprise et des paramètres.
 
 use kadenz_domaine::calcul::{Montant, Quantite, Taux, Totaux};
-use kadenz_domaine::mise_en_page::MiseEnPageAnalysee;
+use kadenz_domaine::mise_en_page::{BasDeDocument, MiseEnPageAnalysee};
 
 #[derive(Debug, Clone, Default)]
 pub struct EntreprisePdf {
@@ -101,9 +101,9 @@ pub struct DocumentPdf {
     pub mode_paiement: String,
     pub observations: String,
     pub lignes: Vec<LignePdf>,
-    /// Faux pour le bordereau de livraison, qui ne porte pas de montants : ses
-    /// lignes montrent les quantités commandée et livrée, et les zones de visa
-    /// remplacent le signataire.
+    /// Faux pour le bordereau de livraison, dont les lignes montrent les
+    /// quantités commandée et livrée au lieu des prix ; ce qui s'imprime au bas
+    /// dépend de `bas`.
     pub avec_montants: bool,
     pub livraison: LivraisonPdf,
     pub taux: Taux,
@@ -116,6 +116,8 @@ pub struct DocumentPdf {
     pub couleur: [u8; 3],
     /// Gabarit, marges, en-tête et pied de page (jalon J8b).
     pub mise_en_page: MiseEnPageAnalysee,
+    /// Éléments imprimés au bas du document, réglés pour son type.
+    pub bas: BasDeDocument,
 }
 
 /// Lettre de relance d'une facture (section 8), textes déjà remplis.

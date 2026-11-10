@@ -9,8 +9,11 @@
 //! Toutes les données sont inventées pour l'essai.
 
 use kadenz_domaine::calcul::{Taux, UNE_UNITE, calculer_totaux, total_ligne};
+use kadenz_domaine::document::TypeDocument;
 use kadenz_domaine::lettres::{Orthographe, en_lettres_majuscule};
-use kadenz_domaine::mise_en_page::{Gabarit, MiseEnPage, MiseEnPageAnalysee};
+use kadenz_domaine::mise_en_page::{
+    BasDeDocument, Gabarit, LigneTotal, MiseEnPage, MiseEnPageAnalysee, StylePied,
+};
 use kadenz_pdf::modele::{
     ColonnePdf, DocumentPdf, EntreprisePdf, Filigrane, LettrePdf, LignePdf, ListePdf, LivraisonPdf,
     TextesPdf, TiersPdf, TotalPdf,
@@ -111,6 +114,7 @@ fn main() {
         filigrane: Filigrane::Aucun,
         couleur: [0x2d, 0x3a, 0x8c],
         mise_en_page: MiseEnPageAnalysee::default(),
+        bas: BasDeDocument::par_defaut(TypeDocument::Facture),
     };
     let polices = Polices::embarquees();
 
@@ -265,13 +269,29 @@ fn main() {
             date_livraison: "09/11/2026".into(),
             date_reception: "10/11/2026".into(),
         },
+        bas: BasDeDocument::par_defaut(TypeDocument::Livraison),
         ..doc.clone()
+    };
+    // Bas réglé : bordereau avec totaux, pied de page accentué.
+    let bordereau_regle = DocumentPdf {
+        bas: BasDeDocument {
+            totaux: vec![LigneTotal::Ht, LigneTotal::Tva, LigneTotal::Ttc],
+            ..bordereau.bas.clone()
+        },
+        mise_en_page: MiseEnPage {
+            style_pied: StylePied::Accentue,
+            ..MiseEnPage::default()
+        }
+        .analyser()
+        .expect("réglages valides"),
+        ..bordereau.clone()
     };
     for (nom, document) in [
         ("essai-devis.pdf", devis),
         ("essai-avoir.pdf", avoir),
         ("essai-bon-commande.pdf", bon_commande),
         ("essai-bordereau.pdf", bordereau),
+        ("essai-bordereau-regle.pdf", bordereau_regle),
     ] {
         let octets = kadenz_pdf::generer(&document, &polices).expect("PDF produit");
         let chemin = std::path::Path::new(&dossier).join(nom);

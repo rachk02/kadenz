@@ -6,7 +6,8 @@
 
 use kadenz_domaine::calcul::{Montant, Pourcentage};
 use kadenz_domaine::mise_en_page::{
-    Gabarit as GabaritImpression, LigneResolue, Marges, PassageResolu, Variable,
+    Gabarit as GabaritImpression, LigneResolue, LigneTotal, Marges, PassageResolu, StylePied,
+    Variable,
 };
 use kadenz_domaine::saisie::{montant_en_texte, pourcentage_en_texte, quantite_en_texte};
 use krilla::Document;
@@ -303,6 +304,8 @@ struct StyleZone {
     couleur: [u8; 3],
     premiere: Option<(f32, f32, [u8; 3])>,
     h_logo: f32,
+    /// Tout le texte en gras (pied de page accentué).
+    gras: bool,
 }
 
 /// Valeur d'une variable d'impression, lue dans les données de l'entreprise.
@@ -328,6 +331,7 @@ pub(crate) struct Moteur<'d> {
     p: &'d Polices,
     pub(crate) g: Cadre,
     gabarit: GabaritImpression,
+    style_pied: StylePied,
     entete: Vec<LigneResolue>,
     pied: Vec<LigneResolue>,
     logo: Option<Image>,
@@ -415,6 +419,7 @@ impl<'d> Moteur<'d> {
             p,
             g,
             gabarit: mep.gabarit,
+            style_pied: mep.style_pied,
             entete: zone(&mep.entete),
             pied: zone(&mep.pied),
             logo: lire_image(&doc.entreprise.logo),
@@ -481,6 +486,7 @@ impl<'d> Moteur<'d> {
         passages: &[PassageResolu],
         taille: f32,
         largeur: f32,
+        tout_gras: bool,
     ) -> Vec<Vec<(String, bool, bool, f32)>> {
         let mut morceaux: Vec<(String, bool, bool)> = Vec::new();
         for p in passages {
@@ -500,7 +506,7 @@ impl<'d> Moteur<'d> {
         let mut rangees: Vec<Vec<(String, bool, bool, f32)>> = vec![Vec::new()];
         let mut occupe = 0.0;
         for (texte, gras, italique) in morceaux {
-            let police = self.police(gras);
+            let police = self.police(gras || tout_gras);
             let utile = police.largeur(texte.trim_end(), taille);
             let rangee = rangees.last_mut().expect("au moins une rangée");
             if !rangee.is_empty() && occupe + utile > largeur {
@@ -553,10 +559,11 @@ impl<'d> Moteur<'d> {
                         h += interligne;
                         continue;
                     }
-                    for rangee in self.couper_riche(passages, taille, largeur) {
+                    for rangee in self.couper_riche(passages, taille, largeur, style.gras) {
                         let mut l_rangee: f32 = rangee.iter().map(|m| m.3).sum();
                         if let Some((texte, gras, _, l)) = rangee.last() {
-                            l_rangee += self.police(*gras).largeur(texte.trim_end(), taille) - l;
+                            let police = self.police(*gras || style.gras);
+                            l_rangee += police.largeur(texte.trim_end(), taille) - l;
                         }
                         let mut xx = if *centree {
                             x + (largeur - l_rangee) / 2.0
@@ -564,7 +571,7 @@ impl<'d> Moteur<'d> {
                             x
                         };
                         for (texte, gras, italique, l) in &rangee {
-                            let police = self.police(*gras);
+                            let police = self.police(*gras || style.gras);
                             let base = base_centree(police, taille, y + h, interligne);
                             t.ecrire_style(police, taille, c, xx, base, texte, *italique);
                             xx += l;
@@ -589,6 +596,7 @@ impl<'d> Moteur<'d> {
                 couleur: SECONDAIRE,
                 premiere: Some((10.0, 12.5, ENCRE)),
                 h_logo: 42.0,
+                gras: false,
             }
         } else {
             StyleZone {
@@ -597,17 +605,23 @@ impl<'d> Moteur<'d> {
                 couleur: SECONDAIRE,
                 premiere: Some((11.5, 14.0, ENCRE)),
                 h_logo: 54.0,
+                gras: false,
             }
         }
     }
 
-    fn style_pied() -> StyleZone {
+    fn accentue(&self) -> bool {
+        self.style_pied == StylePied::Accentue
+    }
+
+    fn style_pied(&self) -> StyleZone {
         StyleZone {
             taille: 7.0,
             interligne: 9.0,
-            couleur: SECONDAIRE,
+            couleur: if self.accentue() { ENCRE } else { SECONDAIRE },
             premiere: None,
             h_logo: 30.0,
+            gras: self.accentue(),
         }
     }
 
@@ -955,60 +969,120 @@ impl<'d> Moteur<'d> {
         H_REPORT
     }
 
-    // ------------------------------------------------------------ bloc final (dernière page)
+    /// Lignes de totaux à imprimer, avec libellé et valeur, selon le bas réglé.
+    fn lignes_totaux(&self) -> Vec<(LigneTotal, String, Montant)> {
+        let d = self.doc;
+        let b = &d.bas;
+        let t = &d.totaux;
+        b.totaux
+            .iter()
+            .filter_map(|&l| {
+                let (valeur, libelle) = match l {
+                    LigneTotal::Ht => (t.ht, l.libelle().to_owned()),
+                    LigneTotal::Remise => (
+                        t.remise,
+                        format!("{} ({})", l.libelle(), taux(d.taux.remise)),
+                    ),
+                    LigneTotal::BaseTva => (t.base_tva, l.libelle().to_owned()),
+                    LigneTotal::Tva => (t.tva, format!("{} ({})", l.libelle(), taux(d.taux.tva))),
+                    LigneTotal::Retenue => (
+                        t.retenue,
+                        format!("{} ({})", l.libelle(), taux(d.taux.retenue)),
+                    ),
+                    LigneTotal::Ttc => (t.ttc, l.libelle().to_owned()),
+                };
+                let masquee = b.masquer_zero
+                    && match l {
+                        LigneTotal::Ttc => false,
+                        LigneTotal::BaseTva => t.remise == 0,
+                        _ => valeur == 0,
+                    };
+                (!masquee).then_some((l, libelle, valeur))
+            })
+            .collect()
+    }
 
+    /// Case de visa ou de date : titre centré, contenu dessous.
+    #[allow(clippy::too_many_arguments)]
+    fn case_bas(
+        &self,
+        t: &mut Toile,
+        x: f32,
+        y: f32,
+        largeur: f32,
+        h: f32,
+        titre: &str,
+        texte: &str,
+    ) {
+        let p = self.p;
+        t.cadre(x, y, largeur, h, BORDURE);
+        let l = p.texte_gras.largeur(titre, 8.5);
+        t.ecrire(
+            &p.texte_gras,
+            8.5,
+            ENCRE,
+            x + (largeur - l) / 2.0,
+            base_centree(&p.texte_gras, 8.5, y + 3.0, 12.0),
+            titre,
+        );
+        if !texte.trim().is_empty() {
+            self.paragraphe(
+                t,
+                &p.texte,
+                8.5,
+                11.0,
+                ENCRE,
+                x + 6.0,
+                y + 16.0,
+                largeur - 12.0,
+                texte,
+            );
+        }
+    }
+
+    // ------------------------------------------------------------ bloc final
+
+    /// Bas du document, selon les éléments réglés pour son type : totaux,
+    /// observations, montant en lettres, visas et dates, signataire.
     fn bloc_final(&self, t: &mut Toile, y: f32) -> f32 {
         let d = self.doc;
+        let b = &d.bas;
         let p = self.p;
         let mut bas = y;
 
-        if d.avec_montants {
-            // Totaux, à droite.
+        // Totaux, à droite ; la ligne du TTC est mise en valeur.
+        let lignes = self.lignes_totaux();
+        let avec_totaux = !lignes.is_empty();
+        if avec_totaux {
             let x = self.g.droite - LARGEUR_TOTAUX;
-            let h = 17.0;
-            let mut rangs: Vec<(String, Montant)> = vec![("Montant HT".into(), d.totaux.ht)];
-            if d.totaux.remise != 0 {
-                rangs.push((format!("Remise ({})", taux(d.taux.remise)), d.totaux.remise));
-                rangs.push(("Base TVA".into(), d.totaux.base_tva));
-            }
-            rangs.push((format!("TVA ({})", taux(d.taux.tva)), d.totaux.tva));
-            if d.totaux.retenue != 0 {
-                rangs.push((
-                    format!("Retenue ({})", taux(d.taux.retenue)),
-                    d.totaux.retenue,
-                ));
-            }
             let mut yt = y;
-            for (libelle, valeur) in &rangs {
-                let base = base_centree(&p.texte, 9.0, yt, h);
-                t.ecrire(&p.texte, 9.0, ENCRE, x + 6.0, base, libelle);
+            for (l, libelle, valeur) in &lignes {
                 let v = format!("{} FCFA", montant(*valeur));
-                let l = p.texte.largeur(&v, 9.0);
-                t.ecrire(&p.texte, 9.0, ENCRE, self.g.droite - 6.0 - l, base, &v);
-                yt += h;
-                t.trait_horizontal(x, self.g.droite, yt, BORDURE, 0.5);
+                if *l == LigneTotal::Ttc {
+                    let h = 20.0;
+                    t.rectangle(x, yt, LARGEUR_TOTAUX, h, d.couleur);
+                    let base = base_centree(&p.texte_gras, 10.0, yt, h);
+                    t.ecrire(&p.texte_gras, 10.0, BLANC, x + 6.0, base, libelle);
+                    let lv = p.texte_gras.largeur(&v, 10.0);
+                    let xv = self.g.droite - 6.0 - lv;
+                    t.ecrire(&p.texte_gras, 10.0, BLANC, xv, base, &v);
+                    yt += h;
+                } else {
+                    let h = 17.0;
+                    let base = base_centree(&p.texte, 9.0, yt, h);
+                    t.ecrire(&p.texte, 9.0, ENCRE, x + 6.0, base, libelle);
+                    let lv = p.texte.largeur(&v, 9.0);
+                    t.ecrire(&p.texte, 9.0, ENCRE, self.g.droite - 6.0 - lv, base, &v);
+                    yt += h;
+                    t.trait_horizontal(x, self.g.droite, yt, BORDURE, 0.5);
+                }
             }
-            let h_ttc = 20.0;
-            t.rectangle(x, yt, LARGEUR_TOTAUX, h_ttc, d.couleur);
-            let base = base_centree(&p.texte_gras, 10.0, yt, h_ttc);
-            t.ecrire(&p.texte_gras, 10.0, BLANC, x + 6.0, base, "Montant TTC");
-            let v = format!("{} FCFA", montant(d.totaux.ttc));
-            let l = p.texte_gras.largeur(&v, 10.0);
-            t.ecrire(
-                &p.texte_gras,
-                10.0,
-                BLANC,
-                self.g.droite - 6.0 - l,
-                base,
-                &v,
-            );
-            yt += h_ttc;
             bas = bas.max(yt);
         }
 
         // Observations, à gauche des totaux.
         if !d.observations.trim().is_empty() {
-            let largeur = if d.avec_montants {
+            let largeur = if avec_totaux {
                 self.g.utile() - LARGEUR_TOTAUX - 16.0
             } else {
                 self.g.utile()
@@ -1041,7 +1115,7 @@ impl<'d> Moteur<'d> {
 
         // Montant en lettres, dans la phrase de l'outil Excel d'origine :
         // « Arrêté le présent ... à la somme de <lettres> francs (<chiffres>) FCFA. »
-        if d.avec_montants && !d.montant_en_lettres.is_empty() {
+        if b.montant_en_lettres && !d.montant_en_lettres.is_empty() {
             bas += 12.0;
             let phrase = phrase_somme(&d.textes.phrase_somme, &d.montant_en_lettres, d.totaux.ttc);
             bas += self.paragraphe(
@@ -1057,69 +1131,60 @@ impl<'d> Moteur<'d> {
             );
         }
 
-        // Bordereau : zones de visa du client et du fournisseur, avec les dates
-        // de réception et de livraison (section 6.5), à la place du signataire.
-        if !d.avec_montants {
+        // Visas et dates, en cases sur deux colonnes (modèle Excel du
+        // bordereau) : le client à gauche, le fournisseur à droite.
+        let ecart = 40.0;
+        let largeur_col = (self.g.utile() - ecart) / 2.0;
+        let x_droite = self.g.gauche + largeur_col + ecart;
+        let avec_cases =
+            b.visa_client || b.visa_fournisseur || b.date_reception || b.date_livraison;
+        if avec_cases {
             bas += 16.0;
-            let ecart = 16.0;
-            let largeur = (self.g.utile() - ecart) / 2.0;
-            let hauteur = 96.0;
             let l = &d.livraison;
-            let zones = [
+            let (h_visa, h_date, espace) = (56.0, 32.0, 8.0);
+            let mut h_cols: f32 = 0.0;
+            for (x, visa, texte_visa, date, texte_date, titre_visa, titre_date) in [
                 (
                     self.g.gauche,
+                    b.visa_client,
+                    &l.visa_client,
+                    b.date_reception,
+                    &l.date_reception,
                     "Visa du client",
                     "Date de réception",
-                    &l.date_reception,
-                    &l.visa_client,
                 ),
                 (
-                    self.g.gauche + largeur + ecart,
+                    x_droite,
+                    b.visa_fournisseur,
+                    &l.visa_fournisseur,
+                    b.date_livraison,
+                    &l.date_livraison,
                     "Visa du fournisseur",
                     "Date de livraison",
-                    &l.date_livraison,
-                    &l.visa_fournisseur,
                 ),
-            ];
-            for (x, titre, libelle_date, date, visa) in zones {
-                t.cadre(x, bas, largeur, hauteur, BORDURE);
-                let interieur = largeur - 12.0;
-                let mut yz = bas + 6.0;
-                yz += self.paragraphe(
-                    t,
-                    &p.texte_gras,
-                    8.5,
-                    11.0,
-                    ENCRE,
-                    x + 6.0,
-                    yz,
-                    interieur,
-                    titre,
-                );
-                yz += self.paragraphe(
-                    t,
-                    &p.texte,
-                    8.0,
-                    11.0,
-                    SECONDAIRE,
-                    x + 6.0,
-                    yz,
-                    interieur,
-                    &format!("{libelle_date} : {date}"),
-                );
-                if !visa.is_empty() {
-                    self.paragraphe(t, &p.texte, 8.5, 11.0, ENCRE, x + 6.0, yz, interieur, visa);
+            ] {
+                let mut yc = bas;
+                if visa {
+                    self.case_bas(t, x, yc, largeur_col, h_visa, titre_visa, texte_visa);
+                    yc += h_visa + espace;
                 }
+                if date {
+                    self.case_bas(t, x, yc, largeur_col, h_date, titre_date, texte_date);
+                    yc += h_date + espace;
+                }
+                h_cols = h_cols.max(yc - bas);
             }
-            bas += hauteur;
-            return bas - y;
+            bas += h_cols - espace;
         }
 
-        // Signataire, à droite.
-        if !d.textes.signataire.is_empty() {
-            bas += 16.0;
-            let largeur = 200.0;
-            let x = self.g.droite - largeur;
+        // Signataire : sous la colonne de droite s'il y a des cases, sinon à droite.
+        if b.signataire && !d.textes.signataire.is_empty() {
+            bas += if avec_cases { 10.0 } else { 16.0 };
+            let (x, largeur) = if avec_cases {
+                (x_droite, largeur_col)
+            } else {
+                (self.g.droite - 200.0, 200.0)
+            };
             let centrer = |police: &Police, taille: f32, texte: &str| {
                 x + (largeur - police.largeur(texte, taille)) / 2.0
             };
@@ -1159,7 +1224,7 @@ impl<'d> Moteur<'d> {
         let h = self.zone(
             &mut Toile::a_blanc(),
             &self.pied,
-            Self::style_pied(),
+            self.style_pied(),
             self.g.gauche,
             0.0,
             self.largeur_pied(),
@@ -1171,12 +1236,16 @@ impl<'d> Moteur<'d> {
         let p = self.p;
         let haut = self.g.bas - self.hauteur_pied();
         if self.gabarit.imprime_les_zones() {
-            t.trait_horizontal(self.g.gauche, self.g.droite, haut, BORDURE, 0.75);
+            if self.accentue() {
+                t.trait_horizontal(self.g.gauche, self.g.droite, haut, self.doc.couleur, 2.0);
+            } else {
+                t.trait_horizontal(self.g.gauche, self.g.droite, haut, BORDURE, 0.75);
+            }
         }
         self.zone(
             t,
             &self.pied,
-            Self::style_pied(),
+            self.style_pied(),
             self.g.gauche,
             haut + 6.0,
             self.largeur_pied(),

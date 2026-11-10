@@ -8,7 +8,7 @@
 
 use kadenz_domaine::document::TypeDocument;
 use kadenz_domaine::lettres::Orthographe;
-use kadenz_domaine::mise_en_page::MiseEnPageAnalysee;
+use kadenz_domaine::mise_en_page::{BasDeDocument, MiseEnPageAnalysee};
 use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::{Value, json};
 
@@ -28,6 +28,8 @@ pub struct Impression {
     pub orthographe: Orthographe,
     /// Gabarit, marges, en-tête et pied de page (jalon J8b).
     pub mise_en_page: MiseEnPageAnalysee,
+    /// Éléments imprimés au bas du document, propres au type.
+    pub bas: BasDeDocument,
 }
 
 /// Valeurs du moment pour un type de document (aperçu d'un brouillon).
@@ -41,6 +43,7 @@ pub fn courante(conn: &Connection, t: TypeDocument) -> Resultat<Impression> {
         couleur: p.couleur_documents,
         orthographe: p.orthographe,
         mise_en_page: mise_en_page::lire_analysee(conn)?,
+        bas: mise_en_page::lire_bas(conn, t)?,
     })
 }
 
@@ -66,10 +69,16 @@ fn en_json(i: &Impression) -> Value {
         "couleur": couleur_en_texte(i.couleur),
         "orthographe": i.orthographe.code(),
         "mise_en_page": mise_en_page::en_json(&i.mise_en_page),
+        "bas": mise_en_page::bas_en_json(&i.bas),
     })
 }
 
-fn depuis_json(v: &Value, logo: Option<Vec<u8>>, logo2: Option<Vec<u8>>) -> Impression {
+fn depuis_json(
+    v: &Value,
+    type_document: TypeDocument,
+    logo: Option<Vec<u8>>,
+    logo2: Option<Vec<u8>>,
+) -> Impression {
     let t = |nom: &str| {
         v.get(nom)
             .and_then(Value::as_str)
@@ -106,6 +115,11 @@ fn depuis_json(v: &Value, logo: Option<Vec<u8>>, logo2: Option<Vec<u8>>) -> Impr
             .get("mise_en_page")
             .map(mise_en_page::depuis_json)
             .unwrap_or_else(mise_en_page::defaut_analyse),
+        // Un instantané antérieur au réglage du bas garde le bas d'origine.
+        bas: v
+            .get("bas")
+            .map(|b| mise_en_page::bas_depuis_json(b, type_document))
+            .unwrap_or_else(|| BasDeDocument::par_defaut(type_document)),
     }
 }
 
@@ -162,5 +176,5 @@ pub fn pour_document(conn: &Connection, document_id: i64) -> Resultat<Impression
         |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
     )?;
     let v: Value = serde_json::from_str(&donnees).unwrap_or(Value::Null);
-    Ok(depuis_json(&v, logo, logo2))
+    Ok(depuis_json(&v, t, logo, logo2))
 }

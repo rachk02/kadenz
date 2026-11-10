@@ -11,6 +11,7 @@
 //! Le markup est analysé en lignes structurées ; c'est cette structure qui est
 //! stockée et imprimée, jamais le texte saisi tel quel.
 
+use crate::document::TypeDocument;
 use crate::message::MessageCompose;
 
 /// Gabarit A4 : choisi, jamais redessiné champ par champ.
@@ -545,6 +546,7 @@ pub struct MiseEnPage {
     pub marges: Marges,
     pub entete: String,
     pub pied: String,
+    pub style_pied: StylePied,
 }
 
 impl Default for MiseEnPage {
@@ -554,6 +556,7 @@ impl Default for MiseEnPage {
             marges: Marges::default(),
             entete: ENTETE_PAR_DEFAUT.to_owned(),
             pied: PIED_PAR_DEFAUT.to_owned(),
+            style_pied: StylePied::default(),
         }
     }
 }
@@ -565,6 +568,7 @@ pub struct MiseEnPageAnalysee {
     pub marges: Marges,
     pub entete: Zone,
     pub pied: Zone,
+    pub style_pied: StylePied,
 }
 
 impl Default for MiseEnPageAnalysee {
@@ -587,7 +591,150 @@ impl MiseEnPage {
             marges: self.marges,
             entete,
             pied,
+            style_pied: self.style_pied,
         })
+    }
+}
+
+/// Style du trait et des mentions du pied de page.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum StylePied {
+    /// Trait fin gris, mentions en gris.
+    #[default]
+    Discret,
+    /// Trait épais de la couleur principale, mentions en gras.
+    Accentue,
+}
+
+impl StylePied {
+    pub const TOUS: [StylePied; 2] = [StylePied::Discret, StylePied::Accentue];
+
+    pub fn code(self) -> &'static str {
+        match self {
+            StylePied::Discret => "discret",
+            StylePied::Accentue => "accentue",
+        }
+    }
+
+    pub fn depuis_code(code: &str) -> Option<StylePied> {
+        StylePied::TOUS.into_iter().find(|s| s.code() == code)
+    }
+}
+
+/// Ligne du tableau des totaux.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum LigneTotal {
+    Ht,
+    Remise,
+    BaseTva,
+    Tva,
+    Retenue,
+    Ttc,
+}
+
+impl LigneTotal {
+    /// Dans l'ordre d'impression.
+    pub const TOUTES: [LigneTotal; 6] = [
+        LigneTotal::Ht,
+        LigneTotal::Remise,
+        LigneTotal::BaseTva,
+        LigneTotal::Tva,
+        LigneTotal::Retenue,
+        LigneTotal::Ttc,
+    ];
+
+    pub fn code(self) -> &'static str {
+        match self {
+            LigneTotal::Ht => "ht",
+            LigneTotal::Remise => "remise",
+            LigneTotal::BaseTva => "base_tva",
+            LigneTotal::Tva => "tva",
+            LigneTotal::Retenue => "retenue",
+            LigneTotal::Ttc => "ttc",
+        }
+    }
+
+    pub fn depuis_code(code: &str) -> Option<LigneTotal> {
+        LigneTotal::TOUTES.into_iter().find(|l| l.code() == code)
+    }
+
+    /// Libellé imprimé (sans le taux, ajouté par le PDF).
+    pub fn libelle(self) -> &'static str {
+        match self {
+            LigneTotal::Ht => "Montant HT",
+            LigneTotal::Remise => "Remise",
+            LigneTotal::BaseTva => "Base TVA",
+            LigneTotal::Tva => "TVA",
+            LigneTotal::Retenue => "Retenue",
+            LigneTotal::Ttc => "Montant TTC",
+        }
+    }
+}
+
+/// Éléments imprimés au bas d'un document, réglés par type de document.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BasDeDocument {
+    /// Lignes de totaux cochées, dans l'ordre de `LigneTotal::TOUTES`.
+    pub totaux: Vec<LigneTotal>,
+    /// Masque les lignes de totaux à zéro, et la base TVA quand elle vaut le
+    /// montant HT (aucune remise).
+    pub masquer_zero: bool,
+    pub montant_en_lettres: bool,
+    pub visa_client: bool,
+    pub visa_fournisseur: bool,
+    pub date_reception: bool,
+    pub date_livraison: bool,
+    /// Libellé du signataire et nom.
+    pub signataire: bool,
+}
+
+impl BasDeDocument {
+    /// Réglage d'origine d'un type : totaux, montant en lettres et signataire
+    /// pour un document à montants ; visas, dates et signataire pour un
+    /// bordereau (modèle Excel du bordereau).
+    pub fn par_defaut(t: TypeDocument) -> BasDeDocument {
+        if t.a_des_montants() {
+            BasDeDocument {
+                totaux: LigneTotal::TOUTES.to_vec(),
+                masquer_zero: true,
+                montant_en_lettres: true,
+                visa_client: false,
+                visa_fournisseur: false,
+                date_reception: false,
+                date_livraison: false,
+                signataire: true,
+            }
+        } else {
+            BasDeDocument {
+                totaux: Vec::new(),
+                masquer_zero: true,
+                montant_en_lettres: false,
+                visa_client: true,
+                visa_fournisseur: true,
+                date_reception: true,
+                date_livraison: true,
+                signataire: true,
+            }
+        }
+    }
+
+    pub fn imprime(&self, l: LigneTotal) -> bool {
+        self.totaux.contains(&l)
+    }
+
+    /// Remet les lignes cochées dans l'ordre d'impression, sans doublon.
+    pub fn normaliser(&mut self) {
+        let cochees = std::mem::take(&mut self.totaux);
+        self.totaux = LigneTotal::TOUTES
+            .into_iter()
+            .filter(|l| cochees.contains(l))
+            .collect();
+    }
+}
+
+impl Default for BasDeDocument {
+    fn default() -> Self {
+        BasDeDocument::par_defaut(TypeDocument::Facture)
     }
 }
 
@@ -826,6 +973,26 @@ mod tests {
         assert_eq!(pied, ["<email>", "<banque2>"]);
         let entete = texte(ENTETE_PAR_DEFAUT, &[Variable::Nom]);
         assert_eq!(entete, ["[logo]", "<nom>", "[logo]"]);
+    }
+
+    #[test]
+    fn bas_par_defaut_et_normalisation() {
+        let f = BasDeDocument::par_defaut(TypeDocument::Facture);
+        assert!(f.imprime(LigneTotal::Ttc) && f.signataire && !f.visa_client);
+        let b = BasDeDocument::par_defaut(TypeDocument::Livraison);
+        assert!(b.totaux.is_empty() && b.visa_client && b.date_livraison);
+        let mut m = BasDeDocument {
+            totaux: vec![LigneTotal::Ttc, LigneTotal::Ht, LigneTotal::Ttc],
+            ..f
+        };
+        m.normaliser();
+        assert_eq!(m.totaux, [LigneTotal::Ht, LigneTotal::Ttc]);
+        for l in LigneTotal::TOUTES {
+            assert_eq!(LigneTotal::depuis_code(l.code()), Some(l));
+        }
+        for s in StylePied::TOUS {
+            assert_eq!(StylePied::depuis_code(s.code()), Some(s));
+        }
     }
 
     #[test]
