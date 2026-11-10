@@ -437,7 +437,12 @@ impl<'d> Moteur<'d> {
             infos.push(("Libellé", d.libelle.as_str()));
         }
         if !d.echeance.is_empty() {
-            infos.push(("Échéance", d.echeance.as_str()));
+            let libelle = if d.libelle_echeance.is_empty() {
+                "Échéance"
+            } else {
+                d.libelle_echeance.as_str()
+            };
+            infos.push((libelle, d.echeance.as_str()));
         }
         if !d.mode_paiement.is_empty() {
             infos.push(("Mode de paiement", d.mode_paiement.as_str()));

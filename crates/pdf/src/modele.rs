@@ -79,6 +79,9 @@ pub struct DocumentPdf {
     /// Dates déjà écrites (jj/mm/aaaa).
     pub date: String,
     pub echeance: String,
+    /// Étiquette de `echeance` : « Validité » sur un devis ou une proforma ;
+    /// vide pour « Échéance ».
+    pub libelle_echeance: String,
     pub libelle: String,
     pub mode_paiement: String,
     pub observations: String,

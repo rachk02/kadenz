@@ -78,6 +78,10 @@ pub(crate) fn document_pdf(conn: &Connection, d: &Document) -> Result<DocumentPd
         reference: reference(d),
         date: date(d.saisie.date),
         echeance: d.saisie.date_echeance.map(date).unwrap_or_default(),
+        libelle_echeance: match d.type_document {
+            TypeDocument::Devis | TypeDocument::Proforma => "Validité".into(),
+            _ => String::new(),
+        },
         libelle: d.saisie.libelle.clone(),
         mode_paiement: d.saisie.mode_paiement.clone(),
         observations: d.saisie.observations.clone(),

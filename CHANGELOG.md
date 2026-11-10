@@ -10,6 +10,7 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 - Jalon J5, écrans : boutons « Convertir en facture », « Créer un avoir » (grisé quand les avoirs couvrent déjà toute la facture), « Dupliquer » et « Corriger » (avec confirmation, l'original est annulé) ; le brouillon créé s'ouvre aussitôt, dans la page de son type, avec un message sous le bandeau ; section « Documents liés » (origine et documents issus du document, chacun ouvrant sa fiche) ; montant dû après avoirs dans le bandeau d'une facture ; mention « Facture en préparation » sur un devis ou une proforma ; remise et TVA d'un avoir verrouillées comme son client ; export PDF ouvert aux devis, proformas et avoirs ; messages fixes du stockage sur la conversion, la duplication et les avoirs traduits dans les six langues ; historique de la fiche traduit, numéros compris.
 
 ### Corrigé
+- PDF d'un devis ou d'une proforma : la date de fin de validité s'imprime sous « Validité » et non plus « Échéance », comme à l'écran.
 - État de paiement « Payé » quand le montant dû est nul ou déjà atteint (facture couverte par ses avoirs), conformément à la section 8.
 
 ## [0.1.0] - 2026-11-09

@@ -1,7 +1,8 @@
 //! Essai du générateur (J4) : facture fictive de plusieurs pages.
 //!
 //! `cargo run -p kadenz-pdf --example essai_facture -- <dossier>` écrit
-//! `essai-facture.pdf` (validée), `essai-brouillon.pdf` et `essai-annulee.pdf`.
+//! `essai-facture.pdf` (validée), `essai-brouillon.pdf`, `essai-annulee.pdf`,
+//! `essai-devis.pdf` et `essai-avoir.pdf`.
 //! Deux arguments facultatifs de plus : fichiers du logo principal et du logo
 //! secondaire (PNG ou JPEG).
 //! Toutes les données sont inventées pour l'essai.
@@ -90,6 +91,7 @@ fn main() {
         reference: String::new(),
         date: "09/11/2026".into(),
         echeance: "09/12/2026".into(),
+        libelle_echeance: String::new(),
         libelle: "Fournitures pour le chantier d'essai".into(),
         mode_paiement: "Virement bancaire".into(),
         observations: String::new(),
@@ -121,5 +123,48 @@ fn main() {
             octets.len(),
             debut.elapsed()
         );
+    }
+
+    // Devis (J5) : date de fin de validité à la place de l'échéance.
+    let devis = DocumentPdf {
+        textes: TextesPdf {
+            titre: "DEVIS".into(),
+            phrase_somme: "Arrêté le présent devis à la somme de".into(),
+            ..doc.textes.clone()
+        },
+        numero: "D2026-11-0001".into(),
+        libelle_echeance: "Validité".into(),
+        mode_paiement: String::new(),
+        ..doc.clone()
+    };
+    // Avoir partiel (J5) : quelques lignes de la facture, référence de la facture d'origine.
+    let lignes_avoir: Vec<LignePdf> = doc.lignes.iter().take(3).cloned().collect();
+    let taux_avoir = Taux { remise: 0, ..taux };
+    let totaux_avoir = calculer_totaux(
+        lignes_avoir.iter().map(|l| (l.prix, l.quantite)),
+        taux_avoir,
+        false,
+    );
+    let avoir = DocumentPdf {
+        textes: TextesPdf {
+            titre: "AVOIR".into(),
+            phrase_somme: "Arrêté le présent avoir à la somme de".into(),
+            ..doc.textes.clone()
+        },
+        numero: "A2026-11-0001".into(),
+        reference: "Facture d'origine : F2026-11-0001".into(),
+        echeance: String::new(),
+        libelle: "Retour de marchandises".into(),
+        lignes: lignes_avoir,
+        taux: taux_avoir,
+        montant_en_lettres: en_lettres_majuscule(totaux_avoir.ttc, Orthographe::Rectifiee),
+        totaux: totaux_avoir,
+        ..doc.clone()
+    };
+    for (nom, document) in [("essai-devis.pdf", devis), ("essai-avoir.pdf", avoir)] {
+        let octets = kadenz_pdf::generer(&document, &polices).expect("PDF produit");
+        let chemin = std::path::Path::new(&dossier).join(nom);
+        std::fs::write(&chemin, &octets).expect("écriture");
+        println!("{} : {} octets", chemin.display(), octets.len());
     }
 }
