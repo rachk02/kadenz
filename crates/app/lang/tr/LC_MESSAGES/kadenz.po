@@ -1592,3 +1592,135 @@ msgstr "\"{}\" tedarikçisi oluşturuldu ve bu belge için seçildi"
 
 msgid "Retenue"
 msgstr "Stopaj"
+
+msgid "Reçue"
+msgstr "Teslim alınan"
+
+msgid "Enregistrer la réception"
+msgstr "Teslim alımı kaydet"
+
+msgid "Saisir pour chaque ligne la quantité reçue depuis la commande, livraisons précédentes comprises. Une réception complète est définitive."
+msgstr "Her satır için siparişten bu yana teslim alınan miktarı, önceki teslimatlar dahil girin. Tamamlanan teslim alma kesindir."
+
+msgid "réception enregistrée"
+msgstr "teslim alma kaydedildi"
+
+msgid "ligne {} : quantité reçue illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "satır {}: teslim alınan miktar okunamıyor, pozitif bir sayı girin (en fazla 3 ondalık)"
+
+msgid "Réception enregistrée"
+msgstr "Teslim alma kaydedildi"
+
+msgid "Réception enregistrée, {}"
+msgstr "Teslim alma kaydedildi, {}"
+
+msgid "la réception ne concerne que les bons de commande"
+msgstr "teslim alma yalnızca sipariş formları için geçerlidir"
+
+msgid "la réception doit donner une quantité pour chaque ligne du bon de commande"
+msgstr "teslim alma, sipariş formunun her satırı için bir miktar vermelidir"
+
+msgid "une réception partielle est déjà enregistrée : au moins une quantité reçue reste nécessaire"
+msgstr "kısmi bir teslim alma zaten kaydedildi: en az bir teslim alınan miktar gereklidir"
+
+msgid "ligne {} : la quantité reçue dépasse la quantité commandée, la corriger"
+msgstr "satır {}: teslim alınan miktar sipariş edilen miktarı aşıyor, düzeltin"
+
+msgid "ligne {} : la quantité livrée dépasse le reste à livrer, la corriger"
+msgstr "satır {}: teslim edilen miktar teslim edilecek kalan miktarı aşıyor, düzeltin"
+
+msgid "ligne {} : la quantité reçue ne peut pas être négative"
+msgstr "satır {}: teslim alınan miktar negatif olamaz"
+
+msgid "la réception s'enregistre sur un bon de commande envoyé ; celui-ci est « {} »"
+msgstr "teslim alma gönderilmiş bir sipariş formuna kaydedilir; bu belgenin durumu \"{}\""
+
+msgid "ligne {} : la quantité livrée doit être comprise entre 0 et la quantité commandée"
+msgstr "satır {}: teslim edilen miktar 0 ile sipariş edilen miktar arasında olmalıdır"
+
+msgid "ligne {} : la désignation est obligatoire"
+msgstr "satır {}: tanım zorunludur"
+
+msgid "ligne {} : le prix ne peut pas être négatif"
+msgstr "satır {}: fiyat negatif olamaz"
+
+msgid "ligne {} : la quantité doit être supérieure à zéro"
+msgstr "satır {}: miktar sıfırdan büyük olmalıdır"
+
+msgid "le tiers « {} » est désactivé"
+msgstr "\"{}\" carisi devre dışı"
+
+msgid "le tiers « {} » n'est pas enregistré comme client"
+msgstr "\"{}\" carisi müşteri olarak kayıtlı değil"
+
+msgid "le tiers « {} » n'est pas enregistré comme fournisseur"
+msgstr "\"{}\" carisi tedarikçi olarak kayıtlı değil"
+
+msgid "le montant de l'avoir ({} FCFA) dépasse le reste à créditer de la facture ({} FCFA)"
+msgstr "iade faturası tutarı ({} FCFA), faturanın kalan iade edilebilir tutarını ({} FCFA) aşıyor"
+
+msgid "le mot de passe doit contenir au moins {} caractères"
+msgstr "parola en az {} karakter içermelidir"
+
+msgid "l'identifiant « {} » est déjà utilisé"
+msgstr "\"{}\" kullanıcı adı zaten kullanılıyor"
+
+msgid "le logo dépasse la taille maximale de {} Mo"
+msgstr "logo en fazla {} MB boyutunu aşıyor"
+
+msgid "la référence « {} » est déjà utilisée par « {} »"
+msgstr "\"{}\" referansı zaten \"{}\" tarafından kullanılıyor"
+
+msgid "type de document inconnu : {}"
+msgstr "bilinmeyen belge türü: {}"
+
+msgid "ce document est « {} » : ses lignes et montants ne se modifient plus"
+msgstr "bu belgenin durumu \"{}\": satırları ve tutarları artık değiştirilemez"
+
+msgid "seul un document validé ou envoyé se convertit en facture ; celui-ci est « {} »"
+msgstr "yalnızca onaylanmış veya gönderilmiş bir belge faturaya dönüştürülebilir; bu belgenin durumu \"{}\""
+
+msgid "seul un document validé ou envoyé se corrige ; celui-ci est « {} »"
+msgstr "yalnızca onaylanmış veya gönderilmiş bir belge düzeltilebilir; bu belgenin durumu \"{}\""
+
+msgid "un avoir se crée depuis une facture validée ou envoyée ; celle-ci est « {} »"
+msgstr "iade faturası onaylanmış veya gönderilmiş bir faturadan oluşturulur; bu faturanın durumu \"{}\""
+
+msgid "seul un brouillon peut être supprimé ; ce document est « {} »"
+msgstr "yalnızca taslak silinebilir; bu belgenin durumu \"{}\""
+
+msgid "le document d'origine est « {} » : il ne peut plus être converti"
+msgstr "kaynak belgenin durumu \"{}\": artık dönüştürülemez"
+
+msgid "la facture d'origine est « {} » : l'avoir ne peut plus être validé"
+msgstr "kaynak faturanın durumu \"{}\": iade faturası artık onaylanamaz"
+
+msgid "les champs administratifs se modifient sur un document validé ; celui-ci est « {} »"
+msgstr "idari alanlar onaylanmış bir belgede değiştirilir; bu belgenin durumu \"{}\""
+
+msgid "le titre imprimé du type « {} » est obligatoire"
+msgstr "\"{}\" türünün basılı başlığı zorunludur"
+
+msgid "{} : passage de « {} » à « {} » non autorisé"
+msgstr "{}: \"{}\" durumundan \"{}\" durumuna geçişe izin verilmiyor"
+
+msgid "fiche {} : {}"
+msgstr "kayıt {}: {}"
+
+msgid "le taux de remise doit être compris entre 0 et 100 %"
+msgstr "indirim oranı 0 ile %100 arasında olmalıdır"
+
+msgid "le taux de TVA doit être compris entre 0 et 100 %"
+msgstr "KDV oranı 0 ile %100 arasında olmalıdır"
+
+msgid "le taux de retenue doit être compris entre 0 et 100 %"
+msgstr "stopaj oranı 0 ile %100 arasında olmalıdır"
+
+msgid "la liste des taux de TVA doit contenir des valeurs entre 0 et 100 %"
+msgstr "KDV oranları listesi 0 ile %100 arasında değerler içermelidir"
+
+msgid "la liste des taux de remise doit contenir des valeurs entre 0 et 100 %"
+msgstr "indirim oranları listesi 0 ile %100 arasında değerler içermelidir"
+
+msgid "la liste des taux de retenue doit contenir des valeurs entre 0 et 100 %"
+msgstr "stopaj oranları listesi 0 ile %100 arasında değerler içermelidir"

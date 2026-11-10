@@ -1592,3 +1592,135 @@ msgstr "أُنشئ المورد «{}» واختير لهذا المستند"
 
 msgid "Retenue"
 msgstr "الاقتطاع"
+
+msgid "Reçue"
+msgstr "المستلَمة"
+
+msgid "Enregistrer la réception"
+msgstr "تسجيل الاستلام"
+
+msgid "Saisir pour chaque ligne la quantité reçue depuis la commande, livraisons précédentes comprises. Une réception complète est définitive."
+msgstr "أدخل لكل بند الكمية المستلَمة منذ الطلب، بما فيها التسليمات السابقة. الاستلام الكامل نهائي."
+
+msgid "réception enregistrée"
+msgstr "سُجّل الاستلام"
+
+msgid "ligne {} : quantité reçue illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "البند {}: الكمية المستلَمة غير مقروءة، أدخل عددًا موجبًا (3 أرقام عشرية على الأكثر)"
+
+msgid "Réception enregistrée"
+msgstr "تسجيل الاستلام"
+
+msgid "Réception enregistrée, {}"
+msgstr "تسجيل الاستلام، {}"
+
+msgid "la réception ne concerne que les bons de commande"
+msgstr "لا يخص الاستلام إلا أوامر الشراء"
+
+msgid "la réception doit donner une quantité pour chaque ligne du bon de commande"
+msgstr "يجب أن يحدد الاستلام كمية لكل بند من أمر الشراء"
+
+msgid "une réception partielle est déjà enregistrée : au moins une quantité reçue reste nécessaire"
+msgstr "سُجّل استلام جزئي من قبل: تبقى كمية مستلَمة واحدة على الأقل ضرورية"
+
+msgid "ligne {} : la quantité reçue dépasse la quantité commandée, la corriger"
+msgstr "البند {}: الكمية المستلَمة تتجاوز الكمية المطلوبة، صحّحها"
+
+msgid "ligne {} : la quantité livrée dépasse le reste à livrer, la corriger"
+msgstr "البند {}: الكمية المسلَّمة تتجاوز الكمية المتبقية للتسليم، صحّحها"
+
+msgid "ligne {} : la quantité reçue ne peut pas être négative"
+msgstr "البند {}: لا يمكن أن تكون الكمية المستلَمة سالبة"
+
+msgid "la réception s'enregistre sur un bon de commande envoyé ; celui-ci est « {} »"
+msgstr "يُسجَّل الاستلام على أمر شراء مُرسَل؛ وحالة هذا الأمر «{}»"
+
+msgid "ligne {} : la quantité livrée doit être comprise entre 0 et la quantité commandée"
+msgstr "البند {}: يجب أن تكون الكمية المسلَّمة بين 0 والكمية المطلوبة"
+
+msgid "ligne {} : la désignation est obligatoire"
+msgstr "البند {}: الوصف إلزامي"
+
+msgid "ligne {} : le prix ne peut pas être négatif"
+msgstr "البند {}: لا يمكن أن يكون السعر سالبًا"
+
+msgid "ligne {} : la quantité doit être supérieure à zéro"
+msgstr "البند {}: يجب أن تكون الكمية أكبر من صفر"
+
+msgid "le tiers « {} » est désactivé"
+msgstr "الطرف «{}» معطَّل"
+
+msgid "le tiers « {} » n'est pas enregistré comme client"
+msgstr "الطرف «{}» غير مسجَّل كعميل"
+
+msgid "le tiers « {} » n'est pas enregistré comme fournisseur"
+msgstr "الطرف «{}» غير مسجَّل كمورد"
+
+msgid "le montant de l'avoir ({} FCFA) dépasse le reste à créditer de la facture ({} FCFA)"
+msgstr "مبلغ الإشعار الدائن ({} FCFA) يتجاوز المتبقي القابل للإضافة من الفاتورة ({} FCFA)"
+
+msgid "le mot de passe doit contenir au moins {} caractères"
+msgstr "يجب أن تحتوي كلمة المرور على {} أحرف على الأقل"
+
+msgid "l'identifiant « {} » est déjà utilisé"
+msgstr "اسم المستخدم «{}» مستخدَم بالفعل"
+
+msgid "le logo dépasse la taille maximale de {} Mo"
+msgstr "يتجاوز الشعار الحجم الأقصى البالغ {} ميغابايت"
+
+msgid "la référence « {} » est déjà utilisée par « {} »"
+msgstr "المرجع «{}» مستخدَم بالفعل لـ «{}»"
+
+msgid "type de document inconnu : {}"
+msgstr "نوع مستند غير معروف: {}"
+
+msgid "ce document est « {} » : ses lignes et montants ne se modifient plus"
+msgstr "حالة هذا المستند «{}»: لم يعد بالإمكان تعديل بنوده ومبالغه"
+
+msgid "seul un document validé ou envoyé se convertit en facture ; celui-ci est « {} »"
+msgstr "لا يُحوَّل إلى فاتورة إلا مستند معتمد أو مُرسَل؛ وحالة هذا المستند «{}»"
+
+msgid "seul un document validé ou envoyé se corrige ; celui-ci est « {} »"
+msgstr "لا يُصحَّح إلا مستند معتمد أو مُرسَل؛ وحالة هذا المستند «{}»"
+
+msgid "un avoir se crée depuis une facture validée ou envoyée ; celle-ci est « {} »"
+msgstr "يُنشأ الإشعار الدائن من فاتورة معتمدة أو مُرسَلة؛ وحالة هذه الفاتورة «{}»"
+
+msgid "seul un brouillon peut être supprimé ; ce document est « {} »"
+msgstr "لا يمكن حذف إلا المسودة؛ وحالة هذا المستند «{}»"
+
+msgid "le document d'origine est « {} » : il ne peut plus être converti"
+msgstr "حالة المستند الأصلي «{}»: لم يعد بالإمكان تحويله"
+
+msgid "la facture d'origine est « {} » : l'avoir ne peut plus être validé"
+msgstr "حالة الفاتورة الأصلية «{}»: لم يعد بالإمكان اعتماد الإشعار الدائن"
+
+msgid "les champs administratifs se modifient sur un document validé ; celui-ci est « {} »"
+msgstr "تُعدَّل الحقول الإدارية على مستند معتمد؛ وحالة هذا المستند «{}»"
+
+msgid "le titre imprimé du type « {} » est obligatoire"
+msgstr "العنوان المطبوع للنوع «{}» إلزامي"
+
+msgid "{} : passage de « {} » à « {} » non autorisé"
+msgstr "{}: الانتقال من «{}» إلى «{}» غير مسموح"
+
+msgid "fiche {} : {}"
+msgstr "البطاقة {}: {}"
+
+msgid "le taux de remise doit être compris entre 0 et 100 %"
+msgstr "يجب أن تكون نسبة الخصم بين 0 و100 %"
+
+msgid "le taux de TVA doit être compris entre 0 et 100 %"
+msgstr "يجب أن تكون نسبة ضريبة القيمة المضافة بين 0 و100 %"
+
+msgid "le taux de retenue doit être compris entre 0 et 100 %"
+msgstr "يجب أن تكون نسبة الاقتطاع بين 0 و100 %"
+
+msgid "la liste des taux de TVA doit contenir des valeurs entre 0 et 100 %"
+msgstr "يجب أن تحتوي قائمة نسب ضريبة القيمة المضافة على قيم بين 0 و100 %"
+
+msgid "la liste des taux de remise doit contenir des valeurs entre 0 et 100 %"
+msgstr "يجب أن تحتوي قائمة نسب الخصم على قيم بين 0 و100 %"
+
+msgid "la liste des taux de retenue doit contenir des valeurs entre 0 et 100 %"
+msgstr "يجب أن تحتوي قائمة نسب الاقتطاع على قيم بين 0 و100 %"

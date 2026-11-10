@@ -1592,3 +1592,135 @@ msgstr "supplier \"{}\" created and selected for this document"
 
 msgid "Retenue"
 msgstr "Withholding"
+
+msgid "Reçue"
+msgstr "Received"
+
+msgid "Enregistrer la réception"
+msgstr "Record receipt"
+
+msgid "Saisir pour chaque ligne la quantité reçue depuis la commande, livraisons précédentes comprises. Une réception complète est définitive."
+msgstr "Enter for each line the quantity received since the order, including earlier deliveries. A complete receipt is final."
+
+msgid "réception enregistrée"
+msgstr "receipt recorded"
+
+msgid "ligne {} : quantité reçue illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "line {}: unreadable received quantity, enter a positive number (3 decimals at most)"
+
+msgid "Réception enregistrée"
+msgstr "Receipt recorded"
+
+msgid "Réception enregistrée, {}"
+msgstr "Receipt recorded, {}"
+
+msgid "la réception ne concerne que les bons de commande"
+msgstr "receipt only applies to purchase orders"
+
+msgid "la réception doit donner une quantité pour chaque ligne du bon de commande"
+msgstr "the receipt must give a quantity for each line of the purchase order"
+
+msgid "une réception partielle est déjà enregistrée : au moins une quantité reçue reste nécessaire"
+msgstr "a partial receipt is already recorded: at least one received quantity is still required"
+
+msgid "ligne {} : la quantité reçue dépasse la quantité commandée, la corriger"
+msgstr "line {}: the received quantity exceeds the ordered quantity, correct it"
+
+msgid "ligne {} : la quantité livrée dépasse le reste à livrer, la corriger"
+msgstr "line {}: the delivered quantity exceeds the quantity left to deliver, correct it"
+
+msgid "ligne {} : la quantité reçue ne peut pas être négative"
+msgstr "line {}: the received quantity cannot be negative"
+
+msgid "la réception s'enregistre sur un bon de commande envoyé ; celui-ci est « {} »"
+msgstr "receipt is recorded on a sent purchase order; this one is \"{}\""
+
+msgid "ligne {} : la quantité livrée doit être comprise entre 0 et la quantité commandée"
+msgstr "line {}: the delivered quantity must be between 0 and the ordered quantity"
+
+msgid "ligne {} : la désignation est obligatoire"
+msgstr "line {}: the description is required"
+
+msgid "ligne {} : le prix ne peut pas être négatif"
+msgstr "line {}: the price cannot be negative"
+
+msgid "ligne {} : la quantité doit être supérieure à zéro"
+msgstr "line {}: the quantity must be greater than zero"
+
+msgid "le tiers « {} » est désactivé"
+msgstr "contact \"{}\" is deactivated"
+
+msgid "le tiers « {} » n'est pas enregistré comme client"
+msgstr "contact \"{}\" is not registered as a customer"
+
+msgid "le tiers « {} » n'est pas enregistré comme fournisseur"
+msgstr "contact \"{}\" is not registered as a supplier"
+
+msgid "le montant de l'avoir ({} FCFA) dépasse le reste à créditer de la facture ({} FCFA)"
+msgstr "the credit note amount ({} FCFA) exceeds the amount left to credit on the invoice ({} FCFA)"
+
+msgid "le mot de passe doit contenir au moins {} caractères"
+msgstr "the password must contain at least {} characters"
+
+msgid "l'identifiant « {} » est déjà utilisé"
+msgstr "the username \"{}\" is already in use"
+
+msgid "le logo dépasse la taille maximale de {} Mo"
+msgstr "the logo exceeds the maximum size of {} MB"
+
+msgid "la référence « {} » est déjà utilisée par « {} »"
+msgstr "the reference \"{}\" is already used by \"{}\""
+
+msgid "type de document inconnu : {}"
+msgstr "unknown document type: {}"
+
+msgid "ce document est « {} » : ses lignes et montants ne se modifient plus"
+msgstr "this document is \"{}\": its lines and amounts can no longer be changed"
+
+msgid "seul un document validé ou envoyé se convertit en facture ; celui-ci est « {} »"
+msgstr "only a validated or sent document can be converted into an invoice; this one is \"{}\""
+
+msgid "seul un document validé ou envoyé se corrige ; celui-ci est « {} »"
+msgstr "only a validated or sent document can be corrected; this one is \"{}\""
+
+msgid "un avoir se crée depuis une facture validée ou envoyée ; celle-ci est « {} »"
+msgstr "a credit note is created from a validated or sent invoice; this one is \"{}\""
+
+msgid "seul un brouillon peut être supprimé ; ce document est « {} »"
+msgstr "only a draft can be deleted; this document is \"{}\""
+
+msgid "le document d'origine est « {} » : il ne peut plus être converti"
+msgstr "the original document is \"{}\": it can no longer be converted"
+
+msgid "la facture d'origine est « {} » : l'avoir ne peut plus être validé"
+msgstr "the original invoice is \"{}\": the credit note can no longer be validated"
+
+msgid "les champs administratifs se modifient sur un document validé ; celui-ci est « {} »"
+msgstr "administrative fields are changed on a validated document; this one is \"{}\""
+
+msgid "le titre imprimé du type « {} » est obligatoire"
+msgstr "the printed title for type \"{}\" is required"
+
+msgid "{} : passage de « {} » à « {} » non autorisé"
+msgstr "{}: change from \"{}\" to \"{}\" not allowed"
+
+msgid "fiche {} : {}"
+msgstr "record {}: {}"
+
+msgid "le taux de remise doit être compris entre 0 et 100 %"
+msgstr "the discount rate must be between 0 and 100%"
+
+msgid "le taux de TVA doit être compris entre 0 et 100 %"
+msgstr "the VAT rate must be between 0 and 100%"
+
+msgid "le taux de retenue doit être compris entre 0 et 100 %"
+msgstr "the withholding rate must be between 0 and 100%"
+
+msgid "la liste des taux de TVA doit contenir des valeurs entre 0 et 100 %"
+msgstr "the VAT rate list must contain values between 0 and 100%"
+
+msgid "la liste des taux de remise doit contenir des valeurs entre 0 et 100 %"
+msgstr "the discount rate list must contain values between 0 and 100%"
+
+msgid "la liste des taux de retenue doit contenir des valeurs entre 0 et 100 %"
+msgstr "the withholding rate list must contain values between 0 and 100%"

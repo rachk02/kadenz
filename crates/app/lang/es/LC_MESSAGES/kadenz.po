@@ -1592,3 +1592,135 @@ msgstr "proveedor «{}» creado y elegido para este documento"
 
 msgid "Retenue"
 msgstr "Retención"
+
+msgid "Reçue"
+msgstr "Recibida"
+
+msgid "Enregistrer la réception"
+msgstr "Registrar la recepción"
+
+msgid "Saisir pour chaque ligne la quantité reçue depuis la commande, livraisons précédentes comprises. Une réception complète est définitive."
+msgstr "Introduzca para cada línea la cantidad recibida desde el pedido, entregas anteriores incluidas. Una recepción completa es definitiva."
+
+msgid "réception enregistrée"
+msgstr "recepción registrada"
+
+msgid "ligne {} : quantité reçue illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "línea {}: cantidad recibida ilegible, introduzca un número positivo (3 decimales como máximo)"
+
+msgid "Réception enregistrée"
+msgstr "Recepción registrada"
+
+msgid "Réception enregistrée, {}"
+msgstr "Recepción registrada, {}"
+
+msgid "la réception ne concerne que les bons de commande"
+msgstr "la recepción solo concierne a las órdenes de compra"
+
+msgid "la réception doit donner une quantité pour chaque ligne du bon de commande"
+msgstr "la recepción debe indicar una cantidad para cada línea de la orden de compra"
+
+msgid "une réception partielle est déjà enregistrée : au moins une quantité reçue reste nécessaire"
+msgstr "ya hay una recepción parcial registrada: se requiere al menos una cantidad recibida"
+
+msgid "ligne {} : la quantité reçue dépasse la quantité commandée, la corriger"
+msgstr "línea {}: la cantidad recibida supera la cantidad pedida, corríjala"
+
+msgid "ligne {} : la quantité livrée dépasse le reste à livrer, la corriger"
+msgstr "línea {}: la cantidad entregada supera la cantidad pendiente de entrega, corríjala"
+
+msgid "ligne {} : la quantité reçue ne peut pas être négative"
+msgstr "línea {}: la cantidad recibida no puede ser negativa"
+
+msgid "la réception s'enregistre sur un bon de commande envoyé ; celui-ci est « {} »"
+msgstr "la recepción se registra en una orden de compra enviada; esta está «{}»"
+
+msgid "ligne {} : la quantité livrée doit être comprise entre 0 et la quantité commandée"
+msgstr "línea {}: la cantidad entregada debe estar entre 0 y la cantidad pedida"
+
+msgid "ligne {} : la désignation est obligatoire"
+msgstr "línea {}: la designación es obligatoria"
+
+msgid "ligne {} : le prix ne peut pas être négatif"
+msgstr "línea {}: el precio no puede ser negativo"
+
+msgid "ligne {} : la quantité doit être supérieure à zéro"
+msgstr "línea {}: la cantidad debe ser mayor que cero"
+
+msgid "le tiers « {} » est désactivé"
+msgstr "el tercero «{}» está desactivado"
+
+msgid "le tiers « {} » n'est pas enregistré comme client"
+msgstr "el tercero «{}» no está registrado como cliente"
+
+msgid "le tiers « {} » n'est pas enregistré comme fournisseur"
+msgstr "el tercero «{}» no está registrado como proveedor"
+
+msgid "le montant de l'avoir ({} FCFA) dépasse le reste à créditer de la facture ({} FCFA)"
+msgstr "el importe de la nota de crédito ({} FCFA) supera el saldo por acreditar de la factura ({} FCFA)"
+
+msgid "le mot de passe doit contenir au moins {} caractères"
+msgstr "la contraseña debe contener al menos {} caracteres"
+
+msgid "l'identifiant « {} » est déjà utilisé"
+msgstr "el identificador «{}» ya está en uso"
+
+msgid "le logo dépasse la taille maximale de {} Mo"
+msgstr "el logotipo supera el tamaño máximo de {} MB"
+
+msgid "la référence « {} » est déjà utilisée par « {} »"
+msgstr "la referencia «{}» ya la usa «{}»"
+
+msgid "type de document inconnu : {}"
+msgstr "tipo de documento desconocido: {}"
+
+msgid "ce document est « {} » : ses lignes et montants ne se modifient plus"
+msgstr "este documento está «{}»: sus líneas e importes ya no se modifican"
+
+msgid "seul un document validé ou envoyé se convertit en facture ; celui-ci est « {} »"
+msgstr "solo un documento validado o enviado se convierte en factura; este está «{}»"
+
+msgid "seul un document validé ou envoyé se corrige ; celui-ci est « {} »"
+msgstr "solo un documento validado o enviado se corrige; este está «{}»"
+
+msgid "un avoir se crée depuis une facture validée ou envoyée ; celle-ci est « {} »"
+msgstr "una nota de crédito se crea a partir de una factura validada o enviada; esta está «{}»"
+
+msgid "seul un brouillon peut être supprimé ; ce document est « {} »"
+msgstr "solo un borrador puede eliminarse; este documento está «{}»"
+
+msgid "le document d'origine est « {} » : il ne peut plus être converti"
+msgstr "el documento de origen está «{}»: ya no puede convertirse"
+
+msgid "la facture d'origine est « {} » : l'avoir ne peut plus être validé"
+msgstr "la factura de origen está «{}»: la nota de crédito ya no puede validarse"
+
+msgid "les champs administratifs se modifient sur un document validé ; celui-ci est « {} »"
+msgstr "los campos administrativos se modifican en un documento validado; este está «{}»"
+
+msgid "le titre imprimé du type « {} » est obligatoire"
+msgstr "el título impreso del tipo «{}» es obligatorio"
+
+msgid "{} : passage de « {} » à « {} » non autorisé"
+msgstr "{}: paso de «{}» a «{}» no autorizado"
+
+msgid "fiche {} : {}"
+msgstr "ficha {}: {}"
+
+msgid "le taux de remise doit être compris entre 0 et 100 %"
+msgstr "el tipo de descuento debe estar entre 0 y 100 %"
+
+msgid "le taux de TVA doit être compris entre 0 et 100 %"
+msgstr "el tipo de IVA debe estar entre 0 y 100 %"
+
+msgid "le taux de retenue doit être compris entre 0 et 100 %"
+msgstr "el tipo de retención debe estar entre 0 y 100 %"
+
+msgid "la liste des taux de TVA doit contenir des valeurs entre 0 et 100 %"
+msgstr "la lista de tipos de IVA debe contener valores entre 0 y 100 %"
+
+msgid "la liste des taux de remise doit contenir des valeurs entre 0 et 100 %"
+msgstr "la lista de tipos de descuento debe contener valores entre 0 y 100 %"
+
+msgid "la liste des taux de retenue doit contenir des valeurs entre 0 et 100 %"
+msgstr "la lista de tipos de retención debe contener valores entre 0 y 100 %"

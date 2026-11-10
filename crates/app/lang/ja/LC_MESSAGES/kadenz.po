@@ -1592,3 +1592,135 @@ msgstr "仕入先「{}」を作成し、この書類に選択しました"
 
 msgid "Retenue"
 msgstr "源泉徴収"
+
+msgid "Reçue"
+msgstr "受領数"
+
+msgid "Enregistrer la réception"
+msgstr "受領を記録"
+
+msgid "Saisir pour chaque ligne la quantité reçue depuis la commande, livraisons précédentes comprises. Une réception complète est définitive."
+msgstr "各明細について、以前の納品分を含め注文以降に受領した数量を入力してください。受領完了は確定となり、変更できません。"
+
+msgid "réception enregistrée"
+msgstr "受領を記録しました。"
+
+msgid "ligne {} : quantité reçue illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "明細 {}：受領数量を読み取れません。正の数を入力してください（小数点以下 3 桁まで）"
+
+msgid "Réception enregistrée"
+msgstr "受領を記録"
+
+msgid "Réception enregistrée, {}"
+msgstr "受領を記録、{}"
+
+msgid "la réception ne concerne que les bons de commande"
+msgstr "受領は注文書にのみ適用されます"
+
+msgid "la réception doit donner une quantité pour chaque ligne du bon de commande"
+msgstr "受領では注文書の各明細に数量を指定する必要があります"
+
+msgid "une réception partielle est déjà enregistrée : au moins une quantité reçue reste nécessaire"
+msgstr "一部受領がすでに記録されています。受領数量を少なくとも 1 つ入力する必要があります"
+
+msgid "ligne {} : la quantité reçue dépasse la quantité commandée, la corriger"
+msgstr "明細 {}：受領数量が注文数量を超えています。訂正してください"
+
+msgid "ligne {} : la quantité livrée dépasse le reste à livrer, la corriger"
+msgstr "明細 {}：納品数量が未納品数量を超えています。訂正してください"
+
+msgid "ligne {} : la quantité reçue ne peut pas être négative"
+msgstr "明細 {}：受領数量を負の値にすることはできません"
+
+msgid "la réception s'enregistre sur un bon de commande envoyé ; celui-ci est « {} »"
+msgstr "受領は送付済みの注文書に記録します。この注文書は「{}」です"
+
+msgid "ligne {} : la quantité livrée doit être comprise entre 0 et la quantité commandée"
+msgstr "明細 {}：納品数量は 0 から注文数量までの範囲で入力してください"
+
+msgid "ligne {} : la désignation est obligatoire"
+msgstr "明細 {}：品名は必須です"
+
+msgid "ligne {} : le prix ne peut pas être négatif"
+msgstr "明細 {}：単価を負の値にすることはできません"
+
+msgid "ligne {} : la quantité doit être supérieure à zéro"
+msgstr "明細 {}：数量は 0 より大きくしてください"
+
+msgid "le tiers « {} » est désactivé"
+msgstr "取引先「{}」は無効になっています"
+
+msgid "le tiers « {} » n'est pas enregistré comme client"
+msgstr "取引先「{}」は顧客として登録されていません"
+
+msgid "le tiers « {} » n'est pas enregistré comme fournisseur"
+msgstr "取引先「{}」は仕入先として登録されていません"
+
+msgid "le montant de l'avoir ({} FCFA) dépasse le reste à créditer de la facture ({} FCFA)"
+msgstr "クレジットノートの金額（{} FCFA）が請求書の残りの控除可能額（{} FCFA）を超えています"
+
+msgid "le mot de passe doit contenir au moins {} caractères"
+msgstr "パスワードは {} 文字以上にしてください"
+
+msgid "l'identifiant « {} » est déjà utilisé"
+msgstr "ユーザー名「{}」はすでに使われています"
+
+msgid "le logo dépasse la taille maximale de {} Mo"
+msgstr "ロゴが最大サイズ {} MB を超えています"
+
+msgid "la référence « {} » est déjà utilisée par « {} »"
+msgstr "品番「{}」はすでに「{}」で使われています"
+
+msgid "type de document inconnu : {}"
+msgstr "不明な書類種別：{}"
+
+msgid "ce document est « {} » : ses lignes et montants ne se modifient plus"
+msgstr "この書類は「{}」です。明細と金額はもう変更できません"
+
+msgid "seul un document validé ou envoyé se convertit en facture ; celui-ci est « {} »"
+msgstr "請求書に変換できるのは確定済みまたは送付済みの書類のみです。この書類は「{}」です"
+
+msgid "seul un document validé ou envoyé se corrige ; celui-ci est « {} »"
+msgstr "訂正できるのは確定済みまたは送付済みの書類のみです。この書類は「{}」です"
+
+msgid "un avoir se crée depuis une facture validée ou envoyée ; celle-ci est « {} »"
+msgstr "クレジットノートは確定済みまたは送付済みの請求書から作成します。この請求書は「{}」です"
+
+msgid "seul un brouillon peut être supprimé ; ce document est « {} »"
+msgstr "削除できるのは下書きのみです。この書類は「{}」です"
+
+msgid "le document d'origine est « {} » : il ne peut plus être converti"
+msgstr "元の書類は「{}」です。もう変換できません"
+
+msgid "la facture d'origine est « {} » : l'avoir ne peut plus être validé"
+msgstr "元の請求書は「{}」です。クレジットノートはもう確定できません"
+
+msgid "les champs administratifs se modifient sur un document validé ; celui-ci est « {} »"
+msgstr "管理項目は確定済みの書類で変更します。この書類は「{}」です"
+
+msgid "le titre imprimé du type « {} » est obligatoire"
+msgstr "種別「{}」の印刷タイトルは必須です"
+
+msgid "{} : passage de « {} » à « {} » non autorisé"
+msgstr "{}：「{}」から「{}」への変更はできません"
+
+msgid "fiche {} : {}"
+msgstr "レコード {}：{}"
+
+msgid "le taux de remise doit être compris entre 0 et 100 %"
+msgstr "値引率は 0～100% の範囲にしてください"
+
+msgid "le taux de TVA doit être compris entre 0 et 100 %"
+msgstr "消費税率は 0～100% の範囲にしてください"
+
+msgid "le taux de retenue doit être compris entre 0 et 100 %"
+msgstr "源泉徴収率は 0～100% の範囲にしてください"
+
+msgid "la liste des taux de TVA doit contenir des valeurs entre 0 et 100 %"
+msgstr "消費税率の一覧には 0～100% の値を入れてください"
+
+msgid "la liste des taux de remise doit contenir des valeurs entre 0 et 100 %"
+msgstr "値引率の一覧には 0～100% の値を入れてください"
+
+msgid "la liste des taux de retenue doit contenir des valeurs entre 0 et 100 %"
+msgstr "源泉徴収率の一覧には 0～100% の値を入れてください"

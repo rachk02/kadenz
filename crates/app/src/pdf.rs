@@ -12,6 +12,8 @@ use kadenz_stockage::Connexion as Connection;
 use kadenz_stockage::documents::{self, Document, NatureLien};
 use kadenz_stockage::impression;
 
+use crate::referentiels::texte_erreur;
+
 fn date(d: chrono::NaiveDate) -> String {
     d.format("%d/%m/%Y").to_string()
 }
@@ -29,7 +31,7 @@ fn reference(d: &Document) -> String {
 
 /// Données à imprimer pour un document.
 pub(crate) fn document_pdf(conn: &Connection, d: &Document) -> Result<DocumentPdf, String> {
-    let i = impression::pour_document(conn, d.id).map_err(|e| e.to_string())?;
+    let i = impression::pour_document(conn, d.id).map_err(texte_erreur)?;
     let e = &i.entreprise;
     let filigrane = match d.statut {
         Statut::Brouillon => Filigrane::Brouillon,
@@ -120,7 +122,7 @@ fn nom_de_fichier(d: &Document) -> String {
 /// Produit le PDF d'un document lu en base, avec le nom de fichier proposé.
 pub(crate) fn generer(conn: &Connection, id: i64) -> Result<(Vec<u8>, String), String> {
     let d = documents::lire(conn, id)
-        .map_err(|e| e.to_string())?
+        .map_err(texte_erreur)?
         .ok_or("document introuvable")?;
     let doc = document_pdf(conn, &d)?;
     let octets = kadenz_pdf::generer(&doc, &Polices::embarquees())?;

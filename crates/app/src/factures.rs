@@ -11,7 +11,7 @@ use std::cmp::Ordering;
 use std::rc::Rc;
 
 use chrono::NaiveDate;
-use kadenz_domaine::calcul::{Pourcentage, Taux, Totaux, calculer_totaux, total_ligne};
+use kadenz_domaine::calcul::{Pourcentage, Quantite, Taux, Totaux, calculer_totaux, total_ligne};
 use kadenz_domaine::lettres::{Orthographe, en_lettres_majuscule};
 use kadenz_domaine::role::Droit;
 use kadenz_domaine::saisie;
@@ -26,7 +26,7 @@ use kadenz_stockage::tiers::{self, FicheTiers, FiltreTiers, TypeTiers};
 use kadenz_stockage::{Connexion, droits, parametres};
 use slint::{ComponentHandle, Model, ModelRc, SharedString, VecModel};
 
-use crate::referentiels::{Vue, modele_lignes, retour_erreur, retour_ok};
+use crate::referentiels::{Vue, modele_lignes, retour_erreur, retour_ok, texte_erreur};
 use crate::traduction::{tr, trf};
 use crate::{
     Etat, EtatPartage, EvenementUi, FacturesApi, FenetrePrincipale, FicheFactureUi, LienUi,
@@ -266,19 +266,19 @@ fn titre_fiche(t: TypeDocument, numero: Option<&str>, existe: bool) -> String {
 fn note_fiche(t: TypeDocument, statut: Statut, modifiable: bool, admin_modifiable: bool) -> String {
     use TypeDocument::{Avoir, BonCommande, Devis, Proforma};
     match (t, statut) {
-        (Devis, Statut::Converti) => tr("Devis converti en facture : lecture seule."),
-        (Proforma, Statut::Converti) => tr("Proforma convertie en facture : lecture seule."),
         (Devis, Statut::Annule) => tr("Devis annulé : lecture seule, numéro conservé."),
         (Proforma, Statut::Annule) => tr("Proforma annulée : lecture seule, numéro conservé."),
         (Avoir, Statut::Annule) => tr("Avoir annulé : lecture seule, numéro conservé."),
         (BonCommande, Statut::Annule) => {
             tr("Bon de commande annulé : lecture seule, numéro conservé.")
         }
+        (_, Statut::Annule) => tr("Facture annulée : lecture seule, numéro conservé."),
+        _ if modifiable || admin_modifiable => String::new(),
+        (Devis, Statut::Converti) => tr("Devis converti en facture : lecture seule."),
+        (Proforma, Statut::Converti) => tr("Proforma convertie en facture : lecture seule."),
         (BonCommande, Statut::ReceptionComplete) => {
             tr("Bon de commande entièrement reçu : lecture seule.")
         }
-        (_, Statut::Annule) => tr("Facture annulée : lecture seule, numéro conservé."),
-        _ if modifiable || admin_modifiable => String::new(),
         (Devis, Statut::Brouillon) => {
             tr("Lecture seule : votre rôle ne permet pas de modifier un devis.")
         }
@@ -501,6 +501,7 @@ fn ligne_ui(l: &LigneSaisie) -> LigneFactureUi {
         prix: saisie::montant_en_texte(l.prix).into(),
         quantite: saisie::quantite_en_texte(l.quantite).into(),
         total: saisie::montant_en_texte(total_ligne(l.prix, l.quantite)).into(),
+        recue: saisie::quantite_en_texte(l.quantite_livree).into(),
     }
 }
 
@@ -599,11 +600,11 @@ fn afficher_produits(api: &FacturesApi, liste: &[Produit]) {
 /// Prépare la fiche d'un document existant, ou d'un nouveau document du type affiché.
 fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Result<(), String> {
     let api = f.global::<FacturesApi>();
-    let p = parametres::lire(&etat.conn).map_err(|e| e.to_string())?;
+    let p = parametres::lire(&etat.conn).map_err(texte_erreur)?;
     let document = match id {
         Some(id) => Some(
             documents::lire(&etat.conn, id)
-                .map_err(|e| e.to_string())?
+                .map_err(texte_erreur)?
                 .ok_or("ce document n'existe plus")?,
         ),
         None => None,
@@ -761,7 +762,19 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
         document.is_some(),
     );
     let valide_ou_envoye = matches!(statut, Statut::Valide | Statut::Envoye);
-    let admin_modifiable = valide_ou_envoye && droit_brouillon;
+    // Mode de paiement et observations : modifiables tant que le document est en
+    // vigueur (converti, en réception ou livré compris), comme le permet le stockage.
+    let admin_modifiable = statut.en_vigueur() && droit_brouillon;
+    // Réception d'un bon de commande (section 7.7) : quantités reçues affichées dès
+    // l'envoi, saisies avec le droit « Valider un document » tant qu'elle n'est pas complète.
+    let avec_reception = t == TypeDocument::BonCommande
+        && matches!(
+            statut,
+            Statut::Envoye | Statut::ReceptionPartielle | Statut::ReceptionComplete
+        );
+    let reception_modifiable = avec_reception
+        && statut != Statut::ReceptionComplete
+        && possede(etat, Droit::ValiderDocument);
 
     // Documents qui peuvent naître de celui-ci (sections 2.11 et 7.2).
     let en_preparation = document.as_ref().is_some_and(|d| {
@@ -833,6 +846,8 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
         peut_envoyer: statut == Statut::Valide && possede(etat, Droit::ValiderDocument),
         peut_annuler: valide_ou_envoye && possede(etat, Droit::AnnulerDocumentValide),
         peut_supprimer: document.is_some() && modifiable,
+        avec_reception,
+        reception_modifiable,
         peut_convertir,
         peut_dupliquer,
         peut_corriger,
@@ -958,9 +973,9 @@ fn enregistrer_brouillon(
     match id {
         Some(id) => documents::modifier_brouillon(&mut etat.conn, acteur, id, &s)
             .map(|()| id)
-            .map_err(|e| e.to_string()),
+            .map_err(texte_erreur),
         None => documents::creer_brouillon(&mut etat.conn, acteur, etat.type_document, &s)
-            .map_err(|e| e.to_string()),
+            .map_err(texte_erreur),
     }
 }
 
@@ -987,6 +1002,28 @@ fn agir(
         }
         Err(message) => retour_erreur(message),
     }
+}
+
+/// Quantités reçues saisies sur les lignes, contrôlées ; une case vide vaut zéro.
+fn quantites_recues(e: Option<&EditionFacture>) -> Result<Vec<Quantite>, String> {
+    let Some(e) = e else {
+        return Err(tr("aucune fiche ouverte"));
+    };
+    e.lignes
+        .iter()
+        .enumerate()
+        .map(|(rang, l)| {
+            if l.recue.trim().is_empty() {
+                return Ok(0);
+            }
+            saisie::quantite_depuis_texte(&l.recue).ok_or_else(|| {
+                trf(
+                    "ligne {} : quantité reçue illisible, saisir un nombre positif (3 décimales au plus)",
+                    &[&(rang + 1)],
+                )
+            })
+        })
+        .collect()
 }
 
 /// Ouvre la fiche d'un document : dans la page affichée s'il est de son type,
@@ -1496,7 +1533,20 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         agir(&f, &e, |etat, acteur, id| {
             documents::marquer_envoye(&mut etat.conn, acteur, id)
                 .map(|()| message_envoi(etat.type_document))
-                .map_err(|e| e.to_string())
+                .map_err(texte_erreur)
+        })
+    });
+
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_enregistrer_reception(move || {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
+        agir(&f, &e, |etat, acteur, id| {
+            let recues = quantites_recues(etat.facture.as_ref())?;
+            documents::enregistrer_reception(&mut etat.conn, acteur, id, &recues)
+                .map(|()| tr("réception enregistrée"))
+                .map_err(texte_erreur)
         })
     });
 
@@ -1549,7 +1599,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         agir(&f, &e, |etat, acteur, id| {
             documents::annuler(&mut etat.conn, acteur, id)
                 .map(|()| message_annulation(etat.type_document))
-                .map_err(|e| e.to_string())
+                .map_err(texte_erreur)
         })
     });
 
@@ -1566,7 +1616,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 .unwrap_or_default();
             documents::modifier_administratif(&mut etat.conn, acteur, id, &mode, &observations)
                 .map(|()| "mode de paiement et observations enregistrés".to_string())
-                .map_err(|e| e.to_string())
+                .map_err(texte_erreur)
         })
     });
 
@@ -1580,7 +1630,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             &e,
             |etat, acteur, id| {
                 documents::convertir_en_facture(&mut etat.conn, acteur, id)
-                    .map_err(|e| e.to_string())
+                    .map_err(texte_erreur)
             },
             tr("facture créée en brouillon ; sa validation marquera le document d'origine comme converti"),
         )
@@ -1601,7 +1651,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             &e,
             |etat, acteur, id| {
                 documents::dupliquer(&mut etat.conn, acteur, id, annuler_original)
-                    .map_err(|e| e.to_string())
+                    .map_err(texte_erreur)
             },
             message,
         )
@@ -1616,7 +1666,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             &f,
             &e,
             |etat, acteur, id| {
-                documents::creer_avoir(&mut etat.conn, acteur, id).map_err(|e| e.to_string())
+                documents::creer_avoir(&mut etat.conn, acteur, id).map_err(texte_erreur)
             },
             tr("avoir créé en brouillon avec les lignes de la facture : retirer des lignes ou baisser les quantités pour un avoir partiel"),
         )

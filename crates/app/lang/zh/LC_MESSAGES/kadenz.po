@@ -1592,3 +1592,135 @@ msgstr "已创建供应商“{}”并为此单据选择"
 
 msgid "Retenue"
 msgstr "预扣税"
+
+msgid "Reçue"
+msgstr "已收"
+
+msgid "Enregistrer la réception"
+msgstr "登记收货"
+
+msgid "Saisir pour chaque ligne la quantité reçue depuis la commande, livraisons précédentes comprises. Une réception complète est définitive."
+msgstr "请为每条明细输入自下单以来的已收数量（含此前到货）。全部收货后不可更改。"
+
+msgid "réception enregistrée"
+msgstr "已登记收货。"
+
+msgid "ligne {} : quantité reçue illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "第 {} 行：已收数量无法识别，请输入正数（最多 3 位小数）"
+
+msgid "Réception enregistrée"
+msgstr "登记收货"
+
+msgid "Réception enregistrée, {}"
+msgstr "登记收货，{}"
+
+msgid "la réception ne concerne que les bons de commande"
+msgstr "收货仅适用于采购订单"
+
+msgid "la réception doit donner une quantité pour chaque ligne du bon de commande"
+msgstr "收货必须为采购订单的每条明细提供数量"
+
+msgid "une réception partielle est déjà enregistrée : au moins une quantité reçue reste nécessaire"
+msgstr "已登记部分收货：至少需要保留一项已收数量"
+
+msgid "ligne {} : la quantité reçue dépasse la quantité commandée, la corriger"
+msgstr "第 {} 行：已收数量超过订购数量，请更正"
+
+msgid "ligne {} : la quantité livrée dépasse le reste à livrer, la corriger"
+msgstr "第 {} 行：交付数量超过待交付数量，请更正"
+
+msgid "ligne {} : la quantité reçue ne peut pas être négative"
+msgstr "第 {} 行：已收数量不能为负数"
+
+msgid "la réception s'enregistre sur un bon de commande envoyé ; celui-ci est « {} »"
+msgstr "收货需在已发送的采购订单上登记；此订单状态为“{}”"
+
+msgid "ligne {} : la quantité livrée doit être comprise entre 0 et la quantité commandée"
+msgstr "第 {} 行：交付数量必须介于 0 与订购数量之间"
+
+msgid "ligne {} : la désignation est obligatoire"
+msgstr "第 {} 行：名称为必填项"
+
+msgid "ligne {} : le prix ne peut pas être négatif"
+msgstr "第 {} 行：单价不能为负数"
+
+msgid "ligne {} : la quantité doit être supérieure à zéro"
+msgstr "第 {} 行：数量必须大于零"
+
+msgid "le tiers « {} » est désactivé"
+msgstr "往来单位“{}”已停用"
+
+msgid "le tiers « {} » n'est pas enregistré comme client"
+msgstr "往来单位“{}”未登记为客户"
+
+msgid "le tiers « {} » n'est pas enregistré comme fournisseur"
+msgstr "往来单位“{}”未登记为供应商"
+
+msgid "le montant de l'avoir ({} FCFA) dépasse le reste à créditer de la facture ({} FCFA)"
+msgstr "贷项通知单金额（{} FCFA）超过发票剩余可贷记金额（{} FCFA）"
+
+msgid "le mot de passe doit contenir au moins {} caractères"
+msgstr "密码至少需要 {} 个字符"
+
+msgid "l'identifiant « {} » est déjà utilisé"
+msgstr "用户名“{}”已被使用"
+
+msgid "le logo dépasse la taille maximale de {} Mo"
+msgstr "徽标超过最大大小 {} MB"
+
+msgid "la référence « {} » est déjà utilisée par « {} »"
+msgstr "编码“{}”已被“{}”使用"
+
+msgid "type de document inconnu : {}"
+msgstr "未知的单据类型：{}"
+
+msgid "ce document est « {} » : ses lignes et montants ne se modifient plus"
+msgstr "此单据状态为“{}”：其明细和金额已无法修改"
+
+msgid "seul un document validé ou envoyé se convertit en facture ; celui-ci est « {} »"
+msgstr "只有已确认或已发送的单据才能转换为发票；此单据状态为“{}”"
+
+msgid "seul un document validé ou envoyé se corrige ; celui-ci est « {} »"
+msgstr "只有已确认或已发送的单据才能更正；此单据状态为“{}”"
+
+msgid "un avoir se crée depuis une facture validée ou envoyée ; celle-ci est « {} »"
+msgstr "贷项通知单需从已确认或已发送的发票创建；此发票状态为“{}”"
+
+msgid "seul un brouillon peut être supprimé ; ce document est « {} »"
+msgstr "只有草稿可以删除；此单据状态为“{}”"
+
+msgid "le document d'origine est « {} » : il ne peut plus être converti"
+msgstr "原单据状态为“{}”：已无法转换"
+
+msgid "la facture d'origine est « {} » : l'avoir ne peut plus être validé"
+msgstr "原发票状态为“{}”：贷项通知单已无法确认"
+
+msgid "les champs administratifs se modifient sur un document validé ; celui-ci est « {} »"
+msgstr "管理字段需在已确认的单据上修改；此单据状态为“{}”"
+
+msgid "le titre imprimé du type « {} » est obligatoire"
+msgstr "类型“{}”的打印标题为必填项"
+
+msgid "{} : passage de « {} » à « {} » non autorisé"
+msgstr "{}：不允许从“{}”变为“{}”"
+
+msgid "fiche {} : {}"
+msgstr "记录 {}：{}"
+
+msgid "le taux de remise doit être compris entre 0 et 100 %"
+msgstr "折扣率必须介于 0 与 100% 之间"
+
+msgid "le taux de TVA doit être compris entre 0 et 100 %"
+msgstr "增值税率必须介于 0 与 100% 之间"
+
+msgid "le taux de retenue doit être compris entre 0 et 100 %"
+msgstr "预扣税率必须介于 0 与 100% 之间"
+
+msgid "la liste des taux de TVA doit contenir des valeurs entre 0 et 100 %"
+msgstr "增值税率列表中的值必须介于 0 与 100% 之间"
+
+msgid "la liste des taux de remise doit contenir des valeurs entre 0 et 100 %"
+msgstr "折扣率列表中的值必须介于 0 与 100% 之间"
+
+msgid "la liste des taux de retenue doit contenir des valeurs entre 0 et 100 %"
+msgstr "预扣税率列表中的值必须介于 0 与 100% 之间"

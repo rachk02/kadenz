@@ -13,7 +13,7 @@ use kadenz_stockage::{BilanImport, Connexion};
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 
 use crate::referentiels::{
-    afficher_produits, afficher_tiers, modele_lignes, retour_erreur, retour_ok,
+    afficher_produits, afficher_tiers, modele_lignes, retour_erreur, retour_ok, texte_erreur,
 };
 use crate::traduction::{tr, trf};
 use crate::{EtatPartage, FenetrePrincipale, ImportApi, Retour, phrase};
@@ -104,7 +104,7 @@ fn analyser(api: &ImportApi, conn: &Connexion, import: &mut ImportEnCours) {
     let rang = usize::try_from(import.defaut).unwrap_or(0);
     let resultat = match import.cible {
         Cible::Tiers => tiers::lister(conn, &tous_tiers)
-            .map_err(|e| e.to_string())
+            .map_err(texte_erreur)
             .and_then(|existants| {
                 let cles: HashSet<String> =
                     existants.iter().map(|t| cle_tiers(&t.fiche.nom)).collect();
@@ -112,7 +112,7 @@ fn analyser(api: &ImportApi, conn: &Connexion, import: &mut ImportEnCours) {
                 analyse::analyser_tiers(table, defaut, &cles).map(Apercu::Tiers)
             }),
         Cible::Produits => produits::lister(conn, &tous_produits)
-            .map_err(|e| e.to_string())
+            .map_err(texte_erreur)
             .and_then(|existants| {
                 let cles: HashSet<String> = existants
                     .iter()

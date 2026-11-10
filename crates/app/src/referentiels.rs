@@ -46,10 +46,36 @@ pub(crate) fn retour_ok(message: impl std::fmt::Display) -> Retour {
     }
 }
 
-pub(crate) fn retour_erreur(message: impl std::fmt::Display) -> Retour {
+pub(crate) fn retour_erreur(message: impl std::fmt::Display + 'static) -> Retour {
+    // Un refus composé du stockage est traduit par son modèle et ses valeurs.
+    let texte = match (&message as &dyn std::any::Any).downcast_ref::<Erreur>() {
+        Some(erreur) => texte_erreur_ref(erreur),
+        None => message.to_string(),
+    };
     Retour {
         ok: false,
-        message: phrase(message),
+        message: phrase(texte),
+    }
+}
+
+/// Texte d'une erreur du stockage, traduit : un refus composé l'est par son modèle,
+/// chaque valeur passant par `tr` (un statut ou un type se traduit, un numéro, un
+/// nom ou un montant reste tel quel) ; les autres erreurs par leur texte entier.
+pub(crate) fn texte_erreur(erreur: Erreur) -> String {
+    texte_erreur_ref(&erreur)
+}
+
+fn texte_erreur_ref(erreur: &Erreur) -> String {
+    match erreur {
+        Erreur::ValidationComposee { modele, valeurs } => {
+            let valeurs: Vec<String> = valeurs.iter().map(|v| tr(v)).collect();
+            let arguments: Vec<&dyn std::fmt::Display> = valeurs
+                .iter()
+                .map(|v| v as &dyn std::fmt::Display)
+                .collect();
+            trf(modele, &arguments)
+        }
+        autre => tr(&autre.to_string()),
     }
 }
 
