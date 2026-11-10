@@ -7,6 +7,7 @@ pub mod droits;
 pub mod entreprise;
 pub mod impression;
 pub mod installation;
+pub mod mise_en_page;
 pub mod parametres;
 pub mod pilotage;
 pub mod produits;

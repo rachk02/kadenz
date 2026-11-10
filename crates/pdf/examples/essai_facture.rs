@@ -10,6 +10,7 @@
 
 use kadenz_domaine::calcul::{Taux, UNE_UNITE, calculer_totaux, total_ligne};
 use kadenz_domaine::lettres::{Orthographe, en_lettres_majuscule};
+use kadenz_domaine::mise_en_page::{Gabarit, MiseEnPage, MiseEnPageAnalysee};
 use kadenz_pdf::modele::{
     ColonnePdf, DocumentPdf, EntreprisePdf, Filigrane, LettrePdf, LignePdf, ListePdf, LivraisonPdf,
     TextesPdf, TiersPdf, TotalPdf,
@@ -75,6 +76,7 @@ fn main() {
             ifu: "IFU-ESSAI-0000".into(),
             banque1: "Banque Essai, compte 0000 0000 0000".into(),
             banque2: String::new(),
+            localisation: "Secteur fictif".into(),
             logo: lire(2),
             logo2: lire(3),
         },
@@ -108,8 +110,40 @@ fn main() {
         totaux,
         filigrane: Filigrane::Aucun,
         couleur: [0x2d, 0x3a, 0x8c],
+        mise_en_page: MiseEnPageAnalysee::default(),
     };
     let polices = Polices::embarquees();
+
+    // Gabarits et zones réglées (J8b).
+    let reglee = MiseEnPage {
+        entete: "-> {logo}
+-> **{nom}** · *{localisation}*
+-> {adresse} · Tél. : {telephone}"
+            .into(),
+        pied: "-> *Merci de votre confiance.*
+-> RCCM : {rccm} · IFU : {ifu} · {banque2}"
+            .into(),
+        ..MiseEnPage::default()
+    };
+    for (nom, gabarit, m) in [
+        ("essai-compact.pdf", Gabarit::Compact, MiseEnPage::default()),
+        (
+            "essai-preimprime.pdf",
+            Gabarit::PreImprime,
+            MiseEnPage::default(),
+        ),
+        ("essai-zones.pdf", Gabarit::Classique, reglee),
+    ] {
+        let m = MiseEnPage { gabarit, ..m };
+        let doc = DocumentPdf {
+            mise_en_page: m.analyser().expect("réglages valides"),
+            ..doc.clone()
+        };
+        let octets = kadenz_pdf::generer(&doc, &polices).expect("PDF produit");
+        let chemin = std::path::Path::new(&dossier).join(nom);
+        std::fs::write(&chemin, &octets).expect("écriture");
+        println!("{}", chemin.display());
+    }
     for (nom, filigrane) in [
         ("essai-facture.pdf", Filigrane::Aucun),
         ("essai-brouillon.pdf", Filigrane::Brouillon),
@@ -274,6 +308,7 @@ fn main() {
         .to_vec(),
         signataire: "LA COMPTABILITE".into(),
         nom_signataire: "Nom Fictif".into(),
+        mise_en_page: doc.mise_en_page.clone(),
     };
     let octets = kadenz_pdf::generer_lettre(&relance, &polices).expect("PDF produit");
     let chemin = std::path::Path::new(&dossier).join("essai-relance.pdf");
@@ -350,6 +385,7 @@ fn main() {
             valeur: valeur.into(),
         })
         .to_vec(),
+        mise_en_page: doc.mise_en_page.clone(),
     };
     let octets = kadenz_pdf::generer_liste(&registre, &polices).expect("PDF produit");
     let chemin = std::path::Path::new(&dossier).join("essai-registre.pdf");

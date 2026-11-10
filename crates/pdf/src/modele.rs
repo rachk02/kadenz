@@ -3,6 +3,7 @@
 //! partir du document validé, de la fiche entreprise et des paramètres.
 
 use kadenz_domaine::calcul::{Montant, Quantite, Taux, Totaux};
+use kadenz_domaine::mise_en_page::MiseEnPageAnalysee;
 
 #[derive(Debug, Clone, Default)]
 pub struct EntreprisePdf {
@@ -11,6 +12,7 @@ pub struct EntreprisePdf {
     pub telephone: String,
     pub email: String,
     pub site_web: String,
+    pub localisation: String,
     pub regime: String,
     pub rccm: String,
     pub ifu: String,
@@ -112,6 +114,8 @@ pub struct DocumentPdf {
     pub filigrane: Filigrane,
     /// Couleur principale (en-tête du tableau, titre).
     pub couleur: [u8; 3],
+    /// Gabarit, marges, en-tête et pied de page (jalon J8b).
+    pub mise_en_page: MiseEnPageAnalysee,
 }
 
 /// Lettre de relance d'une facture (section 8), textes déjà remplis.
@@ -132,6 +136,7 @@ pub struct LettrePdf {
     pub recapitulatif: Vec<(String, String)>,
     pub signataire: String,
     pub nom_signataire: String,
+    pub mise_en_page: MiseEnPageAnalysee,
 }
 
 /// Colonne d'une liste imprimée.
@@ -160,6 +165,7 @@ pub struct ListePdf {
     pub lignes: Vec<Vec<String>>,
     /// Totaux en fin de liste.
     pub totaux: Vec<TotalPdf>,
+    pub mise_en_page: MiseEnPageAnalysee,
 }
 
 /// Ligne de total d'une liste ; un total principal est mis en valeur, un

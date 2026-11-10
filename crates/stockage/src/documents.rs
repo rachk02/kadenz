@@ -2048,8 +2048,14 @@ mod tests {
         let mut p = crate::parametres::lire(&c.conn).unwrap();
         p.textes_documents[4].titre = "FACTURE DEFINITIVE".into();
         crate::parametres::enregistrer(&c.conn, &admin, &p).unwrap();
+        let compacte = kadenz_domaine::mise_en_page::MiseEnPage {
+            gabarit: kadenz_domaine::mise_en_page::Gabarit::Compact,
+            ..Default::default()
+        };
+        crate::mise_en_page::enregistrer(&c.conn, &admin, &compacte).unwrap();
 
         let figee = pour_document(&c.conn, validee).unwrap();
+        assert_eq!(figee.mise_en_page, crate::mise_en_page::defaut_analyse());
         assert_eq!(figee.entreprise.nom, "Avant");
         assert_eq!(figee.textes.titre, "FACTURE");
         assert_eq!(
@@ -2059,6 +2065,10 @@ mod tests {
         let apercu = pour_document(&c.conn, brouillon).unwrap();
         assert_eq!(apercu.entreprise.nom, "Après");
         assert_eq!(apercu.textes.titre, "FACTURE DEFINITIVE");
+        assert_eq!(
+            apercu.mise_en_page.gabarit,
+            kadenz_domaine::mise_en_page::Gabarit::Compact
+        );
         let instantanes: i64 = c
             .conn
             .query_row("SELECT COUNT(*) FROM instantane_entreprise", [], |r| {
@@ -2066,6 +2076,16 @@ mod tests {
             })
             .unwrap();
         assert_eq!(instantanes, 1, "instantané identique réutilisé");
+        // Un instantané antérieur à J8b, sans mise en page, garde celle d'origine.
+        c.conn
+            .execute(
+                "UPDATE instantane_entreprise SET donnees = json_remove(donnees, '$.mise_en_page')",
+                [],
+            )
+            .unwrap();
+        let ancienne = pour_document(&c.conn, validee).unwrap();
+        assert_eq!(ancienne.mise_en_page, crate::mise_en_page::defaut_analyse());
+        assert_eq!(ancienne.entreprise.nom, "Avant");
     }
 
     #[test]

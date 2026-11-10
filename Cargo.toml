@@ -26,6 +26,9 @@ winresource = "0.1.34"
 krilla = "0.8.2"
 # Même version que celle de krilla : façonnage identique pour la mesure et le tracé.
 rustybuzz = "0.20.1"
+# Rendu des PDF en image pour l'aperçu des réglages d'impression (J8b) ; nos PDF
+# embarquent leurs polices.
+hayro = { version = "0.9.0", default-features = false }
 
 # Argon2 non optimisé met plusieurs secondes par hachage : on optimise les
 # dépendances même en mode debug pour que connexion et tests restent rapides.

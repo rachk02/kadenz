@@ -8,6 +8,7 @@ pub mod document;
 pub mod langue;
 pub mod lettres;
 pub mod message;
+pub mod mise_en_page;
 pub mod numerotation;
 pub mod paiement;
 pub mod referentiel;

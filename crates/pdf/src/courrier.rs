@@ -6,9 +6,11 @@ use krilla::metadata::Metadata;
 use krilla::page::PageSettings;
 
 use crate::modele::{ColonnePdf, DocumentPdf, LettrePdf, ListePdf, TotalPdf};
+use kadenz_domaine::mise_en_page::MiseEnPageAnalysee;
+
 use crate::rendu::{
-    BAS, BLANC, BORDURE, DROITE, ENCRE, FOND_CLAIR, GAUCHE, HAUT, HAUTEUR, LARGEUR, MARGE_CELLULE,
-    Moteur, SECONDAIRE, Toile, UTILE, base_centree,
+    BLANC, BORDURE, Cadre, ENCRE, FOND_CLAIR, HAUTEUR, LARGEUR, MARGE_CELLULE, Moteur, SECONDAIRE,
+    Toile, base_centree,
 };
 use crate::texte::{Police, Polices};
 
@@ -19,23 +21,27 @@ const TAILLE_CELLULE: f32 = 8.5;
 const INTERLIGNE_CELLULE: f32 = 11.0;
 
 /// Document réduit à ce que l'en-tête et le pied de page impriment.
-fn cadre(
+fn document_reduit(
     entreprise: &crate::modele::EntreprisePdf,
     titre: &str,
     date: &str,
     couleur: [u8; 3],
+    mise_en_page: &MiseEnPageAnalysee,
 ) -> DocumentPdf {
     let mut d = DocumentPdf {
         entreprise: entreprise.clone(),
         date: date.to_owned(),
         couleur,
+        mise_en_page: mise_en_page.clone(),
         ..Default::default()
     };
     d.textes.titre = titre.to_owned();
     d
 }
 
+#[allow(clippy::too_many_arguments)]
 fn ecrire_a_droite(
+    g: Cadre,
     t: &mut Toile,
     police: &Police,
     taille: f32,
@@ -49,19 +55,19 @@ fn ecrire_a_droite(
         police,
         taille,
         c,
-        DROITE - l,
+        g.droite - l,
         base_centree(police, taille, y, h),
         texte,
     );
 }
 
 /// Bloc du signataire, à droite, comme sur les documents ; renvoie la hauteur.
-fn signataire(t: &mut Toile, p: &Polices, y: f32, libelle: &str, nom: &str) -> f32 {
+fn signataire(g: Cadre, t: &mut Toile, p: &Polices, y: f32, libelle: &str, nom: &str) -> f32 {
     if libelle.is_empty() {
         return 0.0;
     }
     let largeur = 200.0;
-    let x = DROITE - largeur;
+    let x = g.droite - largeur;
     let centrer = |police: &Police, taille: f32, texte: &str| {
         x + (largeur - police.largeur(texte, taille)) / 2.0
     };
@@ -90,16 +96,17 @@ fn signataire(t: &mut Toile, p: &Polices, y: f32, libelle: &str, nom: &str) -> f
 
 /// Corps de la lettre sous l'en-tête ; renvoie la hauteur occupée.
 fn corps_lettre(m: &Moteur, p: &Polices, l: &LettrePdf, t: &mut Toile, y0: f32) -> f32 {
+    let g = m.g;
     let mut y = y0;
     if !l.lieu_et_date.is_empty() {
-        ecrire_a_droite(t, &p.texte, 9.5, ENCRE, y, 14.0, &l.lieu_et_date);
+        ecrire_a_droite(g, t, &p.texte, 9.5, ENCRE, y, 14.0, &l.lieu_et_date);
         y += 14.0;
     }
     y += 12.0;
 
     // Destinataire, dans la moitié droite.
-    let x = GAUCHE + UTILE / 2.0 + 8.0;
-    let largeur = UTILE / 2.0 - 8.0;
+    let x = g.gauche + g.utile() / 2.0 + 8.0;
+    let largeur = g.utile() / 2.0 - 8.0;
     y += m.paragraphe(
         t,
         &p.texte_gras,
@@ -121,7 +128,15 @@ fn corps_lettre(m: &Moteur, p: &Polices, l: &LettrePdf, t: &mut Toile, y0: f32) 
 
     if !l.titre.is_empty() {
         y += m.paragraphe(
-            t, &p.titre, 14.0, 18.0, l.couleur, GAUCHE, y, UTILE, &l.titre,
+            t,
+            &p.titre,
+            14.0,
+            18.0,
+            l.couleur,
+            g.gauche,
+            y,
+            g.utile(),
+            &l.titre,
         );
         y += 2.0;
     }
@@ -132,26 +147,36 @@ fn corps_lettre(m: &Moteur, p: &Polices, l: &LettrePdf, t: &mut Toile, y0: f32) 
             10.0,
             13.5,
             ENCRE,
-            GAUCHE,
+            g.gauche,
             y,
-            UTILE,
+            g.utile(),
             &l.objet,
         );
     }
     y += 14.0;
     if !l.avant.is_empty() {
-        y += m.paragraphe(t, &p.texte, 9.5, 13.5, ENCRE, GAUCHE, y, UTILE, &l.avant);
+        y += m.paragraphe(
+            t,
+            &p.texte,
+            9.5,
+            13.5,
+            ENCRE,
+            g.gauche,
+            y,
+            g.utile(),
+            &l.avant,
+        );
         y += 12.0;
     }
 
     // Tableau récapitulatif, colonnes de même largeur, valeurs centrées.
     if !l.recapitulatif.is_empty() {
         let n = l.recapitulatif.len() as f32;
-        let largeur = UTILE / n;
-        t.rectangle(GAUCHE, y, UTILE, H_ENTETE_TABLEAU, l.couleur);
+        let largeur = g.utile() / n;
+        t.rectangle(g.gauche, y, g.utile(), H_ENTETE_TABLEAU, l.couleur);
         let h_valeur = 20.0;
         for (k, (titre, valeur)) in l.recapitulatif.iter().enumerate() {
-            let x = GAUCHE + k as f32 * largeur;
+            let x = g.gauche + k as f32 * largeur;
             let centrer = |police: &Police, taille: f32, texte: &str| {
                 x + (largeur - police.largeur(texte, taille)) / 2.0
             };
@@ -173,27 +198,38 @@ fn corps_lettre(m: &Moteur, p: &Polices, l: &LettrePdf, t: &mut Toile, y0: f32) 
             );
         }
         y += H_ENTETE_TABLEAU + h_valeur;
-        t.trait_horizontal(GAUCHE, DROITE, y, BORDURE, 0.75);
+        t.trait_horizontal(g.gauche, g.droite, y, BORDURE, 0.75);
         y += 14.0;
     }
 
     if !l.apres.is_empty() {
-        y += m.paragraphe(t, &p.texte, 9.5, 13.5, ENCRE, GAUCHE, y, UTILE, &l.apres);
+        y += m.paragraphe(
+            t,
+            &p.texte,
+            9.5,
+            13.5,
+            ENCRE,
+            g.gauche,
+            y,
+            g.utile(),
+            &l.apres,
+        );
     }
     y += 22.0;
-    y += signataire(t, p, y, &l.signataire, &l.nom_signataire);
+    y += signataire(m.g, t, p, y, &l.signataire, &l.nom_signataire);
     y - y0
 }
 
 /// Produit le PDF d'une lettre de relance, sur une page, ou deux si les textes
 /// réglés ne tiennent pas sur la première (le signataire suit alors le texte).
 pub fn generer_lettre(l: &LettrePdf, polices: &Polices) -> Result<Vec<u8>, String> {
-    let doc = cadre(&l.entreprise, "", "", l.couleur);
+    let doc = document_reduit(&l.entreprise, "", "", l.couleur, &l.mise_en_page);
     let m = Moteur::new(&doc, polices);
+    let g = m.g;
     let mut blanc = Toile::a_blanc();
-    let h_entete = m.en_tete(&mut blanc, HAUT);
+    let h_entete = m.en_tete(&mut blanc, g.haut);
     let h_corps = corps_lettre(&m, polices, l, &mut blanc, 0.0);
-    let disponible = BAS - m.hauteur_pied() - 10.0 - (HAUT + h_entete);
+    let disponible = g.bas - m.hauteur_pied() - 10.0 - (g.haut + h_entete);
     if h_corps > disponible {
         return Err("le texte de la lettre de relance ne tient pas sur une page : le raccourcir dans les paramètres".into());
     }
@@ -206,7 +242,7 @@ pub fn generer_lettre(l: &LettrePdf, polices: &Polices) -> Result<Vec<u8>, Strin
     let mut t = Toile {
         s: Some(&mut surface),
     };
-    let y = HAUT + m.en_tete(&mut t, HAUT);
+    let y = g.haut + m.en_tete(&mut t, g.haut);
     corps_lettre(&m, polices, l, &mut t, y);
     m.pied(&mut t, 1, 1);
     surface.finish();
@@ -215,14 +251,14 @@ pub fn generer_lettre(l: &LettrePdf, polices: &Polices) -> Result<Vec<u8>, Strin
 }
 
 /// Largeurs effectives : les colonnes à 0 se partagent la place restante.
-fn largeurs(colonnes: &[ColonnePdf]) -> Vec<f32> {
+fn largeurs(colonnes: &[ColonnePdf], g: Cadre) -> Vec<f32> {
     let fixe: f32 = colonnes.iter().map(|c| c.largeur).sum();
     let libres = colonnes.iter().filter(|c| c.largeur == 0.0).count().max(1) as f32;
     colonnes
         .iter()
         .map(|c| {
             if c.largeur == 0.0 {
-                ((UTILE - fixe) / libres).max(20.0)
+                ((g.utile() - fixe) / libres).max(20.0)
             } else {
                 c.largeur
             }
@@ -231,17 +267,24 @@ fn largeurs(colonnes: &[ColonnePdf]) -> Vec<f32> {
 }
 
 struct Tableau<'a> {
+    g: Cadre,
     liste: &'a ListePdf,
     largeurs: Vec<f32>,
 }
 
 impl Tableau<'_> {
     fn x(&self, rang: usize) -> f32 {
-        GAUCHE + self.largeurs[..rang].iter().sum::<f32>()
+        self.g.gauche + self.largeurs[..rang].iter().sum::<f32>()
     }
 
     fn entete(&self, p: &Polices, t: &mut Toile, y: f32) -> f32 {
-        t.rectangle(GAUCHE, y, UTILE, H_ENTETE_TABLEAU, self.liste.couleur);
+        t.rectangle(
+            self.g.gauche,
+            y,
+            self.g.utile(),
+            H_ENTETE_TABLEAU,
+            self.liste.couleur,
+        );
         for (rang, c) in self.liste.colonnes.iter().enumerate() {
             let l = p.texte_gras.largeur(&c.titre, 8.0);
             let x = if c.a_droite {
@@ -289,14 +332,24 @@ impl Tableau<'_> {
             h_max = h_max.max(lignes.len() as f32 * INTERLIGNE_CELLULE);
         }
         let h = h_max + 2.0 * MARGE_CELLULE;
-        t.trait_horizontal(GAUCHE, DROITE, y + h, BORDURE, 0.5);
+        t.trait_horizontal(self.g.gauche, self.g.droite, y + h, BORDURE, 0.5);
         h
     }
 
     fn criteres(&self, m: &Moteur, p: &Polices, t: &mut Toile, y: f32) -> f32 {
         let mut h = 0.0;
         for c in &self.liste.criteres {
-            h += m.paragraphe(t, &p.texte, 9.0, 12.5, SECONDAIRE, GAUCHE, y + h, UTILE, c);
+            h += m.paragraphe(
+                t,
+                &p.texte,
+                9.0,
+                12.5,
+                SECONDAIRE,
+                self.g.gauche,
+                y + h,
+                self.g.utile(),
+                c,
+            );
         }
         if h > 0.0 { h + 10.0 } else { 0.0 }
     }
@@ -305,7 +358,7 @@ impl Tableau<'_> {
         if self.liste.totaux.is_empty() {
             return 0.0;
         }
-        let x = DROITE - LARGEUR_TOTAUX;
+        let x = self.g.droite - LARGEUR_TOTAUX;
         let mut yt = y + 10.0;
         for TotalPdf {
             libelle,
@@ -320,9 +373,9 @@ impl Tableau<'_> {
             let base = base_centree(police, 9.0, yt, H_TOTAL);
             t.ecrire(police, 9.0, ENCRE, x + 6.0, base, libelle);
             let l = police.largeur(valeur, 9.0);
-            t.ecrire(police, 9.0, ENCRE, DROITE - 6.0 - l, base, valeur);
+            t.ecrire(police, 9.0, ENCRE, self.g.droite - 6.0 - l, base, valeur);
             yt += H_TOTAL;
-            t.trait_horizontal(x, DROITE, yt, BORDURE, 0.5);
+            t.trait_horizontal(x, self.g.droite, yt, BORDURE, 0.5);
         }
         yt - y
     }
@@ -334,17 +387,25 @@ pub fn generer_liste(liste: &ListePdf, polices: &Polices) -> Result<Vec<u8>, Str
     if liste.colonnes.is_empty() {
         return Err("liste sans colonne".into());
     }
-    let doc = cadre(&liste.entreprise, &liste.titre, &liste.date, liste.couleur);
+    let doc = document_reduit(
+        &liste.entreprise,
+        &liste.titre,
+        &liste.date,
+        liste.couleur,
+        &liste.mise_en_page,
+    );
     let m = Moteur::new(&doc, polices);
+    let g = m.g;
     let tableau = Tableau {
+        g,
         liste,
-        largeurs: largeurs(&liste.colonnes),
+        largeurs: largeurs(&liste.colonnes, g),
     };
 
     // Mesures à blanc, puis découpage en pages.
     let mut blanc = Toile::a_blanc();
-    let haut_corps = HAUT + m.en_tete(&mut blanc, HAUT);
-    let bas_corps = BAS - m.hauteur_pied() - 10.0;
+    let haut_corps = g.haut + m.en_tete(&mut blanc, g.haut);
+    let bas_corps = g.bas - m.hauteur_pied() - 10.0;
     let h_criteres = tableau.criteres(&m, polices, &mut blanc, 0.0);
     let h_totaux = tableau.totaux(polices, &mut blanc, 0.0);
     let hauteurs: Vec<f32> = liste
@@ -380,7 +441,7 @@ pub fn generer_liste(liste: &ListePdf, polices: &Polices) -> Result<Vec<u8>, Str
         let mut t = Toile {
             s: Some(&mut surface),
         };
-        let mut y = HAUT + m.en_tete(&mut t, HAUT);
+        let mut y = g.haut + m.en_tete(&mut t, g.haut);
         if k == 0 {
             y += tableau.criteres(&m, polices, &mut t, y);
         }

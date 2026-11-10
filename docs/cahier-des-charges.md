@@ -25,6 +25,7 @@
 | 2.19 | 2026-11-10 | J8 lancé : règles de calcul des indicateurs du tableau de bord et graphiques dessinés par chemins Slint, choix de mise en œuvre à confirmer par l'utilisateur (section 9) |
 | 2.20 | 2026-11-10 | Attribution de Slint par le badge « Made with Slint » du README du dépôt public à la place du composant AboutSlint, retiré de l'écran « À propos » à la demande de l'utilisateur (section 14) |
 | 2.21 | 2026-11-10 | Règles de calcul du tableau de bord et graphiques par chemins Slint validés par l'utilisateur (section 9) ; bande verticale de couleur retirée des PDF (section 12) ; réglages d'impression spécifiés (en-tête et pied de page libres, gabarits, papier pré-imprimé, marges et calibrage) pour un nouveau jalon J8b inséré avant J9 (sections 5.4, 12, 18 et 19) |
+| 2.22 | 2026-11-10 | Jalon J8b, domaine, stockage et PDF : règles de rendu des zones d'en-tête et de pied de page, des gabarits et des marges, appliquées aussi aux lettres de relance et aux listes (section 12, provisoires, à confirmer avec les questions 13 à 16) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -424,6 +425,14 @@ Réglages d'impression (spécifié, jalon J8b, décision de l'utilisateur du 202
 - Instantané : contenu des zones, gabarit et marges sont figés à la validation avec les données de l'entreprise, les logos et les textes ; les variables sont résolues sur les valeurs figées, la réimpression reste identique. Un brouillon s'imprime en aperçu avec les valeurs du moment.
 - Aperçu en direct : le PDF réel est rastérisé en image pour l'écran des Paramètres (essai de hayro, moteur de rendu PDF en Rust pur, au début de J8b ; objectif inférieur à 100 ms par page à 600 px de large, sinon bouton « Actualiser l'aperçu » ; repli sur l'ouverture du PDF dans la visionneuse de Windows si le rendu n'est pas fidèle).
 
+Règles de rendu (provisoires, jalon J8b, en attente de confirmation par l'utilisateur avec les questions 13 à 16) :
+- Mise en page par défaut : elle reproduit la mise en page d'origine (logo principal à gauche du bloc entreprise, logo secondaire à droite au-dessus du titre, mentions centrées en pied de page). Elle sert aussi aux documents validés avant J8b, dont l'instantané ne contient pas de mise en page.
+- Logos dans l'en-tête : un logo non centré en première ligne de la zone se place à gauche du texte ; un logo non centré en dernière ligne se place à droite, au-dessus du titre ; un logo centré ou placé ailleurs s'insère dans le fil de la zone. Un logo absent n'imprime rien.
+- Mentions vides : une ligne dont toutes les variables sont vides disparaît ; dans une ligne de mentions séparées par « · », une mention dont les variables sont vides disparaît avec son libellé et son séparateur.
+- Tailles : la première ligne de texte de l'en-tête prend la taille du nom de l'entreprise, les suivantes celle des coordonnées ; le pied de page est en petit corps. Le gras utilise la police grasse ; l'italique est la police droite penchée (aucune police italique n'est embarquée).
+- Gabarits : Classique, la mise en page d'origine ; Compact, un en-tête plus dense (corps et logos réduits, espacements resserrés), le corps du document inchangé ; Papier pré-imprimé, sans zones d'en-tête ni de pied ni logos, mais avec le titre, le numéro et la date, le bloc du client, « Page n/N » et le filigrane, qui sont des données du document et non de l'en-tête de l'entreprise.
+- Portée : les réglages s'appliquent aux documents commerciaux, à la lettre de relance et aux listes imprimées (registre des règlements, relances), qui partagent l'en-tête et le pied de page.
+
 Choix technique (spécifié) : c'est la partie la plus délicate en Rust pur (modèles, pagination, logo, polices). La bibliothèque sera choisie après un essai sur une page de facture complète.
 
 Essai du 2026-11-09 (crate `kadenz-pdf`, données fictives) : bibliothèque krilla 0.8.2 (licence MIT ou Apache-2.0, Rust pur, sans dépendance système), polices Inter et Manrope embarquées et sous-ensemblées, logos PNG ou JPEG lus depuis des octets (deux logos vérifiés, répétés sur chaque page, transparence des PNG respectée). Le texte est façonné une fois (rustybuzz) pour être mesuré puis tracé à l'identique, ce qui rend la pagination exacte. Facture fictive de 46 lignes sur 3 pages A4 : en-tête répété, bloc tiers en page 1, en-tête du tableau répété, lignes jamais coupées, « À reporter » et « Report », totaux, montant en lettres et signataire ensemble sur la dernière page, pied de page avec « Page n/N », filigranes « BROUILLON » et « ANNULÉ » ; environ 30 Ko et 0,1 s par document en mode debug. Choix validé par l'utilisateur le 2026-11-09 : krilla est retenue.
@@ -495,7 +504,7 @@ Livré au jalon J4 : depuis la fiche d'une facture, « Aperçu PDF » pour un br
 13. **Gabarits d'impression** (à l'étude, J8b) : nombre de gabarits au lancement et leurs variantes finales (logo secondaire, dense ou aéré).
 14. **Gabarit « Bande latérale »** (à l'étude, J8b) : écarté par la décision du 2026-11-10 de retirer la bande verticale des PDF, sauf avis contraire de l'utilisateur.
 15. **Marges et contenu d'impression** (à l'étude, J8b) : marges globales ou par gabarit ; un contenu d'en-tête et de pied commun à tous les documents ou des variantes par type.
-16. **Variables d'impression** (à l'étude, J8b) : champs de l'entreprise et logo seulement, ou aussi champs du document (numéro, date, montant TTC) dans le pied de page.
+16. **Variables d'impression** (à l'étude, J8b) : champs de l'entreprise et logo seulement, ou aussi champs du document (numéro, date, montant TTC) dans le pied de page. Les règles de rendu provisoires de la section 12 (placement des logos, mentions vides, tailles, gabarit Compact, portée sur les lettres et les listes) sont à confirmer avec ces questions.
 
 ---
 

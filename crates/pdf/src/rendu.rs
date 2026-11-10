@@ -5,6 +5,9 @@
 //! tracé ne peuvent donc pas diverger.
 
 use kadenz_domaine::calcul::{Montant, Pourcentage};
+use kadenz_domaine::mise_en_page::{
+    Gabarit as GabaritImpression, LigneResolue, Marges, PassageResolu, Variable,
+};
 use kadenz_domaine::saisie::{montant_en_texte, pourcentage_en_texte, quantite_en_texte};
 use krilla::Document;
 use krilla::color::rgb;
@@ -16,18 +19,42 @@ use krilla::page::PageSettings;
 use krilla::paint::{Fill, Stroke};
 use krilla::surface::Surface;
 
-use crate::modele::{DocumentPdf, Filigrane, LignePdf};
+use crate::modele::{DocumentPdf, EntreprisePdf, Filigrane, LignePdf};
 use crate::pagination::{Gabarit, paginer};
 use crate::texte::{Police, Polices};
 
 // Format A4 en points (1/72 de pouce).
 pub(crate) const LARGEUR: f32 = 595.28;
 pub(crate) const HAUTEUR: f32 = 841.89;
-pub(crate) const GAUCHE: f32 = 36.0;
-pub(crate) const DROITE: f32 = LARGEUR - 36.0;
-pub(crate) const HAUT: f32 = 34.0;
-pub(crate) const BAS: f32 = HAUTEUR - 26.0;
-pub(crate) const UTILE: f32 = DROITE - GAUCHE;
+
+/// Zone imprimable de la page, d'après les marges réglées (en points).
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct Cadre {
+    pub(crate) gauche: f32,
+    pub(crate) droite: f32,
+    pub(crate) haut: f32,
+    pub(crate) bas: f32,
+}
+
+impl Cadre {
+    pub(crate) fn depuis(m: &Marges) -> Cadre {
+        let pt = |mm: u8| f32::from(mm) * 72.0 / 25.4;
+        Cadre {
+            gauche: pt(m.gauche),
+            droite: LARGEUR - pt(m.droite),
+            haut: pt(m.haut),
+            bas: HAUTEUR - pt(m.bas),
+        }
+    }
+
+    pub(crate) fn utile(&self) -> f32 {
+        self.droite - self.gauche
+    }
+}
+
+/// Inclinaison de l'italique, obtenue en penchant la police droite (aucune
+/// police italique n'est embarquée).
+const PENTE_ITALIQUE: f32 = 0.2;
 
 const H_ENTETE_TABLEAU: f32 = 20.0;
 const H_REPORT: f32 = 18.0;
@@ -113,6 +140,37 @@ impl Toile<'_, '_> {
         );
     }
 
+    /// Texte, penché autour de sa ligne de base s'il est en italique.
+    #[allow(clippy::too_many_arguments)]
+    fn ecrire_style(
+        &mut self,
+        police: &Police,
+        taille: f32,
+        c: [u8; 3],
+        x: f32,
+        base: f32,
+        texte: &str,
+        italique: bool,
+    ) {
+        if !italique {
+            return self.ecrire(police, taille, c, x, base, texte);
+        }
+        if let Some(s) = self.s.as_deref_mut() {
+            s.push_transform(&Transform::from_row(
+                1.0,
+                0.0,
+                -PENTE_ITALIQUE,
+                1.0,
+                PENTE_ITALIQUE * base,
+                0.0,
+            ));
+        }
+        self.ecrire(police, taille, c, x, base, texte);
+        if let Some(s) = self.s.as_deref_mut() {
+            s.pop();
+        }
+    }
+
     pub(crate) fn rectangle(&mut self, x: f32, y: f32, l: f32, h: f32, c: [u8; 3]) {
         let Some(s) = self.s.as_deref_mut() else {
             return;
@@ -176,8 +234,28 @@ impl Toile<'_, '_> {
         }
     }
 
-    /// Image ajustée dans une boîte, proportions gardées, calée à gauche ou à droite.
-    fn image(&mut self, image: &Image, x: f32, y: f32, l: f32, h: f32, a_droite: bool) -> f32 {
+    pub(crate) fn trait_vertical(&mut self, x: f32, y1: f32, y2: f32, c: [u8; 3], epaisseur: f32) {
+        let Some(s) = self.s.as_deref_mut() else {
+            return;
+        };
+        let mut pb = PathBuilder::new();
+        pb.move_to(x, y1);
+        pb.line_to(x, y2);
+        if let Some(chemin) = pb.finish() {
+            s.set_fill(None);
+            s.set_stroke(Some(Stroke {
+                paint: couleur(c).into(),
+                width: epaisseur,
+                ..Default::default()
+            }));
+            s.draw_path(&chemin);
+            s.set_stroke(None);
+        }
+    }
+
+    /// Image ajustée dans une boîte, proportions gardées ; `alignement` vaut 0 à
+    /// gauche, 0,5 au centre, 1 à droite. Renvoie la hauteur tracée.
+    fn image(&mut self, image: &Image, x: f32, y: f32, l: f32, h: f32, alignement: f32) -> f32 {
         let (lp, hp) = image.size();
         if lp == 0 || hp == 0 {
             return 0.0;
@@ -185,7 +263,7 @@ impl Toile<'_, '_> {
         let echelle = (l / lp as f32).min(h / hp as f32);
         let (lr, hr) = (lp as f32 * echelle, hp as f32 * echelle);
         if let (Some(s), Some(taille)) = (self.s.as_deref_mut(), Size::from_wh(lr, hr)) {
-            let x = if a_droite { x + l - lr } else { x };
+            let x = x + (l - lr) * alignement;
             s.push_transform(&Transform::from_translate(x, y));
             s.draw_image(image.clone(), taille);
             s.pop();
@@ -216,9 +294,42 @@ struct Colonne {
     a_droite: bool,
 }
 
+/// Style d'une zone de contenu libre : la première ligne de texte de l'en-tête
+/// prend la taille du nom de l'entreprise.
+#[derive(Clone, Copy)]
+struct StyleZone {
+    taille: f32,
+    interligne: f32,
+    couleur: [u8; 3],
+    premiere: Option<(f32, f32, [u8; 3])>,
+    h_logo: f32,
+}
+
+/// Valeur d'une variable d'impression, lue dans les données de l'entreprise.
+fn valeur(e: &EntreprisePdf, v: Variable) -> String {
+    match v {
+        Variable::Nom => e.nom.clone(),
+        Variable::Adresse => e.adresse.clone(),
+        Variable::Telephone => e.telephone.clone(),
+        Variable::Email => e.email.clone(),
+        Variable::Site => e.site_web.clone(),
+        Variable::Localisation => e.localisation.clone(),
+        Variable::Regime => e.regime.clone(),
+        Variable::Rccm => e.rccm.clone(),
+        Variable::Ifu => e.ifu.clone(),
+        Variable::Banque1 => e.banque1.clone(),
+        Variable::Banque2 => e.banque2.clone(),
+        Variable::Logo | Variable::Logo2 => String::new(),
+    }
+}
+
 pub(crate) struct Moteur<'d> {
     doc: &'d DocumentPdf,
     p: &'d Polices,
+    pub(crate) g: Cadre,
+    gabarit: GabaritImpression,
+    entete: Vec<LigneResolue>,
+    pied: Vec<LigneResolue>,
     logo: Option<Image>,
     logo2: Option<Image>,
     colonnes: Vec<Colonne>,
@@ -226,6 +337,8 @@ pub(crate) struct Moteur<'d> {
 
 impl<'d> Moteur<'d> {
     pub(crate) fn new(doc: &'d DocumentPdf, p: &'d Polices) -> Self {
+        let mep = &doc.mise_en_page;
+        let g = Cadre::depuis(&mep.marges);
         let colonnes = if doc.avec_montants {
             vec![
                 Colonne {
@@ -283,16 +396,27 @@ impl<'d> Moteur<'d> {
             .into_iter()
             .map(|c| Colonne {
                 largeur: if c.largeur == 0.0 {
-                    UTILE - fixe
+                    g.utile() - fixe
                 } else {
                     c.largeur
                 },
                 ..c
             })
             .collect();
+        let zone = |z: &kadenz_domaine::mise_en_page::Zone| {
+            if mep.gabarit.imprime_les_zones() {
+                z.resoudre(|v| valeur(&doc.entreprise, v))
+            } else {
+                Vec::new()
+            }
+        };
         Moteur {
             doc,
             p,
+            g,
+            gabarit: mep.gabarit,
+            entete: zone(&mep.entete),
+            pied: zone(&mep.pied),
             logo: lire_image(&doc.entreprise.logo),
             logo2: lire_image(&doc.entreprise.logo2),
             colonnes,
@@ -300,7 +424,7 @@ impl<'d> Moteur<'d> {
     }
 
     fn x_colonne(&self, rang: usize) -> f32 {
-        GAUCHE + self.colonnes[..rang].iter().map(|c| c.largeur).sum::<f32>()
+        self.g.gauche + self.colonnes[..rang].iter().map(|c| c.largeur).sum::<f32>()
     }
 
     /// Texte sur plusieurs lignes ; renvoie la hauteur occupée.
@@ -334,58 +458,212 @@ impl<'d> Moteur<'d> {
 
     // ------------------------------------------------------------ en-tête
 
-    /// En-tête répété sur chaque page : logos, entreprise, type, numéro, date.
+    fn image_de(&self, v: Variable) -> Option<&Image> {
+        match v {
+            Variable::Logo => self.logo.as_ref(),
+            Variable::Logo2 => self.logo2.as_ref(),
+            _ => None,
+        }
+    }
+
+    fn police(&self, gras: bool) -> &Police {
+        if gras {
+            &self.p.texte_gras
+        } else {
+            &self.p.texte
+        }
+    }
+
+    /// Coupe une ligne à styles mêlés en rangées tenant dans `largeur` ; chaque
+    /// morceau est un mot suivi de ses espaces, avec sa chasse.
+    fn couper_riche(
+        &self,
+        passages: &[PassageResolu],
+        taille: f32,
+        largeur: f32,
+    ) -> Vec<Vec<(String, bool, bool, f32)>> {
+        let mut morceaux: Vec<(String, bool, bool)> = Vec::new();
+        for p in passages {
+            let mut courant = String::new();
+            let mut apres_espace = false;
+            for c in p.texte.chars() {
+                if !c.is_whitespace() && apres_espace && !courant.trim().is_empty() {
+                    morceaux.push((std::mem::take(&mut courant), p.gras, p.italique));
+                }
+                apres_espace = c.is_whitespace();
+                courant.push(c);
+            }
+            if !courant.is_empty() {
+                morceaux.push((courant, p.gras, p.italique));
+            }
+        }
+        let mut rangees: Vec<Vec<(String, bool, bool, f32)>> = vec![Vec::new()];
+        let mut occupe = 0.0;
+        for (texte, gras, italique) in morceaux {
+            let police = self.police(gras);
+            let utile = police.largeur(texte.trim_end(), taille);
+            let rangee = rangees.last_mut().expect("au moins une rangée");
+            if !rangee.is_empty() && occupe + utile > largeur {
+                rangees.push(Vec::new());
+                occupe = 0.0;
+            }
+            let texte = if occupe == 0.0 {
+                texte.trim_start().to_owned()
+            } else {
+                texte
+            };
+            let l = police.largeur(&texte, taille);
+            occupe += l;
+            rangees
+                .last_mut()
+                .expect("au moins une rangée")
+                .push((texte, gras, italique, l));
+        }
+        rangees
+    }
+
+    /// Zone de contenu libre (en-tête ou pied de page), mesurée à blanc ou
+    /// tracée ; renvoie sa hauteur.
+    fn zone(
+        &self,
+        t: &mut Toile,
+        lignes: &[LigneResolue],
+        style: StyleZone,
+        x: f32,
+        y: f32,
+        largeur: f32,
+    ) -> f32 {
+        let mut h = 0.0;
+        let mut premiere = true;
+        for ligne in lignes {
+            match ligne {
+                LigneResolue::Logo { logo, centree } => {
+                    if let Some(image) = self.image_de(*logo) {
+                        let alignement = if *centree { 0.5 } else { 0.0 };
+                        h += t.image(image, x, y + h, largeur, style.h_logo, alignement) + 4.0;
+                    }
+                }
+                LigneResolue::Texte { centree, passages } => {
+                    let (taille, interligne, c) = match (premiere, style.premiere) {
+                        (true, Some(p)) => p,
+                        _ => (style.taille, style.interligne, style.couleur),
+                    };
+                    premiere = false;
+                    if passages.is_empty() {
+                        h += interligne;
+                        continue;
+                    }
+                    for rangee in self.couper_riche(passages, taille, largeur) {
+                        let mut l_rangee: f32 = rangee.iter().map(|m| m.3).sum();
+                        if let Some((texte, gras, _, l)) = rangee.last() {
+                            l_rangee += self.police(*gras).largeur(texte.trim_end(), taille) - l;
+                        }
+                        let mut xx = if *centree {
+                            x + (largeur - l_rangee) / 2.0
+                        } else {
+                            x
+                        };
+                        for (texte, gras, italique, l) in &rangee {
+                            let police = self.police(*gras);
+                            let base = base_centree(police, taille, y + h, interligne);
+                            t.ecrire_style(police, taille, c, xx, base, texte, *italique);
+                            xx += l;
+                        }
+                        h += interligne;
+                    }
+                }
+            }
+        }
+        h
+    }
+
+    fn compact(&self) -> bool {
+        self.gabarit == GabaritImpression::Compact
+    }
+
+    fn style_entete(&self) -> StyleZone {
+        if self.compact() {
+            StyleZone {
+                taille: 7.5,
+                interligne: 9.5,
+                couleur: SECONDAIRE,
+                premiere: Some((10.0, 12.5, ENCRE)),
+                h_logo: 42.0,
+            }
+        } else {
+            StyleZone {
+                taille: 8.0,
+                interligne: 10.5,
+                couleur: SECONDAIRE,
+                premiere: Some((11.5, 14.0, ENCRE)),
+                h_logo: 54.0,
+            }
+        }
+    }
+
+    fn style_pied() -> StyleZone {
+        StyleZone {
+            taille: 7.0,
+            interligne: 9.0,
+            couleur: SECONDAIRE,
+            premiere: None,
+            h_logo: 30.0,
+        }
+    }
+
+    /// En-tête répété sur chaque page : zone d'en-tête à gauche, type, numéro et
+    /// date à droite. Un logo non centré en première ligne de la zone se place à
+    /// gauche du texte ; un logo non centré en dernière ligne se place à droite,
+    /// au-dessus du titre.
     pub(crate) fn en_tete(&self, t: &mut Toile, y: f32) -> f32 {
-        let e = &self.doc.entreprise;
         let p = self.p;
         let largeur_droite = 190.0;
-        let x_droite = DROITE - largeur_droite;
+        let x_droite = self.g.droite - largeur_droite;
 
-        // Colonne gauche : logo principal, puis coordonnées.
-        let mut x_texte = GAUCHE;
+        let mut lignes: &[LigneResolue] = &self.entete;
+        let mut logo_gauche = None;
+        let mut logo_droite = None;
+        if let Some((
+            LigneResolue::Logo {
+                logo,
+                centree: false,
+            },
+            reste,
+        )) = lignes.split_first()
+        {
+            logo_gauche = self.image_de(*logo);
+            lignes = reste;
+        }
+        if let Some((
+            LigneResolue::Logo {
+                logo,
+                centree: false,
+            },
+            reste,
+        )) = lignes.split_last()
+        {
+            logo_droite = self.image_de(*logo);
+            lignes = reste;
+        }
+        let style = self.style_entete();
+
+        // Colonne gauche : logo en tête de zone, puis le reste de la zone.
+        let mut x_texte = self.g.gauche;
         let mut h_logo = 0.0;
-        if let Some(logo) = &self.logo {
-            h_logo = t.image(logo, GAUCHE, y, 110.0, 54.0, false);
-            x_texte = GAUCHE + 122.0;
+        if let Some(logo) = logo_gauche {
+            h_logo = t.image(logo, self.g.gauche, y, 110.0, style.h_logo, 0.0);
+            x_texte = self.g.gauche + 122.0;
         }
         let largeur_texte = x_droite - 12.0 - x_texte;
-        let mut yg = y;
-        yg += self.paragraphe(
-            t,
-            &p.texte_gras,
-            11.5,
-            14.0,
-            ENCRE,
-            x_texte,
-            yg,
-            largeur_texte,
-            &e.nom,
-        );
-        let mut coordonnees = vec![e.adresse.clone()];
-        if !e.telephone.is_empty() {
-            coordonnees.push(format!("Tél. : {}", e.telephone));
-        }
-        coordonnees.push(e.email.clone());
-        coordonnees.push(e.site_web.clone());
-        for ligne in coordonnees.iter().filter(|l| !l.trim().is_empty()) {
-            yg += self.paragraphe(
-                t,
-                &p.texte,
-                8.0,
-                10.5,
-                SECONDAIRE,
-                x_texte,
-                yg,
-                largeur_texte,
-                ligne,
-            );
-        }
-        let h_gauche = (yg - y).max(h_logo);
+        let h_gauche = self
+            .zone(t, lignes, style, x_texte, y, largeur_texte)
+            .max(h_logo);
 
         // Colonne droite : logo secondaire, titre, numéro, date.
         let mut yd = y;
-        if let Some(logo2) = &self.logo2 {
-            yd += t.image(logo2, x_droite, yd, largeur_droite, 36.0, true) + 6.0;
+        if let Some(logo) = logo_droite {
+            let h = if self.compact() { 28.0 } else { 36.0 };
+            yd += t.image(logo, x_droite, yd, largeur_droite, h, 1.0) + 6.0;
         }
         let titre = &self.doc.textes.titre;
         if !titre.is_empty() {
@@ -395,7 +673,7 @@ impl<'d> Moteur<'d> {
                 &p.titre,
                 taille_titre,
                 self.doc.couleur,
-                DROITE - l,
+                self.g.droite - l,
                 base_centree(&p.titre, taille_titre, yd, 22.0),
                 titre,
             );
@@ -408,7 +686,7 @@ impl<'d> Moteur<'d> {
                 &p.texte_gras,
                 10.0,
                 ENCRE,
-                DROITE - l,
+                self.g.droite - l,
                 base_centree(&p.texte_gras, 10.0, yd, 14.0),
                 &texte,
             );
@@ -421,7 +699,7 @@ impl<'d> Moteur<'d> {
                 &p.texte,
                 9.0,
                 ENCRE,
-                DROITE - l,
+                self.g.droite - l,
                 base_centree(&p.texte, 9.0, yd, 13.0),
                 &date,
             );
@@ -434,16 +712,21 @@ impl<'d> Moteur<'d> {
                 &p.texte,
                 9.0,
                 SECONDAIRE,
-                DROITE - l,
+                self.g.droite - l,
                 base_centree(&p.texte, 9.0, yd, 13.0),
                 reference,
             );
             yd += 13.0;
         }
 
-        let bas = y + h_gauche.max(yd - y) + 10.0;
-        t.trait_horizontal(GAUCHE, DROITE, bas, BORDURE, 0.75);
-        bas + 12.0 - y
+        let (avant, apres) = if self.compact() {
+            (7.0, 8.0)
+        } else {
+            (10.0, 12.0)
+        };
+        let bas = y + h_gauche.max(yd - y) + avant;
+        t.trait_horizontal(self.g.gauche, self.g.droite, bas, BORDURE, 0.75);
+        bas + apres - y
     }
 
     // ------------------------------------------------------------ bloc tiers (page 1)
@@ -451,7 +734,7 @@ impl<'d> Moteur<'d> {
     fn bloc_tiers(&self, t: &mut Toile, y: f32) -> f32 {
         let d = self.doc;
         let p = self.p;
-        let demi = UTILE / 2.0;
+        let demi = self.g.utile() / 2.0;
 
         // Gauche : libellé, échéance, mode de paiement.
         let mut yg = y;
@@ -477,7 +760,7 @@ impl<'d> Moteur<'d> {
                 7.5,
                 10.0,
                 SECONDAIRE,
-                GAUCHE,
+                self.g.gauche,
                 yg,
                 demi - 16.0,
                 libelle,
@@ -488,7 +771,7 @@ impl<'d> Moteur<'d> {
                 9.0,
                 12.0,
                 ENCRE,
-                GAUCHE,
+                self.g.gauche,
                 yg,
                 demi - 16.0,
                 valeur,
@@ -497,7 +780,7 @@ impl<'d> Moteur<'d> {
         }
 
         // Droite : cadre du tiers.
-        let x = GAUCHE + demi + 8.0;
+        let x = self.g.gauche + demi + 8.0;
         let largeur = demi - 8.0;
         let marge = 8.0;
         let interieur = largeur - 2.0 * marge;
@@ -558,7 +841,13 @@ impl<'d> Moteur<'d> {
 
     fn entete_tableau(&self, t: &mut Toile, y: f32) -> f32 {
         let p = self.p;
-        t.rectangle(GAUCHE, y, UTILE, H_ENTETE_TABLEAU, self.doc.couleur);
+        t.rectangle(
+            self.g.gauche,
+            y,
+            self.g.utile(),
+            H_ENTETE_TABLEAU,
+            self.doc.couleur,
+        );
         for (rang, c) in self.colonnes.iter().enumerate() {
             let x = self.x_colonne(rang);
             let base = base_centree(&p.texte_gras, 8.0, y, H_ENTETE_TABLEAU);
@@ -586,7 +875,7 @@ impl<'d> Moteur<'d> {
             taille,
             interligne,
             ENCRE,
-            GAUCHE + MARGE_CELLULE,
+            self.g.gauche + MARGE_CELLULE,
             haut,
             interieur(0),
             &l.reference,
@@ -642,13 +931,13 @@ impl<'d> Moteur<'d> {
             );
         }
         let h = h_ref.max(h_des).max(interligne) + 2.0 * MARGE_CELLULE;
-        t.trait_horizontal(GAUCHE, DROITE, y + h, BORDURE, 0.5);
+        t.trait_horizontal(self.g.gauche, self.g.droite, y + h, BORDURE, 0.5);
         h
     }
 
     fn ligne_report(&self, t: &mut Toile, y: f32, libelle: &str, valeur: Montant) -> f32 {
         let p = self.p;
-        t.rectangle(GAUCHE, y, UTILE, H_REPORT, FOND_CLAIR);
+        t.rectangle(self.g.gauche, y, self.g.utile(), H_REPORT, FOND_CLAIR);
         let base = base_centree(&p.texte_gras, 8.5, y, H_REPORT);
         t.ecrire(
             &p.texte_gras,
@@ -675,7 +964,7 @@ impl<'d> Moteur<'d> {
 
         if d.avec_montants {
             // Totaux, à droite.
-            let x = DROITE - LARGEUR_TOTAUX;
+            let x = self.g.droite - LARGEUR_TOTAUX;
             let h = 17.0;
             let mut rangs: Vec<(String, Montant)> = vec![("Montant HT".into(), d.totaux.ht)];
             if d.totaux.remise != 0 {
@@ -695,9 +984,9 @@ impl<'d> Moteur<'d> {
                 t.ecrire(&p.texte, 9.0, ENCRE, x + 6.0, base, libelle);
                 let v = format!("{} FCFA", montant(*valeur));
                 let l = p.texte.largeur(&v, 9.0);
-                t.ecrire(&p.texte, 9.0, ENCRE, DROITE - 6.0 - l, base, &v);
+                t.ecrire(&p.texte, 9.0, ENCRE, self.g.droite - 6.0 - l, base, &v);
                 yt += h;
-                t.trait_horizontal(x, DROITE, yt, BORDURE, 0.5);
+                t.trait_horizontal(x, self.g.droite, yt, BORDURE, 0.5);
             }
             let h_ttc = 20.0;
             t.rectangle(x, yt, LARGEUR_TOTAUX, h_ttc, d.couleur);
@@ -705,7 +994,14 @@ impl<'d> Moteur<'d> {
             t.ecrire(&p.texte_gras, 10.0, BLANC, x + 6.0, base, "Montant TTC");
             let v = format!("{} FCFA", montant(d.totaux.ttc));
             let l = p.texte_gras.largeur(&v, 10.0);
-            t.ecrire(&p.texte_gras, 10.0, BLANC, DROITE - 6.0 - l, base, &v);
+            t.ecrire(
+                &p.texte_gras,
+                10.0,
+                BLANC,
+                self.g.droite - 6.0 - l,
+                base,
+                &v,
+            );
             yt += h_ttc;
             bas = bas.max(yt);
         }
@@ -713,9 +1009,9 @@ impl<'d> Moteur<'d> {
         // Observations, à gauche des totaux.
         if !d.observations.trim().is_empty() {
             let largeur = if d.avec_montants {
-                UTILE - LARGEUR_TOTAUX - 16.0
+                self.g.utile() - LARGEUR_TOTAUX - 16.0
             } else {
-                UTILE
+                self.g.utile()
             };
             let mut yo = y;
             yo += self.paragraphe(
@@ -724,7 +1020,7 @@ impl<'d> Moteur<'d> {
                 7.5,
                 10.0,
                 SECONDAIRE,
-                GAUCHE,
+                self.g.gauche,
                 yo,
                 largeur,
                 "Observations",
@@ -735,7 +1031,7 @@ impl<'d> Moteur<'d> {
                 8.5,
                 11.0,
                 ENCRE,
-                GAUCHE,
+                self.g.gauche,
                 yo,
                 largeur,
                 &d.observations,
@@ -754,9 +1050,9 @@ impl<'d> Moteur<'d> {
                 9.5,
                 12.5,
                 ENCRE,
-                GAUCHE,
+                self.g.gauche,
                 bas,
-                UTILE,
+                self.g.utile(),
                 &phrase,
             );
         }
@@ -766,19 +1062,19 @@ impl<'d> Moteur<'d> {
         if !d.avec_montants {
             bas += 16.0;
             let ecart = 16.0;
-            let largeur = (UTILE - ecart) / 2.0;
+            let largeur = (self.g.utile() - ecart) / 2.0;
             let hauteur = 96.0;
             let l = &d.livraison;
             let zones = [
                 (
-                    GAUCHE,
+                    self.g.gauche,
                     "Visa du client",
                     "Date de réception",
                     &l.date_reception,
                     &l.visa_client,
                 ),
                 (
-                    GAUCHE + largeur + ecart,
+                    self.g.gauche + largeur + ecart,
                     "Visa du fournisseur",
                     "Date de livraison",
                     &l.date_livraison,
@@ -823,7 +1119,7 @@ impl<'d> Moteur<'d> {
         if !d.textes.signataire.is_empty() {
             bas += 16.0;
             let largeur = 200.0;
-            let x = DROITE - largeur;
+            let x = self.g.droite - largeur;
             let centrer = |police: &Police, taille: f32, texte: &str| {
                 x + (largeur - police.largeur(texte, taille)) / 2.0
             };
@@ -855,73 +1151,44 @@ impl<'d> Moteur<'d> {
 
     // ------------------------------------------------------------ pied de page
 
-    fn lignes_pied(&self) -> Vec<String> {
-        let e = &self.doc.entreprise;
-        let joindre = |morceaux: Vec<String>| {
-            morceaux
-                .into_iter()
-                .filter(|m| !m.trim().is_empty())
-                .collect::<Vec<_>>()
-                .join("  ·  ")
-        };
-        let avec = |libelle: &str, v: &str| {
-            if v.trim().is_empty() {
-                String::new()
-            } else {
-                format!("{libelle} : {v}")
-            }
-        };
-        let largeur = UTILE - 50.0;
-        [
-            joindre(vec![
-                e.adresse.clone(),
-                avec("Tél.", &e.telephone),
-                e.email.clone(),
-                e.site_web.clone(),
-            ]),
-            joindre(vec![
-                avec("RCCM", &e.rccm),
-                avec("IFU", &e.ifu),
-                avec("Régime", &e.regime),
-            ]),
-            joindre(vec![e.banque1.clone(), e.banque2.clone()]),
-        ]
-        .into_iter()
-        .filter(|l| !l.is_empty())
-        .flat_map(|l| self.p.texte.couper(&l, 7.0, largeur))
-        .collect()
+    fn largeur_pied(&self) -> f32 {
+        self.g.utile() - 50.0
     }
 
     pub(crate) fn hauteur_pied(&self) -> f32 {
-        8.0 + self.lignes_pied().len().max(1) as f32 * 9.0
+        let h = self.zone(
+            &mut Toile::a_blanc(),
+            &self.pied,
+            Self::style_pied(),
+            self.g.gauche,
+            0.0,
+            self.largeur_pied(),
+        );
+        8.0 + h.max(9.0)
     }
 
     pub(crate) fn pied(&self, t: &mut Toile, page: usize, total: usize) {
         let p = self.p;
-        let haut = BAS - self.hauteur_pied();
-        t.trait_horizontal(GAUCHE, DROITE, haut, BORDURE, 0.75);
-        let mut y = haut + 6.0;
-        let centre = GAUCHE + (UTILE - 50.0) / 2.0;
-        for ligne in self.lignes_pied() {
-            let l = p.texte.largeur(&ligne, 7.0);
-            t.ecrire(
-                &p.texte,
-                7.0,
-                SECONDAIRE,
-                centre - l / 2.0,
-                base_centree(&p.texte, 7.0, y, 9.0),
-                &ligne,
-            );
-            y += 9.0;
+        let haut = self.g.bas - self.hauteur_pied();
+        if self.gabarit.imprime_les_zones() {
+            t.trait_horizontal(self.g.gauche, self.g.droite, haut, BORDURE, 0.75);
         }
+        self.zone(
+            t,
+            &self.pied,
+            Self::style_pied(),
+            self.g.gauche,
+            haut + 6.0,
+            self.largeur_pied(),
+        );
         let numero = format!("Page {page}/{total}");
         let l = p.texte_moyen.largeur(&numero, 7.5);
         t.ecrire(
             &p.texte_moyen,
             7.5,
             SECONDAIRE,
-            DROITE - l,
-            base_centree(&p.texte_moyen, 7.5, BAS - 9.0, 9.0),
+            self.g.droite - l,
+            base_centree(&p.texte_moyen, 7.5, self.g.bas - 9.0, 9.0),
             &numero,
         );
     }
@@ -961,7 +1228,7 @@ pub fn generer(doc: &DocumentPdf, polices: &Polices) -> Result<Vec<u8>, String> 
 
     // Mesures à blanc.
     let mut blanc = Toile::a_blanc();
-    let h_entete = m.en_tete(&mut blanc, HAUT);
+    let h_entete = m.en_tete(&mut blanc, m.g.haut);
     let h_tiers = m.bloc_tiers(&mut blanc, 0.0);
     let h_final = ESPACE_AVANT_FINAL + m.bloc_final(&mut blanc, 0.0);
     let hauteurs: Vec<f32> = doc
@@ -970,8 +1237,8 @@ pub fn generer(doc: &DocumentPdf, polices: &Polices) -> Result<Vec<u8>, String> 
         .map(|l| m.ligne(&mut blanc, 0.0, l))
         .collect();
 
-    let haut_corps = HAUT + h_entete;
-    let bas_corps = BAS - m.hauteur_pied() - 10.0;
+    let haut_corps = m.g.haut + h_entete;
+    let bas_corps = m.g.bas - m.hauteur_pied() - 10.0;
     let gabarit = Gabarit {
         premiere: bas_corps - haut_corps - h_tiers - H_ENTETE_TABLEAU,
         suivantes: bas_corps - haut_corps - H_ENTETE_TABLEAU,
@@ -998,7 +1265,7 @@ pub fn generer(doc: &DocumentPdf, polices: &Polices) -> Result<Vec<u8>, String> 
             s: Some(&mut surface),
         };
 
-        let mut y = HAUT + m.en_tete(&mut t, HAUT);
+        let mut y = m.g.haut + m.en_tete(&mut t, m.g.haut);
         if k == 0 {
             y += m.bloc_tiers(&mut t, y);
         }

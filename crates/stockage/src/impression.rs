@@ -3,15 +3,17 @@
 //!
 //! À la validation, ces éléments sont figés dans un instantané référencé par le
 //! document : une réimpression reste identique à l'original, même si la fiche
-//! entreprise ou les réglages changent ensuite. Un brouillon s'imprime (en aperçu)
+//! entreprise ou les réglages changent ensuite (mise en page comprise). Un brouillon s'imprime (en aperçu)
 //! avec les valeurs du moment.
 
 use kadenz_domaine::document::TypeDocument;
 use kadenz_domaine::lettres::Orthographe;
+use kadenz_domaine::mise_en_page::MiseEnPageAnalysee;
 use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::{Value, json};
 
 use crate::entreprise::{self, Entreprise, Logo};
+use crate::mise_en_page;
 use crate::parametres::{self, TextesDocument, couleur_depuis_texte, couleur_en_texte};
 use crate::{Erreur, Resultat, refus};
 
@@ -24,6 +26,8 @@ pub struct Impression {
     pub couleur: [u8; 3],
     /// Orthographe du montant en lettres.
     pub orthographe: Orthographe,
+    /// Gabarit, marges, en-tête et pied de page (jalon J8b).
+    pub mise_en_page: MiseEnPageAnalysee,
 }
 
 /// Valeurs du moment pour un type de document (aperçu d'un brouillon).
@@ -36,6 +40,7 @@ pub fn courante(conn: &Connection, t: TypeDocument) -> Resultat<Impression> {
         textes: p.textes(t).clone(),
         couleur: p.couleur_documents,
         orthographe: p.orthographe,
+        mise_en_page: mise_en_page::lire_analysee(conn)?,
     })
 }
 
@@ -60,6 +65,7 @@ fn en_json(i: &Impression) -> Value {
         "signataire": i.textes.signataire,
         "couleur": couleur_en_texte(i.couleur),
         "orthographe": i.orthographe.code(),
+        "mise_en_page": mise_en_page::en_json(&i.mise_en_page),
     })
 }
 
@@ -95,6 +101,11 @@ fn depuis_json(v: &Value, logo: Option<Vec<u8>>, logo2: Option<Vec<u8>>) -> Impr
         },
         couleur: couleur_depuis_texte(&t("couleur")).unwrap_or(parametres::COULEUR_PAR_DEFAUT),
         orthographe: Orthographe::depuis_code(&t("orthographe")).unwrap_or_default(),
+        // Un instantané antérieur à J8b garde la mise en page d'origine.
+        mise_en_page: v
+            .get("mise_en_page")
+            .map(mise_en_page::depuis_json)
+            .unwrap_or_else(mise_en_page::defaut_analyse),
     }
 }
 

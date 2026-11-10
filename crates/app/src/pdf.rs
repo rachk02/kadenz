@@ -4,9 +4,10 @@
 //! brouillon s'imprime en aperçu, filigrané « BROUILLON », avec les valeurs du
 //! moment ; un document annulé porte le filigrane « ANNULÉ ».
 
-use kadenz_domaine::calcul::Montant;
+use kadenz_domaine::calcul::{Montant, Taux, UNE_UNITE, calculer_totaux};
 use kadenz_domaine::document::{Statut, TypeDocument};
 use kadenz_domaine::lettres::en_lettres_majuscule;
+use kadenz_domaine::mise_en_page::{Marges, MiseEnPage, MiseEnPageAnalysee};
 use kadenz_domaine::saisie::montant_en_texte;
 use kadenz_pdf::modele::{
     ColonnePdf, DocumentPdf, EntreprisePdf, Filigrane, LettrePdf, LignePdf, ListePdf, LivraisonPdf,
@@ -17,6 +18,7 @@ use kadenz_stockage::Connexion as Connection;
 use kadenz_stockage::documents::{self, Document, NatureLien};
 use kadenz_stockage::entreprise::{self, Entreprise, Logo};
 use kadenz_stockage::impression;
+use kadenz_stockage::mise_en_page;
 use kadenz_stockage::parametres;
 use kadenz_stockage::reglements::{self, FiltreRegistre, Sens, TotalSens};
 use kadenz_stockage::relances;
@@ -48,6 +50,7 @@ fn entreprise_pdf(e: &Entreprise, logo: Option<Vec<u8>>, logo2: Option<Vec<u8>>)
         telephone: e.telephone.clone(),
         email: e.email.clone(),
         site_web: e.site_web.clone(),
+        localisation: e.localisation.clone(),
         regime: e.regime_imposition.clone(),
         rccm: e.rccm.clone(),
         ifu: e.ifu.clone(),
@@ -129,6 +132,7 @@ pub(crate) fn document_pdf(conn: &Connection, d: &Document) -> Result<DocumentPd
         montant_en_lettres: en_lettres_majuscule(d.totaux.ttc, i.orthographe),
         filigrane,
         couleur: i.couleur,
+        mise_en_page: i.mise_en_page.clone(),
     })
 }
 
@@ -159,8 +163,10 @@ fn fcfa(m: Montant) -> String {
     format!("{} FCFA", montant_en_texte(m))
 }
 
-/// Fiche entreprise et couleur du moment, pour une lettre ou une liste imprimée.
-fn entete_du_moment(conn: &Connection) -> Result<(EntreprisePdf, [u8; 3]), String> {
+/// Fiche entreprise, couleur et mise en page du moment, pour une liste imprimée.
+fn entete_du_moment(
+    conn: &Connection,
+) -> Result<(EntreprisePdf, [u8; 3], MiseEnPageAnalysee), String> {
     let e = entreprise::lire(conn)
         .map_err(texte_erreur)?
         .unwrap_or_default();
@@ -169,7 +175,8 @@ fn entete_du_moment(conn: &Connection) -> Result<(EntreprisePdf, [u8; 3]), Strin
     let couleur = parametres::lire(conn)
         .map_err(texte_erreur)?
         .couleur_documents;
-    Ok((entreprise_pdf(&e, logo, logo2), couleur))
+    let mep = mise_en_page::lire_analysee(conn).map_err(texte_erreur)?;
+    Ok((entreprise_pdf(&e, logo, logo2), couleur, mep))
 }
 
 fn colonne(titre: &str, largeur: f32, a_droite: bool) -> ColonnePdf {
@@ -219,6 +226,7 @@ pub(crate) fn lettre_relance(
         ],
         signataire: l.signataire.clone(),
         nom_signataire: l.nom_signataire.clone(),
+        mise_en_page: mise_en_page::lire_analysee(conn).map_err(texte_erreur)?,
     };
     let octets = kadenz_pdf::generer_lettre(&lettre, &Polices::embarquees())?;
     Ok((octets, format!("Relance-{}.pdf", f.numero)))
@@ -274,7 +282,7 @@ pub(crate) fn registre_reglements(
     filtre: &FiltreRegistre,
 ) -> Result<(Vec<u8>, String), String> {
     let r = reglements::registre(conn, filtre).map_err(texte_erreur)?;
-    let (entreprise, couleur) = entete_du_moment(conn)?;
+    let (entreprise, couleur, mep) = entete_du_moment(conn)?;
     let mut totaux = Vec::new();
     if filtre.sens != Some(Sens::Decaissement) {
         totaux_du_sens("Total des encaissements", &r.encaissements, &mut totaux);
@@ -313,6 +321,7 @@ pub(crate) fn registre_reglements(
             })
             .collect(),
         totaux,
+        mise_en_page: mep,
     };
     let octets = kadenz_pdf::generer_liste(&liste, &Polices::embarquees())?;
     Ok((
@@ -328,7 +337,7 @@ pub(crate) fn registre_reglements(
 pub(crate) fn liste_relances(conn: &Connection) -> Result<(Vec<u8>, String), String> {
     let jour = aujourd_hui();
     let echues = reglements::factures_echues(conn, jour).map_err(texte_erreur)?;
-    let (entreprise, couleur) = entete_du_moment(conn)?;
+    let (entreprise, couleur, mep) = entete_du_moment(conn)?;
     let reste: Montant = echues.iter().map(|d| d.reste_a_payer).sum();
     let liste = ListePdf {
         entreprise,
@@ -365,9 +374,108 @@ pub(crate) fn liste_relances(conn: &Connection) -> Result<(Vec<u8>, String), Str
             reste,
             true,
         )],
+        mise_en_page: mep,
     };
     let octets = kadenz_pdf::generer_liste(&liste, &Polices::embarquees())?;
     Ok((octets, format!("Relances-{}.pdf", jour.format("%Y-%m-%d"))))
+}
+
+/// Facture d'exemple de l'aperçu des réglages d'impression : données de
+/// l'entreprise, textes et couleur du moment, lignes génériques.
+fn facture_exemple(conn: &Connection, mep: MiseEnPageAnalysee) -> Result<DocumentPdf, String> {
+    let i = impression::courante(conn, TypeDocument::Facture).map_err(texte_erreur)?;
+    let lignes: Vec<LignePdf> = (1..=3)
+        .map(|k| {
+            let prix = 10_000 * k;
+            let quantite = k * UNE_UNITE;
+            LignePdf {
+                reference: format!("REF-{k}"),
+                designation: format!("Article d'exemple {k}"),
+                prix,
+                quantite,
+                total: kadenz_domaine::calcul::total_ligne(prix, quantite),
+                ..Default::default()
+            }
+        })
+        .collect();
+    let taux = Taux {
+        remise: 0,
+        tva: 1800,
+        retenue: 0,
+    };
+    let totaux = calculer_totaux(lignes.iter().map(|l| (l.prix, l.quantite)), taux, false);
+    Ok(DocumentPdf {
+        entreprise: entreprise_pdf(&i.entreprise, i.logo.clone(), i.logo2.clone()),
+        tiers: TiersPdf {
+            nom: "Client d'exemple".into(),
+            ..Default::default()
+        },
+        textes: TextesPdf {
+            titre: i.textes.titre.clone(),
+            libelle_tiers: "Client".into(),
+            phrase_somme: i.textes.phrase_somme.clone(),
+            signataire: i.textes.signataire.clone(),
+            nom_signataire: String::new(),
+        },
+        date: date(aujourd_hui()),
+        lignes,
+        avec_montants: true,
+        taux,
+        totaux,
+        montant_en_lettres: en_lettres_majuscule(totaux.ttc, i.orthographe),
+        couleur: i.couleur,
+        mise_en_page: mep,
+        ..Default::default()
+    })
+}
+
+/// Aperçu des réglages d'impression (non enregistrés) : première page de la
+/// facture d'exemple, rendue en image RGBA de `largeur_px` pixels de large.
+/// Renvoie les pixels, la largeur et la hauteur ; un markup invalide renvoie le
+/// message traduisible de l'analyse.
+pub(crate) fn apercu_mise_en_page(
+    conn: &Connection,
+    m: &MiseEnPage,
+    largeur_px: u32,
+) -> Result<(Vec<u8>, u32, u32), String> {
+    use hayro::hayro_interpret::InterpreterSettings;
+    use hayro::hayro_syntax::Pdf;
+    use hayro::{PixmapSettings, RenderCache, RenderSettings, render};
+
+    let mep = m
+        .analyser()
+        .map_err(|e| texte_erreur(kadenz_stockage::Erreur::from(e)))?;
+    let doc = facture_exemple(conn, mep)?;
+    let octets = kadenz_pdf::generer(&doc, &Polices::embarquees())?;
+    let pdf = Pdf::new(octets).map_err(|e| format!("{e:?}"))?;
+    let pages = pdf.pages();
+    let page = pages.first().ok_or("aperçu sans page")?;
+    let (largeur, _) = page.render_dimensions();
+    let echelle = largeur_px.max(1) as f32 / largeur;
+    let reglages = PixmapSettings {
+        x_scale: echelle,
+        y_scale: echelle,
+        ..Default::default()
+    };
+    let cache = RenderCache::new();
+    let pixmap = render(
+        page,
+        &cache,
+        &InterpreterSettings::default(),
+        &RenderSettings::default(),
+        &reglages,
+    );
+    let (l, h) = (u32::from(pixmap.width()), u32::from(pixmap.height()));
+    // Fond blanc opaque : les pixels prémultipliés valent les pixels droits.
+    Ok((pixmap.data_as_u8_slice().to_vec(), l, h))
+}
+
+/// Feuille de calibrage pour les marges données (bouton « Tester l'impression »).
+pub(crate) fn feuille_calibrage(marges: &Marges) -> Result<Vec<u8>, String> {
+    marges
+        .verifier()
+        .map_err(|e| texte_erreur(kadenz_stockage::Erreur::from(e)))?;
+    kadenz_pdf::generer_calibrage(marges, &Polices::embarquees())
 }
 
 #[cfg(test)]
@@ -459,5 +567,33 @@ mod tests {
                 std::fs::write(std::path::Path::new(&dossier).join(nom), octets).unwrap();
             }
         }
+    }
+
+    #[test]
+    fn apercu_et_calibrage() {
+        let conn = kadenz_stockage::ouvrir_en_memoire().unwrap();
+        let (pixels, l, h) = apercu_mise_en_page(&conn, &MiseEnPage::default(), 600).unwrap();
+        assert_eq!(l, 600);
+        assert!((840..=860).contains(&h), "proportions A4 : {h}");
+        assert_eq!(pixels.len(), (l * h * 4) as usize);
+        assert!(
+            pixels.chunks(4).any(|p| p[0] < 128),
+            "la page n'est pas blanche"
+        );
+        let faux = MiseEnPage {
+            pied: "**gras".into(),
+            ..MiseEnPage::default()
+        };
+        assert!(apercu_mise_en_page(&conn, &faux, 600).is_err());
+        assert!(
+            feuille_calibrage(&Marges::default())
+                .unwrap()
+                .starts_with(b"%PDF-")
+        );
+        let hors = Marges {
+            haut: 41,
+            ..Marges::default()
+        };
+        assert!(feuille_calibrage(&hors).is_err());
     }
 }
