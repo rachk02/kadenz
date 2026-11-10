@@ -2411,3 +2411,36 @@ msgstr "フッター {} 行目：太字が閉じていません (**)"
 
 msgid "pied de page, ligne {} : italique non fermée (*)"
 msgstr "フッター {} 行目：斜体が閉じていません (*)"
+
+msgid "Style du pied de page"
+msgstr "フッターのスタイル"
+
+msgid "Trait fin gris"
+msgstr "細いグレーの線"
+
+msgid "Trait épais de la couleur principale, mentions en gras"
+msgstr "メインカラーの太い線、記載事項は太字"
+
+msgid "Bas des documents"
+msgstr "書類の下部"
+
+msgid "Éléments imprimés sous les lignes, réglés pour chaque type de document. L'aperçu montre un exemple du type choisi."
+msgstr "明細の下に印刷する項目で、書類の種類ごとに設定します。プレビューには選んだ種類の例が表示されます。"
+
+msgid "Lignes de totaux"
+msgstr "合計行"
+
+msgid "Retenue à la source"
+msgstr "源泉徴収"
+
+msgid "Masquer les lignes à zéro"
+msgstr "ゼロの行を隠す"
+
+msgid "Autres éléments"
+msgstr "その他の項目"
+
+msgid "Signataire et nom"
+msgstr "署名者と氏名"
+
+msgid "Aperçu sur un document d'exemple"
+msgstr "サンプル書類でのプレビュー"

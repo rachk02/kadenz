@@ -2411,3 +2411,36 @@ msgstr "页脚第 {} 行：粗体未闭合 (**)"
 
 msgid "pied de page, ligne {} : italique non fermée (*)"
 msgstr "页脚第 {} 行：斜体未闭合 (*)"
+
+msgid "Style du pied de page"
+msgstr "页脚样式"
+
+msgid "Trait fin gris"
+msgstr "灰色细线"
+
+msgid "Trait épais de la couleur principale, mentions en gras"
+msgstr "主色粗线，信息以粗体显示"
+
+msgid "Bas des documents"
+msgstr "单据底部"
+
+msgid "Éléments imprimés sous les lignes, réglés pour chaque type de document. L'aperçu montre un exemple du type choisi."
+msgstr "打印在明细下方的项目，按单据类型分别设置。预览显示所选类型的示例。"
+
+msgid "Lignes de totaux"
+msgstr "合计行"
+
+msgid "Retenue à la source"
+msgstr "预扣税"
+
+msgid "Masquer les lignes à zéro"
+msgstr "隐藏为零的行"
+
+msgid "Autres éléments"
+msgstr "其他项目"
+
+msgid "Signataire et nom"
+msgstr "签署人及姓名"
+
+msgid "Aperçu sur un document d'exemple"
+msgstr "示例单据预览"

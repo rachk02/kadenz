@@ -2411,3 +2411,36 @@ msgstr "footer, line {}: unclosed bold (**)"
 
 msgid "pied de page, ligne {} : italique non fermée (*)"
 msgstr "footer, line {}: unclosed italic (*)"
+
+msgid "Style du pied de page"
+msgstr "Footer style"
+
+msgid "Trait fin gris"
+msgstr "Thin grey line"
+
+msgid "Trait épais de la couleur principale, mentions en gras"
+msgstr "Thick line in the main colour, bold notices"
+
+msgid "Bas des documents"
+msgstr "Bottom of documents"
+
+msgid "Éléments imprimés sous les lignes, réglés pour chaque type de document. L'aperçu montre un exemple du type choisi."
+msgstr "Items printed below the lines, set for each document type. The preview shows an example of the chosen type."
+
+msgid "Lignes de totaux"
+msgstr "Total lines"
+
+msgid "Retenue à la source"
+msgstr "Withholding tax"
+
+msgid "Masquer les lignes à zéro"
+msgstr "Hide zero lines"
+
+msgid "Autres éléments"
+msgstr "Other items"
+
+msgid "Signataire et nom"
+msgstr "Signatory and name"
+
+msgid "Aperçu sur un document d'exemple"
+msgstr "Preview on a sample document"

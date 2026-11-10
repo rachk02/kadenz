@@ -1,7 +1,7 @@
 // Réglages d'impression (jalon J8b) : gabarit A4, marges, en-tête et pied de
 // page en contenu libre avec variables de l'entreprise, aperçu en direct sur une
 // facture d'exemple, feuille de calibrage. Au droit « Gérer les paramètres ».
-import { ComboBox, LineEdit, ScrollView, TextEdit } from "std-widgets.slint";
+import { CheckBox, ComboBox, ScrollView, TextEdit } from "std-widgets.slint";
 import { Bouton, Champ, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct MiseEnPageUi {
@@ -12,6 +12,25 @@ export struct MiseEnPageUi {
     droite: string,
     entete: string,
     pied: string,
+    // Rang dans l'ordre du domaine : trait fin gris, puis trait épais.
+    style-pied: int,
+}
+
+// Bas d'un type de document : éléments imprimés sous les lignes.
+export struct BasUi {
+    ht: bool,
+    remise: bool,
+    base-tva: bool,
+    tva: bool,
+    retenue: bool,
+    ttc: bool,
+    masquer-zero: bool,
+    montant-en-lettres: bool,
+    visa-client: bool,
+    visa-fournisseur: bool,
+    date-reception: bool,
+    date-livraison: bool,
+    signataire: bool,
 }
 
 export global ImpressionApi {
@@ -28,9 +47,12 @@ export global ImpressionApi {
 
     callback ouvrir() -> MiseEnPageUi;
     callback par-defaut() -> MiseEnPageUi;
-    // Vérifie la saisie et recalcule l'aperçu.
-    callback actualiser(mise-en-page: MiseEnPageUi);
-    callback enregistrer(mise-en-page: MiseEnPageUi) -> Retour;
+    // Bas des six types, dans l'ordre des types.
+    callback ouvrir-bas() -> [BasUi];
+    callback bas-par-defaut() -> [BasUi];
+    // Vérifie la saisie et recalcule l'aperçu sur un exemple du type choisi.
+    callback actualiser(mise-en-page: MiseEnPageUi, bas: BasUi, type-document: int);
+    callback enregistrer(mise-en-page: MiseEnPageUi, bas: [BasUi]) -> Retour;
     // Feuille de calibrage des marges saisies, en PDF.
     callback tester(mise-en-page: MiseEnPageUi) -> Retour;
 }
@@ -111,8 +133,51 @@ component Aide inherits Rangee {
     }
 }
 
-export component PageImpression inherits ScrollView {
+export component PageImpression inherits Rectangle {
     property <Retour> retour;
+    // Bas de chaque type ; le type choisi est édité dans les cases.
+    property <[BasUi]> bas;
+    property <int> rang-type: 0;
+
+    function bas-saisi() -> BasUi {
+        return {
+            ht: ht.checked,
+            remise: remise.checked,
+            base-tva: base-tva.checked,
+            tva: tva.checked,
+            retenue: retenue.checked,
+            ttc: ttc.checked,
+            masquer-zero: masquer-zero.checked,
+            montant-en-lettres: montant-en-lettres.checked,
+            visa-client: visa-client.checked,
+            visa-fournisseur: visa-fournisseur.checked,
+            date-reception: date-reception.checked,
+            date-livraison: date-livraison.checked,
+            signataire: signataire.checked,
+        };
+    }
+
+    function afficher-bas() {
+        ht.checked = root.bas[root.rang-type].ht;
+        remise.checked = root.bas[root.rang-type].remise;
+        base-tva.checked = root.bas[root.rang-type].base-tva;
+        tva.checked = root.bas[root.rang-type].tva;
+        retenue.checked = root.bas[root.rang-type].retenue;
+        ttc.checked = root.bas[root.rang-type].ttc;
+        masquer-zero.checked = root.bas[root.rang-type].masquer-zero;
+        montant-en-lettres.checked = root.bas[root.rang-type].montant-en-lettres;
+        visa-client.checked = root.bas[root.rang-type].visa-client;
+        visa-fournisseur.checked = root.bas[root.rang-type].visa-fournisseur;
+        date-reception.checked = root.bas[root.rang-type].date-reception;
+        date-livraison.checked = root.bas[root.rang-type].date-livraison;
+        signataire.checked = root.bas[root.rang-type].signataire;
+    }
+
+    // Recopie les cases dans le bas du type choisi, puis recalcule l'aperçu.
+    function actualiser() {
+        root.bas[root.rang-type] = root.bas-saisi();
+        ImpressionApi.actualiser(root.saisie(), root.bas-saisi(), root.rang-type);
+    }
 
     function saisie() -> MiseEnPageUi {
         return {
@@ -123,6 +188,7 @@ export component PageImpression inherits ScrollView {
             droite: droite.valeur,
             entete: entete.texte,
             pied: pied.texte,
+            style-pied: style-pied.current-index,
         };
     }
 
@@ -134,39 +200,44 @@ export component PageImpression inherits ScrollView {
         droite.valeur = m.droite;
         entete.texte = m.entete;
         pied.texte = m.pied;
-        ImpressionApi.actualiser(root.saisie());
+        style-pied.current-index = m.style-pied;
+        root.afficher-bas();
+        ImpressionApi.actualiser(root.saisie(), root.bas-saisi(), root.rang-type);
     }
 
     init => {
+        root.bas = ImpressionApi.ouvrir-bas();
         root.charger(ImpressionApi.ouvrir());
     }
 
-    VerticalLayout {
+    // Réglages à gauche, qui défilent ; aperçu fixe à droite, visible pendant la
+    // saisie. Les deux colonnes s'échangent de droite à gauche.
+    GridLayout {
         padding: 24px;
-        spacing: 12px;
-        alignment: start;
+        padding-bottom: 0px;
+        spacing: 24px;
 
-        Titre {
-            text: @tr("Impression");
-        }
-
-        Text {
-            horizontal-alignment: Theme.debut;
-            text: @tr("Mise en page de tous les documents imprimés. Un document validé garde la mise en page du jour de sa validation.");
-            color: Theme.texte-secondaire;
-            wrap: word-wrap;
-        }
-
-        // Réglages d'un côté, aperçu de l'autre ; les deux colonnes s'échangent de droite à gauche.
-        GridLayout {
-            spacing: 24px;
+        ScrollView {
+            row: 0;
+            col: Theme.rtl ? 1 : 0;
+            width: 500px;
 
             VerticalLayout {
-                row: 0;
-                col: Theme.rtl ? 1 : 0;
                 width: 480px;
                 spacing: 12px;
+                padding-bottom: 24px;
                 alignment: start;
+
+                Titre {
+                    text: @tr("Impression");
+                }
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("Mise en page de tous les documents imprimés. Un document validé garde la mise en page du jour de sa validation.");
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
 
                 Section {
                     text: @tr("Gabarit");
@@ -175,7 +246,7 @@ export component PageImpression inherits ScrollView {
                 gabarit := ComboBox {
                     model: ImpressionApi.gabarits;
                     selected => {
-                        ImpressionApi.actualiser(root.saisie());
+                        root.actualiser();
                     }
                 }
 
@@ -192,7 +263,7 @@ export component PageImpression inherits ScrollView {
                         col: Theme.rtl ? 1 : 0;
                         libelle: @tr("Haut");
                         modifie => {
-                            ImpressionApi.actualiser(root.saisie());
+                            root.actualiser();
                         }
                     }
 
@@ -201,7 +272,7 @@ export component PageImpression inherits ScrollView {
                         col: Theme.rtl ? 0 : 1;
                         libelle: @tr("Bas");
                         modifie => {
-                            ImpressionApi.actualiser(root.saisie());
+                            root.actualiser();
                         }
                     }
 
@@ -210,7 +281,7 @@ export component PageImpression inherits ScrollView {
                         col: Theme.rtl ? 1 : 0;
                         libelle: @tr("Gauche");
                         modifie => {
-                            ImpressionApi.actualiser(root.saisie());
+                            root.actualiser();
                         }
                     }
 
@@ -219,7 +290,7 @@ export component PageImpression inherits ScrollView {
                         col: Theme.rtl ? 0 : 1;
                         libelle: @tr("Droite");
                         modifie => {
-                            ImpressionApi.actualiser(root.saisie());
+                            root.actualiser();
                         }
                     }
                 }
@@ -236,7 +307,7 @@ export component PageImpression inherits ScrollView {
                     libelle: @tr("En-tête");
                     erreur: ImpressionApi.erreur-entete;
                     modifie => {
-                        ImpressionApi.actualiser(root.saisie());
+                        root.actualiser();
                     }
                 }
 
@@ -244,7 +315,205 @@ export component PageImpression inherits ScrollView {
                     libelle: @tr("Pied de page");
                     erreur: ImpressionApi.erreur-pied;
                     modifie => {
-                        ImpressionApi.actualiser(root.saisie());
+                        root.actualiser();
+                    }
+                }
+
+                VerticalLayout {
+                    spacing: 4px;
+
+                    Text {
+                        horizontal-alignment: Theme.debut;
+                        text: @tr("Style du pied de page");
+                        font-size: 12px;
+                        color: Theme.texte-secondaire;
+                    }
+
+                    style-pied := ComboBox {
+                        model: [@tr("Trait fin gris"), @tr("Trait épais de la couleur principale, mentions en gras")];
+                        selected => {
+                            root.actualiser();
+                        }
+                    }
+                }
+
+                Section {
+                    text: @tr("Bas des documents");
+                }
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("Éléments imprimés sous les lignes, réglés pour chaque type de document. L'aperçu montre un exemple du type choisi.");
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+
+                ComboBox {
+                    model: [@tr("Devis"), @tr("Proforma"), @tr("Bon de commande"), @tr("Bordereau de livraison"), @tr("Facture"), @tr("Avoir")];
+                    current-index: root.rang-type;
+                    selected => {
+                        root.bas[root.rang-type] = root.bas-saisi();
+                        root.rang-type = self.current-index;
+                        root.afficher-bas();
+                        ImpressionApi.actualiser(root.saisie(), root.bas-saisi(), root.rang-type);
+                    }
+                }
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("Lignes de totaux");
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: Theme.texte;
+                }
+
+                // Deux colonnes de cases ; elles s'échangent de droite à gauche.
+                GridLayout {
+                    spacing-horizontal: 16px;
+                    spacing-vertical: 2px;
+
+                    ht := CheckBox {
+                        horizontal-stretch: 1;
+                        row: 0;
+                        col: Theme.rtl ? 1 : 0;
+                        text: @tr("Montant HT");
+                        toggled => {
+                            root.actualiser();
+                        }
+                    }
+
+                    remise := CheckBox {
+                        horizontal-stretch: 1;
+                        row: 0;
+                        col: Theme.rtl ? 0 : 1;
+                        text: @tr("Remise");
+                        toggled => {
+                            root.actualiser();
+                        }
+                    }
+
+                    base-tva := CheckBox {
+                        horizontal-stretch: 1;
+                        row: 1;
+                        col: Theme.rtl ? 1 : 0;
+                        text: @tr("Base TVA");
+                        toggled => {
+                            root.actualiser();
+                        }
+                    }
+
+                    tva := CheckBox {
+                        horizontal-stretch: 1;
+                        row: 1;
+                        col: Theme.rtl ? 0 : 1;
+                        text: @tr("TVA");
+                        toggled => {
+                            root.actualiser();
+                        }
+                    }
+
+                    retenue := CheckBox {
+                        horizontal-stretch: 1;
+                        row: 2;
+                        col: Theme.rtl ? 1 : 0;
+                        text: @tr("Retenue à la source");
+                        toggled => {
+                            root.actualiser();
+                        }
+                    }
+
+                    ttc := CheckBox {
+                        horizontal-stretch: 1;
+                        row: 2;
+                        col: Theme.rtl ? 0 : 1;
+                        text: @tr("Montant TTC");
+                        toggled => {
+                            root.actualiser();
+                        }
+                    }
+
+                    masquer-zero := CheckBox {
+                        horizontal-stretch: 1;
+                        row: 3;
+                        col: 0;
+                        colspan: 2;
+                        text: @tr("Masquer les lignes à zéro");
+                        toggled => {
+                            root.actualiser();
+                        }
+                    }
+                }
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("Autres éléments");
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: Theme.texte;
+                }
+
+                GridLayout {
+                    spacing-horizontal: 16px;
+                    spacing-vertical: 2px;
+
+                    montant-en-lettres := CheckBox {
+                        horizontal-stretch: 1;
+                        row: 0;
+                        col: Theme.rtl ? 1 : 0;
+                        text: @tr("Montant en lettres");
+                        toggled => {
+                            root.actualiser();
+                        }
+                    }
+
+                    signataire := CheckBox {
+                        horizontal-stretch: 1;
+                        row: 0;
+                        col: Theme.rtl ? 0 : 1;
+                        text: @tr("Signataire et nom");
+                        toggled => {
+                            root.actualiser();
+                        }
+                    }
+
+                    visa-client := CheckBox {
+                        horizontal-stretch: 1;
+                        row: 1;
+                        col: Theme.rtl ? 1 : 0;
+                        text: @tr("Visa du client");
+                        toggled => {
+                            root.actualiser();
+                        }
+                    }
+
+                    visa-fournisseur := CheckBox {
+                        horizontal-stretch: 1;
+                        row: 1;
+                        col: Theme.rtl ? 0 : 1;
+                        text: @tr("Visa du fournisseur");
+                        toggled => {
+                            root.actualiser();
+                        }
+                    }
+
+                    date-reception := CheckBox {
+                        horizontal-stretch: 1;
+                        row: 2;
+                        col: Theme.rtl ? 1 : 0;
+                        text: @tr("Date de réception");
+                        toggled => {
+                            root.actualiser();
+                        }
+                    }
+
+                    date-livraison := CheckBox {
+                        horizontal-stretch: 1;
+                        row: 2;
+                        col: Theme.rtl ? 0 : 1;
+                        text: @tr("Date de livraison");
+                        toggled => {
+                            root.actualiser();
+                        }
                     }
                 }
 
@@ -296,13 +565,15 @@ export component PageImpression inherits ScrollView {
                         text: @tr("Enregistrer");
                         primary: true;
                         clicked => {
-                            root.retour = ImpressionApi.enregistrer(root.saisie());
+                            root.bas[root.rang-type] = root.bas-saisi();
+                            root.retour = ImpressionApi.enregistrer(root.saisie(), root.bas);
                         }
                     }
 
                     Bouton {
                         text: @tr("Rétablir la mise en page par défaut");
                         clicked => {
+                            root.bas = ImpressionApi.bas-par-defaut();
                             root.charger(ImpressionApi.par-defaut());
                             root.retour = { ok: true, message: "" };
                         }
@@ -328,31 +599,32 @@ export component PageImpression inherits ScrollView {
                     wrap: word-wrap;
                 }
             }
+        }
 
-            VerticalLayout {
-                row: 0;
-                col: Theme.rtl ? 0 : 1;
-                spacing: 8px;
-                alignment: start;
+        VerticalLayout {
+            row: 0;
+            col: Theme.rtl ? 0 : 1;
+            spacing: 8px;
+            padding-top: 4px;
+            alignment: start;
 
-                Section {
-                    text: @tr("Aperçu sur une facture d'exemple");
-                }
+            Section {
+                text: @tr("Aperçu sur un document d'exemple");
+            }
 
-                // Page A4 (210 x 297) rendue par le moteur d'impression.
-                Rectangle {
-                    width: 420px;
-                    height: 594px;
-                    background: white;
-                    border-width: 1px;
-                    border-color: Theme.bordure;
+            // Page A4 (210 x 297) rendue par le moteur d'impression.
+            Rectangle {
+                width: 420px;
+                height: 594px;
+                background: white;
+                border-width: 1px;
+                border-color: Theme.bordure;
 
-                    Image {
-                        width: parent.width - 2px;
-                        height: parent.height - 2px;
-                        source: ImpressionApi.apercu;
-                        image-fit: contain;
-                    }
+                Image {
+                    width: parent.width - 2px;
+                    height: parent.height - 2px;
+                    source: ImpressionApi.apercu;
+                    image-fit: contain;
                 }
             }
         }

@@ -2411,3 +2411,36 @@ msgstr "alt bilgi, satır {}: kapatılmamış kalın (**)"
 
 msgid "pied de page, ligne {} : italique non fermée (*)"
 msgstr "alt bilgi, satır {}: kapatılmamış italik (*)"
+
+msgid "Style du pied de page"
+msgstr "Alt bilgi stili"
+
+msgid "Trait fin gris"
+msgstr "İnce gri çizgi"
+
+msgid "Trait épais de la couleur principale, mentions en gras"
+msgstr "Ana renkte kalın çizgi, kalın yazılmış bilgiler"
+
+msgid "Bas des documents"
+msgstr "Belgelerin alt kısmı"
+
+msgid "Éléments imprimés sous les lignes, réglés pour chaque type de document. L'aperçu montre un exemple du type choisi."
+msgstr "Satırların altına yazdırılan öğeler, her belge türü için ayarlanır. Önizleme seçilen türden bir örnek gösterir."
+
+msgid "Lignes de totaux"
+msgstr "Toplam satırları"
+
+msgid "Retenue à la source"
+msgstr "Stopaj"
+
+msgid "Masquer les lignes à zéro"
+msgstr "Sıfır satırlarını gizle"
+
+msgid "Autres éléments"
+msgstr "Diğer öğeler"
+
+msgid "Signataire et nom"
+msgstr "İmzalayan ve adı"
+
+msgid "Aperçu sur un document d'exemple"
+msgstr "Örnek belge üzerinde önizleme"

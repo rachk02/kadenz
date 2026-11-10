@@ -2411,3 +2411,36 @@ msgstr "تذييل الصفحة، السطر {}: غامق غير مغلق (**)"
 
 msgid "pied de page, ligne {} : italique non fermée (*)"
 msgstr "تذييل الصفحة، السطر {}: مائل غير مغلق (*)"
+
+msgid "Style du pied de page"
+msgstr "نمط تذييل الصفحة"
+
+msgid "Trait fin gris"
+msgstr "خط رمادي رفيع"
+
+msgid "Trait épais de la couleur principale, mentions en gras"
+msgstr "خط سميك باللون الرئيسي، والبيانات بخط غامق"
+
+msgid "Bas des documents"
+msgstr "أسفل المستندات"
+
+msgid "Éléments imprimés sous les lignes, réglés pour chaque type de document. L'aperçu montre un exemple du type choisi."
+msgstr "العناصر المطبوعة أسفل البنود، تُضبط لكل نوع من المستندات. تعرض المعاينة مثالًا من النوع المختار."
+
+msgid "Lignes de totaux"
+msgstr "بنود المجاميع"
+
+msgid "Retenue à la source"
+msgstr "الاقتطاع من المصدر"
+
+msgid "Masquer les lignes à zéro"
+msgstr "إخفاء البنود الصفرية"
+
+msgid "Autres éléments"
+msgstr "عناصر أخرى"
+
+msgid "Signataire et nom"
+msgstr "الموقّع والاسم"
+
+msgid "Aperçu sur un document d'exemple"
+msgstr "معاينة على مستند نموذجي"

@@ -2411,3 +2411,36 @@ msgstr "pie de página, línea {}: negrita sin cerrar (**)"
 
 msgid "pied de page, ligne {} : italique non fermée (*)"
 msgstr "pie de página, línea {}: cursiva sin cerrar (*)"
+
+msgid "Style du pied de page"
+msgstr "Estilo del pie de página"
+
+msgid "Trait fin gris"
+msgstr "Línea fina gris"
+
+msgid "Trait épais de la couleur principale, mentions en gras"
+msgstr "Línea gruesa del color principal, menciones en negrita"
+
+msgid "Bas des documents"
+msgstr "Parte inferior de los documentos"
+
+msgid "Éléments imprimés sous les lignes, réglés pour chaque type de document. L'aperçu montre un exemple du type choisi."
+msgstr "Elementos impresos debajo de las líneas, configurados para cada tipo de documento. La vista previa muestra un ejemplo del tipo elegido."
+
+msgid "Lignes de totaux"
+msgstr "Líneas de totales"
+
+msgid "Retenue à la source"
+msgstr "Retención en la fuente"
+
+msgid "Masquer les lignes à zéro"
+msgstr "Ocultar las líneas en cero"
+
+msgid "Autres éléments"
+msgstr "Otros elementos"
+
+msgid "Signataire et nom"
+msgstr "Firmante y nombre"
+
+msgid "Aperçu sur un document d'exemple"
+msgstr "Vista previa en un documento de ejemplo"
