@@ -43,8 +43,12 @@ L'intégration continue GitHub (`.github/workflows/ci.yml`) vérifie format, Cli
 
 ```
 .\scripts\release.ps1 -Version 0.1.0 -Simulation   # vérifications et compilation, sans publier
-.\scripts\release.ps1 -Version 0.1.0               # tag vX.Y.Z, push du tag, release GitHub avec kadenz.exe
+.\scripts\release.ps1 -Version 0.1.0               # tag vX.Y.Z, push du tag, release GitHub avec kadenz.exe et l'installateur
 ```
+
+## Installateur Windows
+
+`.\installateur\construire.ps1` produit `target\installateur\KadenzSetup-X.Y.Z.exe` : installation pour tout le poste dans `Program Files\Kadenz`, raccourcis du menu Démarrer et du bureau, désinstallation depuis les paramètres de Windows. La base dans `%APPDATA%\Kadenz` n'est jamais touchée, ni à l'installation ni à la désinstallation. Prérequis : WiX 5 (`dotnet tool install --global wix --version 5.0.1`) et `wix extension add -g WixToolset.BootstrapperApplications.wixext/5.0.1`. Rien n'est signé.
 
 ## Licence
 

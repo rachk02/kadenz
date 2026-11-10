@@ -1,0 +1,26 @@
+<!--
+  Installateur KadenzSetup-<version>.exe (cahier des charges, section 16) :
+  assistant d'installation standard de WiX, dans la langue de Windows quand
+  elle est disponible, qui installe le paquet Kadenz.msi.
+
+  Aucune licence n'est affichée : le dépôt n'en définit pas. Variables passées
+  par construire.ps1 : Version, Msi (chemin de Kadenz.msi), Editeur, Icone.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
+  <Bundle Name="Kadenz"
+          Manufacturer="$(var.Editeur)"
+          Version="$(var.Version)"
+          UpgradeCode="39f20fc0-e088-4792-85bb-29b2cc47d5ef"
+          IconSourceFile="$(var.Icone)">
+    <BootstrapperApplication>
+      <bal:WixStandardBootstrapperApplication Theme="hyperlinkLicense"
+                                              LicenseUrl=""
+                                              SuppressOptionsUI="yes" />
+    </BootstrapperApplication>
+
+    <Chain>
+      <MsiPackage SourceFile="$(var.Msi)" />
+    </Chain>
+  </Bundle>
+</Wix>

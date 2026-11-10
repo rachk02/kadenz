@@ -1,0 +1,57 @@
+<!--
+  Paquet MSI de Kadenz (cahier des charges, section 16), enveloppé par
+  KadenzSetup.wxs dans l'installateur KadenzSetup-<version>.exe.
+
+  Installation pour tout le poste dans Program Files\Kadenz, raccourcis du menu
+  Démarrer et du bureau, désinstallation depuis les paramètres de Windows.
+  La base de données vit dans %APPDATA%\Kadenz : ni l'installation ni la
+  désinstallation n'y touchent, les données de l'entreprise restent en place.
+
+  Variables passées par construire.ps1 : Version, Exe (chemin de kadenz.exe),
+  Editeur, Icone.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="Kadenz"
+           Manufacturer="$(var.Editeur)"
+           Version="$(var.Version)"
+           UpgradeCode="ea90a773-12f9-43ab-9b4d-c708d91d5300"
+           Language="1036"
+           Codepage="1252"
+           Scope="perMachine">
+    <SummaryInformation Description="Kadenz, gestion commerciale" Manufacturer="$(var.Editeur)" />
+
+    <!-- Une nouvelle version remplace l'ancienne ; un retour en arrière est refusé. -->
+    <MajorUpgrade DowngradeErrorMessage="Une version plus récente de Kadenz est déjà installée." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Icon Id="kadenz.ico" SourceFile="$(var.Icone)" />
+    <Property Id="ARPPRODUCTICON" Value="kadenz.ico" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Kadenz" />
+    </StandardDirectory>
+
+    <Feature Id="Kadenz" Title="Kadenz">
+      <!-- Raccourcis portés par le fichier : installés pour tous les comptes du poste. -->
+      <Component Directory="INSTALLFOLDER">
+        <File Id="kadenz.exe" Source="$(var.Exe)" Name="kadenz.exe" KeyPath="yes">
+          <Shortcut Id="RaccourciMenu"
+                    Directory="ProgramMenuFolder"
+                    Name="Kadenz"
+                    Description="Gestion commerciale"
+                    WorkingDirectory="INSTALLFOLDER"
+                    Icon="kadenz.ico"
+                    Advertise="no" />
+          <Shortcut Id="RaccourciBureau"
+                    Directory="DesktopFolder"
+                    Name="Kadenz"
+                    Description="Gestion commerciale"
+                    WorkingDirectory="INSTALLFOLDER"
+                    Icon="kadenz.ico"
+                    Advertise="no" />
+        </File>
+      </Component>
+    </Feature>
+  </Package>
+</Wix>
