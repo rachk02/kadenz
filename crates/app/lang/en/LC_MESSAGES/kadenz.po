@@ -1469,3 +1469,21 @@ msgstr "the amount of a credit note must be positive"
 
 msgid "cette facture a des avoirs validés : annuler d'abord ces avoirs"
 msgstr "this invoice has validated credit notes: cancel those credit notes first"
+
+msgid "Validation, numéro {}"
+msgstr "Validation, number {}"
+
+msgid "Converti en facture"
+msgstr "Converted to invoice"
+
+msgid "Converti en facture {}"
+msgstr "Converted to invoice {}"
+
+msgid "Avoir validé"
+msgstr "Credit note validated"
+
+msgid "Avoir {} validé"
+msgstr "Credit note {} validated"
+
+msgid "{} vers {}"
+msgstr "{} to {}"

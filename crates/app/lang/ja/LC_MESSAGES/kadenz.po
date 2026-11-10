@@ -1469,3 +1469,21 @@ msgstr "クレジットノートの金額は正の値でなければなりませ
 
 msgid "cette facture a des avoirs validés : annuler d'abord ces avoirs"
 msgstr "この請求書には確定済みのクレジットノートがあります。先にそれらを取り消してください"
+
+msgid "Validation, numéro {}"
+msgstr "確定、番号 {}"
+
+msgid "Converti en facture"
+msgstr "請求書に変換"
+
+msgid "Converti en facture {}"
+msgstr "請求書 {} に変換"
+
+msgid "Avoir validé"
+msgstr "クレジットノートを確定"
+
+msgid "Avoir {} validé"
+msgstr "クレジットノート {} を確定"
+
+msgid "{} vers {}"
+msgstr "{} → {}"

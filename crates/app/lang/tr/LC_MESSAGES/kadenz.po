@@ -1469,3 +1469,21 @@ msgstr "iade faturasının tutarı pozitif olmalıdır"
 
 msgid "cette facture a des avoirs validés : annuler d'abord ces avoirs"
 msgstr "bu faturanın onaylanmış iade faturaları var: önce bu iade faturalarını iptal edin"
+
+msgid "Validation, numéro {}"
+msgstr "Onay, numara {}"
+
+msgid "Converti en facture"
+msgstr "Faturaya dönüştürüldü"
+
+msgid "Converti en facture {}"
+msgstr "Faturaya dönüştürüldü: {}"
+
+msgid "Avoir validé"
+msgstr "İade faturası onaylandı"
+
+msgid "Avoir {} validé"
+msgstr "İade faturası {} onaylandı"
+
+msgid "{} vers {}"
+msgstr "{} → {}"

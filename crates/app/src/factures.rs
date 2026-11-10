@@ -614,7 +614,17 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
             .map(|e| EvenementUi {
                 date: horodatage_en_texte(&e.date_action).into(),
                 utilisateur: e.utilisateur.into(),
-                libelle: tr(&e.libelle).into(),
+                // Libellé fixe traduit, puis ses valeurs : un numéro passe tel quel
+                // (aucun msgid), un statut est traduit.
+                libelle: {
+                    let valeurs: Vec<String> = e.valeurs.iter().map(|v| tr(v)).collect();
+                    let arguments: Vec<&dyn std::fmt::Display> = valeurs
+                        .iter()
+                        .map(|v| v as &dyn std::fmt::Display)
+                        .collect();
+                    trf(&e.modele, &arguments)
+                }
+                .into(),
             })
             .collect::<Vec<_>>(),
     )));

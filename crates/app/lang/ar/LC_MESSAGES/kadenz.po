@@ -1469,3 +1469,21 @@ msgstr "يجب أن يكون مبلغ الإشعار الدائن موجبًا"
 
 msgid "cette facture a des avoirs validés : annuler d'abord ces avoirs"
 msgstr "لهذه الفاتورة إشعارات دائنة معتمدة: ألغِ هذه الإشعارات أولًا"
+
+msgid "Validation, numéro {}"
+msgstr "الاعتماد، الرقم {}"
+
+msgid "Converti en facture"
+msgstr "حُوِّل إلى فاتورة"
+
+msgid "Converti en facture {}"
+msgstr "حُوِّل إلى الفاتورة {}"
+
+msgid "Avoir validé"
+msgstr "اعتُمد إشعار دائن"
+
+msgid "Avoir {} validé"
+msgstr "اعتُمد الإشعار الدائن {}"
+
+msgid "{} vers {}"
+msgstr "{} إلى {}"

@@ -1469,3 +1469,21 @@ msgstr "贷项通知单金额必须为正数"
 
 msgid "cette facture a des avoirs validés : annuler d'abord ces avoirs"
 msgstr "此发票有已确认的贷项通知单：请先作废这些贷项通知单"
+
+msgid "Validation, numéro {}"
+msgstr "确认，编号 {}"
+
+msgid "Converti en facture"
+msgstr "已转换为发票"
+
+msgid "Converti en facture {}"
+msgstr "已转换为发票 {}"
+
+msgid "Avoir validé"
+msgstr "贷项通知单已确认"
+
+msgid "Avoir {} validé"
+msgstr "贷项通知单 {} 已确认"
+
+msgid "{} vers {}"
+msgstr "{} → {}"
