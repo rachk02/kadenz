@@ -2150,3 +2150,120 @@ msgstr "تبقى البيانات على هذا الجهاز، في قاعدة �
 
 msgid "L'assistant qui suit crée votre entreprise et le compte administrateur."
 msgstr "يُنشئ المعالج التالي شركتك وحساب المسؤول."
+
+msgid "4 dernières factures"
+msgstr "آخر 4 فواتير"
+
+msgid "Achats"
+msgstr "المشتريات"
+
+msgid "Aucun règlement sur la période."
+msgstr "لا توجد مدفوعات في هذه الفترة."
+
+msgid "Aucune facture sur la période."
+msgstr "لا توجد فواتير في هذه الفترة."
+
+msgid "CA par mode de paiement"
+msgstr "رقم الأعمال حسب طريقة الدفع"
+
+msgid "CA par état de paiement"
+msgstr "رقم الأعمال حسب حالة الدفع"
+
+msgid "Chiffre d'affaires HT"
+msgstr "رقم الأعمال دون الضرائب"
+
+msgid "Chiffre d'affaires TTC"
+msgstr "رقم الأعمال شامل الضرائب"
+
+msgid "Votre compte n'a pas le droit de consulter le tableau de bord."
+msgstr "لا يملك حسابك صلاحية الاطلاع على لوحة المتابعة."
+
+msgid "FCFA réglés"
+msgstr "فرنك FCFA مدفوعة"
+
+msgid "La date de début est après la date de fin : période non appliquée."
+msgstr "تاريخ البداية بعد تاريخ النهاية: لم تُطبَّق الفترة."
+
+msgid "Payé aux fournisseurs"
+msgstr "المدفوع للموردين"
+
+msgid "Plus haut : {}"
+msgstr "الأعلى: {}"
+
+msgid "Période du {} au {}."
+msgstr "الفترة من {} إلى {}."
+
+msgid "Reste dû aux fournisseurs"
+msgstr "المتبقي المستحق للموردين"
+
+msgid "Tendance des ventes"
+msgstr "اتجاه المبيعات"
+
+msgid "Top 5 clients"
+msgstr "أفضل 5 عملاء"
+
+msgid "Total des bons de commande"
+msgstr "إجمالي أوامر الشراء"
+
+msgid "Total impayé"
+msgstr "إجمالي غير المدفوع"
+
+msgid "Total payé"
+msgstr "إجمالي المدفوع"
+
+msgid "Toutes les années"
+msgstr "كل السنوات"
+
+msgid "Ventes"
+msgstr "المبيعات"
+
+msgid "payé"
+msgstr "مدفوع"
+
+msgid "{} : {}"
+msgstr "{}: {}"
+
+msgid "Version"
+msgstr "الإصدار"
+
+msgid "Licence"
+msgstr "الترخيص"
+
+msgid "Système"
+msgstr "النظام"
+
+msgid "Windows, mono-poste."
+msgstr "Windows، جهاز واحد."
+
+msgid "Langues"
+msgstr "اللغات"
+
+msgid "Données de ce poste"
+msgstr "بيانات هذا الجهاز"
+
+msgid "Fichier de la base"
+msgstr "ملف قاعدة البيانات"
+
+msgid "Version du schéma"
+msgstr "إصدار المخطط"
+
+msgid "Les données restent sur ce poste, dans une base locale SQLite."
+msgstr "تبقى البيانات على هذا الجهاز، في قاعدة بيانات SQLite محلية."
+
+msgid "Interface"
+msgstr "الواجهة"
+
+msgid "Polices"
+msgstr "الخطوط"
+
+msgid "Base de données"
+msgstr "قاعدة البيانات"
+
+msgid "Slint 1.18, sous licence Slint Royalty-free 2.0."
+msgstr "Slint 1.18، بترخيص Slint Royalty-free 2.0."
+
+msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
+msgstr "Inter وManrope، بترخيص SIL Open Font License 1.1."
+
+msgid "SQLite, dans le domaine public."
+msgstr "SQLite، ضمن الملك العام."

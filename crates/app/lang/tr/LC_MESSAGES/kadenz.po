@@ -2150,3 +2150,120 @@ msgstr "Veriler bu bilgisayarda, yerel bir veritabanında kalır. Herkes kendi h
 
 msgid "L'assistant qui suit crée votre entreprise et le compte administrateur."
 msgstr "Ardından gelen sihirbaz şirketinizi ve yönetici hesabını oluşturur."
+
+msgid "4 dernières factures"
+msgstr "Son 4 fatura"
+
+msgid "Achats"
+msgstr "Satın almalar"
+
+msgid "Aucun règlement sur la période."
+msgstr "Bu dönemde ödeme yok."
+
+msgid "Aucune facture sur la période."
+msgstr "Bu dönemde fatura yok."
+
+msgid "CA par mode de paiement"
+msgstr "Ödeme yöntemine göre ciro"
+
+msgid "CA par état de paiement"
+msgstr "Ödeme durumuna göre ciro"
+
+msgid "Chiffre d'affaires HT"
+msgstr "Vergiler hariç ciro"
+
+msgid "Chiffre d'affaires TTC"
+msgstr "Vergiler dahil ciro"
+
+msgid "Votre compte n'a pas le droit de consulter le tableau de bord."
+msgstr "Hesabınızın gösterge panelini görüntüleme yetkisi yok."
+
+msgid "FCFA réglés"
+msgstr "FCFA ödendi"
+
+msgid "La date de début est après la date de fin : période non appliquée."
+msgstr "Başlangıç tarihi bitiş tarihinden sonra: dönem uygulanmadı."
+
+msgid "Payé aux fournisseurs"
+msgstr "Tedarikçilere ödenen"
+
+msgid "Plus haut : {}"
+msgstr "En yüksek: {}"
+
+msgid "Période du {} au {}."
+msgstr "Dönem: {} - {}."
+
+msgid "Reste dû aux fournisseurs"
+msgstr "Tedarikçilere kalan borç"
+
+msgid "Tendance des ventes"
+msgstr "Satış eğilimi"
+
+msgid "Top 5 clients"
+msgstr "En iyi 5 müşteri"
+
+msgid "Total des bons de commande"
+msgstr "Sipariş formları toplamı"
+
+msgid "Total impayé"
+msgstr "Ödenmemiş toplam"
+
+msgid "Total payé"
+msgstr "Ödenen toplam"
+
+msgid "Toutes les années"
+msgstr "Tüm yıllar"
+
+msgid "Ventes"
+msgstr "Satışlar"
+
+msgid "payé"
+msgstr "ödendi"
+
+msgid "{} : {}"
+msgstr "{}: {}"
+
+msgid "Version"
+msgstr "Sürüm"
+
+msgid "Licence"
+msgstr "Lisans"
+
+msgid "Système"
+msgstr "Sistem"
+
+msgid "Windows, mono-poste."
+msgstr "Windows, tek bilgisayar."
+
+msgid "Langues"
+msgstr "Diller"
+
+msgid "Données de ce poste"
+msgstr "Bu bilgisayardaki veriler"
+
+msgid "Fichier de la base"
+msgstr "Veritabanı dosyası"
+
+msgid "Version du schéma"
+msgstr "Şema sürümü"
+
+msgid "Les données restent sur ce poste, dans une base locale SQLite."
+msgstr "Veriler bu bilgisayarda, yerel bir SQLite veritabanında kalır."
+
+msgid "Interface"
+msgstr "Arayüz"
+
+msgid "Polices"
+msgstr "Yazı tipleri"
+
+msgid "Base de données"
+msgstr "Veritabanı"
+
+msgid "Slint 1.18, sous licence Slint Royalty-free 2.0."
+msgstr "Slint 1.18, Slint Royalty-free 2.0 lisansıyla."
+
+msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
+msgstr "Inter ve Manrope, SIL Open Font License 1.1 lisansıyla."
+
+msgid "SQLite, dans le domaine public."
+msgstr "SQLite, kamu malı."

@@ -2150,3 +2150,120 @@ msgstr "データはこのパソコンのローカルデータベースに保存
 
 msgid "L'assistant qui suit crée votre entreprise et le compte administrateur."
 msgstr "続くウィザードで会社と管理者アカウントを作成します。"
+
+msgid "4 dernières factures"
+msgstr "最新の請求書 4 件"
+
+msgid "Achats"
+msgstr "仕入"
+
+msgid "Aucun règlement sur la période."
+msgstr "この期間の入出金はありません。"
+
+msgid "Aucune facture sur la période."
+msgstr "この期間の請求書はありません。"
+
+msgid "CA par mode de paiement"
+msgstr "支払方法別の売上"
+
+msgid "CA par état de paiement"
+msgstr "支払状況別の売上"
+
+msgid "Chiffre d'affaires HT"
+msgstr "税抜売上"
+
+msgid "Chiffre d'affaires TTC"
+msgstr "税込売上"
+
+msgid "Votre compte n'a pas le droit de consulter le tableau de bord."
+msgstr "このアカウントにはダッシュボードを表示する権限がありません。"
+
+msgid "FCFA réglés"
+msgstr "FCFA 入金済み"
+
+msgid "La date de début est après la date de fin : période non appliquée."
+msgstr "開始日が終了日より後です。期間は適用されません。"
+
+msgid "Payé aux fournisseurs"
+msgstr "仕入先への支払済み"
+
+msgid "Plus haut : {}"
+msgstr "最高：{}"
+
+msgid "Période du {} au {}."
+msgstr "期間：{} から {} まで。"
+
+msgid "Reste dû aux fournisseurs"
+msgstr "仕入先への未払残高"
+
+msgid "Tendance des ventes"
+msgstr "売上の推移"
+
+msgid "Top 5 clients"
+msgstr "上位 5 顧客"
+
+msgid "Total des bons de commande"
+msgstr "注文書の合計"
+
+msgid "Total impayé"
+msgstr "未払合計"
+
+msgid "Total payé"
+msgstr "支払済み合計"
+
+msgid "Toutes les années"
+msgstr "すべての年"
+
+msgid "Ventes"
+msgstr "売上"
+
+msgid "payé"
+msgstr "支払済み"
+
+msgid "{} : {}"
+msgstr "{}：{}"
+
+msgid "Version"
+msgstr "バージョン"
+
+msgid "Licence"
+msgstr "ライセンス"
+
+msgid "Système"
+msgstr "システム"
+
+msgid "Windows, mono-poste."
+msgstr "Windows、単一端末。"
+
+msgid "Langues"
+msgstr "言語"
+
+msgid "Données de ce poste"
+msgstr "このパソコンのデータ"
+
+msgid "Fichier de la base"
+msgstr "データベースファイル"
+
+msgid "Version du schéma"
+msgstr "スキーマのバージョン"
+
+msgid "Les données restent sur ce poste, dans une base locale SQLite."
+msgstr "データはこのパソコンのローカル SQLite データベースに保存されます。"
+
+msgid "Interface"
+msgstr "インターフェース"
+
+msgid "Polices"
+msgstr "フォント"
+
+msgid "Base de données"
+msgstr "データベース"
+
+msgid "Slint 1.18, sous licence Slint Royalty-free 2.0."
+msgstr "Slint 1.18（Slint Royalty-free 2.0 ライセンス）。"
+
+msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
+msgstr "Inter と Manrope（SIL Open Font License 1.1）。"
+
+msgid "SQLite, dans le domaine public."
+msgstr "SQLite（パブリックドメイン）。"

@@ -2,6 +2,8 @@
 
 Logiciel desktop Windows de gestion commerciale (devis, proforma, bons de commande, bordereaux de livraison, factures, paiements), mono-poste, installé indépendamment chez chaque entreprise cliente.
 
+[![Made with Slint](https://raw.githubusercontent.com/slint-ui/slint/master/logo/MadeWithSlint-logo-whitebg.png)](https://slint.dev)
+
 La spécification de référence est le [cahier des charges](docs/cahier-des-charges.md). Les sources d'origine (ancien cahier, captures de l'outil Excel) contiennent des données d'entreprise : elles sont conservées hors dépôt, dans `docs_of_interest/` (ignoré par Git).
 
 ## Technologies
@@ -52,4 +54,4 @@ L'intégration continue GitHub (`.github/workflows/ci.yml`) vérifie format, Cli
 
 ## Licence
 
-Logiciel propriétaire, tous droits réservés. Slint est utilisé sous la licence Slint Royalty-free 2.0, qui impose l'affichage du composant `AboutSlint` dans l'écran "À propos" de l'application.
+Logiciel propriétaire, tous droits réservés. Slint est utilisé sous la licence Slint Royalty-free 2.0. L'attribution qu'elle exige est faite par le badge « Made with Slint » en tête de cette page publique, d'où se téléchargent les versions (section 2, option (b) de la licence) ; le badge doit donc y rester. L'écran « À propos » de l'application cite Slint et sa licence parmi les composants tiers.

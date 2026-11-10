@@ -2150,3 +2150,120 @@ msgstr "Los datos permanecen en este equipo, en una base local. Cada persona ini
 
 msgid "L'assistant qui suit crée votre entreprise et le compte administrateur."
 msgstr "El asistente que sigue crea su empresa y la cuenta de administrador."
+
+msgid "4 dernières factures"
+msgstr "Últimas 4 facturas"
+
+msgid "Achats"
+msgstr "Compras"
+
+msgid "Aucun règlement sur la période."
+msgstr "Ningún pago en este periodo."
+
+msgid "Aucune facture sur la période."
+msgstr "Ninguna factura en este periodo."
+
+msgid "CA par mode de paiement"
+msgstr "Facturación por forma de pago"
+
+msgid "CA par état de paiement"
+msgstr "Facturación por estado de pago"
+
+msgid "Chiffre d'affaires HT"
+msgstr "Facturación sin impuestos"
+
+msgid "Chiffre d'affaires TTC"
+msgstr "Facturación con impuestos"
+
+msgid "Votre compte n'a pas le droit de consulter le tableau de bord."
+msgstr "Su cuenta no tiene permiso para consultar el panel."
+
+msgid "FCFA réglés"
+msgstr "FCFA pagados"
+
+msgid "La date de début est après la date de fin : période non appliquée."
+msgstr "La fecha de inicio es posterior a la fecha de fin: periodo no aplicado."
+
+msgid "Payé aux fournisseurs"
+msgstr "Pagado a proveedores"
+
+msgid "Plus haut : {}"
+msgstr "Máximo: {}"
+
+msgid "Période du {} au {}."
+msgstr "Periodo del {} al {}."
+
+msgid "Reste dû aux fournisseurs"
+msgstr "Pendiente con proveedores"
+
+msgid "Tendance des ventes"
+msgstr "Tendencia de ventas"
+
+msgid "Top 5 clients"
+msgstr "Los 5 mejores clientes"
+
+msgid "Total des bons de commande"
+msgstr "Total de órdenes de compra"
+
+msgid "Total impayé"
+msgstr "Total impagado"
+
+msgid "Total payé"
+msgstr "Total pagado"
+
+msgid "Toutes les années"
+msgstr "Todos los años"
+
+msgid "Ventes"
+msgstr "Ventas"
+
+msgid "payé"
+msgstr "pagado"
+
+msgid "{} : {}"
+msgstr "{}: {}"
+
+msgid "Version"
+msgstr "Versión"
+
+msgid "Licence"
+msgstr "Licencia"
+
+msgid "Système"
+msgstr "Sistema"
+
+msgid "Windows, mono-poste."
+msgstr "Windows, un solo puesto."
+
+msgid "Langues"
+msgstr "Idiomas"
+
+msgid "Données de ce poste"
+msgstr "Datos de este equipo"
+
+msgid "Fichier de la base"
+msgstr "Archivo de la base"
+
+msgid "Version du schéma"
+msgstr "Versión del esquema"
+
+msgid "Les données restent sur ce poste, dans une base locale SQLite."
+msgstr "Los datos permanecen en este equipo, en una base SQLite local."
+
+msgid "Interface"
+msgstr "Interfaz"
+
+msgid "Polices"
+msgstr "Fuentes"
+
+msgid "Base de données"
+msgstr "Base de datos"
+
+msgid "Slint 1.18, sous licence Slint Royalty-free 2.0."
+msgstr "Slint 1.18, bajo licencia Slint Royalty-free 2.0."
+
+msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
+msgstr "Inter y Manrope, bajo licencia SIL Open Font License 1.1."
+
+msgid "SQLite, dans le domaine public."
+msgstr "SQLite, de dominio público."

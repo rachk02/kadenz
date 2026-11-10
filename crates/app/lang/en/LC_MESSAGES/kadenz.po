@@ -2150,3 +2150,120 @@ msgstr "Data stays on this computer, in a local database. Everyone signs in with
 
 msgid "L'assistant qui suit crée votre entreprise et le compte administrateur."
 msgstr "The following wizard sets up your company and the administrator account."
+
+msgid "4 dernières factures"
+msgstr "Last 4 invoices"
+
+msgid "Achats"
+msgstr "Purchases"
+
+msgid "Aucun règlement sur la période."
+msgstr "No payments in this period."
+
+msgid "Aucune facture sur la période."
+msgstr "No invoices in this period."
+
+msgid "CA par mode de paiement"
+msgstr "Revenue by payment method"
+
+msgid "CA par état de paiement"
+msgstr "Revenue by payment status"
+
+msgid "Chiffre d'affaires HT"
+msgstr "Revenue excl. tax"
+
+msgid "Chiffre d'affaires TTC"
+msgstr "Revenue incl. tax"
+
+msgid "Votre compte n'a pas le droit de consulter le tableau de bord."
+msgstr "Your account is not allowed to view the dashboard."
+
+msgid "FCFA réglés"
+msgstr "FCFA paid"
+
+msgid "La date de début est après la date de fin : période non appliquée."
+msgstr "The start date is after the end date: period not applied."
+
+msgid "Payé aux fournisseurs"
+msgstr "Paid to suppliers"
+
+msgid "Plus haut : {}"
+msgstr "Highest: {}"
+
+msgid "Période du {} au {}."
+msgstr "Period from {} to {}."
+
+msgid "Reste dû aux fournisseurs"
+msgstr "Still owed to suppliers"
+
+msgid "Tendance des ventes"
+msgstr "Sales trend"
+
+msgid "Top 5 clients"
+msgstr "Top 5 customers"
+
+msgid "Total des bons de commande"
+msgstr "Total purchase orders"
+
+msgid "Total impayé"
+msgstr "Total unpaid"
+
+msgid "Total payé"
+msgstr "Total paid"
+
+msgid "Toutes les années"
+msgstr "All years"
+
+msgid "Ventes"
+msgstr "Sales"
+
+msgid "payé"
+msgstr "paid"
+
+msgid "{} : {}"
+msgstr "{}: {}"
+
+msgid "Version"
+msgstr "Version"
+
+msgid "Licence"
+msgstr "License"
+
+msgid "Système"
+msgstr "System"
+
+msgid "Windows, mono-poste."
+msgstr "Windows, single workstation."
+
+msgid "Langues"
+msgstr "Languages"
+
+msgid "Données de ce poste"
+msgstr "Data on this computer"
+
+msgid "Fichier de la base"
+msgstr "Database file"
+
+msgid "Version du schéma"
+msgstr "Schema version"
+
+msgid "Les données restent sur ce poste, dans une base locale SQLite."
+msgstr "Data stays on this computer, in a local SQLite database."
+
+msgid "Interface"
+msgstr "Interface"
+
+msgid "Polices"
+msgstr "Fonts"
+
+msgid "Base de données"
+msgstr "Database"
+
+msgid "Slint 1.18, sous licence Slint Royalty-free 2.0."
+msgstr "Slint 1.18, under the Slint Royalty-free 2.0 license."
+
+msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
+msgstr "Inter and Manrope, under the SIL Open Font License 1.1."
+
+msgid "SQLite, dans le domaine public."
+msgstr "SQLite, in the public domain."

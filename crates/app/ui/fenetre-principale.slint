@@ -1,4 +1,4 @@
-import { AboutSlint, ComboBox, ScrollView } from "std-widgets.slint";
+import { ComboBox, ScrollView } from "std-widgets.slint";
 import { Bouton, Champ, Droits, ElementNavigation, MessageErreur, Rangee, Section, Theme, Titre } from "composants.slint";
 import { EcranAssistant, DonneesAssistant } from "assistant.slint";
 import { EcranConnexion } from "connexion.slint";
@@ -9,8 +9,9 @@ import { PageUtilisateurs, UtilisateursApi } from "utilisateurs.slint";
 import { ImportApi, PanneauImport } from "import.slint";
 import { FacturesApi, PageFactures } from "factures.slint";
 import { PageReglements, PageRelances, PageSuiviFournisseurs, PaiementsApi, TotalUi } from "paiements.slint";
+import { PageTableauDeBord, PilotageApi } from "pilotage.slint";
 
-export { DonneesAssistant, Droits, Theme, EntrepriseApi, FacturesApi, ImportApi, PaiementsApi, ParametresApi, ProduitsApi, TiersApi, UtilisateursApi }
+export { DonneesAssistant, Droits, Theme, EntrepriseApi, FacturesApi, ImportApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, presentation, assistant, connexion, application }
@@ -156,6 +157,55 @@ component PageMonCompte inherits VerticalLayout {
     Rectangle { }
 }
 
+// Carte de la page À propos : titre de section, puis ses lignes.
+component CarteAPropos inherits Rectangle {
+    in property <string> titre;
+
+    border-width: 1px;
+    border-color: Theme.bordure;
+    border-radius: 4px;
+
+    VerticalLayout {
+        padding: 20px;
+        spacing: 10px;
+        alignment: start;
+
+        Section {
+            text: root.titre;
+        }
+
+        @children
+    }
+}
+
+// Ligne libellé / valeur ; de droite à gauche, le libellé passe à droite.
+component LigneAPropos inherits GridLayout {
+    in property <string> libelle;
+    in property <string> valeur;
+
+    spacing: 12px;
+
+    Text {
+        row: 0;
+        col: Theme.rtl ? 1 : 0;
+        width: 150px;
+        horizontal-alignment: Theme.debut;
+        text: root.libelle;
+        font-size: 13px;
+        color: Theme.texte-secondaire;
+    }
+
+    Text {
+        row: 0;
+        col: Theme.rtl ? 0 : 1;
+        horizontal-alignment: Theme.debut;
+        text: root.valeur;
+        font-size: 13px;
+        color: Theme.texte;
+        wrap: word-wrap;
+    }
+}
+
 export component FenetrePrincipale inherits Window {
     in-out property <Ecran> ecran: Ecran.demarrage-impossible;
     // Présentation revue depuis « À propos » : elle ramène à l'application.
@@ -164,6 +214,9 @@ export component FenetrePrincipale inherits Window {
     in property <string> etat-base;
     in property <string> nom-entreprise;
     in property <string> version-logiciel;
+    // Page À propos : fichier de la base ouverte et version de son schéma.
+    in property <string> chemin-base;
+    in property <string> schema-base;
     in property <string> utilisateur-nom;
     in property <string> utilisateur-identifiant;
     in property <string> utilisateur-role;
@@ -185,7 +238,7 @@ export component FenetrePrincipale inherits Window {
     in property <[Page]> menu;
     in-out property <Page> page: Page.tableau-de-bord;
 
-    property <bool> page-en-construction: root.page != Page.devis && root.page != Page.proforma && root.page != Page.bons-commande && root.page != Page.livraisons && root.page != Page.factures && root.page != Page.avoirs && root.page != Page.reglements && root.page != Page.suivi-fournisseurs && root.page != Page.relances && root.page != Page.tiers && root.page != Page.produits && root.page != Page.entreprise && root.page != Page.parametres && root.page != Page.utilisateurs && root.page != Page.mon-compte && root.page != Page.a-propos;
+    property <bool> page-en-construction: root.page != Page.tableau-de-bord && root.page != Page.devis && root.page != Page.proforma && root.page != Page.bons-commande && root.page != Page.livraisons && root.page != Page.factures && root.page != Page.avoirs && root.page != Page.reglements && root.page != Page.suivi-fournisseurs && root.page != Page.relances && root.page != Page.tiers && root.page != Page.produits && root.page != Page.entreprise && root.page != Page.parametres && root.page != Page.utilisateurs && root.page != Page.mon-compte && root.page != Page.a-propos;
 
     // Libellé de chaque page, dans la langue choisie : calculé ici et non stocké,
     // pour suivre un changement de langue sans reconstruire le menu.
@@ -369,6 +422,8 @@ export component FenetrePrincipale inherits Window {
 
             // Un écran commun pour les documents de vente ; le type est le rang dans
             // TypeDocument::TOUS (0 devis, 1 proforma, 4 facture, 5 avoir).
+            if root.page == Page.tableau-de-bord: PageTableauDeBord { }
+
             if root.page == Page.devis: PageFactures {
                 type-document: 0;
             }
@@ -495,89 +550,84 @@ export component FenetrePrincipale inherits Window {
                 }
 
                 // Grille et non Rangee : les textes à la ligne y gardent une hauteur stable.
-                // Les deux colonnes s'échangent de droite à gauche.
+                // Les colonnes s'échangent de droite à gauche.
                 GridLayout {
                     spacing: 20px;
 
-                    Rectangle {
+                    CarteAPropos {
                         row: 0;
                         col: Theme.rtl ? 1 : 0;
-                        border-width: 1px;
-                        border-color: Theme.bordure;
-                        border-radius: 4px;
+                        titre: @tr("Logiciel");
 
-                        VerticalLayout {
-                            padding: 20px;
-                            spacing: 10px;
-                            alignment: start;
+                        LigneAPropos {
+                            libelle: @tr("Version");
+                            valeur: root.version-logiciel;
+                        }
 
-                            Section {
-                                text: @tr("Logiciel");
-                            }
+                        LigneAPropos {
+                            libelle: @tr("Licence");
+                            valeur: @tr("Logiciel propriétaire, tous droits réservés.");
+                        }
 
-                            Text {
-                                horizontal-alignment: Theme.debut;
-                                text: @tr("Version {}", root.version-logiciel);
-                                color: Theme.texte;
-                                font-weight: 600;
-                            }
+                        LigneAPropos {
+                            libelle: @tr("Système");
+                            valeur: @tr("Windows, mono-poste.");
+                        }
 
-                            Text {
-                                horizontal-alignment: Theme.debut;
-                                text: @tr("Logiciel propriétaire, tous droits réservés.");
-                                color: Theme.texte-secondaire;
-                                wrap: word-wrap;
-                            }
-
-                            Text {
-                                horizontal-alignment: Theme.debut;
-                                text: @tr("Gestion commerciale mono-poste pour Windows : les données restent sur ce poste.");
-                                color: Theme.texte-secondaire;
-                                wrap: word-wrap;
-                            }
+                        LigneAPropos {
+                            libelle: @tr("Langues");
+                            valeur: "Français, English, Español, Türkçe, العربية, 日本語, 中文";
                         }
                     }
 
-                    Rectangle {
+                    CarteAPropos {
                         row: 0;
                         col: Theme.rtl ? 0 : 1;
-                        border-width: 1px;
-                        border-color: Theme.bordure;
-                        border-radius: 4px;
+                        titre: @tr("Données de ce poste");
 
-                        VerticalLayout {
-                            padding: 20px;
-                            spacing: 10px;
-                            alignment: start;
+                        LigneAPropos {
+                            libelle: @tr("Entreprise");
+                            valeur: root.nom-entreprise;
+                        }
 
-                            Section {
-                                text: @tr("Composants tiers");
-                            }
+                        LigneAPropos {
+                            libelle: @tr("Fichier de la base");
+                            valeur: root.chemin-base;
+                        }
 
-                            Text {
-                                horizontal-alignment: Theme.debut;
-                                text: @tr("Interface : Slint, sous licence Slint Royalty-free 2.0.");
-                                color: Theme.texte-secondaire;
-                                wrap: word-wrap;
-                            }
+                        LigneAPropos {
+                            libelle: @tr("Version du schéma");
+                            valeur: root.schema-base;
+                        }
 
-                            Text {
-                                horizontal-alignment: Theme.debut;
-                                text: @tr("Polices : Inter et Manrope, sous licence SIL Open Font License 1.1.");
-                                color: Theme.texte-secondaire;
-                                wrap: word-wrap;
-                            }
+                        Text {
+                            horizontal-alignment: Theme.debut;
+                            text: @tr("Les données restent sur ce poste, dans une base locale SQLite.");
+                            font-size: 12px;
+                            color: Theme.texte-secondaire;
+                            wrap: word-wrap;
+                        }
+                    }
 
-                            Text {
-                                horizontal-alignment: Theme.debut;
-                                text: @tr("Base de données : SQLite, dans le domaine public.");
-                                color: Theme.texte-secondaire;
-                                wrap: word-wrap;
-                            }
+                    CarteAPropos {
+                        row: 1;
+                        col: 0;
+                        colspan: 2;
+                        titre: @tr("Composants tiers");
 
-                            AboutSlint {
-                                max-height: 110px;
-                            }
+                        LigneAPropos {
+                            libelle: @tr("Interface");
+                            valeur: @tr("Slint 1.18, sous licence Slint Royalty-free 2.0.");
+                        }
+
+                        LigneAPropos {
+                            libelle: @tr("Polices");
+                            valeur: @tr("Inter et Manrope, sous licence SIL Open Font License 1.1.");
+                        }
+
+                        LigneAPropos {
+                            libelle: @tr("Base de données");
+                            valeur: @tr("SQLite, dans le domaine public.");
                         }
                     }
                 }

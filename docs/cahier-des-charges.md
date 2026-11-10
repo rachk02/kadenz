@@ -23,6 +23,7 @@
 | 2.17 | 2026-11-10 | Décisions J7 : date d'un règlement, annulation refusée tant qu'il reste des règlements, suppression au droit « Saisir un règlement », factures sans échéance hors relances, relances sur factures validées ou envoyées, PDF des registres dès J7, lettre de relance proposée puis validée par l'utilisateur, trois entrées de menu, registre avec sous-totaux par mode (sections 8 et 10.1) |
 | 2.18 | 2026-11-10 | J7 livré : règlements des factures et des bons de commande, registre des règlements, suivi fournisseurs, relances et lettre de relance, PDF du registre et de la liste des relances (section 19, périmètre de J7) ; décisions de l'utilisateur : installateur Windows avancé avant J8, pages de présentation au premier lancement (sections 4.1, 16 et 19) |
 | 2.19 | 2026-11-10 | J8 lancé : règles de calcul des indicateurs du tableau de bord et graphiques dessinés par chemins Slint, choix de mise en œuvre à confirmer par l'utilisateur (section 9) |
+| 2.20 | 2026-11-10 | Attribution de Slint par le badge « Made with Slint » du README du dépôt public à la place du composant AboutSlint, retiré de l'écran « À propos » à la demande de l'utilisateur (section 14) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -434,7 +435,7 @@ Livré au jalon J4 : depuis la fiche d'une facture, « Aperçu PDF » pour un br
 
 ## 14. Licences (spécifié)
 
-- Slint est utilisé sous la licence Slint Royalty-free 2.0, gratuite pour une application desktop à condition d'afficher le composant `AboutSlint` dans un écran ou dialogue "À propos" accessible depuis le menu principal (ou, à défaut, d'afficher le badge Slint sur la page web de téléchargement). Une licence commerciale payante existe si cette attribution n'est pas souhaitée.
+- Slint est utilisé sous la licence Slint Royalty-free 2.0, gratuite pour une application desktop à condition d'afficher le composant `AboutSlint` dans un écran ou dialogue "À propos" accessible depuis le menu principal, ou d'afficher le badge Slint sur une page web publique, de préférence celle du téléchargement. Retenu (décision de l'utilisateur du 2026-11-10, qui a fait retirer `AboutSlint` de l'écran « À propos ») : badge « Made with Slint » en tête du README du dépôt public, d'où se téléchargent les versions ; l'écran « À propos » cite Slint et sa licence parmi les composants tiers. Cette attribution ne vaut que tant que le dépôt reste public : s'il devient privé, il faut remettre `AboutSlint` ou prendre la licence commerciale. Une licence commerciale payante existe si aucune attribution n'est souhaitée.
 - SQLite est dans le domaine public ; `rusqlite` est sous licence MIT.
 
 ---

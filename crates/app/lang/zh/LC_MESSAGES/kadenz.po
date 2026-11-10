@@ -2150,3 +2150,120 @@ msgstr "数据保存在这台电脑的本地数据库中。每个人使用自己
 
 msgid "L'assistant qui suit crée votre entreprise et le compte administrateur."
 msgstr "接下来的向导将创建贵公司和管理员账户。"
+
+msgid "4 dernières factures"
+msgstr "最近 4 张发票"
+
+msgid "Achats"
+msgstr "采购"
+
+msgid "Aucun règlement sur la période."
+msgstr "此期间没有收付款。"
+
+msgid "Aucune facture sur la période."
+msgstr "此期间没有发票。"
+
+msgid "CA par mode de paiement"
+msgstr "按付款方式的营业额"
+
+msgid "CA par état de paiement"
+msgstr "按付款状态的营业额"
+
+msgid "Chiffre d'affaires HT"
+msgstr "不含税营业额"
+
+msgid "Chiffre d'affaires TTC"
+msgstr "含税营业额"
+
+msgid "Votre compte n'a pas le droit de consulter le tableau de bord."
+msgstr "您的账户无权查看仪表板。"
+
+msgid "FCFA réglés"
+msgstr "FCFA 已付"
+
+msgid "La date de début est après la date de fin : période non appliquée."
+msgstr "开始日期晚于结束日期：未应用该期间。"
+
+msgid "Payé aux fournisseurs"
+msgstr "已付供应商"
+
+msgid "Plus haut : {}"
+msgstr "最高：{}"
+
+msgid "Période du {} au {}."
+msgstr "期间：{} 至 {}。"
+
+msgid "Reste dû aux fournisseurs"
+msgstr "尚欠供应商"
+
+msgid "Tendance des ventes"
+msgstr "销售趋势"
+
+msgid "Top 5 clients"
+msgstr "前 5 名客户"
+
+msgid "Total des bons de commande"
+msgstr "采购订单总额"
+
+msgid "Total impayé"
+msgstr "未付总额"
+
+msgid "Total payé"
+msgstr "已付总额"
+
+msgid "Toutes les années"
+msgstr "所有年份"
+
+msgid "Ventes"
+msgstr "销售"
+
+msgid "payé"
+msgstr "已付"
+
+msgid "{} : {}"
+msgstr "{}：{}"
+
+msgid "Version"
+msgstr "版本"
+
+msgid "Licence"
+msgstr "许可证"
+
+msgid "Système"
+msgstr "系统"
+
+msgid "Windows, mono-poste."
+msgstr "Windows，单机。"
+
+msgid "Langues"
+msgstr "语言"
+
+msgid "Données de ce poste"
+msgstr "本机数据"
+
+msgid "Fichier de la base"
+msgstr "数据库文件"
+
+msgid "Version du schéma"
+msgstr "架构版本"
+
+msgid "Les données restent sur ce poste, dans une base locale SQLite."
+msgstr "数据保存在本机的本地 SQLite 数据库中。"
+
+msgid "Interface"
+msgstr "界面"
+
+msgid "Polices"
+msgstr "字体"
+
+msgid "Base de données"
+msgstr "数据库"
+
+msgid "Slint 1.18, sous licence Slint Royalty-free 2.0."
+msgstr "Slint 1.18，采用 Slint Royalty-free 2.0 许可证。"
+
+msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
+msgstr "Inter 和 Manrope，采用 SIL Open Font License 1.1 许可证。"
+
+msgid "SQLite, dans le domaine public."
+msgstr "SQLite，属于公有领域。"

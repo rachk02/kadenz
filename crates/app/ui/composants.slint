@@ -242,15 +242,8 @@ export component ElementNavigation inherits Rectangle {
         root.clique();
     }
 
-    // Repère, icône et libellé partent du bord de début : à droite en arabe.
-    Rectangle {
-        x: Theme.rtl ? parent.width - self.width : 0px;
-        width: 3px;
-        height: 18px;
-        background: Theme.ambre;
-        visible: root.actif;
-    }
-
+    // Icône et libellé partent du bord de début : à droite en arabe. L'entrée
+    // active se distingue par son seul fond, sans repère sur un côté.
     Image {
         x: Theme.rtl ? parent.width - 12px - self.width : 12px;
         width: 18px;

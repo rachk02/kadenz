@@ -1,0 +1,749 @@
+// Tableau de bord (section 9) : indicateurs des ventes et des achats de la
+// période choisie, repris de la page « Tableau de bord » de l'Excel. Les
+// graphiques sont des chemins dont la géométrie est calculée en Rust
+// (graphiques.rs), dans un repère fixe ajusté ici à la taille de l'élément.
+import { ComboBox, LineEdit, ScrollView } from "std-widgets.slint";
+import { MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+
+// Secteur d'un anneau, avec sa ligne de légende.
+export struct SecteurUi {
+    libelle: string,
+    valeur: string,
+    part: string,
+    couleur: color,
+    // Commandes de l'arc dans le repère 100 x 100 ; vide pour une valeur nulle.
+    arc: string,
+}
+
+export struct BarreUi {
+    libelle: string,
+    valeur: string,
+    // Longueur rapportée à la plus grande barre, de 0 à 1.
+    proportion: float,
+}
+
+// Point de la tendance : position en fraction de la largeur et de la hauteur.
+export struct PointUi {
+    x: float,
+    y: float,
+    // Mois et montant, affichés au survol.
+    texte: string,
+}
+
+export struct FactureRecenteUi {
+    numero: string,
+    date: string,
+    tiers: string,
+    montant: string,
+    etat: string,
+    couleur: color,
+}
+
+export global PilotageApi {
+    // « Toutes les années », puis les années qui ont des documents.
+    in property <[string]> annees;
+    in property <string> periode;
+
+    in property <string> ca-ht;
+    in property <string> tva;
+    in property <string> ca-ttc;
+    in property <string> paye;
+    in property <string> impaye;
+
+    in property <[SecteurUi]> par-etat;
+    // Part du chiffre d'affaires réglée, au centre de l'anneau des états.
+    in property <string> part-payee;
+    in property <[SecteurUi]> par-mode;
+    in property <string> total-modes;
+
+    // Tendance : trait et surface dans le repère 300 x 100, puis les points.
+    in property <string> trace;
+    in property <string> aire;
+    in property <[PointUi]> points;
+    in property <string> tendance-debut;
+    in property <string> tendance-fin;
+    in property <string> tendance-max;
+
+    in property <[BarreUi]> top-clients;
+    in property <[FactureRecenteUi]> dernieres;
+
+    in property <string> achats-total;
+    in property <string> achats-paye;
+    in property <string> achats-reste;
+
+    // Renvoie le message d'une période illisible, vide sinon.
+    callback filtrer(annee: int, du: string, au: string) -> string;
+    callback ouvrir-facture(ligne: int) -> Retour;
+}
+
+component Carte inherits Rectangle {
+    background: white;
+    border-width: 1px;
+    border-color: Theme.bordure;
+    border-radius: 4px;
+}
+
+// Tuile d'un indicateur : montant en grand, libellé dessous. Bordure égale sur
+// les quatre côtés ; seul le montant peut prendre une couleur (payé, impayé).
+component Indicateur inherits Carte {
+    in property <string> libelle;
+    in property <string> valeur;
+    in property <color> couleur-valeur: Theme.texte;
+
+    horizontal-stretch: 1;
+    min-width: 150px;
+
+    VerticalLayout {
+        padding: 14px;
+        spacing: 4px;
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: root.valeur;
+            font-family: Theme.police-titre;
+            font-size: 20px;
+            font-weight: 800;
+            color: root.couleur-valeur;
+            overflow: elide;
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: root.libelle;
+            font-size: 12px;
+            color: Theme.texte-secondaire;
+            overflow: elide;
+        }
+    }
+}
+
+component Anneau inherits Rectangle {
+    in property <[SecteurUi]> secteurs;
+    in property <string> centre;
+    in property <string> sous-centre;
+
+    width: 132px;
+    height: 132px;
+
+    Path {
+        width: parent.width;
+        height: parent.height;
+        viewbox-width: 100;
+        viewbox-height: 100;
+        fit: contain;
+        commands: "M 50 0 A 50 50 0 0 1 50 100 A 50 50 0 0 1 50 0";
+        stroke: #eceef3;
+        stroke-width: 18px;
+    }
+
+    for s in root.secteurs: Rectangle {
+        width: root.width;
+        height: root.height;
+
+        if s.arc != "": Path {
+            width: parent.width;
+            height: parent.height;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            fit: contain;
+            commands: s.arc;
+            stroke: s.couleur;
+            stroke-width: 18px;
+        }
+    }
+
+    VerticalLayout {
+        alignment: center;
+
+        Text {
+            horizontal-alignment: center;
+            text: root.centre;
+            font-family: Theme.police-titre;
+            font-size: 18px;
+            font-weight: 800;
+            color: Theme.texte;
+        }
+
+        Text {
+            horizontal-alignment: center;
+            text: root.sous-centre;
+            font-size: 11px;
+            color: Theme.texte-secondaire;
+        }
+    }
+}
+
+// Légende d'un anneau : pastille, libellé, part et montant.
+component Legende inherits VerticalLayout {
+    in property <[SecteurUi]> secteurs;
+
+    spacing: 6px;
+    alignment: center;
+
+    for s in root.secteurs: Rangee {
+        spacing: 8px;
+
+        Rectangle {
+            width: 10px;
+
+            Rectangle {
+                width: 10px;
+                height: 10px;
+                background: s.couleur;
+            }
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            horizontal-stretch: 1;
+            text: s.libelle;
+            font-size: 12px;
+            color: Theme.texte;
+            overflow: elide;
+        }
+
+        Text {
+            horizontal-alignment: Theme.fin;
+            width: 38px;
+            text: s.part;
+            font-size: 12px;
+            color: Theme.texte-secondaire;
+        }
+
+        Text {
+            horizontal-alignment: Theme.fin;
+            min-width: 90px;
+            text: s.valeur;
+            font-size: 12px;
+            font-weight: 600;
+            color: Theme.texte;
+        }
+    }
+}
+
+component CarteAnneau inherits Carte {
+    in property <string> titre;
+    in property <[SecteurUi]> secteurs;
+    in property <string> centre;
+    in property <string> sous-centre;
+    in property <string> vide;
+
+    horizontal-stretch: 1;
+    min-width: 300px;
+
+    VerticalLayout {
+        padding: 16px;
+        spacing: 12px;
+
+        Section {
+            text: root.titre;
+        }
+
+        Rangee {
+            spacing: 16px;
+
+            Anneau {
+                secteurs: root.secteurs;
+                centre: root.centre;
+                sous-centre: root.sous-centre;
+            }
+
+            if root.secteurs.length > 0: Legende {
+                horizontal-stretch: 1;
+                secteurs: root.secteurs;
+            }
+
+            if root.secteurs.length == 0: Text {
+                horizontal-stretch: 1;
+                horizontal-alignment: Theme.debut;
+                vertical-alignment: center;
+                text: root.vide;
+                font-size: 12px;
+                color: Theme.texte-secondaire;
+                overflow: elide;
+            }
+        }
+    }
+}
+
+component Tendance inherits Carte {
+    horizontal-stretch: 2;
+    min-width: 320px;
+
+    VerticalLayout {
+        padding: 16px;
+        spacing: 8px;
+
+        Rangee {
+            Section {
+                horizontal-stretch: 1;
+                text: @tr("Tendance des ventes");
+            }
+
+            Text {
+                horizontal-alignment: Theme.fin;
+                vertical-alignment: center;
+                text: PilotageApi.tendance-max;
+                font-size: 11px;
+                color: Theme.texte-secondaire;
+            }
+        }
+
+        zone := Rectangle {
+            min-height: 120px;
+            vertical-stretch: 1;
+
+            // Lignes de repère : haut, milieu, bas.
+            for i in 3: Rectangle {
+                y: zone.height * i / 2 - 0.5px;
+                width: zone.width;
+                height: 1px;
+                background: i == 2 ? Theme.bordure : #eceef3;
+            }
+
+            if PilotageApi.aire != "": Path {
+                width: zone.width;
+                height: zone.height;
+                viewbox-width: 300;
+                viewbox-height: 100;
+                fit: fill;
+                commands: PilotageApi.aire;
+                fill: #2d3a8c1f;
+            }
+
+            if PilotageApi.trace != "": Path {
+                width: zone.width;
+                height: zone.height;
+                viewbox-width: 300;
+                viewbox-height: 100;
+                fit: fill;
+                commands: PilotageApi.trace;
+                stroke: Theme.accent;
+                stroke-width: 2px;
+            }
+
+            for p in PilotageApi.points: point := Rectangle {
+                // De droite à gauche, le temps s'écoule vers la gauche.
+                x: (Theme.rtl ? 1 - p.x : p.x) * (zone.width - 2px) + 1px - self.width / 2;
+                y: p.y * (zone.height - 2px) + 1px - self.height / 2;
+                width: survol.has-hover ? 10px : 7px;
+                height: self.width;
+                border-radius: self.width / 2;
+                background: white;
+                border-width: 2px;
+                border-color: Theme.accent;
+
+                survol := TouchArea { }
+
+                if survol.has-hover: Rectangle {
+                    x: (parent.width - self.width) / 2;
+                    y: -self.height - 6px;
+                    width: bulle.preferred-width + 12px;
+                    height: bulle.preferred-height + 8px;
+                    background: Theme.nuit;
+                    border-radius: 3px;
+
+                    bulle := Text {
+                        text: p.texte;
+                        color: white;
+                        font-size: 11px;
+                    }
+                }
+            }
+
+            if PilotageApi.points.length == 0: Text {
+                text: @tr("Aucune facture sur la période.");
+                font-size: 12px;
+                color: Theme.texte-secondaire;
+            }
+        }
+
+        Rangee {
+            Text {
+                horizontal-stretch: 1;
+                horizontal-alignment: Theme.debut;
+                text: PilotageApi.tendance-debut;
+                font-size: 11px;
+                color: Theme.texte-secondaire;
+            }
+
+            Text {
+                horizontal-stretch: 1;
+                horizontal-alignment: Theme.fin;
+                text: PilotageApi.tendance-fin;
+                font-size: 11px;
+                color: Theme.texte-secondaire;
+            }
+        }
+    }
+}
+
+component TopClients inherits Carte {
+    horizontal-stretch: 1;
+    min-width: 300px;
+
+    VerticalLayout {
+        padding: 16px;
+        spacing: 10px;
+        alignment: start;
+
+        Section {
+            text: @tr("Top 5 clients");
+        }
+
+        for b in PilotageApi.top-clients: VerticalLayout {
+            spacing: 3px;
+
+            Rangee {
+                spacing: 8px;
+
+                Text {
+                    horizontal-stretch: 1;
+                    horizontal-alignment: Theme.debut;
+                    text: b.libelle;
+                    font-size: 12px;
+                    color: Theme.texte;
+                    overflow: elide;
+                }
+
+                Text {
+                    horizontal-alignment: Theme.fin;
+                    text: b.valeur;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: Theme.texte;
+                }
+            }
+
+            piste := Rectangle {
+                height: 8px;
+                background: #eceef3;
+
+                Rectangle {
+                    x: Theme.rtl ? piste.width - self.width : 0;
+                    width: max(2px, piste.width * b.proportion);
+                    height: parent.height;
+                    background: Theme.accent;
+                }
+            }
+        }
+
+        if PilotageApi.top-clients.length == 0: Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Aucune facture sur la période.");
+            font-size: 12px;
+            color: Theme.texte-secondaire;
+        }
+    }
+}
+
+component DernieresFactures inherits Carte {
+    callback ouvrir(ligne: int);
+
+    horizontal-stretch: 2;
+    min-width: 360px;
+
+    VerticalLayout {
+        padding: 16px;
+        spacing: 6px;
+        alignment: start;
+
+        Section {
+            text: @tr("4 dernières factures");
+        }
+
+        Rangee {
+            spacing: 8px;
+
+            Text {
+                width: 120px;
+                horizontal-alignment: Theme.debut;
+                text: @tr("N°");
+                font-size: 11px;
+                color: Theme.texte-secondaire;
+            }
+
+            Text {
+                width: 80px;
+                horizontal-alignment: Theme.debut;
+                text: @tr("Date");
+                font-size: 11px;
+                color: Theme.texte-secondaire;
+            }
+
+            Text {
+                horizontal-stretch: 1;
+                horizontal-alignment: Theme.debut;
+                text: @tr("Client");
+                font-size: 11px;
+                color: Theme.texte-secondaire;
+            }
+
+            Text {
+                width: 110px;
+                horizontal-alignment: Theme.fin;
+                text: @tr("Montant TTC");
+                font-size: 11px;
+                color: Theme.texte-secondaire;
+            }
+
+            Text {
+                width: 80px;
+                horizontal-alignment: center;
+                text: @tr("État");
+                font-size: 11px;
+                color: Theme.texte-secondaire;
+            }
+        }
+
+        for f[i] in PilotageApi.dernieres: Rectangle {
+            height: 34px;
+            background: clic.has-hover ? Theme.accent-survol : transparent;
+
+            Rectangle {
+                y: 0;
+                height: 1px;
+                background: #eceef3;
+            }
+
+            clic := TouchArea {
+                mouse-cursor: pointer;
+                clicked => {
+                    root.ouvrir(i);
+                }
+            }
+
+            Rangee {
+                spacing: 8px;
+
+                Text {
+                    width: 120px;
+                    horizontal-alignment: Theme.debut;
+                    vertical-alignment: center;
+                    text: f.numero;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: Theme.accent;
+                    overflow: elide;
+                }
+
+                Text {
+                    width: 80px;
+                    horizontal-alignment: Theme.debut;
+                    vertical-alignment: center;
+                    text: f.date;
+                    font-size: 12px;
+                    color: Theme.texte;
+                }
+
+                Text {
+                    horizontal-stretch: 1;
+                    horizontal-alignment: Theme.debut;
+                    vertical-alignment: center;
+                    text: f.tiers;
+                    font-size: 12px;
+                    color: Theme.texte;
+                    overflow: elide;
+                }
+
+                Text {
+                    width: 110px;
+                    horizontal-alignment: Theme.fin;
+                    vertical-alignment: center;
+                    text: f.montant;
+                    font-size: 12px;
+                    color: Theme.texte;
+                }
+
+                Rectangle {
+                    width: 80px;
+
+                    Rectangle {
+                        width: 72px;
+                        height: 20px;
+                        border-radius: 3px;
+                        background: f.couleur;
+
+                        Text {
+                            text: f.etat;
+                            font-size: 11px;
+                            font-weight: 600;
+                            color: white;
+                        }
+                    }
+                }
+            }
+        }
+
+        if PilotageApi.dernieres.length == 0: Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Aucune facture sur la période.");
+            font-size: 12px;
+            color: Theme.texte-secondaire;
+        }
+    }
+}
+
+export component PageTableauDeBord inherits ScrollView {
+    property <string> erreur-filtre;
+    property <Retour> retour;
+
+    function filtrer() {
+        root.erreur-filtre = PilotageApi.filtrer(annee.current-index, du.text, au.text);
+    }
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 14px;
+        alignment: start;
+
+        Rangee {
+            spacing: 8px;
+
+            Titre {
+                text: @tr("Tableau de bord");
+            }
+
+            Rectangle { }
+
+            annee := ComboBox {
+                width: 170px;
+                model: PilotageApi.annees;
+                selected => {
+                    du.text = "";
+                    au.text = "";
+                    root.filtrer();
+                }
+            }
+
+            du := LineEdit {
+                width: 120px;
+                placeholder-text: @tr("Du JJ/MM/AAAA");
+                edited => {
+                    root.filtrer();
+                }
+            }
+
+            au := LineEdit {
+                width: 120px;
+                placeholder-text: @tr("Au JJ/MM/AAAA");
+                edited => {
+                    root.filtrer();
+                }
+            }
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: root.erreur-filtre != "" ? root.erreur-filtre : PilotageApi.periode;
+            font-size: 12px;
+            color: root.erreur-filtre != "" ? Theme.erreur : Theme.texte-secondaire;
+        }
+
+        if root.retour.message != "": MessageRetour {
+            retour: root.retour;
+        }
+
+        Section {
+            text: @tr("Ventes");
+        }
+
+        Rangee {
+            spacing: 12px;
+
+            Indicateur {
+                libelle: @tr("Chiffre d'affaires HT");
+                valeur: PilotageApi.ca-ht;
+            }
+
+            Indicateur {
+                libelle: @tr("TVA");
+                valeur: PilotageApi.tva;
+            }
+
+            Indicateur {
+                libelle: @tr("Chiffre d'affaires TTC");
+                valeur: PilotageApi.ca-ttc;
+            }
+
+            Indicateur {
+                libelle: @tr("Total payé");
+                valeur: PilotageApi.paye;
+                couleur-valeur: Theme.succes;
+            }
+
+            Indicateur {
+                libelle: @tr("Total impayé");
+                valeur: PilotageApi.impaye;
+                couleur-valeur: Theme.erreur;
+            }
+        }
+
+        Rangee {
+            spacing: 12px;
+
+            CarteAnneau {
+                titre: @tr("CA par état de paiement");
+                secteurs: PilotageApi.par-etat;
+                centre: PilotageApi.part-payee;
+                sous-centre: @tr("payé");
+                vide: @tr("Aucune facture sur la période.");
+            }
+
+            CarteAnneau {
+                titre: @tr("CA par mode de paiement");
+                secteurs: PilotageApi.par-mode;
+                centre: PilotageApi.total-modes;
+                sous-centre: @tr("FCFA réglés");
+                vide: @tr("Aucun règlement sur la période.");
+            }
+        }
+
+        Rangee {
+            height: 230px;
+
+            Tendance { }
+        }
+
+        Rangee {
+            spacing: 12px;
+
+            TopClients { }
+
+            DernieresFactures {
+                ouvrir(ligne) => {
+                    root.retour = PilotageApi.ouvrir-facture(ligne);
+                }
+            }
+        }
+
+        Section {
+            text: @tr("Achats");
+        }
+
+        Rangee {
+            spacing: 12px;
+
+            Indicateur {
+                libelle: @tr("Total des bons de commande");
+                valeur: PilotageApi.achats-total;
+            }
+
+            Indicateur {
+                libelle: @tr("Payé aux fournisseurs");
+                valeur: PilotageApi.achats-paye;
+                couleur-valeur: Theme.succes;
+            }
+
+            Indicateur {
+                libelle: @tr("Reste dû aux fournisseurs");
+                valeur: PilotageApi.achats-reste;
+                couleur-valeur: Theme.erreur;
+            }
+        }
+    }
+
+    init => {
+        root.filtrer();
+    }
+}

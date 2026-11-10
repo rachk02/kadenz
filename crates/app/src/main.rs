@@ -3,9 +3,11 @@
 
 mod administration;
 mod factures;
+mod graphiques;
 mod import_ecran;
 mod paiements;
 mod pdf;
+mod pilotage;
 mod referentiels;
 mod traduction;
 mod utilisateurs;
@@ -150,6 +152,12 @@ fn appliquer_langue(fenetre: &FenetrePrincipale, code: &str) {
 fn afficher_session(fenetre: &FenetrePrincipale, etat: &Etat) {
     // Recalculé ici pour suivre la langue du compte.
     let chemin = etat.conn.path().unwrap_or_default().to_string();
+    fenetre.set_chemin_base(chemin.as_str().into());
+    fenetre.set_schema_base(
+        kadenz_stockage::version_schema_application()
+            .to_string()
+            .into(),
+    );
     let afficher_etat_base = || {
         fenetre.set_etat_base(
             traduction::trf(
@@ -298,6 +306,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     import_ecran::brancher(fenetre, &etat);
     factures::brancher(fenetre, &etat);
     paiements::brancher(fenetre, &etat);
+    pilotage::brancher(fenetre, &etat);
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
     fenetre.on_changer_langue(move |rang| {
