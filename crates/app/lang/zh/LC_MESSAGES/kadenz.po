@@ -1487,3 +1487,30 @@ msgstr "贷项通知单 {} 已确认"
 
 msgid "{} vers {}"
 msgstr "{} → {}"
+
+msgid "Nouveau client"
+msgstr "新建客户"
+
+msgid "Nom (obligatoire)"
+msgstr "名称（必填）"
+
+msgid "Créer et choisir ce client"
+msgstr "创建并选择此客户"
+
+msgid "Le client est enregistré tout de suite dans les tiers ; sa fiche se complète ensuite depuis l'écran Tiers."
+msgstr "客户会立即保存到往来单位中；之后可在往来单位界面补全其资料。"
+
+msgid "client « {} » créé et choisi pour ce document"
+msgstr "已创建客户“{}”并为此单据选择"
+
+msgid "le nom du tiers est obligatoire"
+msgstr "往来单位名称为必填项"
+
+msgid "la désignation est obligatoire"
+msgstr "品名为必填项"
+
+msgid "la référence est obligatoire"
+msgstr "编码为必填项"
+
+msgid "le prix ne peut pas être négatif"
+msgstr "价格不能为负数"

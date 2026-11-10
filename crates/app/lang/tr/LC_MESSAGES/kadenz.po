@@ -1487,3 +1487,30 @@ msgstr "İade faturası {} onaylandı"
 
 msgid "{} vers {}"
 msgstr "{} → {}"
+
+msgid "Nouveau client"
+msgstr "Yeni müşteri"
+
+msgid "Nom (obligatoire)"
+msgstr "Ad (zorunlu)"
+
+msgid "Créer et choisir ce client"
+msgstr "Bu müşteriyi oluştur ve seç"
+
+msgid "Le client est enregistré tout de suite dans les tiers ; sa fiche se complète ensuite depuis l'écran Tiers."
+msgstr "Müşteri hemen carilere kaydedilir; kaydını daha sonra Cariler ekranından tamamlayın."
+
+msgid "client « {} » créé et choisi pour ce document"
+msgstr "\"{}\" müşterisi oluşturuldu ve bu belge için seçildi"
+
+msgid "le nom du tiers est obligatoire"
+msgstr "cari adı zorunludur"
+
+msgid "la désignation est obligatoire"
+msgstr "tanım zorunludur"
+
+msgid "la référence est obligatoire"
+msgstr "referans zorunludur"
+
+msgid "le prix ne peut pas être négatif"
+msgstr "fiyat negatif olamaz"

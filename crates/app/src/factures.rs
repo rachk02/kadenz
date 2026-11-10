@@ -22,7 +22,7 @@ use kadenz_stockage::documents::{
     Statut, TypeDocument,
 };
 use kadenz_stockage::produits::{self, FiltreProduits, Produit};
-use kadenz_stockage::tiers::{self, FiltreTiers};
+use kadenz_stockage::tiers::{self, FicheTiers, FiltreTiers, TypeTiers};
 use kadenz_stockage::{Connexion, droits, parametres};
 use slint::{ComponentHandle, Model, ModelRc, SharedString, VecModel};
 
@@ -595,10 +595,22 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
     };
     afficher_produits(&api, &produits);
 
-    let lignes = Rc::new(VecModel::from(
-        saisie_doc.lignes.iter().map(ligne_ui).collect::<Vec<_>>(),
-    ));
-    api.set_lignes(ModelRc::from(lignes.clone()));
+    let nouvelles: Vec<LigneFactureUi> = saisie_doc.lignes.iter().map(ligne_ui).collect();
+    // Fiche déjà ouverte : son modèle est mis à jour rangée par rangée plutôt que
+    // remplacé. Les champs des lignes restent alors en place, avec le focus : la
+    // saisie et les raccourcis continuent après un enregistrement.
+    let lignes = match etat.facture.as_ref() {
+        Some(ed) => {
+            let modele = ed.lignes.clone();
+            remplacer_lignes(&modele, nouvelles);
+            modele
+        }
+        None => {
+            let modele = Rc::new(VecModel::from(nouvelles));
+            api.set_lignes(ModelRc::from(modele.clone()));
+            modele
+        }
+    };
     let totaux = document
         .as_ref()
         .map_or_else(|| calculer_totaux([], saisie_doc.taux, false), |d| d.totaux);
@@ -741,6 +753,22 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
     api.set_version_fiche(api.get_version_fiche().wrapping_add(1));
     api.set_fiche_ouverte(true);
     Ok(())
+}
+
+/// Remplace le contenu d'un modèle de lignes en ne touchant que les rangées qui changent.
+fn remplacer_lignes(modele: &VecModel<LigneFactureUi>, nouvelles: Vec<LigneFactureUi>) {
+    while modele.row_count() > nouvelles.len() {
+        modele.remove(modele.row_count() - 1);
+    }
+    for (rang, ligne) in nouvelles.into_iter().enumerate() {
+        if rang < modele.row_count() {
+            if modele.row_data(rang).as_ref() != Some(&ligne) {
+                modele.set_row_data(rang, ligne);
+            }
+        } else {
+            modele.push(ligne);
+        }
+    }
 }
 
 /// Valeur choisie au rang donné, ou `None` hors liste.
@@ -1094,6 +1122,45 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         edition.clients = ids;
         f.global::<FacturesApi>().set_clients(modele_textes(noms));
         rang
+    });
+
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_creer_client(move |nom, telephone, adresse, ifu, rccm| {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
+        let mut guard = e.borrow_mut();
+        let etat = &mut *guard;
+        let Some(acteur) = etat.utilisateur.clone() else {
+            return retour_erreur("aucune session ouverte");
+        };
+        let fiche = FicheTiers {
+            nom: nom.to_string(),
+            telephone: telephone.to_string(),
+            adresse: adresse.to_string(),
+            ifu: ifu.to_string(),
+            rccm: rccm.to_string(),
+            ..FicheTiers::vide(TypeTiers::Client)
+        };
+        // Le stockage contrôle le droit d'ajouter un tiers et le nom obligatoire.
+        let cree = match tiers::creer(&etat.conn, &acteur, &fiche) {
+            Ok(t) => t,
+            Err(erreur) => return retour_erreur(erreur),
+        };
+        let Some(edition) = etat.facture.as_mut() else {
+            return retour_erreur("aucune fiche ouverte");
+        };
+        // Liste sans filtre, qui garde le client créé et celui du document.
+        let (ids, noms) = liste_clients(&etat.conn, "", &[Some(cree.id), edition.tiers_document]);
+        let rang = ids.iter().position(|i| *i == Some(cree.id)).unwrap_or(0) as i32;
+        edition.clients = ids;
+        let api = f.global::<FacturesApi>();
+        api.set_clients(modele_textes(noms));
+        api.set_rang_nouveau_client(rang);
+        retour_ok(trf(
+            "client « {} » créé et choisi pour ce document",
+            &[&cree.fiche.nom],
+        ))
     });
 
     let e = etat.clone();

@@ -4,7 +4,7 @@
 // les textes propres au type : cet écran ne fait qu'afficher et transmettre la saisie.
 
 import { CheckBox, ComboBox, LineEdit, ScrollView, StandardTableView } from "std-widgets.slint";
-import { Bouton, Champ, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Bouton, Champ, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct LigneFactureUi {
     // 0 pour une ligne libre, sans produit d'origine.
@@ -164,6 +164,20 @@ export global FacturesApi {
     callback dupliquer(annuler-original: bool) -> Retour;
     callback creer-avoir() -> Retour;
     callback ouvrir-lien(id: int) -> Retour;
+
+    // Raccourcis clavier (cahier, section 4.1) : la page les reçoit et augmente le
+    // compteur de la demande ; le registre ou la fiche affiché y répond.
+    in-out property <int> demande-enregistrer;
+    in-out property <int> demande-pdf;
+    in-out property <int> demande-recherche;
+    // La fiche rend le focus à la page quand l'élément qui l'avait disparaît
+    // (panneau refermé) : sans élément focalisé, aucun raccourci n'arrive.
+    in-out property <int> demande-focus;
+
+    // Création rapide d'un client depuis la fiche : le client créé est ajouté à la
+    // liste, et son rang y est donné par `rang-nouveau-client` pour le choisir aussitôt.
+    callback creer-client(nom: string, telephone: string, adresse: string, ifu: string, rccm: string) -> Retour;
+    in-out property <int> rang-nouveau-client;
 }
 
 component Registre inherits VerticalLayout {
@@ -287,6 +301,13 @@ component Registre inherits VerticalLayout {
         color: Theme.texte-secondaire;
     }
 
+    // Ctrl+F : curseur dans la recherche.
+    property <int> demande-recherche: FacturesApi.demande-recherche;
+    changed demande-recherche => {
+        recherche.focus();
+        recherche.select-all();
+    }
+
     init => {
         root.filtrer();
     }
@@ -332,6 +353,10 @@ component Fiche inherits ScrollView {
     // Message d'ouverture (document créé depuis une autre page), sous le bandeau :
     // la fiche s'ouvre en haut, loin des actions.
     property <Retour> retour-ouverture;
+    // Création rapide d'un client : panneau ouvert, filtre de la liste des clients.
+    property <bool> creation-client;
+    property <Retour> retour-client;
+    property <string> filtre-client;
     // 0 aucune, 1 valider, 2 annuler, 3 supprimer, 4 corriger.
     property <int> confirmation: 0;
     property <int> version-chargee: -1;
@@ -342,6 +367,8 @@ component Fiche inherits ScrollView {
         root.fiche = f;
         root.confirmation = 0;
         root.retour-ouverture = { };
+        root.creation-client = false;
+        root.filtre-client = "";
         date.valeur = f.date;
         root.date-precedente = f.date;
         echeance.valeur = f.echeance;
@@ -375,6 +402,30 @@ component Fiche inherits ScrollView {
 
     function recalculer() {
         FacturesApi.recalculer(remise.current-index, tva.current-index);
+    }
+
+    // Ctrl+S : comme le bouton d'enregistrement affiché (brouillon, ou mode et
+    // observations d'un document validé).
+    property <int> demande-enregistrer: FacturesApi.demande-enregistrer;
+    changed demande-enregistrer => {
+        if (root.fiche.modifiable) {
+            root.confirmation = 0;
+            root.retour = FacturesApi.enregistrer(root.saisie());
+            root.recharger-si-besoin();
+        } else if (root.fiche.admin-modifiable) {
+            root.confirmation = 0;
+            root.retour = FacturesApi.enregistrer-administratif(mode.current-index, observations.valeur);
+            root.recharger-si-besoin();
+        }
+    }
+
+    // Ctrl+P : comme le bouton PDF, une fois le document enregistré.
+    property <int> demande-pdf: FacturesApi.demande-pdf;
+    changed demande-pdf => {
+        if (root.fiche.existe && FacturesApi.avec-pdf) {
+            root.confirmation = 0;
+            root.retour = FacturesApi.exporter-pdf();
+        }
     }
 
     init => {
@@ -482,6 +533,7 @@ component Fiche inherits ScrollView {
 
                     if root.fiche.client-modifiable: recherche-client := LineEdit {
                         width: 160px;
+                        text <=> root.filtre-client;
                         placeholder-text: @tr("Filtrer les clients");
                         edited(texte) => {
                             client.current-index = FacturesApi.filtrer-clients(texte, client.current-index);
@@ -494,6 +546,14 @@ component Fiche inherits ScrollView {
                         enabled: root.fiche.client-modifiable;
                         selected => {
                             root.fiche.tiers-detail = FacturesApi.client-choisi(self.current-index);
+                        }
+                    }
+
+                    if root.fiche.client-modifiable && Droits.ajouter-referentiel && !root.creation-client: Bouton {
+                        text: @tr("Nouveau client");
+                        clicked => {
+                            root.retour-client = { };
+                            root.creation-client = true;
                         }
                     }
                 }
@@ -532,6 +592,97 @@ component Fiche inherits ScrollView {
                 echeance := Champ {
                     libelle: FacturesApi.textes.libelle-echeance;
                     lecture-seule: !root.fiche.modifiable;
+                }
+            }
+        }
+
+        // Création rapide d'un client, sans quitter la fiche.
+        if root.creation-client: Rectangle {
+            border-width: 1px;
+            border-color: Theme.bordure;
+            border-radius: 4px;
+
+            VerticalLayout {
+                padding: 12px;
+                spacing: 10px;
+
+                Section {
+                    text: @tr("Nouveau client");
+                }
+
+                Rangee {
+                    spacing: 12px;
+
+                    nom-client := Champ {
+                        libelle: @tr("Nom (obligatoire)");
+                        horizontal-stretch: 2;
+                    }
+
+                    telephone-client := Champ {
+                        libelle: @tr("Téléphone");
+                        horizontal-stretch: 1;
+                    }
+                }
+
+                Rangee {
+                    spacing: 12px;
+
+                    adresse-client := Champ {
+                        libelle: @tr("Adresse");
+                        horizontal-stretch: 2;
+                    }
+
+                    ifu-client := Champ {
+                        libelle: @tr("IFU");
+                        horizontal-stretch: 1;
+                    }
+
+                    rccm-client := Champ {
+                        libelle: @tr("RCCM");
+                        horizontal-stretch: 1;
+                    }
+                }
+
+                Rangee {
+                    spacing: 8px;
+                    alignment: start;
+
+                    Bouton {
+                        text: @tr("Créer et choisir ce client");
+                        primary: true;
+                        enabled: nom-client.valeur != "";
+                        clicked => {
+                            root.retour-client = FacturesApi.creer-client(nom-client.valeur, telephone-client.valeur, adresse-client.valeur, ifu-client.valeur, rccm-client.valeur);
+                            if (root.retour-client.ok) {
+                                root.filtre-client = "";
+                                client.current-index = FacturesApi.rang-nouveau-client;
+                                root.fiche.tiers-detail = FacturesApi.client-choisi(client.current-index);
+                                root.retour = root.retour-client;
+                                root.creation-client = false;
+                                FacturesApi.demande-focus += 1;
+                            }
+                        }
+                    }
+
+                    Bouton {
+                        text: @tr("Revenir");
+                        clicked => {
+                            root.creation-client = false;
+                            FacturesApi.demande-focus += 1;
+                        }
+                    }
+                }
+
+                if !root.retour-client.ok && root.retour-client.message != "": MessageRetour {
+                    retour: root.retour-client;
+                }
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("Le client est enregistré tout de suite dans les tiers ; sa fiche se complète ensuite depuis l'écran Tiers.");
+                    font-size: 12px;
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
                 }
             }
         }
@@ -1025,9 +1176,56 @@ export component PageFactures inherits Rectangle {
 
     init => {
         FacturesApi.ouvrir(root.type-document);
+        raccourcis.focus();
     }
 
-    if !FacturesApi.fiche-ouverte: Registre { }
+    // Le registre et la fiche sont recréés à chaque bascule : l'élément qui avait
+    // le focus disparaît, la page le reprend pour que les raccourcis restent actifs.
+    property <bool> fiche-ouverte: FacturesApi.fiche-ouverte;
+    changed fiche-ouverte => {
+        raccourcis.focus();
+    }
 
-    if FacturesApi.fiche-ouverte: Fiche { }
+    property <int> demande-focus: FacturesApi.demande-focus;
+    changed demande-focus => {
+        raccourcis.focus();
+    }
+
+    // Raccourcis de la page : reçus ici quand l'élément qui a le focus (champ, liste,
+    // tableau) ne les a pas pris pour lui.
+    raccourcis := FocusScope {
+        KeyBinding {
+            keys: @keys(Control + N);
+            activated => {
+                if (FacturesApi.peut-creer && !FacturesApi.fiche-ouverte) {
+                    FacturesApi.nouvelle();
+                }
+            }
+        }
+
+        KeyBinding {
+            keys: @keys(Control + S);
+            activated => {
+                FacturesApi.demande-enregistrer += 1;
+            }
+        }
+
+        KeyBinding {
+            keys: @keys(Control + P);
+            activated => {
+                FacturesApi.demande-pdf += 1;
+            }
+        }
+
+        KeyBinding {
+            keys: @keys(Control + F);
+            activated => {
+                FacturesApi.demande-recherche += 1;
+            }
+        }
+
+        if !FacturesApi.fiche-ouverte: Registre { }
+
+        if FacturesApi.fiche-ouverte: Fiche { }
+    }
 }

@@ -1487,3 +1487,30 @@ msgstr "Credit note {} validated"
 
 msgid "{} vers {}"
 msgstr "{} to {}"
+
+msgid "Nouveau client"
+msgstr "New customer"
+
+msgid "Nom (obligatoire)"
+msgstr "Name (required)"
+
+msgid "Créer et choisir ce client"
+msgstr "Create and select this customer"
+
+msgid "Le client est enregistré tout de suite dans les tiers ; sa fiche se complète ensuite depuis l'écran Tiers."
+msgstr "The customer is saved to contacts right away; complete their record later from the Contacts screen."
+
+msgid "client « {} » créé et choisi pour ce document"
+msgstr "customer \"{}\" created and selected for this document"
+
+msgid "le nom du tiers est obligatoire"
+msgstr "the contact name is required"
+
+msgid "la désignation est obligatoire"
+msgstr "the description is required"
+
+msgid "la référence est obligatoire"
+msgstr "the reference is required"
+
+msgid "le prix ne peut pas être négatif"
+msgstr "the price cannot be negative"

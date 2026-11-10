@@ -1487,3 +1487,30 @@ msgstr "اعتُمد الإشعار الدائن {}"
 
 msgid "{} vers {}"
 msgstr "{} إلى {}"
+
+msgid "Nouveau client"
+msgstr "عميل جديد"
+
+msgid "Nom (obligatoire)"
+msgstr "الاسم (إلزامي)"
+
+msgid "Créer et choisir ce client"
+msgstr "إنشاء هذا العميل واختياره"
+
+msgid "Le client est enregistré tout de suite dans les tiers ; sa fiche se complète ensuite depuis l'écran Tiers."
+msgstr "يُحفَظ العميل فورًا ضمن الأطراف؛ أكمل بطاقته لاحقًا من شاشة الأطراف."
+
+msgid "client « {} » créé et choisi pour ce document"
+msgstr "أُنشئ العميل «{}» واختير لهذا المستند"
+
+msgid "le nom du tiers est obligatoire"
+msgstr "اسم الطرف إلزامي"
+
+msgid "la désignation est obligatoire"
+msgstr "الوصف إلزامي"
+
+msgid "la référence est obligatoire"
+msgstr "المرجع إلزامي"
+
+msgid "le prix ne peut pas être négatif"
+msgstr "لا يمكن أن يكون السعر سالبًا"

@@ -1487,3 +1487,30 @@ msgstr "Nota de crédito {} validada"
 
 msgid "{} vers {}"
 msgstr "{} a {}"
+
+msgid "Nouveau client"
+msgstr "Nuevo cliente"
+
+msgid "Nom (obligatoire)"
+msgstr "Nombre (obligatorio)"
+
+msgid "Créer et choisir ce client"
+msgstr "Crear y elegir este cliente"
+
+msgid "Le client est enregistré tout de suite dans les tiers ; sa fiche se complète ensuite depuis l'écran Tiers."
+msgstr "El cliente se guarda de inmediato en los terceros; complete su ficha después desde la pantalla Terceros."
+
+msgid "client « {} » créé et choisi pour ce document"
+msgstr "cliente «{}» creado y elegido para este documento"
+
+msgid "le nom du tiers est obligatoire"
+msgstr "el nombre del tercero es obligatorio"
+
+msgid "la désignation est obligatoire"
+msgstr "la descripción es obligatoria"
+
+msgid "la référence est obligatoire"
+msgstr "la referencia es obligatoria"
+
+msgid "le prix ne peut pas être négatif"
+msgstr "el precio no puede ser negativo"

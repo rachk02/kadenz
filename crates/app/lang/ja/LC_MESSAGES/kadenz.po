@@ -1487,3 +1487,30 @@ msgstr "クレジットノート {} を確定"
 
 msgid "{} vers {}"
 msgstr "{} → {}"
+
+msgid "Nouveau client"
+msgstr "新規顧客"
+
+msgid "Nom (obligatoire)"
+msgstr "名称（必須）"
+
+msgid "Créer et choisir ce client"
+msgstr "この顧客を作成して選択"
+
+msgid "Le client est enregistré tout de suite dans les tiers ; sa fiche se complète ensuite depuis l'écran Tiers."
+msgstr "顧客はすぐに取引先に登録されます。詳細は後で取引先画面から入力してください。"
+
+msgid "client « {} » créé et choisi pour ce document"
+msgstr "顧客「{}」を作成し、この書類に選択しました"
+
+msgid "le nom du tiers est obligatoire"
+msgstr "取引先の名称は必須です"
+
+msgid "la désignation est obligatoire"
+msgstr "品名は必須です"
+
+msgid "la référence est obligatoire"
+msgstr "品番は必須です"
+
+msgid "le prix ne peut pas être négatif"
+msgstr "価格を負の値にすることはできません"
