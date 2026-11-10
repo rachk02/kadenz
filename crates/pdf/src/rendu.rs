@@ -23,8 +23,7 @@ use crate::texte::{Police, Polices};
 // Format A4 en points (1/72 de pouce).
 pub(crate) const LARGEUR: f32 = 595.28;
 pub(crate) const HAUTEUR: f32 = 841.89;
-pub(crate) const BANDE: f32 = 12.0;
-pub(crate) const GAUCHE: f32 = 42.0;
+pub(crate) const GAUCHE: f32 = 36.0;
 pub(crate) const DROITE: f32 = LARGEUR - 36.0;
 pub(crate) const HAUT: f32 = 34.0;
 pub(crate) const BAS: f32 = HAUTEUR - 26.0;
@@ -999,7 +998,6 @@ pub fn generer(doc: &DocumentPdf, polices: &Polices) -> Result<Vec<u8>, String> 
             s: Some(&mut surface),
         };
 
-        t.rectangle(0.0, 0.0, BANDE, HAUTEUR, doc.couleur);
         let mut y = HAUT + m.en_tete(&mut t, HAUT);
         if k == 0 {
             y += m.bloc_tiers(&mut t, y);

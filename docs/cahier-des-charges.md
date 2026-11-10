@@ -24,6 +24,7 @@
 | 2.18 | 2026-11-10 | J7 livré : règlements des factures et des bons de commande, registre des règlements, suivi fournisseurs, relances et lettre de relance, PDF du registre et de la liste des relances (section 19, périmètre de J7) ; décisions de l'utilisateur : installateur Windows avancé avant J8, pages de présentation au premier lancement (sections 4.1, 16 et 19) |
 | 2.19 | 2026-11-10 | J8 lancé : règles de calcul des indicateurs du tableau de bord et graphiques dessinés par chemins Slint, choix de mise en œuvre à confirmer par l'utilisateur (section 9) |
 | 2.20 | 2026-11-10 | Attribution de Slint par le badge « Made with Slint » du README du dépôt public à la place du composant AboutSlint, retiré de l'écran « À propos » à la demande de l'utilisateur (section 14) |
+| 2.21 | 2026-11-10 | Règles de calcul du tableau de bord et graphiques par chemins Slint validés par l'utilisateur (section 9) ; bande verticale de couleur retirée des PDF (section 12) ; réglages d'impression spécifiés (en-tête et pied de page libres, gabarits, papier pré-imprimé, marges et calibrage) pour un nouveau jalon J8b inséré avant J9 (sections 5.4, 12, 18 et 19) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -157,7 +158,7 @@ Table clé-valeur, modifiable par l'Admin sans recompiler :
 | Modes de paiement | Liste modifiable, initialisée avec ceux de l'Excel : Espèce, Chèque, Virement bancaire, Carte bancaire, Moov money, Orange money |
 | Numérotation | Préfixe par type (1 à 6 lettres non accentuées, distinctes d'un type à l'autre), remise à zéro du compteur chaque mois (comme l'Excel, par défaut) ou chaque année, nombre de chiffres du rang (1 à 9, 4 par défaut) |
 | Textes des documents | Titre par type (ex. « FACTURE DEFINITIVE »), phrase « Arrêté la présente ... à la somme de », libellé du signataire (ex. « LA COMPTABILITE »), mentions de pied de page |
-| Apparence des PDF | Couleur principale, position des logos |
+| Apparence des PDF | Couleur principale ; en-tête et pied de page libres, gabarit, marges (section 12, réglages d'impression, jalon J8b) |
 | Montant en lettres | Orthographe rectifiée de 1990 ou traditionnelle |
 | Dossiers d'export | Un dossier par type de document (comme l'Excel) |
 | Délais | Durée de validité des devis, délai de paiement des factures (date d'échéance calculée, modifiable sur le document) |
@@ -322,9 +323,9 @@ Indicateurs recalculés en direct par requête sur les tables Document, LigneDoc
 - Achats : total des Bons de commande, montants payés et restant dus aux fournisseurs.
 - Filtre par année ou par période (comme le filtre « DATE Années » de l'Excel).
 
-Slint n'a pas de composant graphique prêt à l'emploi : les graphiques (secteurs, courbes, barres) sont dessinés par l'application. Technique retenue au lancement de J8, à confirmer par l'utilisateur : des chemins Slint calculés en Rust à partir des indicateurs (rendu net à toutes les tailles, thème et lecture de droite à gauche suivis, survol possible) ; une image générée côté Rust ne servirait que si le tableau de bord devait sortir en PDF, ce que cette section ne demande pas.
+Slint n'a pas de composant graphique prêt à l'emploi : les graphiques (secteurs, courbes, barres) sont dessinés par l'application. Technique retenue au lancement de J8 et validée par l'utilisateur le 2026-11-10 : des chemins Slint calculés en Rust à partir des indicateurs (rendu net à toutes les tailles, thème et lecture de droite à gauche suivis, survol possible) ; une image générée côté Rust ne servirait que si le tableau de bord devait sortir en PDF, ce que cette section ne demande pas.
 
-Règles de calcul retenues au lancement de J8 (2026-11-10), choix de mise en œuvre à confirmer par l'utilisateur :
+Règles de calcul retenues au lancement de J8, validées par l'utilisateur le 2026-11-10 :
 - une facture ou un bon de commande compte s'il est en vigueur (ni Brouillon ni Annulé) et daté dans la période, bornes incluses ;
 - les avoirs validés sont déduits de leur facture, quelle que soit leur date : CA HT, TVA et CA TTC sont nets de leurs avoirs, et total payé + total impayé = CA TTC ;
 - CA HT = HT après remise (base de la TVA) ; CA TTC = montant dû (retenue déduite) ;
@@ -396,7 +397,7 @@ Types SQLite : `INTEGER` (identifiants, montants, pourcentages, quantités, bool
 Exigences (spécifié) :
 - Un seul moteur paramétré par un modèle par type de document.
 - Contenu : en-tête entreprise (logo, coordonnées, RCCM/IFU), identification du tiers, tableau des lignes, totaux, montant en lettres, pied de page (comptes bancaires, signataires).
-- Mise en page reprise de l'Excel : bande verticale de couleur à gauche, logo, bloc entreprise, bloc tiers, tableau, totaux, montant en lettres, signataire, pied de page avec adresse, RCCM, IFU, comptes bancaires, site et email. Couleur principale paramétrable.
+- Mise en page reprise de l'Excel : logo, bloc entreprise, bloc tiers, tableau, totaux, montant en lettres, signataire, pied de page avec adresse, RCCM, IFU, comptes bancaires, site et email. Couleur principale paramétrable. La bande verticale de couleur à gauche de l'Excel est retirée de tous les PDF (décision de l'utilisateur du 2026-11-10 : aucune barre d'accent latérale, ni à l'écran ni à l'impression) ; marges gauche et droite égales.
 - Documents exportés : Devis, Proforma, Bon de commande, Bordereau de livraison, Facture, Avoir, lettre de relance. Les registres (listes filtrées, encaissements, relances) s'exportent aussi en PDF, en plus de l'export Excel.
 - Deux logos : un logo principal et un logo secondaire facultatif (certification, partenaire), comme les deux chemins de logo du réglage Excel.
 - Format A4 portrait.
@@ -412,6 +413,16 @@ Règles multi-pages (spécifié) :
 - Réimpression identique à l'original (décision du 2026-11-09) : à la validation, les données de l'entreprise (coordonnées, RCCM, IFU, banques, logos), les textes du document et la couleur principale sont figés avec le document, comme le snapshot du tiers ; une modification ultérieure de la fiche entreprise ou des réglages ne change pas les documents déjà validés.
 - Textes par défaut, repris de l'outil Excel d'origine : titre égal au nom du type en majuscules (« FACTURE », « BON DE COMMANDE »...), libellé « Client » ou « Fournisseur », phrase « Arrêté la présente facture à la somme de <montant en lettres> francs (<montant en chiffres>) FCFA. », signataire « LA COMPTABILITE » suivi du nom du responsable. Tous réglables (section 5.4).
 - Pagination automatique.
+
+Réglages d'impression (spécifié, jalon J8b, décision de l'utilisateur du 2026-11-10) :
+- En-tête et pied de page ne sont plus figés par le programme : ce sont des zones de contenu libre, pensées comme une signature de mail, composées par l'Admin et copiables. Une zone vide n'imprime rien et le document s'adapte.
+- Contenu d'une zone : texte libre multiligne avec un mini-markup restreint (gras, italique, ligne centrée ; l'italique est permise dans ce contenu des documents des clients, par exception à la règle générale de l'interface) et des variables `{...}` insérées depuis une liste déroulante : `{nom}`, `{rccm}`, `{ifu}`, `{banque1}`, `{logo}`... `{logo}` est une variable visuelle : le logo fait partie du contenu d'une zone. Le markup est analysé en données structurées (paragraphes, passages, alignement), jamais stocké tel quel ; aucun moteur HTML : le moteur PDF de Kadenz reste maître du rendu.
+- Gabarits A4 codés, choisis et non redessinés champ par champ, avec aperçu en direct sur un document d'exemple : Classique (bande en haut, tableau large), Compact (colonne resserrée), Papier pré-imprimé, et la variante « en-tête répété » sur les pages suivantes. Le gabarit « Bande latérale » de la réflexion d'origine tombe avec la décision de retirer la bande verticale (question 14).
+- Papier pré-imprimé : ni bande, ni logo, ni en-tête, ni pied de page ; seul le corps du document s'imprime (tableau, totaux, montants, signataire, visas), calé dans la zone imprimable. Le contenu des zones reste dans les réglages, ce gabarit l'ignore.
+- Marges haut, bas, gauche et droite en millimètres ; bouton « Tester l'impression » qui imprime une feuille de calibrage (cadre, croix aux angles) pour les ajuster au papier spécial et à l'imprimante.
+- Droits : choix du gabarit, marges, contenu des zones et variantes par type au droit « Gérer les paramètres » (Admin par défaut, délégable par la matrice) ; les autres rôles impriment sans rien configurer.
+- Instantané : contenu des zones, gabarit et marges sont figés à la validation avec les données de l'entreprise, les logos et les textes ; les variables sont résolues sur les valeurs figées, la réimpression reste identique. Un brouillon s'imprime en aperçu avec les valeurs du moment.
+- Aperçu en direct : le PDF réel est rastérisé en image pour l'écran des Paramètres (essai de hayro, moteur de rendu PDF en Rust pur, au début de J8b ; objectif inférieur à 100 ms par page à 600 px de large, sinon bouton « Actualiser l'aperçu » ; repli sur l'ouverture du PDF dans la visionneuse de Windows si le rendu n'est pas fidèle).
 
 Choix technique (spécifié) : c'est la partie la plus délicate en Rust pur (modèles, pagination, logo, polices). La bibliothèque sera choisie après un essai sur une page de facture complète.
 
@@ -481,6 +492,10 @@ Livré au jalon J4 : depuis la fiche d'une facture, « Aperçu PDF » pour un br
 10. **Délais par défaut** : tranchée le 2026-11-09, la durée de validité des devis et le délai de paiement des factures restent vides par défaut (réglages de la section 5.4) ; aucune date d'échéance n'est calculée tant que l'entreprise ne les renseigne pas.
 11. **Import dans l'assistant** : tranchée le 2026-11-09, l'étape d'import des tiers et des produits dans l'assistant de premier lancement est reportée ; l'import reste disponible depuis les écrans Tiers et Produits.
 12. **Réglage de la numérotation** : tranchée le 2026-11-09, un numéro à compteur annuel s'écrit `{Préfixe}{AAAA}-{rang}`, ex. `F2026-0001` (section 6.1) ; le réglage complet de la section 5.4 est livré.
+13. **Gabarits d'impression** (à l'étude, J8b) : nombre de gabarits au lancement et leurs variantes finales (logo secondaire, dense ou aéré).
+14. **Gabarit « Bande latérale »** (à l'étude, J8b) : écarté par la décision du 2026-11-10 de retirer la bande verticale des PDF, sauf avis contraire de l'utilisateur.
+15. **Marges et contenu d'impression** (à l'étude, J8b) : marges globales ou par gabarit ; un contenu d'en-tête et de pied commun à tous les documents ou des variantes par type.
+16. **Variables d'impression** (à l'étude, J8b) : champs de l'entreprise et logo seulement, ou aussi champs du document (numéro, date, montant TTC) dans le pied de page.
 
 ---
 
@@ -496,6 +511,7 @@ Livré au jalon J4 : depuis la fiche d'une facture, « Aperçu PDF » pour un br
 | J6 | Bons de commande et réception, bordereaux de livraison |
 | J7 | Paiements, registres, relances et lettre de relance |
 | J8 | Tableau de bord, ventes et achats |
+| J8b | Impression : en-tête et pied de page libres, gabarits, papier pré-imprimé, marges et calibrage (inséré le 2026-11-10) |
 | J9 | Licence : outil éditeur, vérification, activation des modules |
 | J10 | Mises à jour, export Excel (l'installateur est avancé après J7, décision du 2026-11-10) |
 

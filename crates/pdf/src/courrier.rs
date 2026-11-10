@@ -1,5 +1,5 @@
 //! Lettre de relance et listes imprimées (registre des règlements, relances),
-//! avec l'en-tête, la bande de couleur et le pied de page des documents.
+//! avec l'en-tête et le pied de page des documents.
 
 use krilla::Document;
 use krilla::metadata::Metadata;
@@ -7,8 +7,8 @@ use krilla::page::PageSettings;
 
 use crate::modele::{ColonnePdf, DocumentPdf, LettrePdf, ListePdf, TotalPdf};
 use crate::rendu::{
-    BANDE, BAS, BLANC, BORDURE, DROITE, ENCRE, FOND_CLAIR, GAUCHE, HAUT, HAUTEUR, LARGEUR,
-    MARGE_CELLULE, Moteur, SECONDAIRE, Toile, UTILE, base_centree,
+    BAS, BLANC, BORDURE, DROITE, ENCRE, FOND_CLAIR, GAUCHE, HAUT, HAUTEUR, LARGEUR, MARGE_CELLULE,
+    Moteur, SECONDAIRE, Toile, UTILE, base_centree,
 };
 use crate::texte::{Police, Polices};
 
@@ -206,7 +206,6 @@ pub fn generer_lettre(l: &LettrePdf, polices: &Polices) -> Result<Vec<u8>, Strin
     let mut t = Toile {
         s: Some(&mut surface),
     };
-    t.rectangle(0.0, 0.0, BANDE, HAUTEUR, l.couleur);
     let y = HAUT + m.en_tete(&mut t, HAUT);
     corps_lettre(&m, polices, l, &mut t, y);
     m.pied(&mut t, 1, 1);
@@ -381,7 +380,6 @@ pub fn generer_liste(liste: &ListePdf, polices: &Polices) -> Result<Vec<u8>, Str
         let mut t = Toile {
             s: Some(&mut surface),
         };
-        t.rectangle(0.0, 0.0, BANDE, HAUTEUR, liste.couleur);
         let mut y = HAUT + m.en_tete(&mut t, HAUT);
         if k == 0 {
             y += tableau.criteres(&m, polices, &mut t, y);

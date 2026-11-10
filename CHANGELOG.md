@@ -24,6 +24,9 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 - Page À propos en trois cartes (Logiciel, Données de ce poste avec le fichier de la base et la version du schéma, Composants tiers) ; le composant AboutSlint est retiré, l'attribution de Slint passe par le badge « Made with Slint » du README du dépôt public.
 - Jalon J8, stockage : indicateurs du tableau de bord sur une période (module pilotage) : CA HT, TVA et CA TTC nets des avoirs, payé et impayé, CA par état et par mode de paiement, tendance mensuelle, top 5 clients, 4 dernières factures ; achats (total des bons de commande, payé, reste dû) ; années disponibles pour le filtre.
 
+### Modifié
+- PDF : la bande verticale de couleur à gauche des pages est retirée (factures et autres documents, lettre de relance, registres), marges gauche et droite égales ; la couleur principale reste sur le titre et l'en-tête du tableau.
+
 ### Corrigé
 - Écrans : plus de liseré de couleur sur un seul côté (tuiles du tableau de bord, entrée active du menu latéral) ; toutes les bordures sont égales sur les quatre côtés.
 - Installateur : la construction refuse un kadenz.exe plus ancien que le dernier commit (un installateur avait embarqué l'application du premier jour, qui affichait « module non encore implémenté »).

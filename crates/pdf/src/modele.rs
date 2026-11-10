@@ -110,7 +110,7 @@ pub struct DocumentPdf {
     /// initiale (en_lettres_majuscule).
     pub montant_en_lettres: String,
     pub filigrane: Filigrane,
-    /// Couleur principale (bande, en-tête du tableau, titre).
+    /// Couleur principale (en-tête du tableau, titre).
     pub couleur: [u8; 3],
 }
 
@@ -118,7 +118,7 @@ pub struct DocumentPdf {
 #[derive(Debug, Clone, Default)]
 pub struct LettrePdf {
     pub entreprise: EntreprisePdf,
-    /// Couleur principale (bande, titre, en-tête du tableau).
+    /// Couleur principale (titre, en-tête du tableau).
     pub couleur: [u8; 3],
     /// Ligne de lieu et de date, déjà écrite (« Ouagadougou, le 11/06/2026 »).
     pub lieu_et_date: String,
