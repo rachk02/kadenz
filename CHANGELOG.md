@@ -12,6 +12,7 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 
 ### Corrigé
 - Fiche d'un document : la saisie dans une ligne n'est plus perdue après un enregistrement (les lignes restent en place au lieu d'être recréées).
+- Fiche d'un document : « Dupliquer » sur un brouillon enregistre d'abord la saisie affichée ; les raccourcis restent actifs après la suppression d'une ligne ou une validation ; la rangée Remise et TVA ne déborde plus de sa colonne.
 - Refus de validation des tiers et des produits (nom, désignation, référence, prix) traduits dans les six langues.
 - PDF d'un devis ou d'une proforma : la date de fin de validité s'imprime sous « Validité » et non plus « Échéance », comme à l'écran.
 - État de paiement « Payé » quand le montant dû est nul ou déjà atteint (facture couverte par ses avoirs), conformément à la section 8.

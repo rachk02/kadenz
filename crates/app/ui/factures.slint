@@ -799,6 +799,8 @@ component Fiche inherits ScrollView {
                 // Les totaux sont recalculés par l'application : cette ligne,
                 // et donc ce gestionnaire, disparaît avec la suppression.
                 clicked => {
+                    // Le champ qui avait le focus peut disparaître avec la ligne.
+                    FacturesApi.demande-focus += 1;
                     FacturesApi.supprimer-ligne(i);
                 }
             }
@@ -861,7 +863,7 @@ component Fiche inherits ScrollView {
                 row: 0;
                 col: Theme.rtl ? 1 : 0;
                 spacing: 10px;
-                width: 320px;
+                width: 340px;
 
                 Rangee {
                     spacing: 12px;
@@ -1054,8 +1056,15 @@ component Fiche inherits ScrollView {
                 text: @tr("Dupliquer");
                 clicked => {
                     root.confirmation = 0;
-                    root.retour = FacturesApi.dupliquer(false);
-                    root.recharger-si-besoin();
+                    // Un brouillon est d'abord enregistré : la copie reprend la saisie affichée.
+                    if (root.fiche.modifiable) {
+                        root.retour = FacturesApi.enregistrer(root.saisie());
+                        root.recharger-si-besoin();
+                    }
+                    if (!root.fiche.modifiable || root.retour.ok) {
+                        root.retour = FacturesApi.dupliquer(false);
+                        root.recharger-si-besoin();
+                    }
                 }
             }
 
@@ -1097,6 +1106,9 @@ component Fiche inherits ScrollView {
                         }
                         root.confirmation = 0;
                         root.recharger-si-besoin();
+                        // Validée ou annulée, la fiche n'est plus modifiable : les champs
+                        // de saisie des produits disparaissent, peut-être avec le focus.
+                        FacturesApi.demande-focus += 1;
                     }
                 }
 
