@@ -280,7 +280,7 @@ fn transition_refusee(e: TransitionInterdite) -> Erreur {
     )
 }
 
-fn date_texte(d: NaiveDate) -> String {
+pub(crate) fn date_texte(d: NaiveDate) -> String {
     d.format(FORMAT_DATE).to_string()
 }
 
@@ -288,13 +288,13 @@ fn conversion(colonne: usize, message: String) -> rusqlite::Error {
     rusqlite::Error::FromSqlConversionFailure(colonne, rusqlite::types::Type::Text, message.into())
 }
 
-fn lire_date(r: &rusqlite::Row<'_>, colonne: usize) -> rusqlite::Result<NaiveDate> {
+pub(crate) fn lire_date(r: &rusqlite::Row<'_>, colonne: usize) -> rusqlite::Result<NaiveDate> {
     let texte: String = r.get(colonne)?;
     NaiveDate::parse_from_str(&texte, FORMAT_DATE)
         .map_err(|_| conversion(colonne, format!("date illisible : {texte}")))
 }
 
-fn lire_date_facultative(
+pub(crate) fn lire_date_facultative(
     r: &rusqlite::Row<'_>,
     colonne: usize,
 ) -> rusqlite::Result<Option<NaiveDate>> {
@@ -310,7 +310,7 @@ fn lire_statut(r: &rusqlite::Row<'_>, colonne: usize) -> rusqlite::Result<Statut
         .ok_or_else(|| conversion(colonne, format!("statut inconnu : {code}")))
 }
 
-fn lire_type(r: &rusqlite::Row<'_>, colonne: usize) -> rusqlite::Result<TypeDocument> {
+pub(crate) fn lire_type(r: &rusqlite::Row<'_>, colonne: usize) -> rusqlite::Result<TypeDocument> {
     let code: String = r.get(colonne)?;
     TypeDocument::depuis_code(&code)
         .ok_or_else(|| conversion(colonne, format!("type de document inconnu : {code}")))
@@ -588,7 +588,7 @@ fn ligne_vers_lien(r: &rusqlite::Row<'_>) -> rusqlite::Result<Lien> {
 }
 
 /// Total TTC des avoirs validés (ou envoyés) d'une facture.
-fn avoirs_valides(conn: &Connection, facture_id: i64) -> Resultat<Montant> {
+pub(crate) fn avoirs_valides(conn: &Connection, facture_id: i64) -> Resultat<Montant> {
     Ok(conn.query_row(
         "SELECT COALESCE(SUM(montant_ttc), 0) FROM document
          WHERE document_source_id = ?1 AND type = 'avoir' AND statut IN ('valide', 'envoye')",
@@ -690,7 +690,7 @@ pub fn lire(conn: &Connection, id: i64) -> Resultat<Option<Document>> {
     Ok(Some(d))
 }
 
-fn lire_existant(conn: &Connection, id: i64) -> Resultat<Document> {
+pub(crate) fn lire_existant(conn: &Connection, id: i64) -> Resultat<Document> {
     lire(conn, id)?.ok_or_else(|| invalide("ce document n'existe plus"))
 }
 
@@ -826,7 +826,7 @@ pub fn creer_brouillon(
 }
 
 /// Date du jour, pour les documents créés à partir d'un autre.
-fn aujourd_hui() -> NaiveDate {
+pub(crate) fn aujourd_hui() -> NaiveDate {
     chrono::Local::now().date_naive()
 }
 
@@ -1536,6 +1536,12 @@ pub fn annuler(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
             "cette facture a des bordereaux non confirmés : les annuler ou confirmer leur livraison d'abord",
         ));
     }
+    // Règlements : refus tant qu'il en reste (décision du 2026-11-10, jalon J7).
+    if d.type_document.recoit_des_reglements() && crate::reglements::nombre(&tx, id)? > 0 {
+        return Err(invalide(
+            "ce document a des règlements : les supprimer d'abord",
+        ));
+    }
     tx.execute(
         "UPDATE document SET statut = ?1 WHERE id = ?2",
         params![Statut::Annule.code(), id],
@@ -1806,6 +1812,24 @@ fn libelle_evenement(e: &EntreeLue) -> (String, Vec<String>) {
             Some(statut) => avec("Réception enregistrée, {}", &statut),
             None => fixe("Réception enregistrée"),
         },
+        "reglement" | "suppression_reglement" => {
+            let valeur = if e.action == "reglement" {
+                &e.nouvelle_valeur
+            } else {
+                &e.ancienne_valeur
+            };
+            let montant = valeur
+                .as_ref()
+                .and_then(|v| v.get("montant"))
+                .and_then(Value::as_i64)
+                .map(montant_en_texte);
+            match (e.action.as_str(), montant) {
+                ("reglement", Some(m)) => avec("Règlement de {} FCFA enregistré", &m),
+                ("reglement", None) => fixe("Règlement enregistré"),
+                (_, Some(m)) => avec("Règlement de {} FCFA supprimé", &m),
+                (_, None) => fixe("Règlement supprimé"),
+            }
+        }
         "livraison" => match libelle_statut(&e.nouvelle_valeur) {
             Some(statut) => avec("Livraison confirmée, {}", &statut),
             None => fixe("Livraison confirmée"),

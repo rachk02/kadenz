@@ -20,6 +20,7 @@
 | 2.14 | 2026-11-10 | Décisions J6 (suite) : confirmation de la livraison au droit « Valider un document », annulation d'une facture refusée tant qu'un de ses bordereaux n'est ni confirmé ni annulé (sections 6.5 et 10.1) |
 | 2.15 | 2026-11-10 | J6 livré : bons de commande et réception, bordereaux de livraison depuis une facture ou vierges, visas et dates, confirmation de la livraison, PDF du bon de commande et du bordereau (section 19, périmètre de J6, avec les choix de mise en œuvre à confirmer) |
 | 2.16 | 2026-11-10 | Choix de mise en œuvre de J6 validés par l'utilisateur (section 19, périmètre de J6) |
+| 2.17 | 2026-11-10 | Décisions J7 : date d'un règlement, annulation refusée tant qu'il reste des règlements, suppression au droit « Saisir un règlement », factures sans échéance hors relances, relances sur factures validées ou envoyées, PDF des registres dès J7, lettre de relance proposée puis validée par l'utilisateur, trois entrées de menu, registre avec sous-totaux par mode (sections 8 et 10.1) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -306,6 +307,8 @@ Relances (module Relances) :
 - Impression d'une lettre de relance par facture (PDF), à l'identité de l'entreprise.
 - Envoi par email hors périmètre V1.
 
+Décisions du 2026-11-10 (jalon J7) : la date d'un règlement est comprise entre la date du document et le jour de la saisie ; une facture ou un bon de commande qui a des règlements ne s'annule pas, il faut d'abord supprimer ses règlements ; supprimer un règlement suit le droit « Saisir un règlement ». Une facture est échue le lendemain de sa date d'échéance ; une facture sans date d'échéance n'est jamais échue et n'apparaît pas dans les relances ; une facture Validée ou Envoyée est relançable. Le registre des règlements et la liste des relances s'exportent en PDF dès J7, l'export Excel de la liste des relances suit en J10 avec les autres exports. Le texte de la lettre de relance est proposé puis validé par l'utilisateur. Navigation : trois entrées après Avoirs, « Règlements » (registre des encaissements et des décaissements, total de la sélection et sous-totaux par mode de paiement), « Suivi fournisseurs » et « Relances ».
+
 ---
 
 ## 9. Pilotage (spécifié)
@@ -337,7 +340,7 @@ Quatre rôles livrés par défaut avec la matrice ci-dessous. L'Admin peut modif
 | Consulter tableau de bord / registres | oui | oui | oui | oui |
 | Sauvegarder / exporter la base | oui | non | non | non |
 
-Actions que la matrice ne nomme pas (choix du 2026-11-09, jalon J3) : supprimer ou annuler un brouillon et modifier les champs administratifs d'un document validé (mode de paiement, observations) suivent le droit de brouillon du type de document ; marquer un document envoyé suit « Valider un document ». Enregistrer la réception d'un bon de commande suit aussi « Valider un document » (décision de l'utilisateur du 2026-11-10, jalon J6). Confirmer la livraison d'un bordereau suit aussi « Valider un document » (même décision).
+Actions que la matrice ne nomme pas (choix du 2026-11-09, jalon J3) : supprimer ou annuler un brouillon et modifier les champs administratifs d'un document validé (mode de paiement, observations) suivent le droit de brouillon du type de document ; marquer un document envoyé suit « Valider un document ». Enregistrer la réception d'un bon de commande suit aussi « Valider un document » (décision de l'utilisateur du 2026-11-10, jalon J6). Confirmer la livraison d'un bordereau suit aussi « Valider un document » (même décision). Supprimer un règlement saisi par erreur suit « Saisir un règlement » (décision de l'utilisateur du 2026-11-10, jalon J7).
 
 ### 10.2 Comptes
 Mots de passe stockés hachés avec Argon2id (jamais en clair). Le premier compte Admin est créé par l'assistant de premier lancement. L'Admin crée et désactive les comptes et réinitialise les mots de passe.

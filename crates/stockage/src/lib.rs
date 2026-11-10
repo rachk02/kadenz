@@ -9,6 +9,7 @@ pub mod impression;
 pub mod installation;
 pub mod parametres;
 pub mod produits;
+pub mod reglements;
 pub mod tiers;
 
 use std::fmt;
