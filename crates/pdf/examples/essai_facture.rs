@@ -161,7 +161,42 @@ fn main() {
         totaux: totaux_avoir,
         ..doc.clone()
     };
-    for (nom, document) in [("essai-devis.pdf", devis), ("essai-avoir.pdf", avoir)] {
+    // Bon de commande (J6) : fournisseur, retenue de 5 % sur la base TVA.
+    let lignes_bc: Vec<LignePdf> = doc.lignes.iter().take(5).cloned().collect();
+    let taux_bc = Taux {
+        retenue: 500,
+        ..taux
+    };
+    let totaux_bc = calculer_totaux(
+        lignes_bc.iter().map(|l| (l.prix, l.quantite)),
+        taux_bc,
+        true,
+    );
+    let bon_commande = DocumentPdf {
+        tiers: TiersPdf {
+            nom: "Fournisseur Beta".into(),
+            ..doc.tiers.clone()
+        },
+        textes: TextesPdf {
+            titre: "BON DE COMMANDE".into(),
+            libelle_tiers: "Fournisseur".into(),
+            phrase_somme: "Arrêté le présent bon de commande à la somme de".into(),
+            ..doc.textes.clone()
+        },
+        numero: "C2026-11-0001".into(),
+        echeance: String::new(),
+        libelle: "Réapprovisionnement du dépôt".into(),
+        lignes: lignes_bc,
+        taux: taux_bc,
+        montant_en_lettres: en_lettres_majuscule(totaux_bc.ttc, Orthographe::Rectifiee),
+        totaux: totaux_bc,
+        ..doc.clone()
+    };
+    for (nom, document) in [
+        ("essai-devis.pdf", devis),
+        ("essai-avoir.pdf", avoir),
+        ("essai-bon-commande.pdf", bon_commande),
+    ] {
         let octets = kadenz_pdf::generer(&document, &polices).expect("PDF produit");
         let chemin = std::path::Path::new(&dossier).join(nom);
         std::fs::write(&chemin, &octets).expect("écriture");

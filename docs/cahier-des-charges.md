@@ -16,6 +16,7 @@
 | 2.10 | 2026-11-09 | J4 livré : aperçu et export PDF depuis l'écran Factures, textes imprimés, couleur et dossiers d'export réglables dans Paramètres (section 12, périmètre de J4) ; mise en page de droite à gauche en arabe (section 13) |
 | 2.11 | 2026-11-09 | Décisions J5 : devis ou proforma converti à la validation de la facture, avoir aux lignes reprises plafonné au TTC de la facture, facture couverte par ses avoirs inchangée, entrée de menu Avoirs ; règles de refus des documents liés ; état « Payé » pour un montant dû nul (sections 6.7, 7.1, 7.7 et 8) |
 | 2.12 | 2026-11-10 | J5 livré : devis, proformas et avoirs dans la fiche commune, conversion en facture, duplication et correction, documents liés, PDF des devis, proformas et avoirs (« Validité » à la place de « Échéance »), raccourcis clavier précisés (section 4.1) et création rapide d'un client (section 19, périmètre de J5) |
+| 2.13 | 2026-11-10 | Décisions J6 : bordereau vierge pour un client, « Confirmer la livraison » après le visa du client, dépassement du reste à livrer et de la quantité commandée refusé, reste à livrer sans les avoirs, réception d'un bon de commande au droit « Valider un document » (sections 6.5, 7.7 et 10.1) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -197,6 +198,8 @@ Pas de montant. Colonnes par ligne : référence, désignation, quantité comman
 
 Un bordereau se crée soit à partir d'une Facture (reprise des lignes et des quantités commandées, lien vers la Facture), soit vierge. Une même Facture peut recevoir plusieurs bordereaux (livraisons en plusieurs fois) ; la quantité restant à livrer par ligne tient compte des bordereaux validés précédents.
 
+Décisions du 2026-11-10 (jalon J6) : le tiers d'un bordereau vierge est un client (type Client ou Les deux). Validé signifie bordereau émis, pas encore livré : après le visa du client, l'action « Confirmer la livraison » fait passer le bordereau en Livraison partielle ou Livraison complète, selon la quantité livrée comparée à la quantité commandée. Une quantité livrée qui dépasse le reste à livrer de la facture est refusée, avec un message demandant de la corriger. Le reste à livrer suit les seules lignes de la facture : un avoir diminue le montant dû, pas le reste à livrer.
+
 ### 6.6 Facture (F-...)
 Structure identique au Devis. Document définitif, porte un état de paiement (section 8). Champ date d'échéance, calculé à partir du délai de paiement paramétré.
 
@@ -276,7 +279,7 @@ L'état de paiement (Facture et Bon de commande) est un axe séparé du statut d
 - **Duplication** : copie d'un document en nouveau brouillon du même type (date du jour, échéance recalculée), avec référence vers l'original. En correction d'un devis ou d'une proforma Validé ou Envoyé, l'original passe en Annulé dans la même transaction (section 7.2) ; une facture se corrige par un avoir ; un avoir ne se duplique pas.
 - **Facture → Bordereau(x) de livraison** : voir section 6.5.
 - **Facture → Avoir** : voir section 6.7.
-- **Bon de commande → réception** : pas de nouveau document. Les quantités reçues sont mises à jour ligne par ligne sur le Bon de commande (Non reçu / Partiel / Complet), ce qui permet des livraisons fournisseur en plusieurs fois.
+- **Bon de commande → réception** : pas de nouveau document. Les quantités reçues sont mises à jour ligne par ligne sur le Bon de commande (Non reçu / Partiel / Complet), ce qui permet des livraisons fournisseur en plusieurs fois. Une quantité reçue qui dépasse la quantité commandée est refusée (décision du 2026-11-10) ; l'enregistrement de la réception suit le droit « Valider un document » (section 10.1).
 
 ---
 
@@ -331,7 +334,7 @@ Quatre rôles livrés par défaut avec la matrice ci-dessous. L'Admin peut modif
 | Consulter tableau de bord / registres | oui | oui | oui | oui |
 | Sauvegarder / exporter la base | oui | non | non | non |
 
-Actions que la matrice ne nomme pas (choix du 2026-11-09, jalon J3) : supprimer ou annuler un brouillon et modifier les champs administratifs d'un document validé (mode de paiement, observations) suivent le droit de brouillon du type de document ; marquer un document envoyé suit « Valider un document ».
+Actions que la matrice ne nomme pas (choix du 2026-11-09, jalon J3) : supprimer ou annuler un brouillon et modifier les champs administratifs d'un document validé (mode de paiement, observations) suivent le droit de brouillon du type de document ; marquer un document envoyé suit « Valider un document ». Enregistrer la réception d'un bon de commande suit aussi « Valider un document » (décision de l'utilisateur du 2026-11-10, jalon J6).
 
 ### 10.2 Comptes
 Mots de passe stockés hachés avec Argon2id (jamais en clair). Le premier compte Admin est créé par l'assistant de premier lancement. L'Admin crée et désactive les comptes et réinitialise les mots de passe.

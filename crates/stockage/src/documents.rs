@@ -28,7 +28,7 @@ use chrono::NaiveDate;
 use kadenz_domaine::calcul::{
     CENT_POUR_CENT, Montant, Quantite, Taux, Totaux, calculer_totaux, total_ligne,
 };
-use kadenz_domaine::document::verifier_transition;
+use kadenz_domaine::document::{Avancement, avancement, verifier_transition};
 pub use kadenz_domaine::document::{Statut, TypeDocument};
 pub use kadenz_domaine::paiement::EtatPaiement;
 use kadenz_domaine::paiement::etat_paiement;
@@ -54,6 +54,10 @@ pub struct LigneSaisie {
     pub designation: String,
     pub prix: Montant,
     pub quantite: Quantite,
+    /// Quantité livrée d'un bordereau, saisie dans le brouillon ; quantité reçue
+    /// d'un bon de commande, mise à jour par `enregistrer_reception` seulement.
+    /// Toujours 0 pour les autres types.
+    pub quantite_livree: Quantite,
     pub observations: String,
 }
 
@@ -160,8 +164,8 @@ pub struct Document {
     pub source: Option<Lien>,
     /// Documents issus de celui-ci, du plus ancien au plus récent.
     pub derives: Vec<Lien>,
-    /// Montant dû d'un document qui reçoit des règlements, une fois Validé ou
-    /// Envoyé : TTC moins les avoirs validés (section 7.1).
+    /// Montant dû d'un document qui reçoit des règlements, une fois validé et
+    /// tant qu'il n'est pas annulé : TTC moins les avoirs validés (section 7.1).
     pub montant_du: Option<Montant>,
     /// Facture Validée ou Envoyée : TTC moins les avoirs déjà validés, plafond
     /// d'un nouvel avoir.
@@ -312,6 +316,14 @@ fn nettoyer(type_document: TypeDocument, saisie: &Saisie) -> Resultat<Saisie> {
                 "ligne {n} : la quantité doit être supérieure à zéro"
             )));
         }
+        if type_document != TypeDocument::Livraison {
+            // La réception d'un bon de commande ne passe pas par le brouillon.
+            ligne.quantite_livree = 0;
+        } else if !(0..=ligne.quantite).contains(&ligne.quantite_livree) {
+            return Err(invalide(format!(
+                "ligne {n} : la quantité livrée doit être comprise entre 0 et la quantité commandée"
+            )));
+        }
     }
     Ok(s)
 }
@@ -417,8 +429,9 @@ fn ecrire_contenu(
     conn.execute("DELETE FROM ligne_document WHERE document_id = ?1", [id])?;
     let mut insertion = conn.prepare(
         "INSERT INTO ligne_document (document_id, produit_id, reference_snapshot,
-             designation_snapshot, prix_snapshot, quantite, total, observations, ordre)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+             designation_snapshot, prix_snapshot, quantite, quantite_livree, total,
+             observations, ordre)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
     )?;
     for (ordre, l) in s.lignes.iter().enumerate() {
         insertion.execute(params![
@@ -428,6 +441,7 @@ fn ecrire_contenu(
             l.designation,
             l.prix,
             l.quantite,
+            l.quantite_livree,
             total_ligne(l.prix, l.quantite),
             l.observations,
             ordre as i64
@@ -544,7 +558,7 @@ fn completer_liens(conn: &Connection, d: &mut Document) -> Resultat<()> {
     d.derives = requete
         .query_map([d.id], ligne_vers_lien)?
         .collect::<rusqlite::Result<Vec<_>>>()?;
-    if matches!(d.statut, Statut::Valide | Statut::Envoye) {
+    if d.statut.en_vigueur() {
         let avoirs = if d.type_document == TypeDocument::Facture {
             avoirs_valides(conn, d.id)?
         } else {
@@ -574,7 +588,7 @@ pub fn lire(conn: &Connection, id: i64) -> Resultat<Option<Document>> {
     };
     let mut requete = conn.prepare(
         "SELECT produit_id, reference_snapshot, designation_snapshot, prix_snapshot, quantite,
-                observations, total
+                observations, total, quantite_livree
          FROM ligne_document WHERE document_id = ?1 ORDER BY ordre, id",
     )?;
     let lignes = requete
@@ -586,6 +600,7 @@ pub fn lire(conn: &Connection, id: i64) -> Resultat<Option<Document>> {
                     designation: r.get(2)?,
                     prix: r.get(3)?,
                     quantite: r.get(4)?,
+                    quantite_livree: r.get(7)?,
                     observations: r.get(5)?,
                 },
                 r.get::<_, Montant>(6)?,
@@ -636,8 +651,7 @@ pub fn lister(
             let ttc: Montant = r.get(5)?;
             let regle: Montant = r.get(9)?;
             let avoirs: Montant = r.get(10)?;
-            let etat = (recoit && matches!(statut, Statut::Valide | Statut::Envoye))
-                .then(|| etat_paiement(ttc - avoirs, regle));
+            let etat = (recoit && statut.en_vigueur()).then(|| etat_paiement(ttc - avoirs, regle));
             Ok(ResumeDocument {
                 id: r.get(0)?,
                 numero: r.get(1)?,
@@ -1228,6 +1242,106 @@ pub fn modifier_administratif(
     Ok(())
 }
 
+/// Droit d'enregistrer la réception d'un bon de commande : « Valider un
+/// document », comme le marquage envoyé (décision du 2026-11-10, section 10.1).
+fn droit_reception() -> Droit {
+    Droit::ValiderDocument
+}
+
+/// Réception d'un bon de commande Envoyé ou en Réception partielle (section 7.7) :
+/// quantité reçue cumulée de chaque ligne, dans l'ordre des lignes. Le statut suit :
+/// Réception complète quand chaque ligne a reçu sa quantité commandée, Réception
+/// partielle dès qu'une quantité est arrivée. Une saisie qui ferait revenir en
+/// arrière (tout à zéro après une réception partielle) est refusée ; Réception
+/// complète est définitive.
+pub fn enregistrer_reception(
+    conn: &mut Connection,
+    acteur: &Utilisateur,
+    id: i64,
+    recues: &[Quantite],
+) -> Resultat<()> {
+    let tx = conn.transaction()?;
+    let d = lire_existant(&tx, id)?;
+    exiger(&tx, acteur, droit_reception())?;
+    if d.type_document != TypeDocument::BonCommande {
+        return Err(invalide(
+            "la réception ne concerne que les bons de commande",
+        ));
+    }
+    if !matches!(d.statut, Statut::Envoye | Statut::ReceptionPartielle) {
+        return Err(invalide(format!(
+            "la réception s'enregistre sur un bon de commande envoyé ; celui-ci est « {} »",
+            d.statut
+        )));
+    }
+    if recues.len() != d.saisie.lignes.len() {
+        return Err(invalide(
+            "la réception doit donner une quantité pour chaque ligne du bon de commande",
+        ));
+    }
+    for (rang, (ligne, &recue)) in d.saisie.lignes.iter().zip(recues).enumerate() {
+        let n = rang + 1;
+        if recue < 0 {
+            return Err(invalide(format!(
+                "ligne {n} : la quantité reçue ne peut pas être négative"
+            )));
+        }
+        // Dépassement refusé, pas simple avertissement (décision du 2026-11-10).
+        if recue > ligne.quantite {
+            return Err(invalide(format!(
+                "ligne {n} : la quantité reçue dépasse la quantité commandée, la corriger"
+            )));
+        }
+    }
+    let anciennes: Vec<Quantite> = d.saisie.lignes.iter().map(|l| l.quantite_livree).collect();
+    if anciennes == recues {
+        return Ok(());
+    }
+    let nouveau = match avancement(
+        d.saisie
+            .lignes
+            .iter()
+            .map(|l| l.quantite)
+            .zip(recues.iter().copied()),
+    ) {
+        Avancement::Aucun if d.statut == Statut::Envoye => Statut::Envoye,
+        Avancement::Aucun => {
+            return Err(invalide(
+                "une réception partielle est déjà enregistrée : au moins une quantité reçue reste nécessaire",
+            ));
+        }
+        Avancement::Partiel => Statut::ReceptionPartielle,
+        Avancement::Complet => Statut::ReceptionComplete,
+    };
+    if nouveau != d.statut {
+        verifier_transition(d.type_document, d.statut, nouveau)
+            .map_err(|e| invalide(e.to_string()))?;
+    }
+    let mut maj = tx.prepare(
+        "UPDATE ligne_document SET quantite_livree = ?1
+         WHERE id = (SELECT id FROM ligne_document WHERE document_id = ?2
+                     ORDER BY ordre, id LIMIT 1 OFFSET ?3)",
+    )?;
+    for (rang, recue) in recues.iter().enumerate() {
+        maj.execute(params![recue, id, rang as i64])?;
+    }
+    drop(maj);
+    tx.execute(
+        "UPDATE document SET statut = ?1 WHERE id = ?2",
+        params![nouveau.code(), id],
+    )?;
+    journaliser_statut(
+        &tx,
+        id,
+        "reception",
+        Some(json!({ "statut": d.statut.code(), "quantites": anciennes })),
+        json!({ "statut": nouveau.code(), "quantites": recues }),
+        acteur,
+    )?;
+    tx.commit()?;
+    Ok(())
+}
+
 fn libelle_statut(valeur: &Option<Value>) -> Option<String> {
     let code = valeur.as_ref()?.get("statut")?.as_str()?;
     Statut::depuis_code(code).map(|s| s.to_string())
@@ -1262,6 +1376,10 @@ fn libelle_evenement(e: &EntreeLue) -> (String, Vec<String>) {
         "avoir" => match texte_de(&e.nouvelle_valeur, "avoir") {
             Some(a) => avec("Avoir {} validé", a),
             None => fixe("Avoir validé"),
+        },
+        "reception" => match libelle_statut(&e.nouvelle_valeur) {
+            Some(statut) => avec("Réception enregistrée, {}", &statut),
+            None => fixe("Réception enregistrée"),
         },
         _ => match libelle_statut(&e.ancienne_valeur) {
             Some(ancien) => (
@@ -1308,11 +1426,10 @@ pub fn historique(conn: &Connection, id: i64) -> Resultat<Vec<Evenement>> {
 }
 
 /// État de paiement d'un document : seulement pour un type qui reçoit des
-/// règlements, une fois Validé ou Envoyé (section 8).
+/// règlements, une fois validé et tant qu'il n'est pas annulé (section 8), y
+/// compris un bon de commande en réception.
 pub fn etat_paiement_de(conn: &Connection, d: &Document) -> Resultat<Option<EtatPaiement>> {
-    if !d.type_document.recoit_des_reglements()
-        || !matches!(d.statut, Statut::Valide | Statut::Envoye)
-    {
+    if !d.type_document.recoit_des_reglements() || !d.statut.en_vigueur() {
         return Ok(None);
     }
     let regle: Montant = conn.query_row(
@@ -2015,5 +2132,115 @@ mod tests {
             creer_avoir(&mut c.conn, &vente, facture),
             Err(Erreur::Interdit(Droit::BrouillonFacture))
         ));
+    }
+
+    /// Bon de commande au fournisseur : 2 pelles et 1 brouette, laissé au statut donné.
+    fn bon_commande(c: &mut Contexte, jusqu_a: Statut) -> i64 {
+        let admin = c.admin.clone();
+        let s = Saisie {
+            tiers_id: Some(c.fournisseur),
+            ..saisie(c, date(2026, 6, 2))
+        };
+        let id = creer_brouillon(&mut c.conn, &admin, TypeDocument::BonCommande, &s).unwrap();
+        if jusqu_a != Statut::Brouillon {
+            valider(&mut c.conn, &admin, id).unwrap();
+        }
+        if jusqu_a == Statut::Envoye {
+            marquer_envoye(&mut c.conn, &admin, id).unwrap();
+        }
+        id
+    }
+
+    fn recues(c: &Contexte, id: i64) -> Vec<Quantite> {
+        doc(c, id)
+            .saisie
+            .lignes
+            .iter()
+            .map(|l| l.quantite_livree)
+            .collect()
+    }
+
+    #[test]
+    fn reception_partielle_puis_complete() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let bc = bon_commande(&mut c, Statut::Envoye);
+        assert_eq!(recues(&c, bc), [0, 0]);
+        enregistrer_reception(&mut c.conn, &admin, bc, &[UNE_UNITE, 0]).unwrap();
+        assert_eq!(doc(&c, bc).statut, Statut::ReceptionPartielle);
+        assert_eq!(recues(&c, bc), [UNE_UNITE, 0]);
+        // Une ligne peut être corrigée à la baisse tant que la réception reste partielle.
+        enregistrer_reception(&mut c.conn, &admin, bc, &[0, UNE_UNITE / 2]).unwrap();
+        assert_eq!(doc(&c, bc).statut, Statut::ReceptionPartielle);
+        // Revenir à rien reçu est refusé.
+        assert!(enregistrer_reception(&mut c.conn, &admin, bc, &[0, 0]).is_err());
+        enregistrer_reception(&mut c.conn, &admin, bc, &[2 * UNE_UNITE, UNE_UNITE]).unwrap();
+        let d = doc(&c, bc);
+        assert_eq!(d.statut, Statut::ReceptionComplete);
+        // Le bon de commande garde son état de paiement et son montant dû.
+        assert_eq!(d.montant_du, Some(d.totaux.ttc));
+        assert!(etat_paiement_de(&c.conn, &d).unwrap().is_some());
+        let au_registre = lister(
+            &c.conn,
+            TypeDocument::BonCommande,
+            &FiltreDocuments::default(),
+        )
+        .unwrap();
+        assert!(au_registre[0].etat_paiement.is_some());
+        // Réception complète : définitive.
+        assert!(enregistrer_reception(&mut c.conn, &admin, bc, &[UNE_UNITE, UNE_UNITE]).is_err());
+        // Historique : libellé fixe et statut à part.
+        let evenements = historique(&c.conn, bc).unwrap();
+        let dernier = evenements.last().unwrap();
+        assert_eq!(dernier.modele, "Réception enregistrée, {}");
+        assert_eq!(dernier.valeurs, ["Réception complète"]);
+    }
+
+    #[test]
+    fn reception_refusee_hors_cas_prevus() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let brouillon = bon_commande(&mut c, Statut::Brouillon);
+        assert!(enregistrer_reception(&mut c.conn, &admin, brouillon, &[0, UNE_UNITE]).is_err());
+        let valide = bon_commande(&mut c, Statut::Valide);
+        assert!(enregistrer_reception(&mut c.conn, &admin, valide, &[0, UNE_UNITE]).is_err());
+        let bc = bon_commande(&mut c, Statut::Envoye);
+        // Nombre de lignes, quantité négative, dépassement de la quantité commandée.
+        assert!(enregistrer_reception(&mut c.conn, &admin, bc, &[UNE_UNITE]).is_err());
+        assert!(enregistrer_reception(&mut c.conn, &admin, bc, &[-1, 0]).is_err());
+        assert!(enregistrer_reception(&mut c.conn, &admin, bc, &[3 * UNE_UNITE, 0]).is_err());
+        assert_eq!(recues(&c, bc), [0, 0]);
+        assert_eq!(doc(&c, bc).statut, Statut::Envoye);
+        // Une facture ne se réceptionne pas.
+        let facture = facture_validee(&mut c);
+        assert!(enregistrer_reception(&mut c.conn, &admin, facture, &[0, 0]).is_err());
+        // Droit : le rôle Commercial ne valide pas, il ne réceptionne donc pas.
+        let vente = c.vente.clone();
+        assert!(matches!(
+            enregistrer_reception(&mut c.conn, &vente, bc, &[UNE_UNITE, 0]),
+            Err(Erreur::Interdit(Droit::ValiderDocument))
+        ));
+        // Annulation refusée après une réception partielle (section 7.1).
+        enregistrer_reception(&mut c.conn, &admin, bc, &[UNE_UNITE, 0]).unwrap();
+        assert!(annuler(&mut c.conn, &admin, bc).is_err());
+    }
+
+    #[test]
+    fn brouillon_et_copie_d_un_bc_sans_quantite_recue() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        // Une quantité reçue passée par le brouillon est ignorée.
+        let mut s = Saisie {
+            tiers_id: Some(c.fournisseur),
+            ..saisie(&c, date(2026, 6, 2))
+        };
+        s.lignes[0].quantite_livree = UNE_UNITE;
+        let id = creer_brouillon(&mut c.conn, &admin, TypeDocument::BonCommande, &s).unwrap();
+        assert_eq!(recues(&c, id), [0, 0]);
+        // La copie d'un bon de commande réceptionné repart de zéro.
+        let bc = bon_commande(&mut c, Statut::Envoye);
+        enregistrer_reception(&mut c.conn, &admin, bc, &[UNE_UNITE, 0]).unwrap();
+        let copie = dupliquer(&mut c.conn, &admin, bc, false).unwrap();
+        assert_eq!(recues(&c, copie), [0, 0]);
     }
 }

@@ -3,6 +3,8 @@
 
 use std::fmt;
 
+use crate::calcul::Quantite;
+
 /// Type de document commercial.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TypeDocument {
@@ -148,6 +150,39 @@ impl Statut {
     pub fn suppression_physique_autorisee(self) -> bool {
         self == Statut::Brouillon
     }
+
+    /// Validé et non annulé : le document produit ses effets (montant dû, état de
+    /// paiement), y compris un bon de commande en réception ou un bordereau livré.
+    pub fn en_vigueur(self) -> bool {
+        !matches!(self, Statut::Brouillon | Statut::Annule)
+    }
+}
+
+/// Avancement d'une réception (bon de commande) ou d'une livraison (bordereau),
+/// ligne à ligne : quantité arrivée comparée à la quantité commandée.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Avancement {
+    /// Rien d'arrivé sur aucune ligne.
+    Aucun,
+    /// Au moins une quantité arrivée, sans que toutes les lignes soient complètes.
+    Partiel,
+    /// Chaque ligne a reçu au moins sa quantité commandée.
+    Complet,
+}
+
+/// Avancement de lignes données par paires (commandée, arrivée).
+pub fn avancement(lignes: impl IntoIterator<Item = (Quantite, Quantite)>) -> Avancement {
+    let mut complet = true;
+    let mut quelque_chose = false;
+    for (commandee, arrivee) in lignes {
+        complet &= arrivee >= commandee;
+        quelque_chose |= arrivee > 0;
+    }
+    match (quelque_chose, complet) {
+        (false, _) => Avancement::Aucun,
+        (true, true) => Avancement::Complet,
+        (true, false) => Avancement::Partiel,
+    }
 }
 
 impl fmt::Display for Statut {
@@ -254,6 +289,29 @@ mod tests {
         assert!(verifier_transition(TypeDocument::Facture, Envoye, Annule).is_ok());
         assert!(verifier_transition(TypeDocument::Facture, Brouillon, Envoye).is_err());
         assert!(verifier_transition(TypeDocument::Facture, Valide, Converti).is_err());
+    }
+
+    #[test]
+    fn avancement_des_lignes() {
+        assert_eq!(avancement([(1000, 0), (2000, 0)]), Avancement::Aucun);
+        assert_eq!(avancement([(1000, 500), (2000, 0)]), Avancement::Partiel);
+        assert_eq!(
+            avancement([(1000, 1000), (2000, 1500)]),
+            Avancement::Partiel
+        );
+        assert_eq!(
+            avancement([(1000, 1000), (2000, 2000)]),
+            Avancement::Complet
+        );
+        assert_eq!(avancement(std::iter::empty()), Avancement::Aucun);
+    }
+
+    #[test]
+    fn en_vigueur() {
+        assert!(!Statut::Brouillon.en_vigueur());
+        assert!(!Statut::Annule.en_vigueur());
+        assert!(Statut::ReceptionPartielle.en_vigueur());
+        assert!(Statut::Envoye.en_vigueur());
     }
 
     #[test]
