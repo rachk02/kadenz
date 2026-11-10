@@ -215,7 +215,13 @@ impl FiltreDocuments {
 pub struct Evenement {
     pub date_action: String,
     pub utilisateur: String,
+    /// Libellé composé, en français : `modele` où chaque `{}` reçoit la valeur suivante.
     pub libelle: String,
+    /// Libellé fixe, à traduire, avec un `{}` par valeur (ex. « Validation, numéro {} »).
+    pub modele: String,
+    /// Valeurs à placer dans `modele`, dans l'ordre : numéro de document (tel quel) ou
+    /// libellé de statut (à traduire, pour « {} vers {} »).
+    pub valeurs: Vec<String>,
 }
 
 fn invalide(message: impl Into<String>) -> Erreur {
@@ -1231,45 +1237,72 @@ fn texte_de<'a>(valeur: &'a Option<Value>, cle: &str) -> Option<&'a str> {
     valeur.as_ref()?.get(cle)?.as_str()
 }
 
-fn libelle_evenement(e: &EntreeLue) -> String {
-    let nouveau = libelle_statut(&e.nouvelle_valeur).unwrap_or_default();
+/// Libellé fixe de l'événement et valeurs à y placer, une par `{}`.
+fn libelle_evenement(e: &EntreeLue) -> (String, Vec<String>) {
+    let fixe = |modele: &str| (modele.to_string(), Vec::new());
+    let avec = |modele: &str, valeur: &str| (modele.to_string(), vec![valeur.to_string()]);
     let numero = e
         .nouvelle_valeur
         .as_ref()
         .and_then(|v| v.get("numero"))
         .and_then(Value::as_str);
     match e.action.as_str() {
-        "creation" => "Création du brouillon".to_string(),
+        "creation" => fixe("Création du brouillon"),
         "validation" => match numero {
-            Some(n) => format!("Validation, numéro {n}"),
-            None => "Validation".to_string(),
+            Some(n) => avec("Validation, numéro {}", n),
+            None => fixe("Validation"),
         },
         "modification_administrative" => {
-            "Modification du mode de paiement ou des observations".to_string()
+            fixe("Modification du mode de paiement ou des observations")
         }
         "conversion" => match texte_de(&e.nouvelle_valeur, "facture") {
-            Some(f) => format!("Converti en facture {f}"),
-            None => "Converti en facture".to_string(),
+            Some(f) => avec("Converti en facture {}", f),
+            None => fixe("Converti en facture"),
         },
         "avoir" => match texte_de(&e.nouvelle_valeur, "avoir") {
-            Some(a) => format!("Avoir {a} validé"),
-            None => "Avoir validé".to_string(),
+            Some(a) => avec("Avoir {} validé", a),
+            None => fixe("Avoir validé"),
         },
         _ => match libelle_statut(&e.ancienne_valeur) {
-            Some(ancien) => format!("{ancien} vers {nouveau}"),
-            None => e.action.clone(),
+            Some(ancien) => (
+                "{} vers {}".to_string(),
+                vec![
+                    ancien,
+                    libelle_statut(&e.nouvelle_valeur).unwrap_or_default(),
+                ],
+            ),
+            None => fixe(&e.action),
         },
     }
+}
+
+/// Place chaque valeur dans le `{}` suivant du modèle.
+fn composer(modele: &str, valeurs: &[String]) -> String {
+    let mut sortie = String::with_capacity(modele.len());
+    let mut valeurs = valeurs.iter();
+    let mut reste = modele;
+    while let Some(position) = reste.find("{}") {
+        sortie.push_str(&reste[..position]);
+        sortie.push_str(valeurs.next().map_or("{}", String::as_str));
+        reste = &reste[position + 2..];
+    }
+    sortie.push_str(reste);
+    sortie
 }
 
 /// Historique de la fiche, tiré du journal d'audit.
 pub fn historique(conn: &Connection, id: i64) -> Resultat<Vec<Evenement>> {
     Ok(audit::lister_pour(conn, "document", id)?
         .iter()
-        .map(|e| Evenement {
-            date_action: e.date_action.clone(),
-            utilisateur: e.utilisateur.clone(),
-            libelle: libelle_evenement(e),
+        .map(|e| {
+            let (modele, valeurs) = libelle_evenement(e);
+            Evenement {
+                date_action: e.date_action.clone(),
+                utilisateur: e.utilisateur.clone(),
+                libelle: composer(&modele, &valeurs),
+                modele,
+                valeurs,
+            }
         })
         .collect())
 }
@@ -1671,6 +1704,16 @@ mod tests {
                 "Envoyé vers Annulé",
             ]
         );
+        // Libellé fixe et valeurs à part, pour la traduction côté écran.
+        let evenements = historique(&c.conn, id).unwrap();
+        assert_eq!(
+            (evenements[0].modele.as_str(), evenements[0].valeurs.len()),
+            ("Création du brouillon", 0)
+        );
+        assert_eq!(evenements[1].modele, "Validation, numéro {}");
+        assert_eq!(evenements[1].valeurs, ["F2026-05-0001"]);
+        assert_eq!(evenements[2].modele, "{} vers {}");
+        assert_eq!(evenements[2].valeurs, ["Validé", "Envoyé"]);
         assert_eq!(
             historique(&c.conn, id).unwrap()[0].utilisateur,
             "Compte admin"
