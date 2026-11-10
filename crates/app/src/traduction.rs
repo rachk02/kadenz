@@ -158,6 +158,26 @@ fn chaine_po(brut: &str) -> String {
     sortie
 }
 
+/// Textes qui ne viennent pas d'un littéral `tr(...)` (libellés et messages du
+/// domaine) : ceux qui manquent ou dont le nombre de `{}` diffère, par langue.
+#[cfg(test)]
+pub(crate) fn sans_traduction(textes: &[&str]) -> Vec<String> {
+    let mut manques = Vec::new();
+    for (code, contenu) in FICHIERS {
+        let table = lire_po(contenu);
+        for texte in textes {
+            match table.get(*texte) {
+                None => manques.push(format!("[{code}] {texte:?}")),
+                Some(t) if t.matches("{}").count() != texte.matches("{}").count() => {
+                    manques.push(format!("[{code}] nombre de {{}} : {texte:?}"))
+                }
+                Some(_) => {}
+            }
+        }
+    }
+    manques
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

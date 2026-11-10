@@ -2267,3 +2267,147 @@ msgstr "Inter and Manrope, under the SIL Open Font License 1.1."
 
 msgid "SQLite, dans le domaine public."
 msgstr "SQLite, in the public domain."
+
+msgid "Impression"
+msgstr "Printing"
+
+msgid "Général"
+msgstr "General"
+
+msgid "Insérer la variable"
+msgstr "Insert the variable"
+
+msgid "Mise en page de tous les documents imprimés. Un document validé garde la mise en page du jour de sa validation."
+msgstr "Layout of all printed documents. A validated document keeps the layout of the day it was validated."
+
+msgid "Gabarit"
+msgstr "Template"
+
+msgid "Marges (en mm)"
+msgstr "Margins (in mm)"
+
+msgid "Haut"
+msgstr "Top"
+
+msgid "Bas"
+msgstr "Bottom"
+
+msgid "Gauche"
+msgstr "Left"
+
+msgid "Droite"
+msgstr "Right"
+
+msgid "En-tête"
+msgstr "Header"
+
+msgid "Pied de page"
+msgstr "Footer"
+
+msgid "Mise en forme"
+msgstr "Formatting"
+
+msgid "texte en gras"
+msgstr "bold text"
+
+msgid "texte en italique"
+msgstr "italic text"
+
+msgid "ligne centrée"
+msgstr "centered line"
+
+msgid "logo principal ou secondaire, seul sur sa ligne"
+msgstr "main or secondary logo, alone on its line"
+
+msgid "Une ligne dont toutes les variables sont vides ne s'imprime pas ; une zone vide n'imprime rien."
+msgstr "A line whose variables are all empty is not printed; an empty area prints nothing."
+
+msgid "Rétablir la mise en page par défaut"
+msgstr "Restore the default layout"
+
+msgid "Tester l'impression"
+msgstr "Test printing"
+
+msgid "« Tester l'impression » produit une feuille de calibrage : un cadre aux marges saisies et une croix à chaque angle. Imprimez-la et mesurez les écarts pour ajuster les marges."
+msgstr "\"Test printing\" produces a calibration sheet: a frame at the margins entered and a cross at each corner. Print it and measure the gaps to adjust the margins."
+
+msgid "Aperçu sur une facture d'exemple"
+msgstr "Preview on a sample invoice"
+
+msgid "Classique"
+msgstr "Classic"
+
+msgid "Compact"
+msgstr "Compact"
+
+msgid "Papier pré-imprimé"
+msgstr "Pre-printed paper"
+
+msgid "Chaque marge est un nombre entier de millimètres."
+msgstr "Each margin is a whole number of millimetres."
+
+msgid "Mise en page enregistrée."
+msgstr "Layout saved."
+
+msgid "Votre compte n'a pas le droit de gérer les paramètres."
+msgstr "Your account is not allowed to manage settings."
+
+msgid "Nom de l'entreprise"
+msgstr "Company name"
+
+msgid "Banque 1"
+msgstr "Bank 1"
+
+msgid "Banque 2"
+msgstr "Bank 2"
+
+msgid "Logo secondaire"
+msgstr "Secondary logo"
+
+msgid "chaque marge doit être comprise entre 0 et {} mm"
+msgstr "each margin must be between 0 and {} mm"
+
+msgid "ligne {} : accolade « { » non fermée"
+msgstr "line {}: unclosed brace \"{\""
+
+msgid "ligne {} : la variable « {} » n'existe pas"
+msgstr "line {}: the variable \"{}\" does not exist"
+
+msgid "ligne {} : un logo doit être seul sur sa ligne"
+msgstr "line {}: a logo must be alone on its line"
+
+msgid "ligne {} : gras non fermé (**)"
+msgstr "line {}: unclosed bold (**)"
+
+msgid "ligne {} : italique non fermée (*)"
+msgstr "line {}: unclosed italic (*)"
+
+msgid "en-tête, ligne {} : accolade « { » non fermée"
+msgstr "header, line {}: unclosed brace \"{\""
+
+msgid "en-tête, ligne {} : la variable « {} » n'existe pas"
+msgstr "header, line {}: the variable \"{}\" does not exist"
+
+msgid "en-tête, ligne {} : un logo doit être seul sur sa ligne"
+msgstr "header, line {}: a logo must be alone on its line"
+
+msgid "en-tête, ligne {} : gras non fermé (**)"
+msgstr "header, line {}: unclosed bold (**)"
+
+msgid "en-tête, ligne {} : italique non fermée (*)"
+msgstr "header, line {}: unclosed italic (*)"
+
+msgid "pied de page, ligne {} : accolade « { » non fermée"
+msgstr "footer, line {}: unclosed brace \"{\""
+
+msgid "pied de page, ligne {} : la variable « {} » n'existe pas"
+msgstr "footer, line {}: the variable \"{}\" does not exist"
+
+msgid "pied de page, ligne {} : un logo doit être seul sur sa ligne"
+msgstr "footer, line {}: a logo must be alone on its line"
+
+msgid "pied de page, ligne {} : gras non fermé (**)"
+msgstr "footer, line {}: unclosed bold (**)"
+
+msgid "pied de page, ligne {} : italique non fermée (*)"
+msgstr "footer, line {}: unclosed italic (*)"

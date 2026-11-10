@@ -2267,3 +2267,147 @@ msgstr "Inter y Manrope, bajo licencia SIL Open Font License 1.1."
 
 msgid "SQLite, dans le domaine public."
 msgstr "SQLite, de dominio público."
+
+msgid "Impression"
+msgstr "Impresión"
+
+msgid "Général"
+msgstr "General"
+
+msgid "Insérer la variable"
+msgstr "Insertar la variable"
+
+msgid "Mise en page de tous les documents imprimés. Un document validé garde la mise en page du jour de sa validation."
+msgstr "Diseño de todos los documentos impresos. Un documento validado conserva el diseño del día de su validación."
+
+msgid "Gabarit"
+msgstr "Plantilla"
+
+msgid "Marges (en mm)"
+msgstr "Márgenes (en mm)"
+
+msgid "Haut"
+msgstr "Superior"
+
+msgid "Bas"
+msgstr "Inferior"
+
+msgid "Gauche"
+msgstr "Izquierdo"
+
+msgid "Droite"
+msgstr "Derecho"
+
+msgid "En-tête"
+msgstr "Encabezado"
+
+msgid "Pied de page"
+msgstr "Pie de página"
+
+msgid "Mise en forme"
+msgstr "Formato"
+
+msgid "texte en gras"
+msgstr "texto en negrita"
+
+msgid "texte en italique"
+msgstr "texto en cursiva"
+
+msgid "ligne centrée"
+msgstr "línea centrada"
+
+msgid "logo principal ou secondaire, seul sur sa ligne"
+msgstr "logotipo principal o secundario, solo en su línea"
+
+msgid "Une ligne dont toutes les variables sont vides ne s'imprime pas ; une zone vide n'imprime rien."
+msgstr "Una línea cuyas variables están todas vacías no se imprime; una zona vacía no imprime nada."
+
+msgid "Rétablir la mise en page par défaut"
+msgstr "Restablecer el diseño predeterminado"
+
+msgid "Tester l'impression"
+msgstr "Probar la impresión"
+
+msgid "« Tester l'impression » produit une feuille de calibrage : un cadre aux marges saisies et une croix à chaque angle. Imprimez-la et mesurez les écarts pour ajuster les marges."
+msgstr "«Probar la impresión» genera una hoja de calibración: un marco en los márgenes indicados y una cruz en cada esquina. Imprímala y mida las diferencias para ajustar los márgenes."
+
+msgid "Aperçu sur une facture d'exemple"
+msgstr "Vista previa en una factura de ejemplo"
+
+msgid "Classique"
+msgstr "Clásica"
+
+msgid "Compact"
+msgstr "Compacta"
+
+msgid "Papier pré-imprimé"
+msgstr "Papel preimpreso"
+
+msgid "Chaque marge est un nombre entier de millimètres."
+msgstr "Cada margen es un número entero de milímetros."
+
+msgid "Mise en page enregistrée."
+msgstr "Diseño guardado."
+
+msgid "Votre compte n'a pas le droit de gérer les paramètres."
+msgstr "Su cuenta no tiene permiso para gestionar los parámetros."
+
+msgid "Nom de l'entreprise"
+msgstr "Nombre de la empresa"
+
+msgid "Banque 1"
+msgstr "Banco 1"
+
+msgid "Banque 2"
+msgstr "Banco 2"
+
+msgid "Logo secondaire"
+msgstr "Logotipo secundario"
+
+msgid "chaque marge doit être comprise entre 0 et {} mm"
+msgstr "cada margen debe estar entre 0 y {} mm"
+
+msgid "ligne {} : accolade « { » non fermée"
+msgstr "línea {}: llave «{» sin cerrar"
+
+msgid "ligne {} : la variable « {} » n'existe pas"
+msgstr "línea {}: la variable «{}» no existe"
+
+msgid "ligne {} : un logo doit être seul sur sa ligne"
+msgstr "línea {}: un logotipo debe estar solo en su línea"
+
+msgid "ligne {} : gras non fermé (**)"
+msgstr "línea {}: negrita sin cerrar (**)"
+
+msgid "ligne {} : italique non fermée (*)"
+msgstr "línea {}: cursiva sin cerrar (*)"
+
+msgid "en-tête, ligne {} : accolade « { » non fermée"
+msgstr "encabezado, línea {}: llave «{» sin cerrar"
+
+msgid "en-tête, ligne {} : la variable « {} » n'existe pas"
+msgstr "encabezado, línea {}: la variable «{}» no existe"
+
+msgid "en-tête, ligne {} : un logo doit être seul sur sa ligne"
+msgstr "encabezado, línea {}: un logotipo debe estar solo en su línea"
+
+msgid "en-tête, ligne {} : gras non fermé (**)"
+msgstr "encabezado, línea {}: negrita sin cerrar (**)"
+
+msgid "en-tête, ligne {} : italique non fermée (*)"
+msgstr "encabezado, línea {}: cursiva sin cerrar (*)"
+
+msgid "pied de page, ligne {} : accolade « { » non fermée"
+msgstr "pie de página, línea {}: llave «{» sin cerrar"
+
+msgid "pied de page, ligne {} : la variable « {} » n'existe pas"
+msgstr "pie de página, línea {}: la variable «{}» no existe"
+
+msgid "pied de page, ligne {} : un logo doit être seul sur sa ligne"
+msgstr "pie de página, línea {}: un logotipo debe estar solo en su línea"
+
+msgid "pied de page, ligne {} : gras non fermé (**)"
+msgstr "pie de página, línea {}: negrita sin cerrar (**)"
+
+msgid "pied de page, ligne {} : italique non fermée (*)"
+msgstr "pie de página, línea {}: cursiva sin cerrar (*)"

@@ -5,6 +5,7 @@ mod administration;
 mod factures;
 mod graphiques;
 mod import_ecran;
+mod impression;
 mod paiements;
 mod pdf;
 mod pilotage;
@@ -307,6 +308,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     factures::brancher(fenetre, &etat);
     paiements::brancher(fenetre, &etat);
     pilotage::brancher(fenetre, &etat);
+    impression::brancher(fenetre, &etat);
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
     fenetre.on_changer_langue(move |rang| {

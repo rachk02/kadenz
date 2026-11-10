@@ -2267,3 +2267,147 @@ msgstr "Inter 和 Manrope，采用 SIL Open Font License 1.1 许可证。"
 
 msgid "SQLite, dans le domaine public."
 msgstr "SQLite，属于公有领域。"
+
+msgid "Impression"
+msgstr "打印"
+
+msgid "Général"
+msgstr "常规"
+
+msgid "Insérer la variable"
+msgstr "插入变量"
+
+msgid "Mise en page de tous les documents imprimés. Un document validé garde la mise en page du jour de sa validation."
+msgstr "所有打印单据的版式。已确认的单据保留其确认当天的版式。"
+
+msgid "Gabarit"
+msgstr "模板"
+
+msgid "Marges (en mm)"
+msgstr "页边距（毫米）"
+
+msgid "Haut"
+msgstr "上"
+
+msgid "Bas"
+msgstr "下"
+
+msgid "Gauche"
+msgstr "左"
+
+msgid "Droite"
+msgstr "右"
+
+msgid "En-tête"
+msgstr "页眉"
+
+msgid "Pied de page"
+msgstr "页脚"
+
+msgid "Mise en forme"
+msgstr "格式"
+
+msgid "texte en gras"
+msgstr "粗体文字"
+
+msgid "texte en italique"
+msgstr "斜体文字"
+
+msgid "ligne centrée"
+msgstr "居中的行"
+
+msgid "logo principal ou secondaire, seul sur sa ligne"
+msgstr "主徽标或副徽标，单独占一行"
+
+msgid "Une ligne dont toutes les variables sont vides ne s'imprime pas ; une zone vide n'imprime rien."
+msgstr "所有变量均为空的行不打印；空白区域不打印任何内容。"
+
+msgid "Rétablir la mise en page par défaut"
+msgstr "恢复默认版式"
+
+msgid "Tester l'impression"
+msgstr "测试打印"
+
+msgid "« Tester l'impression » produit une feuille de calibrage : un cadre aux marges saisies et une croix à chaque angle. Imprimez-la et mesurez les écarts pour ajuster les marges."
+msgstr "“测试打印”会生成一张校准页：在所填页边距处画一个边框，并在每个角画一个十字。打印后测量偏差以调整页边距。"
+
+msgid "Aperçu sur une facture d'exemple"
+msgstr "示例发票预览"
+
+msgid "Classique"
+msgstr "经典"
+
+msgid "Compact"
+msgstr "紧凑"
+
+msgid "Papier pré-imprimé"
+msgstr "预印纸"
+
+msgid "Chaque marge est un nombre entier de millimètres."
+msgstr "每个页边距须为整数毫米。"
+
+msgid "Mise en page enregistrée."
+msgstr "版式已保存。"
+
+msgid "Votre compte n'a pas le droit de gérer les paramètres."
+msgstr "您的账户无权管理设置。"
+
+msgid "Nom de l'entreprise"
+msgstr "公司名称"
+
+msgid "Banque 1"
+msgstr "银行 1"
+
+msgid "Banque 2"
+msgstr "银行 2"
+
+msgid "Logo secondaire"
+msgstr "副徽标"
+
+msgid "chaque marge doit être comprise entre 0 et {} mm"
+msgstr "每个页边距须在 0 到 {} 毫米之间"
+
+msgid "ligne {} : accolade « { » non fermée"
+msgstr "第 {} 行：花括号“{”未闭合"
+
+msgid "ligne {} : la variable « {} » n'existe pas"
+msgstr "第 {} 行：变量“{}”不存在"
+
+msgid "ligne {} : un logo doit être seul sur sa ligne"
+msgstr "第 {} 行：徽标必须单独占一行"
+
+msgid "ligne {} : gras non fermé (**)"
+msgstr "第 {} 行：粗体未闭合 (**)"
+
+msgid "ligne {} : italique non fermée (*)"
+msgstr "第 {} 行：斜体未闭合 (*)"
+
+msgid "en-tête, ligne {} : accolade « { » non fermée"
+msgstr "页眉第 {} 行：花括号“{”未闭合"
+
+msgid "en-tête, ligne {} : la variable « {} » n'existe pas"
+msgstr "页眉第 {} 行：变量“{}”不存在"
+
+msgid "en-tête, ligne {} : un logo doit être seul sur sa ligne"
+msgstr "页眉第 {} 行：徽标必须单独占一行"
+
+msgid "en-tête, ligne {} : gras non fermé (**)"
+msgstr "页眉第 {} 行：粗体未闭合 (**)"
+
+msgid "en-tête, ligne {} : italique non fermée (*)"
+msgstr "页眉第 {} 行：斜体未闭合 (*)"
+
+msgid "pied de page, ligne {} : accolade « { » non fermée"
+msgstr "页脚第 {} 行：花括号“{”未闭合"
+
+msgid "pied de page, ligne {} : la variable « {} » n'existe pas"
+msgstr "页脚第 {} 行：变量“{}”不存在"
+
+msgid "pied de page, ligne {} : un logo doit être seul sur sa ligne"
+msgstr "页脚第 {} 行：徽标必须单独占一行"
+
+msgid "pied de page, ligne {} : gras non fermé (**)"
+msgstr "页脚第 {} 行：粗体未闭合 (**)"
+
+msgid "pied de page, ligne {} : italique non fermée (*)"
+msgstr "页脚第 {} 行：斜体未闭合 (*)"

@@ -2267,3 +2267,147 @@ msgstr "Inter と Manrope（SIL Open Font License 1.1）。"
 
 msgid "SQLite, dans le domaine public."
 msgstr "SQLite（パブリックドメイン）。"
+
+msgid "Impression"
+msgstr "印刷"
+
+msgid "Général"
+msgstr "一般"
+
+msgid "Insérer la variable"
+msgstr "変数を挿入"
+
+msgid "Mise en page de tous les documents imprimés. Un document validé garde la mise en page du jour de sa validation."
+msgstr "すべての印刷書類のレイアウトです。確定した書類は確定日のレイアウトを保持します。"
+
+msgid "Gabarit"
+msgstr "テンプレート"
+
+msgid "Marges (en mm)"
+msgstr "余白（mm）"
+
+msgid "Haut"
+msgstr "上"
+
+msgid "Bas"
+msgstr "下"
+
+msgid "Gauche"
+msgstr "左"
+
+msgid "Droite"
+msgstr "右"
+
+msgid "En-tête"
+msgstr "ヘッダー"
+
+msgid "Pied de page"
+msgstr "フッター"
+
+msgid "Mise en forme"
+msgstr "書式"
+
+msgid "texte en gras"
+msgstr "太字のテキスト"
+
+msgid "texte en italique"
+msgstr "斜体のテキスト"
+
+msgid "ligne centrée"
+msgstr "中央揃えの行"
+
+msgid "logo principal ou secondaire, seul sur sa ligne"
+msgstr "メインまたはサブのロゴ、単独の行に配置"
+
+msgid "Une ligne dont toutes les variables sont vides ne s'imprime pas ; une zone vide n'imprime rien."
+msgstr "変数がすべて空の行は印刷されません。空の領域は何も印刷しません。"
+
+msgid "Rétablir la mise en page par défaut"
+msgstr "既定のレイアウトに戻す"
+
+msgid "Tester l'impression"
+msgstr "印刷をテスト"
+
+msgid "« Tester l'impression » produit une feuille de calibrage : un cadre aux marges saisies et une croix à chaque angle. Imprimez-la et mesurez les écarts pour ajuster les marges."
+msgstr "「印刷をテスト」は校正用紙を作成します。入力した余白に枠を、各隅に十字を印刷します。印刷して差を測り、余白を調整してください。"
+
+msgid "Aperçu sur une facture d'exemple"
+msgstr "サンプル請求書でのプレビュー"
+
+msgid "Classique"
+msgstr "クラシック"
+
+msgid "Compact"
+msgstr "コンパクト"
+
+msgid "Papier pré-imprimé"
+msgstr "印刷済み用紙"
+
+msgid "Chaque marge est un nombre entier de millimètres."
+msgstr "各余白はミリ単位の整数です。"
+
+msgid "Mise en page enregistrée."
+msgstr "レイアウトを保存しました。"
+
+msgid "Votre compte n'a pas le droit de gérer les paramètres."
+msgstr "このアカウントには設定を管理する権限がありません。"
+
+msgid "Nom de l'entreprise"
+msgstr "会社名"
+
+msgid "Banque 1"
+msgstr "銀行 1"
+
+msgid "Banque 2"
+msgstr "銀行 2"
+
+msgid "Logo secondaire"
+msgstr "サブロゴ"
+
+msgid "chaque marge doit être comprise entre 0 et {} mm"
+msgstr "各余白は 0 から {} mm の間にしてください"
+
+msgid "ligne {} : accolade « { » non fermée"
+msgstr "{} 行目：波括弧「{」が閉じていません"
+
+msgid "ligne {} : la variable « {} » n'existe pas"
+msgstr "{} 行目：変数「{}」は存在しません"
+
+msgid "ligne {} : un logo doit être seul sur sa ligne"
+msgstr "{} 行目：ロゴは単独の行に置いてください"
+
+msgid "ligne {} : gras non fermé (**)"
+msgstr "{} 行目：太字が閉じていません (**)"
+
+msgid "ligne {} : italique non fermée (*)"
+msgstr "{} 行目：斜体が閉じていません (*)"
+
+msgid "en-tête, ligne {} : accolade « { » non fermée"
+msgstr "ヘッダー {} 行目：波括弧「{」が閉じていません"
+
+msgid "en-tête, ligne {} : la variable « {} » n'existe pas"
+msgstr "ヘッダー {} 行目：変数「{}」は存在しません"
+
+msgid "en-tête, ligne {} : un logo doit être seul sur sa ligne"
+msgstr "ヘッダー {} 行目：ロゴは単独の行に置いてください"
+
+msgid "en-tête, ligne {} : gras non fermé (**)"
+msgstr "ヘッダー {} 行目：太字が閉じていません (**)"
+
+msgid "en-tête, ligne {} : italique non fermée (*)"
+msgstr "ヘッダー {} 行目：斜体が閉じていません (*)"
+
+msgid "pied de page, ligne {} : accolade « { » non fermée"
+msgstr "フッター {} 行目：波括弧「{」が閉じていません"
+
+msgid "pied de page, ligne {} : la variable « {} » n'existe pas"
+msgstr "フッター {} 行目：変数「{}」は存在しません"
+
+msgid "pied de page, ligne {} : un logo doit être seul sur sa ligne"
+msgstr "フッター {} 行目：ロゴは単独の行に置いてください"
+
+msgid "pied de page, ligne {} : gras non fermé (**)"
+msgstr "フッター {} 行目：太字が閉じていません (**)"
+
+msgid "pied de page, ligne {} : italique non fermée (*)"
+msgstr "フッター {} 行目：斜体が閉じていません (*)"

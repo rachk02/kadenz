@@ -1,0 +1,360 @@
+// Réglages d'impression (jalon J8b) : gabarit A4, marges, en-tête et pied de
+// page en contenu libre avec variables de l'entreprise, aperçu en direct sur une
+// facture d'exemple, feuille de calibrage. Au droit « Gérer les paramètres ».
+import { ComboBox, LineEdit, ScrollView, TextEdit } from "std-widgets.slint";
+import { Bouton, Champ, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+
+export struct MiseEnPageUi {
+    gabarit: int,
+    haut: string,
+    bas: string,
+    gauche: string,
+    droite: string,
+    entete: string,
+    pied: string,
+}
+
+export global ImpressionApi {
+    // Libellés des gabarits, dans l'ordre du domaine.
+    in property <[string]> gabarits;
+    // Variables proposées : libellé traduit, puis le code à insérer (« {nom} »).
+    in property <[string]> variables;
+    in property <[string]> codes-variables;
+    in property <image> apercu;
+    // Messages sous les champs, vides si la saisie est correcte.
+    in property <string> erreur-entete;
+    in property <string> erreur-pied;
+    in property <string> erreur-marges;
+
+    callback ouvrir() -> MiseEnPageUi;
+    callback par-defaut() -> MiseEnPageUi;
+    // Vérifie la saisie et recalcule l'aperçu.
+    callback actualiser(mise-en-page: MiseEnPageUi);
+    callback enregistrer(mise-en-page: MiseEnPageUi) -> Retour;
+    // Feuille de calibrage des marges saisies, en PDF.
+    callback tester(mise-en-page: MiseEnPageUi) -> Retour;
+}
+
+// Zone libre (en-tête ou pied) : éditeur, insertion d'une variable, erreur.
+component ZoneLibre inherits VerticalLayout {
+    in property <string> libelle;
+    in property <string> erreur;
+    in-out property <string> texte <=> saisie.text;
+    callback modifie();
+
+    spacing: 6px;
+
+    Section {
+        text: root.libelle;
+    }
+
+    // Police à chasse fixe : la syntaxe s'affiche telle quelle (Inter dessine
+    // « -> » en flèche).
+    saisie := TextEdit {
+        height: 120px;
+        wrap: word-wrap;
+        font-family: "Consolas";
+        edited => {
+            root.modifie();
+        }
+    }
+
+    Rangee {
+        spacing: 8px;
+
+        variable := ComboBox {
+            horizontal-stretch: 1;
+            model: ImpressionApi.variables;
+        }
+
+        Bouton {
+            text: @tr("Insérer la variable");
+            clicked => {
+                saisie.text += ImpressionApi.codes-variables[variable.current-index];
+                root.modifie();
+            }
+        }
+    }
+
+    if root.erreur != "": Text {
+        horizontal-alignment: Theme.debut;
+        text: root.erreur;
+        font-size: 12px;
+        color: Theme.erreur;
+        wrap: word-wrap;
+    }
+}
+
+// Une ligne de l'aide du markup : la syntaxe, non traduite, puis son effet.
+component Aide inherits Rangee {
+    in property <string> syntaxe;
+    in property <string> effet;
+
+    spacing: 12px;
+
+    Text {
+        width: 140px;
+        horizontal-alignment: Theme.debut;
+        text: root.syntaxe;
+        font-family: "Consolas";
+        font-size: 12px;
+        color: Theme.texte;
+    }
+
+    Text {
+        horizontal-stretch: 1;
+        horizontal-alignment: Theme.debut;
+        text: root.effet;
+        font-size: 12px;
+        color: Theme.texte-secondaire;
+        overflow: elide;
+    }
+}
+
+export component PageImpression inherits ScrollView {
+    property <Retour> retour;
+
+    function saisie() -> MiseEnPageUi {
+        return {
+            gabarit: gabarit.current-index,
+            haut: haut.valeur,
+            bas: bas.valeur,
+            gauche: gauche.valeur,
+            droite: droite.valeur,
+            entete: entete.texte,
+            pied: pied.texte,
+        };
+    }
+
+    function charger(m: MiseEnPageUi) {
+        gabarit.current-index = m.gabarit;
+        haut.valeur = m.haut;
+        bas.valeur = m.bas;
+        gauche.valeur = m.gauche;
+        droite.valeur = m.droite;
+        entete.texte = m.entete;
+        pied.texte = m.pied;
+        ImpressionApi.actualiser(root.saisie());
+    }
+
+    init => {
+        root.charger(ImpressionApi.ouvrir());
+    }
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 12px;
+        alignment: start;
+
+        Titre {
+            text: @tr("Impression");
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Mise en page de tous les documents imprimés. Un document validé garde la mise en page du jour de sa validation.");
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        // Réglages d'un côté, aperçu de l'autre ; les deux colonnes s'échangent de droite à gauche.
+        GridLayout {
+            spacing: 24px;
+
+            VerticalLayout {
+                row: 0;
+                col: Theme.rtl ? 1 : 0;
+                width: 480px;
+                spacing: 12px;
+                alignment: start;
+
+                Section {
+                    text: @tr("Gabarit");
+                }
+
+                gabarit := ComboBox {
+                    model: ImpressionApi.gabarits;
+                    selected => {
+                        ImpressionApi.actualiser(root.saisie());
+                    }
+                }
+
+                Section {
+                    text: @tr("Marges (en mm)");
+                }
+
+                // Deux colonnes : quatre champs côte à côte ne tiennent pas dans la largeur.
+                GridLayout {
+                    spacing: 8px;
+
+                    haut := Champ {
+                        row: 0;
+                        col: Theme.rtl ? 1 : 0;
+                        libelle: @tr("Haut");
+                        modifie => {
+                            ImpressionApi.actualiser(root.saisie());
+                        }
+                    }
+
+                    bas := Champ {
+                        row: 0;
+                        col: Theme.rtl ? 0 : 1;
+                        libelle: @tr("Bas");
+                        modifie => {
+                            ImpressionApi.actualiser(root.saisie());
+                        }
+                    }
+
+                    gauche := Champ {
+                        row: 1;
+                        col: Theme.rtl ? 1 : 0;
+                        libelle: @tr("Gauche");
+                        modifie => {
+                            ImpressionApi.actualiser(root.saisie());
+                        }
+                    }
+
+                    droite := Champ {
+                        row: 1;
+                        col: Theme.rtl ? 0 : 1;
+                        libelle: @tr("Droite");
+                        modifie => {
+                            ImpressionApi.actualiser(root.saisie());
+                        }
+                    }
+                }
+
+                if ImpressionApi.erreur-marges != "": Text {
+                    horizontal-alignment: Theme.debut;
+                    text: ImpressionApi.erreur-marges;
+                    font-size: 12px;
+                    color: Theme.erreur;
+                    wrap: word-wrap;
+                }
+
+                entete := ZoneLibre {
+                    libelle: @tr("En-tête");
+                    erreur: ImpressionApi.erreur-entete;
+                    modifie => {
+                        ImpressionApi.actualiser(root.saisie());
+                    }
+                }
+
+                pied := ZoneLibre {
+                    libelle: @tr("Pied de page");
+                    erreur: ImpressionApi.erreur-pied;
+                    modifie => {
+                        ImpressionApi.actualiser(root.saisie());
+                    }
+                }
+
+                VerticalLayout {
+                    spacing: 4px;
+
+                    Text {
+                        horizontal-alignment: Theme.debut;
+                        text: @tr("Mise en forme");
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: Theme.texte;
+                    }
+
+                    Aide {
+                        syntaxe: "**texte**";
+                        effet: @tr("texte en gras");
+                    }
+
+                    Aide {
+                        syntaxe: "*texte*";
+                        effet: @tr("texte en italique");
+                    }
+
+                    Aide {
+                        syntaxe: "-> texte";
+                        effet: @tr("ligne centrée");
+                    }
+
+                    Aide {
+                        syntaxe: "{logo} {logo2}";
+                        effet: @tr("logo principal ou secondaire, seul sur sa ligne");
+                    }
+
+                    Text {
+                        horizontal-alignment: Theme.debut;
+                        text: @tr("Une ligne dont toutes les variables sont vides ne s'imprime pas ; une zone vide n'imprime rien.");
+                        font-size: 12px;
+                        color: Theme.texte-secondaire;
+                        wrap: word-wrap;
+                    }
+                }
+
+                Rangee {
+                    spacing: 8px;
+                    alignment: start;
+
+                    Bouton {
+                        text: @tr("Enregistrer");
+                        primary: true;
+                        clicked => {
+                            root.retour = ImpressionApi.enregistrer(root.saisie());
+                        }
+                    }
+
+                    Bouton {
+                        text: @tr("Rétablir la mise en page par défaut");
+                        clicked => {
+                            root.charger(ImpressionApi.par-defaut());
+                            root.retour = { ok: true, message: "" };
+                        }
+                    }
+
+                    Bouton {
+                        text: @tr("Tester l'impression");
+                        clicked => {
+                            root.retour = ImpressionApi.tester(root.saisie());
+                        }
+                    }
+                }
+
+                MessageRetour {
+                    retour: root.retour;
+                }
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("« Tester l'impression » produit une feuille de calibrage : un cadre aux marges saisies et une croix à chaque angle. Imprimez-la et mesurez les écarts pour ajuster les marges.");
+                    font-size: 12px;
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+            }
+
+            VerticalLayout {
+                row: 0;
+                col: Theme.rtl ? 0 : 1;
+                spacing: 8px;
+                alignment: start;
+
+                Section {
+                    text: @tr("Aperçu sur une facture d'exemple");
+                }
+
+                // Page A4 (210 x 297) rendue par le moteur d'impression.
+                Rectangle {
+                    width: 420px;
+                    height: 594px;
+                    background: white;
+                    border-width: 1px;
+                    border-color: Theme.bordure;
+
+                    Image {
+                        width: parent.width - 2px;
+                        height: parent.height - 2px;
+                        source: ImpressionApi.apercu;
+                        image-fit: contain;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -2267,3 +2267,147 @@ msgstr "Inter وManrope، بترخيص SIL Open Font License 1.1."
 
 msgid "SQLite, dans le domaine public."
 msgstr "SQLite، ضمن الملك العام."
+
+msgid "Impression"
+msgstr "الطباعة"
+
+msgid "Général"
+msgstr "عام"
+
+msgid "Insérer la variable"
+msgstr "إدراج المتغير"
+
+msgid "Mise en page de tous les documents imprimés. Un document validé garde la mise en page du jour de sa validation."
+msgstr "تخطيط جميع المستندات المطبوعة. يحتفظ المستند المعتمد بتخطيط يوم اعتماده."
+
+msgid "Gabarit"
+msgstr "القالب"
+
+msgid "Marges (en mm)"
+msgstr "الهوامش (بالمليمتر)"
+
+msgid "Haut"
+msgstr "أعلى"
+
+msgid "Bas"
+msgstr "أسفل"
+
+msgid "Gauche"
+msgstr "يسار"
+
+msgid "Droite"
+msgstr "يمين"
+
+msgid "En-tête"
+msgstr "الترويسة"
+
+msgid "Pied de page"
+msgstr "تذييل الصفحة"
+
+msgid "Mise en forme"
+msgstr "التنسيق"
+
+msgid "texte en gras"
+msgstr "نص غامق"
+
+msgid "texte en italique"
+msgstr "نص مائل"
+
+msgid "ligne centrée"
+msgstr "سطر في الوسط"
+
+msgid "logo principal ou secondaire, seul sur sa ligne"
+msgstr "الشعار الرئيسي أو الثانوي، وحده في سطره"
+
+msgid "Une ligne dont toutes les variables sont vides ne s'imprime pas ; une zone vide n'imprime rien."
+msgstr "لا يُطبع السطر الذي تكون كل متغيراته فارغة، ولا تطبع المنطقة الفارغة شيئًا."
+
+msgid "Rétablir la mise en page par défaut"
+msgstr "استعادة التخطيط الافتراضي"
+
+msgid "Tester l'impression"
+msgstr "اختبار الطباعة"
+
+msgid "« Tester l'impression » produit une feuille de calibrage : un cadre aux marges saisies et une croix à chaque angle. Imprimez-la et mesurez les écarts pour ajuster les marges."
+msgstr "ينتج «اختبار الطباعة» ورقة معايرة: إطار عند الهوامش المدخلة وعلامة تقاطع في كل زاوية. اطبعها وقس الفروق لضبط الهوامش."
+
+msgid "Aperçu sur une facture d'exemple"
+msgstr "معاينة على فاتورة نموذجية"
+
+msgid "Classique"
+msgstr "كلاسيكي"
+
+msgid "Compact"
+msgstr "مضغوط"
+
+msgid "Papier pré-imprimé"
+msgstr "ورق مطبوع مسبقًا"
+
+msgid "Chaque marge est un nombre entier de millimètres."
+msgstr "كل هامش عدد صحيح من المليمترات."
+
+msgid "Mise en page enregistrée."
+msgstr "تم حفظ التخطيط."
+
+msgid "Votre compte n'a pas le droit de gérer les paramètres."
+msgstr "لا يملك حسابك صلاحية إدارة الإعدادات."
+
+msgid "Nom de l'entreprise"
+msgstr "اسم الشركة"
+
+msgid "Banque 1"
+msgstr "البنك 1"
+
+msgid "Banque 2"
+msgstr "البنك 2"
+
+msgid "Logo secondaire"
+msgstr "الشعار الثانوي"
+
+msgid "chaque marge doit être comprise entre 0 et {} mm"
+msgstr "يجب أن يكون كل هامش بين 0 و{} مم"
+
+msgid "ligne {} : accolade « { » non fermée"
+msgstr "السطر {}: قوس «{» غير مغلق"
+
+msgid "ligne {} : la variable « {} » n'existe pas"
+msgstr "السطر {}: المتغير «{}» غير موجود"
+
+msgid "ligne {} : un logo doit être seul sur sa ligne"
+msgstr "السطر {}: يجب أن يكون الشعار وحده في سطره"
+
+msgid "ligne {} : gras non fermé (**)"
+msgstr "السطر {}: غامق غير مغلق (**)"
+
+msgid "ligne {} : italique non fermée (*)"
+msgstr "السطر {}: مائل غير مغلق (*)"
+
+msgid "en-tête, ligne {} : accolade « { » non fermée"
+msgstr "الترويسة، السطر {}: قوس «{» غير مغلق"
+
+msgid "en-tête, ligne {} : la variable « {} » n'existe pas"
+msgstr "الترويسة، السطر {}: المتغير «{}» غير موجود"
+
+msgid "en-tête, ligne {} : un logo doit être seul sur sa ligne"
+msgstr "الترويسة، السطر {}: يجب أن يكون الشعار وحده في سطره"
+
+msgid "en-tête, ligne {} : gras non fermé (**)"
+msgstr "الترويسة، السطر {}: غامق غير مغلق (**)"
+
+msgid "en-tête, ligne {} : italique non fermée (*)"
+msgstr "الترويسة، السطر {}: مائل غير مغلق (*)"
+
+msgid "pied de page, ligne {} : accolade « { » non fermée"
+msgstr "تذييل الصفحة، السطر {}: قوس «{» غير مغلق"
+
+msgid "pied de page, ligne {} : la variable « {} » n'existe pas"
+msgstr "تذييل الصفحة، السطر {}: المتغير «{}» غير موجود"
+
+msgid "pied de page, ligne {} : un logo doit être seul sur sa ligne"
+msgstr "تذييل الصفحة، السطر {}: يجب أن يكون الشعار وحده في سطره"
+
+msgid "pied de page, ligne {} : gras non fermé (**)"
+msgstr "تذييل الصفحة، السطر {}: غامق غير مغلق (**)"
+
+msgid "pied de page, ligne {} : italique non fermée (*)"
+msgstr "تذييل الصفحة، السطر {}: مائل غير مغلق (*)"

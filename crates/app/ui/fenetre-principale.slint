@@ -10,8 +10,9 @@ import { ImportApi, PanneauImport } from "import.slint";
 import { FacturesApi, PageFactures } from "factures.slint";
 import { PageReglements, PageRelances, PageSuiviFournisseurs, PaiementsApi, TotalUi } from "paiements.slint";
 import { PageTableauDeBord, PilotageApi } from "pilotage.slint";
+import { ImpressionApi, PageImpression } from "impression.slint";
 
-export { DonneesAssistant, Droits, Theme, EntrepriseApi, FacturesApi, ImportApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, TiersApi, UtilisateursApi }
+export { DonneesAssistant, Droits, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, presentation, assistant, connexion, application }
@@ -210,6 +211,7 @@ export component FenetrePrincipale inherits Window {
     in-out property <Ecran> ecran: Ecran.demarrage-impossible;
     // Présentation revue depuis « À propos » : elle ramène à l'application.
     property <bool> presentation-depuis-a-propos;
+    property <int> onglet-parametres: 0;
     in property <string> message-demarrage;
     in property <string> etat-base;
     in property <string> nom-entreprise;
@@ -460,7 +462,36 @@ export component FenetrePrincipale inherits Window {
 
             if root.page == Page.entreprise: PageEntreprise { }
 
-            if root.page == Page.parametres: PageParametres { }
+            // Paramètres en deux onglets : réglages généraux, puis impression (jalon J8b).
+            if root.page == Page.parametres: VerticalLayout {
+                Rangee {
+                    padding-left: 24px;
+                    padding-right: 24px;
+                    padding-top: 16px;
+                    spacing: 8px;
+                    alignment: start;
+
+                    Bouton {
+                        text: @tr("Général");
+                        primary: root.onglet-parametres == 0;
+                        clicked => {
+                            root.onglet-parametres = 0;
+                        }
+                    }
+
+                    Bouton {
+                        text: @tr("Impression");
+                        primary: root.onglet-parametres == 1;
+                        clicked => {
+                            root.onglet-parametres = 1;
+                        }
+                    }
+                }
+
+                if root.onglet-parametres == 0: PageParametres { }
+
+                if root.onglet-parametres == 1: PageImpression { }
+            }
 
             if root.page == Page.utilisateurs: PageUtilisateurs { }
 

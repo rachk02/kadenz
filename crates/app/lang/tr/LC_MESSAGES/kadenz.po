@@ -2267,3 +2267,147 @@ msgstr "Inter ve Manrope, SIL Open Font License 1.1 lisansıyla."
 
 msgid "SQLite, dans le domaine public."
 msgstr "SQLite, kamu malı."
+
+msgid "Impression"
+msgstr "Yazdırma"
+
+msgid "Général"
+msgstr "Genel"
+
+msgid "Insérer la variable"
+msgstr "Değişkeni ekle"
+
+msgid "Mise en page de tous les documents imprimés. Un document validé garde la mise en page du jour de sa validation."
+msgstr "Tüm yazdırılan belgelerin sayfa düzeni. Onaylanan bir belge, onaylandığı günün sayfa düzenini korur."
+
+msgid "Gabarit"
+msgstr "Şablon"
+
+msgid "Marges (en mm)"
+msgstr "Kenar boşlukları (mm)"
+
+msgid "Haut"
+msgstr "Üst"
+
+msgid "Bas"
+msgstr "Alt"
+
+msgid "Gauche"
+msgstr "Sol"
+
+msgid "Droite"
+msgstr "Sağ"
+
+msgid "En-tête"
+msgstr "Üst bilgi"
+
+msgid "Pied de page"
+msgstr "Alt bilgi"
+
+msgid "Mise en forme"
+msgstr "Biçimlendirme"
+
+msgid "texte en gras"
+msgstr "kalın metin"
+
+msgid "texte en italique"
+msgstr "italik metin"
+
+msgid "ligne centrée"
+msgstr "ortalanmış satır"
+
+msgid "logo principal ou secondaire, seul sur sa ligne"
+msgstr "ana veya ikincil logo, kendi satırında tek başına"
+
+msgid "Une ligne dont toutes les variables sont vides ne s'imprime pas ; une zone vide n'imprime rien."
+msgstr "Tüm değişkenleri boş olan bir satır yazdırılmaz; boş bir alan hiçbir şey yazdırmaz."
+
+msgid "Rétablir la mise en page par défaut"
+msgstr "Varsayılan sayfa düzenini geri yükle"
+
+msgid "Tester l'impression"
+msgstr "Yazdırmayı dene"
+
+msgid "« Tester l'impression » produit une feuille de calibrage : un cadre aux marges saisies et une croix à chaque angle. Imprimez-la et mesurez les écarts pour ajuster les marges."
+msgstr "\"Yazdırmayı dene\" bir kalibrasyon sayfası üretir: girilen kenar boşluklarında bir çerçeve ve her köşede bir artı işareti. Yazdırın ve kenar boşluklarını ayarlamak için farkları ölçün."
+
+msgid "Aperçu sur une facture d'exemple"
+msgstr "Örnek fatura üzerinde önizleme"
+
+msgid "Classique"
+msgstr "Klasik"
+
+msgid "Compact"
+msgstr "Sıkı"
+
+msgid "Papier pré-imprimé"
+msgstr "Önceden basılmış kâğıt"
+
+msgid "Chaque marge est un nombre entier de millimètres."
+msgstr "Her kenar boşluğu tam sayı milimetredir."
+
+msgid "Mise en page enregistrée."
+msgstr "Sayfa düzeni kaydedildi."
+
+msgid "Votre compte n'a pas le droit de gérer les paramètres."
+msgstr "Hesabınızın ayarları yönetme yetkisi yok."
+
+msgid "Nom de l'entreprise"
+msgstr "Şirket adı"
+
+msgid "Banque 1"
+msgstr "Banka 1"
+
+msgid "Banque 2"
+msgstr "Banka 2"
+
+msgid "Logo secondaire"
+msgstr "İkincil logo"
+
+msgid "chaque marge doit être comprise entre 0 et {} mm"
+msgstr "her kenar boşluğu 0 ile {} mm arasında olmalıdır"
+
+msgid "ligne {} : accolade « { » non fermée"
+msgstr "satır {}: kapatılmamış süslü parantez \"{\""
+
+msgid "ligne {} : la variable « {} » n'existe pas"
+msgstr "satır {}: \"{}\" değişkeni yok"
+
+msgid "ligne {} : un logo doit être seul sur sa ligne"
+msgstr "satır {}: logo kendi satırında tek başına olmalıdır"
+
+msgid "ligne {} : gras non fermé (**)"
+msgstr "satır {}: kapatılmamış kalın (**)"
+
+msgid "ligne {} : italique non fermée (*)"
+msgstr "satır {}: kapatılmamış italik (*)"
+
+msgid "en-tête, ligne {} : accolade « { » non fermée"
+msgstr "üst bilgi, satır {}: kapatılmamış süslü parantez \"{\""
+
+msgid "en-tête, ligne {} : la variable « {} » n'existe pas"
+msgstr "üst bilgi, satır {}: \"{}\" değişkeni yok"
+
+msgid "en-tête, ligne {} : un logo doit être seul sur sa ligne"
+msgstr "üst bilgi, satır {}: logo kendi satırında tek başına olmalıdır"
+
+msgid "en-tête, ligne {} : gras non fermé (**)"
+msgstr "üst bilgi, satır {}: kapatılmamış kalın (**)"
+
+msgid "en-tête, ligne {} : italique non fermée (*)"
+msgstr "üst bilgi, satır {}: kapatılmamış italik (*)"
+
+msgid "pied de page, ligne {} : accolade « { » non fermée"
+msgstr "alt bilgi, satır {}: kapatılmamış süslü parantez \"{\""
+
+msgid "pied de page, ligne {} : la variable « {} » n'existe pas"
+msgstr "alt bilgi, satır {}: \"{}\" değişkeni yok"
+
+msgid "pied de page, ligne {} : un logo doit être seul sur sa ligne"
+msgstr "alt bilgi, satır {}: logo kendi satırında tek başına olmalıdır"
+
+msgid "pied de page, ligne {} : gras non fermé (**)"
+msgstr "alt bilgi, satır {}: kapatılmamış kalın (**)"
+
+msgid "pied de page, ligne {} : italique non fermée (*)"
+msgstr "alt bilgi, satır {}: kapatılmamış italik (*)"

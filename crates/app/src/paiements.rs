@@ -64,7 +64,7 @@ fn ouvrir(f: &FenetrePrincipale, etat: &EtatPartage, id: i64, t: TypeDocument) -
 }
 
 /// Enregistre un PDF à l'endroit choisi par l'utilisateur, puis l'ouvre.
-fn enregistrer_pdf(octets: &[u8], nom: &str, dossier: Option<String>) -> Retour {
+pub(crate) fn enregistrer_pdf(octets: &[u8], nom: &str, dossier: Option<String>) -> Retour {
     let mut boite = rfd::FileDialog::new();
     if let Some(dossier) = dossier.filter(|d| !d.is_empty() && std::path::Path::new(d).is_dir()) {
         boite = boite.set_directory(dossier);
