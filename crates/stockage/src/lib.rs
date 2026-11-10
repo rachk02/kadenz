@@ -27,6 +27,30 @@ pub(crate) fn maintenant() -> String {
     chrono::Local::now().format("%Y-%m-%dT%H:%M:%S").to_string()
 }
 
+/// Place chaque valeur dans le `{}` suivant du modèle ; un `{}` sans valeur reste tel quel.
+pub fn composer(modele: &str, valeurs: &[String]) -> String {
+    let mut sortie = String::with_capacity(modele.len());
+    let mut valeurs = valeurs.iter();
+    let mut reste = modele;
+    while let Some(position) = reste.find("{}") {
+        sortie.push_str(&reste[..position]);
+        sortie.push_str(valeurs.next().map_or("{}", String::as_str));
+        reste = &reste[position + 2..];
+    }
+    sortie.push_str(reste);
+    sortie
+}
+
+/// Refus composé : `modele` est un texte fixe à traduire, chaque `{}` reçoit la
+/// valeur suivante. Une valeur est un numéro, un nom ou un libellé autonome
+/// (statut, type de document), jamais un fragment de phrase à accorder.
+pub(crate) fn refus(modele: &str, valeurs: &[&dyn fmt::Display]) -> Erreur {
+    Erreur::ValidationComposee {
+        modele: modele.to_string(),
+        valeurs: valeurs.iter().map(|v| v.to_string()).collect(),
+    }
+}
+
 /// Migrations embarquées, appliquées dans l'ordre. Le rang d'une migration
 /// correspond à `PRAGMA user_version` une fois appliquée. Ne jamais modifier
 /// une migration publiée : en ajouter une nouvelle.
@@ -46,8 +70,15 @@ pub enum Erreur {
         base: u32,
         application: u32,
     },
-    /// Saisie refusée ; le message est destiné à l'utilisateur.
+    /// Saisie refusée ; le message, fixe, est destiné à l'utilisateur.
     Validation(String),
+    /// Saisie refusée, message composé : `modele` est le texte fixe à traduire,
+    /// chaque `{}` reçoit la valeur suivante (voir [`composer`]). Le `Display`
+    /// donne la phrase française composée.
+    ValidationComposee {
+        modele: String,
+        valeurs: Vec<String>,
+    },
     /// Identifiant inconnu, mot de passe faux ou compte désactivé (sans préciser lequel).
     ConnexionRefusee,
     /// L'opération laisserait l'installation sans administrateur actif.
@@ -65,6 +96,9 @@ impl fmt::Display for Erreur {
             Erreur::Sqlite(e) => write!(f, "erreur de base de données : {e}"),
             Erreur::Io(e) => write!(f, "erreur de fichier : {e}"),
             Erreur::Validation(message) => f.write_str(message),
+            Erreur::ValidationComposee { modele, valeurs } => {
+                f.write_str(&composer(modele, valeurs))
+            }
             Erreur::ConnexionRefusee => f.write_str("identifiant ou mot de passe incorrect"),
             Erreur::DernierAdmin => f.write_str(
                 "impossible : l'installation doit garder au moins un administrateur actif",
@@ -205,6 +239,19 @@ pub fn sauvegarder(conn: &Connection, destination: &Path) -> Resultat<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn refus_compose() {
+        let e = refus("ligne {} : la désignation est obligatoire", &[&3]);
+        assert_eq!(e.to_string(), "ligne 3 : la désignation est obligatoire");
+        let Erreur::ValidationComposee { modele, valeurs } = e else {
+            panic!("refus composé attendu");
+        };
+        assert_eq!(modele, "ligne {} : la désignation est obligatoire");
+        assert_eq!(valeurs, ["3"]);
+        // Un {} sans valeur reste visible plutôt que de disparaître.
+        assert_eq!(composer("{} vers {}", &["Validé".into()]), "Validé vers {}");
+    }
 
     fn base() -> Connection {
         ouvrir_en_memoire().expect("ouverture de la base en mémoire")

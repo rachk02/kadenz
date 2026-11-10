@@ -28,7 +28,7 @@ use chrono::NaiveDate;
 use kadenz_domaine::calcul::{
     CENT_POUR_CENT, Montant, Quantite, Taux, Totaux, calculer_totaux, total_ligne,
 };
-use kadenz_domaine::document::{Avancement, avancement, verifier_transition};
+use kadenz_domaine::document::{Avancement, TransitionInterdite, avancement, verifier_transition};
 pub use kadenz_domaine::document::{Statut, TypeDocument};
 pub use kadenz_domaine::paiement::EtatPaiement;
 use kadenz_domaine::paiement::etat_paiement;
@@ -41,7 +41,7 @@ use serde_json::{Value, json};
 use crate::audit::{self, Entree, EntreeLue};
 use crate::comptes::Utilisateur;
 use crate::droits::exiger;
-use crate::{Erreur, Resultat, maintenant};
+use crate::{Erreur, Resultat, composer, maintenant, refus};
 
 const FORMAT_DATE: &str = "%Y-%m-%d";
 
@@ -232,6 +232,15 @@ fn invalide(message: impl Into<String>) -> Erreur {
     Erreur::Validation(message.into())
 }
 
+/// Transition de statut refusée par le domaine, en message composé : type de
+/// document et statuts sont des libellés à traduire.
+fn transition_refusee(e: TransitionInterdite) -> Erreur {
+    refus(
+        "{} : passage de « {} » à « {} » non autorisé",
+        &[&e.type_document, &e.depuis, &e.vers],
+    )
+}
+
 fn date_texte(d: NaiveDate) -> String {
     d.format(FORMAT_DATE).to_string()
 }
@@ -278,15 +287,22 @@ fn nettoyer(type_document: TypeDocument, saisie: &Saisie) -> Resultat<Saisie> {
     if !type_document.retenue_applicable() {
         s.taux.retenue = 0;
     }
-    for (nom, taux) in [
-        ("remise", s.taux.remise),
-        ("TVA", s.taux.tva),
-        ("retenue", s.taux.retenue),
+    for (message, taux) in [
+        (
+            "le taux de remise doit être compris entre 0 et 100 %",
+            s.taux.remise,
+        ),
+        (
+            "le taux de TVA doit être compris entre 0 et 100 %",
+            s.taux.tva,
+        ),
+        (
+            "le taux de retenue doit être compris entre 0 et 100 %",
+            s.taux.retenue,
+        ),
     ] {
         if !(0..=CENT_POUR_CENT).contains(&taux) {
-            return Err(invalide(format!(
-                "le taux de {nom} doit être compris entre 0 et 100 %"
-            )));
+            return Err(invalide(message));
         }
     }
     if let Some(echeance) = s.date_echeance
@@ -302,27 +318,25 @@ fn nettoyer(type_document: TypeDocument, saisie: &Saisie) -> Resultat<Saisie> {
         ligne.designation = ligne.designation.trim().to_string();
         ligne.observations = ligne.observations.trim().to_string();
         if ligne.designation.is_empty() {
-            return Err(invalide(format!(
-                "ligne {n} : la désignation est obligatoire"
-            )));
+            return Err(refus("ligne {} : la désignation est obligatoire", &[&n]));
         }
         if ligne.prix < 0 {
-            return Err(invalide(format!(
-                "ligne {n} : le prix ne peut pas être négatif"
-            )));
+            return Err(refus("ligne {} : le prix ne peut pas être négatif", &[&n]));
         }
         if ligne.quantite <= 0 {
-            return Err(invalide(format!(
-                "ligne {n} : la quantité doit être supérieure à zéro"
-            )));
+            return Err(refus(
+                "ligne {} : la quantité doit être supérieure à zéro",
+                &[&n],
+            ));
         }
         if type_document != TypeDocument::Livraison {
             // La réception d'un bon de commande ne passe pas par le brouillon.
             ligne.quantite_livree = 0;
         } else if !(0..=ligne.quantite).contains(&ligne.quantite_livree) {
-            return Err(invalide(format!(
-                "ligne {n} : la quantité livrée doit être comprise entre 0 et la quantité commandée"
-            )));
+            return Err(refus(
+                "ligne {} : la quantité livrée doit être comprise entre 0 et la quantité commandée",
+                &[&n],
+            ));
         }
     }
     Ok(s)
@@ -359,21 +373,15 @@ fn snapshot_tiers(
     };
     let t = crate::tiers::lire(conn, id)?.ok_or_else(|| invalide("ce tiers n'existe plus"))?;
     if !t.actif && tiers_actuel != Some(id) {
-        return Err(invalide(format!(
-            "le tiers « {} » est désactivé",
-            t.fiche.nom
-        )));
+        return Err(refus("le tiers « {} » est désactivé", &[&t.fiche.nom]));
     }
     if !tiers_compatible(type_document, &t) {
-        let attendu = if type_document == TypeDocument::BonCommande {
-            "fournisseur"
+        let modele = if type_document == TypeDocument::BonCommande {
+            "le tiers « {} » n'est pas enregistré comme fournisseur"
         } else {
-            "client"
+            "le tiers « {} » n'est pas enregistré comme client"
         };
-        return Err(invalide(format!(
-            "le tiers « {} » n'est pas enregistré comme {attendu}",
-            t.fiche.nom
-        )));
+        return Err(refus(modele, &[&t.fiche.nom]));
     }
     Ok(SnapshotTiers {
         nom: t.fiche.nom,
@@ -620,10 +628,10 @@ fn exiger_brouillon(d: &Document) -> Resultat<()> {
     if d.statut == Statut::Brouillon {
         Ok(())
     } else {
-        Err(invalide(format!(
+        Err(refus(
             "ce document est « {} » : ses lignes et montants ne se modifient plus",
-            d.statut
-        )))
+            &[&d.statut],
+        ))
     }
 }
 
@@ -796,10 +804,10 @@ pub fn convertir_en_facture(
         ));
     }
     if !matches!(src.statut, Statut::Valide | Statut::Envoye) {
-        return Err(invalide(format!(
+        return Err(refus(
             "seul un document validé ou envoyé se convertit en facture ; celui-ci est « {} »",
-            src.statut
-        )));
+            &[&src.statut],
+        ));
     }
     if facture_en_preparation(&tx, source_id)?.is_some() {
         return Err(invalide(
@@ -844,10 +852,10 @@ pub fn dupliquer(
             ));
         }
         if !matches!(d.statut, Statut::Valide | Statut::Envoye) {
-            return Err(invalide(format!(
+            return Err(refus(
                 "seul un document validé ou envoyé se corrige ; celui-ci est « {} »",
-                d.statut
-            )));
+                &[&d.statut],
+            ));
         }
         exiger(&tx, acteur, Droit::AnnulerDocumentValide)?;
         if facture_en_preparation(&tx, id)?.is_some() {
@@ -856,7 +864,7 @@ pub fn dupliquer(
             ));
         }
         verifier_transition(d.type_document, d.statut, Statut::Annule)
-            .map_err(|e| invalide(e.to_string()))?;
+            .map_err(transition_refusee)?;
     }
     let nature = if annuler_original {
         NatureLien::Correction
@@ -901,10 +909,10 @@ pub fn creer_avoir(conn: &mut Connection, acteur: &Utilisateur, facture_id: i64)
         return Err(invalide("un avoir se crée depuis une facture"));
     }
     if !matches!(f.statut, Statut::Valide | Statut::Envoye) {
-        return Err(invalide(format!(
+        return Err(refus(
             "un avoir se crée depuis une facture validée ou envoyée ; celle-ci est « {} »",
-            f.statut
-        )));
+            &[&f.statut],
+        ));
     }
     if f.reste_a_crediter.unwrap_or(0) <= 0 {
         return Err(invalide(
@@ -993,10 +1001,10 @@ pub fn supprimer_brouillon(conn: &mut Connection, acteur: &Utilisateur, id: i64)
     let d = lire_existant(&tx, id)?;
     exiger(&tx, acteur, Droit::brouillon(d.type_document))?;
     if !d.statut.suppression_physique_autorisee() {
-        return Err(invalide(format!(
+        return Err(refus(
             "seul un brouillon peut être supprimé ; ce document est « {} »",
-            d.statut
-        )));
+            &[&d.statut],
+        ));
     }
     tx.execute("DELETE FROM document WHERE id = ?1", [id])?;
     audit::journaliser(
@@ -1020,8 +1028,7 @@ pub fn valider(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
     let tx = conn.transaction()?;
     let d = lire_existant(&tx, id)?;
     exiger(&tx, acteur, Droit::ValiderDocument)?;
-    verifier_transition(d.type_document, d.statut, Statut::Valide)
-        .map_err(|e| invalide(e.to_string()))?;
+    verifier_transition(d.type_document, d.statut, Statut::Valide).map_err(transition_refusee)?;
     let s = nettoyer(d.type_document, &d.saisie)?;
     if s.tiers_id.is_none() {
         return Err(invalide("choisir le tiers avant de valider"));
@@ -1035,10 +1042,10 @@ pub fn valider(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
         (Some(l), TypeDocument::Facture) if l.nature == NatureLien::Conversion => {
             let src = lire_existant(&tx, l.id)?;
             verifier_transition(src.type_document, src.statut, Statut::Converti).map_err(|_| {
-                invalide(format!(
+                refus(
                     "le document d'origine est « {} » : il ne peut plus être converti",
-                    src.statut
-                ))
+                    &[&src.statut],
+                )
             })?;
             Some(src)
         }
@@ -1047,10 +1054,10 @@ pub fn valider(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
     let facture_creditee = if d.type_document == TypeDocument::Avoir {
         let f = facture_de_l_avoir(&tx, &d)?;
         if !matches!(f.statut, Statut::Valide | Statut::Envoye) {
-            return Err(invalide(format!(
+            return Err(refus(
                 "la facture d'origine est « {} » : l'avoir ne peut plus être validé",
-                f.statut
-            )));
+                &[&f.statut],
+            ));
         }
         controler_avoir(&f, &s)?;
         let montant = calculer(TypeDocument::Avoir, &s).ttc;
@@ -1059,11 +1066,10 @@ pub fn valider(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
             return Err(invalide("le montant d'un avoir doit être positif"));
         }
         if montant > reste {
-            return Err(invalide(format!(
+            return Err(refus(
                 "le montant de l'avoir ({} FCFA) dépasse le reste à créditer de la facture ({} FCFA)",
-                montant_en_texte(montant),
-                montant_en_texte(reste)
-            )));
+                &[&montant_en_texte(montant), &montant_en_texte(reste)],
+            ));
         }
         Some(f)
     } else {
@@ -1143,8 +1149,7 @@ pub fn marquer_envoye(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> R
     let tx = conn.transaction()?;
     let d = lire_existant(&tx, id)?;
     exiger(&tx, acteur, Droit::ValiderDocument)?;
-    verifier_transition(d.type_document, d.statut, Statut::Envoye)
-        .map_err(|e| invalide(e.to_string()))?;
+    verifier_transition(d.type_document, d.statut, Statut::Envoye).map_err(transition_refusee)?;
     tx.execute(
         "UPDATE document SET statut = ?1, date_envoi = ?2 WHERE id = ?3",
         params![Statut::Envoye.code(), maintenant(), id],
@@ -1171,8 +1176,7 @@ pub fn annuler(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
         Droit::AnnulerDocumentValide
     };
     exiger(&tx, acteur, droit)?;
-    verifier_transition(d.type_document, d.statut, Statut::Annule)
-        .map_err(|e| invalide(e.to_string()))?;
+    verifier_transition(d.type_document, d.statut, Statut::Annule).map_err(transition_refusee)?;
     if d.type_document.convertible_en_facture() && facture_en_preparation(&tx, id)?.is_some() {
         return Err(invalide(
             "une facture est en préparation pour ce document : supprimer d'abord ce brouillon",
@@ -1211,10 +1215,10 @@ pub fn modifier_administratif(
     let d = lire_existant(&tx, id)?;
     exiger(&tx, acteur, Droit::brouillon(d.type_document))?;
     if matches!(d.statut, Statut::Brouillon | Statut::Annule) {
-        return Err(invalide(format!(
+        return Err(refus(
             "les champs administratifs se modifient sur un document validé ; celui-ci est « {} »",
-            d.statut
-        )));
+            &[&d.statut],
+        ));
     }
     let (mode, obs) = (mode_paiement.trim(), observations.trim());
     if mode == d.saisie.mode_paiement && obs == d.saisie.observations {
@@ -1269,10 +1273,10 @@ pub fn enregistrer_reception(
         ));
     }
     if !matches!(d.statut, Statut::Envoye | Statut::ReceptionPartielle) {
-        return Err(invalide(format!(
+        return Err(refus(
             "la réception s'enregistre sur un bon de commande envoyé ; celui-ci est « {} »",
-            d.statut
-        )));
+            &[&d.statut],
+        ));
     }
     if recues.len() != d.saisie.lignes.len() {
         return Err(invalide(
@@ -1282,15 +1286,17 @@ pub fn enregistrer_reception(
     for (rang, (ligne, &recue)) in d.saisie.lignes.iter().zip(recues).enumerate() {
         let n = rang + 1;
         if recue < 0 {
-            return Err(invalide(format!(
-                "ligne {n} : la quantité reçue ne peut pas être négative"
-            )));
+            return Err(refus(
+                "ligne {} : la quantité reçue ne peut pas être négative",
+                &[&n],
+            ));
         }
         // Dépassement refusé, pas simple avertissement (décision du 2026-11-10).
         if recue > ligne.quantite {
-            return Err(invalide(format!(
-                "ligne {n} : la quantité reçue dépasse la quantité commandée, la corriger"
-            )));
+            return Err(refus(
+                "ligne {} : la quantité reçue dépasse la quantité commandée, la corriger",
+                &[&n],
+            ));
         }
     }
     let anciennes: Vec<Quantite> = d.saisie.lignes.iter().map(|l| l.quantite_livree).collect();
@@ -1314,8 +1320,7 @@ pub fn enregistrer_reception(
         Avancement::Complet => Statut::ReceptionComplete,
     };
     if nouveau != d.statut {
-        verifier_transition(d.type_document, d.statut, nouveau)
-            .map_err(|e| invalide(e.to_string()))?;
+        verifier_transition(d.type_document, d.statut, nouveau).map_err(transition_refusee)?;
     }
     let mut maj = tx.prepare(
         "UPDATE ligne_document SET quantite_livree = ?1
@@ -1392,20 +1397,6 @@ fn libelle_evenement(e: &EntreeLue) -> (String, Vec<String>) {
             None => fixe(&e.action),
         },
     }
-}
-
-/// Place chaque valeur dans le `{}` suivant du modèle.
-fn composer(modele: &str, valeurs: &[String]) -> String {
-    let mut sortie = String::with_capacity(modele.len());
-    let mut valeurs = valeurs.iter();
-    let mut reste = modele;
-    while let Some(position) = reste.find("{}") {
-        sortie.push_str(&reste[..position]);
-        sortie.push_str(valeurs.next().map_or("{}", String::as_str));
-        reste = &reste[position + 2..];
-    }
-    sortie.push_str(reste);
-    sortie
 }
 
 /// Historique de la fiche, tiré du journal d'audit.

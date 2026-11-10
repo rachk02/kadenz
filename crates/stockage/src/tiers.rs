@@ -13,7 +13,7 @@ use serde_json::{Value, json};
 use crate::audit::{self, Entree};
 use crate::comptes::Utilisateur;
 use crate::droits::exiger;
-use crate::{BilanImport, Erreur, Resultat, Retrait};
+use crate::{BilanImport, Erreur, Resultat, Retrait, refus};
 
 fn en_json(f: &FicheTiers) -> Value {
     json!({
@@ -300,7 +300,7 @@ pub fn importer(
     for (rang, fiche) in fiches.iter().enumerate() {
         let f = fiche
             .nettoyee()
-            .map_err(|e| Erreur::Validation(format!("fiche {} : {e}", rang + 1)))?;
+            .map_err(|e| refus("fiche {} : {}", &[&(rang + 1), &e]))?;
         if !noms.insert(texte::cle_comparaison(&f.nom)) {
             bilan
                 .ignorees

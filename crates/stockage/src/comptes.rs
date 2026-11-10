@@ -11,7 +11,7 @@ use serde_json::json;
 
 use crate::audit::{self, Entree};
 use crate::droits::exiger;
-use crate::{Erreur, Resultat, maintenant};
+use crate::{Erreur, Resultat, maintenant, refus};
 
 pub const LONGUEUR_MIN_MOT_DE_PASSE: usize = 8;
 
@@ -77,9 +77,10 @@ fn mot_de_passe_correct(mot_de_passe: &str, hache: &str) -> bool {
 
 fn valider_mot_de_passe(mot_de_passe: &str) -> Resultat<()> {
     if mot_de_passe.chars().count() < LONGUEUR_MIN_MOT_DE_PASSE {
-        return Err(Erreur::Validation(format!(
-            "le mot de passe doit contenir au moins {LONGUEUR_MIN_MOT_DE_PASSE} caractères"
-        )));
+        return Err(refus(
+            "le mot de passe doit contenir au moins {} caractères",
+            &[&LONGUEUR_MIN_MOT_DE_PASSE],
+        ));
     }
     Ok(())
 }
@@ -160,9 +161,10 @@ pub(crate) fn creer_sans_controle(
         |r| r.get(0),
     )?;
     if deja_pris {
-        return Err(Erreur::Validation(format!(
-            "l'identifiant « {identifiant} » est déjà utilisé"
-        )));
+        return Err(refus(
+            "l'identifiant « {} » est déjà utilisé",
+            &[&identifiant],
+        ));
     }
 
     conn.execute(
@@ -498,7 +500,7 @@ mod tests {
         assert!(connecter(&conn, "admin", "motdepasse1").is_ok());
         assert!(matches!(
             creer(&conn, &admin, &nouveau("ADMIN", Role::Commercial)),
-            Err(Erreur::Validation(_))
+            Err(Erreur::ValidationComposee { .. })
         ));
     }
 
@@ -540,7 +542,7 @@ mod tests {
         court.mot_de_passe = "court".into();
         assert!(matches!(
             creer_sans_controle(&conn, &court, None),
-            Err(Erreur::Validation(_))
+            Err(Erreur::ValidationComposee { .. })
         ));
         let mut espace = nouveau("un admin", Role::Admin);
         espace.identifiant = "un admin".into();

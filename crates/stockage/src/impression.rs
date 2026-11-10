@@ -13,7 +13,7 @@ use serde_json::{Value, json};
 
 use crate::entreprise::{self, Entreprise, Logo};
 use crate::parametres::{self, TextesDocument, couleur_depuis_texte, couleur_en_texte};
-use crate::{Erreur, Resultat};
+use crate::{Erreur, Resultat, refus};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Impression {
@@ -141,7 +141,7 @@ pub fn pour_document(conn: &Connection, document_id: i64) -> Resultat<Impression
         .optional()?
         .ok_or_else(|| Erreur::Validation("document introuvable".into()))?;
     let t = TypeDocument::depuis_code(&code)
-        .ok_or_else(|| Erreur::Validation(format!("type de document inconnu : {code}")))?;
+        .ok_or_else(|| refus("type de document inconnu : {}", &[&code]))?;
     let Some(id) = instantane else {
         return courante(conn, t);
     };

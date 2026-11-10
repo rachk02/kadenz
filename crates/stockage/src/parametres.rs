@@ -14,7 +14,7 @@ use serde_json::{Value, json};
 use crate::audit::{self, Entree};
 use crate::comptes::Utilisateur;
 use crate::droits::exiger;
-use crate::{Erreur, Resultat};
+use crate::{Erreur, Resultat, refus};
 
 const CLE_TAUX_TVA: &str = "taux.tva";
 const CLE_TAUX_REMISE: &str = "taux.remise";
@@ -130,18 +130,25 @@ impl Default for Parametres {
 
 impl Parametres {
     fn valider(&self) -> Resultat<()> {
-        let verifier_taux = |nom: &str, liste: &[Pourcentage]| {
+        let verifier_taux = |message: &str, liste: &[Pourcentage]| {
             if liste.is_empty() || liste.iter().any(|p| !(0..=10_000).contains(p)) {
-                Err(Erreur::Validation(format!(
-                    "la liste des taux de {nom} doit contenir des valeurs entre 0 et 100 %"
-                )))
+                Err(Erreur::Validation(message.into()))
             } else {
                 Ok(())
             }
         };
-        verifier_taux("TVA", &self.taux_tva)?;
-        verifier_taux("remise", &self.taux_remise)?;
-        verifier_taux("retenue", &self.taux_retenue)?;
+        verifier_taux(
+            "la liste des taux de TVA doit contenir des valeurs entre 0 et 100 %",
+            &self.taux_tva,
+        )?;
+        verifier_taux(
+            "la liste des taux de remise doit contenir des valeurs entre 0 et 100 %",
+            &self.taux_remise,
+        )?;
+        verifier_taux(
+            "la liste des taux de retenue doit contenir des valeurs entre 0 et 100 %",
+            &self.taux_retenue,
+        )?;
         if self.modes_paiement.iter().all(|m| m.trim().is_empty()) {
             return Err(Erreur::Validation(
                 "au moins un mode de paiement est nécessaire".into(),
@@ -152,10 +159,10 @@ impl Parametres {
             .iter()
             .position(|t| t.titre.trim().is_empty())
         {
-            return Err(Erreur::Validation(format!(
+            return Err(refus(
                 "le titre imprimé du type « {} » est obligatoire",
-                TypeDocument::TOUS[t]
-            )));
+                &[&TypeDocument::TOUS[t]],
+            ));
         }
         self.numerotation
             .nettoyee()

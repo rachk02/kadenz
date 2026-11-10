@@ -11,7 +11,7 @@ use serde_json::{Value, json};
 use crate::audit::{self, Entree};
 use crate::comptes::Utilisateur;
 use crate::droits::exiger;
-use crate::{Erreur, Resultat};
+use crate::{Erreur, Resultat, refus};
 
 /// Taille maximale d'un logo : largement assez pour un en-tête de document A4.
 pub const TAILLE_MAX_LOGO: usize = 2 * 1024 * 1024;
@@ -238,10 +238,10 @@ pub fn definir_logo(
             ));
         }
         if o.len() > TAILLE_MAX_LOGO {
-            return Err(Erreur::Validation(format!(
+            return Err(refus(
                 "le logo dépasse la taille maximale de {} Mo",
-                TAILLE_MAX_LOGO / (1024 * 1024)
-            )));
+                &[&(TAILLE_MAX_LOGO / (1024 * 1024))],
+            ));
         }
     }
     let modifies = conn.execute(
@@ -336,7 +336,7 @@ mod tests {
         let trop_gros = [PNG_MINIMAL, &vec![0u8; TAILLE_MAX_LOGO]].concat();
         assert!(matches!(
             definir_logo(&conn, &admin, Logo::Secondaire, Some(&trop_gros)),
-            Err(Erreur::Validation(_))
+            Err(Erreur::ValidationComposee { .. })
         ));
 
         definir_logo(&conn, &admin, Logo::Principal, None).unwrap();

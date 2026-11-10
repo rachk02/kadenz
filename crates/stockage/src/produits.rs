@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 use crate::audit::{self, Entree};
 use crate::comptes::Utilisateur;
 use crate::droits::exiger;
-use crate::{BilanImport, Erreur, Resultat, Retrait};
+use crate::{BilanImport, Erreur, Resultat, Retrait, refus};
 
 fn en_json(f: &FicheProduit) -> Value {
     json!({
@@ -120,10 +120,10 @@ pub fn lister(conn: &Connection, filtre: &FiltreProduits) -> Resultat<Vec<Produi
 
 fn reference_prise(conn: &Connection, reference: &str, sauf: Option<i64>) -> Resultat<()> {
     match par_reference(conn, reference)? {
-        Some(p) if Some(p.id) != sauf => Err(Erreur::Validation(format!(
+        Some(p) if Some(p.id) != sauf => Err(refus(
             "la référence « {} » est déjà utilisée par « {} »",
-            p.fiche.reference, p.fiche.designation
-        ))),
+            &[&p.fiche.reference, &p.fiche.designation],
+        )),
         _ => Ok(()),
     }
 }
@@ -259,7 +259,7 @@ pub fn importer(
     for (rang, fiche) in fiches.iter().enumerate() {
         let f = fiche
             .nettoyee()
-            .map_err(|e| Erreur::Validation(format!("fiche {} : {e}", rang + 1)))?;
+            .map_err(|e| refus("fiche {} : {}", &[&(rang + 1), &e]))?;
         if let Some(existant) = par_reference(&tx, &f.reference)? {
             bilan.ignorees.push((
                 rang,
@@ -306,7 +306,7 @@ mod tests {
         assert_eq!(p.fiche.reference, "CIM-42");
         assert!(matches!(
             creer(&conn, &admin, &fiche("cim-42", "Autre", Sens::Vente)),
-            Err(Erreur::Validation(_))
+            Err(Erreur::ValidationComposee { .. })
         ));
         let autre = creer(&conn, &admin, &fiche("FER-8", "Fer de 8", Sens::Achat)).unwrap();
         assert!(
