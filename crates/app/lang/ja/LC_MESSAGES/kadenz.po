@@ -1877,3 +1877,15 @@ msgstr "確認印と日付は納品書にのみ適用されます"
 
 msgid "les visas et dates se modifient sur un bordereau validé, avant la confirmation ; celui-ci est « {} »"
 msgstr "確認印と日付は確定済みの納品書で、確認の前に変更します。この納品書は「{}」です"
+
+msgid "le préfixe « {} » est obligatoire"
+msgstr "「{}」の接頭辞は必須です"
+
+msgid "le préfixe « {} » doit compter de 1 à {} lettres, sans chiffre, espace ni accent"
+msgstr "「{}」の接頭辞は数字・空白・アクセント記号なしの 1～{} 文字にしてください"
+
+msgid "les types « {} » et « {} » ont le même préfixe « {} »"
+msgstr "種類「{}」と「{}」の接頭辞が同じ「{}」です"
+
+msgid "le nombre de chiffres du rang doit être compris entre {} et {}"
+msgstr "連番の桁数は {}～{} の範囲にしてください"

@@ -1877,3 +1877,15 @@ msgstr "signatures and dates only apply to delivery notes"
 
 msgid "les visas et dates se modifient sur un bordereau validé, avant la confirmation ; celui-ci est « {} »"
 msgstr "signatures and dates are changed on a validated delivery note, before confirmation; this one is \"{}\""
+
+msgid "le préfixe « {} » est obligatoire"
+msgstr "the \"{}\" prefix is required"
+
+msgid "le préfixe « {} » doit compter de 1 à {} lettres, sans chiffre, espace ni accent"
+msgstr "the \"{}\" prefix must have 1 to {} letters, with no digit, space or accent"
+
+msgid "les types « {} » et « {} » ont le même préfixe « {} »"
+msgstr "types \"{}\" and \"{}\" have the same prefix \"{}\""
+
+msgid "le nombre de chiffres du rang doit être compris entre {} et {}"
+msgstr "the number of digits in the sequence number must be between {} and {}"

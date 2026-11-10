@@ -1877,3 +1877,15 @@ msgstr "imzalar ve tarihler yalnızca irsaliyeler için geçerlidir"
 
 msgid "les visas et dates se modifient sur un bordereau validé, avant la confirmation ; celui-ci est « {} »"
 msgstr "imzalar ve tarihler onaylanmış bir irsaliyede, teslimat onayından önce değiştirilir; bu irsaliyenin durumu \"{}\""
+
+msgid "le préfixe « {} » est obligatoire"
+msgstr "\"{}\" öneki zorunludur"
+
+msgid "le préfixe « {} » doit compter de 1 à {} lettres, sans chiffre, espace ni accent"
+msgstr "\"{}\" öneki rakam, boşluk ve aksan içermeden 1 ile {} harf arasında olmalıdır"
+
+msgid "les types « {} » et « {} » ont le même préfixe « {} »"
+msgstr "\"{}\" ve \"{}\" türleri aynı \"{}\" önekine sahip"
+
+msgid "le nombre de chiffres du rang doit être compris entre {} et {}"
+msgstr "sıra numarasının basamak sayısı {} ile {} arasında olmalıdır"

@@ -1877,3 +1877,15 @@ msgstr "签字和日期仅适用于送货单"
 
 msgid "les visas et dates se modifient sur un bordereau validé, avant la confirmation ; celui-ci est « {} »"
 msgstr "签字和日期需在已确认的送货单上、确认交货之前修改；此送货单状态为“{}”"
+
+msgid "le préfixe « {} » est obligatoire"
+msgstr "“{}”的前缀为必填项"
+
+msgid "le préfixe « {} » doit compter de 1 à {} lettres, sans chiffre, espace ni accent"
+msgstr "“{}”的前缀须为 1 至 {} 个字母，不含数字、空格或重音符号"
+
+msgid "les types « {} » et « {} » ont le même préfixe « {} »"
+msgstr "类型“{}”与“{}”的前缀相同：“{}”"
+
+msgid "le nombre de chiffres du rang doit être compris entre {} et {}"
+msgstr "序号的位数必须介于 {} 与 {} 之间"

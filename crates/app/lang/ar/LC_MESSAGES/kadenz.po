@@ -1877,3 +1877,15 @@ msgstr "التوقيعات والتواريخ لا تخص إلا إشعارات 
 
 msgid "les visas et dates se modifient sur un bordereau validé, avant la confirmation ; celui-ci est « {} »"
 msgstr "تُعدَّل التوقيعات والتواريخ على إشعار تسليم معتمد قبل التأكيد؛ وحالة هذا الإشعار «{}»"
+
+msgid "le préfixe « {} » est obligatoire"
+msgstr "البادئة «{}» إلزامية"
+
+msgid "le préfixe « {} » doit compter de 1 à {} lettres, sans chiffre, espace ni accent"
+msgstr "يجب أن تتكون البادئة «{}» من حرف إلى {} أحرف، دون أرقام أو مسافات أو علامات تشكيل"
+
+msgid "les types « {} » et « {} » ont le même préfixe « {} »"
+msgstr "للنوعين «{}» و«{}» البادئة نفسها «{}»"
+
+msgid "le nombre de chiffres du rang doit être compris entre {} et {}"
+msgstr "يجب أن يكون عدد أرقام الرقم التسلسلي بين {} و{}"

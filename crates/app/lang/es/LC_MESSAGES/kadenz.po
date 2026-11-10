@@ -1877,3 +1877,15 @@ msgstr "los vistos buenos y las fechas solo se aplican a los albaranes"
 
 msgid "les visas et dates se modifient sur un bordereau validé, avant la confirmation ; celui-ci est « {} »"
 msgstr "los vistos buenos y las fechas se modifican en un albarán validado, antes de la confirmación; este está «{}»"
+
+msgid "le préfixe « {} » est obligatoire"
+msgstr "el prefijo «{}» es obligatorio"
+
+msgid "le préfixe « {} » doit compter de 1 à {} lettres, sans chiffre, espace ni accent"
+msgstr "el prefijo «{}» debe tener de 1 a {} letras, sin cifras, espacios ni tildes"
+
+msgid "les types « {} » et « {} » ont le même préfixe « {} »"
+msgstr "los tipos «{}» y «{}» tienen el mismo prefijo «{}»"
+
+msgid "le nombre de chiffres du rang doit être compris entre {} et {}"
+msgstr "el número de cifras del número correlativo debe estar entre {} y {}"
