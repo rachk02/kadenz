@@ -152,7 +152,7 @@ pub(crate) fn nombre(conn: &Connection, document_id: i64) -> Resultat<i64> {
     )?)
 }
 
-fn situation_de(montant_du: Montant, regle: Montant) -> Situation {
+pub(crate) fn situation_de(montant_du: Montant, regle: Montant) -> Situation {
     Situation {
         montant_du,
         regle,

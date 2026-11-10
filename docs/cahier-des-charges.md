@@ -22,6 +22,7 @@
 | 2.16 | 2026-11-10 | Choix de mise en œuvre de J6 validés par l'utilisateur (section 19, périmètre de J6) |
 | 2.17 | 2026-11-10 | Décisions J7 : date d'un règlement, annulation refusée tant qu'il reste des règlements, suppression au droit « Saisir un règlement », factures sans échéance hors relances, relances sur factures validées ou envoyées, PDF des registres dès J7, lettre de relance proposée puis validée par l'utilisateur, trois entrées de menu, registre avec sous-totaux par mode (sections 8 et 10.1) |
 | 2.18 | 2026-11-10 | J7 livré : règlements des factures et des bons de commande, registre des règlements, suivi fournisseurs, relances et lettre de relance, PDF du registre et de la liste des relances (section 19, périmètre de J7) ; décisions de l'utilisateur : installateur Windows avancé avant J8, pages de présentation au premier lancement (sections 4.1, 16 et 19) |
+| 2.19 | 2026-11-10 | J8 lancé : règles de calcul des indicateurs du tableau de bord et graphiques dessinés par chemins Slint, choix de mise en œuvre à confirmer par l'utilisateur (section 9) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -320,7 +321,19 @@ Indicateurs recalculés en direct par requête sur les tables Document, LigneDoc
 - Achats : total des Bons de commande, montants payés et restant dus aux fournisseurs.
 - Filtre par année ou par période (comme le filtre « DATE Années » de l'Excel).
 
-Slint n'a pas de composant graphique prêt à l'emploi : les graphiques (secteurs, courbes, barres) sont dessinés par l'application (chemins Slint ou image générée côté Rust). À l'étude : choix entre ces deux techniques.
+Slint n'a pas de composant graphique prêt à l'emploi : les graphiques (secteurs, courbes, barres) sont dessinés par l'application. Technique retenue au lancement de J8, à confirmer par l'utilisateur : des chemins Slint calculés en Rust à partir des indicateurs (rendu net à toutes les tailles, thème et lecture de droite à gauche suivis, survol possible) ; une image générée côté Rust ne servirait que si le tableau de bord devait sortir en PDF, ce que cette section ne demande pas.
+
+Règles de calcul retenues au lancement de J8 (2026-11-10), choix de mise en œuvre à confirmer par l'utilisateur :
+- une facture ou un bon de commande compte s'il est en vigueur (ni Brouillon ni Annulé) et daté dans la période, bornes incluses ;
+- les avoirs validés sont déduits de leur facture, quelle que soit leur date : CA HT, TVA et CA TTC sont nets de leurs avoirs, et total payé + total impayé = CA TTC ;
+- CA HT = HT après remise (base de la TVA) ; CA TTC = montant dû (retenue déduite) ;
+- le payé d'un document est plafonné à son montant dû (un trop-perçu ne compte pas), l'impayé est la somme des restes à payer ;
+- CA par état de paiement : montant dû des factures groupé en Impayé, Partiel et Payé ;
+- CA par mode de paiement : règlements des factures de la période, par mode (le registre des règlements reste la vue par date de règlement) ;
+- tendance : un point par mois de la période, mois vides à zéro ;
+- top 5 clients par CA TTC, à égalité par nom ; 4 dernières factures de la période, de la plus récente à la plus ancienne ;
+- achats : total TTC des bons de commande de la période, payé et restant dû ;
+- filtre par année : années qui ont au moins une facture ou un bon de commande en vigueur.
 
 ---
 

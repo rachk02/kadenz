@@ -8,6 +8,7 @@ pub mod entreprise;
 pub mod impression;
 pub mod installation;
 pub mod parametres;
+pub mod pilotage;
 pub mod produits;
 pub mod reglements;
 pub mod relances;
