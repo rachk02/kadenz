@@ -1367,3 +1367,105 @@ msgstr "この文書はもう存在しません"
 
 msgid "enregistrer d'abord le document"
 msgstr "先に文書を保存してください"
+
+msgid "Montant dû après avoirs : {} FCFA"
+msgstr "クレジットノート控除後の請求額：{} FCFA"
+
+msgid "Facture en préparation"
+msgstr "請求書を作成中"
+
+msgid "Convertir en facture"
+msgstr "請求書に変換"
+
+msgid "Créer un avoir"
+msgstr "クレジットノートを作成"
+
+msgid "Dupliquer"
+msgstr "複製"
+
+msgid "Corriger"
+msgstr "訂正"
+
+msgid "Corriger ce document ? Il est annulé, son numéro conservé, et une copie modifiable est créée en brouillon."
+msgstr "この書類を訂正しますか？番号を残したまま取り消され、編集可能なコピーが下書きとして作成されます。"
+
+msgid "Confirmer la correction"
+msgstr "訂正を確定"
+
+msgid "Documents liés"
+msgstr "関連書類"
+
+msgid "facture créée en brouillon ; sa validation marquera le document d'origine comme converti"
+msgstr "請求書を下書きとして作成しました。確定すると元の書類は変換済みになります"
+
+msgid "original annulé ; sa copie est créée en brouillon pour être corrigée"
+msgstr "元の書類を取り消し、訂正用のコピーを下書きとして作成しました"
+
+msgid "copie créée en brouillon"
+msgstr "コピーを下書きとして作成しました"
+
+msgid "avoir créé en brouillon avec les lignes de la facture : retirer des lignes ou baisser les quantités pour un avoir partiel"
+msgstr "請求書の明細でクレジットノートを下書き作成しました。一部返金の場合は明細を削除するか数量を減らしてください"
+
+msgid "{} ({})"
+msgstr "{}（{}）"
+
+msgid "Origine (conversion) : {}"
+msgstr "変換元：{}"
+
+msgid "Origine (copie) : {}"
+msgstr "複製元：{}"
+
+msgid "Origine (correction) : {}"
+msgstr "訂正元：{}"
+
+msgid "Facture d'origine : {}"
+msgstr "元の請求書：{}"
+
+msgid "Conversion : {}"
+msgstr "変換先：{}"
+
+msgid "Copie : {}"
+msgstr "複製：{}"
+
+msgid "Correction : {}"
+msgstr "訂正：{}"
+
+msgid "un avoir se crée depuis la fiche d'une facture validée"
+msgstr "クレジットノートは確定済み請求書の画面から作成します"
+
+msgid "seuls un devis ou une proforma se convertissent en facture"
+msgstr "請求書に変換できるのは見積書または見積請求書のみです"
+
+msgid "une facture est déjà en préparation pour ce document"
+msgstr "この書類の請求書はすでに作成中です"
+
+msgid "un avoir ne se duplique pas : il se crée depuis la fiche de sa facture"
+msgstr "クレジットノートは複製できません。対象の請求書の画面から作成します"
+
+msgid "la correction avec annulation de l'original vaut pour un devis ou une proforma ; une facture se corrige par un avoir"
+msgstr "元の書類を取り消す訂正は見積書と見積請求書に限られます。請求書はクレジットノートで訂正します"
+
+msgid "une facture est en préparation pour ce document : supprimer d'abord ce brouillon"
+msgstr "この書類の請求書が作成中です。先にその下書きを削除してください"
+
+msgid "un avoir se crée depuis une facture"
+msgstr "クレジットノートは請求書から作成します"
+
+msgid "cette facture est entièrement couverte par ses avoirs"
+msgstr "この請求書はクレジットノートで全額相殺されています"
+
+msgid "cet avoir n'est rattaché à aucune facture"
+msgstr "このクレジットノートはどの請求書にも紐付いていません"
+
+msgid "le client d'un avoir est celui de sa facture"
+msgstr "クレジットノートの顧客は対象請求書の顧客です"
+
+msgid "la remise et la TVA d'un avoir sont celles de sa facture"
+msgstr "クレジットノートの値引きと消費税は対象請求書と同じです"
+
+msgid "le montant d'un avoir doit être positif"
+msgstr "クレジットノートの金額は正の値でなければなりません"
+
+msgid "cette facture a des avoirs validés : annuler d'abord ces avoirs"
+msgstr "この請求書には確定済みのクレジットノートがあります。先にそれらを取り消してください"

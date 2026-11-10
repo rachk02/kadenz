@@ -1367,3 +1367,105 @@ msgstr "هذا المستند لم يعد موجودًا"
 
 msgid "enregistrer d'abord le document"
 msgstr "احفظ المستند أولًا"
+
+msgid "Montant dû après avoirs : {} FCFA"
+msgstr "المبلغ المستحق بعد الإشعارات الدائنة: {} FCFA"
+
+msgid "Facture en préparation"
+msgstr "فاتورة قيد الإعداد"
+
+msgid "Convertir en facture"
+msgstr "تحويل إلى فاتورة"
+
+msgid "Créer un avoir"
+msgstr "إنشاء إشعار دائن"
+
+msgid "Dupliquer"
+msgstr "تكرار"
+
+msgid "Corriger"
+msgstr "تصحيح"
+
+msgid "Corriger ce document ? Il est annulé, son numéro conservé, et une copie modifiable est créée en brouillon."
+msgstr "هل تريد تصحيح هذا المستند؟ سيُلغى مع الاحتفاظ برقمه، وتُنشأ نسخة قابلة للتعديل كمسودة."
+
+msgid "Confirmer la correction"
+msgstr "تأكيد التصحيح"
+
+msgid "Documents liés"
+msgstr "المستندات المرتبطة"
+
+msgid "facture créée en brouillon ; sa validation marquera le document d'origine comme converti"
+msgstr "أُنشئت الفاتورة كمسودة؛ عند اعتمادها سيُعلَّم المستند الأصلي على أنه محوَّل"
+
+msgid "original annulé ; sa copie est créée en brouillon pour être corrigée"
+msgstr "أُلغي الأصل؛ وأُنشئت نسخته كمسودة لتصحيحها"
+
+msgid "copie créée en brouillon"
+msgstr "أُنشئت نسخة كمسودة"
+
+msgid "avoir créé en brouillon avec les lignes de la facture : retirer des lignes ou baisser les quantités pour un avoir partiel"
+msgstr "أُنشئ إشعار دائن كمسودة ببنود الفاتورة: احذف بنودًا أو خفّض الكميات لإشعار دائن جزئي"
+
+msgid "{} ({})"
+msgstr "{} ({})"
+
+msgid "Origine (conversion) : {}"
+msgstr "الأصل (تحويل): {}"
+
+msgid "Origine (copie) : {}"
+msgstr "الأصل (نسخة): {}"
+
+msgid "Origine (correction) : {}"
+msgstr "الأصل (تصحيح): {}"
+
+msgid "Facture d'origine : {}"
+msgstr "الفاتورة الأصلية: {}"
+
+msgid "Conversion : {}"
+msgstr "تحويل: {}"
+
+msgid "Copie : {}"
+msgstr "نسخة: {}"
+
+msgid "Correction : {}"
+msgstr "تصحيح: {}"
+
+msgid "un avoir se crée depuis la fiche d'une facture validée"
+msgstr "يُنشأ الإشعار الدائن من بطاقة فاتورة معتمدة"
+
+msgid "seuls un devis ou une proforma se convertissent en facture"
+msgstr "لا يُحوَّل إلى فاتورة إلا عرض سعر أو فاتورة مبدئية"
+
+msgid "une facture est déjà en préparation pour ce document"
+msgstr "توجد فاتورة قيد الإعداد لهذا المستند بالفعل"
+
+msgid "un avoir ne se duplique pas : il se crée depuis la fiche de sa facture"
+msgstr "لا يُكرَّر الإشعار الدائن: يُنشأ من بطاقة فاتورته"
+
+msgid "la correction avec annulation de l'original vaut pour un devis ou une proforma ; une facture se corrige par un avoir"
+msgstr "التصحيح مع إلغاء الأصل خاص بعرض السعر أو الفاتورة المبدئية؛ أما الفاتورة فتُصحَّح بإشعار دائن"
+
+msgid "une facture est en préparation pour ce document : supprimer d'abord ce brouillon"
+msgstr "توجد فاتورة قيد الإعداد لهذا المستند: احذف تلك المسودة أولًا"
+
+msgid "un avoir se crée depuis une facture"
+msgstr "يُنشأ الإشعار الدائن من فاتورة"
+
+msgid "cette facture est entièrement couverte par ses avoirs"
+msgstr "هذه الفاتورة مغطاة بالكامل بإشعاراتها الدائنة"
+
+msgid "cet avoir n'est rattaché à aucune facture"
+msgstr "هذا الإشعار الدائن غير مرتبط بأي فاتورة"
+
+msgid "le client d'un avoir est celui de sa facture"
+msgstr "عميل الإشعار الدائن هو عميل فاتورته"
+
+msgid "la remise et la TVA d'un avoir sont celles de sa facture"
+msgstr "الخصم وضريبة القيمة المضافة في الإشعار الدائن هما نفسهما في فاتورته"
+
+msgid "le montant d'un avoir doit être positif"
+msgstr "يجب أن يكون مبلغ الإشعار الدائن موجبًا"
+
+msgid "cette facture a des avoirs validés : annuler d'abord ces avoirs"
+msgstr "لهذه الفاتورة إشعارات دائنة معتمدة: ألغِ هذه الإشعارات أولًا"

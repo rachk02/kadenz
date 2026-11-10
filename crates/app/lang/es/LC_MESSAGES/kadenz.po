@@ -1366,4 +1366,106 @@ msgid "ce document n'existe plus"
 msgstr "este documento ya no existe"
 
 msgid "enregistrer d'abord le document"
-msgstr "guardar primero el documento"
+msgstr "guarde primero el documento"
+
+msgid "Montant dû après avoirs : {} FCFA"
+msgstr "Importe adeudado tras notas de crédito: {} FCFA"
+
+msgid "Facture en préparation"
+msgstr "Factura en preparación"
+
+msgid "Convertir en facture"
+msgstr "Convertir en factura"
+
+msgid "Créer un avoir"
+msgstr "Crear una nota de crédito"
+
+msgid "Dupliquer"
+msgstr "Duplicar"
+
+msgid "Corriger"
+msgstr "Corregir"
+
+msgid "Corriger ce document ? Il est annulé, son numéro conservé, et une copie modifiable est créée en brouillon."
+msgstr "¿Corregir este documento? Se anula, conserva su número, y se crea una copia editable como borrador."
+
+msgid "Confirmer la correction"
+msgstr "Confirmar la corrección"
+
+msgid "Documents liés"
+msgstr "Documentos vinculados"
+
+msgid "facture créée en brouillon ; sa validation marquera le document d'origine comme converti"
+msgstr "factura creada como borrador; su validación marcará el documento de origen como convertido"
+
+msgid "original annulé ; sa copie est créée en brouillon pour être corrigée"
+msgstr "original anulado; su copia se crea como borrador para corregirla"
+
+msgid "copie créée en brouillon"
+msgstr "copia creada como borrador"
+
+msgid "avoir créé en brouillon avec les lignes de la facture : retirer des lignes ou baisser les quantités pour un avoir partiel"
+msgstr "nota de crédito creada como borrador con las líneas de la factura: quite líneas o reduzca cantidades para una nota de crédito parcial"
+
+msgid "{} ({})"
+msgstr "{} ({})"
+
+msgid "Origine (conversion) : {}"
+msgstr "Origen (conversión): {}"
+
+msgid "Origine (copie) : {}"
+msgstr "Origen (copia): {}"
+
+msgid "Origine (correction) : {}"
+msgstr "Origen (corrección): {}"
+
+msgid "Facture d'origine : {}"
+msgstr "Factura de origen: {}"
+
+msgid "Conversion : {}"
+msgstr "Conversión: {}"
+
+msgid "Copie : {}"
+msgstr "Copia: {}"
+
+msgid "Correction : {}"
+msgstr "Corrección: {}"
+
+msgid "un avoir se crée depuis la fiche d'une facture validée"
+msgstr "una nota de crédito se crea desde la ficha de una factura validada"
+
+msgid "seuls un devis ou une proforma se convertissent en facture"
+msgstr "solo un presupuesto o una proforma se convierten en factura"
+
+msgid "une facture est déjà en préparation pour ce document"
+msgstr "ya hay una factura en preparación para este documento"
+
+msgid "un avoir ne se duplique pas : il se crée depuis la fiche de sa facture"
+msgstr "una nota de crédito no se duplica: se crea desde la ficha de su factura"
+
+msgid "la correction avec annulation de l'original vaut pour un devis ou une proforma ; une facture se corrige par un avoir"
+msgstr "la corrección con anulación del original vale para un presupuesto o una proforma; una factura se corrige con una nota de crédito"
+
+msgid "une facture est en préparation pour ce document : supprimer d'abord ce brouillon"
+msgstr "hay una factura en preparación para este documento: elimine primero ese borrador"
+
+msgid "un avoir se crée depuis une facture"
+msgstr "una nota de crédito se crea a partir de una factura"
+
+msgid "cette facture est entièrement couverte par ses avoirs"
+msgstr "esta factura está totalmente cubierta por sus notas de crédito"
+
+msgid "cet avoir n'est rattaché à aucune facture"
+msgstr "esta nota de crédito no está vinculada a ninguna factura"
+
+msgid "le client d'un avoir est celui de sa facture"
+msgstr "el cliente de una nota de crédito es el de su factura"
+
+msgid "la remise et la TVA d'un avoir sont celles de sa facture"
+msgstr "el descuento y el IVA de una nota de crédito son los de su factura"
+
+msgid "le montant d'un avoir doit être positif"
+msgstr "el importe de una nota de crédito debe ser positivo"
+
+msgid "cette facture a des avoirs validés : annuler d'abord ces avoirs"
+msgstr "esta factura tiene notas de crédito validadas: anule primero esas notas de crédito"

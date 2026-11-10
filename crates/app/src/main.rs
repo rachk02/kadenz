@@ -70,6 +70,9 @@ struct Etat {
     facture: Option<factures::EditionFacture>,
     /// Type de document de l'écran commun des documents de vente.
     type_document: TypeDocument,
+    /// Document à ouvrir dès l'affichage de la page de son type (document créé
+    /// ou lien suivi depuis la fiche d'un autre type).
+    document_a_ouvrir: Option<i64>,
 }
 
 impl Etat {
@@ -83,6 +86,7 @@ impl Etat {
             factures: factures::Registre::default(),
             facture: None,
             type_document: TypeDocument::Facture,
+            document_a_ouvrir: None,
         }
     }
 }

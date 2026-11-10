@@ -35,11 +35,26 @@ export struct FicheFactureUi {
     modifiable: bool,
     // Faux pour un avoir : son client est celui de la facture d'origine.
     client-modifiable: bool,
+    // Faux pour un avoir : sa remise et sa TVA sont celles de la facture d'origine.
+    taux-modifiables: bool,
     admin-modifiable: bool,
     peut-valider: bool,
     peut-envoyer: bool,
     peut-annuler: bool,
     peut-supprimer: bool,
+    // Devis ou proforma validé ou envoyé, sans facture en préparation.
+    peut-convertir: bool,
+    peut-dupliquer: bool,
+    // Correction d'un devis ou d'une proforma : copie en brouillon, original annulé.
+    peut-corriger: bool,
+    // Facture validée ou envoyée et droit de créer un avoir ; le bouton est grisé
+    // si ses avoirs couvrent déjà tout le montant (`avoir-possible` faux).
+    peut-creer-avoir: bool,
+    avoir-possible: bool,
+    // Montant dû diminué des avoirs validés ; vide s'il vaut le TTC.
+    montant-du: string,
+    // Devis ou proforma dont la facture issue de la conversion est encore en brouillon.
+    en-preparation: bool,
     // Explication affichée sous les actions quand la fiche n'est pas modifiable
     // (lecture seule, document figé, annulé, converti) ; vide sinon.
     note: string,
@@ -56,6 +71,12 @@ export struct TextesDocumentUi {
     annuler: string,
     confirmer-validation: string,
     confirmer-annulation: string,
+}
+
+// Document lié (origine ou document issu de celui-ci), pour la navigation.
+export struct LienUi {
+    id: int,
+    texte: string,
 }
 
 export struct TotauxUi {
@@ -110,6 +131,10 @@ export global FacturesApi {
     in property <[LigneFactureUi]> lignes;
     in property <TotauxUi> totaux;
     in property <[EvenementUi]> historique;
+    in property <[LienUi]> liens;
+    // Message à afficher à l'ouverture d'une fiche dans une autre page (document
+    // créé d'un autre type) ; la fiche le reprend puis le vide.
+    in-out property <Retour> message-ouverture;
     // Renvoie le nouveau rang du client choisi dans la liste filtrée.
     callback filtrer-clients(texte: string, rang-courant: int) -> int;
     // Renvoie les coordonnées du client choisi.
@@ -134,6 +159,11 @@ export global FacturesApi {
     // PDF du document enregistré : aperçu filigrané pour un brouillon, document
     // définitif une fois validé, filigrane « ANNULÉ » s'il est annulé.
     callback exporter-pdf() -> Retour;
+    // Chacune ouvre le brouillon créé, dans la page de son type.
+    callback convertir() -> Retour;
+    callback dupliquer(annuler-original: bool) -> Retour;
+    callback creer-avoir() -> Retour;
+    callback ouvrir-lien(id: int) -> Retour;
 }
 
 component Registre inherits VerticalLayout {
@@ -299,7 +329,10 @@ component PetitBouton inherits Bouton {
 component Fiche inherits ScrollView {
     property <FicheFactureUi> fiche;
     property <Retour> retour;
-    // 0 aucune, 1 valider, 2 annuler, 3 supprimer.
+    // Message d'ouverture (document créé depuis une autre page), sous le bandeau :
+    // la fiche s'ouvre en haut, loin des actions.
+    property <Retour> retour-ouverture;
+    // 0 aucune, 1 valider, 2 annuler, 3 supprimer, 4 corriger.
     property <int> confirmation: 0;
     property <int> version-chargee: -1;
     property <string> date-precedente;
@@ -308,6 +341,7 @@ component Fiche inherits ScrollView {
         root.version-chargee = FacturesApi.version-fiche;
         root.fiche = f;
         root.confirmation = 0;
+        root.retour-ouverture = { };
         date.valeur = f.date;
         root.date-precedente = f.date;
         echeance.valeur = f.echeance;
@@ -345,6 +379,8 @@ component Fiche inherits ScrollView {
 
     init => {
         root.charger(FacturesApi.fiche-courante());
+        root.retour-ouverture = FacturesApi.message-ouverture;
+        FacturesApi.message-ouverture = { };
     }
 
     VerticalLayout {
@@ -397,7 +433,21 @@ component Fiche inherits ScrollView {
                     vertical-alignment: center;
                 }
 
+                if root.fiche.montant-du != "": Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("Montant dû après avoirs : {} FCFA", root.fiche.montant-du);
+                    color: Theme.texte;
+                    vertical-alignment: center;
+                }
+
                 Rectangle { }
+
+                if root.fiche.en-preparation: Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("Facture en préparation");
+                    color: Theme.texte-secondaire;
+                    vertical-alignment: center;
+                }
 
                 if root.fiche.brouillon: Text {
                     horizontal-alignment: Theme.debut;
@@ -406,6 +456,10 @@ component Fiche inherits ScrollView {
                     vertical-alignment: center;
                 }
             }
+        }
+
+        if root.retour-ouverture.message != "": MessageRetour {
+            retour: root.retour-ouverture;
         }
 
         // En-tête : client, dates, libellé.
@@ -670,7 +724,7 @@ component Fiche inherits ScrollView {
 
                         remise := ComboBox {
                             model: FacturesApi.taux-remise;
-                            enabled: root.fiche.modifiable;
+                            enabled: root.fiche.taux-modifiables;
                             selected => {
                                 root.recalculer();
                             }
@@ -686,7 +740,7 @@ component Fiche inherits ScrollView {
 
                         tva := ComboBox {
                             model: FacturesApi.taux-tva;
-                            enabled: root.fiche.modifiable;
+                            enabled: root.fiche.taux-modifiables;
                             selected => {
                                 root.recalculer();
                             }
@@ -821,12 +875,54 @@ component Fiche inherits ScrollView {
             }
         }
 
+        // Documents qui naissent de celui-ci : chacun ouvre sa fiche une fois créé.
+        if root.fiche.peut-convertir || root.fiche.peut-dupliquer || root.fiche.peut-corriger || root.fiche.peut-creer-avoir: Rangee {
+            spacing: 8px;
+            alignment: start;
+
+            if root.fiche.peut-convertir: Bouton {
+                text: @tr("Convertir en facture");
+                clicked => {
+                    root.confirmation = 0;
+                    root.retour = FacturesApi.convertir();
+                    root.recharger-si-besoin();
+                }
+            }
+
+            if root.fiche.peut-creer-avoir: Bouton {
+                text: @tr("Créer un avoir");
+                enabled: root.fiche.avoir-possible;
+                clicked => {
+                    root.confirmation = 0;
+                    root.retour = FacturesApi.creer-avoir();
+                    root.recharger-si-besoin();
+                }
+            }
+
+            if root.fiche.peut-dupliquer: Bouton {
+                text: @tr("Dupliquer");
+                clicked => {
+                    root.confirmation = 0;
+                    root.retour = FacturesApi.dupliquer(false);
+                    root.recharger-si-besoin();
+                }
+            }
+
+            if root.fiche.peut-corriger: Bouton {
+                text: @tr("Corriger");
+                clicked => {
+                    root.retour = { };
+                    root.confirmation = 4;
+                }
+            }
+        }
+
         if root.confirmation != 0: VerticalLayout {
             spacing: 8px;
 
             Text {
                 horizontal-alignment: Theme.debut;
-                text: root.confirmation == 1 ? FacturesApi.textes.confirmer-validation : (root.confirmation == 2 ? FacturesApi.textes.confirmer-annulation : @tr("Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit."));
+                text: root.confirmation == 1 ? FacturesApi.textes.confirmer-validation : (root.confirmation == 2 ? FacturesApi.textes.confirmer-annulation : (root.confirmation == 4 ? @tr("Corriger ce document ? Il est annulé, son numéro conservé, et une copie modifiable est créée en brouillon.") : @tr("Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit.")));
                 color: Theme.texte;
                 wrap: word-wrap;
             }
@@ -836,13 +932,15 @@ component Fiche inherits ScrollView {
                 alignment: start;
 
                 Bouton {
-                    text: root.confirmation == 1 ? @tr("Confirmer la validation") : (root.confirmation == 2 ? @tr("Confirmer l'annulation") : @tr("Confirmer la suppression"));
+                    text: root.confirmation == 1 ? @tr("Confirmer la validation") : (root.confirmation == 2 ? @tr("Confirmer l'annulation") : (root.confirmation == 4 ? @tr("Confirmer la correction") : @tr("Confirmer la suppression")));
                     primary: true;
                     clicked => {
                         if (root.confirmation == 1) {
                             root.retour = FacturesApi.valider(root.saisie());
                         } else if (root.confirmation == 2) {
                             root.retour = FacturesApi.annuler-document();
+                        } else if (root.confirmation == 4) {
+                            root.retour = FacturesApi.dupliquer(true);
                         } else {
                             root.retour = FacturesApi.supprimer();
                         }
@@ -869,6 +967,24 @@ component Fiche inherits ScrollView {
             text: root.fiche.note;
             color: Theme.texte-secondaire;
             wrap: word-wrap;
+        }
+
+        // Documents liés : origine, puis documents issus de celui-ci.
+        if FacturesApi.liens.length > 0: Section {
+            text: @tr("Documents liés");
+        }
+
+        for lien in FacturesApi.liens: Rangee {
+            alignment: start;
+
+            Bouton {
+                text: lien.texte;
+                clicked => {
+                    root.confirmation = 0;
+                    root.retour = FacturesApi.ouvrir-lien(lien.id);
+                    root.recharger-si-besoin();
+                }
+            }
         }
 
         // Historique des changements de statut.

@@ -1367,3 +1367,105 @@ msgstr "此文档已不存在"
 
 msgid "enregistrer d'abord le document"
 msgstr "请先保存文档"
+
+msgid "Montant dû après avoirs : {} FCFA"
+msgstr "扣除贷项通知单后的应付金额：{} FCFA"
+
+msgid "Facture en préparation"
+msgstr "发票准备中"
+
+msgid "Convertir en facture"
+msgstr "转换为发票"
+
+msgid "Créer un avoir"
+msgstr "创建贷项通知单"
+
+msgid "Dupliquer"
+msgstr "复制"
+
+msgid "Corriger"
+msgstr "更正"
+
+msgid "Corriger ce document ? Il est annulé, son numéro conservé, et une copie modifiable est créée en brouillon."
+msgstr "更正此单据？它将被作废并保留编号，同时创建一份可编辑的草稿副本。"
+
+msgid "Confirmer la correction"
+msgstr "确认更正"
+
+msgid "Documents liés"
+msgstr "关联单据"
+
+msgid "facture créée en brouillon ; sa validation marquera le document d'origine comme converti"
+msgstr "已创建发票草稿；确认后，原单据将标记为已转换"
+
+msgid "original annulé ; sa copie est créée en brouillon pour être corrigée"
+msgstr "原单据已作废；已创建其草稿副本以供更正"
+
+msgid "copie créée en brouillon"
+msgstr "已创建草稿副本"
+
+msgid "avoir créé en brouillon avec les lignes de la facture : retirer des lignes ou baisser les quantités pour un avoir partiel"
+msgstr "已按发票明细创建贷项通知单草稿：如需部分贷记，请删除明细或减少数量"
+
+msgid "{} ({})"
+msgstr "{}（{}）"
+
+msgid "Origine (conversion) : {}"
+msgstr "转换来源：{}"
+
+msgid "Origine (copie) : {}"
+msgstr "复制来源：{}"
+
+msgid "Origine (correction) : {}"
+msgstr "更正来源：{}"
+
+msgid "Facture d'origine : {}"
+msgstr "原发票：{}"
+
+msgid "Conversion : {}"
+msgstr "转换为：{}"
+
+msgid "Copie : {}"
+msgstr "副本：{}"
+
+msgid "Correction : {}"
+msgstr "更正：{}"
+
+msgid "un avoir se crée depuis la fiche d'une facture validée"
+msgstr "贷项通知单需从已确认发票的详情页创建"
+
+msgid "seuls un devis ou une proforma se convertissent en facture"
+msgstr "只有报价单或形式发票可以转换为发票"
+
+msgid "une facture est déjà en préparation pour ce document"
+msgstr "此单据已有一张发票在准备中"
+
+msgid "un avoir ne se duplique pas : il se crée depuis la fiche de sa facture"
+msgstr "贷项通知单不能复制：需从其发票的详情页创建"
+
+msgid "la correction avec annulation de l'original vaut pour un devis ou une proforma ; une facture se corrige par un avoir"
+msgstr "作废原单据的更正仅适用于报价单或形式发票；发票须通过贷项通知单更正"
+
+msgid "une facture est en préparation pour ce document : supprimer d'abord ce brouillon"
+msgstr "此单据有一张发票正在准备中：请先删除该草稿"
+
+msgid "un avoir se crée depuis une facture"
+msgstr "贷项通知单需从发票创建"
+
+msgid "cette facture est entièrement couverte par ses avoirs"
+msgstr "此发票已被其贷项通知单全额抵销"
+
+msgid "cet avoir n'est rattaché à aucune facture"
+msgstr "此贷项通知单未关联任何发票"
+
+msgid "le client d'un avoir est celui de sa facture"
+msgstr "贷项通知单的客户即其发票的客户"
+
+msgid "la remise et la TVA d'un avoir sont celles de sa facture"
+msgstr "贷项通知单的折扣和增值税与其发票相同"
+
+msgid "le montant d'un avoir doit être positif"
+msgstr "贷项通知单金额必须为正数"
+
+msgid "cette facture a des avoirs validés : annuler d'abord ces avoirs"
+msgstr "此发票有已确认的贷项通知单：请先作废这些贷项通知单"

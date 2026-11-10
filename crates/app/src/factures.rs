@@ -18,7 +18,8 @@ use kadenz_domaine::saisie;
 use kadenz_domaine::texte::{cle_comparaison, contient};
 use kadenz_stockage::comptes::Utilisateur;
 use kadenz_stockage::documents::{
-    self, EtatPaiement, FiltreDocuments, LigneSaisie, ResumeDocument, Saisie, Statut, TypeDocument,
+    self, EtatPaiement, FiltreDocuments, Lien, LigneSaisie, NatureLien, ResumeDocument, Saisie,
+    Statut, TypeDocument,
 };
 use kadenz_stockage::produits::{self, FiltreProduits, Produit};
 use kadenz_stockage::tiers::{self, FiltreTiers};
@@ -28,8 +29,8 @@ use slint::{ComponentHandle, Model, ModelRc, SharedString, VecModel};
 use crate::referentiels::{Vue, modele_lignes, retour_erreur, retour_ok};
 use crate::traduction::{tr, trf};
 use crate::{
-    Etat, EtatPartage, EvenementUi, FacturesApi, FenetrePrincipale, FicheFactureUi, LigneFactureUi,
-    Retour, TextesDocumentUi, TotauxUi,
+    Etat, EtatPartage, EvenementUi, FacturesApi, FenetrePrincipale, FicheFactureUi, LienUi,
+    LigneFactureUi, Page, Retour, TextesDocumentUi, TotauxUi,
 };
 
 /// Fiche ouverte : document éventuel et correspondance rang affiché vers valeur.
@@ -275,6 +276,44 @@ fn statuts_filtre(t: TypeDocument) -> Vec<Option<Statut>> {
     }
     statuts.push(Some(Statut::Annule));
     statuts
+}
+
+/// Page du menu qui affiche un type de document.
+fn page_du_type(t: TypeDocument) -> Page {
+    match t {
+        TypeDocument::Devis => Page::Devis,
+        TypeDocument::Proforma => Page::Proforma,
+        TypeDocument::BonCommande => Page::BonsCommande,
+        TypeDocument::Livraison => Page::Livraisons,
+        TypeDocument::Avoir => Page::Avoirs,
+        TypeDocument::Facture => Page::Factures,
+    }
+}
+
+/// Texte d'un document lié : sa nature, puis le document (numéro et statut).
+fn texte_lien(l: &Lien, origine: bool) -> String {
+    // La facture d'origine d'un avoir est nommée par son seul numéro : son libellé dit déjà
+    // qu'il s'agit d'une facture.
+    let titre = match (l.nature, origine, &l.numero) {
+        (NatureLien::Avoir, true, Some(n)) => n.clone(),
+        _ => titre_fiche(l.type_document, l.numero.as_deref(), true),
+    };
+    let document = if l.numero.is_some() {
+        trf("{} ({})", &[&titre, &tr(&l.statut.to_string())])
+    } else {
+        titre
+    };
+    match (l.nature, origine) {
+        (NatureLien::Conversion, true) => trf("Origine (conversion) : {}", &[&document]),
+        (NatureLien::Copie, true) => trf("Origine (copie) : {}", &[&document]),
+        (NatureLien::Correction, true) => trf("Origine (correction) : {}", &[&document]),
+        (NatureLien::Avoir, true) => trf("Facture d'origine : {}", &[&document]),
+        (NatureLien::Conversion, false) => trf("Conversion : {}", &[&document]),
+        (NatureLien::Copie, false) => trf("Copie : {}", &[&document]),
+        (NatureLien::Correction, false) => trf("Correction : {}", &[&document]),
+        // « Avoir A-... » se suffit à lui-même.
+        (NatureLien::Avoir, false) => document,
+    }
 }
 
 /// Type d'après son rang dans `TypeDocument::TOUS` ; la facture par défaut.
@@ -595,6 +634,47 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
     );
     let valide_ou_envoye = matches!(statut, Statut::Valide | Statut::Envoye);
     let admin_modifiable = valide_ou_envoye && droit_brouillon;
+
+    // Documents qui peuvent naître de celui-ci (sections 2.11 et 7.2).
+    let en_preparation = document.as_ref().is_some_and(|d| {
+        d.derives.iter().any(|l| {
+            l.nature == NatureLien::Conversion
+                && l.type_document == TypeDocument::Facture
+                && l.statut == Statut::Brouillon
+        })
+    });
+    let convertible = t.convertible_en_facture() && valide_ou_envoye && !en_preparation;
+    let peut_convertir = convertible && possede(etat, Droit::brouillon(TypeDocument::Facture));
+    let peut_corriger =
+        convertible && droit_brouillon && possede(etat, Droit::AnnulerDocumentValide);
+    let peut_dupliquer = document.is_some() && t != TypeDocument::Avoir && droit_brouillon;
+    let peut_creer_avoir = t == TypeDocument::Facture
+        && valide_ou_envoye
+        && possede(etat, Droit::brouillon(TypeDocument::Avoir));
+    let avoir_possible = document
+        .as_ref()
+        .and_then(|d| d.reste_a_crediter)
+        .is_some_and(|r| r > 0);
+    // Le montant dû n'est affiché que s'il diffère du TTC, c'est-à-dire après un avoir.
+    let montant_du = document
+        .as_ref()
+        .and_then(|d| d.montant_du.filter(|m| *m != d.totaux.ttc))
+        .map(saisie::montant_en_texte)
+        .unwrap_or_default();
+    let liens: Vec<LienUi> = document
+        .iter()
+        .flat_map(|d| {
+            d.source
+                .iter()
+                .map(|l| (l, true))
+                .chain(d.derives.iter().map(|l| (l, false)))
+        })
+        .map(|(l, origine)| LienUi {
+            id: l.id as i32,
+            texte: texte_lien(l, origine).into(),
+        })
+        .collect();
+    api.set_liens(ModelRc::new(VecModel::from(liens)));
     let fiche = FicheFactureUi {
         existe: document.is_some(),
         titre: titre.into(),
@@ -617,11 +697,20 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
         mode_index,
         modifiable,
         client_modifiable,
+        // L'avoir garde la remise et la TVA de sa facture, comme son client.
+        taux_modifiables: client_modifiable,
         admin_modifiable,
         peut_valider: modifiable && possede(etat, Droit::ValiderDocument),
         peut_envoyer: statut == Statut::Valide && possede(etat, Droit::ValiderDocument),
         peut_annuler: valide_ou_envoye && possede(etat, Droit::AnnulerDocumentValide),
         peut_supprimer: document.is_some() && modifiable,
+        peut_convertir,
+        peut_dupliquer,
+        peut_corriger,
+        peut_creer_avoir,
+        avoir_possible,
+        montant_du: montant_du.into(),
+        en_preparation,
         note: note_fiche(t, statut, modifiable, admin_modifiable).into(),
     };
     etat.facture = Some(EditionFacture {
@@ -751,6 +840,54 @@ fn agir(
     }
 }
 
+/// Ouvre la fiche d'un document : dans la page affichée s'il est de son type,
+/// sinon dans la page de son type, qui l'ouvre dès son affichage (`on_ouvrir`).
+fn ouvrir_document(f: &FenetrePrincipale, etat: &EtatPartage, id: i64, retour: Retour) -> Retour {
+    let mut guard = etat.borrow_mut();
+    let t = match documents::lire(&guard.conn, id) {
+        Ok(Some(d)) => d.type_document,
+        Ok(None) => return retour_erreur("ce document n'existe plus"),
+        Err(erreur) => return retour_erreur(erreur),
+    };
+    if t == guard.type_document {
+        if let Err(message) = ouvrir_fiche(f, &mut guard, Some(id)) {
+            return retour_erreur(message);
+        }
+        afficher_registre(f, &mut guard);
+        return retour;
+    }
+    guard.document_a_ouvrir = Some(id);
+    // L'état est libéré avant le changement de page, qui rappellera `on_ouvrir`.
+    drop(guard);
+    f.global::<FacturesApi>()
+        .set_message_ouverture(retour.clone());
+    f.set_page(page_du_type(t));
+    retour
+}
+
+/// Crée un document depuis celui de la fiche, puis ouvre sa fiche.
+fn creer_puis_ouvrir(
+    f: &FenetrePrincipale,
+    etat: &EtatPartage,
+    action: impl FnOnce(&mut Etat, &Utilisateur, i64) -> Result<i64, String>,
+    message: String,
+) -> Retour {
+    let nouveau = {
+        let mut etat = etat.borrow_mut();
+        let Some(acteur) = etat.utilisateur.clone() else {
+            return retour_erreur("aucune session ouverte");
+        };
+        let Some(id) = etat.facture.as_ref().and_then(|e| e.id) else {
+            return retour_erreur("enregistrer d'abord le document");
+        };
+        match action(&mut etat, &acteur, id) {
+            Ok(nouveau) => nouveau,
+            Err(message) => return retour_erreur(message),
+        }
+    };
+    ouvrir_document(f, etat, nouveau, retour_ok(message))
+}
+
 /// Recalcule le total de chaque ligne lisible et les totaux du document.
 fn recalculer(api: &FacturesApi, e: &EditionFacture, remise: i32, tva: i32) {
     let mut valeurs = Vec::new();
@@ -823,11 +960,16 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             },
         )));
         api.set_avec_paiement(t.recoit_des_reglements());
-        // PDF : seule la facture a son modèle pour l'instant.
-        api.set_avec_pdf(t == TypeDocument::Facture);
+        api.set_avec_pdf(true);
         // Un avoir naît toujours d'une facture validée, jamais d'une page vierge.
         api.set_peut_creer(t != TypeDocument::Avoir && possede(&etat, Droit::brouillon(t)));
         api.set_fiche_ouverte(false);
+        // Document créé ou lien suivi depuis une autre page.
+        if let Some(id) = etat.document_a_ouvrir.take()
+            && let Err(message) = ouvrir_fiche(&f, &mut etat, Some(id))
+        {
+            api.set_message_ouverture(retour_erreur(message));
+        }
     });
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
@@ -1209,6 +1351,66 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 .map(|()| "mode de paiement et observations enregistrés".to_string())
                 .map_err(|e| e.to_string())
         })
+    });
+
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_convertir(move || {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
+        creer_puis_ouvrir(
+            &f,
+            &e,
+            |etat, acteur, id| {
+                documents::convertir_en_facture(&mut etat.conn, acteur, id)
+                    .map_err(|e| e.to_string())
+            },
+            tr("facture créée en brouillon ; sa validation marquera le document d'origine comme converti"),
+        )
+    });
+
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_dupliquer(move |annuler_original| {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
+        let message = if annuler_original {
+            tr("original annulé ; sa copie est créée en brouillon pour être corrigée")
+        } else {
+            tr("copie créée en brouillon")
+        };
+        creer_puis_ouvrir(
+            &f,
+            &e,
+            |etat, acteur, id| {
+                documents::dupliquer(&mut etat.conn, acteur, id, annuler_original)
+                    .map_err(|e| e.to_string())
+            },
+            message,
+        )
+    });
+
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_creer_avoir(move || {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
+        creer_puis_ouvrir(
+            &f,
+            &e,
+            |etat, acteur, id| {
+                documents::creer_avoir(&mut etat.conn, acteur, id).map_err(|e| e.to_string())
+            },
+            tr("avoir créé en brouillon avec les lignes de la facture : retirer des lignes ou baisser les quantités pour un avoir partiel"),
+        )
+    });
+
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_ouvrir_lien(move |id| {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
+        ouvrir_document(&f, &e, i64::from(id), Retour::default())
     });
 
     let (f, e) = (fenetre.as_weak(), etat.clone());

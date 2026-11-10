@@ -1367,3 +1367,105 @@ msgstr "this document no longer exists"
 
 msgid "enregistrer d'abord le document"
 msgstr "save the document first"
+
+msgid "Montant dû après avoirs : {} FCFA"
+msgstr "Amount due after credit notes: {} FCFA"
+
+msgid "Facture en préparation"
+msgstr "Invoice in preparation"
+
+msgid "Convertir en facture"
+msgstr "Convert to invoice"
+
+msgid "Créer un avoir"
+msgstr "Create a credit note"
+
+msgid "Dupliquer"
+msgstr "Duplicate"
+
+msgid "Corriger"
+msgstr "Correct"
+
+msgid "Corriger ce document ? Il est annulé, son numéro conservé, et une copie modifiable est créée en brouillon."
+msgstr "Correct this document? It is cancelled, its number kept, and an editable copy is created as a draft."
+
+msgid "Confirmer la correction"
+msgstr "Confirm correction"
+
+msgid "Documents liés"
+msgstr "Linked documents"
+
+msgid "facture créée en brouillon ; sa validation marquera le document d'origine comme converti"
+msgstr "invoice created as a draft; validating it will mark the original document as converted"
+
+msgid "original annulé ; sa copie est créée en brouillon pour être corrigée"
+msgstr "original cancelled; its copy is created as a draft to be corrected"
+
+msgid "copie créée en brouillon"
+msgstr "copy created as a draft"
+
+msgid "avoir créé en brouillon avec les lignes de la facture : retirer des lignes ou baisser les quantités pour un avoir partiel"
+msgstr "credit note created as a draft with the invoice lines: remove lines or lower quantities for a partial credit note"
+
+msgid "{} ({})"
+msgstr "{} ({})"
+
+msgid "Origine (conversion) : {}"
+msgstr "Origin (conversion): {}"
+
+msgid "Origine (copie) : {}"
+msgstr "Origin (copy): {}"
+
+msgid "Origine (correction) : {}"
+msgstr "Origin (correction): {}"
+
+msgid "Facture d'origine : {}"
+msgstr "Original invoice: {}"
+
+msgid "Conversion : {}"
+msgstr "Conversion: {}"
+
+msgid "Copie : {}"
+msgstr "Copy: {}"
+
+msgid "Correction : {}"
+msgstr "Correction: {}"
+
+msgid "un avoir se crée depuis la fiche d'une facture validée"
+msgstr "a credit note is created from the record of a validated invoice"
+
+msgid "seuls un devis ou une proforma se convertissent en facture"
+msgstr "only a quote or a pro forma can be converted into an invoice"
+
+msgid "une facture est déjà en préparation pour ce document"
+msgstr "an invoice is already in preparation for this document"
+
+msgid "un avoir ne se duplique pas : il se crée depuis la fiche de sa facture"
+msgstr "a credit note cannot be duplicated: it is created from the record of its invoice"
+
+msgid "la correction avec annulation de l'original vaut pour un devis ou une proforma ; une facture se corrige par un avoir"
+msgstr "correction with cancellation of the original applies to a quote or a pro forma; an invoice is corrected by a credit note"
+
+msgid "une facture est en préparation pour ce document : supprimer d'abord ce brouillon"
+msgstr "an invoice is in preparation for this document: delete that draft first"
+
+msgid "un avoir se crée depuis une facture"
+msgstr "a credit note is created from an invoice"
+
+msgid "cette facture est entièrement couverte par ses avoirs"
+msgstr "this invoice is fully covered by its credit notes"
+
+msgid "cet avoir n'est rattaché à aucune facture"
+msgstr "this credit note is not linked to any invoice"
+
+msgid "le client d'un avoir est celui de sa facture"
+msgstr "the customer of a credit note is that of its invoice"
+
+msgid "la remise et la TVA d'un avoir sont celles de sa facture"
+msgstr "the discount and VAT of a credit note are those of its invoice"
+
+msgid "le montant d'un avoir doit être positif"
+msgstr "the amount of a credit note must be positive"
+
+msgid "cette facture a des avoirs validés : annuler d'abord ces avoirs"
+msgstr "this invoice has validated credit notes: cancel those credit notes first"
