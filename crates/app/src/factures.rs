@@ -387,6 +387,8 @@ fn texte_lien(l: &Lien, origine: bool) -> String {
         (NatureLien::Correction, false) => trf("Correction : {}", &[&document]),
         // « Avoir A-... » se suffit à lui-même.
         (NatureLien::Avoir, false) => document,
+        (NatureLien::Livraison, true) => trf("Facture d'origine : {}", &[&document]),
+        (NatureLien::Livraison, false) => document,
     }
 }
 
@@ -958,6 +960,7 @@ fn saisie_depuis_ui(e: &EditionFacture, fiche: &FicheFactureUi) -> Result<Saisie
         observations: fiche.observations.to_string(),
         date_echeance,
         lignes: lignes_saisies(e)?,
+        livraison: Default::default(),
     })
 }
 

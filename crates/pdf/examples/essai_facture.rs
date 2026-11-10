@@ -9,7 +9,9 @@
 
 use kadenz_domaine::calcul::{Taux, UNE_UNITE, calculer_totaux, total_ligne};
 use kadenz_domaine::lettres::{Orthographe, en_lettres_majuscule};
-use kadenz_pdf::modele::{DocumentPdf, EntreprisePdf, Filigrane, LignePdf, TextesPdf, TiersPdf};
+use kadenz_pdf::modele::{
+    DocumentPdf, EntreprisePdf, Filigrane, LignePdf, LivraisonPdf, TextesPdf, TiersPdf,
+};
 use kadenz_pdf::texte::Polices;
 
 fn main() {
@@ -47,6 +49,7 @@ fn main() {
                 observations: observations.into(),
                 prix,
                 quantite,
+                quantite_livree: 0,
                 total: total_ligne(prix, quantite),
             }
         })
@@ -97,6 +100,7 @@ fn main() {
         observations: String::new(),
         lignes,
         avec_montants: true,
+        livraison: LivraisonPdf::default(),
         taux,
         montant_en_lettres: en_lettres_majuscule(totaux.ttc, Orthographe::Rectifiee),
         totaux,
@@ -192,10 +196,46 @@ fn main() {
         totaux: totaux_bc,
         ..doc.clone()
     };
+    // Bordereau de livraison (J6) : sans montants, quantités commandée et livrée,
+    // zones de visa et dates.
+    let bordereau = DocumentPdf {
+        textes: TextesPdf {
+            titre: "BORDEREAU DE LIVRAISON".into(),
+            phrase_somme: String::new(),
+            ..doc.textes.clone()
+        },
+        numero: "L2026-11-0001".into(),
+        reference: "Facture d'origine : F2026-11-0001".into(),
+        echeance: String::new(),
+        mode_paiement: String::new(),
+        lignes: doc
+            .lignes
+            .iter()
+            .take(6)
+            .enumerate()
+            .map(|(k, l)| LignePdf {
+                quantite_livree: if k % 3 == 0 {
+                    l.quantite / 2
+                } else {
+                    l.quantite
+                },
+                ..l.clone()
+            })
+            .collect(),
+        avec_montants: false,
+        livraison: LivraisonPdf {
+            visa_client: "Reçu en bon état, M. Client".into(),
+            visa_fournisseur: "Magasinier".into(),
+            date_livraison: "09/11/2026".into(),
+            date_reception: "10/11/2026".into(),
+        },
+        ..doc.clone()
+    };
     for (nom, document) in [
         ("essai-devis.pdf", devis),
         ("essai-avoir.pdf", avoir),
         ("essai-bon-commande.pdf", bon_commande),
+        ("essai-bordereau.pdf", bordereau),
     ] {
         let octets = kadenz_pdf::generer(&document, &polices).expect("PDF produit");
         let chemin = std::path::Path::new(&dossier).join(nom);

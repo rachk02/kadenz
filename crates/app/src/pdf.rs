@@ -6,7 +6,9 @@
 
 use kadenz_domaine::document::{Statut, TypeDocument};
 use kadenz_domaine::lettres::en_lettres_majuscule;
-use kadenz_pdf::modele::{DocumentPdf, EntreprisePdf, Filigrane, LignePdf, TextesPdf, TiersPdf};
+use kadenz_pdf::modele::{
+    DocumentPdf, EntreprisePdf, Filigrane, LignePdf, LivraisonPdf, TextesPdf, TiersPdf,
+};
 use kadenz_pdf::texte::Polices;
 use kadenz_stockage::Connexion as Connection;
 use kadenz_stockage::documents::{self, Document, NatureLien};
@@ -18,13 +20,16 @@ fn date(d: chrono::NaiveDate) -> String {
     d.format("%d/%m/%Y").to_string()
 }
 
-/// Référence imprimée sous la date : la facture d'origine d'un avoir.
+/// Référence imprimée sous la date : la facture d'origine d'un avoir ou d'un
+/// bordereau issu d'une facture.
 fn reference(d: &Document) -> String {
-    match &d.source {
-        Some(l) if l.nature == NatureLien::Avoir => match &l.numero {
-            Some(numero) => format!("Facture d'origine : {numero}"),
-            None => String::new(),
-        },
+    let Some(l) = &d.source else {
+        return String::new();
+    };
+    match (&l.numero, l.nature) {
+        (Some(numero), NatureLien::Avoir | NatureLien::Livraison) => {
+            format!("Facture d'origine : {numero}")
+        }
         _ => String::new(),
     }
 }
@@ -98,10 +103,17 @@ pub(crate) fn document_pdf(conn: &Connection, d: &Document) -> Result<DocumentPd
                 observations: l.observations.clone(),
                 prix: l.prix,
                 quantite: l.quantite,
+                quantite_livree: l.quantite_livree,
                 total: *total,
             })
             .collect(),
         avec_montants: d.type_document.a_des_montants(),
+        livraison: LivraisonPdf {
+            visa_client: d.saisie.livraison.visa_client.clone(),
+            visa_fournisseur: d.saisie.livraison.visa_fournisseur.clone(),
+            date_livraison: d.saisie.livraison.date_livraison.clone(),
+            date_reception: d.saisie.livraison.date_reception.clone(),
+        },
         taux: d.saisie.taux,
         totaux: d.totaux,
         montant_en_lettres: en_lettres_majuscule(d.totaux.ttc, i.orthographe),

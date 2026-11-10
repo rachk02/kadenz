@@ -59,6 +59,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0002_langue.sql"),
     include_str!("migrations/0003_instantane_entreprise.sql"),
     include_str!("migrations/0004_lien_documents.sql"),
+    include_str!("migrations/0005_bordereau.sql"),
 ];
 
 #[derive(Debug)]

@@ -36,8 +36,21 @@ pub struct LignePdf {
     pub designation: String,
     pub observations: String,
     pub prix: Montant,
+    /// Quantité commandée sur un bordereau de livraison.
     pub quantite: Quantite,
+    /// Quantité livrée, imprimée seulement sur un bordereau (sans montants).
+    pub quantite_livree: Quantite,
     pub total: Montant,
+}
+
+/// Zones de visa et dates d'un bordereau de livraison, en texte libre (section
+/// 6.5) ; ignorées sur un document à montants.
+#[derive(Debug, Clone, Default)]
+pub struct LivraisonPdf {
+    pub visa_client: String,
+    pub visa_fournisseur: String,
+    pub date_livraison: String,
+    pub date_reception: String,
 }
 
 /// Textes réglables par type de document (section 5.4, « Textes des documents »).
@@ -86,8 +99,11 @@ pub struct DocumentPdf {
     pub mode_paiement: String,
     pub observations: String,
     pub lignes: Vec<LignePdf>,
-    /// Faux pour le bordereau de livraison, qui ne porte pas de montants.
+    /// Faux pour le bordereau de livraison, qui ne porte pas de montants : ses
+    /// lignes montrent les quantités commandée et livrée, et les zones de visa
+    /// remplacent le signataire.
     pub avec_montants: bool,
+    pub livraison: LivraisonPdf,
     pub taux: Taux,
     pub totaux: Totaux,
     /// Montant TTC en lettres, déjà écrit selon l'orthographe réglée, avec majuscule

@@ -72,6 +72,17 @@ pub struct Saisie {
     pub observations: String,
     pub date_echeance: Option<NaiveDate>,
     pub lignes: Vec<LigneSaisie>,
+    /// Visas et dates d'un bordereau de livraison ; vides pour les autres types.
+    pub livraison: ChampsLivraison,
+}
+
+/// Zones de visa et dates d'un bordereau, en texte libre (section 6.5).
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct ChampsLivraison {
+    pub visa_client: String,
+    pub visa_fournisseur: String,
+    pub date_livraison: String,
+    pub date_reception: String,
 }
 
 impl Saisie {
@@ -85,6 +96,7 @@ impl Saisie {
             observations: String::new(),
             date_echeance: None,
             lignes: Vec::new(),
+            livraison: ChampsLivraison::default(),
         }
     }
 }
@@ -110,6 +122,8 @@ pub enum NatureLien {
     Copie,
     /// Avoir rattaché à sa facture.
     Avoir,
+    /// Bordereau de livraison créé depuis sa facture (jalon J6).
+    Livraison,
 }
 
 impl NatureLien {
@@ -119,6 +133,18 @@ impl NatureLien {
             NatureLien::Correction => "correction",
             NatureLien::Copie => "copie",
             NatureLien::Avoir => "avoir",
+            NatureLien::Livraison => "livraison",
+        }
+    }
+
+    /// Valeur de la colonne `nature_source`. Le bordereau n'y a pas de code :
+    /// la contrainte de la migration 0004, déjà appliquée, ne connaît pas
+    /// « livraison ». Il est reconnu au type des deux documents (voir
+    /// `nature_lue`).
+    fn code_en_base(self) -> Option<&'static str> {
+        match self {
+            NatureLien::Livraison => None,
+            n => Some(n.code()),
         }
     }
 
@@ -128,10 +154,18 @@ impl NatureLien {
             NatureLien::Correction,
             NatureLien::Copie,
             NatureLien::Avoir,
+            NatureLien::Livraison,
         ]
         .into_iter()
         .find(|n| n.code() == code)
     }
+}
+
+/// Nature d'un lien lue en base : sans code, c'est un bordereau rattaché à sa
+/// facture (seul lien écrit sans code depuis J5).
+fn nature_lue(code: Option<&str>) -> NatureLien {
+    code.and_then(NatureLien::depuis_code)
+        .unwrap_or(NatureLien::Livraison)
 }
 
 /// Document lié, pour la navigation depuis la fiche.
@@ -170,6 +204,11 @@ pub struct Document {
     /// Facture Validée ou Envoyée : TTC moins les avoirs déjà validés, plafond
     /// d'un nouvel avoir.
     pub reste_a_crediter: Option<Montant>,
+    /// Reste à livrer de chaque ligne, dans l'ordre de `saisie.lignes` (section
+    /// 6.5) : sur une facture en vigueur, quantité facturée moins les bordereaux
+    /// validés ; sur un bordereau issu d'une facture, la même chose sans compter
+    /// ce bordereau. Vide pour les autres documents.
+    pub restes_a_livrer: Vec<Quantite>,
 }
 
 /// Ligne de registre.
@@ -284,6 +323,19 @@ fn nettoyer(type_document: TypeDocument, saisie: &Saisie) -> Resultat<Saisie> {
     s.libelle = s.libelle.trim().to_string();
     s.mode_paiement = s.mode_paiement.trim().to_string();
     s.observations = s.observations.trim().to_string();
+    if type_document == TypeDocument::Livraison {
+        let l = &mut s.livraison;
+        for champ in [
+            &mut l.visa_client,
+            &mut l.visa_fournisseur,
+            &mut l.date_livraison,
+            &mut l.date_reception,
+        ] {
+            *champ = champ.trim().to_string();
+        }
+    } else {
+        s.livraison = ChampsLivraison::default();
+    }
     if !type_document.retenue_applicable() {
         s.taux.retenue = 0;
     }
@@ -350,12 +402,12 @@ fn calculer(type_document: TypeDocument, s: &Saisie) -> Totaux {
     )
 }
 
-/// Le tiers convient-il au type de document ? Client pour les ventes, fournisseur
-/// pour le bon de commande, l'un ou l'autre pour le bordereau.
+/// Le tiers convient-il au type de document ? Fournisseur pour le bon de
+/// commande, client pour tous les autres, bordereau compris (décision du
+/// 2026-11-10 : la réception d'un fournisseur passe par le bon de commande).
 fn tiers_compatible(type_document: TypeDocument, t: &crate::tiers::Tiers) -> bool {
     match type_document {
         TypeDocument::BonCommande => t.fiche.type_tiers.est_fournisseur(),
-        TypeDocument::Livraison => true,
         _ => t.fiche.type_tiers.est_client(),
     }
 }
@@ -408,8 +460,10 @@ fn ecrire_contenu(
              libelle = ?8, montant_ht = ?9, montant_remise = ?10, montant_base_tva = ?11,
              montant_tva = ?12, montant_retenue = ?13, montant_ttc = ?14,
              pourcentage_remise = ?15, pourcentage_tva = ?16, pourcentage_retenue = ?17,
-             mode_paiement = ?18, observations = ?19, date_echeance = ?20
-         WHERE id = ?21",
+             mode_paiement = ?18, observations = ?19, date_echeance = ?20,
+             visa_client = ?21, visa_fournisseur = ?22, date_livraison_texte = ?23,
+             date_reception_texte = ?24
+         WHERE id = ?25",
         params![
             date_texte(s.date),
             s.tiers_id,
@@ -431,6 +485,10 @@ fn ecrire_contenu(
             s.mode_paiement,
             s.observations,
             s.date_echeance.map(date_texte),
+            s.livraison.visa_client,
+            s.livraison.visa_fournisseur,
+            s.livraison.date_livraison,
+            s.livraison.date_reception,
             id
         ],
     )?;
@@ -462,7 +520,8 @@ const COLONNES: &str = "id, type, numero, statut, date, tiers_id, libelle,
     pourcentage_remise, pourcentage_tva, pourcentage_retenue, mode_paiement, observations,
     date_echeance, tiers_nom_snapshot, tiers_adresse_snapshot, tiers_ifu_snapshot,
     tiers_rccm_snapshot, tiers_regime_snapshot, montant_ht, montant_remise, montant_base_tva,
-    montant_tva, montant_retenue, montant_ttc, date_creation, date_validation, date_envoi";
+    montant_tva, montant_retenue, montant_ttc, date_creation, date_validation, date_envoi,
+    visa_client, visa_fournisseur, date_livraison_texte, date_reception_texte";
 
 fn ligne_vers_document(r: &rusqlite::Row<'_>) -> rusqlite::Result<Document> {
     Ok(Document {
@@ -483,6 +542,12 @@ fn ligne_vers_document(r: &rusqlite::Row<'_>) -> rusqlite::Result<Document> {
             observations: r.get(11)?,
             date_echeance: lire_date_facultative(r, 12)?,
             lignes: Vec::new(),
+            livraison: ChampsLivraison {
+                visa_client: r.get(27)?,
+                visa_fournisseur: r.get(28)?,
+                date_livraison: r.get(29)?,
+                date_reception: r.get(30)?,
+            },
         },
         totaux_lignes: Vec::new(),
         tiers: SnapshotTiers {
@@ -507,6 +572,7 @@ fn ligne_vers_document(r: &rusqlite::Row<'_>) -> rusqlite::Result<Document> {
         derives: Vec::new(),
         montant_du: None,
         reste_a_crediter: None,
+        restes_a_livrer: Vec::new(),
     })
 }
 
@@ -517,10 +583,7 @@ fn ligne_vers_lien(r: &rusqlite::Row<'_>) -> rusqlite::Result<Lien> {
         type_document: lire_type(r, 1)?,
         numero: r.get(2)?,
         statut: lire_statut(r, 3)?,
-        nature: nature
-            .as_deref()
-            .and_then(NatureLien::depuis_code)
-            .unwrap_or(NatureLien::Copie),
+        nature: nature_lue(nature.as_deref()),
     })
 }
 
@@ -578,7 +641,14 @@ fn completer_liens(conn: &Connection, d: &mut Document) -> Resultat<()> {
         }
         if d.type_document == TypeDocument::Facture {
             d.reste_a_crediter = Some(reste);
+            d.restes_a_livrer = restes_a_livrer(conn, d.id, None)?;
         }
+    }
+    if d.type_document == TypeDocument::Livraison
+        && let Some(l) = &d.source
+        && l.nature == NatureLien::Livraison
+    {
+        d.restes_a_livrer = restes_a_livrer(conn, l.id, Some(d.id))?;
     }
     Ok(())
 }
@@ -721,7 +791,7 @@ fn inserer_brouillon(
             maintenant(),
             acteur.id,
             source.map(|(id, _)| id),
-            source.map(|(_, n)| n.code()),
+            source.and_then(|(_, n)| n.code_en_base()),
         ],
     )?;
     let id = tx.last_insert_rowid();
@@ -845,6 +915,13 @@ pub fn dupliquer(
             "un avoir ne se duplique pas : il se crée depuis la fiche de sa facture",
         ));
     }
+    if d.source.as_ref().map(|l| l.nature) == Some(NatureLien::Livraison) {
+        // La copie ne serait plus rattachée à la facture et échapperait au
+        // contrôle du reste à livrer.
+        return Err(invalide(
+            "un bordereau issu d'une facture ne se duplique pas : en créer un autre depuis la facture",
+        ));
+    }
     if annuler_original {
         if !d.type_document.convertible_en_facture() {
             return Err(invalide(
@@ -955,6 +1032,249 @@ fn controler_avoir(facture: &Document, s: &Saisie) -> Resultat<()> {
     Ok(())
 }
 
+/// Statuts d'un bordereau dont les quantités comptent dans le reste à livrer de
+/// sa facture : émis (Validé) ou confirmé.
+const BORDEREAU_EMIS: &str = "'valide', 'livraison_partielle', 'livraison_complete'";
+/// Statuts d'un bordereau dont la livraison est confirmée.
+const BORDEREAU_CONFIRME: &str = "'livraison_partielle', 'livraison_complete'";
+
+/// Quantité livrée par rang de ligne, cumulée sur les bordereaux d'une facture
+/// aux statuts donnés, sans compter le bordereau `sauf`.
+fn livrees_par_rang(
+    conn: &Connection,
+    facture_id: i64,
+    statuts: &str,
+    sauf: Option<i64>,
+) -> Resultat<Vec<(usize, Quantite)>> {
+    let mut requete = conn.prepare(&format!(
+        "SELECT l.ordre, SUM(l.quantite_livree)
+         FROM ligne_document l JOIN document b ON b.id = l.document_id
+         WHERE b.document_source_id = ?1 AND b.type = 'livraison'
+           AND b.statut IN ({statuts}) AND b.id <> ?2
+         GROUP BY l.ordre"
+    ))?;
+    let lignes = requete
+        .query_map(params![facture_id, sauf.unwrap_or(-1)], |r| {
+            Ok((r.get::<_, i64>(0)? as usize, r.get(1)?))
+        })?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    Ok(lignes)
+}
+
+/// Nombre de bordereaux d'une facture en brouillon ou validés, pas encore
+/// confirmés ni annulés.
+fn bordereaux_en_cours(conn: &Connection, facture_id: i64) -> Resultat<i64> {
+    Ok(conn.query_row(
+        "SELECT COUNT(*) FROM document
+         WHERE document_source_id = ?1 AND type = 'livraison'
+           AND statut IN ('brouillon', 'valide')",
+        [facture_id],
+        |r| r.get(0),
+    )?)
+}
+
+/// Quantités facturées, dans l'ordre des lignes de la facture (figées depuis sa
+/// validation : le rang d'une ligne ne change plus).
+fn quantites_facturees(conn: &Connection, facture_id: i64) -> Resultat<Vec<Quantite>> {
+    let mut requete = conn
+        .prepare("SELECT quantite FROM ligne_document WHERE document_id = ?1 ORDER BY ordre, id")?;
+    let quantites = requete
+        .query_map([facture_id], |r| r.get(0))?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    Ok(quantites)
+}
+
+/// Reste à livrer de chaque ligne d'une facture : quantité facturée moins les
+/// bordereaux émis, hors `sauf` (section 6.5). Les avoirs n'y changent rien
+/// (décision du 2026-11-10).
+fn restes_a_livrer(
+    conn: &Connection,
+    facture_id: i64,
+    sauf: Option<i64>,
+) -> Resultat<Vec<Quantite>> {
+    let mut restes = quantites_facturees(conn, facture_id)?;
+    for (rang, livree) in livrees_par_rang(conn, facture_id, BORDEREAU_EMIS, sauf)? {
+        if let Some(reste) = restes.get_mut(rang) {
+            *reste = (*reste - livree).max(0);
+        }
+    }
+    Ok(restes)
+}
+
+/// Facture d'origine d'un bordereau créé depuis une facture ; `None` pour un
+/// bordereau vierge.
+fn facture_du_bordereau(conn: &Connection, bordereau: &Document) -> Resultat<Option<Document>> {
+    match &bordereau.source {
+        Some(l) if l.nature == NatureLien::Livraison => Ok(Some(lire_existant(conn, l.id)?)),
+        _ => Ok(None),
+    }
+}
+
+/// Un bordereau issu d'une facture reprend ses lignes et son client : seules la
+/// quantité livrée et les observations se modifient. Les prix, qui ne
+/// s'affichent pas sur un bordereau, sont repris de la facture. Une quantité
+/// livrée au-delà du reste à livrer est refusée (décision du 2026-11-10).
+fn controler_bordereau(
+    conn: &Connection,
+    bordereau_id: i64,
+    facture: &Document,
+    s: &mut Saisie,
+) -> Resultat<()> {
+    if s.tiers_id != facture.saisie.tiers_id {
+        return Err(invalide(
+            "le client d'un bordereau issu d'une facture est celui de la facture",
+        ));
+    }
+    if s.lignes.len() != facture.saisie.lignes.len() {
+        return Err(invalide(
+            "un bordereau issu d'une facture reprend toutes les lignes de la facture",
+        ));
+    }
+    let restes = restes_a_livrer(conn, facture.id, Some(bordereau_id))?;
+    for (rang, (ligne, origine)) in s.lignes.iter_mut().zip(&facture.saisie.lignes).enumerate() {
+        let n = rang + 1;
+        if (&ligne.reference, &ligne.designation, ligne.quantite)
+            != (&origine.reference, &origine.designation, origine.quantite)
+        {
+            return Err(refus(
+                "ligne {} : un bordereau issu d'une facture reprend la ligne de la facture ; seules la quantité livrée et les observations se modifient",
+                &[&n],
+            ));
+        }
+        ligne.produit_id = origine.produit_id;
+        ligne.prix = origine.prix;
+        if ligne.quantite_livree > restes.get(rang).copied().unwrap_or(0) {
+            return Err(refus(
+                "ligne {} : la quantité livrée dépasse le reste à livrer, la corriger",
+                &[&n],
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// Crée un bordereau brouillon depuis une facture Validée ou Envoyée et renvoie
+/// son identifiant (section 6.5) : lignes et client de la facture, quantité
+/// commandée égale à la quantité facturée, quantité livrée proposée égale au
+/// reste à livrer. Refusé quand plus rien ne reste à livrer.
+pub fn creer_bordereau(
+    conn: &mut Connection,
+    acteur: &Utilisateur,
+    facture_id: i64,
+) -> Resultat<i64> {
+    let tx = conn.transaction()?;
+    exiger(&tx, acteur, Droit::brouillon(TypeDocument::Livraison))?;
+    let f = lire_existant(&tx, facture_id)?;
+    if f.type_document != TypeDocument::Facture {
+        return Err(invalide("un bordereau se crée depuis une facture"));
+    }
+    if !matches!(f.statut, Statut::Valide | Statut::Envoye) {
+        return Err(refus(
+            "un bordereau se crée depuis une facture validée ou envoyée ; celle-ci est « {} »",
+            &[&f.statut],
+        ));
+    }
+    let restes = restes_a_livrer(&tx, facture_id, None)?;
+    if restes.iter().all(|r| *r <= 0) {
+        return Err(invalide(
+            "tout est déjà livré ou en cours de livraison sur cette facture",
+        ));
+    }
+    let date = aujourd_hui();
+    let s = Saisie {
+        tiers_id: f.saisie.tiers_id,
+        libelle: f.saisie.libelle.clone(),
+        lignes: f
+            .saisie
+            .lignes
+            .iter()
+            .zip(&restes)
+            .map(|(l, reste)| LigneSaisie {
+                quantite_livree: *reste,
+                observations: String::new(),
+                ..l.clone()
+            })
+            .collect(),
+        ..Saisie::vide(date)
+    };
+    let id = inserer_brouillon(
+        &tx,
+        acteur,
+        TypeDocument::Livraison,
+        &s,
+        Some((facture_id, NatureLien::Livraison)),
+        f.saisie.tiers_id,
+    )?;
+    tx.commit()?;
+    Ok(id)
+}
+
+/// Droit de confirmer la livraison d'un bordereau : « Valider un document »,
+/// comme la réception d'un bon de commande (décision du 2026-11-10, section 10.1).
+fn droit_confirmation_livraison() -> Droit {
+    Droit::ValiderDocument
+}
+
+/// Confirme la livraison d'un bordereau Validé, après le visa du client
+/// (décision du 2026-11-10). Bordereau issu d'une facture : Livraison complète
+/// si les bordereaux déjà confirmés et celui-ci couvrent chaque ligne de la
+/// facture, partielle sinon. Bordereau vierge : quantités livrées comparées à
+/// ses quantités commandées. Le statut ne change plus ensuite.
+pub fn confirmer_livraison(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat<()> {
+    let tx = conn.transaction()?;
+    let d = lire_existant(&tx, id)?;
+    exiger(&tx, acteur, droit_confirmation_livraison())?;
+    if d.type_document != TypeDocument::Livraison {
+        return Err(invalide("seul un bordereau de livraison se confirme"));
+    }
+    if d.statut != Statut::Valide {
+        return Err(refus(
+            "seul un bordereau validé se confirme ; celui-ci est « {} »",
+            &[&d.statut],
+        ));
+    }
+    let paires: Vec<(Quantite, Quantite)> = match facture_du_bordereau(&tx, &d)? {
+        Some(f) => {
+            let mut livrees: Vec<Quantite> =
+                d.saisie.lignes.iter().map(|l| l.quantite_livree).collect();
+            for (rang, livree) in livrees_par_rang(&tx, f.id, BORDEREAU_CONFIRME, Some(id))? {
+                if let Some(cumul) = livrees.get_mut(rang) {
+                    *cumul += livree;
+                }
+            }
+            quantites_facturees(&tx, f.id)?
+                .into_iter()
+                .zip(livrees)
+                .collect()
+        }
+        None => d
+            .saisie
+            .lignes
+            .iter()
+            .map(|l| (l.quantite, l.quantite_livree))
+            .collect(),
+    };
+    let nouveau = match avancement(paires) {
+        Avancement::Complet => Statut::LivraisonComplete,
+        _ => Statut::LivraisonPartielle,
+    };
+    verifier_transition(d.type_document, d.statut, nouveau).map_err(transition_refusee)?;
+    tx.execute(
+        "UPDATE document SET statut = ?1 WHERE id = ?2",
+        params![nouveau.code(), id],
+    )?;
+    journaliser_statut(
+        &tx,
+        id,
+        "livraison",
+        Some(json!({ "statut": d.statut.code() })),
+        json!({ "statut": nouveau.code() }),
+        acteur,
+    )?;
+    tx.commit()?;
+    Ok(())
+}
+
 /// Remplace le contenu d'un brouillon. Pas d'audit ligne à ligne en brouillon
 /// (section 7.4).
 pub fn modifier_brouillon(
@@ -967,9 +1287,12 @@ pub fn modifier_brouillon(
     let d = lire_existant(&tx, id)?;
     exiger(&tx, acteur, Droit::brouillon(d.type_document))?;
     exiger_brouillon(&d)?;
-    let s = nettoyer(d.type_document, saisie)?;
+    let mut s = nettoyer(d.type_document, saisie)?;
     if d.type_document == TypeDocument::Avoir {
         controler_avoir(&facture_de_l_avoir(&tx, &d)?, &s)?;
+    }
+    if let Some(f) = facture_du_bordereau(&tx, &d)? {
+        controler_bordereau(&tx, id, &f, &mut s)?;
     }
     let tiers = snapshot_tiers(&tx, d.type_document, s.tiers_id, d.saisie.tiers_id)?;
     ecrire_contenu(&tx, id, d.type_document, &s, &tiers)?;
@@ -1029,12 +1352,30 @@ pub fn valider(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
     let d = lire_existant(&tx, id)?;
     exiger(&tx, acteur, Droit::ValiderDocument)?;
     verifier_transition(d.type_document, d.statut, Statut::Valide).map_err(transition_refusee)?;
-    let s = nettoyer(d.type_document, &d.saisie)?;
+    let mut s = nettoyer(d.type_document, &d.saisie)?;
     if s.tiers_id.is_none() {
         return Err(invalide("choisir le tiers avant de valider"));
     }
     if s.lignes.is_empty() {
         return Err(invalide("le document doit compter au moins une ligne"));
+    }
+    // Bordereau : quelque chose à livrer ; reste à livrer revérifié, un autre
+    // bordereau de la même facture a pu être validé entre-temps.
+    if d.type_document == TypeDocument::Livraison {
+        if s.lignes.iter().all(|l| l.quantite_livree == 0) {
+            return Err(invalide(
+                "le bordereau ne livre rien : saisir au moins une quantité livrée",
+            ));
+        }
+        if let Some(f) = facture_du_bordereau(&tx, &d)? {
+            if !matches!(f.statut, Statut::Valide | Statut::Envoye) {
+                return Err(refus(
+                    "la facture d'origine est « {} » : le bordereau ne peut plus être validé",
+                    &[&f.statut],
+                ));
+            }
+            controler_bordereau(&tx, id, &f, &mut s)?;
+        }
     }
     // Documents liés : la source d'une facture convertie doit encore pouvoir
     // passer en Converti ; un avoir reste dans le reste à créditer de sa facture.
@@ -1187,6 +1528,14 @@ pub fn annuler(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
             "cette facture a des avoirs validés : annuler d'abord ces avoirs",
         ));
     }
+    // Bordereau en brouillon ou validé, pas encore confirmé : refus (décision du
+    // 2026-11-10). Une fois les bordereaux confirmés ou annulés, la facture
+    // s'annule ; un bordereau confirmé ne s'annule plus (section 7.1).
+    if d.type_document == TypeDocument::Facture && bordereaux_en_cours(&tx, id)? > 0 {
+        return Err(invalide(
+            "cette facture a des bordereaux non confirmés : les annuler ou confirmer leur livraison d'abord",
+        ));
+    }
     tx.execute(
         "UPDATE document SET statut = ?1 WHERE id = ?2",
         params![Statut::Annule.code(), id],
@@ -1239,6 +1588,76 @@ pub fn modifier_administratif(
                 "observations": d.saisie.observations,
             })),
             nouvelle_valeur: Some(json!({ "mode_paiement": mode, "observations": obs })),
+            utilisateur_id: Some(acteur.id),
+        },
+    )?;
+    tx.commit()?;
+    Ok(())
+}
+
+/// Visas et dates d'un bordereau Validé, avant la confirmation de la livraison :
+/// le visa du client et la date de réception se remplissent une fois la
+/// marchandise remise (décision du 2026-11-10 : confirmation après le visa).
+/// En brouillon, ils passent par `modifier_brouillon` ; après la confirmation,
+/// ils sont figés. Même droit que les champs administratifs (section 10.1).
+pub fn modifier_livraison(
+    conn: &mut Connection,
+    acteur: &Utilisateur,
+    id: i64,
+    champs: &ChampsLivraison,
+) -> Resultat<()> {
+    let tx = conn.transaction()?;
+    let d = lire_existant(&tx, id)?;
+    exiger(&tx, acteur, Droit::brouillon(d.type_document))?;
+    if d.type_document != TypeDocument::Livraison {
+        return Err(invalide(
+            "les visas et dates ne concernent que les bordereaux de livraison",
+        ));
+    }
+    if d.statut != Statut::Valide {
+        return Err(refus(
+            "les visas et dates se modifient sur un bordereau validé, avant la confirmation ; celui-ci est « {} »",
+            &[&d.statut],
+        ));
+    }
+    let nouveaux = ChampsLivraison {
+        visa_client: champs.visa_client.trim().to_string(),
+        visa_fournisseur: champs.visa_fournisseur.trim().to_string(),
+        date_livraison: champs.date_livraison.trim().to_string(),
+        date_reception: champs.date_reception.trim().to_string(),
+    };
+    let anciens = &d.saisie.livraison;
+    if &nouveaux == anciens {
+        return Ok(());
+    }
+    tx.execute(
+        "UPDATE document SET visa_client = ?1, visa_fournisseur = ?2,
+             date_livraison_texte = ?3, date_reception_texte = ?4
+         WHERE id = ?5",
+        params![
+            nouveaux.visa_client,
+            nouveaux.visa_fournisseur,
+            nouveaux.date_livraison,
+            nouveaux.date_reception,
+            id
+        ],
+    )?;
+    let en_json = |c: &ChampsLivraison| {
+        json!({
+            "visa_client": c.visa_client,
+            "visa_fournisseur": c.visa_fournisseur,
+            "date_livraison": c.date_livraison,
+            "date_reception": c.date_reception,
+        })
+    };
+    audit::journaliser(
+        &tx,
+        Entree {
+            entite: "document",
+            entite_id: id,
+            action: "modification_livraison",
+            ancienne_valeur: Some(en_json(anciens)),
+            nouvelle_valeur: Some(en_json(&nouveaux)),
             utilisateur_id: Some(acteur.id),
         },
     )?;
@@ -1374,6 +1793,7 @@ fn libelle_evenement(e: &EntreeLue) -> (String, Vec<String>) {
         "modification_administrative" => {
             fixe("Modification du mode de paiement ou des observations")
         }
+        "modification_livraison" => fixe("Modification des visas et dates de livraison"),
         "conversion" => match texte_de(&e.nouvelle_valeur, "facture") {
             Some(f) => avec("Converti en facture {}", f),
             None => fixe("Converti en facture"),
@@ -1385,6 +1805,10 @@ fn libelle_evenement(e: &EntreeLue) -> (String, Vec<String>) {
         "reception" => match libelle_statut(&e.nouvelle_valeur) {
             Some(statut) => avec("Réception enregistrée, {}", &statut),
             None => fixe("Réception enregistrée"),
+        },
+        "livraison" => match libelle_statut(&e.nouvelle_valeur) {
+            Some(statut) => avec("Livraison confirmée, {}", &statut),
+            None => fixe("Livraison confirmée"),
         },
         _ => match libelle_statut(&e.ancienne_valeur) {
             Some(ancien) => (
@@ -2233,5 +2657,260 @@ mod tests {
         enregistrer_reception(&mut c.conn, &admin, bc, &[UNE_UNITE, 0]).unwrap();
         let copie = dupliquer(&mut c.conn, &admin, bc, false).unwrap();
         assert_eq!(recues(&c, copie), [0, 0]);
+    }
+
+    /// Quantités livrées d'un bordereau, ligne à ligne.
+    fn livrees(c: &Contexte, id: i64) -> Vec<Quantite> {
+        recues(c, id)
+    }
+
+    /// Enregistre de nouvelles quantités livrées sur un bordereau brouillon.
+    fn livrer(c: &mut Contexte, id: i64, quantites: &[Quantite]) -> Resultat<()> {
+        let admin = c.admin.clone();
+        let mut s = doc(c, id).saisie;
+        for (ligne, q) in s.lignes.iter_mut().zip(quantites) {
+            ligne.quantite_livree = *q;
+        }
+        modifier_brouillon(&mut c.conn, &admin, id, &s)
+    }
+
+    #[test]
+    fn bordereau_depuis_une_facture_et_reste_a_livrer() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let f = facture_validee(&mut c);
+        // Facture de 2 pelles et 1 brouette.
+        assert_eq!(doc(&c, f).restes_a_livrer, [2 * UNE_UNITE, UNE_UNITE]);
+        let b = creer_bordereau(&mut c.conn, &admin, f).unwrap();
+        let d = doc(&c, b);
+        assert_eq!(
+            (d.type_document, d.statut),
+            (TypeDocument::Livraison, Statut::Brouillon)
+        );
+        assert_eq!(d.saisie.tiers_id, Some(c.client));
+        assert_eq!(
+            livrees(&c, b),
+            [2 * UNE_UNITE, UNE_UNITE],
+            "reste à livrer proposé"
+        );
+        assert_eq!(d.restes_a_livrer, [2 * UNE_UNITE, UNE_UNITE]);
+        assert_eq!(d.source.unwrap().nature, NatureLien::Livraison);
+        let derive = doc(&c, f).derives.pop().unwrap();
+        assert_eq!((derive.id, derive.nature), (b, NatureLien::Livraison));
+        // Première livraison : une pelle.
+        livrer(&mut c, b, &[UNE_UNITE, 0]).unwrap();
+        valider(&mut c.conn, &admin, b).unwrap();
+        assert_eq!(doc(&c, f).restes_a_livrer, [UNE_UNITE, UNE_UNITE]);
+        // Second bordereau : le reste, plafonné.
+        let b2 = creer_bordereau(&mut c.conn, &admin, f).unwrap();
+        assert_eq!(livrees(&c, b2), [UNE_UNITE, UNE_UNITE]);
+        assert_eq!(doc(&c, b2).restes_a_livrer, [UNE_UNITE, UNE_UNITE]);
+        let e = livrer(&mut c, b2, &[2 * UNE_UNITE, 0]).unwrap_err();
+        assert_eq!(
+            e.to_string(),
+            "ligne 1 : la quantité livrée dépasse le reste à livrer, la corriger"
+        );
+        // Le premier bordereau annulé rend son reste à la facture.
+        annuler(&mut c.conn, &admin, b).unwrap();
+        assert_eq!(doc(&c, f).restes_a_livrer, [2 * UNE_UNITE, UNE_UNITE]);
+        livrer(&mut c, b2, &[2 * UNE_UNITE, UNE_UNITE]).unwrap();
+        valider(&mut c.conn, &admin, b2).unwrap();
+        assert_eq!(doc(&c, f).restes_a_livrer, [0, 0]);
+        assert!(
+            creer_bordereau(&mut c.conn, &admin, f).is_err(),
+            "tout est livré"
+        );
+    }
+
+    #[test]
+    fn reste_a_livrer_reverifie_a_la_validation() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let f = facture_validee(&mut c);
+        // Deux brouillons proposent chacun tout le reste.
+        let b1 = creer_bordereau(&mut c.conn, &admin, f).unwrap();
+        let b2 = creer_bordereau(&mut c.conn, &admin, f).unwrap();
+        valider(&mut c.conn, &admin, b1).unwrap();
+        let e = valider(&mut c.conn, &admin, b2).unwrap_err();
+        assert!(e.to_string().contains("dépasse le reste à livrer"), "{e}");
+        assert_eq!(doc(&c, b2).statut, Statut::Brouillon);
+    }
+
+    #[test]
+    fn lignes_d_un_bordereau_issu_d_une_facture_verrouillees() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let f = facture_validee(&mut c);
+        let b = creer_bordereau(&mut c.conn, &admin, f).unwrap();
+        let origine = doc(&c, b).saisie;
+        let mut s = origine.clone();
+        s.lignes[0].designation = "Autre chose".into();
+        assert!(modifier_brouillon(&mut c.conn, &admin, b, &s).is_err());
+        let mut s = origine.clone();
+        s.lignes[1].quantite = 5 * UNE_UNITE;
+        assert!(modifier_brouillon(&mut c.conn, &admin, b, &s).is_err());
+        let mut s = origine.clone();
+        s.lignes.pop();
+        assert!(modifier_brouillon(&mut c.conn, &admin, b, &s).is_err());
+        let mut s = origine.clone();
+        s.tiers_id = None;
+        assert!(modifier_brouillon(&mut c.conn, &admin, b, &s).is_err());
+        // Prix masqués à l'écran : repris de la facture ; observations libres.
+        let mut s = origine.clone();
+        s.lignes[0].prix = 0;
+        s.lignes[0].observations = "Livré au dépôt".into();
+        modifier_brouillon(&mut c.conn, &admin, b, &s).unwrap();
+        let d = doc(&c, b);
+        assert_eq!(d.saisie.lignes[0].prix, origine.lignes[0].prix);
+        assert_eq!(d.saisie.lignes[0].observations, "Livré au dépôt");
+        // Pas de copie : elle échapperait au reste à livrer.
+        assert!(dupliquer(&mut c.conn, &admin, b, false).is_err());
+    }
+
+    #[test]
+    fn bordereau_refuse_hors_facture_en_vigueur() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let brouillon = facture(&mut c, date(2026, 5, 3));
+        assert!(creer_bordereau(&mut c.conn, &admin, brouillon).is_err());
+        let annulee = facture_validee(&mut c);
+        annuler(&mut c.conn, &admin, annulee).unwrap();
+        assert!(creer_bordereau(&mut c.conn, &admin, annulee).is_err());
+        let devis = devis_valide(&mut c);
+        assert!(creer_bordereau(&mut c.conn, &admin, devis).is_err());
+    }
+
+    #[test]
+    fn bordereau_vierge_client_visas_et_confirmation() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let mut s = Saisie {
+            tiers_id: Some(c.fournisseur),
+            ..saisie(&c, date(2026, 6, 10))
+        };
+        s.livraison = ChampsLivraison {
+            visa_client: "  M. Client ".into(),
+            visa_fournisseur: "Magasinier".into(),
+            date_livraison: "10/06/2026".into(),
+            date_reception: String::new(),
+        };
+        // Client seulement (décision du 2026-11-10).
+        let e = creer_brouillon(&mut c.conn, &admin, TypeDocument::Livraison, &s).unwrap_err();
+        assert!(e.to_string().contains("comme client"), "{e}");
+        s.tiers_id = Some(c.client);
+        s.lignes[0].quantite_livree = 3 * UNE_UNITE;
+        assert!(creer_brouillon(&mut c.conn, &admin, TypeDocument::Livraison, &s).is_err());
+        s.lignes[0].quantite_livree = 0;
+        let b = creer_brouillon(&mut c.conn, &admin, TypeDocument::Livraison, &s).unwrap();
+        assert_eq!(doc(&c, b).saisie.livraison.visa_client, "M. Client");
+        // Rien à livrer : validation refusée.
+        assert!(valider(&mut c.conn, &admin, b).is_err());
+        livrer(&mut c, b, &[UNE_UNITE, UNE_UNITE]).unwrap();
+        // Confirmation : seulement un bordereau validé.
+        assert!(confirmer_livraison(&mut c.conn, &admin, b).is_err());
+        valider(&mut c.conn, &admin, b).unwrap();
+        confirmer_livraison(&mut c.conn, &admin, b).unwrap();
+        assert_eq!(doc(&c, b).statut, Statut::LivraisonPartielle);
+        assert!(
+            confirmer_livraison(&mut c.conn, &admin, b).is_err(),
+            "définitif"
+        );
+        let dernier = historique(&c.conn, b).unwrap().pop().unwrap();
+        assert_eq!(dernier.modele, "Livraison confirmée, {}");
+        assert_eq!(dernier.valeurs, ["Livraison partielle"]);
+        // Les visas ne s'enregistrent que sur un bordereau.
+        let mut s_facture = saisie(&c, date(2026, 6, 10));
+        s_facture.livraison.visa_client = "X".into();
+        let id = creer_brouillon(&mut c.conn, &admin, TypeDocument::Facture, &s_facture).unwrap();
+        assert_eq!(doc(&c, id).saisie.livraison, ChampsLivraison::default());
+    }
+
+    #[test]
+    fn livraison_complete_selon_les_bordereaux_confirmes() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let f = facture_validee(&mut c);
+        // Premier bordereau : 1 pelle et la brouette, validé mais pas encore confirmé.
+        let b1 = creer_bordereau(&mut c.conn, &admin, f).unwrap();
+        livrer(&mut c, b1, &[UNE_UNITE, UNE_UNITE]).unwrap();
+        valider(&mut c.conn, &admin, b1).unwrap();
+        // Second : la dernière pelle. Le premier n'est pas confirmé : partielle.
+        let b2 = creer_bordereau(&mut c.conn, &admin, f).unwrap();
+        assert_eq!(livrees(&c, b2), [UNE_UNITE, 0]);
+        valider(&mut c.conn, &admin, b2).unwrap();
+        confirmer_livraison(&mut c.conn, &admin, b2).unwrap();
+        assert_eq!(doc(&c, b2).statut, Statut::LivraisonPartielle);
+        // Le premier confirmé à son tour : avec le second, tout est livré.
+        confirmer_livraison(&mut c.conn, &admin, b1).unwrap();
+        assert_eq!(doc(&c, b1).statut, Statut::LivraisonComplete);
+        // Un bordereau confirmé ne s'annule plus (section 7.1).
+        assert!(annuler(&mut c.conn, &admin, b1).is_err());
+    }
+
+    #[test]
+    fn annulation_d_une_facture_selon_ses_bordereaux() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let f = facture_validee(&mut c);
+        let b = creer_bordereau(&mut c.conn, &admin, f).unwrap();
+        // Bordereau en brouillon, puis validé : refus (décision du 2026-11-10).
+        let e = annuler(&mut c.conn, &admin, f).unwrap_err();
+        assert!(e.to_string().contains("bordereaux non confirmés"), "{e}");
+        valider(&mut c.conn, &admin, b).unwrap();
+        assert!(annuler(&mut c.conn, &admin, f).is_err());
+        // Livraison confirmée : la facture s'annule.
+        confirmer_livraison(&mut c.conn, &admin, b).unwrap();
+        annuler(&mut c.conn, &admin, f).unwrap();
+        assert_eq!(doc(&c, f).statut, Statut::Annule);
+        // Un bordereau annulé ne bloque pas non plus.
+        let f2 = facture_validee(&mut c);
+        let b2 = creer_bordereau(&mut c.conn, &admin, f2).unwrap();
+        annuler(&mut c.conn, &admin, b2).unwrap();
+        annuler(&mut c.conn, &admin, f2).unwrap();
+    }
+
+    #[test]
+    fn visas_d_un_bordereau_valide_avant_confirmation() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let f = facture_validee(&mut c);
+        let b = creer_bordereau(&mut c.conn, &admin, f).unwrap();
+        let visas = ChampsLivraison {
+            visa_client: " Reçu, M. Client ".into(),
+            date_reception: "12/06/2026".into(),
+            ..Default::default()
+        };
+        // En brouillon : par modifier_brouillon, pas ici.
+        assert!(modifier_livraison(&mut c.conn, &admin, b, &visas).is_err());
+        valider(&mut c.conn, &admin, b).unwrap();
+        modifier_livraison(&mut c.conn, &admin, b, &visas).unwrap();
+        let d = doc(&c, b);
+        assert_eq!(d.saisie.livraison.visa_client, "Reçu, M. Client");
+        assert_eq!(d.saisie.livraison.date_reception, "12/06/2026");
+        let dernier = historique(&c.conn, b).unwrap().pop().unwrap();
+        assert_eq!(
+            dernier.modele,
+            "Modification des visas et dates de livraison"
+        );
+        // Après la confirmation : figés.
+        confirmer_livraison(&mut c.conn, &admin, b).unwrap();
+        assert!(modifier_livraison(&mut c.conn, &admin, b, &ChampsLivraison::default()).is_err());
+        // Pas sur une facture.
+        assert!(modifier_livraison(&mut c.conn, &admin, f, &visas).is_err());
+    }
+
+    #[test]
+    fn droits_du_bordereau() {
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        let vente = c.vente.clone();
+        let f = facture_validee(&mut c);
+        // Le rôle Commercial prépare un bordereau, sans le valider ni le confirmer.
+        let b = creer_bordereau(&mut c.conn, &vente, f).unwrap();
+        valider(&mut c.conn, &admin, b).unwrap();
+        assert!(matches!(
+            confirmer_livraison(&mut c.conn, &vente, b),
+            Err(Erreur::Interdit(Droit::ValiderDocument))
+        ));
     }
 }

@@ -253,7 +253,12 @@ impl<'d> Moteur<'d> {
                     a_droite: false,
                 },
                 Colonne {
-                    titre: "Quantité",
+                    titre: "Qté commandée",
+                    largeur: 76.0,
+                    a_droite: true,
+                },
+                Colonne {
+                    titre: "Qté livrée",
                     largeur: 70.0,
                     a_droite: true,
                 },
@@ -600,7 +605,10 @@ impl<'d> Moteur<'d> {
                 montant(l.total),
             ]
         } else {
-            vec![quantite_en_texte(l.quantite)]
+            vec![
+                quantite_en_texte(l.quantite),
+                quantite_en_texte(l.quantite_livree),
+            ]
         };
         for (k, v) in valeurs.iter().enumerate() {
             let rang = k + 2;
@@ -733,6 +741,64 @@ impl<'d> Moteur<'d> {
                 UTILE,
                 &phrase,
             );
+        }
+
+        // Bordereau : zones de visa du client et du fournisseur, avec les dates
+        // de réception et de livraison (section 6.5), à la place du signataire.
+        if !d.avec_montants {
+            bas += 16.0;
+            let ecart = 16.0;
+            let largeur = (UTILE - ecart) / 2.0;
+            let hauteur = 96.0;
+            let l = &d.livraison;
+            let zones = [
+                (
+                    GAUCHE,
+                    "Visa du client",
+                    "Date de réception",
+                    &l.date_reception,
+                    &l.visa_client,
+                ),
+                (
+                    GAUCHE + largeur + ecart,
+                    "Visa du fournisseur",
+                    "Date de livraison",
+                    &l.date_livraison,
+                    &l.visa_fournisseur,
+                ),
+            ];
+            for (x, titre, libelle_date, date, visa) in zones {
+                t.cadre(x, bas, largeur, hauteur, BORDURE);
+                let interieur = largeur - 12.0;
+                let mut yz = bas + 6.0;
+                yz += self.paragraphe(
+                    t,
+                    &p.texte_gras,
+                    8.5,
+                    11.0,
+                    ENCRE,
+                    x + 6.0,
+                    yz,
+                    interieur,
+                    titre,
+                );
+                yz += self.paragraphe(
+                    t,
+                    &p.texte,
+                    8.0,
+                    11.0,
+                    SECONDAIRE,
+                    x + 6.0,
+                    yz,
+                    interieur,
+                    &format!("{libelle_date} : {date}"),
+                );
+                if !visa.is_empty() {
+                    self.paragraphe(t, &p.texte, 8.5, 11.0, ENCRE, x + 6.0, yz, interieur, visa);
+                }
+            }
+            bas += hauteur;
+            return bas - y;
         }
 
         // Signataire, à droite.
