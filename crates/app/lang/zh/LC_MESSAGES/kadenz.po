@@ -2108,3 +2108,45 @@ msgstr "默认函件文字"
 
 msgid "Tous les modes"
 msgstr "全部付款方式"
+
+msgid "Passer"
+msgstr "跳过"
+
+msgid "Revoir la présentation"
+msgstr "重新查看介绍"
+
+msgid "{} sur {}"
+msgstr "第 {} 页，共 {} 页"
+
+msgid "Revenir à Kadenz"
+msgstr "返回 Kadenz"
+
+msgid "Commencer l'installation"
+msgstr "开始安装"
+
+msgid "Bienvenue dans Kadenz"
+msgstr "欢迎使用 Kadenz"
+
+msgid "Vos documents"
+msgstr "您的单据"
+
+msgid "Vos paiements"
+msgstr "您的收付款"
+
+msgid "Vos données"
+msgstr "您的数据"
+
+msgid "Kadenz tient la facturation de votre entreprise sur ce poste : clients, fournisseurs, produits et documents commerciaux, montants en FCFA. L'interface existe en sept langues ; chaque compte choisit la sienne."
+msgstr "Kadenz 在这台电脑上管理贵公司的开票业务：客户、供应商、产品和商业单据，金额以 FCFA 计。界面提供七种语言，每个账户可自选语言。"
+
+msgid "Devis, proformas, bons de commande, bordereaux de livraison, factures et avoirs se préparent dans le même écran. Un document commence en brouillon et reçoit son numéro à la validation ; ses lignes et ses montants sont alors figés : une facture se corrige par un avoir, un devis ou une proforma par une copie corrigée. Chaque document s'exporte en PDF à l'identité de votre entreprise."
+msgstr "报价单、形式发票、采购订单、送货单、发票和贷项通知单都在同一界面中编制。单据从草稿开始，确认时获得编号，此后其明细和金额即被锁定：发票通过贷项通知单更正，报价单或形式发票通过更正后的副本更正。每份单据都可以导出为带有贵公司信息的 PDF。"
+
+msgid "Les règlements se saisissent dans la fiche d'une facture ou d'un bon de commande ; l'état Impayé, Partiel ou Payé se calcule tout seul. Le suivi des fournisseurs liste les bons de commande à payer. Le registre des règlements et la liste des factures échues s'impriment en PDF, comme la lettre de relance de chaque facture."
+msgstr "收付款在发票或采购订单的详情中录入，未付款、部分付款或已付款状态会自动计算。供应商跟踪列出待付款的采购订单。收付款登记簿和逾期发票清单可打印为 PDF，每张发票的催款函也一样。"
+
+msgid "Les données restent sur ce poste, dans une base locale. Chacun se connecte avec son propre compte ; les mots de passe ne sont jamais conservés en clair et les droits dépendent du rôle. Validations, annulations et règlements sont inscrits dans l'historique de chaque document."
+msgstr "数据保存在这台电脑的本地数据库中。每个人使用自己的账户登录；密码绝不以明文保存，权限取决于角色。确认、作废和收付款都会记入每份单据的历史记录。"
+
+msgid "L'assistant qui suit crée votre entreprise et le compte administrateur."
+msgstr "接下来的向导将创建贵公司和管理员账户。"

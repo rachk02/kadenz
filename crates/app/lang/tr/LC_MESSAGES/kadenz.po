@@ -2108,3 +2108,45 @@ msgstr "Varsayılan mektup metni"
 
 msgid "Tous les modes"
 msgstr "Tüm yöntemler"
+
+msgid "Passer"
+msgstr "Atla"
+
+msgid "Revoir la présentation"
+msgstr "Tanıtımı yeniden göster"
+
+msgid "{} sur {}"
+msgstr "{} / {}"
+
+msgid "Revenir à Kadenz"
+msgstr "Kadenz'e dön"
+
+msgid "Commencer l'installation"
+msgstr "Kuruluma başla"
+
+msgid "Bienvenue dans Kadenz"
+msgstr "Kadenz'e hoş geldiniz"
+
+msgid "Vos documents"
+msgstr "Belgeleriniz"
+
+msgid "Vos paiements"
+msgstr "Ödemeleriniz"
+
+msgid "Vos données"
+msgstr "Verileriniz"
+
+msgid "Kadenz tient la facturation de votre entreprise sur ce poste : clients, fournisseurs, produits et documents commerciaux, montants en FCFA. L'interface existe en sept langues ; chaque compte choisit la sienne."
+msgstr "Kadenz, şirketinizin faturalandırmasını bu bilgisayarda tutar: müşteriler, tedarikçiler, ürünler ve ticari belgeler, tutarlar FCFA cinsinden. Arayüz yedi dilde sunulur; her hesap kendi dilini seçer."
+
+msgid "Devis, proformas, bons de commande, bordereaux de livraison, factures et avoirs se préparent dans le même écran. Un document commence en brouillon et reçoit son numéro à la validation ; ses lignes et ses montants sont alors figés : une facture se corrige par un avoir, un devis ou une proforma par une copie corrigée. Chaque document s'exporte en PDF à l'identité de votre entreprise."
+msgstr "Teklifler, proformalar, sipariş formları, irsaliyeler, faturalar ve iade faturaları aynı ekranda hazırlanır. Bir belge taslak olarak başlar ve onaylandığında numarasını alır; satırları ve tutarları o andan itibaren sabitlenir: bir fatura iade faturasıyla, bir teklif veya proforma düzeltilmiş bir kopyayla düzeltilir. Her belge şirketinizin bilgileriyle PDF olarak dışa aktarılır."
+
+msgid "Les règlements se saisissent dans la fiche d'une facture ou d'un bon de commande ; l'état Impayé, Partiel ou Payé se calcule tout seul. Le suivi des fournisseurs liste les bons de commande à payer. Le registre des règlements et la liste des factures échues s'impriment en PDF, comme la lettre de relance de chaque facture."
+msgstr "Ödemeler bir faturanın veya sipariş formunun kartına girilir; Ödenmedi, Kısmi veya Ödendi durumu kendiliğinden hesaplanır. Tedarikçi takibi, ödenecek sipariş formlarını listeler. Ödeme kaydı ve vadesi geçmiş faturaların listesi, her faturanın hatırlatma mektubu gibi PDF olarak yazdırılır."
+
+msgid "Les données restent sur ce poste, dans une base locale. Chacun se connecte avec son propre compte ; les mots de passe ne sont jamais conservés en clair et les droits dépendent du rôle. Validations, annulations et règlements sont inscrits dans l'historique de chaque document."
+msgstr "Veriler bu bilgisayarda, yerel bir veritabanında kalır. Herkes kendi hesabıyla oturum açar; parolalar asla açık metin olarak saklanmaz ve yetkiler role bağlıdır. Onaylar, iptaller ve ödemeler her belgenin geçmişine kaydedilir."
+
+msgid "L'assistant qui suit crée votre entreprise et le compte administrateur."
+msgstr "Ardından gelen sihirbaz şirketinizi ve yönetici hesabını oluşturur."

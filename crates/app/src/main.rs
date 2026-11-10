@@ -361,7 +361,8 @@ fn main() -> Result<(), slint::PlatformError> {
             let etat = Rc::new(RefCell::new(Etat::nouveau(conn)));
             afficher_session(&fenetre, &etat.borrow());
             fenetre.set_ecran(match ecran {
-                EtatInstallation::AssistantRequis => Ecran::Assistant,
+                // Premier lancement : présentation, puis assistant.
+                EtatInstallation::AssistantRequis => Ecran::Presentation,
                 EtatInstallation::ConnexionRequise => Ecran::Connexion,
             });
             brancher(&fenetre, etat);

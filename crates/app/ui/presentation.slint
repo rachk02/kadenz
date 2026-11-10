@@ -1,0 +1,174 @@
+// Pages de présentation (cahier, section 4.1) : affichées au premier lancement,
+// avant l'assistant, et depuis « À propos ». Elles ne décrivent que des fonctions
+// livrées.
+import { Bouton, Rangee, Theme } from "composants.slint";
+
+export component EcranPresentation inherits Rectangle {
+    in property <string> version-logiciel;
+    // Vrai quand la présentation est revue depuis « À propos » : la dernière page
+    // ramène alors à l'application au lieu d'ouvrir l'assistant.
+    in property <bool> depuis-a-propos;
+
+    callback terminer();
+
+    property <int> page: 0;
+    property <int> nombre: 4;
+
+    pure function titre(p: int) -> string {
+        if (p == 0) { return @tr("Bienvenue dans Kadenz"); }
+        if (p == 1) { return @tr("Vos documents"); }
+        if (p == 2) { return @tr("Vos paiements"); }
+        return @tr("Vos données");
+    }
+
+    pure function texte(p: int) -> string {
+        if (p == 0) {
+            return @tr("Kadenz tient la facturation de votre entreprise sur ce poste : clients, fournisseurs, produits et documents commerciaux, montants en FCFA. L'interface existe en sept langues ; chaque compte choisit la sienne.");
+        }
+        if (p == 1) {
+            return @tr("Devis, proformas, bons de commande, bordereaux de livraison, factures et avoirs se préparent dans le même écran. Un document commence en brouillon et reçoit son numéro à la validation ; ses lignes et ses montants sont alors figés : une facture se corrige par un avoir, un devis ou une proforma par une copie corrigée. Chaque document s'exporte en PDF à l'identité de votre entreprise.");
+        }
+        if (p == 2) {
+            return @tr("Les règlements se saisissent dans la fiche d'une facture ou d'un bon de commande ; l'état Impayé, Partiel ou Payé se calcule tout seul. Le suivi des fournisseurs liste les bons de commande à payer. Le registre des règlements et la liste des factures échues s'impriment en PDF, comme la lettre de relance de chaque facture.");
+        }
+        return @tr("Les données restent sur ce poste, dans une base locale. Chacun se connecte avec son propre compte ; les mots de passe ne sont jamais conservés en clair et les droits dépendent du rôle. Validations, annulations et règlements sont inscrits dans l'historique de chaque document.");
+    }
+
+    background: white;
+
+    Rangee {
+        remplit: true;
+
+        // Bandeau de marque, comme sur l'écran de connexion.
+        Rectangle {
+            width: max(300px, min(420px, root.width * 0.35));
+            background: Theme.nuit;
+            clip: true;
+
+            Image {
+                width: parent.width;
+                height: parent.height;
+                source: @image-url("icones/motif-cadence.svg");
+                image-fit: cover;
+            }
+
+            VerticalLayout {
+                padding: 40px;
+                spacing: 14px;
+
+                Image {
+                    width: 150px;
+                    height: 40px;
+                    source: @image-url("icones/kadenz-logo-horizontal-negatif.svg");
+                    image-fit: contain;
+                    horizontal-alignment: Theme.rtl ? ImageHorizontalAlignment.right : ImageHorizontalAlignment.left;
+                }
+
+                Rectangle { }
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("Gestion commerciale");
+                    color: white;
+                    font-family: Theme.police-titre;
+                    font-size: 26px;
+                    font-weight: 800;
+                    wrap: word-wrap;
+                }
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("Version {}", root.version-logiciel);
+                    color: #9aa3c7;
+                    font-size: 12px;
+                }
+            }
+        }
+
+        VerticalLayout {
+            padding: 48px;
+            spacing: 20px;
+
+            Rectangle { }
+
+            // Étapes : la page en cours en Ambre.
+            Rangee {
+                alignment: start;
+                spacing: 8px;
+
+                for i in root.nombre: Rectangle {
+                    width: 40px;
+                    height: 4px;
+                    background: i == root.page ? Theme.ambre : #d5d9e6;
+                }
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("{} sur {}", root.page + 1, root.nombre);
+                font-size: 12px;
+                color: Theme.texte-secondaire;
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: root.titre(root.page);
+                font-family: Theme.police-titre;
+                font-size: 26px;
+                font-weight: 800;
+                color: Theme.texte;
+                wrap: word-wrap;
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: root.texte(root.page);
+                font-size: 15px;
+                color: Theme.texte;
+                wrap: word-wrap;
+            }
+
+            if root.page == root.nombre - 1 && !root.depuis-a-propos: Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("L'assistant qui suit crée votre entreprise et le compte administrateur.");
+                font-size: 13px;
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+
+            Rectangle { }
+
+            Rangee {
+                spacing: 8px;
+
+                if root.page > 0: Bouton {
+                    text: @tr("Précédent");
+                    clicked => {
+                        root.page -= 1;
+                    }
+                }
+
+                Rectangle { }
+
+                if root.page < root.nombre - 1: Bouton {
+                    text: root.depuis-a-propos ? @tr("Fermer") : @tr("Passer");
+                    clicked => {
+                        root.terminer();
+                    }
+                }
+
+                Bouton {
+                    primary: true;
+                    text: root.page < root.nombre - 1 ? @tr("Suivant") : (root.depuis-a-propos ? @tr("Revenir à Kadenz") : @tr("Commencer l'installation"));
+                    clicked => {
+                        if (root.page < root.nombre - 1) {
+                            root.page += 1;
+                        } else {
+                            root.terminer();
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

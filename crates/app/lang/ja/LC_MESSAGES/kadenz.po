@@ -2108,3 +2108,45 @@ msgstr "督促状の既定の文章"
 
 msgid "Tous les modes"
 msgstr "すべての支払方法"
+
+msgid "Passer"
+msgstr "スキップ"
+
+msgid "Revoir la présentation"
+msgstr "紹介をもう一度見る"
+
+msgid "{} sur {}"
+msgstr "{} / {}"
+
+msgid "Revenir à Kadenz"
+msgstr "Kadenz に戻る"
+
+msgid "Commencer l'installation"
+msgstr "セットアップを開始"
+
+msgid "Bienvenue dans Kadenz"
+msgstr "Kadenz へようこそ"
+
+msgid "Vos documents"
+msgstr "ドキュメント"
+
+msgid "Vos paiements"
+msgstr "入出金"
+
+msgid "Vos données"
+msgstr "データ"
+
+msgid "Kadenz tient la facturation de votre entreprise sur ce poste : clients, fournisseurs, produits et documents commerciaux, montants en FCFA. L'interface existe en sept langues ; chaque compte choisit la sienne."
+msgstr "Kadenz はこのパソコンで会社の請求業務を管理します。顧客、仕入先、商品、商取引書類を扱い、金額は FCFA で表示します。画面は 7 言語に対応し、アカウントごとに言語を選べます。"
+
+msgid "Devis, proformas, bons de commande, bordereaux de livraison, factures et avoirs se préparent dans le même écran. Un document commence en brouillon et reçoit son numéro à la validation ; ses lignes et ses montants sont alors figés : une facture se corrige par un avoir, un devis ou une proforma par une copie corrigée. Chaque document s'exporte en PDF à l'identité de votre entreprise."
+msgstr "見積書、見積請求書、注文書、納品書、請求書、クレジットノートは同じ画面で作成します。書類は下書きから始まり、確定時に番号が付きます。その時点で明細と金額は固定され、請求書はクレジットノートで、見積書や見積請求書は修正した複製で訂正します。すべての書類は会社の情報入りで PDF に出力できます。"
+
+msgid "Les règlements se saisissent dans la fiche d'une facture ou d'un bon de commande ; l'état Impayé, Partiel ou Payé se calcule tout seul. Le suivi des fournisseurs liste les bons de commande à payer. Le registre des règlements et la liste des factures échues s'impriment en PDF, comme la lettre de relance de chaque facture."
+msgstr "入出金は請求書または注文書の詳細画面で入力し、未払い、一部入金、支払済みの状態は自動で計算されます。仕入先の支払管理には支払うべき注文書が一覧表示されます。入出金台帳と支払期日を過ぎた請求書の一覧は PDF で印刷でき、各請求書の督促状も同様です。"
+
+msgid "Les données restent sur ce poste, dans une base locale. Chacun se connecte avec son propre compte ; les mots de passe ne sont jamais conservés en clair et les droits dépendent du rôle. Validations, annulations et règlements sont inscrits dans l'historique de chaque document."
+msgstr "データはこのパソコンのローカルデータベースに保存されます。各自が自分のアカウントでログインし、パスワードが平文で保存されることはなく、権限は役割によって決まります。確定、取消、入出金は各書類の履歴に記録されます。"
+
+msgid "L'assistant qui suit crée votre entreprise et le compte administrateur."
+msgstr "続くウィザードで会社と管理者アカウントを作成します。"

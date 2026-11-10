@@ -2108,3 +2108,45 @@ msgstr "Texto predeterminado de la carta"
 
 msgid "Tous les modes"
 msgstr "Todos los modos"
+
+msgid "Passer"
+msgstr "Omitir"
+
+msgid "Revoir la présentation"
+msgstr "Volver a ver la presentación"
+
+msgid "{} sur {}"
+msgstr "{} de {}"
+
+msgid "Revenir à Kadenz"
+msgstr "Volver a Kadenz"
+
+msgid "Commencer l'installation"
+msgstr "Comenzar la instalación"
+
+msgid "Bienvenue dans Kadenz"
+msgstr "Bienvenido a Kadenz"
+
+msgid "Vos documents"
+msgstr "Sus documentos"
+
+msgid "Vos paiements"
+msgstr "Sus pagos"
+
+msgid "Vos données"
+msgstr "Sus datos"
+
+msgid "Kadenz tient la facturation de votre entreprise sur ce poste : clients, fournisseurs, produits et documents commerciaux, montants en FCFA. L'interface existe en sept langues ; chaque compte choisit la sienne."
+msgstr "Kadenz lleva la facturación de su empresa en este equipo: clientes, proveedores, productos y documentos comerciales, con importes en FCFA. La interfaz está disponible en siete idiomas; cada cuenta elige el suyo."
+
+msgid "Devis, proformas, bons de commande, bordereaux de livraison, factures et avoirs se préparent dans le même écran. Un document commence en brouillon et reçoit son numéro à la validation ; ses lignes et ses montants sont alors figés : une facture se corrige par un avoir, un devis ou une proforma par une copie corrigée. Chaque document s'exporte en PDF à l'identité de votre entreprise."
+msgstr "Presupuestos, proformas, órdenes de compra, albaranes de entrega, facturas y notas de crédito se preparan en la misma pantalla. Un documento empieza como borrador y recibe su número al validarlo; sus líneas e importes quedan entonces fijados: una factura se corrige con una nota de crédito, un presupuesto o una proforma con una copia corregida. Cada documento se exporta en PDF con los datos de su empresa."
+
+msgid "Les règlements se saisissent dans la fiche d'une facture ou d'un bon de commande ; l'état Impayé, Partiel ou Payé se calcule tout seul. Le suivi des fournisseurs liste les bons de commande à payer. Le registre des règlements et la liste des factures échues s'impriment en PDF, comme la lettre de relance de chaque facture."
+msgstr "Los pagos se registran en la ficha de una factura o de una orden de compra; el estado Impagado, Parcial o Pagado se calcula automáticamente. El seguimiento de proveedores lista las órdenes de compra pendientes de pago. El registro de pagos y la lista de facturas vencidas se imprimen en PDF, al igual que la carta de recordatorio de cada factura."
+
+msgid "Les données restent sur ce poste, dans une base locale. Chacun se connecte avec son propre compte ; les mots de passe ne sont jamais conservés en clair et les droits dépendent du rôle. Validations, annulations et règlements sont inscrits dans l'historique de chaque document."
+msgstr "Los datos permanecen en este equipo, en una base local. Cada persona inicia sesión con su propia cuenta; las contraseñas nunca se guardan en texto claro y los permisos dependen del rol. Las validaciones, anulaciones y pagos quedan registrados en el historial de cada documento."
+
+msgid "L'assistant qui suit crée votre entreprise et le compte administrateur."
+msgstr "El asistente que sigue crea su empresa y la cuenta de administrador."

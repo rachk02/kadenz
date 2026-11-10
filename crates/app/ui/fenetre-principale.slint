@@ -2,6 +2,7 @@ import { AboutSlint, ComboBox, ScrollView } from "std-widgets.slint";
 import { Bouton, Champ, Droits, ElementNavigation, MessageErreur, Rangee, Section, Theme, Titre } from "composants.slint";
 import { EcranAssistant, DonneesAssistant } from "assistant.slint";
 import { EcranConnexion } from "connexion.slint";
+import { EcranPresentation } from "presentation.slint";
 import { PageProduits, PageTiers, ProduitsApi, TiersApi } from "referentiels.slint";
 import { EntrepriseApi, PageEntreprise, PageParametres, ParametresApi } from "administration.slint";
 import { PageUtilisateurs, UtilisateursApi } from "utilisateurs.slint";
@@ -12,7 +13,7 @@ import { PageReglements, PageRelances, PageSuiviFournisseurs, PaiementsApi, Tota
 export { DonneesAssistant, Droits, Theme, EntrepriseApi, FacturesApi, ImportApi, PaiementsApi, ParametresApi, ProduitsApi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
-export enum Ecran { demarrage-impossible, assistant, connexion, application }
+export enum Ecran { demarrage-impossible, presentation, assistant, connexion, application }
 
 // Pages de l'application ; le menu n'affiche que celles que les droits du compte ouvrent.
 export enum Page {
@@ -157,6 +158,8 @@ component PageMonCompte inherits VerticalLayout {
 
 export component FenetrePrincipale inherits Window {
     in-out property <Ecran> ecran: Ecran.demarrage-impossible;
+    // Présentation revue depuis « À propos » : elle ramène à l'application.
+    property <bool> presentation-depuis-a-propos;
     in property <string> message-demarrage;
     in property <string> etat-base;
     in property <string> nom-entreprise;
@@ -249,6 +252,15 @@ export component FenetrePrincipale inherits Window {
         MessageErreur {
             text: root.message-demarrage;
             horizontal-alignment: center;
+        }
+    }
+
+    if root.ecran == Ecran.presentation: EcranPresentation {
+        version-logiciel: root.version-logiciel;
+        depuis-a-propos: root.presentation-depuis-a-propos;
+        terminer => {
+            root.ecran = root.presentation-depuis-a-propos ? Ecran.application : Ecran.assistant;
+            root.presentation-depuis-a-propos = false;
         }
     }
 
@@ -417,8 +429,22 @@ export component FenetrePrincipale inherits Window {
                 padding: 24px;
                 spacing: 20px;
 
-                Titre {
-                    text: @tr("À propos");
+                Rangee {
+                    spacing: 8px;
+
+                    Titre {
+                        text: @tr("À propos");
+                    }
+
+                    Rectangle { }
+
+                    Bouton {
+                        text: @tr("Revoir la présentation");
+                        clicked => {
+                            root.presentation-depuis-a-propos = true;
+                            root.ecran = Ecran.presentation;
+                        }
+                    }
                 }
 
                 // Bandeau de marque : logo, motif Cadence, rôle du logiciel.

@@ -2108,3 +2108,45 @@ msgstr "النص الافتراضي للرسالة"
 
 msgid "Tous les modes"
 msgstr "كل الطرق"
+
+msgid "Passer"
+msgstr "تخطي"
+
+msgid "Revoir la présentation"
+msgstr "إعادة عرض التقديم"
+
+msgid "{} sur {}"
+msgstr "{} من {}"
+
+msgid "Revenir à Kadenz"
+msgstr "العودة إلى Kadenz"
+
+msgid "Commencer l'installation"
+msgstr "بدء التثبيت"
+
+msgid "Bienvenue dans Kadenz"
+msgstr "مرحبًا بك في Kadenz"
+
+msgid "Vos documents"
+msgstr "مستنداتك"
+
+msgid "Vos paiements"
+msgstr "مدفوعاتك"
+
+msgid "Vos données"
+msgstr "بياناتك"
+
+msgid "Kadenz tient la facturation de votre entreprise sur ce poste : clients, fournisseurs, produits et documents commerciaux, montants en FCFA. L'interface existe en sept langues ; chaque compte choisit la sienne."
+msgstr "يتولى Kadenz فوترة شركتك على هذا الجهاز: العملاء والموردون والمنتجات والمستندات التجارية، والمبالغ بالفرنك الأفريقي FCFA. الواجهة متاحة بسبع لغات، ويختار كل حساب لغته."
+
+msgid "Devis, proformas, bons de commande, bordereaux de livraison, factures et avoirs se préparent dans le même écran. Un document commence en brouillon et reçoit son numéro à la validation ; ses lignes et ses montants sont alors figés : une facture se corrige par un avoir, un devis ou une proforma par une copie corrigée. Chaque document s'exporte en PDF à l'identité de votre entreprise."
+msgstr "تُعدّ عروض الأسعار والفواتير المبدئية وأوامر الشراء وإشعارات التسليم والفواتير والإشعارات الدائنة في الشاشة نفسها. يبدأ المستند كمسودة ويحصل على رقمه عند الاعتماد، وتُثبَّت عندئذ بنوده ومبالغه: تُصحَّح الفاتورة بإشعار دائن، ويُصحَّح عرض السعر أو الفاتورة المبدئية بنسخة مصحَّحة. ويُصدَّر كل مستند بصيغة PDF بهوية شركتك."
+
+msgid "Les règlements se saisissent dans la fiche d'une facture ou d'un bon de commande ; l'état Impayé, Partiel ou Payé se calcule tout seul. Le suivi des fournisseurs liste les bons de commande à payer. Le registre des règlements et la liste des factures échues s'impriment en PDF, comme la lettre de relance de chaque facture."
+msgstr "تُسجَّل المدفوعات في بطاقة الفاتورة أو أمر الشراء، وتُحسب الحالة غير مدفوع أو جزئي أو مدفوع تلقائيًا. تعرض متابعة الموردين أوامر الشراء الواجب دفعها. ويُطبع سجل المدفوعات وقائمة الفواتير المستحقة بصيغة PDF، وكذلك رسالة التذكير لكل فاتورة."
+
+msgid "Les données restent sur ce poste, dans une base locale. Chacun se connecte avec son propre compte ; les mots de passe ne sont jamais conservés en clair et les droits dépendent du rôle. Validations, annulations et règlements sont inscrits dans l'historique de chaque document."
+msgstr "تبقى البيانات على هذا الجهاز، في قاعدة بيانات محلية. يسجّل كل شخص الدخول بحسابه الخاص، ولا تُحفظ كلمات المرور أبدًا كنص واضح، وتعتمد الصلاحيات على الدور. وتُقيَّد عمليات الاعتماد والإلغاء والمدفوعات في السجل التاريخي لكل مستند."
+
+msgid "L'assistant qui suit crée votre entreprise et le compte administrateur."
+msgstr "يُنشئ المعالج التالي شركتك وحساب المسؤول."

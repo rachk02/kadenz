@@ -2108,3 +2108,45 @@ msgstr "Default letter text"
 
 msgid "Tous les modes"
 msgstr "All methods"
+
+msgid "Passer"
+msgstr "Skip"
+
+msgid "Revoir la présentation"
+msgstr "View the introduction again"
+
+msgid "{} sur {}"
+msgstr "{} of {}"
+
+msgid "Revenir à Kadenz"
+msgstr "Back to Kadenz"
+
+msgid "Commencer l'installation"
+msgstr "Start the setup"
+
+msgid "Bienvenue dans Kadenz"
+msgstr "Welcome to Kadenz"
+
+msgid "Vos documents"
+msgstr "Your documents"
+
+msgid "Vos paiements"
+msgstr "Your payments"
+
+msgid "Vos données"
+msgstr "Your data"
+
+msgid "Kadenz tient la facturation de votre entreprise sur ce poste : clients, fournisseurs, produits et documents commerciaux, montants en FCFA. L'interface existe en sept langues ; chaque compte choisit la sienne."
+msgstr "Kadenz keeps your company's invoicing on this computer: customers, suppliers, products and business documents, with amounts in FCFA. The interface is available in seven languages; each account chooses its own."
+
+msgid "Devis, proformas, bons de commande, bordereaux de livraison, factures et avoirs se préparent dans le même écran. Un document commence en brouillon et reçoit son numéro à la validation ; ses lignes et ses montants sont alors figés : une facture se corrige par un avoir, un devis ou une proforma par une copie corrigée. Chaque document s'exporte en PDF à l'identité de votre entreprise."
+msgstr "Quotes, pro formas, purchase orders, delivery notes, invoices and credit notes are prepared on the same screen. A document starts as a draft and receives its number when validated; its lines and amounts are then locked: an invoice is corrected with a credit note, a quote or pro forma with a corrected copy. Every document can be exported to PDF with your company's details."
+
+msgid "Les règlements se saisissent dans la fiche d'une facture ou d'un bon de commande ; l'état Impayé, Partiel ou Payé se calcule tout seul. Le suivi des fournisseurs liste les bons de commande à payer. Le registre des règlements et la liste des factures échues s'impriment en PDF, comme la lettre de relance de chaque facture."
+msgstr "Payments are entered on the record of an invoice or purchase order; the Unpaid, Partial or Paid status is calculated automatically. Supplier follow-up lists the purchase orders still to be paid. The payment register and the list of overdue invoices print to PDF, as does the reminder letter for each invoice."
+
+msgid "Les données restent sur ce poste, dans une base locale. Chacun se connecte avec son propre compte ; les mots de passe ne sont jamais conservés en clair et les droits dépendent du rôle. Validations, annulations et règlements sont inscrits dans l'historique de chaque document."
+msgstr "Data stays on this computer, in a local database. Everyone signs in with their own account; passwords are never stored in plain text and permissions depend on the role. Validations, cancellations and payments are recorded in each document's history."
+
+msgid "L'assistant qui suit crée votre entreprise et le compte administrateur."
+msgstr "The following wizard sets up your company and the administrator account."
