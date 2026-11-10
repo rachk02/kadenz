@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Règlements, identité B</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e5de}
+a{color:#151515;text-decoration:none}a:hover{color:#5e5a54}
+.hachure{background:repeating-linear-gradient(135deg,#f4f2ee 0 6px,#ddd8cf 6px 7px);border:1px solid #cfc8bc}
+</style>
+</helmet>
+<div style="min-height: 1000px; box-sizing: border-box; padding: 16px; background: #e9e5de; font-family: Geist, sans-serif; color: #151515; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+
+  <nav aria-label="Menu principal" style="flex: 1 1 250px; max-width: 280px; background: #ffffff; border-radius: 28px; padding: 18px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 6px 14px">
+      <svg width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="14" fill="#151515"></rect><g transform="translate(-1.75 0)" fill="#ffffff"><path d="M10 6 L19 6 L19 42 L10 42 Z M17 19.09 L27.47 6 L39 6 L17 33.5 Z M18.09 27.14 L23.85 19.94 L33.31 31.76 L21.78 31.76 Z M24.18 34.76 L35.71 34.76 L37.4 36.88 L25.88 36.88 Z"></path><path fill="#f2b632" d="M28.28 39.88 L39.8 39.88 L41.5 42 L29.97 42 Z"></path></g></svg>
+      <span style="font-weight: 600; font-size: 24px; letter-spacing: -1px">kadenz</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; background: #f4f2ee; border-radius: 18px; padding: 10px 12px; margin-bottom: 10px">
+      <div style="width: 36px; height: 36px; border-radius: 50%; background: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px">EE</div>
+      <div style="display: flex; flex-direction: column"><span style="font-weight: 500; font-size: 14px">Entreprise Essai</span><span style="font-size: 12px; color: #5e5a54">Compte admin</span></div>
+    </div>
+    <a href="B-TableauDeBord.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 999px; font-size: 14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect></svg>Tableau de bord</a>
+    <p style="margin: 12px 14px 4px; font-size: 12px; color: #5e5a54">Ventes</p>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 999px; font-size: 14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"></path><path d="M9 12h7M9 16h7"></path></svg>Devis</a>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 999px; font-size: 14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"></path><path d="M9 12h7M9 16h4"></path></svg>Proforma</a>
+    <a href="B-Factures.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 999px; font-size: 14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"></path><path d="M9 9h6M9 13h6"></path></svg><span style="flex-grow: 1">Factures</span><span style="font-size: 13px; color: #5e5a54">16</span></a>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 999px; font-size: 14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h12v18H6z"></path><path d="M9 12h6"></path></svg>Avoirs</a>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 999px; font-size: 14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 7h12v9H2zM14 10h4l3 3v3h-7"></path><circle cx="6" cy="18" r="2"></circle><circle cx="17" cy="18" r="2"></circle></svg>Livraisons</a>
+    <p style="margin: 12px 14px 4px; font-size: 12px; color: #5e5a54">Achats et paiements</p>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 999px; font-size: 14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 4h2l2 12h11l2-8H6"></path><circle cx="9" cy="20" r="1.5"></circle><circle cx="17" cy="20" r="1.5"></circle></svg><span style="flex-grow: 1">Bons de commande</span><span style="font-size: 13px; color: #5e5a54">3</span></a>
+    <a href="#" aria-current="page" style="display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 999px; background: #151515; color: #ffffff; font-size: 14px; font-weight: 500"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="3"></rect><circle cx="12" cy="12" r="2.5"></circle></svg>Règlements</a>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 999px; font-size: 14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h5"></path></svg>Suivi fournisseurs</a>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 999px; font-size: 14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"></path><path d="M10 21h4"></path></svg>Relances</a>
+    <p style="margin: 12px 14px 4px; font-size: 12px; color: #5e5a54">Référentiels</p>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 999px; font-size: 14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .8 3 3 3 6"></path></svg>Tiers</a>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 999px; font-size: 14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"></path><path d="M4 7.5l8 4.5 8-4.5M12 12v9"></path></svg>Produits</a>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 999px; font-size: 14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 21V5h10v16M14 9h6v12M7 9h4M7 13h4M7 17h4"></path></svg>Entreprise</a>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 999px; font-size: 14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg>Paramètres</a>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 16px; padding: 8px 4px">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+      <h1 style="margin: 0; flex-grow: 1; font-weight: 600; font-size: 44px; letter-spacing: -1.5px">Règlements</h1>
+      <button type="button" style="font-family: Geist, sans-serif; font-size: 14px; font-weight: 500; border: none; border-radius: 999px; padding: 12px 20px; background: #151515; color: #ffffff">Imprimer le registre</button>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px">
+      <div style="display: flex; gap: 4px; background: #ffffff; border-radius: 999px; padding: 4px">
+        <button type="button" style="font-family: Geist, sans-serif; font-size: 14px; border: none; border-radius: 999px; padding: 10px 16px; background: #151515; color: #ffffff">Tous</button>
+        <button type="button" style="font-family: Geist, sans-serif; font-size: 14px; border: none; border-radius: 999px; padding: 10px 16px; background: transparent; color: #151515">Encaissements</button>
+        <button type="button" style="font-family: Geist, sans-serif; font-size: 14px; border: none; border-radius: 999px; padding: 10px 16px; background: transparent; color: #151515">Décaissements</button>
+      </div>
+      <button type="button" style="font-family: Geist, sans-serif; font-size: 14px; border: none; border-radius: 999px; padding: 12px 16px; background: #ffffff; color: #151515"><span style="color: #5e5a54">Mode</span> Tous</button>
+      <button type="button" style="font-family: Geist, sans-serif; font-size: 14px; border: none; border-radius: 999px; padding: 12px 16px; background: #ffffff; color: #151515"><span style="color: #5e5a54">Période</span> Toutes</button>
+    </div>
+
+    <section style="background: #ffffff; border-radius: 28px; padding: 26px; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px">
+        <div style="flex-grow: 1"><h2 style="margin: 0; font-weight: 600; font-size: 22px">Encaissements</h2><p style="margin: 4px 0 0; font-size: 14px; color: #5e5a54">Règlements des factures, sous-totaux par mode</p></div>
+        <p style="margin: 0; font-weight: 600; font-size: 40px; letter-spacing: -1.5px; font-variant-numeric: tabular-nums">9 445 600 <span style="font-size: 16px; font-weight: 500; color: #5e5a54">FCFA</span></p>
+      </div>
+      <div style="display: grid; grid-template-columns: 150px minmax(0, 1fr) 120px; gap: 12px 16px; align-items: center; font-size: 15px">
+        <span>Virement bancaire</span><div style="height: 40px; width: 100%; border-radius: 14px; background: {{mangue}}"></div><span style="text-align: right; font-weight: 500; font-variant-numeric: tabular-nums">2 737 600</span>
+        <span>Espèce</span><div class="hachure" style="height: 40px; width: 82%; border-radius: 14px; box-sizing: border-box"></div><span style="text-align: right; font-weight: 500; font-variant-numeric: tabular-nums">2 241 700</span>
+        <span>Chèque</span><div class="hachure" style="height: 40px; width: 56%; border-radius: 14px; box-sizing: border-box"></div><span style="text-align: right; font-weight: 500; font-variant-numeric: tabular-nums">1 534 000</span>
+        <span>Orange money</span><div class="hachure" style="height: 40px; width: 55%; border-radius: 14px; box-sizing: border-box"></div><span style="text-align: right; font-weight: 500; font-variant-numeric: tabular-nums">1 510 400</span>
+        <span>Moov money</span><div class="hachure" style="height: 40px; width: 52%; border-radius: 14px; box-sizing: border-box"></div><span style="text-align: right; font-weight: 500; font-variant-numeric: tabular-nums">1 421 900</span>
+      </div>
+    </section>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px">
+      <div style="background: #f4f2ee; border: 1px solid #ddd8cf; border-radius: 24px; padding: 20px"><p style="margin: 0; font-size: 13px; color: #5e5a54">Décaissements</p><p style="margin: 8px 0 0; font-weight: 600; font-size: 30px; letter-spacing: -1px; font-variant-numeric: tabular-nums">619 500</p><p style="margin: 4px 0 0; font-size: 13px; color: #5e5a54">Règlements des bons de commande</p></div>
+      <div style="background: #f4f2ee; border: 1px solid #ddd8cf; border-radius: 24px; padding: 20px"><p style="margin: 0; font-size: 13px; color: #5e5a54">Règle d'affichage</p><p style="margin: 8px 0 0; font-size: 15px; line-height: 1.5">Encaissements et décaissements ne s'additionnent jamais : chaque sens garde son total.</p></div>
+    </div>
+
+    <section style="background: #ffffff; border-radius: 28px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: grid; grid-template-columns: 110px 120px 140px minmax(0, 1fr) 140px 120px; gap: 12px; padding: 12px 16px; background: #f4f2ee; border-radius: 999px; font-size: 13px; color: #5e5a54"><span>Date</span><span>Sens</span><span>Document</span><span>Tiers</span><span>Mode</span><span style="text-align: right">Montant</span></div>
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 6px 16px" aria-hidden="true">
+        <div style="height: 14px; border-radius: 999px; background: #f4f2ee; width: 96%"></div>
+        <div style="height: 14px; border-radius: 999px; background: #f4f2ee; width: 90%"></div>
+        <div style="height: 14px; border-radius: 999px; background: #f4f2ee; width: 93%"></div>
+      </div>
+      <p style="margin: 0; padding: 0 16px 6px; font-size: 13px; color: #5e5a54">Lignes du registre, une par règlement (non reprises dans la maquette).</p>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"mangue":{"editor":"color","default":"#f2b632","options":["#f2b632","#e8f06a","#7fc8a9"]},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { mangue: this.props.mangue ?? '#f2b632' };
+  }
+}
+</script>
+</body>
+</html>

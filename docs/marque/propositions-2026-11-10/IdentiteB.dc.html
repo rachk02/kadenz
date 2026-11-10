@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Identité B, planche de marque</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#151515}a:hover{color:#5e5a54}
+</style>
+</helmet>
+<div style="width: 1600px; height: 1200px; box-sizing: border-box; padding: 40px; background: #151515; font-family: Geist, sans-serif; color: #151515; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 24px">
+
+  <!-- Logo compact -->
+  <div style="background: #f4f2ee; border-radius: 28px; padding: 32px; display: flex; flex-direction: column; justify-content: space-between">
+    <div style="display: flex; align-items: center; gap: 14px">
+      <svg width="58" height="58" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="14" fill="#151515"></rect><g transform="translate(-1.75 0)" fill="#ffffff"><path d="M10 6 L19 6 L19 42 L10 42 Z M17 19.09 L27.47 6 L39 6 L17 33.5 Z M18.09 27.14 L23.85 19.94 L33.31 31.76 L21.78 31.76 Z M24.18 34.76 L35.71 34.76 L37.4 36.88 L25.88 36.88 Z"></path><path fill="{{mangue}}" d="M28.28 39.88 L39.8 39.88 L41.5 42 L29.97 42 Z"></path></g></svg>
+      <span style="font-weight: 600; font-size: 42px; letter-spacing: -1.5px">kadenz</span>
+    </div>
+    <div>
+      <p style="margin: 0 0 6px; font-size: 13px; color: #5e5a54">Mot-symbole en minuscules, Geist 600</p>
+      <p style="margin: 0; font-size: 13px; color: #5e5a54">Le dernier temps de la jambe en Mangue</p>
+    </div>
+  </div>
+
+  <!-- Grand logo -->
+  <div style="grid-column: span 2; background: #f4f2ee; border-radius: 28px; display: flex; align-items: center; justify-content: center; gap: 30px">
+    <svg width="136" height="136" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="14" fill="#151515"></rect><g transform="translate(-1.75 0)" fill="#ffffff"><path d="M10 6 L19 6 L19 42 L10 42 Z M17 19.09 L27.47 6 L39 6 L17 33.5 Z M18.09 27.14 L23.85 19.94 L33.31 31.76 L21.78 31.76 Z M24.18 34.76 L35.71 34.76 L37.4 36.88 L25.88 36.88 Z"></path><path fill="{{mangue}}" d="M28.28 39.88 L39.8 39.88 L41.5 42 L29.97 42 Z"></path></g></svg>
+    <span style="font-weight: 600; font-size: 120px; line-height: 1; letter-spacing: -5px">kadenz</span>
+  </div>
+
+  <!-- Construction -->
+  <div style="background: #f4f2ee; border-radius: 28px; padding: 24px; display: flex; flex-direction: column; gap: 12px">
+    <svg width="100%" height="270" viewBox="0 0 48 48" role="img" aria-label="Symbole sur sa grille, tuile aux angles de 14 unités">
+      <g stroke="#cfcac1" stroke-width="0.12" fill="none" stroke-dasharray="0.5 0.35">
+        <path d="M0 6 H48 M0 12 H48 M0 18 H48 M0 24 H48 M0 30 H48 M0 36 H48 M0 42 H48 M6 0 V48 M12 0 V48 M18 0 V48 M24 0 V48 M30 0 V48 M36 0 V48 M42 0 V48"></path>
+        <circle cx="14" cy="14" r="14"></circle><circle cx="34" cy="34" r="14"></circle>
+      </g>
+      <g transform="translate(-1.75 0)" fill="#bdb7ad"><path d="M10 6 L19 6 L19 42 L10 42 Z M17 19.09 L27.47 6 L39 6 L17 33.5 Z M18.09 27.14 L23.85 19.94 L33.31 31.76 L21.78 31.76 Z M24.18 34.76 L35.71 34.76 L37.4 36.88 L25.88 36.88 Z M28.28 39.88 L39.8 39.88 L41.5 42 L29.97 42 Z"></path></g>
+    </svg>
+    <p style="margin: 0; font-size: 13px; color: #5e5a54">Même K cadencé, tuile arrondie au rayon de 14 sur 48.</p>
+  </div>
+
+  <!-- Installateur -->
+  <div style="grid-row: span 2; background: {{mangue}}; border-radius: 28px; padding: 28px; display: flex; flex-direction: column; justify-content: center; gap: 16px; overflow: hidden">
+    <div style="background: #ffffff; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 12px 30px rgba(21, 21, 21, 0.18)">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <svg width="34" height="34" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="14" fill="#151515"></rect><g transform="translate(-1.75 0)" fill="#ffffff"><path d="M10 6 L19 6 L19 42 L10 42 Z M17 19.09 L27.47 6 L39 6 L17 33.5 Z M18.09 27.14 L23.85 19.94 L33.31 31.76 L21.78 31.76 Z M24.18 34.76 L35.71 34.76 L37.4 36.88 L25.88 36.88 Z"></path><path fill="{{mangue}}" d="M28.28 39.88 L39.8 39.88 L41.5 42 L29.97 42 Z"></path></g></svg>
+        <span style="font-weight: 600; font-size: 16px">Installation de Kadenz 0.1.0</span>
+      </div>
+      <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #5e5a54">Kadenz s'installe pour tout le poste dans Program Files\Kadenz. Vos données restent en place.</p>
+      <div style="height: 10px; border-radius: 999px; background: #ece8e1; overflow: hidden"><div style="width: 62%; height: 10px; background: #151515; border-radius: 999px"></div></div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px">
+        <button type="button" style="font-family: Geist, sans-serif; font-size: 13px; padding: 10px 16px; border-radius: 999px; border: 1px solid #d9d4cb; background: #ffffff; color: #151515">Annuler</button>
+        <button type="button" style="font-family: Geist, sans-serif; font-size: 13px; padding: 10px 16px; border-radius: 999px; border: none; background: #151515; color: #ffffff">Installer</button>
+      </div>
+    </div>
+    <p style="margin: 0; font-size: 13px; color: #151515">Fenêtre de l'installateur KadenzSetup</p>
+  </div>
+
+  <!-- Couleurs en pastilles -->
+  <div style="grid-column: span 2; background: #232323; border-radius: 28px; padding: 28px; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 16px">
+    <div style="width: 150px; height: 104px; border-radius: 52px; background: #e9e5de; display: flex; align-items: center; justify-content: center; flex-direction: column"><span style="font-weight: 600; font-size: 15px">Grès</span><span style="font-size: 13px">#E9E5DE</span></div>
+    <div style="width: 150px; height: 104px; border-radius: 52px; background: #f4f2ee; display: flex; align-items: center; justify-content: center; flex-direction: column"><span style="font-weight: 600; font-size: 15px">Craie</span><span style="font-size: 13px">#F4F2EE</span></div>
+    <div style="width: 150px; height: 104px; border-radius: 52px; background: #0a0a0a; border: 1px solid #3a3a3a; color: #ffffff; display: flex; align-items: center; justify-content: center; flex-direction: column"><span style="font-weight: 600; font-size: 15px">Encre</span><span style="font-size: 13px">#151515</span></div>
+    <div style="width: 150px; height: 104px; border-radius: 52px; background: #f2b632; display: flex; align-items: center; justify-content: center; flex-direction: column"><span style="font-weight: 600; font-size: 15px">Mangue</span><span style="font-size: 13px">#F2B632</span></div>
+    <div style="width: 150px; height: 104px; border-radius: 52px; background: #5e5a54; color: #ffffff; display: flex; align-items: center; justify-content: center; flex-direction: column"><span style="font-weight: 600; font-size: 15px">Taupe</span><span style="font-size: 13px">#5E5A54</span></div>
+    <div style="width: 150px; height: 104px; border-radius: 52px; background: #1f7a4d; color: #ffffff; display: flex; align-items: center; justify-content: center; flex-direction: column"><span style="font-weight: 600; font-size: 15px">Payé</span><span style="font-size: 13px">#1F7A4D</span></div>
+    <div style="width: 150px; height: 104px; border-radius: 52px; background: #b42318; color: #ffffff; display: flex; align-items: center; justify-content: center; flex-direction: column"><span style="font-weight: 600; font-size: 15px">Impayé</span><span style="font-size: 13px">#B42318</span></div>
+    <div style="width: 150px; height: 104px; border-radius: 52px; background: #fbe7b5; display: flex; align-items: center; justify-content: center; flex-direction: column"><span style="font-weight: 600; font-size: 15px">Mangue pâle</span><span style="font-size: 13px">#FBE7B5</span></div>
+  </div>
+
+  <!-- Icônes et motif -->
+  <div style="grid-row: span 2; background: #e9e5de; border-radius: 28px; padding: 28px; display: flex; flex-direction: column; gap: 18px">
+    <div style="flex-grow: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-content: start">
+      <div style="aspect-ratio: 1; border-radius: 22px; background: #151515; display: flex; align-items: center; justify-content: center"><svg width="64%" viewBox="0 0 48 48" aria-hidden="true"><g transform="translate(-1.75 0)" fill="#ffffff"><path d="M10 6 L19 6 L19 42 L10 42 Z M17 19.09 L27.47 6 L39 6 L17 33.5 Z M18.09 27.14 L23.85 19.94 L33.31 31.76 L21.78 31.76 Z M24.18 34.76 L35.71 34.76 L37.4 36.88 L25.88 36.88 Z"></path><path fill="{{mangue}}" d="M28.28 39.88 L39.8 39.88 L41.5 42 L29.97 42 Z"></path></g></svg></div>
+      <div style="aspect-ratio: 1; border-radius: 22px; background: {{mangue}}; display: flex; align-items: center; justify-content: center"><svg width="64%" viewBox="0 0 48 48" aria-hidden="true"><g transform="translate(-1.75 0)" fill="#151515"><path d="M10 6 L19 6 L19 42 L10 42 Z M17 19.09 L27.47 6 L39 6 L17 33.5 Z M18.09 27.14 L23.85 19.94 L33.31 31.76 L21.78 31.76 Z M24.18 34.76 L35.71 34.76 L37.4 36.88 L25.88 36.88 Z M28.28 39.88 L39.8 39.88 L41.5 42 L29.97 42 Z"></path></g></svg></div>
+      <div style="aspect-ratio: 1; border-radius: 22px; background: #ffffff; display: flex; align-items: center; justify-content: center"><svg width="64%" viewBox="0 0 48 48" aria-hidden="true"><g transform="translate(-1.75 0)" fill="#151515"><path d="M10 6 L19 6 L19 42 L10 42 Z M17 19.09 L27.47 6 L39 6 L17 33.5 Z M18.09 27.14 L23.85 19.94 L33.31 31.76 L21.78 31.76 Z M24.18 34.76 L35.71 34.76 L37.4 36.88 L25.88 36.88 Z M28.28 39.88 L39.8 39.88 L41.5 42 L29.97 42 Z"></path></g></svg></div>
+    </div>
+    <div style="background: #ffffff; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+      <p style="margin: 0; font-size: 13px; color: #5e5a54">Barre des tâches de Windows</p>
+      <div style="display: flex; align-items: center; gap: 10px; background: #202020; border-radius: 12px; padding: 10px 14px">
+        <div style="width: 26px; height: 26px; border-radius: 6px; background: #3a3a3a"></div>
+        <div style="width: 26px; height: 26px; border-radius: 6px; background: #3a3a3a"></div>
+        <svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="14" fill="#151515"></rect><rect x="1" y="1" width="46" height="46" rx="13" fill="none" stroke="#4a4a4a" stroke-width="2"></rect><g transform="translate(-1.75 0)" fill="#ffffff"><path d="M10 6 L19 6 L19 42 L10 42 Z M17 19.09 L27.47 6 L39 6 L17 33.5 Z M18 27 L24 20 L41.5 42 L29.97 42 Z"></path></g></svg>
+        <div style="width: 26px; height: 26px; border-radius: 6px; background: #3a3a3a"></div>
+      </div>
+      <p style="margin: 0; font-size: 13px; color: #5e5a54">Sous 48 px, la jambe redevient pleine.</p>
+    </div>
+  </div>
+
+  <!-- Typographie -->
+  <div style="background: #f4f2ee; border-radius: 28px; padding: 28px; display: flex; flex-direction: column; gap: 10px">
+    <p style="margin: 0; font-size: 13px; color: #5e5a54">Une seule famille : Geist</p>
+    <p style="margin: 0; font-weight: 600; font-size: 56px; line-height: 1; letter-spacing: -2px">Aa 17 723</p>
+    <div style="height: 1px; background: #ddd8cf; margin: 6px 0"></div>
+    <p style="margin: 0; font-size: 13px; color: #5e5a54">Titres 600, texte 400 et 500</p>
+    <p style="margin: 0; font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums">9 445 600 FCFA</p>
+    <p style="margin: 0; font-size: 14px; color: #5e5a54">Grands chiffres serrés, libellés calmes.</p>
+  </div>
+
+  <!-- Grille -->
+  <div style="background: #f4f2ee; border-radius: 28px; padding: 28px; display: flex; flex-direction: column; gap: 14px">
+    <p style="margin: 0; font-weight: 600; font-size: 18px">Grille des écrans</p>
+    <div style="flex-grow: 1; display: flex; gap: 12px">
+      <div style="width: 26%; border-radius: 16px; background: #ffffff; border: 1px solid #ddd8cf"></div>
+      <div style="flex-grow: 1; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px">
+        <div style="border-radius: 8px; background: #f8d98a"></div><div style="border-radius: 8px; background: #f8d98a"></div><div style="border-radius: 8px; background: #f8d98a"></div><div style="border-radius: 8px; background: #f8d98a"></div><div style="border-radius: 8px; background: #f8d98a"></div><div style="border-radius: 8px; background: #f8d98a"></div>
+      </div>
+    </div>
+    <p style="margin: 0; font-size: 13px; color: #5e5a54">Menu en panneau blanc, contenu sur Grès ; rayons 28, 20 et pilules.</p>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"mangue":{"editor":"color","default":"#f2b632","options":["#f2b632","#e8f06a","#7fc8a9"]},"$preview":{"width":1600,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { mangue: this.props.mangue ?? '#f2b632' };
+  }
+}
+</script>
+</body>
+</html>
