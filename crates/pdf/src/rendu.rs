@@ -21,27 +21,27 @@ use crate::pagination::{Gabarit, paginer};
 use crate::texte::{Police, Polices};
 
 // Format A4 en points (1/72 de pouce).
-const LARGEUR: f32 = 595.28;
-const HAUTEUR: f32 = 841.89;
-const BANDE: f32 = 12.0;
-const GAUCHE: f32 = 42.0;
-const DROITE: f32 = LARGEUR - 36.0;
-const HAUT: f32 = 34.0;
-const BAS: f32 = HAUTEUR - 26.0;
-const UTILE: f32 = DROITE - GAUCHE;
+pub(crate) const LARGEUR: f32 = 595.28;
+pub(crate) const HAUTEUR: f32 = 841.89;
+pub(crate) const BANDE: f32 = 12.0;
+pub(crate) const GAUCHE: f32 = 42.0;
+pub(crate) const DROITE: f32 = LARGEUR - 36.0;
+pub(crate) const HAUT: f32 = 34.0;
+pub(crate) const BAS: f32 = HAUTEUR - 26.0;
+pub(crate) const UTILE: f32 = DROITE - GAUCHE;
 
 const H_ENTETE_TABLEAU: f32 = 20.0;
 const H_REPORT: f32 = 18.0;
-const MARGE_CELLULE: f32 = 4.0;
+pub(crate) const MARGE_CELLULE: f32 = 4.0;
 const ESPACE_AVANT_FINAL: f32 = 14.0;
 const LARGEUR_TOTAUX: f32 = 230.0;
 
 // Couleurs de la charte (Theme de l'application).
-const ENCRE: [u8; 3] = [0x1f, 0x29, 0x33];
-const SECONDAIRE: [u8; 3] = [0x52, 0x60, 0x6d];
-const BORDURE: [u8; 3] = [0xd9, 0xdc, 0xe3];
-const FOND_CLAIR: [u8; 3] = [0xf4, 0xf5, 0xf9];
-const BLANC: [u8; 3] = [0xff, 0xff, 0xff];
+pub(crate) const ENCRE: [u8; 3] = [0x1f, 0x29, 0x33];
+pub(crate) const SECONDAIRE: [u8; 3] = [0x52, 0x60, 0x6d];
+pub(crate) const BORDURE: [u8; 3] = [0xd9, 0xdc, 0xe3];
+pub(crate) const FOND_CLAIR: [u8; 3] = [0xf4, 0xf5, 0xf9];
+pub(crate) const BLANC: [u8; 3] = [0xff, 0xff, 0xff];
 const ROUGE: [u8; 3] = [0xb4, 0x23, 0x18];
 
 fn couleur(c: [u8; 3]) -> rgb::Color {
@@ -56,7 +56,7 @@ fn remplissage(c: [u8; 3], opacite: f32) -> Fill {
     }
 }
 
-fn montant(m: Montant) -> String {
+pub(crate) fn montant(m: Montant) -> String {
     montant_en_texte(m)
 }
 
@@ -77,16 +77,24 @@ fn phrase_somme(phrase: &str, lettres: &str, ttc: Montant) -> String {
 }
 
 /// Surface de tracé, ou rien quand on ne fait que mesurer.
-struct Toile<'a, 'b> {
-    s: Option<&'a mut Surface<'b>>,
+pub(crate) struct Toile<'a, 'b> {
+    pub(crate) s: Option<&'a mut Surface<'b>>,
 }
 
 impl Toile<'_, '_> {
-    fn a_blanc() -> Toile<'static, 'static> {
+    pub(crate) fn a_blanc() -> Toile<'static, 'static> {
         Toile { s: None }
     }
 
-    fn ecrire(&mut self, police: &Police, taille: f32, c: [u8; 3], x: f32, base: f32, texte: &str) {
+    pub(crate) fn ecrire(
+        &mut self,
+        police: &Police,
+        taille: f32,
+        c: [u8; 3],
+        x: f32,
+        base: f32,
+        texte: &str,
+    ) {
         let Some(s) = self.s.as_deref_mut() else {
             return;
         };
@@ -106,7 +114,7 @@ impl Toile<'_, '_> {
         );
     }
 
-    fn rectangle(&mut self, x: f32, y: f32, l: f32, h: f32, c: [u8; 3]) {
+    pub(crate) fn rectangle(&mut self, x: f32, y: f32, l: f32, h: f32, c: [u8; 3]) {
         let Some(s) = self.s.as_deref_mut() else {
             return;
         };
@@ -122,7 +130,7 @@ impl Toile<'_, '_> {
         }
     }
 
-    fn cadre(&mut self, x: f32, y: f32, l: f32, h: f32, c: [u8; 3]) {
+    pub(crate) fn cadre(&mut self, x: f32, y: f32, l: f32, h: f32, c: [u8; 3]) {
         let Some(s) = self.s.as_deref_mut() else {
             return;
         };
@@ -143,7 +151,14 @@ impl Toile<'_, '_> {
         }
     }
 
-    fn trait_horizontal(&mut self, x1: f32, x2: f32, y: f32, c: [u8; 3], epaisseur: f32) {
+    pub(crate) fn trait_horizontal(
+        &mut self,
+        x1: f32,
+        x2: f32,
+        y: f32,
+        c: [u8; 3],
+        epaisseur: f32,
+    ) {
         let Some(s) = self.s.as_deref_mut() else {
             return;
         };
@@ -181,7 +196,7 @@ impl Toile<'_, '_> {
 }
 
 /// Ligne de base d'un texte centré verticalement dans une bande `[haut, haut + h]`.
-fn base_centree(police: &Police, taille: f32, haut: f32, h: f32) -> f32 {
+pub(crate) fn base_centree(police: &Police, taille: f32, haut: f32, h: f32) -> f32 {
     haut + h / 2.0 + police.hauteur_capitales * taille / 2.0
 }
 
@@ -202,7 +217,7 @@ struct Colonne {
     a_droite: bool,
 }
 
-struct Moteur<'d> {
+pub(crate) struct Moteur<'d> {
     doc: &'d DocumentPdf,
     p: &'d Polices,
     logo: Option<Image>,
@@ -211,7 +226,7 @@ struct Moteur<'d> {
 }
 
 impl<'d> Moteur<'d> {
-    fn new(doc: &'d DocumentPdf, p: &'d Polices) -> Self {
+    pub(crate) fn new(doc: &'d DocumentPdf, p: &'d Polices) -> Self {
         let colonnes = if doc.avec_montants {
             vec![
                 Colonne {
@@ -291,7 +306,7 @@ impl<'d> Moteur<'d> {
 
     /// Texte sur plusieurs lignes ; renvoie la hauteur occupée.
     #[allow(clippy::too_many_arguments)]
-    fn paragraphe(
+    pub(crate) fn paragraphe(
         &self,
         t: &mut Toile,
         police: &Police,
@@ -321,7 +336,7 @@ impl<'d> Moteur<'d> {
     // ------------------------------------------------------------ en-tête
 
     /// En-tête répété sur chaque page : logos, entreprise, type, numéro, date.
-    fn en_tete(&self, t: &mut Toile, y: f32) -> f32 {
+    pub(crate) fn en_tete(&self, t: &mut Toile, y: f32) -> f32 {
         let e = &self.doc.entreprise;
         let p = self.p;
         let largeur_droite = 190.0;
@@ -374,17 +389,19 @@ impl<'d> Moteur<'d> {
             yd += t.image(logo2, x_droite, yd, largeur_droite, 36.0, true) + 6.0;
         }
         let titre = &self.doc.textes.titre;
-        let taille_titre = 17.0;
-        let l = p.titre.largeur(titre, taille_titre);
-        t.ecrire(
-            &p.titre,
-            taille_titre,
-            self.doc.couleur,
-            DROITE - l,
-            base_centree(&p.titre, taille_titre, yd, 22.0),
-            titre,
-        );
-        yd += 22.0;
+        if !titre.is_empty() {
+            let taille_titre = 17.0;
+            let l = p.titre.largeur(titre, taille_titre);
+            t.ecrire(
+                &p.titre,
+                taille_titre,
+                self.doc.couleur,
+                DROITE - l,
+                base_centree(&p.titre, taille_titre, yd, 22.0),
+                titre,
+            );
+            yd += 22.0;
+        }
         if !self.doc.numero.is_empty() {
             let texte = format!("N° {}", self.doc.numero);
             let l = p.texte_gras.largeur(&texte, 10.0);
@@ -398,17 +415,19 @@ impl<'d> Moteur<'d> {
             );
             yd += 14.0;
         }
-        let date = format!("Date : {}", self.doc.date);
-        let l = p.texte.largeur(&date, 9.0);
-        t.ecrire(
-            &p.texte,
-            9.0,
-            ENCRE,
-            DROITE - l,
-            base_centree(&p.texte, 9.0, yd, 13.0),
-            &date,
-        );
-        yd += 13.0;
+        if !self.doc.date.is_empty() {
+            let date = format!("Date : {}", self.doc.date);
+            let l = p.texte.largeur(&date, 9.0);
+            t.ecrire(
+                &p.texte,
+                9.0,
+                ENCRE,
+                DROITE - l,
+                base_centree(&p.texte, 9.0, yd, 13.0),
+                &date,
+            );
+            yd += 13.0;
+        }
         if !self.doc.reference.is_empty() {
             let reference = &self.doc.reference;
             let l = p.texte.largeur(reference, 9.0);
@@ -874,11 +893,11 @@ impl<'d> Moteur<'d> {
         .collect()
     }
 
-    fn hauteur_pied(&self) -> f32 {
+    pub(crate) fn hauteur_pied(&self) -> f32 {
         8.0 + self.lignes_pied().len().max(1) as f32 * 9.0
     }
 
-    fn pied(&self, t: &mut Toile, page: usize, total: usize) {
+    pub(crate) fn pied(&self, t: &mut Toile, page: usize, total: usize) {
         let p = self.p;
         let haut = BAS - self.hauteur_pied();
         t.trait_horizontal(GAUCHE, DROITE, haut, BORDURE, 0.75);

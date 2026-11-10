@@ -2,7 +2,8 @@
 //!
 //! `cargo run -p kadenz-pdf --example essai_facture -- <dossier>` écrit
 //! `essai-facture.pdf` (validée), `essai-brouillon.pdf`, `essai-annulee.pdf`,
-//! `essai-devis.pdf` et `essai-avoir.pdf`.
+//! `essai-devis.pdf`, `essai-avoir.pdf`, `essai-bon-commande.pdf`,
+//! `essai-bordereau.pdf`, `essai-relance.pdf` et `essai-registre.pdf`.
 //! Deux arguments facultatifs de plus : fichiers du logo principal et du logo
 //! secondaire (PNG ou JPEG).
 //! Toutes les données sont inventées pour l'essai.
@@ -10,7 +11,8 @@
 use kadenz_domaine::calcul::{Taux, UNE_UNITE, calculer_totaux, total_ligne};
 use kadenz_domaine::lettres::{Orthographe, en_lettres_majuscule};
 use kadenz_pdf::modele::{
-    DocumentPdf, EntreprisePdf, Filigrane, LignePdf, LivraisonPdf, TextesPdf, TiersPdf,
+    ColonnePdf, DocumentPdf, EntreprisePdf, Filigrane, LettrePdf, LignePdf, ListePdf, LivraisonPdf,
+    TextesPdf, TiersPdf, TotalPdf,
 };
 use kadenz_pdf::texte::Polices;
 
@@ -242,4 +244,115 @@ fn main() {
         std::fs::write(&chemin, &octets).expect("écriture");
         println!("{} : {} octets", chemin.display(), octets.len());
     }
+
+    // Lettre de relance (J7), texte par défaut validé par l'utilisateur.
+    let relance = LettrePdf {
+        entreprise: doc.entreprise.clone(),
+        couleur: doc.couleur,
+        lieu_et_date: "Ville Fictive, le 11/06/2026".into(),
+        destinataire: doc.tiers.clone(),
+        titre: "LETTRE DE RELANCE".into(),
+        objet: "Objet : facture n° F2026-05-0001 impayée".into(),
+        avant: "Madame, Monsieur,\n\nSauf erreur ou omission de notre part, la facture \
+                n° F2026-05-0001 du 03/05/2026, arrivée à échéance le 01/06/2026, reste \
+                impayée à ce jour pour un montant de 60\u{a0}000 FCFA, soit 10 jours de retard."
+            .into(),
+        apres: "Nous vous remercions de bien vouloir procéder à son règlement dans les \
+                meilleurs délais. Si votre paiement a été effectué entre-temps, nous vous \
+                prions de ne pas tenir compte de la présente.\n\nNous vous prions \
+                d'agréer, Madame, Monsieur, l'expression de nos salutations distinguées."
+            .into(),
+        recapitulatif: [
+            ("Facture", "F2026-05-0001"),
+            ("Date", "03/05/2026"),
+            ("Échéance", "01/06/2026"),
+            ("Montant dû", "100\u{a0}000"),
+            ("Réglé", "40\u{a0}000"),
+            ("Reste dû", "60\u{a0}000"),
+        ]
+        .map(|(a, b)| (a.to_string(), b.to_string()))
+        .to_vec(),
+        signataire: "LA COMPTABILITE".into(),
+        nom_signataire: "Nom Fictif".into(),
+    };
+    let octets = kadenz_pdf::generer_lettre(&relance, &polices).expect("PDF produit");
+    let chemin = std::path::Path::new(&dossier).join("essai-relance.pdf");
+    std::fs::write(&chemin, &octets).expect("écriture");
+    println!("{} : {} octets", chemin.display(), octets.len());
+
+    // Registre des règlements (J7) : 70 lignes fictives sur deux pages.
+    let colonne = |titre: &str, largeur: f32, a_droite: bool| ColonnePdf {
+        titre: titre.into(),
+        largeur,
+        a_droite,
+    };
+    let registre = ListePdf {
+        entreprise: doc.entreprise.clone(),
+        couleur: doc.couleur,
+        titre: "REGISTRE DES RÈGLEMENTS".into(),
+        date: "11/06/2026".into(),
+        criteres: vec![
+            "Encaissements et décaissements".into(),
+            "Période : du 01/05/2026 au 31/05/2026".into(),
+        ],
+        colonnes: vec![
+            colonne("Date", 58.0, false),
+            colonne("Sens", 74.0, false),
+            colonne("Document", 80.0, false),
+            colonne("Tiers", 0.0, false),
+            colonne("Mode", 72.0, false),
+            colonne("Référence", 70.0, false),
+            colonne("Montant", 66.0, true),
+        ],
+        lignes: (0..70)
+            .map(|k| {
+                let achat = k % 4 == 0;
+                vec![
+                    format!("{:02}/05/2026", 1 + k % 30),
+                    if achat {
+                        "Décaissement"
+                    } else {
+                        "Encaissement"
+                    }
+                    .into(),
+                    if achat {
+                        format!("C2026-05-{:04}", k + 1)
+                    } else {
+                        format!("F2026-05-{:04}", k + 1)
+                    },
+                    if achat {
+                        "Fournisseur Beta"
+                    } else {
+                        "Client Alpha, établissement principal"
+                    }
+                    .into(),
+                    if k % 3 == 0 { "Chèque" } else { "Espèce" }.into(),
+                    if k % 3 == 0 {
+                        format!("CHQ {k:04}")
+                    } else {
+                        String::new()
+                    },
+                    "25\u{a0}000".into(),
+                ]
+            })
+            .collect(),
+        totaux: [
+            ("Total des encaissements", "1\u{a0}300\u{a0}000 FCFA"),
+            ("dont Chèque", "425\u{a0}000 FCFA"),
+            ("dont Espèce", "875\u{a0}000 FCFA"),
+            ("Total des décaissements", "450\u{a0}000 FCFA"),
+            ("dont Chèque", "175\u{a0}000 FCFA"),
+            ("dont Espèce", "275\u{a0}000 FCFA"),
+        ]
+        .map(|(libelle, valeur)| TotalPdf {
+            principal: libelle.starts_with("Total"),
+            libelle: libelle.into(),
+            valeur: valeur.into(),
+        })
+        .to_vec(),
+    };
+    let octets = kadenz_pdf::generer_liste(&registre, &polices).expect("PDF produit");
+    let chemin = std::path::Path::new(&dossier).join("essai-registre.pdf");
+    std::fs::write(&chemin, &octets).expect("écriture");
+    println!("{} : {} octets", chemin.display(), octets.len());
 }

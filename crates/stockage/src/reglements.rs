@@ -101,13 +101,21 @@ pub struct LigneRegistre {
     pub tiers: String,
 }
 
-/// Registre filtré, du plus ancien au plus récent, avec ses totaux.
+/// Total d'un sens (encaissements ou décaissements) dans la sélection.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Registre {
-    pub lignes: Vec<LigneRegistre>,
+pub struct TotalSens {
     pub total: Montant,
     /// Sous-total par mode de paiement, dans l'ordre alphabétique des modes.
     pub par_mode: Vec<(String, Montant)>,
+}
+
+/// Registre filtré, du plus ancien au plus récent, avec ses totaux : les
+/// encaissements et les décaissements ne s'additionnent pas.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Registre {
+    pub lignes: Vec<LigneRegistre>,
+    pub encaissements: TotalSens,
+    pub decaissements: TotalSens,
 }
 
 /// Document qui reste à payer (suivi fournisseurs, relances).
@@ -383,19 +391,23 @@ pub fn registre(conn: &Connection, filtre: &FiltreRegistre) -> Resultat<Registre
             },
         )?
         .collect::<rusqlite::Result<Vec<_>>>()?;
-    let mut par_mode: Vec<(String, Montant)> = Vec::new();
-    for l in &lignes {
-        let mode = &l.reglement.mode_paiement;
-        match par_mode.iter_mut().find(|(m, _)| m == mode) {
-            Some((_, total)) => *total += l.reglement.montant,
-            None => par_mode.push((mode.clone(), l.reglement.montant)),
+    let total_du_sens = |sens: Sens| {
+        let mut t = TotalSens::default();
+        for l in lignes.iter().filter(|l| l.sens == sens) {
+            let mode = &l.reglement.mode_paiement;
+            t.total += l.reglement.montant;
+            match t.par_mode.iter_mut().find(|(m, _)| m == mode) {
+                Some((_, total)) => *total += l.reglement.montant,
+                None => t.par_mode.push((mode.clone(), l.reglement.montant)),
+            }
         }
-    }
-    par_mode.sort_by(|a, b| a.0.cmp(&b.0));
+        t.par_mode.sort_by(|a, b| a.0.cmp(&b.0));
+        t
+    };
     Ok(Registre {
-        total: lignes.iter().map(|l| l.reglement.montant).sum(),
+        encaissements: total_du_sens(Sens::Encaissement),
+        decaissements: total_du_sens(Sens::Decaissement),
         lignes,
-        par_mode,
     })
 }
 
@@ -679,13 +691,20 @@ mod tests {
         ajouter(&mut c.conn, &admin, bc, &saisie(date(2026, 5, 4), 5_000)).unwrap();
         let tout = registre(&c.conn, &FiltreRegistre::default()).unwrap();
         assert_eq!(tout.lignes.len(), 3);
-        assert_eq!(tout.total, 35_000);
+        assert_eq!(tout.encaissements.total, 30_000);
         assert_eq!(
-            tout.par_mode,
+            tout.encaissements.par_mode,
             [
                 ("Chèque".to_string(), 20_000),
-                ("Espèce".to_string(), 15_000)
+                ("Espèce".to_string(), 10_000)
             ]
+        );
+        assert_eq!(
+            tout.decaissements,
+            TotalSens {
+                total: 5_000,
+                par_mode: vec![("Espèce".to_string(), 5_000)]
+            }
         );
         let encaissements = registre(
             &c.conn,
@@ -695,7 +714,8 @@ mod tests {
             },
         )
         .unwrap();
-        assert_eq!(encaissements.total, 30_000);
+        assert_eq!(encaissements.encaissements.total, 30_000);
+        assert_eq!(encaissements.decaissements, TotalSens::default());
         assert!(
             encaissements
                 .lignes

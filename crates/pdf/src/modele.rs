@@ -113,3 +113,61 @@ pub struct DocumentPdf {
     /// Couleur principale (bande, en-tête du tableau, titre).
     pub couleur: [u8; 3],
 }
+
+/// Lettre de relance d'une facture (section 8), textes déjà remplis.
+#[derive(Debug, Clone, Default)]
+pub struct LettrePdf {
+    pub entreprise: EntreprisePdf,
+    /// Couleur principale (bande, titre, en-tête du tableau).
+    pub couleur: [u8; 3],
+    /// Ligne de lieu et de date, déjà écrite (« Ouagadougou, le 11/06/2026 »).
+    pub lieu_et_date: String,
+    pub destinataire: TiersPdf,
+    pub titre: String,
+    pub objet: String,
+    /// Texte avant et après le tableau ; une ligne vide sépare deux paragraphes.
+    pub avant: String,
+    pub apres: String,
+    /// Tableau récapitulatif : en-têtes et valeurs, déjà écrits, dans le même ordre.
+    pub recapitulatif: Vec<(String, String)>,
+    pub signataire: String,
+    pub nom_signataire: String,
+}
+
+/// Colonne d'une liste imprimée.
+#[derive(Debug, Clone, Default)]
+pub struct ColonnePdf {
+    pub titre: String,
+    /// Largeur en points ; 0 pour se partager la place restante.
+    pub largeur: f32,
+    pub a_droite: bool,
+}
+
+/// Registre ou liste imprimée (règlements, relances) : tableau paginé, en-tête
+/// et pied de page de l'entreprise, totaux en fin de liste.
+#[derive(Debug, Clone, Default)]
+pub struct ListePdf {
+    pub entreprise: EntreprisePdf,
+    pub couleur: [u8; 3],
+    /// Titre imprimé en haut à droite, ex. « REGISTRE DES RÈGLEMENTS ».
+    pub titre: String,
+    /// Date d'édition, déjà écrite (jj/mm/aaaa).
+    pub date: String,
+    /// Critères de la sélection, une ligne chacun, en page 1.
+    pub criteres: Vec<String>,
+    pub colonnes: Vec<ColonnePdf>,
+    /// Valeurs déjà écrites, une par colonne.
+    pub lignes: Vec<Vec<String>>,
+    /// Totaux en fin de liste.
+    pub totaux: Vec<TotalPdf>,
+}
+
+/// Ligne de total d'une liste ; un total principal est mis en valeur, un
+/// sous-total (« dont ... ») ne l'est pas.
+#[derive(Debug, Clone, Default)]
+pub struct TotalPdf {
+    pub libelle: String,
+    /// Valeur déjà écrite.
+    pub valeur: String,
+    pub principal: bool,
+}
