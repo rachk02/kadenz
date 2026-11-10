@@ -15,7 +15,7 @@
 | 2.9 | 2026-11-09 | krilla retenue ; données de l'entreprise, textes et couleur figés à la validation ; textes par défaut repris de l'Excel (section 12) ; changement de compteur de numérotation laissé libre, avec mise en garde |
 | 2.10 | 2026-11-09 | J4 livré : aperçu et export PDF depuis l'écran Factures, textes imprimés, couleur et dossiers d'export réglables dans Paramètres (section 12, périmètre de J4) ; mise en page de droite à gauche en arabe (section 13) |
 | 2.11 | 2026-11-09 | Décisions J5 : devis ou proforma converti à la validation de la facture, avoir aux lignes reprises plafonné au TTC de la facture, facture couverte par ses avoirs inchangée, entrée de menu Avoirs ; règles de refus des documents liés ; état « Payé » pour un montant dû nul (sections 6.7, 7.1, 7.7 et 8) |
-| 2.12 | 2026-11-10 | J5 livré : devis, proformas et avoirs dans la fiche commune, conversion en facture, duplication et correction, documents liés, PDF des devis, proformas et avoirs (« Validité » à la place de « Échéance »), raccourcis clavier et création rapide d'un client (section 19, périmètre de J5) |
+| 2.12 | 2026-11-10 | J5 livré : devis, proformas et avoirs dans la fiche commune, conversion en facture, duplication et correction, documents liés, PDF des devis, proformas et avoirs (« Validité » à la place de « Échéance »), raccourcis clavier précisés (section 4.1) et création rapide d'un client (section 19, périmètre de J5) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -112,7 +112,7 @@ Cette modularité est une modularité de configuration et de code (crates, modul
 - Assistant de premier lancement, dans l'ordre : clé de licence, fiche entreprise, compte Admin, taux et modes de paiement, import facultatif des produits et des tiers.
 - Chaque type de document a deux écrans : Liste (registre) et Fiche (création, consultation), comme « Création / Liste » dans l'Excel.
 - Chaque liste se filtre (numéro, tiers, période, statut, état de paiement) et se trie par colonne. Colonnes : celles de l'Excel (n°, date, tiers, montant TTC, état de paiement, mode de paiement, document), plus le statut.
-- Raccourcis clavier : Ctrl+N nouveau, Ctrl+S enregistrer, Ctrl+P imprimer, Ctrl+F rechercher.
+- Raccourcis clavier : Ctrl+N nouveau, Ctrl+S enregistrer, Ctrl+P imprimer, Ctrl+F rechercher. Livrés en J5 dans les pages des documents de vente (Devis, Proformas, Factures, Avoirs) : Ctrl+N crée un document depuis le registre seulement, jamais depuis une fiche ouverte, pour ne pas perdre une saisie en cours ; Ctrl+S agit comme le bouton d'enregistrement affiché ; Ctrl+P exporte le PDF d'un document déjà enregistré ; Ctrl+F place le curseur dans la recherche du registre.
 - Écran « À propos » accessible depuis la navigation, avec l'attribution Slint (section 14).
 
 ### 4.2 Fiche document (spécifié)
