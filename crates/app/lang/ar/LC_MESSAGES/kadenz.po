@@ -1889,3 +1889,48 @@ msgstr "للنوعين «{}» و«{}» البادئة نفسها «{}»"
 
 msgid "le nombre de chiffres du rang doit être compris entre {} et {}"
 msgstr "يجب أن يكون عدد أرقام الرقم التسلسلي بين {} و{}"
+
+msgid "Règlements"
+msgstr "المدفوعات"
+
+msgid "Suivi fournisseurs"
+msgstr "متابعة الموردين"
+
+msgid "Relances"
+msgstr "التذكيرات"
+
+msgid "le règlement dépasse le reste à payer ({} FCFA)"
+msgstr "الدفعة تتجاوز المبلغ المتبقي ({} FCFA)"
+
+msgid "la date du règlement ne peut pas précéder celle du document ({})"
+msgstr "لا يمكن أن يسبق تاريخ الدفعة تاريخ المستند ({})"
+
+msgid "seuls une facture ou un bon de commande reçoivent des règlements"
+msgstr "لا يتلقى الدفعات إلا فاتورة أو أمر شراء"
+
+msgid "un règlement se saisit sur un document validé et non annulé"
+msgstr "تُسجَّل الدفعة على مستند معتمد وغير ملغى"
+
+msgid "la date du règlement ne peut pas être dans le futur"
+msgstr "لا يمكن أن يكون تاريخ الدفعة في المستقبل"
+
+msgid "le mode de paiement du règlement est obligatoire"
+msgstr "طريقة الدفع إلزامية"
+
+msgid "ce règlement n'existe plus"
+msgstr "هذه الدفعة لم تعد موجودة"
+
+msgid "ce document a des règlements : les supprimer d'abord"
+msgstr "لهذا المستند دفعات: احذفها أولًا"
+
+msgid "Règlement de {} FCFA enregistré"
+msgstr "تم تسجيل دفعة بقيمة {} FCFA"
+
+msgid "Règlement de {} FCFA supprimé"
+msgstr "تم حذف دفعة بقيمة {} FCFA"
+
+msgid "Règlement enregistré"
+msgstr "تم تسجيل الدفعة"
+
+msgid "Règlement supprimé"
+msgstr "تم حذف الدفعة"

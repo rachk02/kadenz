@@ -1889,3 +1889,48 @@ msgstr "los tipos «{}» y «{}» tienen el mismo prefijo «{}»"
 
 msgid "le nombre de chiffres du rang doit être compris entre {} et {}"
 msgstr "el número de cifras del número correlativo debe estar entre {} y {}"
+
+msgid "Règlements"
+msgstr "Pagos"
+
+msgid "Suivi fournisseurs"
+msgstr "Seguimiento de proveedores"
+
+msgid "Relances"
+msgstr "Recordatorios"
+
+msgid "le règlement dépasse le reste à payer ({} FCFA)"
+msgstr "el pago supera el saldo pendiente ({} FCFA)"
+
+msgid "la date du règlement ne peut pas précéder celle du document ({})"
+msgstr "la fecha del pago no puede ser anterior a la del documento ({})"
+
+msgid "seuls une facture ou un bon de commande reçoivent des règlements"
+msgstr "solo una factura o una orden de compra reciben pagos"
+
+msgid "un règlement se saisit sur un document validé et non annulé"
+msgstr "un pago se registra en un documento validado y no anulado"
+
+msgid "la date du règlement ne peut pas être dans le futur"
+msgstr "la fecha del pago no puede ser futura"
+
+msgid "le mode de paiement du règlement est obligatoire"
+msgstr "el modo de pago es obligatorio"
+
+msgid "ce règlement n'existe plus"
+msgstr "este pago ya no existe"
+
+msgid "ce document a des règlements : les supprimer d'abord"
+msgstr "este documento tiene pagos: elimínelos primero"
+
+msgid "Règlement de {} FCFA enregistré"
+msgstr "Pago de {} FCFA registrado"
+
+msgid "Règlement de {} FCFA supprimé"
+msgstr "Pago de {} FCFA eliminado"
+
+msgid "Règlement enregistré"
+msgstr "Pago registrado"
+
+msgid "Règlement supprimé"
+msgstr "Pago eliminado"

@@ -117,6 +117,9 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
             Page::Livraisons,
             Page::Factures,
             Page::Avoirs,
+            Page::Reglements,
+            Page::SuiviFournisseurs,
+            Page::Relances,
             Page::Tiers,
             Page::Produits,
         ]);

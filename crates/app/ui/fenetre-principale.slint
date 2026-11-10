@@ -1,4 +1,4 @@
-import { AboutSlint, ComboBox } from "std-widgets.slint";
+import { AboutSlint, ComboBox, ScrollView } from "std-widgets.slint";
 import { Bouton, Champ, Droits, ElementNavigation, MessageErreur, Rangee, Section, Theme, Titre } from "composants.slint";
 import { EcranAssistant, DonneesAssistant } from "assistant.slint";
 import { EcranConnexion } from "connexion.slint";
@@ -22,6 +22,9 @@ export enum Page {
     livraisons,
     factures,
     avoirs,
+    reglements,
+    suivi-fournisseurs,
+    relances,
     tiers,
     produits,
     entreprise,
@@ -190,6 +193,9 @@ export component FenetrePrincipale inherits Window {
         if (p == Page.livraisons) { return @tr("Livraisons"); }
         if (p == Page.factures) { return @tr("Factures"); }
         if (p == Page.avoirs) { return @tr("Avoirs"); }
+        if (p == Page.reglements) { return @tr("Règlements"); }
+        if (p == Page.suivi-fournisseurs) { return @tr("Suivi fournisseurs"); }
+        if (p == Page.relances) { return @tr("Relances"); }
         if (p == Page.tiers) { return @tr("Tiers"); }
         if (p == Page.produits) { return @tr("Produits"); }
         if (p == Page.entreprise) { return @tr("Entreprise"); }
@@ -208,6 +214,9 @@ export component FenetrePrincipale inherits Window {
         if (p == Page.livraisons) { return @image-url("icones/menu/livraisons.svg"); }
         if (p == Page.factures) { return @image-url("icones/menu/factures.svg"); }
         if (p == Page.avoirs) { return @image-url("icones/menu/avoirs.svg"); }
+        if (p == Page.reglements) { return @image-url("icones/menu/reglements.svg"); }
+        if (p == Page.suivi-fournisseurs) { return @image-url("icones/menu/suivi-fournisseurs.svg"); }
+        if (p == Page.relances) { return @image-url("icones/menu/relances.svg"); }
         if (p == Page.tiers) { return @image-url("icones/menu/tiers.svg"); }
         if (p == Page.produits) { return @image-url("icones/menu/produits.svg"); }
         if (p == Page.entreprise) { return @image-url("icones/menu/entreprise.svg"); }
@@ -283,16 +292,24 @@ export component FenetrePrincipale inherits Window {
                     height: 8px;
                 }
 
-                for element in root.menu: ElementNavigation {
-                    libelle: root.libelle-page(element);
-                    icone: root.icone-page(element);
-                    actif: root.page == element;
-                    clique => {
-                        root.page = element;
+                // Le menu défile quand la fenêtre est trop basse pour toutes ses entrées.
+                ScrollView {
+                    vertical-stretch: 1;
+
+                    VerticalLayout {
+                        alignment: start;
+                        spacing: 4px;
+
+                        for element in root.menu: ElementNavigation {
+                            libelle: root.libelle-page(element);
+                            icone: root.icone-page(element);
+                            actif: root.page == element;
+                            clique => {
+                                root.page = element;
+                            }
+                        }
                     }
                 }
-
-                Rectangle { }
 
                 Text {
                     horizontal-alignment: Theme.debut;

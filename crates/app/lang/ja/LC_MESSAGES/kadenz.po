@@ -1889,3 +1889,48 @@ msgstr "種類「{}」と「{}」の接頭辞が同じ「{}」です"
 
 msgid "le nombre de chiffres du rang doit être compris entre {} et {}"
 msgstr "連番の桁数は {}～{} の範囲にしてください"
+
+msgid "Règlements"
+msgstr "入出金"
+
+msgid "Suivi fournisseurs"
+msgstr "仕入先の支払管理"
+
+msgid "Relances"
+msgstr "督促"
+
+msgid "le règlement dépasse le reste à payer ({} FCFA)"
+msgstr "入出金額が残額（{} FCFA）を超えています"
+
+msgid "la date du règlement ne peut pas précéder celle du document ({})"
+msgstr "入出金日は書類の日付（{}）より前にできません"
+
+msgid "seuls une facture ou un bon de commande reçoivent des règlements"
+msgstr "入出金を記録できるのは請求書か注文書のみです"
+
+msgid "un règlement se saisit sur un document validé et non annulé"
+msgstr "入出金は確定済みで取り消されていない書類に記録します"
+
+msgid "la date du règlement ne peut pas être dans le futur"
+msgstr "入出金日を未来の日付にすることはできません"
+
+msgid "le mode de paiement du règlement est obligatoire"
+msgstr "支払方法は必須です"
+
+msgid "ce règlement n'existe plus"
+msgstr "この入出金はもう存在しません"
+
+msgid "ce document a des règlements : les supprimer d'abord"
+msgstr "この書類には入出金があります。先に削除してください"
+
+msgid "Règlement de {} FCFA enregistré"
+msgstr "{} FCFA の入出金を記録"
+
+msgid "Règlement de {} FCFA supprimé"
+msgstr "{} FCFA の入出金を削除"
+
+msgid "Règlement enregistré"
+msgstr "入出金を記録"
+
+msgid "Règlement supprimé"
+msgstr "入出金を削除"

@@ -1889,3 +1889,48 @@ msgstr "类型“{}”与“{}”的前缀相同：“{}”"
 
 msgid "le nombre de chiffres du rang doit être compris entre {} et {}"
 msgstr "序号的位数必须介于 {} 与 {} 之间"
+
+msgid "Règlements"
+msgstr "收付款"
+
+msgid "Suivi fournisseurs"
+msgstr "供应商跟踪"
+
+msgid "Relances"
+msgstr "催款"
+
+msgid "le règlement dépasse le reste à payer ({} FCFA)"
+msgstr "收付款金额超过剩余应付金额（{} FCFA）"
+
+msgid "la date du règlement ne peut pas précéder celle du document ({})"
+msgstr "收付款日期不能早于单据日期（{}）"
+
+msgid "seuls une facture ou un bon de commande reçoivent des règlements"
+msgstr "只有发票或采购订单可以登记收付款"
+
+msgid "un règlement se saisit sur un document validé et non annulé"
+msgstr "收付款需登记在已确认且未作废的单据上"
+
+msgid "la date du règlement ne peut pas être dans le futur"
+msgstr "收付款日期不能晚于今天"
+
+msgid "le mode de paiement du règlement est obligatoire"
+msgstr "付款方式为必填项"
+
+msgid "ce règlement n'existe plus"
+msgstr "此收付款已不存在"
+
+msgid "ce document a des règlements : les supprimer d'abord"
+msgstr "此单据已有收付款：请先删除"
+
+msgid "Règlement de {} FCFA enregistré"
+msgstr "已登记 {} FCFA 的收付款"
+
+msgid "Règlement de {} FCFA supprimé"
+msgstr "已删除 {} FCFA 的收付款"
+
+msgid "Règlement enregistré"
+msgstr "已登记收付款"
+
+msgid "Règlement supprimé"
+msgstr "已删除收付款"

@@ -1889,3 +1889,48 @@ msgstr "\"{}\" ve \"{}\" türleri aynı \"{}\" önekine sahip"
 
 msgid "le nombre de chiffres du rang doit être compris entre {} et {}"
 msgstr "sıra numarasının basamak sayısı {} ile {} arasında olmalıdır"
+
+msgid "Règlements"
+msgstr "Ödemeler"
+
+msgid "Suivi fournisseurs"
+msgstr "Tedarikçi takibi"
+
+msgid "Relances"
+msgstr "Hatırlatmalar"
+
+msgid "le règlement dépasse le reste à payer ({} FCFA)"
+msgstr "ödeme kalan tutarı ({} FCFA) aşıyor"
+
+msgid "la date du règlement ne peut pas précéder celle du document ({})"
+msgstr "ödeme tarihi belge tarihinden ({}) önce olamaz"
+
+msgid "seuls une facture ou un bon de commande reçoivent des règlements"
+msgstr "yalnızca bir fatura veya sipariş formu ödeme alabilir"
+
+msgid "un règlement se saisit sur un document validé et non annulé"
+msgstr "ödeme, onaylanmış ve iptal edilmemiş bir belgeye girilir"
+
+msgid "la date du règlement ne peut pas être dans le futur"
+msgstr "ödeme tarihi gelecekte olamaz"
+
+msgid "le mode de paiement du règlement est obligatoire"
+msgstr "ödeme yöntemi zorunludur"
+
+msgid "ce règlement n'existe plus"
+msgstr "bu ödeme artık mevcut değil"
+
+msgid "ce document a des règlements : les supprimer d'abord"
+msgstr "bu belgenin ödemeleri var: önce bunları silin"
+
+msgid "Règlement de {} FCFA enregistré"
+msgstr "{} FCFA tutarında ödeme kaydedildi"
+
+msgid "Règlement de {} FCFA supprimé"
+msgstr "{} FCFA tutarında ödeme silindi"
+
+msgid "Règlement enregistré"
+msgstr "Ödeme kaydedildi"
+
+msgid "Règlement supprimé"
+msgstr "Ödeme silindi"

@@ -1889,3 +1889,48 @@ msgstr "types \"{}\" and \"{}\" have the same prefix \"{}\""
 
 msgid "le nombre de chiffres du rang doit être compris entre {} et {}"
 msgstr "the number of digits in the sequence number must be between {} and {}"
+
+msgid "Règlements"
+msgstr "Payments"
+
+msgid "Suivi fournisseurs"
+msgstr "Supplier follow-up"
+
+msgid "Relances"
+msgstr "Reminders"
+
+msgid "le règlement dépasse le reste à payer ({} FCFA)"
+msgstr "the payment exceeds the amount left to pay ({} FCFA)"
+
+msgid "la date du règlement ne peut pas précéder celle du document ({})"
+msgstr "the payment date cannot be earlier than the document date ({})"
+
+msgid "seuls une facture ou un bon de commande reçoivent des règlements"
+msgstr "only an invoice or a purchase order can receive payments"
+
+msgid "un règlement se saisit sur un document validé et non annulé"
+msgstr "a payment is entered on a validated, non-cancelled document"
+
+msgid "la date du règlement ne peut pas être dans le futur"
+msgstr "the payment date cannot be in the future"
+
+msgid "le mode de paiement du règlement est obligatoire"
+msgstr "the payment method is required"
+
+msgid "ce règlement n'existe plus"
+msgstr "this payment no longer exists"
+
+msgid "ce document a des règlements : les supprimer d'abord"
+msgstr "this document has payments: delete them first"
+
+msgid "Règlement de {} FCFA enregistré"
+msgstr "Payment of {} FCFA recorded"
+
+msgid "Règlement de {} FCFA supprimé"
+msgstr "Payment of {} FCFA deleted"
+
+msgid "Règlement enregistré"
+msgstr "Payment recorded"
+
+msgid "Règlement supprimé"
+msgstr "Payment deleted"
