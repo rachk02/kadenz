@@ -804,6 +804,7 @@ fn lignes_saisies(e: &EditionFacture) -> Result<Vec<LigneSaisie>, String> {
                 prix,
                 quantite,
                 observations: String::new(),
+                ..Default::default()
             })
         })
         .collect()
@@ -1205,6 +1206,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 prix: p.fiche.prix,
                 quantite: kadenz_domaine::calcul::UNE_UNITE,
                 observations: String::new(),
+                ..Default::default()
             }));
         }
     });
