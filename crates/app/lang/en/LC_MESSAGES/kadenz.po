@@ -1934,3 +1934,63 @@ msgstr "Payment recorded"
 
 msgid "Règlement supprimé"
 msgstr "Payment deleted"
+
+msgid "Montant dû : {} FCFA"
+msgstr "Amount due: {} FCFA"
+
+msgid "Réglé : {} FCFA"
+msgstr "Paid: {} FCFA"
+
+msgid "Reste à payer : {} FCFA"
+msgstr "Left to pay: {} FCFA"
+
+msgid "Montant"
+msgstr "Amount"
+
+msgid "Saisi par"
+msgstr "Entered by"
+
+msgid "Supprimer"
+msgstr "Delete"
+
+msgid "Supprimer ce règlement ? La suppression est inscrite dans l'historique du document, avec son montant."
+msgstr "Delete this payment? The deletion is recorded in the document history, with its amount."
+
+msgid "Date du règlement (JJ/MM/AAAA)"
+msgstr "Payment date (DD/MM/YYYY)"
+
+msgid "Montant (FCFA)"
+msgstr "Amount (FCFA)"
+
+msgid "Référence (facultative)"
+msgstr "Reference (optional)"
+
+msgid "Enregistrer le règlement"
+msgstr "Record the payment"
+
+msgid "date du règlement illisible : saisir la date au format JJ/MM/AAAA"
+msgstr "unreadable payment date: enter the date as DD/MM/YYYY"
+
+msgid "montant du règlement illisible : saisir un montant entier en FCFA"
+msgstr "unreadable payment amount: enter a whole amount in FCFA"
+
+msgid "choisir le mode de paiement du règlement"
+msgstr "choose the payment method"
+
+msgid "règlement enregistré"
+msgstr "payment recorded"
+
+msgid "règlement supprimé"
+msgstr "payment deleted"
+
+msgid "le titre de la lettre de relance est obligatoire"
+msgstr "the reminder letter title is required"
+
+msgid "le texte de la lettre de relance est obligatoire"
+msgstr "the reminder letter text is required"
+
+msgid "cette facture n'est pas échue ou ne reste pas à payer : pas de relance"
+msgstr "this invoice is not overdue or has nothing left to pay: no reminder"
+
+msgid "le texte de la lettre de relance ne tient pas sur une page : le raccourcir dans les paramètres"
+msgstr "the reminder letter text does not fit on one page: shorten it in the settings"

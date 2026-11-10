@@ -1934,3 +1934,63 @@ msgstr "Ödeme kaydedildi"
 
 msgid "Règlement supprimé"
 msgstr "Ödeme silindi"
+
+msgid "Montant dû : {} FCFA"
+msgstr "Borç tutarı: {} FCFA"
+
+msgid "Réglé : {} FCFA"
+msgstr "Ödenen: {} FCFA"
+
+msgid "Reste à payer : {} FCFA"
+msgstr "Kalan: {} FCFA"
+
+msgid "Montant"
+msgstr "Tutar"
+
+msgid "Saisi par"
+msgstr "Giren"
+
+msgid "Supprimer"
+msgstr "Sil"
+
+msgid "Supprimer ce règlement ? La suppression est inscrite dans l'historique du document, avec son montant."
+msgstr "Bu ödeme silinsin mi? Silme işlemi, tutarıyla birlikte belgenin geçmişine kaydedilir."
+
+msgid "Date du règlement (JJ/MM/AAAA)"
+msgstr "Ödeme tarihi (GG/AA/YYYY)"
+
+msgid "Montant (FCFA)"
+msgstr "Tutar (FCFA)"
+
+msgid "Référence (facultative)"
+msgstr "Referans (isteğe bağlı)"
+
+msgid "Enregistrer le règlement"
+msgstr "Ödemeyi kaydet"
+
+msgid "date du règlement illisible : saisir la date au format JJ/MM/AAAA"
+msgstr "ödeme tarihi okunamıyor: tarihi GG/AA/YYYY biçiminde girin"
+
+msgid "montant du règlement illisible : saisir un montant entier en FCFA"
+msgstr "ödeme tutarı okunamıyor: FCFA cinsinden tam sayı bir tutar girin"
+
+msgid "choisir le mode de paiement du règlement"
+msgstr "ödeme yöntemini seçin"
+
+msgid "règlement enregistré"
+msgstr "ödeme kaydedildi"
+
+msgid "règlement supprimé"
+msgstr "ödeme silindi"
+
+msgid "le titre de la lettre de relance est obligatoire"
+msgstr "hatırlatma mektubunun başlığı zorunludur"
+
+msgid "le texte de la lettre de relance est obligatoire"
+msgstr "hatırlatma mektubunun metni zorunludur"
+
+msgid "cette facture n'est pas échue ou ne reste pas à payer : pas de relance"
+msgstr "bu fatura vadesi geçmemiş veya ödenecek tutarı kalmamış: hatırlatma yok"
+
+msgid "le texte de la lettre de relance ne tient pas sur une page : le raccourcir dans les paramètres"
+msgstr "hatırlatma mektubunun metni tek sayfaya sığmıyor: ayarlardan kısaltın"

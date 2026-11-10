@@ -1934,3 +1934,63 @@ msgstr "تم تسجيل الدفعة"
 
 msgid "Règlement supprimé"
 msgstr "تم حذف الدفعة"
+
+msgid "Montant dû : {} FCFA"
+msgstr "المبلغ المستحق: {} FCFA"
+
+msgid "Réglé : {} FCFA"
+msgstr "المدفوع: {} FCFA"
+
+msgid "Reste à payer : {} FCFA"
+msgstr "المتبقي للدفع: {} FCFA"
+
+msgid "Montant"
+msgstr "المبلغ"
+
+msgid "Saisi par"
+msgstr "أدخله"
+
+msgid "Supprimer"
+msgstr "حذف"
+
+msgid "Supprimer ce règlement ? La suppression est inscrite dans l'historique du document, avec son montant."
+msgstr "حذف هذه الدفعة؟ يُسجَّل الحذف في السجل التاريخي للمستند مع مبلغها."
+
+msgid "Date du règlement (JJ/MM/AAAA)"
+msgstr "تاريخ الدفعة (يوم/شهر/سنة)"
+
+msgid "Montant (FCFA)"
+msgstr "المبلغ (FCFA)"
+
+msgid "Référence (facultative)"
+msgstr "المرجع (اختياري)"
+
+msgid "Enregistrer le règlement"
+msgstr "تسجيل الدفعة"
+
+msgid "date du règlement illisible : saisir la date au format JJ/MM/AAAA"
+msgstr "تاريخ الدفعة غير مقروء: أدخل التاريخ بصيغة يوم/شهر/سنة"
+
+msgid "montant du règlement illisible : saisir un montant entier en FCFA"
+msgstr "مبلغ الدفعة غير مقروء: أدخل مبلغًا صحيحًا بالفرنك الأفريقي FCFA"
+
+msgid "choisir le mode de paiement du règlement"
+msgstr "اختر طريقة الدفع"
+
+msgid "règlement enregistré"
+msgstr "تم تسجيل الدفعة"
+
+msgid "règlement supprimé"
+msgstr "تم حذف الدفعة"
+
+msgid "le titre de la lettre de relance est obligatoire"
+msgstr "عنوان رسالة التذكير إلزامي"
+
+msgid "le texte de la lettre de relance est obligatoire"
+msgstr "نص رسالة التذكير إلزامي"
+
+msgid "cette facture n'est pas échue ou ne reste pas à payer : pas de relance"
+msgstr "هذه الفاتورة غير مستحقة أو لم يبقَ عليها مبلغ: لا تذكير"
+
+msgid "le texte de la lettre de relance ne tient pas sur une page : le raccourcir dans les paramètres"
+msgstr "نص رسالة التذكير لا يتسع في صفحة واحدة: اختصره في الإعدادات"

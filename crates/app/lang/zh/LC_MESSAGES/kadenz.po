@@ -1934,3 +1934,63 @@ msgstr "已登记收付款"
 
 msgid "Règlement supprimé"
 msgstr "已删除收付款"
+
+msgid "Montant dû : {} FCFA"
+msgstr "应付金额：{} FCFA"
+
+msgid "Réglé : {} FCFA"
+msgstr "已付：{} FCFA"
+
+msgid "Reste à payer : {} FCFA"
+msgstr "剩余应付：{} FCFA"
+
+msgid "Montant"
+msgstr "金额"
+
+msgid "Saisi par"
+msgstr "录入人"
+
+msgid "Supprimer"
+msgstr "删除"
+
+msgid "Supprimer ce règlement ? La suppression est inscrite dans l'historique du document, avec son montant."
+msgstr "删除此收付款？删除操作将连同金额记入单据历史。"
+
+msgid "Date du règlement (JJ/MM/AAAA)"
+msgstr "收付款日期（DD/MM/YYYY）"
+
+msgid "Montant (FCFA)"
+msgstr "金额（FCFA）"
+
+msgid "Référence (facultative)"
+msgstr "参考号（选填）"
+
+msgid "Enregistrer le règlement"
+msgstr "登记收付款"
+
+msgid "date du règlement illisible : saisir la date au format JJ/MM/AAAA"
+msgstr "收付款日期无法识别：请按 DD/MM/YYYY 格式输入"
+
+msgid "montant du règlement illisible : saisir un montant entier en FCFA"
+msgstr "收付款金额无法识别：请输入以 FCFA 计的整数金额"
+
+msgid "choisir le mode de paiement du règlement"
+msgstr "请选择付款方式"
+
+msgid "règlement enregistré"
+msgstr "收付款已登记"
+
+msgid "règlement supprimé"
+msgstr "收付款已删除"
+
+msgid "le titre de la lettre de relance est obligatoire"
+msgstr "催款函标题为必填项"
+
+msgid "le texte de la lettre de relance est obligatoire"
+msgstr "催款函正文为必填项"
+
+msgid "cette facture n'est pas échue ou ne reste pas à payer : pas de relance"
+msgstr "此发票未到期或已无剩余应付：无需催款"
+
+msgid "le texte de la lettre de relance ne tient pas sur une page : le raccourcir dans les paramètres"
+msgstr "催款函正文超过一页：请在设置中缩短"

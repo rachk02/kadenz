@@ -1934,3 +1934,63 @@ msgstr "Pago registrado"
 
 msgid "Règlement supprimé"
 msgstr "Pago eliminado"
+
+msgid "Montant dû : {} FCFA"
+msgstr "Importe adeudado: {} FCFA"
+
+msgid "Réglé : {} FCFA"
+msgstr "Pagado: {} FCFA"
+
+msgid "Reste à payer : {} FCFA"
+msgstr "Saldo pendiente: {} FCFA"
+
+msgid "Montant"
+msgstr "Importe"
+
+msgid "Saisi par"
+msgstr "Registrado por"
+
+msgid "Supprimer"
+msgstr "Eliminar"
+
+msgid "Supprimer ce règlement ? La suppression est inscrite dans l'historique du document, avec son montant."
+msgstr "¿Eliminar este pago? La eliminación queda registrada en el historial del documento, con su importe."
+
+msgid "Date du règlement (JJ/MM/AAAA)"
+msgstr "Fecha del pago (DD/MM/AAAA)"
+
+msgid "Montant (FCFA)"
+msgstr "Importe (FCFA)"
+
+msgid "Référence (facultative)"
+msgstr "Referencia (opcional)"
+
+msgid "Enregistrer le règlement"
+msgstr "Registrar el pago"
+
+msgid "date du règlement illisible : saisir la date au format JJ/MM/AAAA"
+msgstr "fecha del pago ilegible: introduzca la fecha con el formato DD/MM/AAAA"
+
+msgid "montant du règlement illisible : saisir un montant entier en FCFA"
+msgstr "importe del pago ilegible: introduzca un importe entero en FCFA"
+
+msgid "choisir le mode de paiement du règlement"
+msgstr "elija el modo de pago"
+
+msgid "règlement enregistré"
+msgstr "pago registrado"
+
+msgid "règlement supprimé"
+msgstr "pago eliminado"
+
+msgid "le titre de la lettre de relance est obligatoire"
+msgstr "el título de la carta de recordatorio es obligatorio"
+
+msgid "le texte de la lettre de relance est obligatoire"
+msgstr "el texto de la carta de recordatorio es obligatorio"
+
+msgid "cette facture n'est pas échue ou ne reste pas à payer : pas de relance"
+msgstr "esta factura no está vencida o no tiene saldo pendiente: sin recordatorio"
+
+msgid "le texte de la lettre de relance ne tient pas sur une page : le raccourcir dans les paramètres"
+msgstr "el texto de la carta de recordatorio no cabe en una página: acórtelo en los parámetros"

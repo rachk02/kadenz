@@ -1934,3 +1934,63 @@ msgstr "入出金を記録"
 
 msgid "Règlement supprimé"
 msgstr "入出金を削除"
+
+msgid "Montant dû : {} FCFA"
+msgstr "支払うべき金額：{} FCFA"
+
+msgid "Réglé : {} FCFA"
+msgstr "支払済：{} FCFA"
+
+msgid "Reste à payer : {} FCFA"
+msgstr "残額：{} FCFA"
+
+msgid "Montant"
+msgstr "金額"
+
+msgid "Saisi par"
+msgstr "入力者"
+
+msgid "Supprimer"
+msgstr "削除"
+
+msgid "Supprimer ce règlement ? La suppression est inscrite dans l'historique du document, avec son montant."
+msgstr "この入出金を削除しますか？削除は金額とともに書類の履歴に記録されます。"
+
+msgid "Date du règlement (JJ/MM/AAAA)"
+msgstr "入出金日（DD/MM/YYYY）"
+
+msgid "Montant (FCFA)"
+msgstr "金額（FCFA）"
+
+msgid "Référence (facultative)"
+msgstr "参照番号（任意）"
+
+msgid "Enregistrer le règlement"
+msgstr "入出金を記録"
+
+msgid "date du règlement illisible : saisir la date au format JJ/MM/AAAA"
+msgstr "入出金日を読み取れません。DD/MM/YYYYの形式で入力してください"
+
+msgid "montant du règlement illisible : saisir un montant entier en FCFA"
+msgstr "入出金額を読み取れません。FCFA の整数で入力してください"
+
+msgid "choisir le mode de paiement du règlement"
+msgstr "支払方法を選んでください"
+
+msgid "règlement enregistré"
+msgstr "入出金を記録しました"
+
+msgid "règlement supprimé"
+msgstr "入出金を削除しました"
+
+msgid "le titre de la lettre de relance est obligatoire"
+msgstr "督促状のタイトルは必須です"
+
+msgid "le texte de la lettre de relance est obligatoire"
+msgstr "督促状の本文は必須です"
+
+msgid "cette facture n'est pas échue ou ne reste pas à payer : pas de relance"
+msgstr "この請求書は期限前か残額がありません。督促はできません"
+
+msgid "le texte de la lettre de relance ne tient pas sur une page : le raccourcir dans les paramètres"
+msgstr "督促状の本文が 1 ページに収まりません。設定で短くしてください"

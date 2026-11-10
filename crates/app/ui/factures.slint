@@ -83,6 +83,18 @@ export struct FicheFactureUi {
     avoir-possible: bool,
     // Montant dû diminué des avoirs validés ; vide s'il vaut le TTC.
     montant-du: string,
+    // Règlements : section affichée pour une facture ou un bon de commande en
+    // vigueur ; saisie et suppression au droit « Saisir un règlement ».
+    avec-reglements: bool,
+    peut-saisir-reglement: bool,
+    du-reglements: string,
+    regle: string,
+    reste-a-payer: string,
+    // Saisie proposée : date du jour, reste à payer, mode du document s'il est
+    // dans la liste des Paramètres.
+    reglement-date: string,
+    reglement-montant: string,
+    reglement-mode-index: int,
     // Devis ou proforma dont la facture issue de la conversion est encore en brouillon.
     en-preparation: bool,
     // Explication affichée sous les actions quand la fiche n'est pas modifiable
@@ -124,6 +136,16 @@ export struct TotauxUi {
     retenue: string,
     ttc: string,
     lettres: string,
+}
+
+// Règlement d'une facture (encaissement) ou d'un bon de commande (décaissement).
+export struct ReglementUi {
+    id: int,
+    date: string,
+    montant: string,
+    mode: string,
+    reference: string,
+    auteur: string,
 }
 
 export struct EvenementUi {
@@ -174,6 +196,9 @@ export global FacturesApi {
     in property <[LigneFactureUi]> lignes;
     in property <TotauxUi> totaux;
     in property <[EvenementUi]> historique;
+    in property <[ReglementUi]> reglements;
+    // Modes des Paramètres, sans « Non précisé » : un règlement a toujours un mode.
+    in property <[string]> modes-reglement;
     in property <[LienUi]> liens;
     // Message à afficher à l'ouverture d'une fiche dans une autre page (document
     // créé d'un autre type) ; la fiche le reprend puis le vide.
@@ -198,6 +223,8 @@ export global FacturesApi {
     callback marquer-envoye() -> Retour;
     // Réception d'un bon de commande : quantités reçues cumulées lues sur les lignes.
     callback enregistrer-reception() -> Retour;
+    callback ajouter-reglement(date: string, montant: string, mode: int, reference: string) -> Retour;
+    callback supprimer-reglement(id: int) -> Retour;
     // Bordereau : création depuis la facture affichée ; visas, dates et observations
     // d'un bordereau validé ; confirmation de la livraison (visas enregistrés d'abord).
     callback creer-bordereau() -> Retour;
@@ -432,6 +459,14 @@ component Fiche inherits ScrollView {
     property <string> visa-fournisseur;
     property <string> date-livraison;
     property <string> date-reception;
+    // Saisie d'un règlement, règlement dont la suppression attend confirmation
+    // (0 aucun) et message propre à la section, affiché sous elle.
+    property <string> reglement-date;
+    property <string> reglement-montant;
+    property <int> reglement-mode;
+    property <string> reglement-reference;
+    property <int> reglement-a-supprimer;
+    property <Retour> retour-reglement;
     // 0 aucune, 1 valider, 2 annuler, 3 supprimer, 4 corriger, 5 confirmer la livraison.
     property <int> confirmation: 0;
     property <int> version-chargee: -1;
@@ -458,6 +493,11 @@ component Fiche inherits ScrollView {
         root.visa-fournisseur = f.visa-fournisseur;
         root.date-livraison = f.date-livraison;
         root.date-reception = f.date-reception;
+        root.reglement-date = f.reglement-date;
+        root.reglement-montant = f.reglement-montant;
+        root.reglement-mode = f.reglement-mode-index;
+        root.reglement-reference = "";
+        root.reglement-a-supprimer = 0;
     }
 
     function saisie() -> FicheFactureUi {
@@ -1468,6 +1508,207 @@ component Fiche inherits ScrollView {
             text: root.fiche.note;
             color: Theme.texte-secondaire;
             wrap: word-wrap;
+        }
+
+        // Règlements : situation, liste, suppression confirmée sur place, saisie.
+        if root.fiche.avec-reglements: Section {
+            text: @tr("Règlements");
+        }
+
+        if root.fiche.avec-reglements: Rangee {
+            alignment: start;
+            spacing: 32px;
+
+            Text {
+                text: @tr("Montant dû : {} FCFA", root.fiche.du-reglements);
+                color: Theme.texte;
+            }
+
+            Text {
+                text: @tr("Réglé : {} FCFA", root.fiche.regle);
+                color: Theme.texte;
+            }
+
+            Text {
+                text: @tr("Reste à payer : {} FCFA", root.fiche.reste-a-payer);
+                color: Theme.texte;
+                font-weight: 700;
+            }
+        }
+
+        if root.fiche.avec-reglements && FacturesApi.reglements.length > 0: Rangee {
+            spacing: 12px;
+
+            Etiquette {
+                text: @tr("Date");
+                width: 90px;
+            }
+
+            Etiquette {
+                text: @tr("Montant");
+                width: 110px;
+                horizontal-alignment: Theme.fin;
+            }
+
+            Etiquette {
+                text: @tr("Mode de paiement");
+                width: 150px;
+            }
+
+            Etiquette {
+                text: @tr("Référence");
+                horizontal-stretch: 1;
+            }
+
+            Etiquette {
+                text: @tr("Saisi par");
+                width: 160px;
+            }
+
+            if root.fiche.peut-saisir-reglement: Rectangle {
+                width: 110px;
+            }
+        }
+
+        if root.fiche.avec-reglements && FacturesApi.reglements.length > 0: VerticalLayout {
+            spacing: 6px;
+
+            for reglement in FacturesApi.reglements: Rangee {
+                spacing: 12px;
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    vertical-alignment: center;
+                    width: 90px;
+                    text: reglement.date;
+                    color: Theme.texte;
+                }
+
+                Text {
+                    horizontal-alignment: Theme.fin;
+                    vertical-alignment: center;
+                    width: 110px;
+                    text: reglement.montant;
+                    color: Theme.texte;
+                }
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    vertical-alignment: center;
+                    width: 150px;
+                    text: reglement.mode;
+                    color: Theme.texte;
+                }
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    vertical-alignment: center;
+                    horizontal-stretch: 1;
+                    text: reglement.reference;
+                    color: Theme.texte;
+                }
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    vertical-alignment: center;
+                    width: 160px;
+                    text: reglement.auteur;
+                    color: Theme.texte-secondaire;
+                }
+
+                if root.fiche.peut-saisir-reglement: Bouton {
+                    width: 110px;
+                    text: @tr("Supprimer");
+                    clicked => {
+                        root.retour-reglement = { };
+                        root.reglement-a-supprimer = reglement.id;
+                    }
+                }
+            }
+        }
+
+        if root.reglement-a-supprimer != 0: Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Supprimer ce règlement ? La suppression est inscrite dans l'historique du document, avec son montant.");
+            color: Theme.texte;
+            wrap: word-wrap;
+        }
+
+        if root.reglement-a-supprimer != 0: Rangee {
+            alignment: start;
+            spacing: 8px;
+
+            Bouton {
+                text: @tr("Confirmer la suppression");
+                primary: true;
+                clicked => {
+                    root.retour-reglement = FacturesApi.supprimer-reglement(root.reglement-a-supprimer);
+                    root.reglement-a-supprimer = 0;
+                    root.recharger-si-besoin();
+                }
+            }
+
+            Bouton {
+                text: @tr("Revenir");
+                clicked => {
+                    root.reglement-a-supprimer = 0;
+                }
+            }
+        }
+
+        if root.fiche.peut-saisir-reglement && root.fiche.reglement-montant != "": Rangee {
+            spacing: 12px;
+
+            Champ {
+                libelle: @tr("Date du règlement (JJ/MM/AAAA)");
+                width: 220px;
+                valeur <=> root.reglement-date;
+            }
+
+            Champ {
+                libelle: @tr("Montant (FCFA)");
+                width: 150px;
+                valeur <=> root.reglement-montant;
+            }
+
+            VerticalLayout {
+                spacing: 4px;
+                width: 190px;
+                alignment: start;
+
+                Etiquette {
+                    text: @tr("Mode de paiement");
+                }
+
+                ComboBox {
+                    model: FacturesApi.modes-reglement;
+                    current-index <=> root.reglement-mode;
+                }
+            }
+
+            Champ {
+                libelle: @tr("Référence (facultative)");
+                horizontal-stretch: 1;
+                valeur <=> root.reglement-reference;
+            }
+        }
+
+        if root.fiche.peut-saisir-reglement && root.fiche.reglement-montant != "": Rangee {
+            alignment: start;
+
+            Bouton {
+                text: @tr("Enregistrer le règlement");
+                primary: true;
+                clicked => {
+                    root.reglement-a-supprimer = 0;
+                    root.retour-reglement = FacturesApi.ajouter-reglement(root.reglement-date, root.reglement-montant, root.reglement-mode, root.reglement-reference);
+                    root.recharger-si-besoin();
+                }
+            }
+        }
+
+        if root.retour-reglement.message != "": MessageRetour {
+            retour: root.retour-reglement;
         }
 
         // Documents liés : origine, puis documents issus de celui-ci.

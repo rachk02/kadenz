@@ -11,7 +11,9 @@ use std::cmp::Ordering;
 use std::rc::Rc;
 
 use chrono::NaiveDate;
-use kadenz_domaine::calcul::{Pourcentage, Quantite, Taux, Totaux, calculer_totaux, total_ligne};
+use kadenz_domaine::calcul::{
+    Montant, Pourcentage, Quantite, Taux, Totaux, calculer_totaux, total_ligne,
+};
 use kadenz_domaine::lettres::{Orthographe, en_lettres_majuscule};
 use kadenz_domaine::role::Droit;
 use kadenz_domaine::saisie;
@@ -22,6 +24,7 @@ use kadenz_stockage::documents::{
     ResumeDocument, Saisie, Statut, TypeDocument,
 };
 use kadenz_stockage::produits::{self, FiltreProduits, Produit};
+use kadenz_stockage::reglements::{self, SaisieReglement};
 use kadenz_stockage::tiers::{self, FicheTiers, FiltreTiers, TypeTiers};
 use kadenz_stockage::{Connexion, droits, parametres};
 use slint::{ComponentHandle, Model, ModelRc, SharedString, VecModel};
@@ -30,7 +33,7 @@ use crate::referentiels::{Vue, modele_lignes, retour_erreur, retour_ok, texte_er
 use crate::traduction::{tr, trf};
 use crate::{
     Etat, EtatPartage, EvenementUi, FacturesApi, FenetrePrincipale, FicheFactureUi, LienUi,
-    LigneFactureUi, Page, Retour, TextesDocumentUi, TotauxUi,
+    LigneFactureUi, Page, ReglementUi, Retour, TextesDocumentUi, TotauxUi,
 };
 
 /// Fiche ouverte : document éventuel et correspondance rang affiché vers valeur.
@@ -47,6 +50,8 @@ pub(crate) struct EditionFacture {
     retenues: Vec<Pourcentage>,
     /// Le rang 0 est « non précisé » (chaîne vide).
     modes: Vec<String>,
+    /// Modes proposés pour un règlement : ceux des Paramètres, sans « non précisé ».
+    modes_reglement: Vec<String>,
     lignes: Rc<VecModel<LigneFactureUi>>,
     orthographe: Orthographe,
     /// Délai de l'échéance proposée : validité des devis pour un devis ou une
@@ -827,6 +832,42 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
             .collect::<Vec<_>>(),
     )));
 
+    // Règlements d'une facture ou d'un bon de commande en vigueur.
+    let situation = match &document {
+        Some(d) => reglements::situation(&etat.conn, d).map_err(texte_erreur)?,
+        None => None,
+    };
+    let liste_reglements = match (&situation, id) {
+        (Some(_), Some(id)) => reglements::reglements(&etat.conn, id).map_err(texte_erreur)?,
+        _ => Vec::new(),
+    };
+    api.set_reglements(ModelRc::new(VecModel::from(
+        liste_reglements
+            .iter()
+            .map(|r| ReglementUi {
+                id: r.id as i32,
+                date: date_en_texte(r.date).into(),
+                montant: saisie::montant_en_texte(r.montant).into(),
+                mode: r.mode_paiement.as_str().into(),
+                reference: r.reference.as_str().into(),
+                auteur: r.auteur.as_str().into(),
+            })
+            .collect::<Vec<_>>(),
+    )));
+    let modes_reglement = p.modes_paiement.clone();
+    api.set_modes_reglement(modele_textes(modes_reglement.iter().cloned()));
+    let reglement_mode_index = document
+        .as_ref()
+        .and_then(|d| {
+            modes_reglement
+                .iter()
+                .position(|m| *m == d.saisie.mode_paiement)
+        })
+        .unwrap_or(0) as i32;
+    let peut_saisir_reglement = situation.is_some() && possede(etat, Droit::SaisirReglement);
+    let montant_situation =
+        |m: Option<Montant>| m.map(saisie::montant_en_texte).unwrap_or_default();
+
     let paiement = match &document {
         Some(d) => documents::etat_paiement_de(&etat.conn, d)
             .ok()
@@ -964,6 +1005,19 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
         peut_creer_avoir,
         avoir_possible,
         montant_du: montant_du.into(),
+        avec_reglements: situation.is_some(),
+        peut_saisir_reglement,
+        du_reglements: montant_situation(situation.map(|s| s.montant_du)).into(),
+        regle: montant_situation(situation.map(|s| s.regle)).into(),
+        reste_a_payer: montant_situation(situation.map(|s| s.reste_a_payer)).into(),
+        reglement_date: date_en_texte(chrono::Local::now().date_naive()).into(),
+        // Vide quand rien ne reste à payer : le formulaire de saisie disparaît.
+        reglement_montant: situation
+            .filter(|s| s.reste_a_payer > 0)
+            .map(|s| saisie::montant_en_texte(s.reste_a_payer))
+            .unwrap_or_default()
+            .into(),
+        reglement_mode_index,
         en_preparation,
         note: note_fiche(t, statut, modifiable, admin_modifiable).into(),
     };
@@ -977,6 +1031,7 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
         tvas,
         retenues,
         modes,
+        modes_reglement,
         lignes,
         orthographe: p.orthographe,
         delai_echeance_jours: delai_echeance,
@@ -1712,6 +1767,47 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             let recues = quantites_recues(etat.facture.as_ref())?;
             documents::enregistrer_reception(&mut etat.conn, acteur, id, &recues)
                 .map(|()| tr("réception enregistrée"))
+                .map_err(texte_erreur)
+        })
+    });
+
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_ajouter_reglement(move |date, montant, mode, reference| {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
+        agir(&f, &e, |etat, acteur, id| {
+            let date = date_depuis_texte(&date).ok_or_else(|| {
+                tr("date du règlement illisible : saisir la date au format JJ/MM/AAAA")
+            })?;
+            let montant = saisie::montant_depuis_texte(&montant).ok_or_else(|| {
+                tr("montant du règlement illisible : saisir un montant entier en FCFA")
+            })?;
+            let mode_paiement = etat
+                .facture
+                .as_ref()
+                .and_then(|ed| au_rang(&ed.modes_reglement, mode))
+                .ok_or_else(|| tr("choisir le mode de paiement du règlement"))?;
+            let saisie = SaisieReglement {
+                date,
+                montant,
+                mode_paiement,
+                reference: reference.trim().to_string(),
+            };
+            reglements::ajouter(&mut etat.conn, acteur, id, &saisie)
+                .map(|_| tr("règlement enregistré"))
+                .map_err(texte_erreur)
+        })
+    });
+
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_supprimer_reglement(move |reglement_id| {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
+        agir(&f, &e, |etat, acteur, _| {
+            reglements::supprimer(&mut etat.conn, acteur, i64::from(reglement_id))
+                .map(|()| tr("règlement supprimé"))
                 .map_err(texte_erreur)
         })
     });
