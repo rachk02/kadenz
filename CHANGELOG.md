@@ -22,6 +22,7 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 - Refus de validation des tiers et des produits (nom, désignation, référence, prix) traduits dans les six langues.
 - PDF d'un devis ou d'une proforma : la date de fin de validité s'imprime sous « Validité » et non plus « Échéance », comme à l'écran.
 - État de paiement « Payé » quand le montant dû est nul ou déjà atteint (facture couverte par ses avoirs), conformément à la section 8.
+- Refus du réglage de la numérotation (préfixe vide ou invalide, préfixe partagé par deux types, nombre de chiffres du rang) traduits dans les six langues : le domaine les livre en texte fixe et valeurs (MessageCompose).
 
 ## [0.1.0] - 2026-11-09
 

@@ -7,6 +7,7 @@ pub mod calcul;
 pub mod document;
 pub mod langue;
 pub mod lettres;
+pub mod message;
 pub mod numerotation;
 pub mod paiement;
 pub mod referentiel;

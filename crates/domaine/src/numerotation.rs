@@ -10,6 +10,7 @@
 //! document (question 1, tranchée le 2026-11-09).
 
 use crate::document::TypeDocument;
+use crate::message::MessageCompose;
 
 /// Fréquence de remise à zéro du compteur.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -100,35 +101,42 @@ impl Numerotation {
     /// Nettoie et contrôle le réglage : préfixes de 1 à 6 lettres non accentuées
     /// (un chiffre se confondrait avec l'année qui suit), distincts entre types ;
     /// nombre de chiffres dans les bornes.
-    pub fn nettoyee(&self) -> Result<Numerotation, String> {
+    pub fn nettoyee(&self) -> Result<Numerotation, MessageCompose> {
         let mut n = self.clone();
         for (rang, p) in n.prefixes.iter_mut().enumerate() {
             let libelle = TypeDocument::TOUS[rang];
             *p = p.trim().to_uppercase();
             if p.is_empty() {
-                return Err(format!("le préfixe « {libelle} » est obligatoire"));
+                return Err(MessageCompose::new(
+                    "le préfixe « {} » est obligatoire",
+                    &[&libelle],
+                ));
             }
             if p.chars().count() > PREFIXE_MAX || !p.chars().all(|c| c.is_ascii_alphabetic()) {
-                return Err(format!(
-                    "le préfixe « {libelle} » doit compter de 1 à {PREFIXE_MAX} lettres, sans chiffre, espace ni accent"
+                return Err(MessageCompose::new(
+                    "le préfixe « {} » doit compter de 1 à {} lettres, sans chiffre, espace ni accent",
+                    &[&libelle, &PREFIXE_MAX],
                 ));
             }
         }
         for i in 0..n.prefixes.len() {
             for j in (i + 1)..n.prefixes.len() {
                 if n.prefixes[i] == n.prefixes[j] {
-                    return Err(format!(
+                    return Err(MessageCompose::new(
                         "les types « {} » et « {} » ont le même préfixe « {} »",
-                        TypeDocument::TOUS[i],
-                        TypeDocument::TOUS[j],
-                        n.prefixes[i]
+                        &[
+                            &TypeDocument::TOUS[i],
+                            &TypeDocument::TOUS[j],
+                            &n.prefixes[i],
+                        ],
                     ));
                 }
             }
         }
         if !(CHIFFRES_MIN..=CHIFFRES_MAX).contains(&n.chiffres) {
-            return Err(format!(
-                "le nombre de chiffres du rang doit être compris entre {CHIFFRES_MIN} et {CHIFFRES_MAX}"
+            return Err(MessageCompose::new(
+                "le nombre de chiffres du rang doit être compris entre {} et {}",
+                &[&CHIFFRES_MIN, &CHIFFRES_MAX],
             ));
         }
         Ok(n)
@@ -218,7 +226,8 @@ mod tests {
         assert!(n.nettoyee().is_err());
         n.prefixes[4] = "d".into();
         let e = n.nettoyee().unwrap_err();
-        assert!(e.contains("même préfixe"), "{e}");
+        assert!(e.to_string().contains("même préfixe"), "{e}");
+        assert_eq!(e.valeurs[2], "D");
         let n = Numerotation {
             chiffres: 0,
             ..Default::default()

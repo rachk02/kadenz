@@ -164,9 +164,7 @@ impl Parametres {
                 &[&TypeDocument::TOUS[t]],
             ));
         }
-        self.numerotation
-            .nettoyee()
-            .map_err(|e| Erreur::Validation(e.to_string()))?;
+        self.numerotation.nettoyee()?;
         Ok(())
     }
 }

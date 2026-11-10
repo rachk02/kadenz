@@ -133,6 +133,15 @@ impl From<rusqlite::Error> for Erreur {
     }
 }
 
+impl From<kadenz_domaine::message::MessageCompose> for Erreur {
+    fn from(m: kadenz_domaine::message::MessageCompose) -> Self {
+        Erreur::ValidationComposee {
+            modele: m.modele.to_owned(),
+            valeurs: m.valeurs,
+        }
+    }
+}
+
 impl From<std::io::Error> for Erreur {
     fn from(e: std::io::Error) -> Self {
         Erreur::Io(e)

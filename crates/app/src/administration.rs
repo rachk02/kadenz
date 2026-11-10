@@ -12,7 +12,7 @@ use kadenz_stockage::entreprise::{self, Entreprise, FormatImage, Logo};
 use kadenz_stockage::parametres::{self, Parametres, TextesDocument};
 use slint::{ComponentHandle, Image, Model, ModelRc, SharedString, VecModel};
 
-use crate::referentiels::{retour_erreur, retour_ok};
+use crate::referentiels::{retour_erreur, retour_ok, texte_erreur};
 use crate::traduction::{tr, trf};
 use crate::{
     EntrepriseApi, EtatPartage, FenetrePrincipale, FicheEntrepriseUi, ParametresApi, ParametresUi,
@@ -326,6 +326,7 @@ fn numerotation_depuis_ui(
         chiffres,
     }
     .nettoyee()
+    .map_err(|e| texte_erreur(e.into()))
 }
 
 fn brancher_parametres(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
