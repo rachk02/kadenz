@@ -23,6 +23,7 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 - Jalon J8, stockage : indicateurs du tableau de bord sur une période (module pilotage) : CA HT, TVA et CA TTC nets des avoirs, payé et impayé, CA par état et par mode de paiement, tendance mensuelle, top 5 clients, 4 dernières factures ; achats (total des bons de commande, payé, reste dû) ; années disponibles pour le filtre.
 
 ### Corrigé
+- Installateur : la construction refuse un kadenz.exe plus ancien que le dernier commit (un installateur avait embarqué l'application du premier jour, qui affichait « module non encore implémenté »).
 - Fiche d'un document : la saisie dans une ligne n'est plus perdue après un enregistrement (les lignes restent en place au lieu d'être recréées).
 - Fiche d'un document : « Dupliquer » sur un brouillon enregistre d'abord la saisie affichée ; les raccourcis restent actifs après la suppression d'une ligne ou une validation ; la rangée Remise et TVA ne déborde plus de sa colonne.
 - Refus de validation des tiers et des produits (nom, désignation, référence, prix) traduits dans les six langues.

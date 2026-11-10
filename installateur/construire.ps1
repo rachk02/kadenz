@@ -48,6 +48,12 @@ if (-not $SansCompilation) {
 }
 $exe = Join-Path $racine 'target\release\kadenz.exe'
 if (-not (Test-Path $exe)) { throw "kadenz.exe introuvable : $exe" }
+# Garde-fou : un kadenz.exe plus ancien que le dernier commit n'est pas celui du
+# code livré (un installateur a déjà embarqué par erreur le socle du premier jour).
+$dernierCommit = [DateTime]::Parse((git -C $racine log -1 --format=%cI))
+if ((Get-Item $exe).LastWriteTime -lt $dernierCommit) {
+    throw "kadenz.exe ($((Get-Item $exe).LastWriteTime)) est plus ancien que le dernier commit ($dernierCommit) : relancer sans -SansCompilation"
+}
 
 $sortie = Join-Path $racine 'target\installateur'
 New-Item -ItemType Directory -Force $sortie | Out-Null
