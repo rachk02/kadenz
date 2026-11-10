@@ -358,11 +358,106 @@ pub(crate) fn liste_relances(conn: &Connection) -> Result<(Vec<u8>, String), Str
             })
             .collect(),
         totaux: vec![total(
-            format!("Reste dû ({} factures)", echues.len()),
+            match echues.len() {
+                1 => "Reste dû (1 facture)".to_string(),
+                n => format!("Reste dû ({n} factures)"),
+            },
             reste,
             true,
         )],
     };
     let octets = kadenz_pdf::generer_liste(&liste, &Polices::embarquees())?;
     Ok((octets, format!("Relances-{}.pdf", jour.format("%Y-%m-%d"))))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::Days;
+    use kadenz_domaine::calcul::{Taux, UNE_UNITE};
+    use kadenz_domaine::role::Role;
+    use kadenz_stockage::comptes::NouvelUtilisateur;
+    use kadenz_stockage::documents::{LigneSaisie, Saisie};
+    use kadenz_stockage::installation::{self, InstallationInitiale};
+    use kadenz_stockage::parametres::Parametres;
+    use kadenz_stockage::reglements::SaisieReglement;
+    use kadenz_stockage::tiers::{self, FicheTiers, TypeTiers};
+
+    /// Les trois PDF de J7 sur une base où une facture est échue depuis dix jours.
+    /// Avec la variable KADENZ_ESSAI_PDF (un dossier), les fichiers y sont écrits
+    /// pour un contrôle à l'oeil.
+    #[test]
+    fn pdf_des_relances_et_du_registre() {
+        let mut conn = kadenz_stockage::ouvrir_en_memoire().unwrap();
+        let entreprise = Entreprise {
+            nom: "Entreprise Essai".into(),
+            localisation: "Ville Fictive".into(),
+            responsable_comptabilite: "Nom Fictif".into(),
+            ..Default::default()
+        };
+        let admin = installation::installer(
+            &mut conn,
+            &InstallationInitiale {
+                entreprise,
+                admin: NouvelUtilisateur {
+                    nom_complet: "Admin Essai".into(),
+                    identifiant: "admin".into(),
+                    mot_de_passe: "motdepasse1".into(),
+                    role: Role::Admin,
+                },
+                parametres: Parametres::default(),
+            },
+        )
+        .unwrap();
+        let mut fiche = FicheTiers::vide(TypeTiers::Client);
+        fiche.nom = "Client Alpha".into();
+        fiche.adresse = "02 BP 1111, Ville Fictive".into();
+        let client = tiers::creer(&conn, &admin, &fiche).unwrap().id;
+        let jour = aujourd_hui();
+        let s = Saisie {
+            tiers_id: Some(client),
+            taux: Taux {
+                remise: 0,
+                tva: 0,
+                retenue: 0,
+            },
+            date_echeance: jour.checked_sub_days(Days::new(10)),
+            lignes: vec![LigneSaisie {
+                designation: "Pelle".into(),
+                prix: 100_000,
+                quantite: UNE_UNITE,
+                ..Default::default()
+            }],
+            ..Saisie::vide(jour.checked_sub_days(Days::new(40)).unwrap())
+        };
+        let f = documents::creer_brouillon(&mut conn, &admin, TypeDocument::Facture, &s).unwrap();
+        let numero = documents::valider(&mut conn, &admin, f).unwrap();
+        let reglement = SaisieReglement {
+            date: jour,
+            montant: 40_000,
+            mode_paiement: "Espèce".into(),
+            reference: String::new(),
+        };
+        reglements::ajouter(&mut conn, &admin, f, &reglement).unwrap();
+
+        let (lettre, nom_lettre) = lettre_relance(&conn, f).unwrap();
+        assert_eq!(nom_lettre, format!("Relance-{numero}.pdf"));
+        let (registre, nom_registre) =
+            registre_reglements(&conn, &FiltreRegistre::default()).unwrap();
+        assert!(nom_registre.starts_with("Registre-reglements-"));
+        let (liste, nom_liste) = liste_relances(&conn).unwrap();
+        assert!(nom_liste.starts_with("Relances-"));
+        for octets in [&lettre, &registre, &liste] {
+            assert!(octets.starts_with(b"%PDF-"));
+        }
+        if let Ok(dossier) = std::env::var("KADENZ_ESSAI_PDF") {
+            for (nom, octets) in [
+                (nom_lettre, lettre),
+                (nom_registre, registre),
+                (nom_liste, liste),
+            ] {
+                std::fs::write(std::path::Path::new(&dossier).join(nom), octets).unwrap();
+            }
+        }
+    }
 }

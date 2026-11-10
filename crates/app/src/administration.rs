@@ -10,13 +10,14 @@ use kadenz_domaine::numerotation::{CHIFFRES_MAX, CHIFFRES_MIN, Numerotation, Rem
 use kadenz_domaine::saisie;
 use kadenz_stockage::entreprise::{self, Entreprise, FormatImage, Logo};
 use kadenz_stockage::parametres::{self, Parametres, TextesDocument};
+use kadenz_stockage::relances::{self, TextesRelance};
 use slint::{ComponentHandle, Image, Model, ModelRc, SharedString, VecModel};
 
 use crate::referentiels::{retour_erreur, retour_ok, texte_erreur};
 use crate::traduction::{tr, trf};
 use crate::{
     EntrepriseApi, EtatPartage, FenetrePrincipale, FicheEntrepriseUi, ParametresApi, ParametresUi,
-    Retour, TexteDocumentUi,
+    Retour, TexteDocumentUi, TextesRelanceUi,
 };
 
 // ---------------------------------------------------------------- Entreprise
@@ -227,6 +228,27 @@ fn parametres_ui(p: &Parametres) -> ParametresUi {
                 .collect::<Vec<_>>(),
         )),
         couleur: parametres::couleur_en_texte(p.couleur_documents).into(),
+        relance: relance_ui(&TextesRelance::default()),
+    }
+}
+
+fn relance_ui(t: &TextesRelance) -> TextesRelanceUi {
+    TextesRelanceUi {
+        titre: t.titre.clone().into(),
+        objet: t.objet.clone().into(),
+        avant: t.avant.clone().into(),
+        apres: t.apres.clone().into(),
+        signataire: t.signataire.clone().into(),
+    }
+}
+
+fn relance_depuis_ui(u: &TextesRelanceUi) -> TextesRelance {
+    TextesRelance {
+        titre: u.titre.to_string(),
+        objet: u.objet.to_string(),
+        avant: u.avant.to_string(),
+        apres: u.apres.to_string(),
+        signataire: u.signataire.to_string(),
     }
 }
 
@@ -397,6 +419,8 @@ fn brancher_parametres(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         texte_ui(&TextesDocument::par_defaut(t), "")
     });
 
+    api.on_relance_par_defaut(|| relance_ui(&TextesRelance::default()));
+
     let (f, e) = (fenetre.as_weak(), etat.clone());
     api.on_ouvrir(move || {
         // Exemples recalculés à chaque ouverture : ils suivent la langue du compte.
@@ -406,9 +430,13 @@ fn brancher_parametres(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             api.set_exemple_traditionnelle(exemple(Orthographe::Traditionnelle).into());
         }
         let etat = e.borrow();
-        parametres::lire(&etat.conn)
+        let mut u = parametres::lire(&etat.conn)
             .map(|p| parametres_ui(&p))
-            .unwrap_or_else(|_| parametres_ui(&Parametres::default()))
+            .unwrap_or_else(|_| parametres_ui(&Parametres::default()));
+        if let Ok(t) = relances::lire_textes(&etat.conn) {
+            u.relance = relance_ui(&t);
+        }
+        u
     });
 
     let e = etat.clone();
@@ -421,7 +449,15 @@ fn brancher_parametres(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let Some(acteur) = &etat.utilisateur else {
             return retour_erreur("aucune session ouverte");
         };
-        match parametres::enregistrer(&etat.conn, acteur, &p) {
+        // Paramètres et lettre de relance ensemble, ou rien.
+        let enregistrer = || -> kadenz_stockage::Resultat<()> {
+            let tx = etat.conn.unchecked_transaction()?;
+            parametres::enregistrer(&tx, acteur, &p)?;
+            relances::enregistrer_textes(&tx, acteur, &relance_depuis_ui(&saisie.relance))?;
+            tx.commit()?;
+            Ok(())
+        };
+        match enregistrer() {
             Ok(()) => retour_ok("paramètres enregistrés"),
             Err(erreur) => retour_erreur(erreur),
         }
