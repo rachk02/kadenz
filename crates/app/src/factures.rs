@@ -36,6 +36,7 @@ use crate::{
 /// Fiche ouverte : document éventuel et correspondance rang affiché vers valeur.
 pub(crate) struct EditionFacture {
     id: Option<i64>,
+    type_document: TypeDocument,
     /// Tiers du document à l'ouverture : gardé dans la liste même s'il a été désactivé.
     tiers_document: Option<i64>,
     /// Le rang 0 est « aucun client choisi ».
@@ -43,6 +44,7 @@ pub(crate) struct EditionFacture {
     produits: Vec<Produit>,
     remises: Vec<Pourcentage>,
     tvas: Vec<Pourcentage>,
+    retenues: Vec<Pourcentage>,
     /// Le rang 0 est « non précisé » (chaîne vide).
     modes: Vec<String>,
     lignes: Rc<VecModel<LigneFactureUi>>,
@@ -50,10 +52,11 @@ pub(crate) struct EditionFacture {
     /// Délai de l'échéance proposée : validité des devis pour un devis ou une
     /// proforma, délai de paiement pour une facture, aucun pour un avoir.
     delai_echeance_jours: Option<u32>,
-    /// Derniers rangs de remise et de TVA choisis, pour recalculer les totaux
-    /// quand une ligne est supprimée (le bouton disparaît avec sa ligne).
+    /// Derniers rangs de remise, de TVA et de retenue choisis, pour recalculer les
+    /// totaux quand une ligne est supprimée (le bouton disparaît avec sa ligne).
     remise_rang: i32,
     tva_rang: i32,
+    retenue_rang: i32,
     fiche: FicheFactureUi,
 }
 
@@ -97,6 +100,11 @@ fn modele_textes(textes: impl IntoIterator<Item = String>) -> ModelRc<SharedStri
 // Chaque texte est un littéral dans `tr(...)` : le test de couverture des
 // traductions les retrouve ainsi tous. Le genre suit le type (un devis, une proforma).
 
+/// Document d'achat : son tiers est un fournisseur, ses produits ceux du sens Achat.
+fn est_achat(t: TypeDocument) -> bool {
+    t == TypeDocument::BonCommande
+}
+
 fn textes_type(t: TypeDocument) -> TextesDocumentUi {
     let (titre, nouveau, aide, sans_numero, envoye, annuler, validation, annulation) = match t {
         TypeDocument::Devis => (
@@ -123,6 +131,20 @@ fn textes_type(t: TypeDocument) -> TextesDocumentUi {
             ),
             tr(
                 "Annuler cette proforma ? Elle reste dans le registre avec son numéro, en lecture seule.",
+            ),
+        ),
+        TypeDocument::BonCommande => (
+            tr("Bons de commande"),
+            tr("Nouveau bon de commande"),
+            tr("Cliquer sur un bon de commande pour ouvrir sa fiche."),
+            tr("Aucun numéro tant que le bon de commande n'est pas validé."),
+            tr("Marquer envoyé"),
+            tr("Annuler le bon de commande"),
+            tr(
+                "Valider ce bon de commande ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés.",
+            ),
+            tr(
+                "Annuler ce bon de commande ? Il reste dans le registre avec son numéro, en lecture seule.",
             ),
         ),
         TypeDocument::Avoir => (
@@ -157,6 +179,29 @@ fn textes_type(t: TypeDocument) -> TextesDocumentUi {
     } else {
         tr("Échéance (facultative)")
     };
+    let (tiers, recherche, filtrer, nouveau_tiers, creer, note) = if est_achat(t) {
+        (
+            tr("Fournisseur"),
+            tr("Rechercher : numéro, fournisseur, libellé"),
+            tr("Filtrer les fournisseurs"),
+            tr("Nouveau fournisseur"),
+            tr("Créer et choisir ce fournisseur"),
+            tr(
+                "Le fournisseur est enregistré tout de suite dans les tiers ; sa fiche se complète ensuite depuis l'écran Tiers.",
+            ),
+        )
+    } else {
+        (
+            tr("Client"),
+            tr("Rechercher : numéro, client, libellé"),
+            tr("Filtrer les clients"),
+            tr("Nouveau client"),
+            tr("Créer et choisir ce client"),
+            tr(
+                "Le client est enregistré tout de suite dans les tiers ; sa fiche se complète ensuite depuis l'écran Tiers.",
+            ),
+        )
+    };
     TextesDocumentUi {
         titre: titre.into(),
         nouveau: nouveau.into(),
@@ -167,6 +212,12 @@ fn textes_type(t: TypeDocument) -> TextesDocumentUi {
         annuler: annuler.into(),
         confirmer_validation: validation.into(),
         confirmer_annulation: annulation.into(),
+        tiers: tiers.into(),
+        recherche: recherche.into(),
+        filtrer_tiers: filtrer.into(),
+        nouveau_tiers: nouveau_tiers.into(),
+        creer_tiers: creer.into(),
+        note_tiers: note.into(),
     }
 }
 
@@ -179,6 +230,9 @@ fn resume_registre(t: TypeDocument, n: usize) -> String {
         (TypeDocument::Proforma, 0) => tr("Aucune proforma."),
         (TypeDocument::Proforma, 1) => tr("1 proforma."),
         (TypeDocument::Proforma, n) => trf("{} proformas.", &[&n]),
+        (TypeDocument::BonCommande, 0) => tr("Aucun bon de commande."),
+        (TypeDocument::BonCommande, 1) => tr("1 bon de commande."),
+        (TypeDocument::BonCommande, n) => trf("{} bons de commande.", &[&n]),
         (TypeDocument::Avoir, 0) => tr("Aucun avoir."),
         (TypeDocument::Avoir, 1) => tr("1 avoir."),
         (TypeDocument::Avoir, n) => trf("{} avoirs.", &[&n]),
@@ -197,6 +251,9 @@ fn titre_fiche(t: TypeDocument, numero: Option<&str>, existe: bool) -> String {
         (TypeDocument::Proforma, Some(n), _) => trf("Proforma {}", &[&n]),
         (TypeDocument::Proforma, None, true) => tr("Proforma (brouillon)"),
         (TypeDocument::Proforma, None, false) => tr("Nouvelle proforma"),
+        (TypeDocument::BonCommande, Some(n), _) => trf("Bon de commande {}", &[&n]),
+        (TypeDocument::BonCommande, None, true) => tr("Bon de commande (brouillon)"),
+        (TypeDocument::BonCommande, None, false) => tr("Nouveau bon de commande"),
         (TypeDocument::Avoir, Some(n), _) => trf("Avoir {}", &[&n]),
         (TypeDocument::Avoir, None, _) => tr("Avoir (brouillon)"),
         (_, Some(n), _) => trf("Facture {}", &[&n]),
@@ -207,13 +264,19 @@ fn titre_fiche(t: TypeDocument, numero: Option<&str>, existe: bool) -> String {
 
 /// Explication affichée sous les actions d'une fiche non modifiable.
 fn note_fiche(t: TypeDocument, statut: Statut, modifiable: bool, admin_modifiable: bool) -> String {
-    use TypeDocument::{Avoir, Devis, Proforma};
+    use TypeDocument::{Avoir, BonCommande, Devis, Proforma};
     match (t, statut) {
         (Devis, Statut::Converti) => tr("Devis converti en facture : lecture seule."),
         (Proforma, Statut::Converti) => tr("Proforma convertie en facture : lecture seule."),
         (Devis, Statut::Annule) => tr("Devis annulé : lecture seule, numéro conservé."),
         (Proforma, Statut::Annule) => tr("Proforma annulée : lecture seule, numéro conservé."),
         (Avoir, Statut::Annule) => tr("Avoir annulé : lecture seule, numéro conservé."),
+        (BonCommande, Statut::Annule) => {
+            tr("Bon de commande annulé : lecture seule, numéro conservé.")
+        }
+        (BonCommande, Statut::ReceptionComplete) => {
+            tr("Bon de commande entièrement reçu : lecture seule.")
+        }
         (_, Statut::Annule) => tr("Facture annulée : lecture seule, numéro conservé."),
         _ if modifiable || admin_modifiable => String::new(),
         (Devis, Statut::Brouillon) => {
@@ -225,12 +288,16 @@ fn note_fiche(t: TypeDocument, statut: Statut, modifiable: bool, admin_modifiabl
         (Avoir, Statut::Brouillon) => {
             tr("Lecture seule : votre rôle ne permet pas de modifier un avoir.")
         }
+        (BonCommande, Statut::Brouillon) => {
+            tr("Lecture seule : votre rôle ne permet pas de modifier un bon de commande.")
+        }
         (_, Statut::Brouillon) => {
             tr("Lecture seule : votre rôle ne permet pas de modifier une facture.")
         }
         (Devis, _) => tr("Devis validé : lignes et montants figés."),
         (Proforma, _) => tr("Proforma validée : lignes et montants figés."),
         (Avoir, _) => tr("Avoir validé : lignes et montants figés."),
+        (BonCommande, _) => tr("Bon de commande validé : lignes et montants figés."),
         _ => tr("Facture validée : lignes et montants figés."),
     }
 }
@@ -240,6 +307,7 @@ fn message_validation(t: TypeDocument, numero: &str) -> String {
     match t {
         TypeDocument::Devis => trf("devis validé sous le numéro {}", &[&numero]),
         TypeDocument::Proforma => trf("proforma validée sous le numéro {}", &[&numero]),
+        TypeDocument::BonCommande => trf("bon de commande validé sous le numéro {}", &[&numero]),
         TypeDocument::Avoir => trf("avoir validé sous le numéro {}", &[&numero]),
         _ => trf("facture validée sous le numéro {}", &[&numero]),
     }
@@ -249,6 +317,7 @@ fn message_envoi(t: TypeDocument) -> String {
     match t {
         TypeDocument::Devis => tr("devis marqué envoyé"),
         TypeDocument::Proforma => tr("proforma marquée envoyée"),
+        TypeDocument::BonCommande => tr("bon de commande marqué envoyé"),
         TypeDocument::Avoir => tr("avoir marqué envoyé"),
         _ => tr("facture marquée envoyée"),
     }
@@ -258,6 +327,7 @@ fn message_annulation(t: TypeDocument) -> String {
     match t {
         TypeDocument::Devis => tr("devis annulé"),
         TypeDocument::Proforma => tr("proforma annulée"),
+        TypeDocument::BonCommande => tr("bon de commande annulé"),
         TypeDocument::Avoir => tr("avoir annulé"),
         _ => tr("facture annulée"),
     }
@@ -273,6 +343,10 @@ fn statuts_filtre(t: TypeDocument) -> Vec<Option<Statut>> {
     ];
     if t.convertible_en_facture() {
         statuts.push(Some(Statut::Converti));
+    }
+    if t == TypeDocument::BonCommande {
+        statuts.push(Some(Statut::ReceptionPartielle));
+        statuts.push(Some(Statut::ReceptionComplete));
     }
     statuts.push(Some(Statut::Annule));
     statuts
@@ -437,6 +511,7 @@ fn totaux_ui(t: &Totaux, orthographe: Orthographe) -> TotauxUi {
         remise: m(t.remise),
         base_tva: m(t.base_tva),
         tva: m(t.tva),
+        retenue: m(t.retenue),
         ttc: m(t.ttc),
         // Le montant en lettres reste en français : il est repris tel quel sur le document.
         lettres: trf(
@@ -447,11 +522,12 @@ fn totaux_ui(t: &Totaux, orthographe: Orthographe) -> TotauxUi {
     }
 }
 
-/// Clients proposés : « aucun client choisi », puis les clients actifs filtrés
-/// par le texte, plus le client choisi (et celui du document) même s'il ne
-/// correspond pas au filtre ou a été désactivé.
+/// Tiers proposés : « aucun client choisi » (ou fournisseur pour un achat), puis
+/// les tiers actifs du bon type filtrés par le texte, plus le tiers choisi (et
+/// celui du document) même s'il ne correspond pas au filtre ou a été désactivé.
 fn liste_clients(
     conn: &Connexion,
+    achat: bool,
     texte: &str,
     garder: &[Option<i64>],
 ) -> (Vec<Option<i64>>, Vec<String>) {
@@ -464,10 +540,19 @@ fn liste_clients(
     )
     .unwrap_or_default();
     let mut ids = vec![None];
-    let mut noms = vec![tr("Aucun client choisi")];
+    let mut noms = vec![if achat {
+        tr("Aucun fournisseur choisi")
+    } else {
+        tr("Aucun client choisi")
+    }];
     for t in tous {
         let garde = garder.contains(&Some(t.id));
-        let propose = t.actif && t.fiche.type_tiers.est_client() && contient(&t.fiche.nom, texte);
+        let du_bon_type = if achat {
+            t.fiche.type_tiers.est_fournisseur()
+        } else {
+            t.fiche.type_tiers.est_client()
+        };
+        let propose = t.actif && du_bon_type && contient(&t.fiche.nom, texte);
         if garde || propose {
             ids.push(Some(t.id));
             noms.push(if t.actif {
@@ -480,12 +565,21 @@ fn liste_clients(
     (ids, noms)
 }
 
-fn liste_produits(conn: &Connexion, texte: &str) -> Vec<Produit> {
+/// Le produit se propose-t-il pour ce document ? Sens Achat pour un achat, Vente sinon.
+fn dans_le_sens(p: &Produit, achat: bool) -> bool {
+    if achat {
+        p.fiche.sens.en_achat()
+    } else {
+        p.fiche.sens.en_vente()
+    }
+}
+
+fn liste_produits(conn: &Connexion, achat: bool, texte: &str) -> Vec<Produit> {
     produits::lister(conn, &FiltreProduits::default())
         .unwrap_or_default()
         .into_iter()
         .filter(|p| {
-            p.fiche.sens.en_vente()
+            dans_le_sens(p, achat)
                 && (contient(&p.fiche.reference, texte) || contient(&p.fiche.designation, texte))
         })
         .collect()
@@ -529,7 +623,11 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
             taux: Taux {
                 remise: p.taux_remise.first().copied().unwrap_or(0),
                 tva: p.taux_tva.first().copied().unwrap_or(0),
-                retenue: 0,
+                retenue: if t.retenue_applicable() {
+                    p.taux_retenue.first().copied().unwrap_or(0)
+                } else {
+                    0
+                },
             },
             ..Saisie::vide(aujourd_hui)
         },
@@ -544,7 +642,7 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
 
     // Clients : liste modifiable, ou seulement le nom figé du document.
     let (clients, noms, client_index, detail) = if client_modifiable {
-        let (ids, noms) = liste_clients(&etat.conn, "", &[saisie_doc.tiers_id]);
+        let (ids, noms) = liste_clients(&etat.conn, est_achat(t), "", &[saisie_doc.tiers_id]);
         let rang = ids
             .iter()
             .position(|i| *i == saisie_doc.tiers_id)
@@ -566,6 +664,7 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
 
     let (remises, remise_index) = avec_valeur(p.taux_remise.clone(), &saisie_doc.taux.remise);
     let (tvas, tva_index) = avec_valeur(p.taux_tva.clone(), &saisie_doc.taux.tva);
+    let (retenues, retenue_index) = avec_valeur(p.taux_retenue.clone(), &saisie_doc.taux.retenue);
     let mut modes_base = vec![String::new()];
     modes_base.extend(p.modes_paiement.iter().cloned());
     let (modes, mode_index) = avec_valeur(modes_base, &saisie_doc.mode_paiement);
@@ -580,6 +679,12 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
             .map(|&t| pourcentage_libelle(t))
             .collect::<Vec<_>>(),
     )));
+    api.set_taux_retenue(ModelRc::new(VecModel::from(
+        retenues
+            .iter()
+            .map(|&r| pourcentage_libelle(r))
+            .collect::<Vec<_>>(),
+    )));
     api.set_modes_paiement(modele_textes(modes.iter().map(|m| {
         if m.is_empty() {
             tr("Non précisé")
@@ -589,7 +694,7 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
     })));
 
     let produits = if modifiable {
-        liste_produits(&etat.conn, "")
+        liste_produits(&etat.conn, est_achat(t), "")
     } else {
         Vec::new()
     };
@@ -611,9 +716,10 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
             modele
         }
     };
-    let totaux = document
-        .as_ref()
-        .map_or_else(|| calculer_totaux([], saisie_doc.taux, false), |d| d.totaux);
+    let totaux = document.as_ref().map_or_else(
+        || calculer_totaux([], saisie_doc.taux, t.retenue_applicable()),
+        |d| d.totaux,
+    );
     api.set_totaux(totaux_ui(&totaux, p.orthographe));
 
     let historique = match id {
@@ -716,6 +822,7 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
         tiers_detail: detail.into(),
         remise_index,
         tva_index,
+        retenue_index,
         mode_index,
         modifiable,
         client_modifiable,
@@ -737,17 +844,20 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
     };
     etat.facture = Some(EditionFacture {
         id,
+        type_document: t,
         tiers_document: saisie_doc.tiers_id,
         clients,
         produits,
         remises,
         tvas,
+        retenues,
         modes,
         lignes,
         orthographe: p.orthographe,
         delai_echeance_jours: delai_echeance,
         remise_rang: remise_index,
         tva_rang: tva_index,
+        retenue_rang: retenue_index,
         fiche,
     });
     api.set_version_fiche(api.get_version_fiche().wrapping_add(1));
@@ -827,7 +937,7 @@ fn saisie_depuis_ui(e: &EditionFacture, fiche: &FicheFactureUi) -> Result<Saisie
         taux: Taux {
             remise: au_rang(&e.remises, fiche.remise_index).unwrap_or(0),
             tva: au_rang(&e.tvas, fiche.tva_index).unwrap_or(0),
-            retenue: 0,
+            retenue: au_rang(&e.retenues, fiche.retenue_index).unwrap_or(0),
         },
         mode_paiement: au_rang(&e.modes, fiche.mode_index).unwrap_or_default(),
         observations: fiche.observations.to_string(),
@@ -928,7 +1038,7 @@ fn creer_puis_ouvrir(
 }
 
 /// Recalcule le total de chaque ligne lisible et les totaux du document.
-fn recalculer(api: &FacturesApi, e: &EditionFacture, remise: i32, tva: i32) {
+fn recalculer(api: &FacturesApi, e: &EditionFacture, remise: i32, tva: i32, retenue: i32) {
     let mut valeurs = Vec::new();
     for rang in 0..e.lignes.row_count() {
         let Some(mut l) = e.lignes.row_data(rang) else {
@@ -951,10 +1061,10 @@ fn recalculer(api: &FacturesApi, e: &EditionFacture, remise: i32, tva: i32) {
     let taux = Taux {
         remise: au_rang(&e.remises, remise).unwrap_or(0),
         tva: au_rang(&e.tvas, tva).unwrap_or(0),
-        retenue: 0,
+        retenue: au_rang(&e.retenues, retenue).unwrap_or(0),
     };
     api.set_totaux(totaux_ui(
-        &calculer_totaux(valeurs, taux, false),
+        &calculer_totaux(valeurs, taux, e.type_document.retenue_applicable()),
         e.orthographe,
     ));
 }
@@ -999,6 +1109,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             },
         )));
         api.set_avec_paiement(t.recoit_des_reglements());
+        api.set_avec_retenue(t.retenue_applicable());
         api.set_avec_pdf(true);
         // Un avoir naît toujours d'une facture validée, jamais d'une page vierge.
         api.set_peut_creer(t != TypeDocument::Avoir && possede(&etat, Droit::brouillon(t)));
@@ -1118,7 +1229,12 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             return -1;
         };
         let courant = au_rang(&edition.clients, rang_courant).flatten();
-        let (ids, noms) = liste_clients(&etat.conn, &texte, &[courant, edition.tiers_document]);
+        let (ids, noms) = liste_clients(
+            &etat.conn,
+            est_achat(edition.type_document),
+            &texte,
+            &[courant, edition.tiers_document],
+        );
         let rang = ids.iter().position(|i| *i == courant).unwrap_or(0) as i32;
         edition.clients = ids;
         f.global::<FacturesApi>().set_clients(modele_textes(noms));
@@ -1135,13 +1251,21 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let Some(acteur) = etat.utilisateur.clone() else {
             return retour_erreur("aucune session ouverte");
         };
+        let achat = etat
+            .facture
+            .as_ref()
+            .is_some_and(|ed| est_achat(ed.type_document));
         let fiche = FicheTiers {
             nom: nom.to_string(),
             telephone: telephone.to_string(),
             adresse: adresse.to_string(),
             ifu: ifu.to_string(),
             rccm: rccm.to_string(),
-            ..FicheTiers::vide(TypeTiers::Client)
+            ..FicheTiers::vide(if achat {
+                TypeTiers::Fournisseur
+            } else {
+                TypeTiers::Client
+            })
         };
         // Le stockage contrôle le droit d'ajouter un tiers et le nom obligatoire.
         let cree = match tiers::creer(&etat.conn, &acteur, &fiche) {
@@ -1152,16 +1276,28 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             return retour_erreur("aucune fiche ouverte");
         };
         // Liste sans filtre, qui garde le client créé et celui du document.
-        let (ids, noms) = liste_clients(&etat.conn, "", &[Some(cree.id), edition.tiers_document]);
+        let (ids, noms) = liste_clients(
+            &etat.conn,
+            achat,
+            "",
+            &[Some(cree.id), edition.tiers_document],
+        );
         let rang = ids.iter().position(|i| *i == Some(cree.id)).unwrap_or(0) as i32;
         edition.clients = ids;
         let api = f.global::<FacturesApi>();
         api.set_clients(modele_textes(noms));
         api.set_rang_nouveau_client(rang);
-        retour_ok(trf(
-            "client « {} » créé et choisi pour ce document",
-            &[&cree.fiche.nom],
-        ))
+        retour_ok(if achat {
+            trf(
+                "fournisseur « {} » créé et choisi pour ce document",
+                &[&cree.fiche.nom],
+            )
+        } else {
+            trf(
+                "client « {} » créé et choisi pour ce document",
+                &[&cree.fiche.nom],
+            )
+        })
     });
 
     let e = etat.clone();
@@ -1188,7 +1324,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let Some(edition) = etat.facture.as_mut() else {
             return;
         };
-        edition.produits = liste_produits(&etat.conn, &texte);
+        edition.produits = liste_produits(&etat.conn, est_achat(edition.type_document), &texte);
         afficher_produits(&f.global::<FacturesApi>(), &edition.produits);
     });
 
@@ -1234,7 +1370,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             return;
         };
         match produits::par_reference(&etat.conn, l.reference.trim()) {
-            Ok(Some(p)) if p.actif && p.fiche.sens.en_vente() => {
+            Ok(Some(p)) if p.actif && dans_le_sens(&p, est_achat(edition.type_document)) => {
                 l.produit_id = p.id as i32;
                 l.reference = p.fiche.reference.into();
                 l.designation = p.fiche.designation.into();
@@ -1274,17 +1410,19 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 edition,
                 edition.remise_rang,
                 edition.tva_rang,
+                edition.retenue_rang,
             );
         }
     });
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
-    api.on_recalculer(move |remise, tva| {
+    api.on_recalculer(move |remise, tva, retenue| {
         let Some(f) = f.upgrade() else { return };
         if let Some(edition) = e.borrow_mut().facture.as_mut() {
             edition.remise_rang = remise;
             edition.tva_rang = tva;
-            recalculer(&f.global::<FacturesApi>(), edition, remise, tva);
+            edition.retenue_rang = retenue;
+            recalculer(&f.global::<FacturesApi>(), edition, remise, tva, retenue);
         }
     });
 

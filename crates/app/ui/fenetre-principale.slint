@@ -178,7 +178,7 @@ export component FenetrePrincipale inherits Window {
     in property <[Page]> menu;
     in-out property <Page> page: Page.tableau-de-bord;
 
-    property <bool> page-en-construction: root.page != Page.devis && root.page != Page.proforma && root.page != Page.factures && root.page != Page.avoirs && root.page != Page.tiers && root.page != Page.produits && root.page != Page.entreprise && root.page != Page.parametres && root.page != Page.utilisateurs && root.page != Page.mon-compte && root.page != Page.a-propos;
+    property <bool> page-en-construction: root.page != Page.devis && root.page != Page.proforma && root.page != Page.bons-commande && root.page != Page.factures && root.page != Page.avoirs && root.page != Page.tiers && root.page != Page.produits && root.page != Page.entreprise && root.page != Page.parametres && root.page != Page.utilisateurs && root.page != Page.mon-compte && root.page != Page.a-propos;
 
     // Libellé de chaque page, dans la langue choisie : calculé ici et non stocké,
     // pour suivre un changement de langue sans reconstruire le menu.
@@ -345,6 +345,10 @@ export component FenetrePrincipale inherits Window {
 
             if root.page == Page.proforma: PageFactures {
                 type-document: 1;
+            }
+
+            if root.page == Page.bons-commande: PageFactures {
+                type-document: 2;
             }
 
             if root.page == Page.factures: PageFactures {

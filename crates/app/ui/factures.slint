@@ -1,4 +1,4 @@
-// Écran commun des documents de vente (Devis, Proforma, Facture, Avoir) : registre
+// Écran commun des documents à montants (Devis, Proforma, Bon de commande, Facture, Avoir) : registre
 // filtrable, puis fiche en pleine page (cahier des charges, sections 4.1, 4.2, 6 et 7).
 // Tous les calculs et les contrôles sont faits par l'application, qui fournit aussi
 // les textes propres au type : cet écran ne fait qu'afficher et transmettre la saisie.
@@ -31,6 +31,8 @@ export struct FicheFactureUi {
     tiers-detail: string,
     remise-index: int,
     tva-index: int,
+    // Retenue à la source : bon de commande seulement.
+    retenue-index: int,
     mode-index: int,
     modifiable: bool,
     // Faux pour un avoir : son client est celui de la facture d'origine.
@@ -71,6 +73,13 @@ export struct TextesDocumentUi {
     annuler: string,
     confirmer-validation: string,
     confirmer-annulation: string,
+    // Tiers du type : client pour une vente, fournisseur pour un bon de commande.
+    tiers: string,
+    recherche: string,
+    filtrer-tiers: string,
+    nouveau-tiers: string,
+    creer-tiers: string,
+    note-tiers: string,
 }
 
 // Document lié (origine ou document issu de celui-ci), pour la navigation.
@@ -84,6 +93,7 @@ export struct TotauxUi {
     remise: string,
     base-tva: string,
     tva: string,
+    retenue: string,
     ttc: string,
     lettres: string,
 }
@@ -126,6 +136,9 @@ export global FacturesApi {
     in property <[string]> clients;
     in property <[string]> taux-remise;
     in property <[string]> taux-tva;
+    // Liste et ligne de retenue : seulement pour un type où elle s'applique.
+    in property <bool> avec-retenue;
+    in property <[string]> taux-retenue;
     in property <[string]> modes-paiement;
     in property <[string]> produits;
     in property <[LigneFactureUi]> lignes;
@@ -146,7 +159,7 @@ export global FacturesApi {
     callback reference-saisie(ligne: int);
     callback deplacer-ligne(ligne: int, sens: int);
     callback supprimer-ligne(ligne: int);
-    callback recalculer(remise: int, tva: int);
+    callback recalculer(remise: int, tva: int, retenue: int);
     // Échéance après un changement de date : recalculée si elle valait la date
     // précédente plus le délai de paiement réglé, gardée sinon.
     callback echeance-apres-date(date-precedente: string, date: string, echeance: string) -> string;
@@ -212,7 +225,7 @@ component Registre inherits VerticalLayout {
         spacing: 8px;
 
         recherche := LineEdit {
-            placeholder-text: @tr("Rechercher : numéro, client, libellé");
+            placeholder-text: FacturesApi.textes.recherche;
             edited => {
                 root.filtrer();
             }
@@ -267,13 +280,13 @@ component Registre inherits VerticalLayout {
             { title: @tr("Statut"), min-width: 80px, horizontal-stretch: 0 },
             { title: @tr("Montant TTC"), min-width: 100px, horizontal-stretch: 1 },
             { title: @tr("Libellé"), min-width: 110px, horizontal-stretch: 2 },
-            { title: @tr("Client"), min-width: 130px, horizontal-stretch: 2 },
+            { title: FacturesApi.textes.tiers, min-width: 130px, horizontal-stretch: 2 },
             { title: @tr("Date"), min-width: 85px, horizontal-stretch: 0 },
             { title: @tr("N°"), min-width: 110px, horizontal-stretch: 1 },
         ] : [
             { title: @tr("N°"), min-width: 110px, horizontal-stretch: 1 },
             { title: @tr("Date"), min-width: 85px, horizontal-stretch: 0 },
-            { title: @tr("Client"), min-width: 130px, horizontal-stretch: 2 },
+            { title: FacturesApi.textes.tiers, min-width: 130px, horizontal-stretch: 2 },
             { title: @tr("Libellé"), min-width: 110px, horizontal-stretch: 2 },
             { title: @tr("Montant TTC"), min-width: 100px, horizontal-stretch: 1 },
             { title: @tr("Statut"), min-width: 80px, horizontal-stretch: 0 },
@@ -357,6 +370,8 @@ component Fiche inherits ScrollView {
     property <bool> creation-client;
     property <Retour> retour-client;
     property <string> filtre-client;
+    // Rang de la retenue : la liste n'existe que pour un bon de commande.
+    property <int> retenue-index;
     // 0 aucune, 1 valider, 2 annuler, 3 supprimer, 4 corriger.
     property <int> confirmation: 0;
     property <int> version-chargee: -1;
@@ -377,6 +392,7 @@ component Fiche inherits ScrollView {
         client.current-index = f.client-index;
         remise.current-index = f.remise-index;
         tva.current-index = f.tva-index;
+        root.retenue-index = f.retenue-index;
         mode.current-index = f.mode-index;
     }
 
@@ -390,6 +406,7 @@ component Fiche inherits ScrollView {
             client-index: client.current-index,
             remise-index: remise.current-index,
             tva-index: tva.current-index,
+            retenue-index: root.retenue-index,
             mode-index: mode.current-index,
         }
     }
@@ -401,7 +418,7 @@ component Fiche inherits ScrollView {
     }
 
     function recalculer() {
-        FacturesApi.recalculer(remise.current-index, tva.current-index);
+        FacturesApi.recalculer(remise.current-index, tva.current-index, root.retenue-index);
     }
 
     // Ctrl+S : comme le bouton d'enregistrement affiché (brouillon, ou mode et
@@ -525,7 +542,7 @@ component Fiche inherits ScrollView {
                 horizontal-stretch: 2;
 
                 Etiquette {
-                    text: @tr("Client");
+                    text: FacturesApi.textes.tiers;
                 }
 
                 Rangee {
@@ -534,7 +551,7 @@ component Fiche inherits ScrollView {
                     if root.fiche.client-modifiable: recherche-client := LineEdit {
                         width: 160px;
                         text <=> root.filtre-client;
-                        placeholder-text: @tr("Filtrer les clients");
+                        placeholder-text: FacturesApi.textes.filtrer-tiers;
                         edited(texte) => {
                             client.current-index = FacturesApi.filtrer-clients(texte, client.current-index);
                             root.fiche.tiers-detail = FacturesApi.client-choisi(client.current-index);
@@ -550,7 +567,7 @@ component Fiche inherits ScrollView {
                     }
 
                     if root.fiche.client-modifiable && Droits.ajouter-referentiel && !root.creation-client: Bouton {
-                        text: @tr("Nouveau client");
+                        text: FacturesApi.textes.nouveau-tiers;
                         clicked => {
                             root.retour-client = { };
                             root.creation-client = true;
@@ -607,7 +624,7 @@ component Fiche inherits ScrollView {
                 spacing: 10px;
 
                 Section {
-                    text: @tr("Nouveau client");
+                    text: FacturesApi.textes.nouveau-tiers;
                 }
 
                 Rangee {
@@ -648,7 +665,7 @@ component Fiche inherits ScrollView {
                     alignment: start;
 
                     Bouton {
-                        text: @tr("Créer et choisir ce client");
+                        text: FacturesApi.textes.creer-tiers;
                         primary: true;
                         enabled: nom-client.valeur != "";
                         clicked => {
@@ -679,7 +696,7 @@ component Fiche inherits ScrollView {
 
                 Text {
                     horizontal-alignment: Theme.debut;
-                    text: @tr("Le client est enregistré tout de suite dans les tiers ; sa fiche se complète ensuite depuis l'écran Tiers.");
+                    text: FacturesApi.textes.note-tiers;
                     font-size: 12px;
                     color: Theme.texte-secondaire;
                     wrap: word-wrap;
@@ -863,7 +880,8 @@ component Fiche inherits ScrollView {
                 row: 0;
                 col: Theme.rtl ? 1 : 0;
                 spacing: 10px;
-                width: 340px;
+                // Trois listes de taux (remise, TVA, retenue) pour un bon de commande.
+                width: FacturesApi.avec-retenue ? 510px : 340px;
 
                 Rangee {
                     spacing: 12px;
@@ -894,6 +912,23 @@ component Fiche inherits ScrollView {
                         tva := ComboBox {
                             model: FacturesApi.taux-tva;
                             enabled: root.fiche.taux-modifiables;
+                            selected => {
+                                root.recalculer();
+                            }
+                        }
+                    }
+
+                    if FacturesApi.avec-retenue: VerticalLayout {
+                        spacing: 4px;
+
+                        Etiquette {
+                            text: @tr("Retenue");
+                        }
+
+                        ComboBox {
+                            model: FacturesApi.taux-retenue;
+                            enabled: root.fiche.taux-modifiables;
+                            current-index <=> root.retenue-index;
                             selected => {
                                 root.recalculer();
                             }
@@ -944,6 +979,11 @@ component Fiche inherits ScrollView {
                 LigneTotal {
                     libelle: @tr("TVA");
                     valeur: FacturesApi.totaux.tva;
+                }
+
+                if FacturesApi.avec-retenue: LigneTotal {
+                    libelle: @tr("Retenue");
+                    valeur: FacturesApi.totaux.retenue;
                 }
 
                 LigneTotal {

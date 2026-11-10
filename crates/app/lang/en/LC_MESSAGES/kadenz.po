@@ -1514,3 +1514,81 @@ msgstr "the reference is required"
 
 msgid "le prix ne peut pas être négatif"
 msgstr "the price cannot be negative"
+
+msgid "Nouveau bon de commande"
+msgstr "New purchase order"
+
+msgid "Cliquer sur un bon de commande pour ouvrir sa fiche."
+msgstr "Click a purchase order to open it."
+
+msgid "Aucun numéro tant que le bon de commande n'est pas validé."
+msgstr "No number until the purchase order is validated."
+
+msgid "Annuler le bon de commande"
+msgstr "Cancel purchase order"
+
+msgid "Valider ce bon de commande ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "Validate this purchase order? It receives its final number; its lines and amounts can no longer be changed."
+
+msgid "Annuler ce bon de commande ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "Cancel this purchase order? It stays in the register with its number, read-only."
+
+msgid "Rechercher : numéro, fournisseur, libellé"
+msgstr "Search: number, supplier, description"
+
+msgid "Filtrer les fournisseurs"
+msgstr "Filter suppliers"
+
+msgid "Nouveau fournisseur"
+msgstr "New supplier"
+
+msgid "Créer et choisir ce fournisseur"
+msgstr "Create and select this supplier"
+
+msgid "Le fournisseur est enregistré tout de suite dans les tiers ; sa fiche se complète ensuite depuis l'écran Tiers."
+msgstr "The supplier is saved to contacts right away; complete their record later from the Contacts screen."
+
+msgid "Aucun bon de commande."
+msgstr "No purchase orders."
+
+msgid "1 bon de commande."
+msgstr "1 purchase order."
+
+msgid "{} bons de commande."
+msgstr "{} purchase orders."
+
+msgid "Bon de commande {}"
+msgstr "Purchase order {}"
+
+msgid "Bon de commande (brouillon)"
+msgstr "Purchase order (draft)"
+
+msgid "Bon de commande annulé : lecture seule, numéro conservé."
+msgstr "Purchase order cancelled: read-only, number kept."
+
+msgid "Bon de commande entièrement reçu : lecture seule."
+msgstr "Purchase order fully received: read-only."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un bon de commande."
+msgstr "Read-only: your role does not allow editing a purchase order."
+
+msgid "Bon de commande validé : lignes et montants figés."
+msgstr "Purchase order validated: lines and amounts are locked."
+
+msgid "bon de commande validé sous le numéro {}"
+msgstr "purchase order validated under number {}"
+
+msgid "bon de commande marqué envoyé"
+msgstr "purchase order marked as sent"
+
+msgid "bon de commande annulé"
+msgstr "purchase order cancelled"
+
+msgid "Aucun fournisseur choisi"
+msgstr "No supplier chosen"
+
+msgid "fournisseur « {} » créé et choisi pour ce document"
+msgstr "supplier \"{}\" created and selected for this document"
+
+msgid "Retenue"
+msgstr "Withholding"

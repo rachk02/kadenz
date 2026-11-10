@@ -1514,3 +1514,81 @@ msgstr "referans zorunludur"
 
 msgid "le prix ne peut pas être négatif"
 msgstr "fiyat negatif olamaz"
+
+msgid "Nouveau bon de commande"
+msgstr "Yeni sipariş formu"
+
+msgid "Cliquer sur un bon de commande pour ouvrir sa fiche."
+msgstr "Kartını açmak için bir sipariş formuna tıklayın."
+
+msgid "Aucun numéro tant que le bon de commande n'est pas validé."
+msgstr "Sipariş formu onaylanana kadar numara verilmez."
+
+msgid "Annuler le bon de commande"
+msgstr "Sipariş formunu iptal et"
+
+msgid "Valider ce bon de commande ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "Bu sipariş formu onaylansın mı? Kesin numarasını alır; satırları ve tutarları artık değiştirilemez."
+
+msgid "Annuler ce bon de commande ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "Bu sipariş formu iptal edilsin mi? Numarasıyla kayıt defterinde salt okunur olarak kalır."
+
+msgid "Rechercher : numéro, fournisseur, libellé"
+msgstr "Ara: numara, tedarikçi, açıklama"
+
+msgid "Filtrer les fournisseurs"
+msgstr "Tedarikçileri filtrele"
+
+msgid "Nouveau fournisseur"
+msgstr "Yeni tedarikçi"
+
+msgid "Créer et choisir ce fournisseur"
+msgstr "Bu tedarikçiyi oluştur ve seç"
+
+msgid "Le fournisseur est enregistré tout de suite dans les tiers ; sa fiche se complète ensuite depuis l'écran Tiers."
+msgstr "Tedarikçi hemen carilere kaydedilir; kaydını daha sonra Cariler ekranından tamamlayın."
+
+msgid "Aucun bon de commande."
+msgstr "Sipariş formu yok."
+
+msgid "1 bon de commande."
+msgstr "1 sipariş formu."
+
+msgid "{} bons de commande."
+msgstr "{} sipariş formu."
+
+msgid "Bon de commande {}"
+msgstr "Sipariş formu {}"
+
+msgid "Bon de commande (brouillon)"
+msgstr "Sipariş formu (taslak)"
+
+msgid "Bon de commande annulé : lecture seule, numéro conservé."
+msgstr "Sipariş formu iptal edildi: salt okunur, numara korundu."
+
+msgid "Bon de commande entièrement reçu : lecture seule."
+msgstr "Sipariş formu tamamen teslim alındı: salt okunur."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un bon de commande."
+msgstr "Salt okunur: rolünüz sipariş formu değiştirmeye izin vermiyor."
+
+msgid "Bon de commande validé : lignes et montants figés."
+msgstr "Sipariş formu onaylandı: satırlar ve tutarlar sabitlendi."
+
+msgid "bon de commande validé sous le numéro {}"
+msgstr "sipariş formu {} numarasıyla onaylandı"
+
+msgid "bon de commande marqué envoyé"
+msgstr "sipariş formu gönderildi olarak işaretlendi"
+
+msgid "bon de commande annulé"
+msgstr "sipariş formu iptal edildi"
+
+msgid "Aucun fournisseur choisi"
+msgstr "Tedarikçi seçilmedi"
+
+msgid "fournisseur « {} » créé et choisi pour ce document"
+msgstr "\"{}\" tedarikçisi oluşturuldu ve bu belge için seçildi"
+
+msgid "Retenue"
+msgstr "Stopaj"

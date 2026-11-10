@@ -1514,3 +1514,81 @@ msgstr "品番は必須です"
 
 msgid "le prix ne peut pas être négatif"
 msgstr "価格を負の値にすることはできません"
+
+msgid "Nouveau bon de commande"
+msgstr "新規注文書"
+
+msgid "Cliquer sur un bon de commande pour ouvrir sa fiche."
+msgstr "注文書をクリックすると詳細が開きます。"
+
+msgid "Aucun numéro tant que le bon de commande n'est pas validé."
+msgstr "注文書が確定されるまで番号は付きません。"
+
+msgid "Annuler le bon de commande"
+msgstr "注文書を取り消す"
+
+msgid "Valider ce bon de commande ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "この注文書を確定しますか？最終番号が付与され、明細と金額は変更できなくなります。"
+
+msgid "Annuler ce bon de commande ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "この注文書を取り消しますか？番号付きのまま一覧に残り、読み取り専用になります。"
+
+msgid "Rechercher : numéro, fournisseur, libellé"
+msgstr "検索：番号、仕入先、件名"
+
+msgid "Filtrer les fournisseurs"
+msgstr "仕入先を絞り込む"
+
+msgid "Nouveau fournisseur"
+msgstr "新規仕入先"
+
+msgid "Créer et choisir ce fournisseur"
+msgstr "この仕入先を作成して選択"
+
+msgid "Le fournisseur est enregistré tout de suite dans les tiers ; sa fiche se complète ensuite depuis l'écran Tiers."
+msgstr "仕入先はすぐに取引先に登録されます。詳細は後で取引先画面から入力してください。"
+
+msgid "Aucun bon de commande."
+msgstr "注文書はありません。"
+
+msgid "1 bon de commande."
+msgstr "注文書 1 件。"
+
+msgid "{} bons de commande."
+msgstr "注文書 {} 件。"
+
+msgid "Bon de commande {}"
+msgstr "注文書 {}"
+
+msgid "Bon de commande (brouillon)"
+msgstr "注文書（下書き）"
+
+msgid "Bon de commande annulé : lecture seule, numéro conservé."
+msgstr "取消済みの注文書：読み取り専用、番号は保持されます。"
+
+msgid "Bon de commande entièrement reçu : lecture seule."
+msgstr "受領完了の注文書：読み取り専用です。"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un bon de commande."
+msgstr "読み取り専用：あなたの役割では注文書を変更できません。"
+
+msgid "Bon de commande validé : lignes et montants figés."
+msgstr "確定済みの注文書：明細と金額は固定されています。"
+
+msgid "bon de commande validé sous le numéro {}"
+msgstr "注文書を番号 {} で確定しました。"
+
+msgid "bon de commande marqué envoyé"
+msgstr "注文書を送付済みにしました。"
+
+msgid "bon de commande annulé"
+msgstr "注文書を取り消しました。"
+
+msgid "Aucun fournisseur choisi"
+msgstr "仕入先が選択されていません"
+
+msgid "fournisseur « {} » créé et choisi pour ce document"
+msgstr "仕入先「{}」を作成し、この書類に選択しました"
+
+msgid "Retenue"
+msgstr "源泉徴収"

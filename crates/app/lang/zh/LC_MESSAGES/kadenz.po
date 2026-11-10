@@ -1514,3 +1514,81 @@ msgstr "编码为必填项"
 
 msgid "le prix ne peut pas être négatif"
 msgstr "价格不能为负数"
+
+msgid "Nouveau bon de commande"
+msgstr "新建采购订单"
+
+msgid "Cliquer sur un bon de commande pour ouvrir sa fiche."
+msgstr "点击采购订单即可打开其详情。"
+
+msgid "Aucun numéro tant que le bon de commande n'est pas validé."
+msgstr "采购订单确认之前没有编号。"
+
+msgid "Annuler le bon de commande"
+msgstr "作废采购订单"
+
+msgid "Valider ce bon de commande ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "确认此采购订单？它将获得正式编号，其明细和金额将无法再修改。"
+
+msgid "Annuler ce bon de commande ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "作废此采购订单？它将保留编号留在登记簿中，且为只读。"
+
+msgid "Rechercher : numéro, fournisseur, libellé"
+msgstr "搜索：编号、供应商、摘要"
+
+msgid "Filtrer les fournisseurs"
+msgstr "筛选供应商"
+
+msgid "Nouveau fournisseur"
+msgstr "新建供应商"
+
+msgid "Créer et choisir ce fournisseur"
+msgstr "创建并选择此供应商"
+
+msgid "Le fournisseur est enregistré tout de suite dans les tiers ; sa fiche se complète ensuite depuis l'écran Tiers."
+msgstr "供应商会立即保存到往来单位中；之后可在往来单位界面补全其资料。"
+
+msgid "Aucun bon de commande."
+msgstr "没有采购订单。"
+
+msgid "1 bon de commande."
+msgstr "1 份采购订单。"
+
+msgid "{} bons de commande."
+msgstr "{} 份采购订单。"
+
+msgid "Bon de commande {}"
+msgstr "采购订单 {}"
+
+msgid "Bon de commande (brouillon)"
+msgstr "采购订单（草稿）"
+
+msgid "Bon de commande annulé : lecture seule, numéro conservé."
+msgstr "采购订单已作废：只读，编号保留。"
+
+msgid "Bon de commande entièrement reçu : lecture seule."
+msgstr "采购订单已全部收货：只读。"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un bon de commande."
+msgstr "只读：您的角色无权修改采购订单。"
+
+msgid "Bon de commande validé : lignes et montants figés."
+msgstr "采购订单已确认：明细和金额已锁定。"
+
+msgid "bon de commande validé sous le numéro {}"
+msgstr "采购订单已确认，编号为 {}。"
+
+msgid "bon de commande marqué envoyé"
+msgstr "采购订单已标记为已发送。"
+
+msgid "bon de commande annulé"
+msgstr "采购订单已作废。"
+
+msgid "Aucun fournisseur choisi"
+msgstr "未选择供应商"
+
+msgid "fournisseur « {} » créé et choisi pour ce document"
+msgstr "已创建供应商“{}”并为此单据选择"
+
+msgid "Retenue"
+msgstr "预扣税"

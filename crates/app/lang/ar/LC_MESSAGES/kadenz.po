@@ -1514,3 +1514,81 @@ msgstr "المرجع إلزامي"
 
 msgid "le prix ne peut pas être négatif"
 msgstr "لا يمكن أن يكون السعر سالبًا"
+
+msgid "Nouveau bon de commande"
+msgstr "أمر شراء جديد"
+
+msgid "Cliquer sur un bon de commande pour ouvrir sa fiche."
+msgstr "انقر على أمر شراء لفتح بطاقته."
+
+msgid "Aucun numéro tant que le bon de commande n'est pas validé."
+msgstr "لا يُسند رقم ما دام أمر الشراء غير معتمد."
+
+msgid "Annuler le bon de commande"
+msgstr "إلغاء أمر الشراء"
+
+msgid "Valider ce bon de commande ? Il reçoit son numéro définitif ; ses lignes et ses montants ne pourront plus être modifiés."
+msgstr "هل تريد اعتماد أمر الشراء هذا؟ سيحصل على رقمه النهائي، ولن يعود بالإمكان تعديل بنوده ومبالغه."
+
+msgid "Annuler ce bon de commande ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "هل تريد إلغاء أمر الشراء هذا؟ سيبقى في السجل برقمه، للقراءة فقط."
+
+msgid "Rechercher : numéro, fournisseur, libellé"
+msgstr "بحث: الرقم، المورد، البيان"
+
+msgid "Filtrer les fournisseurs"
+msgstr "تصفية الموردين"
+
+msgid "Nouveau fournisseur"
+msgstr "مورد جديد"
+
+msgid "Créer et choisir ce fournisseur"
+msgstr "إنشاء هذا المورد واختياره"
+
+msgid "Le fournisseur est enregistré tout de suite dans les tiers ; sa fiche se complète ensuite depuis l'écran Tiers."
+msgstr "يُحفَظ المورد فورًا ضمن الأطراف؛ أكمل بطاقته لاحقًا من شاشة الأطراف."
+
+msgid "Aucun bon de commande."
+msgstr "لا توجد أوامر شراء."
+
+msgid "1 bon de commande."
+msgstr "أمر شراء واحد."
+
+msgid "{} bons de commande."
+msgstr "عدد أوامر الشراء: {}."
+
+msgid "Bon de commande {}"
+msgstr "أمر الشراء {}"
+
+msgid "Bon de commande (brouillon)"
+msgstr "أمر شراء (مسودة)"
+
+msgid "Bon de commande annulé : lecture seule, numéro conservé."
+msgstr "أمر شراء ملغى: للقراءة فقط، مع الاحتفاظ بالرقم."
+
+msgid "Bon de commande entièrement reçu : lecture seule."
+msgstr "أمر شراء مستلَم بالكامل: للقراءة فقط."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un bon de commande."
+msgstr "للقراءة فقط: لا يسمح دورك بتعديل أمر شراء."
+
+msgid "Bon de commande validé : lignes et montants figés."
+msgstr "أمر شراء معتمد: البنود والمبالغ مثبتة."
+
+msgid "bon de commande validé sous le numéro {}"
+msgstr "اعتُمد أمر الشراء برقم {}"
+
+msgid "bon de commande marqué envoyé"
+msgstr "وُضعت على أمر الشراء علامة مُرسَل"
+
+msgid "bon de commande annulé"
+msgstr "أُلغي أمر الشراء"
+
+msgid "Aucun fournisseur choisi"
+msgstr "لم يُختر أي مورد"
+
+msgid "fournisseur « {} » créé et choisi pour ce document"
+msgstr "أُنشئ المورد «{}» واختير لهذا المستند"
+
+msgid "Retenue"
+msgstr "الاقتطاع"
