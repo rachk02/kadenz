@@ -1724,3 +1724,156 @@ msgstr "the discount rate list must contain values between 0 and 100%"
 
 msgid "la liste des taux de retenue doit contenir des valeurs entre 0 et 100 %"
 msgstr "the withholding rate list must contain values between 0 and 100%"
+
+msgid "Nouveau bordereau"
+msgstr "New delivery note"
+
+msgid "Cliquer sur un bordereau pour ouvrir sa fiche."
+msgstr "Click a delivery note to open it."
+
+msgid "Aucun numéro tant que le bordereau n'est pas validé."
+msgstr "No number until the delivery note is validated."
+
+msgid "Annuler le bordereau"
+msgstr "Cancel delivery note"
+
+msgid "Valider ce bordereau ? Il reçoit son numéro définitif ; ses lignes et ses quantités ne pourront plus être modifiées."
+msgstr "Validate this delivery note? It receives its final number; its lines and quantities can no longer be changed."
+
+msgid "Annuler ce bordereau ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "Cancel this delivery note? It stays in the register with its number, read-only."
+
+msgid "Aucun bordereau."
+msgstr "No delivery notes."
+
+msgid "1 bordereau."
+msgstr "1 delivery note."
+
+msgid "{} bordereaux."
+msgstr "{} delivery notes."
+
+msgid "Bordereau {}"
+msgstr "Delivery note {}"
+
+msgid "Bordereau (brouillon)"
+msgstr "Delivery note (draft)"
+
+msgid "Bordereau annulé : lecture seule, numéro conservé."
+msgstr "Delivery note cancelled: read-only, number kept."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un bordereau."
+msgstr "Read-only: your role does not allow editing a delivery note."
+
+msgid "Bordereau validé : lignes et quantités figées."
+msgstr "Delivery note validated: lines and quantities are locked."
+
+msgid "Bordereau livré : lecture seule."
+msgstr "Delivery note delivered: read-only."
+
+msgid "bordereau validé sous le numéro {}"
+msgstr "delivery note validated under number {}"
+
+msgid "bordereau annulé"
+msgstr "delivery note cancelled"
+
+msgid "Commandée"
+msgstr "Ordered"
+
+msgid "Livrée"
+msgstr "Delivered"
+
+msgid "Reste à livrer"
+msgstr "Left to deliver"
+
+msgid "Visa du client"
+msgstr "Customer's signature"
+
+msgid "Visa du fournisseur"
+msgstr "Supplier's signature"
+
+msgid "Date de livraison"
+msgstr "Delivery date"
+
+msgid "Date de réception"
+msgstr "Receipt date"
+
+msgid "Créer un bordereau"
+msgstr "Create a delivery note"
+
+msgid "Confirmer la livraison"
+msgstr "Confirm delivery"
+
+msgid "Confirmer la livraison ? Le statut passe en livraison partielle ou complète selon les quantités livrées ; le bordereau ne pourra plus être annulé."
+msgstr "Confirm delivery? The status becomes partially or fully delivered according to the delivered quantities; the delivery note can no longer be cancelled."
+
+msgid "bordereau créé en brouillon avec les lignes de la facture : ajuster les quantités livrées puis valider"
+msgstr "delivery note created as a draft with the invoice lines: adjust the delivered quantities, then validate"
+
+msgid "livraison confirmée"
+msgstr "delivery confirmed"
+
+msgid "Bordereau : {}"
+msgstr "Delivery note: {}"
+
+msgid "Livraison confirmée"
+msgstr "Delivery confirmed"
+
+msgid "Livraison confirmée, {}"
+msgstr "Delivery confirmed, {}"
+
+msgid "ligne {} : un bordereau issu d'une facture reprend la ligne de la facture ; seules la quantité livrée et les observations se modifient"
+msgstr "line {}: a delivery note issued from an invoice keeps the invoice line; only the delivered quantity and the notes can be changed"
+
+msgid "un bordereau se crée depuis une facture validée ou envoyée ; celle-ci est « {} »"
+msgstr "a delivery note is created from a validated or sent invoice; this one is \"{}\""
+
+msgid "seul un bordereau validé se confirme ; celui-ci est « {} »"
+msgstr "only a validated delivery note can be confirmed; this one is \"{}\""
+
+msgid "la facture d'origine est « {} » : le bordereau ne peut plus être validé"
+msgstr "the original invoice is \"{}\": the delivery note can no longer be validated"
+
+msgid "un bordereau se crée depuis une facture"
+msgstr "a delivery note is created from an invoice"
+
+msgid "tout est déjà livré ou en cours de livraison sur cette facture"
+msgstr "everything on this invoice is already delivered or being delivered"
+
+msgid "le client d'un bordereau issu d'une facture est celui de la facture"
+msgstr "the customer of a delivery note issued from an invoice is that of the invoice"
+
+msgid "un bordereau issu d'une facture reprend toutes les lignes de la facture"
+msgstr "a delivery note issued from an invoice keeps all the invoice lines"
+
+msgid "seul un bordereau de livraison se confirme"
+msgstr "only a delivery note can be confirmed"
+
+msgid "le bordereau ne livre rien : saisir au moins une quantité livrée"
+msgstr "the delivery note delivers nothing: enter at least one delivered quantity"
+
+msgid "un bordereau issu d'une facture ne se duplique pas : en créer un autre depuis la facture"
+msgstr "a delivery note issued from an invoice cannot be duplicated: create another one from the invoice"
+
+msgid "ligne {} : quantité livrée illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "line {}: unreadable delivered quantity, enter a positive number (3 decimals at most)"
+
+msgid "Enregistrer les visas et les observations"
+msgstr "Save signatures and notes"
+
+msgid "Enregistrer les observations"
+msgstr "Save notes"
+
+msgid "bordereau enregistré"
+msgstr "delivery note saved"
+
+msgid "Modification des visas et dates de livraison"
+msgstr "Change of delivery signatures and dates"
+
+msgid "cette facture a des bordereaux non confirmés : les annuler ou confirmer leur livraison d'abord"
+msgstr "this invoice has unconfirmed delivery notes: cancel them or confirm their delivery first"
+
+msgid "les visas et dates ne concernent que les bordereaux de livraison"
+msgstr "signatures and dates only apply to delivery notes"
+
+msgid "les visas et dates se modifient sur un bordereau validé, avant la confirmation ; celui-ci est « {} »"
+msgstr "signatures and dates are changed on a validated delivery note, before confirmation; this one is \"{}\""

@@ -1724,3 +1724,156 @@ msgstr "يجب أن تحتوي قائمة نسب الخصم على قيم بين
 
 msgid "la liste des taux de retenue doit contenir des valeurs entre 0 et 100 %"
 msgstr "يجب أن تحتوي قائمة نسب الاقتطاع على قيم بين 0 و100 %"
+
+msgid "Nouveau bordereau"
+msgstr "إشعار تسليم جديد"
+
+msgid "Cliquer sur un bordereau pour ouvrir sa fiche."
+msgstr "انقر على إشعار تسليم لفتح بطاقته."
+
+msgid "Aucun numéro tant que le bordereau n'est pas validé."
+msgstr "لا يُسند رقم ما دام إشعار التسليم غير معتمد."
+
+msgid "Annuler le bordereau"
+msgstr "إلغاء إشعار التسليم"
+
+msgid "Valider ce bordereau ? Il reçoit son numéro définitif ; ses lignes et ses quantités ne pourront plus être modifiées."
+msgstr "هل تريد اعتماد إشعار التسليم هذا؟ سيحصل على رقمه النهائي، ولن يعود بالإمكان تعديل بنوده وكمياته."
+
+msgid "Annuler ce bordereau ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "هل تريد إلغاء إشعار التسليم هذا؟ سيبقى في السجل برقمه، للقراءة فقط."
+
+msgid "Aucun bordereau."
+msgstr "لا توجد إشعارات تسليم."
+
+msgid "1 bordereau."
+msgstr "إشعار تسليم واحد."
+
+msgid "{} bordereaux."
+msgstr "عدد إشعارات التسليم: {}."
+
+msgid "Bordereau {}"
+msgstr "إشعار التسليم {}"
+
+msgid "Bordereau (brouillon)"
+msgstr "إشعار تسليم (مسودة)"
+
+msgid "Bordereau annulé : lecture seule, numéro conservé."
+msgstr "إشعار تسليم ملغى: للقراءة فقط، مع الاحتفاظ بالرقم."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un bordereau."
+msgstr "للقراءة فقط: لا يسمح دورك بتعديل إشعار تسليم."
+
+msgid "Bordereau validé : lignes et quantités figées."
+msgstr "إشعار تسليم معتمد: البنود والكميات مثبتة."
+
+msgid "Bordereau livré : lecture seule."
+msgstr "إشعار تسليم مُسلَّم: للقراءة فقط."
+
+msgid "bordereau validé sous le numéro {}"
+msgstr "اعتُمد إشعار التسليم برقم {}"
+
+msgid "bordereau annulé"
+msgstr "أُلغي إشعار التسليم"
+
+msgid "Commandée"
+msgstr "المطلوبة"
+
+msgid "Livrée"
+msgstr "المسلَّمة"
+
+msgid "Reste à livrer"
+msgstr "المتبقي للتسليم"
+
+msgid "Visa du client"
+msgstr "توقيع العميل"
+
+msgid "Visa du fournisseur"
+msgstr "توقيع المورد"
+
+msgid "Date de livraison"
+msgstr "تاريخ التسليم"
+
+msgid "Date de réception"
+msgstr "تاريخ الاستلام"
+
+msgid "Créer un bordereau"
+msgstr "إنشاء إشعار تسليم"
+
+msgid "Confirmer la livraison"
+msgstr "تأكيد التسليم"
+
+msgid "Confirmer la livraison ? Le statut passe en livraison partielle ou complète selon les quantités livrées ; le bordereau ne pourra plus être annulé."
+msgstr "هل تريد تأكيد التسليم؟ تصبح الحالة تسليمًا جزئيًا أو كاملًا حسب الكميات المسلَّمة، ولن يعود بالإمكان إلغاء إشعار التسليم."
+
+msgid "bordereau créé en brouillon avec les lignes de la facture : ajuster les quantités livrées puis valider"
+msgstr "أُنشئ إشعار تسليم كمسودة ببنود الفاتورة: عدّل الكميات المسلَّمة ثم اعتمده"
+
+msgid "livraison confirmée"
+msgstr "تأكّد التسليم"
+
+msgid "Bordereau : {}"
+msgstr "إشعار التسليم: {}"
+
+msgid "Livraison confirmée"
+msgstr "تأكيد التسليم"
+
+msgid "Livraison confirmée, {}"
+msgstr "تأكيد التسليم، {}"
+
+msgid "ligne {} : un bordereau issu d'une facture reprend la ligne de la facture ; seules la quantité livrée et les observations se modifient"
+msgstr "البند {}: إشعار التسليم الصادر عن فاتورة يحتفظ ببند الفاتورة؛ لا يُعدَّل إلا الكمية المسلَّمة والملاحظات"
+
+msgid "un bordereau se crée depuis une facture validée ou envoyée ; celle-ci est « {} »"
+msgstr "يُنشأ إشعار التسليم من فاتورة معتمدة أو مُرسَلة؛ وحالة هذه الفاتورة «{}»"
+
+msgid "seul un bordereau validé se confirme ; celui-ci est « {} »"
+msgstr "لا يُؤكَّد إلا إشعار تسليم معتمد؛ وحالة هذا الإشعار «{}»"
+
+msgid "la facture d'origine est « {} » : le bordereau ne peut plus être validé"
+msgstr "حالة الفاتورة الأصلية «{}»: لم يعد بالإمكان اعتماد إشعار التسليم"
+
+msgid "un bordereau se crée depuis une facture"
+msgstr "يُنشأ إشعار التسليم من فاتورة"
+
+msgid "tout est déjà livré ou en cours de livraison sur cette facture"
+msgstr "كل ما في هذه الفاتورة مُسلَّم أو قيد التسليم"
+
+msgid "le client d'un bordereau issu d'une facture est celui de la facture"
+msgstr "عميل إشعار التسليم الصادر عن فاتورة هو عميل الفاتورة"
+
+msgid "un bordereau issu d'une facture reprend toutes les lignes de la facture"
+msgstr "إشعار التسليم الصادر عن فاتورة يحتفظ بكل بنود الفاتورة"
+
+msgid "seul un bordereau de livraison se confirme"
+msgstr "لا يُؤكَّد إلا إشعار التسليم"
+
+msgid "le bordereau ne livre rien : saisir au moins une quantité livrée"
+msgstr "إشعار التسليم لا يسلّم شيئًا: أدخل كمية مسلَّمة واحدة على الأقل"
+
+msgid "un bordereau issu d'une facture ne se duplique pas : en créer un autre depuis la facture"
+msgstr "لا يُكرَّر إشعار التسليم الصادر عن فاتورة: أنشئ إشعارًا آخر من الفاتورة"
+
+msgid "ligne {} : quantité livrée illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "البند {}: الكمية المسلَّمة غير مقروءة، أدخل عددًا موجبًا (3 أرقام عشرية على الأكثر)"
+
+msgid "Enregistrer les visas et les observations"
+msgstr "حفظ التوقيعات والملاحظات"
+
+msgid "Enregistrer les observations"
+msgstr "حفظ الملاحظات"
+
+msgid "bordereau enregistré"
+msgstr "تم حفظ إشعار التسليم"
+
+msgid "Modification des visas et dates de livraison"
+msgstr "تعديل توقيعات التسليم وتواريخه"
+
+msgid "cette facture a des bordereaux non confirmés : les annuler ou confirmer leur livraison d'abord"
+msgstr "لهذه الفاتورة إشعارات تسليم غير مؤكَّدة: ألغِها أو أكِّد تسليمها أولًا"
+
+msgid "les visas et dates ne concernent que les bordereaux de livraison"
+msgstr "التوقيعات والتواريخ لا تخص إلا إشعارات التسليم"
+
+msgid "les visas et dates se modifient sur un bordereau validé, avant la confirmation ; celui-ci est « {} »"
+msgstr "تُعدَّل التوقيعات والتواريخ على إشعار تسليم معتمد قبل التأكيد؛ وحالة هذا الإشعار «{}»"

@@ -18,8 +18,8 @@ use kadenz_domaine::saisie;
 use kadenz_domaine::texte::{cle_comparaison, contient};
 use kadenz_stockage::comptes::Utilisateur;
 use kadenz_stockage::documents::{
-    self, EtatPaiement, FiltreDocuments, Lien, LigneSaisie, NatureLien, ResumeDocument, Saisie,
-    Statut, TypeDocument,
+    self, ChampsLivraison, EtatPaiement, FiltreDocuments, Lien, LigneSaisie, NatureLien,
+    ResumeDocument, Saisie, Statut, TypeDocument,
 };
 use kadenz_stockage::produits::{self, FiltreProduits, Produit};
 use kadenz_stockage::tiers::{self, FicheTiers, FiltreTiers, TypeTiers};
@@ -147,6 +147,20 @@ fn textes_type(t: TypeDocument) -> TextesDocumentUi {
                 "Annuler ce bon de commande ? Il reste dans le registre avec son numéro, en lecture seule.",
             ),
         ),
+        TypeDocument::Livraison => (
+            tr("Livraisons"),
+            tr("Nouveau bordereau"),
+            tr("Cliquer sur un bordereau pour ouvrir sa fiche."),
+            tr("Aucun numéro tant que le bordereau n'est pas validé."),
+            tr("Marquer envoyé"),
+            tr("Annuler le bordereau"),
+            tr(
+                "Valider ce bordereau ? Il reçoit son numéro définitif ; ses lignes et ses quantités ne pourront plus être modifiées.",
+            ),
+            tr(
+                "Annuler ce bordereau ? Il reste dans le registre avec son numéro, en lecture seule.",
+            ),
+        ),
         TypeDocument::Avoir => (
             tr("Avoirs"),
             String::new(),
@@ -233,6 +247,9 @@ fn resume_registre(t: TypeDocument, n: usize) -> String {
         (TypeDocument::BonCommande, 0) => tr("Aucun bon de commande."),
         (TypeDocument::BonCommande, 1) => tr("1 bon de commande."),
         (TypeDocument::BonCommande, n) => trf("{} bons de commande.", &[&n]),
+        (TypeDocument::Livraison, 0) => tr("Aucun bordereau."),
+        (TypeDocument::Livraison, 1) => tr("1 bordereau."),
+        (TypeDocument::Livraison, n) => trf("{} bordereaux.", &[&n]),
         (TypeDocument::Avoir, 0) => tr("Aucun avoir."),
         (TypeDocument::Avoir, 1) => tr("1 avoir."),
         (TypeDocument::Avoir, n) => trf("{} avoirs.", &[&n]),
@@ -254,6 +271,9 @@ fn titre_fiche(t: TypeDocument, numero: Option<&str>, existe: bool) -> String {
         (TypeDocument::BonCommande, Some(n), _) => trf("Bon de commande {}", &[&n]),
         (TypeDocument::BonCommande, None, true) => tr("Bon de commande (brouillon)"),
         (TypeDocument::BonCommande, None, false) => tr("Nouveau bon de commande"),
+        (TypeDocument::Livraison, Some(n), _) => trf("Bordereau {}", &[&n]),
+        (TypeDocument::Livraison, None, true) => tr("Bordereau (brouillon)"),
+        (TypeDocument::Livraison, None, false) => tr("Nouveau bordereau"),
         (TypeDocument::Avoir, Some(n), _) => trf("Avoir {}", &[&n]),
         (TypeDocument::Avoir, None, _) => tr("Avoir (brouillon)"),
         (_, Some(n), _) => trf("Facture {}", &[&n]),
@@ -264,7 +284,7 @@ fn titre_fiche(t: TypeDocument, numero: Option<&str>, existe: bool) -> String {
 
 /// Explication affichée sous les actions d'une fiche non modifiable.
 fn note_fiche(t: TypeDocument, statut: Statut, modifiable: bool, admin_modifiable: bool) -> String {
-    use TypeDocument::{Avoir, BonCommande, Devis, Proforma};
+    use TypeDocument::{Avoir, BonCommande, Devis, Livraison, Proforma};
     match (t, statut) {
         (Devis, Statut::Annule) => tr("Devis annulé : lecture seule, numéro conservé."),
         (Proforma, Statut::Annule) => tr("Proforma annulée : lecture seule, numéro conservé."),
@@ -272,12 +292,16 @@ fn note_fiche(t: TypeDocument, statut: Statut, modifiable: bool, admin_modifiabl
         (BonCommande, Statut::Annule) => {
             tr("Bon de commande annulé : lecture seule, numéro conservé.")
         }
+        (Livraison, Statut::Annule) => tr("Bordereau annulé : lecture seule, numéro conservé."),
         (_, Statut::Annule) => tr("Facture annulée : lecture seule, numéro conservé."),
         _ if modifiable || admin_modifiable => String::new(),
         (Devis, Statut::Converti) => tr("Devis converti en facture : lecture seule."),
         (Proforma, Statut::Converti) => tr("Proforma convertie en facture : lecture seule."),
         (BonCommande, Statut::ReceptionComplete) => {
             tr("Bon de commande entièrement reçu : lecture seule.")
+        }
+        (Livraison, Statut::LivraisonPartielle | Statut::LivraisonComplete) => {
+            tr("Bordereau livré : lecture seule.")
         }
         (Devis, Statut::Brouillon) => {
             tr("Lecture seule : votre rôle ne permet pas de modifier un devis.")
@@ -291,6 +315,9 @@ fn note_fiche(t: TypeDocument, statut: Statut, modifiable: bool, admin_modifiabl
         (BonCommande, Statut::Brouillon) => {
             tr("Lecture seule : votre rôle ne permet pas de modifier un bon de commande.")
         }
+        (Livraison, Statut::Brouillon) => {
+            tr("Lecture seule : votre rôle ne permet pas de modifier un bordereau.")
+        }
         (_, Statut::Brouillon) => {
             tr("Lecture seule : votre rôle ne permet pas de modifier une facture.")
         }
@@ -298,6 +325,7 @@ fn note_fiche(t: TypeDocument, statut: Statut, modifiable: bool, admin_modifiabl
         (Proforma, _) => tr("Proforma validée : lignes et montants figés."),
         (Avoir, _) => tr("Avoir validé : lignes et montants figés."),
         (BonCommande, _) => tr("Bon de commande validé : lignes et montants figés."),
+        (Livraison, _) => tr("Bordereau validé : lignes et quantités figées."),
         _ => tr("Facture validée : lignes et montants figés."),
     }
 }
@@ -308,6 +336,7 @@ fn message_validation(t: TypeDocument, numero: &str) -> String {
         TypeDocument::Devis => trf("devis validé sous le numéro {}", &[&numero]),
         TypeDocument::Proforma => trf("proforma validée sous le numéro {}", &[&numero]),
         TypeDocument::BonCommande => trf("bon de commande validé sous le numéro {}", &[&numero]),
+        TypeDocument::Livraison => trf("bordereau validé sous le numéro {}", &[&numero]),
         TypeDocument::Avoir => trf("avoir validé sous le numéro {}", &[&numero]),
         _ => trf("facture validée sous le numéro {}", &[&numero]),
     }
@@ -328,6 +357,7 @@ fn message_annulation(t: TypeDocument) -> String {
         TypeDocument::Devis => tr("devis annulé"),
         TypeDocument::Proforma => tr("proforma annulée"),
         TypeDocument::BonCommande => tr("bon de commande annulé"),
+        TypeDocument::Livraison => tr("bordereau annulé"),
         TypeDocument::Avoir => tr("avoir annulé"),
         _ => tr("facture annulée"),
     }
@@ -335,12 +365,14 @@ fn message_annulation(t: TypeDocument) -> String {
 
 /// Statuts proposés par le filtre du registre ; `None` est « tous les statuts ».
 fn statuts_filtre(t: TypeDocument) -> Vec<Option<Statut>> {
-    let mut statuts = vec![
-        None,
-        Some(Statut::Brouillon),
-        Some(Statut::Valide),
-        Some(Statut::Envoye),
-    ];
+    let mut statuts = vec![None, Some(Statut::Brouillon), Some(Statut::Valide)];
+    // Un bordereau ne s'envoie pas : il se confirme une fois livré.
+    if t == TypeDocument::Livraison {
+        statuts.push(Some(Statut::LivraisonPartielle));
+        statuts.push(Some(Statut::LivraisonComplete));
+    } else {
+        statuts.push(Some(Statut::Envoye));
+    }
     if t.convertible_en_facture() {
         statuts.push(Some(Statut::Converti));
     }
@@ -369,7 +401,7 @@ fn texte_lien(l: &Lien, origine: bool) -> String {
     // La facture d'origine d'un avoir est nommée par son seul numéro : son libellé dit déjà
     // qu'il s'agit d'une facture.
     let titre = match (l.nature, origine, &l.numero) {
-        (NatureLien::Avoir, true, Some(n)) => n.clone(),
+        (NatureLien::Avoir | NatureLien::Livraison, true, Some(n)) => n.clone(),
         _ => titre_fiche(l.type_document, l.numero.as_deref(), true),
     };
     let document = if l.numero.is_some() {
@@ -402,7 +434,16 @@ fn type_au_rang(rang: i32) -> TypeDocument {
 
 // ---------------------------------------------------------------- Registre
 
-fn cellules(d: &ResumeDocument) -> Vec<String> {
+fn cellules(d: &ResumeDocument, montants: bool) -> Vec<String> {
+    if !montants {
+        return vec![
+            d.numero.clone().unwrap_or_else(|| tr("(brouillon)")),
+            date_en_texte(d.date),
+            d.tiers_nom.clone(),
+            d.libelle.clone(),
+            tr(&d.statut.to_string()),
+        ];
+    }
     vec![
         d.numero.clone().unwrap_or_else(|| tr("(brouillon)")),
         date_en_texte(d.date),
@@ -418,7 +459,13 @@ fn cellules(d: &ResumeDocument) -> Vec<String> {
     ]
 }
 
-fn trier(lignes: &mut [ResumeDocument], colonne: i32, croissant: bool) {
+fn trier(lignes: &mut [ResumeDocument], colonne: i32, croissant: bool, montants: bool) {
+    // Sans montants, la cinquième colonne est le statut.
+    let colonne = if !montants && colonne == 4 {
+        5
+    } else {
+        colonne
+    };
     let comparer = |a: &ResumeDocument, b: &ResumeDocument| -> Ordering {
         match colonne {
             0 => a.numero.cmp(&b.numero),
@@ -447,9 +494,12 @@ fn afficher_registre(f: &FenetrePrincipale, etat: &mut Etat) {
     match documents::lister(&etat.conn, t, &etat.factures.filtre) {
         Ok(mut lignes) => {
             if let Some((colonne, croissant)) = etat.factures.tri {
-                trier(&mut lignes, colonne, croissant);
+                trier(&mut lignes, colonne, croissant, t.a_des_montants());
             }
-            api.set_registre(modele_lignes(lignes.iter().map(cellules).collect()));
+            let montants = t.a_des_montants();
+            api.set_registre(modele_lignes(
+                lignes.iter().map(|d| cellules(d, montants)).collect(),
+            ));
             api.set_resume(resume_registre(t, lignes.len()).into());
             etat.factures.lignes = lignes;
         }
@@ -504,6 +554,8 @@ fn ligne_ui(l: &LigneSaisie) -> LigneFactureUi {
         quantite: saisie::quantite_en_texte(l.quantite).into(),
         total: saisie::montant_en_texte(total_ligne(l.prix, l.quantite)).into(),
         recue: saisie::quantite_en_texte(l.quantite_livree).into(),
+        observations: l.observations.as_str().into(),
+        reste: SharedString::new(),
     }
 }
 
@@ -640,8 +692,14 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
     let brouillon = statut == Statut::Brouillon;
     let droit_brouillon = possede(etat, Droit::brouillon(t));
     let modifiable = brouillon && droit_brouillon;
+    // Bordereau issu d'une facture : client et lignes repris de la facture.
+    let issu_facture = t == TypeDocument::Livraison
+        && document
+            .as_ref()
+            .and_then(|d| d.source.as_ref())
+            .is_some_and(|l| l.nature == NatureLien::Livraison);
     // Le client d'un avoir est celui de la facture d'origine : jamais choisi à l'écran.
-    let client_modifiable = modifiable && t != TypeDocument::Avoir;
+    let client_modifiable = modifiable && t != TypeDocument::Avoir && !issu_facture;
 
     // Clients : liste modifiable, ou seulement le nom figé du document.
     let (clients, noms, client_index, detail) = if client_modifiable {
@@ -703,7 +761,26 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
     };
     afficher_produits(&api, &produits);
 
-    let nouvelles: Vec<LigneFactureUi> = saisie_doc.lignes.iter().map(ligne_ui).collect();
+    // Reste à livrer de chaque ligne, affiché sur un bordereau issu d'une facture.
+    let restes = document
+        .as_ref()
+        .map(|d| d.restes_a_livrer.clone())
+        .unwrap_or_default();
+    // Le reste avant ce bordereau sert de plafond pendant la saisie ; une fois le
+    // bordereau validé, il ne dirait plus rien d'utile.
+    let avec_reste = t == TypeDocument::Livraison && modifiable && !restes.is_empty();
+    let nouvelles: Vec<LigneFactureUi> = saisie_doc
+        .lignes
+        .iter()
+        .enumerate()
+        .map(|(rang, l)| {
+            let mut ligne = ligne_ui(l);
+            if avec_reste && let Some(reste) = restes.get(rang) {
+                ligne.reste = saisie::quantite_en_texte(*reste).into();
+            }
+            ligne
+        })
+        .collect();
     // Fiche déjà ouverte : son modèle est mis à jour rangée par rangée plutôt que
     // remplacé. Les champs des lignes restent alors en place, avec le focus : la
     // saisie et les raccourcis continuent après un enregistrement.
@@ -790,7 +867,24 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
     let peut_convertir = convertible && possede(etat, Droit::brouillon(TypeDocument::Facture));
     let peut_corriger =
         convertible && droit_brouillon && possede(etat, Droit::AnnulerDocumentValide);
-    let peut_dupliquer = document.is_some() && t != TypeDocument::Avoir && droit_brouillon;
+    // Un bordereau issu d'une facture ne se duplique pas : la copie échapperait au
+    // contrôle du reste à livrer.
+    let peut_dupliquer =
+        document.is_some() && t != TypeDocument::Avoir && !issu_facture && droit_brouillon;
+    let peut_creer_bordereau = t == TypeDocument::Facture
+        && valide_ou_envoye
+        && possede(etat, Droit::brouillon(TypeDocument::Livraison));
+    let bordereau_possible = t == TypeDocument::Facture && restes.iter().any(|r| *r > 0);
+    let livraison = t == TypeDocument::Livraison;
+    let visas_modifiables =
+        livraison && (modifiable || (statut == Statut::Valide && droit_brouillon));
+    let peut_confirmer_livraison =
+        livraison && statut == Statut::Valide && possede(etat, Droit::ValiderDocument);
+    let libelle_administratif = match (livraison, visas_modifiables) {
+        (true, true) => tr("Enregistrer les visas et les observations"),
+        (true, false) => tr("Enregistrer les observations"),
+        _ => tr("Enregistrer le mode et les observations"),
+    };
     let peut_creer_avoir = t == TypeDocument::Facture
         && valide_ou_envoye
         && possede(etat, Droit::brouillon(TypeDocument::Avoir));
@@ -845,11 +939,25 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
         taux_modifiables: client_modifiable,
         admin_modifiable,
         peut_valider: modifiable && possede(etat, Droit::ValiderDocument),
-        peut_envoyer: statut == Statut::Valide && possede(etat, Droit::ValiderDocument),
+        // Un bordereau ne s'envoie pas : il se confirme.
+        peut_envoyer: statut == Statut::Valide
+            && !livraison
+            && possede(etat, Droit::ValiderDocument),
         peut_annuler: valide_ou_envoye && possede(etat, Droit::AnnulerDocumentValide),
         peut_supprimer: document.is_some() && modifiable,
         avec_reception,
         reception_modifiable,
+        lignes_verrouillees: issu_facture,
+        avec_reste,
+        visa_client: saisie_doc.livraison.visa_client.as_str().into(),
+        visa_fournisseur: saisie_doc.livraison.visa_fournisseur.as_str().into(),
+        date_livraison: saisie_doc.livraison.date_livraison.as_str().into(),
+        date_reception: saisie_doc.livraison.date_reception.as_str().into(),
+        visas_modifiables,
+        peut_confirmer_livraison,
+        peut_creer_bordereau,
+        bordereau_possible,
+        libelle_administratif: libelle_administratif.into(),
         peut_convertir,
         peut_dupliquer,
         peut_corriger,
@@ -912,12 +1020,29 @@ fn lignes_saisies(e: &EditionFacture) -> Result<Vec<LigneSaisie>, String> {
         .enumerate()
         .map(|(rang, l)| {
             let n = rang + 1;
-            let prix = saisie::montant_depuis_texte(&l.prix).ok_or_else(|| {
-                trf(
-                    "ligne {} : prix illisible, saisir un montant entier en FCFA",
-                    &[&n],
-                )
-            })?;
+            let montants = e.type_document.a_des_montants();
+            // Le bordereau n'affiche pas de prix : 0 pour une ligne libre, celui de la
+            // facture étant repris par le stockage pour un bordereau issu d'une facture.
+            let prix = if !montants && l.prix.trim().is_empty() {
+                0
+            } else {
+                saisie::montant_depuis_texte(&l.prix).ok_or_else(|| {
+                    trf(
+                        "ligne {} : prix illisible, saisir un montant entier en FCFA",
+                        &[&n],
+                    )
+                })?
+            };
+            let quantite_livree = if montants {
+                0
+            } else {
+                quantite_ou_zero(&l.recue).ok_or_else(|| {
+                    trf(
+                        "ligne {} : quantité livrée illisible, saisir un nombre positif (3 décimales au plus)",
+                        &[&n],
+                    )
+                })?
+            };
             let quantite = saisie::quantite_depuis_texte(&l.quantite).ok_or_else(|| {
                 trf(
                     "ligne {} : quantité illisible, saisir un nombre positif (3 décimales au plus)",
@@ -930,8 +1055,8 @@ fn lignes_saisies(e: &EditionFacture) -> Result<Vec<LigneSaisie>, String> {
                 designation: l.designation.to_string(),
                 prix,
                 quantite,
-                observations: String::new(),
-                ..Default::default()
+                quantite_livree,
+                observations: l.observations.to_string(),
             })
         })
         .collect()
@@ -960,8 +1085,27 @@ fn saisie_depuis_ui(e: &EditionFacture, fiche: &FicheFactureUi) -> Result<Saisie
         observations: fiche.observations.to_string(),
         date_echeance,
         lignes: lignes_saisies(e)?,
-        livraison: Default::default(),
+        livraison: champs_livraison(
+            &fiche.visa_client,
+            &fiche.visa_fournisseur,
+            &fiche.date_livraison,
+            &fiche.date_reception,
+        ),
     })
+}
+
+fn champs_livraison(
+    visa_client: &str,
+    visa_fournisseur: &str,
+    date_livraison: &str,
+    date_reception: &str,
+) -> ChampsLivraison {
+    ChampsLivraison {
+        visa_client: visa_client.to_string(),
+        visa_fournisseur: visa_fournisseur.to_string(),
+        date_livraison: date_livraison.to_string(),
+        date_reception: date_reception.to_string(),
+    }
 }
 
 /// Enregistre le brouillon affiché ; renvoie son identifiant.
@@ -1007,6 +1151,27 @@ fn agir(
     }
 }
 
+/// Les visas et dates saisis diffèrent-ils de ceux du document ?
+fn champs_changes(fiche: &FicheFactureUi, champs: &ChampsLivraison) -> bool {
+    fiche.visa_client.as_str() != champs.visa_client
+        || fiche.visa_fournisseur.as_str() != champs.visa_fournisseur
+        || fiche.date_livraison.as_str() != champs.date_livraison
+        || fiche.date_reception.as_str() != champs.date_reception
+}
+
+/// Quantité reçue ou livrée : comme une quantité de ligne, mais zéro est permis
+/// (case vide, « 0 », « 0,0 ») puisqu'une ligne peut ne rien recevoir.
+fn quantite_ou_zero(texte: &str) -> Option<Quantite> {
+    let t = texte.trim();
+    if t.chars().all(|c| matches!(c, '0' | ',' | '.'))
+        && t.chars().filter(|c| matches!(c, ',' | '.')).count() <= 1
+        && !t.starts_with([',', '.'])
+    {
+        return Some(0);
+    }
+    saisie::quantite_depuis_texte(t)
+}
+
 /// Quantités reçues saisies sur les lignes, contrôlées ; une case vide vaut zéro.
 fn quantites_recues(e: Option<&EditionFacture>) -> Result<Vec<Quantite>, String> {
     let Some(e) = e else {
@@ -1016,10 +1181,7 @@ fn quantites_recues(e: Option<&EditionFacture>) -> Result<Vec<Quantite>, String>
         .iter()
         .enumerate()
         .map(|(rang, l)| {
-            if l.recue.trim().is_empty() {
-                return Ok(0);
-            }
-            saisie::quantite_depuis_texte(&l.recue).ok_or_else(|| {
+            quantite_ou_zero(&l.recue).ok_or_else(|| {
                 trf(
                     "ligne {} : quantité reçue illisible, saisir un nombre positif (3 décimales au plus)",
                     &[&(rang + 1)],
@@ -1150,6 +1312,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         )));
         api.set_avec_paiement(t.recoit_des_reglements());
         api.set_avec_retenue(t.retenue_applicable());
+        api.set_avec_montants(t.a_des_montants());
         api.set_avec_pdf(true);
         // Un avoir naît toujours d'une facture validée, jamais d'une page vierge.
         api.set_peut_creer(t != TypeDocument::Avoir && possede(&etat, Droit::brouillon(t)));
@@ -1553,6 +1716,70 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         })
     });
 
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_creer_bordereau(move || {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
+        creer_puis_ouvrir(
+            &f,
+            &e,
+            |etat, acteur, id| {
+                documents::creer_bordereau(&mut etat.conn, acteur, id).map_err(texte_erreur)
+            },
+            tr("bordereau créé en brouillon avec les lignes de la facture : ajuster les quantités livrées puis valider"),
+        )
+    });
+
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_enregistrer_livraison(move |vc, vf, dl, dr, observations| {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
+        agir(&f, &e, |etat, acteur, id| {
+            let Some(fiche) = etat.facture.as_ref().map(|ed| ed.fiche.clone()) else {
+                return Err(tr("aucune fiche ouverte"));
+            };
+            let champs = champs_livraison(&vc, &vf, &dl, &dr);
+            if fiche.visas_modifiables && champs_changes(&fiche, &champs) {
+                documents::modifier_livraison(&mut etat.conn, acteur, id, &champs)
+                    .map_err(texte_erreur)?;
+            }
+            if observations != fiche.observations {
+                // Le mode de paiement d'un bordereau reste celui du document.
+                let mode = etat
+                    .facture
+                    .as_ref()
+                    .and_then(|ed| au_rang(&ed.modes, fiche.mode_index))
+                    .unwrap_or_default();
+                documents::modifier_administratif(&mut etat.conn, acteur, id, &mode, &observations)
+                    .map_err(texte_erreur)?;
+            }
+            Ok(tr("bordereau enregistré"))
+        })
+    });
+
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_confirmer_livraison(move |vc, vf, dl, dr| {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
+        agir(&f, &e, |etat, acteur, id| {
+            let Some(fiche) = etat.facture.as_ref().map(|ed| ed.fiche.clone()) else {
+                return Err(tr("aucune fiche ouverte"));
+            };
+            // Les visas saisis avant la confirmation sont enregistrés d'abord.
+            let champs = champs_livraison(&vc, &vf, &dl, &dr);
+            if fiche.visas_modifiables && champs_changes(&fiche, &champs) {
+                documents::modifier_livraison(&mut etat.conn, acteur, id, &champs)
+                    .map_err(texte_erreur)?;
+            }
+            documents::confirmer_livraison(&mut etat.conn, acteur, id)
+                .map(|()| tr("livraison confirmée"))
+                .map_err(texte_erreur)
+        })
+    });
+
     let e = etat.clone();
     api.on_exporter_pdf(move || {
         let etat = e.borrow();
@@ -1709,6 +1936,17 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn quantites_recues_ou_livrees() {
+        assert_eq!(quantite_ou_zero(""), Some(0));
+        assert_eq!(quantite_ou_zero(" 0 "), Some(0));
+        assert_eq!(quantite_ou_zero("0,000"), Some(0));
+        assert_eq!(quantite_ou_zero("2,5"), Some(2500));
+        assert_eq!(quantite_ou_zero(","), None);
+        assert_eq!(quantite_ou_zero("0,0,0"), None);
+        assert_eq!(quantite_ou_zero("-1"), None);
+    }
 
     #[test]
     fn dates_saisies() {

@@ -1724,3 +1724,156 @@ msgstr "折扣率列表中的值必须介于 0 与 100% 之间"
 
 msgid "la liste des taux de retenue doit contenir des valeurs entre 0 et 100 %"
 msgstr "预扣税率列表中的值必须介于 0 与 100% 之间"
+
+msgid "Nouveau bordereau"
+msgstr "新建送货单"
+
+msgid "Cliquer sur un bordereau pour ouvrir sa fiche."
+msgstr "点击送货单即可打开其详情。"
+
+msgid "Aucun numéro tant que le bordereau n'est pas validé."
+msgstr "送货单确认之前没有编号。"
+
+msgid "Annuler le bordereau"
+msgstr "作废送货单"
+
+msgid "Valider ce bordereau ? Il reçoit son numéro définitif ; ses lignes et ses quantités ne pourront plus être modifiées."
+msgstr "确认此送货单？它将获得正式编号，其明细和数量将无法再修改。"
+
+msgid "Annuler ce bordereau ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "作废此送货单？它将保留编号留在登记簿中，且为只读。"
+
+msgid "Aucun bordereau."
+msgstr "没有送货单。"
+
+msgid "1 bordereau."
+msgstr "1 张送货单。"
+
+msgid "{} bordereaux."
+msgstr "{} 张送货单。"
+
+msgid "Bordereau {}"
+msgstr "送货单 {}"
+
+msgid "Bordereau (brouillon)"
+msgstr "送货单（草稿）"
+
+msgid "Bordereau annulé : lecture seule, numéro conservé."
+msgstr "送货单已作废：只读，编号保留。"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un bordereau."
+msgstr "只读：您的角色无权修改送货单。"
+
+msgid "Bordereau validé : lignes et quantités figées."
+msgstr "送货单已确认：明细和数量已锁定。"
+
+msgid "Bordereau livré : lecture seule."
+msgstr "送货单已送达：只读。"
+
+msgid "bordereau validé sous le numéro {}"
+msgstr "送货单已确认，编号为 {}。"
+
+msgid "bordereau annulé"
+msgstr "送货单已作废。"
+
+msgid "Commandée"
+msgstr "订购"
+
+msgid "Livrée"
+msgstr "已交付"
+
+msgid "Reste à livrer"
+msgstr "待交付"
+
+msgid "Visa du client"
+msgstr "客户签收"
+
+msgid "Visa du fournisseur"
+msgstr "供应商签字"
+
+msgid "Date de livraison"
+msgstr "交货日期"
+
+msgid "Date de réception"
+msgstr "收货日期"
+
+msgid "Créer un bordereau"
+msgstr "创建送货单"
+
+msgid "Confirmer la livraison"
+msgstr "确认交付"
+
+msgid "Confirmer la livraison ? Le statut passe en livraison partielle ou complète selon les quantités livrées ; le bordereau ne pourra plus être annulé."
+msgstr "确认交付？状态将根据交付数量变为部分送货或全部送货；送货单将无法再作废。"
+
+msgid "bordereau créé en brouillon avec les lignes de la facture : ajuster les quantités livrées puis valider"
+msgstr "已按发票明细创建送货单草稿：请调整交付数量后再确认"
+
+msgid "livraison confirmée"
+msgstr "已确认交付。"
+
+msgid "Bordereau : {}"
+msgstr "送货单：{}"
+
+msgid "Livraison confirmée"
+msgstr "确认交付"
+
+msgid "Livraison confirmée, {}"
+msgstr "确认交付，{}"
+
+msgid "ligne {} : un bordereau issu d'une facture reprend la ligne de la facture ; seules la quantité livrée et les observations se modifient"
+msgstr "第 {} 行：由发票生成的送货单沿用发票明细；只能修改交付数量和备注"
+
+msgid "un bordereau se crée depuis une facture validée ou envoyée ; celle-ci est « {} »"
+msgstr "送货单需从已确认或已发送的发票创建；此发票状态为“{}”"
+
+msgid "seul un bordereau validé se confirme ; celui-ci est « {} »"
+msgstr "只有已确认的送货单才能确认交付；此送货单状态为“{}”"
+
+msgid "la facture d'origine est « {} » : le bordereau ne peut plus être validé"
+msgstr "原发票状态为“{}”：送货单已无法确认"
+
+msgid "un bordereau se crée depuis une facture"
+msgstr "送货单需从发票创建"
+
+msgid "tout est déjà livré ou en cours de livraison sur cette facture"
+msgstr "此发票的所有项目均已交付或正在交付"
+
+msgid "le client d'un bordereau issu d'une facture est celui de la facture"
+msgstr "由发票生成的送货单的客户即该发票的客户"
+
+msgid "un bordereau issu d'une facture reprend toutes les lignes de la facture"
+msgstr "由发票生成的送货单沿用发票的全部明细"
+
+msgid "seul un bordereau de livraison se confirme"
+msgstr "只有送货单才能确认交付"
+
+msgid "le bordereau ne livre rien : saisir au moins une quantité livrée"
+msgstr "送货单没有交付任何内容：请至少输入一项交付数量"
+
+msgid "un bordereau issu d'une facture ne se duplique pas : en créer un autre depuis la facture"
+msgstr "由发票生成的送货单不能复制：请从发票另行创建"
+
+msgid "ligne {} : quantité livrée illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "第 {} 行：交付数量无法识别，请输入正数（最多 3 位小数）"
+
+msgid "Enregistrer les visas et les observations"
+msgstr "保存签字和备注"
+
+msgid "Enregistrer les observations"
+msgstr "保存备注"
+
+msgid "bordereau enregistré"
+msgstr "送货单已保存"
+
+msgid "Modification des visas et dates de livraison"
+msgstr "修改送货签字和日期"
+
+msgid "cette facture a des bordereaux non confirmés : les annuler ou confirmer leur livraison d'abord"
+msgstr "此发票有未确认的送货单：请先作废或确认其交货"
+
+msgid "les visas et dates ne concernent que les bordereaux de livraison"
+msgstr "签字和日期仅适用于送货单"
+
+msgid "les visas et dates se modifient sur un bordereau validé, avant la confirmation ; celui-ci est « {} »"
+msgstr "签字和日期需在已确认的送货单上、确认交货之前修改；此送货单状态为“{}”"

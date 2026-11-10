@@ -14,8 +14,12 @@ export struct LigneFactureUi {
     prix: string,
     quantite: string,
     total: string,
-    // Quantité reçue cumulée (bon de commande en réception).
+    // Quantité reçue cumulée (bon de commande en réception) ou quantité livrée
+    // (bordereau de livraison).
     recue: string,
+    observations: string,
+    // Reste à livrer avant ce bordereau (bordereau issu d'une facture).
+    reste: string,
 }
 
 export struct FicheFactureUi {
@@ -50,6 +54,24 @@ export struct FicheFactureUi {
     // saisie tant que la réception n'est pas complète (droit « Valider un document »).
     avec-reception: bool,
     reception-modifiable: bool,
+    // Bordereau issu d'une facture : client et lignes repris de la facture, seules
+    // la quantité livrée et les observations de ligne se modifient.
+    lignes-verrouillees: bool,
+    avec-reste: bool,
+    // Visas et dates du bordereau, modifiables en brouillon et une fois validé,
+    // jusqu'à la confirmation de la livraison.
+    visa-client: string,
+    visa-fournisseur: string,
+    date-livraison: string,
+    date-reception: string,
+    visas-modifiables: bool,
+    peut-confirmer-livraison: bool,
+    // Facture validée ou envoyée : bouton « Créer un bordereau », grisé quand
+    // tout est déjà livré ou en cours de livraison.
+    peut-creer-bordereau: bool,
+    bordereau-possible: bool,
+    // Texte du bouton d'enregistrement d'un document validé.
+    libelle-administratif: string,
     // Devis ou proforma validé ou envoyé, sans facture en préparation.
     peut-convertir: bool,
     peut-dupliquer: bool,
@@ -124,6 +146,8 @@ export global FacturesApi {
     in property <bool> avec-paiement;
     // PDF disponible pour ce type.
     in property <bool> avec-pdf;
+    // Faux pour le bordereau de livraison : ni prix, ni taux, ni totaux.
+    in property <bool> avec-montants: true;
     // Rang du type dans TypeDocument::TOUS.
     callback ouvrir(type-document: int);
     // Statut : rang dans `statuts`. Paiement : 0 tous, 1 impayé, 2 partiel, 3 payé.
@@ -174,6 +198,11 @@ export global FacturesApi {
     callback marquer-envoye() -> Retour;
     // Réception d'un bon de commande : quantités reçues cumulées lues sur les lignes.
     callback enregistrer-reception() -> Retour;
+    // Bordereau : création depuis la facture affichée ; visas, dates et observations
+    // d'un bordereau validé ; confirmation de la livraison (visas enregistrés d'abord).
+    callback creer-bordereau() -> Retour;
+    callback enregistrer-livraison(visa-client: string, visa-fournisseur: string, date-livraison: string, date-reception: string, observations: string) -> Retour;
+    callback confirmer-livraison(visa-client: string, visa-fournisseur: string, date-livraison: string, date-reception: string) -> Retour;
     callback annuler-document() -> Retour;
     callback supprimer() -> Retour;
     callback enregistrer-administratif(mode: int, observations: string) -> Retour;
@@ -281,7 +310,20 @@ component Registre inherits VerticalLayout {
 
     StandardTableView {
         // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
-        columns: Theme.rtl ? [
+        // Le bordereau n'a que cinq colonnes : ni montant, ni paiement, ni échéance.
+        columns: !FacturesApi.avec-montants ? (Theme.rtl ? [
+            { title: @tr("Statut"), min-width: 140px, horizontal-stretch: 0 },
+            { title: @tr("Libellé"), min-width: 110px, horizontal-stretch: 2 },
+            { title: FacturesApi.textes.tiers, min-width: 130px, horizontal-stretch: 2 },
+            { title: @tr("Date"), min-width: 85px, horizontal-stretch: 0 },
+            { title: @tr("N°"), min-width: 110px, horizontal-stretch: 1 },
+        ] : [
+            { title: @tr("N°"), min-width: 110px, horizontal-stretch: 1 },
+            { title: @tr("Date"), min-width: 85px, horizontal-stretch: 0 },
+            { title: FacturesApi.textes.tiers, min-width: 130px, horizontal-stretch: 2 },
+            { title: @tr("Libellé"), min-width: 110px, horizontal-stretch: 2 },
+            { title: @tr("Statut"), min-width: 140px, horizontal-stretch: 0 },
+        ]) : Theme.rtl ? [
             { title: @tr("Échéance"), min-width: 85px, horizontal-stretch: 0 },
             { title: @tr("Mode"), min-width: 100px, horizontal-stretch: 1 },
             { title: @tr("Paiement"), min-width: 85px, horizontal-stretch: 0 },
@@ -378,9 +420,19 @@ component Fiche inherits ScrollView {
     property <bool> creation-client;
     property <Retour> retour-client;
     property <string> filtre-client;
-    // Rang de la retenue : la liste n'existe que pour un bon de commande.
+    // Rangs des taux et du mode, échéance, visas : leurs champs n'existent que pour
+    // certains types (pas de taux ni d'échéance sur un bordereau, retenue sur un
+    // bon de commande seulement), d'où ces propriétés liées dans les deux sens.
     property <int> retenue-index;
-    // 0 aucune, 1 valider, 2 annuler, 3 supprimer, 4 corriger.
+    property <int> remise-index;
+    property <int> tva-index;
+    property <int> mode-index;
+    property <string> echeance-texte;
+    property <string> visa-client;
+    property <string> visa-fournisseur;
+    property <string> date-livraison;
+    property <string> date-reception;
+    // 0 aucune, 1 valider, 2 annuler, 3 supprimer, 4 corriger, 5 confirmer la livraison.
     property <int> confirmation: 0;
     property <int> version-chargee: -1;
     property <string> date-precedente;
@@ -394,28 +446,36 @@ component Fiche inherits ScrollView {
         root.filtre-client = "";
         date.valeur = f.date;
         root.date-precedente = f.date;
-        echeance.valeur = f.echeance;
+        root.echeance-texte = f.echeance;
         libelle.valeur = f.libelle;
         observations.valeur = f.observations;
         client.current-index = f.client-index;
-        remise.current-index = f.remise-index;
-        tva.current-index = f.tva-index;
+        root.remise-index = f.remise-index;
+        root.tva-index = f.tva-index;
         root.retenue-index = f.retenue-index;
-        mode.current-index = f.mode-index;
+        root.mode-index = f.mode-index;
+        root.visa-client = f.visa-client;
+        root.visa-fournisseur = f.visa-fournisseur;
+        root.date-livraison = f.date-livraison;
+        root.date-reception = f.date-reception;
     }
 
     function saisie() -> FicheFactureUi {
         {
             existe: root.fiche.existe,
             date: date.valeur,
-            echeance: echeance.valeur,
+            echeance: root.echeance-texte,
             libelle: libelle.valeur,
             observations: observations.valeur,
             client-index: client.current-index,
-            remise-index: remise.current-index,
-            tva-index: tva.current-index,
+            remise-index: root.remise-index,
+            tva-index: root.tva-index,
             retenue-index: root.retenue-index,
-            mode-index: mode.current-index,
+            mode-index: root.mode-index,
+            visa-client: root.visa-client,
+            visa-fournisseur: root.visa-fournisseur,
+            date-livraison: root.date-livraison,
+            date-reception: root.date-reception,
         }
     }
 
@@ -426,7 +486,19 @@ component Fiche inherits ScrollView {
     }
 
     function recalculer() {
-        FacturesApi.recalculer(remise.current-index, tva.current-index, root.retenue-index);
+        FacturesApi.recalculer(root.remise-index, root.tva-index, root.retenue-index);
+    }
+
+    // Enregistrement d'un document validé : mode et observations, ou, pour un
+    // bordereau, visas, dates et observations.
+    function enregistrer-administratif() {
+        root.confirmation = 0;
+        if (FacturesApi.avec-montants) {
+            root.retour = FacturesApi.enregistrer-administratif(root.mode-index, observations.valeur);
+        } else {
+            root.retour = FacturesApi.enregistrer-livraison(root.visa-client, root.visa-fournisseur, root.date-livraison, root.date-reception, observations.valeur);
+        }
+        root.recharger-si-besoin();
     }
 
     // Ctrl+S : comme le bouton d'enregistrement affiché (brouillon, ou mode et
@@ -438,9 +510,7 @@ component Fiche inherits ScrollView {
             root.retour = FacturesApi.enregistrer(root.saisie());
             root.recharger-si-besoin();
         } else if (root.fiche.admin-modifiable) {
-            root.confirmation = 0;
-            root.retour = FacturesApi.enregistrer-administratif(mode.current-index, observations.valeur);
-            root.recharger-si-besoin();
+            root.enregistrer-administratif();
         }
     }
 
@@ -602,21 +672,22 @@ component Fiche inherits ScrollView {
                     libelle: @tr("Date (JJ/MM/AAAA)");
                     lecture-seule: !root.fiche.modifiable;
                     modifie(texte) => {
-                        echeance.valeur = FacturesApi.echeance-apres-date(root.date-precedente, texte, echeance.valeur);
+                        root.echeance-texte = FacturesApi.echeance-apres-date(root.date-precedente, texte, root.echeance-texte);
                         root.date-precedente = texte;
                     }
                 }
             }
 
-            VerticalLayout {
+            if FacturesApi.avec-montants: VerticalLayout {
                 row: 0;
                 col: Theme.rtl ? 0 : 2;
                 horizontal-stretch: 1;
                 alignment: start;
 
-                echeance := Champ {
+                Champ {
                     libelle: FacturesApi.textes.libelle-echeance;
                     lecture-seule: !root.fiche.modifiable;
+                    valeur <=> root.echeance-texte;
                 }
             }
         }
@@ -717,10 +788,45 @@ component Fiche inherits ScrollView {
             lecture-seule: !root.fiche.modifiable;
         }
 
+        if !FacturesApi.avec-montants: Rangee {
+            spacing: 12px;
+
+            Champ {
+                libelle: @tr("Visa du client");
+                horizontal-stretch: 1;
+                lecture-seule: !root.fiche.visas-modifiables;
+                valeur <=> root.visa-client;
+            }
+
+            Champ {
+                libelle: @tr("Visa du fournisseur");
+                horizontal-stretch: 1;
+                lecture-seule: !root.fiche.visas-modifiables;
+                valeur <=> root.visa-fournisseur;
+            }
+
+            Champ {
+                libelle: @tr("Date de livraison");
+                horizontal-stretch: 1;
+                lecture-seule: !root.fiche.visas-modifiables;
+                valeur <=> root.date-livraison;
+            }
+
+            Champ {
+                libelle: @tr("Date de réception");
+                horizontal-stretch: 1;
+                lecture-seule: !root.fiche.visas-modifiables;
+                valeur <=> root.date-reception;
+            }
+        }
+
         // Lignes.
         Section {
             text: @tr("Lignes");
         }
+
+        if FacturesApi.avec-montants: VerticalLayout {
+        spacing: 14px;
 
         Rangee {
             spacing: 8px;
@@ -843,6 +949,124 @@ component Fiche inherits ScrollView {
                 }
             }
         }
+        }
+
+        // Bordereau : quantités commandée, livrée et reste à livrer, observation par ligne.
+        if !FacturesApi.avec-montants: VerticalLayout {
+            spacing: 14px;
+
+            Rangee {
+                spacing: 8px;
+
+                Etiquette {
+                    text: @tr("Référence");
+                    width: 120px;
+                }
+
+                Etiquette {
+                    text: @tr("Désignation");
+                    horizontal-stretch: 1;
+                }
+
+                Etiquette {
+                    text: @tr("Commandée");
+                    width: 80px;
+                    horizontal-alignment: Theme.fin;
+                }
+
+                Etiquette {
+                    text: @tr("Livrée");
+                    width: 80px;
+                    horizontal-alignment: Theme.fin;
+                }
+
+                if root.fiche.avec-reste: Etiquette {
+                    text: @tr("Reste à livrer");
+                    width: 100px;
+                    horizontal-alignment: Theme.fin;
+                }
+
+                Etiquette {
+                    text: @tr("Observations");
+                    width: 180px;
+                }
+
+                if root.fiche.modifiable && !root.fiche.lignes-verrouillees: Rectangle {
+                    width: 124px;
+                }
+            }
+
+            for ligne[i] in FacturesApi.lignes: Rangee {
+                spacing: 8px;
+
+                LineEdit {
+                    width: 120px;
+                    text <=> ligne.reference;
+                    read-only: !root.fiche.modifiable || root.fiche.lignes-verrouillees;
+                    accepted => {
+                        FacturesApi.reference-saisie(i);
+                    }
+                }
+
+                LineEdit {
+                    horizontal-stretch: 1;
+                    text <=> ligne.designation;
+                    read-only: !root.fiche.modifiable || root.fiche.lignes-verrouillees;
+                }
+
+                LineEdit {
+                    width: 80px;
+                    text <=> ligne.quantite;
+                    read-only: !root.fiche.modifiable || root.fiche.lignes-verrouillees;
+                    horizontal-alignment: Theme.fin;
+                }
+
+                LineEdit {
+                    width: 80px;
+                    text <=> ligne.recue;
+                    read-only: !root.fiche.modifiable;
+                    horizontal-alignment: Theme.fin;
+                }
+
+                if root.fiche.avec-reste: Text {
+                    width: 100px;
+                    text: ligne.reste;
+                    horizontal-alignment: Theme.fin;
+                    vertical-alignment: center;
+                    color: Theme.texte;
+                }
+
+                LineEdit {
+                    width: 180px;
+                    text <=> ligne.observations;
+                    read-only: !root.fiche.modifiable;
+                }
+
+                if root.fiche.modifiable && !root.fiche.lignes-verrouillees: PetitBouton {
+                    text: "↑";
+                    enabled: i > 0;
+                    clicked => {
+                        FacturesApi.deplacer-ligne(i, -1);
+                    }
+                }
+
+                if root.fiche.modifiable && !root.fiche.lignes-verrouillees: PetitBouton {
+                    text: "↓";
+                    enabled: i < FacturesApi.lignes.length - 1;
+                    clicked => {
+                        FacturesApi.deplacer-ligne(i, 1);
+                    }
+                }
+
+                if root.fiche.modifiable && !root.fiche.lignes-verrouillees: PetitBouton {
+                    text: "×";
+                    clicked => {
+                        FacturesApi.demande-focus += 1;
+                        FacturesApi.supprimer-ligne(i);
+                    }
+                }
+            }
+        }
 
         if FacturesApi.lignes.length == 0: Text {
             horizontal-alignment: Theme.debut;
@@ -878,7 +1102,7 @@ component Fiche inherits ScrollView {
             }
         }
 
-        if root.fiche.modifiable: Rangee {
+        if root.fiche.modifiable && !root.fiche.lignes-verrouillees: Rangee {
             spacing: 8px;
 
             recherche-produit := LineEdit {
@@ -912,7 +1136,7 @@ component Fiche inherits ScrollView {
             }
         }
 
-        if root.fiche.modifiable: Text {
+        if root.fiche.modifiable && FacturesApi.avec-montants: Text {
             horizontal-alignment: Theme.debut;
             text: @tr("Le produit choisi remplit la référence, la désignation et le prix, qui restent modifiables sur la ligne. Une référence tapée puis validée par Entrée reprend le produit correspondant.");
             font-size: 12px;
@@ -927,12 +1151,15 @@ component Fiche inherits ScrollView {
 
             VerticalLayout {
                 row: 0;
-                col: Theme.rtl ? 1 : 0;
+                col: Theme.rtl && FacturesApi.avec-montants ? 1 : 0;
                 spacing: 10px;
-                // Trois listes de taux (remise, TVA, retenue) pour un bon de commande.
-                width: FacturesApi.avec-retenue ? 510px : 340px;
+                // Trois listes de taux (remise, TVA, retenue) pour un bon de commande ;
+                // un bordereau n'a que ses observations, sur toute la largeur.
+                min-width: !FacturesApi.avec-montants ? 0px : (FacturesApi.avec-retenue ? 510px : 340px);
+                max-width: !FacturesApi.avec-montants ? 100000px : (FacturesApi.avec-retenue ? 510px : 340px);
+                horizontal-stretch: FacturesApi.avec-montants ? 0 : 1;
 
-                Rangee {
+                if FacturesApi.avec-montants: Rangee {
                     spacing: 12px;
 
                     VerticalLayout {
@@ -942,9 +1169,10 @@ component Fiche inherits ScrollView {
                             text: @tr("Remise");
                         }
 
-                        remise := ComboBox {
+                        ComboBox {
                             model: FacturesApi.taux-remise;
                             enabled: root.fiche.taux-modifiables;
+                            current-index <=> root.remise-index;
                             selected => {
                                 root.recalculer();
                             }
@@ -958,9 +1186,10 @@ component Fiche inherits ScrollView {
                             text: @tr("TVA");
                         }
 
-                        tva := ComboBox {
+                        ComboBox {
                             model: FacturesApi.taux-tva;
                             enabled: root.fiche.taux-modifiables;
+                            current-index <=> root.tva-index;
                             selected => {
                                 root.recalculer();
                             }
@@ -985,16 +1214,17 @@ component Fiche inherits ScrollView {
                     }
                 }
 
-                VerticalLayout {
+                if FacturesApi.avec-montants: VerticalLayout {
                     spacing: 4px;
 
                     Etiquette {
                         text: @tr("Mode de paiement");
                     }
 
-                    mode := ComboBox {
+                    ComboBox {
                         model: FacturesApi.modes-paiement;
                         enabled: root.fiche.modifiable || root.fiche.admin-modifiable;
+                        current-index <=> root.mode-index;
                     }
                 }
 
@@ -1004,7 +1234,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            VerticalLayout {
+            if FacturesApi.avec-montants: VerticalLayout {
                 row: 0;
                 col: Theme.rtl ? 0 : 1;
                 spacing: 6px;
@@ -1075,11 +1305,18 @@ component Fiche inherits ScrollView {
             }
 
             if root.fiche.admin-modifiable: Bouton {
-                text: @tr("Enregistrer le mode et les observations");
+                text: root.fiche.libelle-administratif;
                 clicked => {
-                    root.confirmation = 0;
-                    root.retour = FacturesApi.enregistrer-administratif(mode.current-index, observations.valeur);
-                    root.recharger-si-besoin();
+                    root.enregistrer-administratif();
+                }
+            }
+
+            if root.fiche.peut-confirmer-livraison: Bouton {
+                text: @tr("Confirmer la livraison");
+                primary: true;
+                clicked => {
+                    root.retour = { };
+                    root.confirmation = 5;
                 }
             }
 
@@ -1118,7 +1355,7 @@ component Fiche inherits ScrollView {
         }
 
         // Documents qui naissent de celui-ci : chacun ouvre sa fiche une fois créé.
-        if root.fiche.peut-convertir || root.fiche.peut-dupliquer || root.fiche.peut-corriger || root.fiche.peut-creer-avoir: Rangee {
+        if root.fiche.peut-convertir || root.fiche.peut-dupliquer || root.fiche.peut-corriger || root.fiche.peut-creer-avoir || root.fiche.peut-creer-bordereau: Rangee {
             spacing: 8px;
             alignment: start;
 
@@ -1127,6 +1364,16 @@ component Fiche inherits ScrollView {
                 clicked => {
                     root.confirmation = 0;
                     root.retour = FacturesApi.convertir();
+                    root.recharger-si-besoin();
+                }
+            }
+
+            if root.fiche.peut-creer-bordereau: Bouton {
+                text: @tr("Créer un bordereau");
+                enabled: root.fiche.bordereau-possible;
+                clicked => {
+                    root.confirmation = 0;
+                    root.retour = FacturesApi.creer-bordereau();
                     root.recharger-si-besoin();
                 }
             }
@@ -1171,7 +1418,7 @@ component Fiche inherits ScrollView {
 
             Text {
                 horizontal-alignment: Theme.debut;
-                text: root.confirmation == 1 ? FacturesApi.textes.confirmer-validation : (root.confirmation == 2 ? FacturesApi.textes.confirmer-annulation : (root.confirmation == 4 ? @tr("Corriger ce document ? Il est annulé, son numéro conservé, et une copie modifiable est créée en brouillon.") : @tr("Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit.")));
+                text: root.confirmation == 1 ? FacturesApi.textes.confirmer-validation : (root.confirmation == 2 ? FacturesApi.textes.confirmer-annulation : (root.confirmation == 4 ? @tr("Corriger ce document ? Il est annulé, son numéro conservé, et une copie modifiable est créée en brouillon.") : root.confirmation == 5 ? @tr("Confirmer la livraison ? Le statut passe en livraison partielle ou complète selon les quantités livrées ; le bordereau ne pourra plus être annulé.") : @tr("Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit.")));
                 color: Theme.texte;
                 wrap: word-wrap;
             }
@@ -1181,7 +1428,7 @@ component Fiche inherits ScrollView {
                 alignment: start;
 
                 Bouton {
-                    text: root.confirmation == 1 ? @tr("Confirmer la validation") : (root.confirmation == 2 ? @tr("Confirmer l'annulation") : (root.confirmation == 4 ? @tr("Confirmer la correction") : @tr("Confirmer la suppression")));
+                    text: root.confirmation == 1 ? @tr("Confirmer la validation") : (root.confirmation == 2 ? @tr("Confirmer l'annulation") : (root.confirmation == 4 ? @tr("Confirmer la correction") : root.confirmation == 5 ? @tr("Confirmer la livraison") : @tr("Confirmer la suppression")));
                     primary: true;
                     clicked => {
                         if (root.confirmation == 1) {
@@ -1190,6 +1437,8 @@ component Fiche inherits ScrollView {
                             root.retour = FacturesApi.annuler-document();
                         } else if (root.confirmation == 4) {
                             root.retour = FacturesApi.dupliquer(true);
+                        } else if (root.confirmation == 5) {
+                            root.retour = FacturesApi.confirmer-livraison(root.visa-client, root.visa-fournisseur, root.date-livraison, root.date-reception);
                         } else {
                             root.retour = FacturesApi.supprimer();
                         }

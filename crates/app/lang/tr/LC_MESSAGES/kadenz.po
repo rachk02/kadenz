@@ -1724,3 +1724,156 @@ msgstr "indirim oranları listesi 0 ile %100 arasında değerler içermelidir"
 
 msgid "la liste des taux de retenue doit contenir des valeurs entre 0 et 100 %"
 msgstr "stopaj oranları listesi 0 ile %100 arasında değerler içermelidir"
+
+msgid "Nouveau bordereau"
+msgstr "Yeni irsaliye"
+
+msgid "Cliquer sur un bordereau pour ouvrir sa fiche."
+msgstr "Kartını açmak için bir irsaliyeye tıklayın."
+
+msgid "Aucun numéro tant que le bordereau n'est pas validé."
+msgstr "İrsaliye onaylanana kadar numara verilmez."
+
+msgid "Annuler le bordereau"
+msgstr "İrsaliyeyi iptal et"
+
+msgid "Valider ce bordereau ? Il reçoit son numéro définitif ; ses lignes et ses quantités ne pourront plus être modifiées."
+msgstr "Bu irsaliye onaylansın mı? Kesin numarasını alır; satırları ve miktarları artık değiştirilemez."
+
+msgid "Annuler ce bordereau ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "Bu irsaliye iptal edilsin mi? Numarasıyla kayıt defterinde salt okunur olarak kalır."
+
+msgid "Aucun bordereau."
+msgstr "İrsaliye yok."
+
+msgid "1 bordereau."
+msgstr "1 irsaliye."
+
+msgid "{} bordereaux."
+msgstr "{} irsaliye."
+
+msgid "Bordereau {}"
+msgstr "İrsaliye {}"
+
+msgid "Bordereau (brouillon)"
+msgstr "İrsaliye (taslak)"
+
+msgid "Bordereau annulé : lecture seule, numéro conservé."
+msgstr "İrsaliye iptal edildi: salt okunur, numara korundu."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un bordereau."
+msgstr "Salt okunur: rolünüz irsaliye değiştirmeye izin vermiyor."
+
+msgid "Bordereau validé : lignes et quantités figées."
+msgstr "İrsaliye onaylandı: satırlar ve miktarlar sabitlendi."
+
+msgid "Bordereau livré : lecture seule."
+msgstr "İrsaliye teslim edildi: salt okunur."
+
+msgid "bordereau validé sous le numéro {}"
+msgstr "irsaliye {} numarasıyla onaylandı"
+
+msgid "bordereau annulé"
+msgstr "irsaliye iptal edildi"
+
+msgid "Commandée"
+msgstr "Sipariş edilen"
+
+msgid "Livrée"
+msgstr "Teslim edilen"
+
+msgid "Reste à livrer"
+msgstr "Teslim edilecek"
+
+msgid "Visa du client"
+msgstr "Müşteri onayı"
+
+msgid "Visa du fournisseur"
+msgstr "Tedarikçi onayı"
+
+msgid "Date de livraison"
+msgstr "Teslim tarihi"
+
+msgid "Date de réception"
+msgstr "Teslim alma tarihi"
+
+msgid "Créer un bordereau"
+msgstr "İrsaliye oluştur"
+
+msgid "Confirmer la livraison"
+msgstr "Teslimatı doğrula"
+
+msgid "Confirmer la livraison ? Le statut passe en livraison partielle ou complète selon les quantités livrées ; le bordereau ne pourra plus être annulé."
+msgstr "Teslimat doğrulansın mı? Durum, teslim edilen miktarlara göre kısmi veya tam teslime geçer; irsaliye artık iptal edilemez."
+
+msgid "bordereau créé en brouillon avec les lignes de la facture : ajuster les quantités livrées puis valider"
+msgstr "fatura satırlarıyla irsaliye taslağı oluşturuldu: teslim edilen miktarları ayarlayıp onaylayın"
+
+msgid "livraison confirmée"
+msgstr "teslimat doğrulandı"
+
+msgid "Bordereau : {}"
+msgstr "İrsaliye: {}"
+
+msgid "Livraison confirmée"
+msgstr "Teslimat doğrulandı"
+
+msgid "Livraison confirmée, {}"
+msgstr "Teslimat doğrulandı, {}"
+
+msgid "ligne {} : un bordereau issu d'une facture reprend la ligne de la facture ; seules la quantité livrée et les observations se modifient"
+msgstr "satır {}: faturadan oluşturulan irsaliye fatura satırını korur; yalnızca teslim edilen miktar ve notlar değiştirilebilir"
+
+msgid "un bordereau se crée depuis une facture validée ou envoyée ; celle-ci est « {} »"
+msgstr "irsaliye onaylanmış veya gönderilmiş bir faturadan oluşturulur; bu faturanın durumu \"{}\""
+
+msgid "seul un bordereau validé se confirme ; celui-ci est « {} »"
+msgstr "yalnızca onaylanmış bir irsaliye doğrulanabilir; bu irsaliyenin durumu \"{}\""
+
+msgid "la facture d'origine est « {} » : le bordereau ne peut plus être validé"
+msgstr "kaynak faturanın durumu \"{}\": irsaliye artık onaylanamaz"
+
+msgid "un bordereau se crée depuis une facture"
+msgstr "irsaliye bir faturadan oluşturulur"
+
+msgid "tout est déjà livré ou en cours de livraison sur cette facture"
+msgstr "bu faturadaki her şey zaten teslim edildi veya teslim ediliyor"
+
+msgid "le client d'un bordereau issu d'une facture est celui de la facture"
+msgstr "faturadan oluşturulan irsaliyenin müşterisi faturanın müşterisidir"
+
+msgid "un bordereau issu d'une facture reprend toutes les lignes de la facture"
+msgstr "faturadan oluşturulan irsaliye faturanın tüm satırlarını korur"
+
+msgid "seul un bordereau de livraison se confirme"
+msgstr "yalnızca irsaliye doğrulanabilir"
+
+msgid "le bordereau ne livre rien : saisir au moins une quantité livrée"
+msgstr "irsaliye hiçbir şey teslim etmiyor: en az bir teslim edilen miktar girin"
+
+msgid "un bordereau issu d'une facture ne se duplique pas : en créer un autre depuis la facture"
+msgstr "faturadan oluşturulan irsaliye çoğaltılamaz: faturadan yeni bir tane oluşturun"
+
+msgid "ligne {} : quantité livrée illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "satır {}: teslim edilen miktar okunamıyor, pozitif bir sayı girin (en fazla 3 ondalık)"
+
+msgid "Enregistrer les visas et les observations"
+msgstr "İmzaları ve notları kaydet"
+
+msgid "Enregistrer les observations"
+msgstr "Notları kaydet"
+
+msgid "bordereau enregistré"
+msgstr "irsaliye kaydedildi"
+
+msgid "Modification des visas et dates de livraison"
+msgstr "Teslimat imzaları ve tarihlerinin değiştirilmesi"
+
+msgid "cette facture a des bordereaux non confirmés : les annuler ou confirmer leur livraison d'abord"
+msgstr "bu faturanın onaylanmamış irsaliyeleri var: önce bunları iptal edin veya teslimatlarını onaylayın"
+
+msgid "les visas et dates ne concernent que les bordereaux de livraison"
+msgstr "imzalar ve tarihler yalnızca irsaliyeler için geçerlidir"
+
+msgid "les visas et dates se modifient sur un bordereau validé, avant la confirmation ; celui-ci est « {} »"
+msgstr "imzalar ve tarihler onaylanmış bir irsaliyede, teslimat onayından önce değiştirilir; bu irsaliyenin durumu \"{}\""

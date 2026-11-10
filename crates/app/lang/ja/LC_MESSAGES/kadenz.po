@@ -1724,3 +1724,156 @@ msgstr "値引率の一覧には 0～100% の値を入れてください"
 
 msgid "la liste des taux de retenue doit contenir des valeurs entre 0 et 100 %"
 msgstr "源泉徴収率の一覧には 0～100% の値を入れてください"
+
+msgid "Nouveau bordereau"
+msgstr "新規納品書"
+
+msgid "Cliquer sur un bordereau pour ouvrir sa fiche."
+msgstr "納品書をクリックすると詳細が開きます。"
+
+msgid "Aucun numéro tant que le bordereau n'est pas validé."
+msgstr "納品書が確定されるまで番号は付きません。"
+
+msgid "Annuler le bordereau"
+msgstr "納品書を取り消す"
+
+msgid "Valider ce bordereau ? Il reçoit son numéro définitif ; ses lignes et ses quantités ne pourront plus être modifiées."
+msgstr "この納品書を確定しますか？最終番号が付与され、明細と数量は変更できなくなります。"
+
+msgid "Annuler ce bordereau ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "この納品書を取り消しますか？番号付きのまま一覧に残り、読み取り専用になります。"
+
+msgid "Aucun bordereau."
+msgstr "納品書はありません。"
+
+msgid "1 bordereau."
+msgstr "納品書 1 件。"
+
+msgid "{} bordereaux."
+msgstr "納品書 {} 件。"
+
+msgid "Bordereau {}"
+msgstr "納品書 {}"
+
+msgid "Bordereau (brouillon)"
+msgstr "納品書（下書き）"
+
+msgid "Bordereau annulé : lecture seule, numéro conservé."
+msgstr "取消済みの納品書：読み取り専用、番号は保持されます。"
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un bordereau."
+msgstr "読み取り専用：あなたの役割では納品書を変更できません。"
+
+msgid "Bordereau validé : lignes et quantités figées."
+msgstr "確定済みの納品書：明細と数量は固定されています。"
+
+msgid "Bordereau livré : lecture seule."
+msgstr "納品済みの納品書：読み取り専用です。"
+
+msgid "bordereau validé sous le numéro {}"
+msgstr "納品書を番号 {} で確定しました。"
+
+msgid "bordereau annulé"
+msgstr "納品書を取り消しました。"
+
+msgid "Commandée"
+msgstr "注文数"
+
+msgid "Livrée"
+msgstr "納品数"
+
+msgid "Reste à livrer"
+msgstr "未納品"
+
+msgid "Visa du client"
+msgstr "顧客の確認印"
+
+msgid "Visa du fournisseur"
+msgstr "仕入先の確認印"
+
+msgid "Date de livraison"
+msgstr "納品日"
+
+msgid "Date de réception"
+msgstr "受領日"
+
+msgid "Créer un bordereau"
+msgstr "納品書を作成"
+
+msgid "Confirmer la livraison"
+msgstr "納品を確定"
+
+msgid "Confirmer la livraison ? Le statut passe en livraison partielle ou complète selon les quantités livrées ; le bordereau ne pourra plus être annulé."
+msgstr "納品を確定しますか？納品数量に応じて状態が一部納品または納品完了になり、納品書は取り消せなくなります。"
+
+msgid "bordereau créé en brouillon avec les lignes de la facture : ajuster les quantités livrées puis valider"
+msgstr "請求書の明細で納品書を下書き作成しました。納品数量を調整してから確定してください"
+
+msgid "livraison confirmée"
+msgstr "納品を確定しました。"
+
+msgid "Bordereau : {}"
+msgstr "納品書：{}"
+
+msgid "Livraison confirmée"
+msgstr "納品を確定"
+
+msgid "Livraison confirmée, {}"
+msgstr "納品を確定、{}"
+
+msgid "ligne {} : un bordereau issu d'une facture reprend la ligne de la facture ; seules la quantité livrée et les observations se modifient"
+msgstr "明細 {}：請求書から作成した納品書は請求書の明細を引き継ぎます。変更できるのは納品数量と備考のみです"
+
+msgid "un bordereau se crée depuis une facture validée ou envoyée ; celle-ci est « {} »"
+msgstr "納品書は確定済みまたは送付済みの請求書から作成します。この請求書は「{}」です"
+
+msgid "seul un bordereau validé se confirme ; celui-ci est « {} »"
+msgstr "確定できるのは確定済みの納品書のみです。この納品書は「{}」です"
+
+msgid "la facture d'origine est « {} » : le bordereau ne peut plus être validé"
+msgstr "元の請求書は「{}」です。納品書はもう確定できません"
+
+msgid "un bordereau se crée depuis une facture"
+msgstr "納品書は請求書から作成します"
+
+msgid "tout est déjà livré ou en cours de livraison sur cette facture"
+msgstr "この請求書の品目はすべて納品済みまたは納品中です"
+
+msgid "le client d'un bordereau issu d'une facture est celui de la facture"
+msgstr "請求書から作成した納品書の顧客は請求書の顧客です"
+
+msgid "un bordereau issu d'une facture reprend toutes les lignes de la facture"
+msgstr "請求書から作成した納品書は請求書のすべての明細を引き継ぎます"
+
+msgid "seul un bordereau de livraison se confirme"
+msgstr "確定できるのは納品書のみです"
+
+msgid "le bordereau ne livre rien : saisir au moins une quantité livrée"
+msgstr "納品書に納品数量がありません。少なくとも 1 つ納品数量を入力してください"
+
+msgid "un bordereau issu d'une facture ne se duplique pas : en créer un autre depuis la facture"
+msgstr "請求書から作成した納品書は複製できません。請求書から新しく作成してください"
+
+msgid "ligne {} : quantité livrée illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "明細 {}：納品数量を読み取れません。正の数を入力してください（小数点以下 3 桁まで）"
+
+msgid "Enregistrer les visas et les observations"
+msgstr "確認印と備考を保存"
+
+msgid "Enregistrer les observations"
+msgstr "備考を保存"
+
+msgid "bordereau enregistré"
+msgstr "納品書を保存しました"
+
+msgid "Modification des visas et dates de livraison"
+msgstr "納品の確認印と日付の変更"
+
+msgid "cette facture a des bordereaux non confirmés : les annuler ou confirmer leur livraison d'abord"
+msgstr "この請求書には未確認の納品書があります。先に取り消すか納品を確認してください"
+
+msgid "les visas et dates ne concernent que les bordereaux de livraison"
+msgstr "確認印と日付は納品書にのみ適用されます"
+
+msgid "les visas et dates se modifient sur un bordereau validé, avant la confirmation ; celui-ci est « {} »"
+msgstr "確認印と日付は確定済みの納品書で、確認の前に変更します。この納品書は「{}」です"

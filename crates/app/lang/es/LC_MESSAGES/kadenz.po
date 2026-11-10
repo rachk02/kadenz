@@ -1724,3 +1724,156 @@ msgstr "la lista de tipos de descuento debe contener valores entre 0 y 100 %"
 
 msgid "la liste des taux de retenue doit contenir des valeurs entre 0 et 100 %"
 msgstr "la lista de tipos de retención debe contener valores entre 0 y 100 %"
+
+msgid "Nouveau bordereau"
+msgstr "Nuevo albarán"
+
+msgid "Cliquer sur un bordereau pour ouvrir sa fiche."
+msgstr "Haga clic en un albarán para abrir su ficha."
+
+msgid "Aucun numéro tant que le bordereau n'est pas validé."
+msgstr "Sin número mientras el albarán no esté validado."
+
+msgid "Annuler le bordereau"
+msgstr "Anular el albarán"
+
+msgid "Valider ce bordereau ? Il reçoit son numéro définitif ; ses lignes et ses quantités ne pourront plus être modifiées."
+msgstr "¿Validar este albarán? Recibe su número definitivo; sus líneas y cantidades ya no podrán modificarse."
+
+msgid "Annuler ce bordereau ? Il reste dans le registre avec son numéro, en lecture seule."
+msgstr "¿Anular este albarán? Permanece en el registro con su número, en solo lectura."
+
+msgid "Aucun bordereau."
+msgstr "Ningún albarán."
+
+msgid "1 bordereau."
+msgstr "1 albarán."
+
+msgid "{} bordereaux."
+msgstr "{} albaranes."
+
+msgid "Bordereau {}"
+msgstr "Albarán {}"
+
+msgid "Bordereau (brouillon)"
+msgstr "Albarán (borrador)"
+
+msgid "Bordereau annulé : lecture seule, numéro conservé."
+msgstr "Albarán anulado: solo lectura, número conservado."
+
+msgid "Lecture seule : votre rôle ne permet pas de modifier un bordereau."
+msgstr "Solo lectura: su rol no permite modificar un albarán."
+
+msgid "Bordereau validé : lignes et quantités figées."
+msgstr "Albarán validado: líneas y cantidades fijadas."
+
+msgid "Bordereau livré : lecture seule."
+msgstr "Albarán entregado: solo lectura."
+
+msgid "bordereau validé sous le numéro {}"
+msgstr "albarán validado con el número {}"
+
+msgid "bordereau annulé"
+msgstr "albarán anulado"
+
+msgid "Commandée"
+msgstr "Pedida"
+
+msgid "Livrée"
+msgstr "Entregada"
+
+msgid "Reste à livrer"
+msgstr "Pendiente"
+
+msgid "Visa du client"
+msgstr "Visto bueno del cliente"
+
+msgid "Visa du fournisseur"
+msgstr "Visto bueno del proveedor"
+
+msgid "Date de livraison"
+msgstr "Fecha de entrega"
+
+msgid "Date de réception"
+msgstr "Fecha de recepción"
+
+msgid "Créer un bordereau"
+msgstr "Crear un albarán"
+
+msgid "Confirmer la livraison"
+msgstr "Confirmar la entrega"
+
+msgid "Confirmer la livraison ? Le statut passe en livraison partielle ou complète selon les quantités livrées ; le bordereau ne pourra plus être annulé."
+msgstr "¿Confirmar la entrega? El estado pasa a entrega parcial o completa según las cantidades entregadas; el albarán ya no podrá anularse."
+
+msgid "bordereau créé en brouillon avec les lignes de la facture : ajuster les quantités livrées puis valider"
+msgstr "albarán creado como borrador con las líneas de la factura: ajuste las cantidades entregadas y luego valide"
+
+msgid "livraison confirmée"
+msgstr "entrega confirmada"
+
+msgid "Bordereau : {}"
+msgstr "Albarán: {}"
+
+msgid "Livraison confirmée"
+msgstr "Entrega confirmada"
+
+msgid "Livraison confirmée, {}"
+msgstr "Entrega confirmada, {}"
+
+msgid "ligne {} : un bordereau issu d'une facture reprend la ligne de la facture ; seules la quantité livrée et les observations se modifient"
+msgstr "línea {}: un albarán emitido desde una factura conserva la línea de la factura; solo se modifican la cantidad entregada y las observaciones"
+
+msgid "un bordereau se crée depuis une facture validée ou envoyée ; celle-ci est « {} »"
+msgstr "un albarán se crea a partir de una factura validada o enviada; esta está «{}»"
+
+msgid "seul un bordereau validé se confirme ; celui-ci est « {} »"
+msgstr "solo un albarán validado se confirma; este está «{}»"
+
+msgid "la facture d'origine est « {} » : le bordereau ne peut plus être validé"
+msgstr "la factura de origen está «{}»: el albarán ya no puede validarse"
+
+msgid "un bordereau se crée depuis une facture"
+msgstr "un albarán se crea a partir de una factura"
+
+msgid "tout est déjà livré ou en cours de livraison sur cette facture"
+msgstr "todo ya está entregado o en curso de entrega en esta factura"
+
+msgid "le client d'un bordereau issu d'une facture est celui de la facture"
+msgstr "el cliente de un albarán emitido desde una factura es el de la factura"
+
+msgid "un bordereau issu d'une facture reprend toutes les lignes de la facture"
+msgstr "un albarán emitido desde una factura conserva todas las líneas de la factura"
+
+msgid "seul un bordereau de livraison se confirme"
+msgstr "solo un albarán se confirma"
+
+msgid "le bordereau ne livre rien : saisir au moins une quantité livrée"
+msgstr "el albarán no entrega nada: introduzca al menos una cantidad entregada"
+
+msgid "un bordereau issu d'une facture ne se duplique pas : en créer un autre depuis la facture"
+msgstr "un albarán emitido desde una factura no se duplica: cree otro desde la factura"
+
+msgid "ligne {} : quantité livrée illisible, saisir un nombre positif (3 décimales au plus)"
+msgstr "línea {}: cantidad entregada ilegible, introduzca un número positivo (3 decimales como máximo)"
+
+msgid "Enregistrer les visas et les observations"
+msgstr "Guardar vistos buenos y observaciones"
+
+msgid "Enregistrer les observations"
+msgstr "Guardar observaciones"
+
+msgid "bordereau enregistré"
+msgstr "albarán guardado"
+
+msgid "Modification des visas et dates de livraison"
+msgstr "Modificación de vistos buenos y fechas de entrega"
+
+msgid "cette facture a des bordereaux non confirmés : les annuler ou confirmer leur livraison d'abord"
+msgstr "esta factura tiene albaranes sin confirmar: anúlelos o confirme su entrega primero"
+
+msgid "les visas et dates ne concernent que les bordereaux de livraison"
+msgstr "los vistos buenos y las fechas solo se aplican a los albaranes"
+
+msgid "les visas et dates se modifient sur un bordereau validé, avant la confirmation ; celui-ci est « {} »"
+msgstr "los vistos buenos y las fechas se modifican en un albarán validado, antes de la confirmación; este está «{}»"
