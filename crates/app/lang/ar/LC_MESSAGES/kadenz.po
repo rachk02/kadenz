@@ -1994,3 +1994,117 @@ msgstr "هذه الفاتورة غير مستحقة أو لم يبقَ عليه�
 
 msgid "le texte de la lettre de relance ne tient pas sur une page : le raccourcir dans les paramètres"
 msgstr "نص رسالة التذكير لا يتسع في صفحة واحدة: اختصره في الإعدادات"
+
+msgid "Lettre de relance"
+msgstr "رسالة تذكير"
+
+msgid "Imprimer le registre"
+msgstr "طباعة السجل"
+
+msgid "Tous les règlements"
+msgstr "كل المدفوعات"
+
+msgid "Encaissements"
+msgstr "المقبوضات"
+
+msgid "Décaissements"
+msgstr "المدفوعات الصادرة"
+
+msgid "Cliquer sur un règlement pour ouvrir son document."
+msgstr "انقر على دفعة لفتح مستندها."
+
+msgid "Rechercher : numéro, fournisseur"
+msgstr "بحث: الرقم، المورد"
+
+msgid "Reste à payer"
+msgstr "المتبقي للدفع"
+
+msgid "Réglé"
+msgstr "المدفوع"
+
+msgid "Montant dû"
+msgstr "المبلغ المستحق"
+
+msgid "Cliquer sur un bon de commande pour ouvrir sa fiche et saisir un règlement."
+msgstr "انقر على أمر شراء لفتح بطاقته وتسجيل دفعة."
+
+msgid "Imprimer la liste"
+msgstr "طباعة القائمة"
+
+msgid "Rechercher : numéro, client"
+msgstr "بحث: الرقم، العميل"
+
+msgid "Ouvrir la facture"
+msgstr "فتح الفاتورة"
+
+msgid "Jours de retard"
+msgstr "أيام التأخير"
+
+msgid "Reste dû"
+msgstr "المتبقي المستحق"
+
+msgid "Choisir une facture, puis imprimer sa lettre de relance ou ouvrir sa fiche. Une facture sans échéance n'est jamais relancée."
+msgstr "اختر فاتورة ثم اطبع رسالة التذكير الخاصة بها أو افتح بطاقتها. لا تُذكَّر أبدًا فاتورة بلا تاريخ استحقاق."
+
+msgid "Encaissement"
+msgstr "قبض"
+
+msgid "Décaissement"
+msgstr "دفع صادر"
+
+msgid "Total des encaissements"
+msgstr "إجمالي المقبوضات"
+
+msgid "Total des décaissements"
+msgstr "إجمالي المدفوعات الصادرة"
+
+msgid "Aucun règlement."
+msgstr "لا توجد دفعات."
+
+msgid "1 règlement."
+msgstr "دفعة واحدة."
+
+msgid "{} règlements."
+msgstr "عدد الدفعات: {}."
+
+msgid "Aucun bon de commande à payer."
+msgstr "لا توجد أوامر شراء للدفع."
+
+msgid "1 bon de commande à payer ; reste dû : {} FCFA."
+msgstr "أمر شراء واحد للدفع؛ المتبقي المستحق: {} FCFA."
+
+msgid "{} bons de commande à payer ; reste dû : {} FCFA."
+msgstr "عدد أوامر الشراء للدفع: {}؛ المتبقي المستحق: {} FCFA."
+
+msgid "Aucune facture échue à relancer."
+msgstr "لا توجد فواتير مستحقة للتذكير."
+
+msgid "1 facture échue ; reste dû : {} FCFA."
+msgstr "فاتورة مستحقة واحدة؛ المتبقي المستحق: {} FCFA."
+
+msgid "{} factures échues ; reste dû : {} FCFA."
+msgstr "عدد الفواتير المستحقة: {}؛ المتبقي المستحق: {} FCFA."
+
+msgid "choisir une facture dans la liste"
+msgstr "اختر فاتورة من القائمة"
+
+msgid "{} FCFA"
+msgstr "{} FCFA"
+
+msgid "Imprimée depuis la page Relances, toujours en français. Dans l'objet et le texte, les champs suivants reçoivent, dans l'ordre, le numéro, la date, l'échéance, le reste dû et les jours de retard de la facture :"
+msgstr "تُطبع من صفحة التذكيرات، بالفرنسية دائمًا. في الموضوع والنص، تتلقى الحقول التالية، بالترتيب، رقم الفاتورة وتاريخها وتاريخ استحقاقها والمبلغ المتبقي وعدد أيام التأخير:"
+
+msgid "Objet"
+msgstr "الموضوع"
+
+msgid "Texte avant le tableau récapitulatif (une ligne vide sépare deux paragraphes)"
+msgstr "النص قبل جدول الملخص (يفصل سطر فارغ بين فقرتين)"
+
+msgid "Texte après le tableau récapitulatif"
+msgstr "النص بعد جدول الملخص"
+
+msgid "Texte par défaut de la lettre"
+msgstr "النص الافتراضي للرسالة"
+
+msgid "Tous les modes"
+msgstr "كل الطرق"

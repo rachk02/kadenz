@@ -1994,3 +1994,117 @@ msgstr "bu fatura vadesi geçmemiş veya ödenecek tutarı kalmamış: hatırlat
 
 msgid "le texte de la lettre de relance ne tient pas sur une page : le raccourcir dans les paramètres"
 msgstr "hatırlatma mektubunun metni tek sayfaya sığmıyor: ayarlardan kısaltın"
+
+msgid "Lettre de relance"
+msgstr "Hatırlatma mektubu"
+
+msgid "Imprimer le registre"
+msgstr "Kaydı yazdır"
+
+msgid "Tous les règlements"
+msgstr "Tüm ödemeler"
+
+msgid "Encaissements"
+msgstr "Tahsilatlar"
+
+msgid "Décaissements"
+msgstr "Ödemeler (çıkış)"
+
+msgid "Cliquer sur un règlement pour ouvrir son document."
+msgstr "Belgesini açmak için bir ödemeye tıklayın."
+
+msgid "Rechercher : numéro, fournisseur"
+msgstr "Ara: numara, tedarikçi"
+
+msgid "Reste à payer"
+msgstr "Kalan tutar"
+
+msgid "Réglé"
+msgstr "Ödenen"
+
+msgid "Montant dû"
+msgstr "Borç tutarı"
+
+msgid "Cliquer sur un bon de commande pour ouvrir sa fiche et saisir un règlement."
+msgstr "Açmak ve ödeme girmek için bir sipariş formuna tıklayın."
+
+msgid "Imprimer la liste"
+msgstr "Listeyi yazdır"
+
+msgid "Rechercher : numéro, client"
+msgstr "Ara: numara, müşteri"
+
+msgid "Ouvrir la facture"
+msgstr "Faturayı aç"
+
+msgid "Jours de retard"
+msgstr "Gecikme günü"
+
+msgid "Reste dû"
+msgstr "Kalan borç"
+
+msgid "Choisir une facture, puis imprimer sa lettre de relance ou ouvrir sa fiche. Une facture sans échéance n'est jamais relancée."
+msgstr "Bir fatura seçin, ardından hatırlatma mektubunu yazdırın veya faturayı açın. Vade tarihi olmayan bir fatura için asla hatırlatma yapılmaz."
+
+msgid "Encaissement"
+msgstr "Tahsilat"
+
+msgid "Décaissement"
+msgstr "Ödeme (çıkış)"
+
+msgid "Total des encaissements"
+msgstr "Toplam tahsilat"
+
+msgid "Total des décaissements"
+msgstr "Toplam ödeme (çıkış)"
+
+msgid "Aucun règlement."
+msgstr "Ödeme yok."
+
+msgid "1 règlement."
+msgstr "1 ödeme."
+
+msgid "{} règlements."
+msgstr "{} ödeme."
+
+msgid "Aucun bon de commande à payer."
+msgstr "Ödenecek sipariş formu yok."
+
+msgid "1 bon de commande à payer ; reste dû : {} FCFA."
+msgstr "Ödenecek 1 sipariş formu; kalan borç: {} FCFA."
+
+msgid "{} bons de commande à payer ; reste dû : {} FCFA."
+msgstr "Ödenecek {} sipariş formu; kalan borç: {} FCFA."
+
+msgid "Aucune facture échue à relancer."
+msgstr "Hatırlatılacak vadesi geçmiş fatura yok."
+
+msgid "1 facture échue ; reste dû : {} FCFA."
+msgstr "Vadesi geçmiş 1 fatura; kalan borç: {} FCFA."
+
+msgid "{} factures échues ; reste dû : {} FCFA."
+msgstr "Vadesi geçmiş {} fatura; kalan borç: {} FCFA."
+
+msgid "choisir une facture dans la liste"
+msgstr "listeden bir fatura seçin"
+
+msgid "{} FCFA"
+msgstr "{} FCFA"
+
+msgid "Imprimée depuis la page Relances, toujours en français. Dans l'objet et le texte, les champs suivants reçoivent, dans l'ordre, le numéro, la date, l'échéance, le reste dû et les jours de retard de la facture :"
+msgstr "Hatırlatmalar sayfasından, her zaman Fransızca yazdırılır. Konu ve metinde aşağıdaki alanlar sırasıyla faturanın numarasını, tarihini, vade tarihini, kalan borcunu ve gecikme gün sayısını alır:"
+
+msgid "Objet"
+msgstr "Konu"
+
+msgid "Texte avant le tableau récapitulatif (une ligne vide sépare deux paragraphes)"
+msgstr "Özet tablosundan önceki metin (boş bir satır iki paragrafı ayırır)"
+
+msgid "Texte après le tableau récapitulatif"
+msgstr "Özet tablosundan sonraki metin"
+
+msgid "Texte par défaut de la lettre"
+msgstr "Varsayılan mektup metni"
+
+msgid "Tous les modes"
+msgstr "Tüm yöntemler"

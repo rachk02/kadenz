@@ -1994,3 +1994,117 @@ msgstr "this invoice is not overdue or has nothing left to pay: no reminder"
 
 msgid "le texte de la lettre de relance ne tient pas sur une page : le raccourcir dans les paramètres"
 msgstr "the reminder letter text does not fit on one page: shorten it in the settings"
+
+msgid "Lettre de relance"
+msgstr "Reminder letter"
+
+msgid "Imprimer le registre"
+msgstr "Print the register"
+
+msgid "Tous les règlements"
+msgstr "All payments"
+
+msgid "Encaissements"
+msgstr "Receipts"
+
+msgid "Décaissements"
+msgstr "Disbursements"
+
+msgid "Cliquer sur un règlement pour ouvrir son document."
+msgstr "Click a payment to open its document."
+
+msgid "Rechercher : numéro, fournisseur"
+msgstr "Search: number, supplier"
+
+msgid "Reste à payer"
+msgstr "Left to pay"
+
+msgid "Réglé"
+msgstr "Paid"
+
+msgid "Montant dû"
+msgstr "Amount due"
+
+msgid "Cliquer sur un bon de commande pour ouvrir sa fiche et saisir un règlement."
+msgstr "Click a purchase order to open it and enter a payment."
+
+msgid "Imprimer la liste"
+msgstr "Print the list"
+
+msgid "Rechercher : numéro, client"
+msgstr "Search: number, customer"
+
+msgid "Ouvrir la facture"
+msgstr "Open the invoice"
+
+msgid "Jours de retard"
+msgstr "Days overdue"
+
+msgid "Reste dû"
+msgstr "Balance due"
+
+msgid "Choisir une facture, puis imprimer sa lettre de relance ou ouvrir sa fiche. Une facture sans échéance n'est jamais relancée."
+msgstr "Choose an invoice, then print its reminder letter or open it. An invoice without a due date is never reminded."
+
+msgid "Encaissement"
+msgstr "Receipt"
+
+msgid "Décaissement"
+msgstr "Disbursement"
+
+msgid "Total des encaissements"
+msgstr "Total receipts"
+
+msgid "Total des décaissements"
+msgstr "Total disbursements"
+
+msgid "Aucun règlement."
+msgstr "No payments."
+
+msgid "1 règlement."
+msgstr "1 payment."
+
+msgid "{} règlements."
+msgstr "{} payments."
+
+msgid "Aucun bon de commande à payer."
+msgstr "No purchase orders to pay."
+
+msgid "1 bon de commande à payer ; reste dû : {} FCFA."
+msgstr "1 purchase order to pay; balance due: {} FCFA."
+
+msgid "{} bons de commande à payer ; reste dû : {} FCFA."
+msgstr "{} purchase orders to pay; balance due: {} FCFA."
+
+msgid "Aucune facture échue à relancer."
+msgstr "No overdue invoices to remind."
+
+msgid "1 facture échue ; reste dû : {} FCFA."
+msgstr "1 overdue invoice; balance due: {} FCFA."
+
+msgid "{} factures échues ; reste dû : {} FCFA."
+msgstr "{} overdue invoices; balance due: {} FCFA."
+
+msgid "choisir une facture dans la liste"
+msgstr "choose an invoice in the list"
+
+msgid "{} FCFA"
+msgstr "{} FCFA"
+
+msgid "Imprimée depuis la page Relances, toujours en français. Dans l'objet et le texte, les champs suivants reçoivent, dans l'ordre, le numéro, la date, l'échéance, le reste dû et les jours de retard de la facture :"
+msgstr "Printed from the Reminders page, always in French. In the subject and the text, the following fields receive, in order, the invoice number, date, due date, balance due and days overdue:"
+
+msgid "Objet"
+msgstr "Subject"
+
+msgid "Texte avant le tableau récapitulatif (une ligne vide sépare deux paragraphes)"
+msgstr "Text before the summary table (a blank line separates two paragraphs)"
+
+msgid "Texte après le tableau récapitulatif"
+msgstr "Text after the summary table"
+
+msgid "Texte par défaut de la lettre"
+msgstr "Default letter text"
+
+msgid "Tous les modes"
+msgstr "All methods"

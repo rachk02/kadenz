@@ -1994,3 +1994,117 @@ msgstr "此发票未到期或已无剩余应付：无需催款"
 
 msgid "le texte de la lettre de relance ne tient pas sur une page : le raccourcir dans les paramètres"
 msgstr "催款函正文超过一页：请在设置中缩短"
+
+msgid "Lettre de relance"
+msgstr "催款函"
+
+msgid "Imprimer le registre"
+msgstr "打印登记簿"
+
+msgid "Tous les règlements"
+msgstr "全部收付款"
+
+msgid "Encaissements"
+msgstr "收款"
+
+msgid "Décaissements"
+msgstr "付款"
+
+msgid "Cliquer sur un règlement pour ouvrir son document."
+msgstr "点击收付款以打开其单据。"
+
+msgid "Rechercher : numéro, fournisseur"
+msgstr "搜索：编号、供应商"
+
+msgid "Reste à payer"
+msgstr "剩余应付"
+
+msgid "Réglé"
+msgstr "已付"
+
+msgid "Montant dû"
+msgstr "应付金额"
+
+msgid "Cliquer sur un bon de commande pour ouvrir sa fiche et saisir un règlement."
+msgstr "点击采购订单以打开并登记付款。"
+
+msgid "Imprimer la liste"
+msgstr "打印列表"
+
+msgid "Rechercher : numéro, client"
+msgstr "搜索：编号、客户"
+
+msgid "Ouvrir la facture"
+msgstr "打开发票"
+
+msgid "Jours de retard"
+msgstr "逾期天数"
+
+msgid "Reste dû"
+msgstr "剩余欠款"
+
+msgid "Choisir une facture, puis imprimer sa lettre de relance ou ouvrir sa fiche. Une facture sans échéance n'est jamais relancée."
+msgstr "选择一张发票，然后打印其催款函或打开发票。没有到期日的发票不会被催款。"
+
+msgid "Encaissement"
+msgstr "收款"
+
+msgid "Décaissement"
+msgstr "付款"
+
+msgid "Total des encaissements"
+msgstr "收款合计"
+
+msgid "Total des décaissements"
+msgstr "付款合计"
+
+msgid "Aucun règlement."
+msgstr "无收付款。"
+
+msgid "1 règlement."
+msgstr "1 笔收付款。"
+
+msgid "{} règlements."
+msgstr "{} 笔收付款。"
+
+msgid "Aucun bon de commande à payer."
+msgstr "没有待付款的采购订单。"
+
+msgid "1 bon de commande à payer ; reste dû : {} FCFA."
+msgstr "1 张待付款采购订单；剩余欠款：{} FCFA。"
+
+msgid "{} bons de commande à payer ; reste dû : {} FCFA."
+msgstr "{} 张待付款采购订单；剩余欠款：{} FCFA。"
+
+msgid "Aucune facture échue à relancer."
+msgstr "没有需要催款的逾期发票。"
+
+msgid "1 facture échue ; reste dû : {} FCFA."
+msgstr "1 张逾期发票；剩余欠款：{} FCFA。"
+
+msgid "{} factures échues ; reste dû : {} FCFA."
+msgstr "{} 张逾期发票；剩余欠款：{} FCFA。"
+
+msgid "choisir une facture dans la liste"
+msgstr "请从列表中选择一张发票"
+
+msgid "{} FCFA"
+msgstr "{} FCFA"
+
+msgid "Imprimée depuis la page Relances, toujours en français. Dans l'objet et le texte, les champs suivants reçoivent, dans l'ordre, le numéro, la date, l'échéance, le reste dû et les jours de retard de la facture :"
+msgstr "从催款页面打印，始终为法语。在主题和正文中，以下字段依次填入发票的编号、日期、到期日、未付余额和逾期天数："
+
+msgid "Objet"
+msgstr "主题"
+
+msgid "Texte avant le tableau récapitulatif (une ligne vide sépare deux paragraphes)"
+msgstr "摘要表之前的文字（空行分隔两个段落）"
+
+msgid "Texte après le tableau récapitulatif"
+msgstr "摘要表之后的文字"
+
+msgid "Texte par défaut de la lettre"
+msgstr "默认函件文字"
+
+msgid "Tous les modes"
+msgstr "全部付款方式"

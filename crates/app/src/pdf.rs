@@ -182,8 +182,6 @@ fn colonne(titre: &str, largeur: f32, a_droite: bool) -> ColonnePdf {
 
 /// Lettre de relance d'une facture échue (section 8), datée du jour ; le texte
 /// est celui des paramètres, en français comme tous les PDF (section 13).
-// Branché par l'écran des relances (kadenz-bf) : retirer alors l'attribut.
-#[allow(dead_code)]
 pub(crate) fn lettre_relance(
     conn: &Connection,
     facture_id: i64,
@@ -271,8 +269,6 @@ fn criteres_du_registre(filtre: &FiltreRegistre) -> Vec<String> {
 
 /// Registre des règlements filtré, imprimé, avec le total et les sous-totaux
 /// par mode de chaque sens (section 8).
-// Branché par l'écran des règlements (kadenz-bf) : retirer alors l'attribut.
-#[allow(dead_code)]
 pub(crate) fn registre_reglements(
     conn: &Connection,
     filtre: &FiltreRegistre,
@@ -329,8 +325,6 @@ pub(crate) fn registre_reglements(
 }
 
 /// Liste des factures échues non payées au jour, imprimée (section 8).
-// Branché par l'écran des relances (kadenz-bf) : retirer alors l'attribut.
-#[allow(dead_code)]
 pub(crate) fn liste_relances(conn: &Connection) -> Result<(Vec<u8>, String), String> {
     let jour = aujourd_hui();
     let echues = reglements::factures_echues(conn, jour).map_err(texte_erreur)?;

@@ -390,7 +390,7 @@ fn statuts_filtre(t: TypeDocument) -> Vec<Option<Statut>> {
 }
 
 /// Page du menu qui affiche un type de document.
-fn page_du_type(t: TypeDocument) -> Page {
+pub(crate) fn page_du_type(t: TypeDocument) -> Page {
     match t {
         TypeDocument::Devis => Page::Devis,
         TypeDocument::Proforma => Page::Proforma,

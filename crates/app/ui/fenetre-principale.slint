@@ -7,8 +7,9 @@ import { EntrepriseApi, PageEntreprise, PageParametres, ParametresApi } from "ad
 import { PageUtilisateurs, UtilisateursApi } from "utilisateurs.slint";
 import { ImportApi, PanneauImport } from "import.slint";
 import { FacturesApi, PageFactures } from "factures.slint";
+import { PageReglements, PageRelances, PageSuiviFournisseurs, PaiementsApi, TotalUi } from "paiements.slint";
 
-export { DonneesAssistant, Droits, Theme, EntrepriseApi, FacturesApi, ImportApi, ParametresApi, ProduitsApi, TiersApi, UtilisateursApi }
+export { DonneesAssistant, Droits, Theme, EntrepriseApi, FacturesApi, ImportApi, PaiementsApi, ParametresApi, ProduitsApi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, assistant, connexion, application }
@@ -181,7 +182,7 @@ export component FenetrePrincipale inherits Window {
     in property <[Page]> menu;
     in-out property <Page> page: Page.tableau-de-bord;
 
-    property <bool> page-en-construction: root.page != Page.devis && root.page != Page.proforma && root.page != Page.bons-commande && root.page != Page.livraisons && root.page != Page.factures && root.page != Page.avoirs && root.page != Page.tiers && root.page != Page.produits && root.page != Page.entreprise && root.page != Page.parametres && root.page != Page.utilisateurs && root.page != Page.mon-compte && root.page != Page.a-propos;
+    property <bool> page-en-construction: root.page != Page.devis && root.page != Page.proforma && root.page != Page.bons-commande && root.page != Page.livraisons && root.page != Page.factures && root.page != Page.avoirs && root.page != Page.reglements && root.page != Page.suivi-fournisseurs && root.page != Page.relances && root.page != Page.tiers && root.page != Page.produits && root.page != Page.entreprise && root.page != Page.parametres && root.page != Page.utilisateurs && root.page != Page.mon-compte && root.page != Page.a-propos;
 
     // Libellé de chaque page, dans la langue choisie : calculé ici et non stocké,
     // pour suivre un changement de langue sans reconstruire le menu.
@@ -371,6 +372,12 @@ export component FenetrePrincipale inherits Window {
             if root.page == Page.livraisons: PageFactures {
                 type-document: 3;
             }
+
+            if root.page == Page.reglements: PageReglements { }
+
+            if root.page == Page.suivi-fournisseurs: PageSuiviFournisseurs { }
+
+            if root.page == Page.relances: PageRelances { }
 
             if root.page == Page.factures: PageFactures {
                 type-document: 4;

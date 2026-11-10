@@ -1994,3 +1994,117 @@ msgstr "esta factura no está vencida o no tiene saldo pendiente: sin recordator
 
 msgid "le texte de la lettre de relance ne tient pas sur une page : le raccourcir dans les paramètres"
 msgstr "el texto de la carta de recordatorio no cabe en una página: acórtelo en los parámetros"
+
+msgid "Lettre de relance"
+msgstr "Carta de recordatorio"
+
+msgid "Imprimer le registre"
+msgstr "Imprimir el registro"
+
+msgid "Tous les règlements"
+msgstr "Todos los pagos"
+
+msgid "Encaissements"
+msgstr "Cobros"
+
+msgid "Décaissements"
+msgstr "Pagos realizados"
+
+msgid "Cliquer sur un règlement pour ouvrir son document."
+msgstr "Haga clic en un pago para abrir su documento."
+
+msgid "Rechercher : numéro, fournisseur"
+msgstr "Buscar: número, proveedor"
+
+msgid "Reste à payer"
+msgstr "Saldo pendiente"
+
+msgid "Réglé"
+msgstr "Pagado"
+
+msgid "Montant dû"
+msgstr "Importe adeudado"
+
+msgid "Cliquer sur un bon de commande pour ouvrir sa fiche et saisir un règlement."
+msgstr "Haga clic en una orden de compra para abrirla y registrar un pago."
+
+msgid "Imprimer la liste"
+msgstr "Imprimir la lista"
+
+msgid "Rechercher : numéro, client"
+msgstr "Buscar: número, cliente"
+
+msgid "Ouvrir la facture"
+msgstr "Abrir la factura"
+
+msgid "Jours de retard"
+msgstr "Días de retraso"
+
+msgid "Reste dû"
+msgstr "Saldo adeudado"
+
+msgid "Choisir une facture, puis imprimer sa lettre de relance ou ouvrir sa fiche. Une facture sans échéance n'est jamais relancée."
+msgstr "Elija una factura y luego imprima su carta de recordatorio o ábrala. Una factura sin vencimiento nunca se recuerda."
+
+msgid "Encaissement"
+msgstr "Cobro"
+
+msgid "Décaissement"
+msgstr "Pago realizado"
+
+msgid "Total des encaissements"
+msgstr "Total de cobros"
+
+msgid "Total des décaissements"
+msgstr "Total de pagos realizados"
+
+msgid "Aucun règlement."
+msgstr "Ningún pago."
+
+msgid "1 règlement."
+msgstr "1 pago."
+
+msgid "{} règlements."
+msgstr "{} pagos."
+
+msgid "Aucun bon de commande à payer."
+msgstr "Ninguna orden de compra por pagar."
+
+msgid "1 bon de commande à payer ; reste dû : {} FCFA."
+msgstr "1 orden de compra por pagar; saldo adeudado: {} FCFA."
+
+msgid "{} bons de commande à payer ; reste dû : {} FCFA."
+msgstr "{} órdenes de compra por pagar; saldo adeudado: {} FCFA."
+
+msgid "Aucune facture échue à relancer."
+msgstr "Ninguna factura vencida por recordar."
+
+msgid "1 facture échue ; reste dû : {} FCFA."
+msgstr "1 factura vencida; saldo adeudado: {} FCFA."
+
+msgid "{} factures échues ; reste dû : {} FCFA."
+msgstr "{} facturas vencidas; saldo adeudado: {} FCFA."
+
+msgid "choisir une facture dans la liste"
+msgstr "elija una factura de la lista"
+
+msgid "{} FCFA"
+msgstr "{} FCFA"
+
+msgid "Imprimée depuis la page Relances, toujours en français. Dans l'objet et le texte, les champs suivants reçoivent, dans l'ordre, le numéro, la date, l'échéance, le reste dû et les jours de retard de la facture :"
+msgstr "Se imprime desde la página Recordatorios, siempre en francés. En el asunto y el texto, los siguientes campos reciben, en orden, el número, la fecha, el vencimiento, el saldo pendiente y los días de retraso de la factura:"
+
+msgid "Objet"
+msgstr "Asunto"
+
+msgid "Texte avant le tableau récapitulatif (une ligne vide sépare deux paragraphes)"
+msgstr "Texto antes de la tabla de resumen (una línea en blanco separa dos párrafos)"
+
+msgid "Texte après le tableau récapitulatif"
+msgstr "Texto después de la tabla de resumen"
+
+msgid "Texte par défaut de la lettre"
+msgstr "Texto predeterminado de la carta"
+
+msgid "Tous les modes"
+msgstr "Todos los modos"

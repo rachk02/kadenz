@@ -1,0 +1,322 @@
+// Pages du module Paiements (section 8) : registre des règlements, suivi des
+// bons de commande non payés et relances des factures échues.
+import { ComboBox, LineEdit, StandardTableView } from "std-widgets.slint";
+import { Bouton, MessageRetour, Rangee, Retour, Theme, Titre } from "composants.slint";
+
+// Ligne des totaux du registre : total d'un sens (en gras) ou sous-total d'un mode.
+export struct TotalUi {
+    libelle: string,
+    valeur: string,
+    fort: bool,
+}
+
+export global PaiementsApi {
+    // Registre des règlements.
+    in property <[[StandardListViewItem]]> reglements;
+    // « Tous les modes », puis les modes des Paramètres.
+    in property <[string]> modes;
+    in property <[TotalUi]> totaux;
+    in property <string> resume-reglements;
+    // Renvoie le message d'une période illisible, vide sinon.
+    callback filtrer-reglements(sens: int, mode: int, du: string, au: string) -> string;
+    callback ouvrir-reglement(ligne: int) -> Retour;
+    callback imprimer-registre() -> Retour;
+
+    // Suivi fournisseurs : bons de commande non payés.
+    in property <[[StandardListViewItem]]> fournisseurs;
+    in property <string> resume-fournisseurs;
+    callback filtrer-fournisseurs(texte: string);
+    callback ouvrir-fournisseur(ligne: int) -> Retour;
+
+    // Relances : factures échues non payées.
+    in property <[[StandardListViewItem]]> relances;
+    in property <string> resume-relances;
+    callback filtrer-relances(texte: string);
+    callback ouvrir-relance(ligne: int) -> Retour;
+    callback lettre-relance(ligne: int) -> Retour;
+    callback imprimer-relances() -> Retour;
+}
+
+component Resume inherits Text {
+    horizontal-alignment: Theme.debut;
+    font-size: 12px;
+    color: Theme.texte-secondaire;
+    wrap: word-wrap;
+}
+
+export component PageReglements inherits VerticalLayout {
+    property <string> erreur-filtre;
+    property <Retour> retour;
+
+    function filtrer() {
+        root.erreur-filtre = PaiementsApi.filtrer-reglements(sens.current-index, mode.current-index, du.text, au.text);
+    }
+
+    padding: 24px;
+    spacing: 12px;
+
+    Rangee {
+        spacing: 8px;
+
+        Titre {
+            text: @tr("Règlements");
+        }
+
+        Rectangle { }
+
+        Bouton {
+            text: @tr("Imprimer le registre");
+            clicked => {
+                root.retour = PaiementsApi.imprimer-registre();
+            }
+        }
+    }
+
+    Rangee {
+        spacing: 8px;
+
+        sens := ComboBox {
+            width: 190px;
+            model: [@tr("Tous les règlements"), @tr("Encaissements"), @tr("Décaissements")];
+            selected => {
+                root.filtrer();
+            }
+        }
+
+        mode := ComboBox {
+            width: 190px;
+            model: PaiementsApi.modes;
+            selected => {
+                root.filtrer();
+            }
+        }
+
+        du := LineEdit {
+            width: 120px;
+            placeholder-text: @tr("Du JJ/MM/AAAA");
+            edited => {
+                root.filtrer();
+            }
+        }
+
+        au := LineEdit {
+            width: 120px;
+            placeholder-text: @tr("Au JJ/MM/AAAA");
+            edited => {
+                root.filtrer();
+            }
+        }
+    }
+
+    if root.erreur-filtre != "": Text {
+        horizontal-alignment: Theme.debut;
+        text: root.erreur-filtre;
+        color: Theme.erreur;
+    }
+
+    if root.retour.message != "": MessageRetour {
+        retour: root.retour;
+    }
+
+    StandardTableView {
+        // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
+        columns: Theme.rtl ? [
+            { title: @tr("Montant"), min-width: 100px, horizontal-stretch: 0 },
+            { title: @tr("Référence"), min-width: 110px, horizontal-stretch: 1 },
+            { title: @tr("Mode"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Tiers"), min-width: 130px, horizontal-stretch: 2 },
+            { title: @tr("N°"), min-width: 110px, horizontal-stretch: 1 },
+            { title: @tr("Type"), min-width: 110px, horizontal-stretch: 0 },
+            { title: @tr("Date"), min-width: 85px, horizontal-stretch: 0 },
+        ] : [
+            { title: @tr("Date"), min-width: 85px, horizontal-stretch: 0 },
+            { title: @tr("Type"), min-width: 110px, horizontal-stretch: 0 },
+            { title: @tr("N°"), min-width: 110px, horizontal-stretch: 1 },
+            { title: @tr("Tiers"), min-width: 130px, horizontal-stretch: 2 },
+            { title: @tr("Mode"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Référence"), min-width: 110px, horizontal-stretch: 1 },
+            { title: @tr("Montant"), min-width: 100px, horizontal-stretch: 0 },
+        ];
+        rows: PaiementsApi.reglements;
+        current-row-changed(ligne) => {
+            root.retour = PaiementsApi.ouvrir-reglement(ligne);
+        }
+    }
+
+    // Total de chaque sens, puis ses sous-totaux par mode.
+    for total in PaiementsApi.totaux: Rangee {
+        spacing: 12px;
+
+        Text {
+            text: total.libelle;
+            horizontal-stretch: 1;
+            horizontal-alignment: Theme.fin;
+            color: total.fort ? Theme.texte : Theme.texte-secondaire;
+            font-weight: total.fort ? 700 : 400;
+        }
+
+        Text {
+            text: total.valeur;
+            width: 160px;
+            horizontal-alignment: Theme.fin;
+            color: Theme.texte;
+            font-weight: total.fort ? 700 : 400;
+        }
+    }
+
+    Resume {
+        text: PaiementsApi.resume-reglements + " " + @tr("Cliquer sur un règlement pour ouvrir son document.");
+    }
+
+    init => {
+        root.filtrer();
+    }
+}
+
+export component PageSuiviFournisseurs inherits VerticalLayout {
+    property <Retour> retour;
+
+    padding: 24px;
+    spacing: 12px;
+
+    Titre {
+        text: @tr("Suivi fournisseurs");
+    }
+
+    recherche := LineEdit {
+        placeholder-text: @tr("Rechercher : numéro, fournisseur");
+        edited => {
+            PaiementsApi.filtrer-fournisseurs(self.text);
+        }
+    }
+
+    if root.retour.message != "": MessageRetour {
+        retour: root.retour;
+    }
+
+    StandardTableView {
+        columns: Theme.rtl ? [
+            { title: @tr("Statut"), min-width: 120px, horizontal-stretch: 0 },
+            { title: @tr("Reste à payer"), min-width: 120px, horizontal-stretch: 0 },
+            { title: @tr("Réglé"), min-width: 100px, horizontal-stretch: 0 },
+            { title: @tr("Montant dû"), min-width: 120px, horizontal-stretch: 0 },
+            { title: @tr("Fournisseur"), min-width: 150px, horizontal-stretch: 2 },
+            { title: @tr("Date"), min-width: 85px, horizontal-stretch: 0 },
+            { title: @tr("N°"), min-width: 110px, horizontal-stretch: 1 },
+        ] : [
+            { title: @tr("N°"), min-width: 110px, horizontal-stretch: 1 },
+            { title: @tr("Date"), min-width: 85px, horizontal-stretch: 0 },
+            { title: @tr("Fournisseur"), min-width: 150px, horizontal-stretch: 2 },
+            { title: @tr("Montant dû"), min-width: 120px, horizontal-stretch: 0 },
+            { title: @tr("Réglé"), min-width: 100px, horizontal-stretch: 0 },
+            { title: @tr("Reste à payer"), min-width: 120px, horizontal-stretch: 0 },
+            { title: @tr("Statut"), min-width: 120px, horizontal-stretch: 0 },
+        ];
+        rows: PaiementsApi.fournisseurs;
+        current-row-changed(ligne) => {
+            root.retour = PaiementsApi.ouvrir-fournisseur(ligne);
+        }
+    }
+
+    Resume {
+        text: PaiementsApi.resume-fournisseurs + " " + @tr("Cliquer sur un bon de commande pour ouvrir sa fiche et saisir un règlement.");
+    }
+
+    init => {
+        PaiementsApi.filtrer-fournisseurs("");
+    }
+}
+
+export component PageRelances inherits VerticalLayout {
+    property <Retour> retour;
+    property <int> ligne: -1;
+
+    padding: 24px;
+    spacing: 12px;
+
+    Rangee {
+        spacing: 8px;
+
+        Titre {
+            text: @tr("Relances");
+        }
+
+        Rectangle { }
+
+        Bouton {
+            text: @tr("Imprimer la liste");
+            clicked => {
+                root.retour = PaiementsApi.imprimer-relances();
+            }
+        }
+    }
+
+    recherche := LineEdit {
+        placeholder-text: @tr("Rechercher : numéro, client");
+        edited => {
+            root.ligne = -1;
+            PaiementsApi.filtrer-relances(self.text);
+        }
+    }
+
+    // Actions sur la facture choisie dans la liste.
+    Rangee {
+        alignment: start;
+        spacing: 8px;
+
+        Bouton {
+            text: @tr("Lettre de relance");
+            primary: true;
+            enabled: root.ligne >= 0;
+            clicked => {
+                root.retour = PaiementsApi.lettre-relance(root.ligne);
+            }
+        }
+
+        Bouton {
+            text: @tr("Ouvrir la facture");
+            enabled: root.ligne >= 0;
+            clicked => {
+                root.retour = PaiementsApi.ouvrir-relance(root.ligne);
+            }
+        }
+    }
+
+    if root.retour.message != "": MessageRetour {
+        retour: root.retour;
+    }
+
+    StandardTableView {
+        columns: Theme.rtl ? [
+            { title: @tr("Jours de retard"), min-width: 130px, horizontal-stretch: 0 },
+            { title: @tr("Reste dû"), min-width: 110px, horizontal-stretch: 0 },
+            { title: @tr("Réglé"), min-width: 100px, horizontal-stretch: 0 },
+            { title: @tr("Montant dû"), min-width: 120px, horizontal-stretch: 0 },
+            { title: @tr("Client"), min-width: 140px, horizontal-stretch: 2 },
+            { title: @tr("Échéance"), min-width: 85px, horizontal-stretch: 0 },
+            { title: @tr("Date"), min-width: 85px, horizontal-stretch: 0 },
+            { title: @tr("N°"), min-width: 110px, horizontal-stretch: 1 },
+        ] : [
+            { title: @tr("N°"), min-width: 110px, horizontal-stretch: 1 },
+            { title: @tr("Date"), min-width: 85px, horizontal-stretch: 0 },
+            { title: @tr("Échéance"), min-width: 85px, horizontal-stretch: 0 },
+            { title: @tr("Client"), min-width: 140px, horizontal-stretch: 2 },
+            { title: @tr("Montant dû"), min-width: 120px, horizontal-stretch: 0 },
+            { title: @tr("Réglé"), min-width: 100px, horizontal-stretch: 0 },
+            { title: @tr("Reste dû"), min-width: 110px, horizontal-stretch: 0 },
+            { title: @tr("Jours de retard"), min-width: 130px, horizontal-stretch: 0 },
+        ];
+        rows: PaiementsApi.relances;
+        current-row-changed(ligne) => {
+            root.ligne = ligne;
+        }
+    }
+
+    Resume {
+        text: PaiementsApi.resume-relances + " " + @tr("Choisir une facture, puis imprimer sa lettre de relance ou ouvrir sa fiche. Une facture sans échéance n'est jamais relancée.");
+    }
+
+    init => {
+        PaiementsApi.filtrer-relances("");
+    }
+}

@@ -4,6 +4,7 @@
 mod administration;
 mod factures;
 mod import_ecran;
+mod paiements;
 mod pdf;
 mod referentiels;
 mod traduction;
@@ -296,6 +297,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     utilisateurs::brancher(fenetre, &etat);
     import_ecran::brancher(fenetre, &etat);
     factures::brancher(fenetre, &etat);
+    paiements::brancher(fenetre, &etat);
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
     fenetre.on_changer_langue(move |rang| {

@@ -237,7 +237,11 @@ mod tests {
             }
         };
         lire("ui", ".slint", &["@tr("]);
-        lire("src", ".rs", &[" tr(", "(tr(", " trf(", "(trf("]);
+        lire(
+            "src",
+            ".rs",
+            &[" tr(", "(tr(", "[tr(", " trf(", "(trf(", "[trf("],
+        );
         assert!(textes.len() > 300, "{} textes seulement", textes.len());
 
         let mut manques = Vec::new();

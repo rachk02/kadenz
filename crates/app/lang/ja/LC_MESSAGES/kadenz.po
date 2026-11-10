@@ -1994,3 +1994,117 @@ msgstr "この請求書は期限前か残額がありません。督促はでき
 
 msgid "le texte de la lettre de relance ne tient pas sur une page : le raccourcir dans les paramètres"
 msgstr "督促状の本文が 1 ページに収まりません。設定で短くしてください"
+
+msgid "Lettre de relance"
+msgstr "督促状"
+
+msgid "Imprimer le registre"
+msgstr "台帳を印刷"
+
+msgid "Tous les règlements"
+msgstr "すべての入出金"
+
+msgid "Encaissements"
+msgstr "入金"
+
+msgid "Décaissements"
+msgstr "出金"
+
+msgid "Cliquer sur un règlement pour ouvrir son document."
+msgstr "入出金をクリックすると書類が開きます。"
+
+msgid "Rechercher : numéro, fournisseur"
+msgstr "検索：番号、仕入先"
+
+msgid "Reste à payer"
+msgstr "残額"
+
+msgid "Réglé"
+msgstr "支払済"
+
+msgid "Montant dû"
+msgstr "支払うべき金額"
+
+msgid "Cliquer sur un bon de commande pour ouvrir sa fiche et saisir un règlement."
+msgstr "注文書をクリックすると開き、入出金を記録できます。"
+
+msgid "Imprimer la liste"
+msgstr "一覧を印刷"
+
+msgid "Rechercher : numéro, client"
+msgstr "検索：番号、顧客"
+
+msgid "Ouvrir la facture"
+msgstr "請求書を開く"
+
+msgid "Jours de retard"
+msgstr "遅延日数"
+
+msgid "Reste dû"
+msgstr "未払残高"
+
+msgid "Choisir une facture, puis imprimer sa lettre de relance ou ouvrir sa fiche. Une facture sans échéance n'est jamais relancée."
+msgstr "請求書を選んでから、督促状を印刷するか請求書を開きます。期限のない請求書は督促されません。"
+
+msgid "Encaissement"
+msgstr "入金"
+
+msgid "Décaissement"
+msgstr "出金"
+
+msgid "Total des encaissements"
+msgstr "入金合計"
+
+msgid "Total des décaissements"
+msgstr "出金合計"
+
+msgid "Aucun règlement."
+msgstr "入出金はありません。"
+
+msgid "1 règlement."
+msgstr "入出金 1 件。"
+
+msgid "{} règlements."
+msgstr "入出金 {} 件。"
+
+msgid "Aucun bon de commande à payer."
+msgstr "支払う注文書はありません。"
+
+msgid "1 bon de commande à payer ; reste dû : {} FCFA."
+msgstr "支払う注文書 1 件、未払残高：{} FCFA。"
+
+msgid "{} bons de commande à payer ; reste dû : {} FCFA."
+msgstr "支払う注文書 {} 件、未払残高：{} FCFA。"
+
+msgid "Aucune facture échue à relancer."
+msgstr "督促する期限切れの請求書はありません。"
+
+msgid "1 facture échue ; reste dû : {} FCFA."
+msgstr "期限切れの請求書 1 件、未払残高：{} FCFA。"
+
+msgid "{} factures échues ; reste dû : {} FCFA."
+msgstr "期限切れの請求書 {} 件、未払残高：{} FCFA。"
+
+msgid "choisir une facture dans la liste"
+msgstr "一覧から請求書を選んでください"
+
+msgid "{} FCFA"
+msgstr "{} FCFA"
+
+msgid "Imprimée depuis la page Relances, toujours en français. Dans l'objet et le texte, les champs suivants reçoivent, dans l'ordre, le numéro, la date, l'échéance, le reste dû et les jours de retard de la facture :"
+msgstr "督促ページから印刷され、常にフランス語です。件名と本文では、次のフィールドに請求書の番号、日付、支払期日、残額、遅延日数が順に入ります："
+
+msgid "Objet"
+msgstr "件名"
+
+msgid "Texte avant le tableau récapitulatif (une ligne vide sépare deux paragraphes)"
+msgstr "概要表の前の文章（空行で段落を区切ります）"
+
+msgid "Texte après le tableau récapitulatif"
+msgstr "概要表の後の文章"
+
+msgid "Texte par défaut de la lettre"
+msgstr "督促状の既定の文章"
+
+msgid "Tous les modes"
+msgstr "すべての支払方法"
