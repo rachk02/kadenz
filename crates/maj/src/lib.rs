@@ -127,6 +127,43 @@ pub fn verifier() -> Option<MiseAJour> {
     analyser(&derniere_release()?, VERSION)
 }
 
+/// Issue d'une recherche demandée par l'utilisateur (bouton « Rechercher une
+/// mise à jour » des Paramètres).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Recherche {
+    Disponible(MiseAJour),
+    /// Aucune release plus récente ne contient d'installateur.
+    AJour,
+    /// GitHub injoignable ou réponse illisible.
+    HorsLigne,
+}
+
+/// Recherche à la demande : comme [`verifier`], mais dit pourquoi il n'y a
+/// rien à installer. `KADENZ_SANS_MAJ` ne s'applique pas : l'utilisateur a
+/// demandé la recherche. Bloquant : à appeler hors du fil de l'interface.
+pub fn rechercher() -> Recherche {
+    match derniere_release() {
+        Some(json) => trier(&json, VERSION),
+        None => Recherche::HorsLigne,
+    }
+}
+
+/// Classe une réponse de l'API : illisible (sans tag de version) ou à jour.
+pub fn trier(json: &str, actuelle: &str) -> Recherche {
+    if let Some(maj) = analyser(json, actuelle) {
+        return Recherche::Disponible(maj);
+    }
+    let lisible = serde_json::from_str::<serde_json::Value>(json)
+        .ok()
+        .and_then(|v| v["tag_name"].as_str().and_then(Version::lire))
+        .is_some();
+    if lisible {
+        Recherche::AJour
+    } else {
+        Recherche::HorsLigne
+    }
+}
+
 /// Variable des versions de développement : chemin d'un fichier JSON local
 /// lu à la place de la réponse de GitHub, pour essayer l'invite.
 pub const FICHIER_ESSAI: &str = "KADENZ_MAJ_JSON";
@@ -310,6 +347,17 @@ mod tests {
         assert_eq!(analyser("pas du json", "0.1.0"), None);
         let sans = analyser(&release("v0.2.0", false), "0.1.0").expect("sans empreinte");
         assert_eq!(sans.empreinte_url, None);
+    }
+
+    #[test]
+    fn recherche_a_la_demande_triee() {
+        assert!(matches!(
+            trier(&release("v0.2.0", true), "0.1.0"),
+            Recherche::Disponible(m) if m.version == "0.2.0"
+        ));
+        assert_eq!(trier(&release("v0.1.0", true), "0.1.0"), Recherche::AJour);
+        assert_eq!(trier("<html>erreur</html>", "0.1.0"), Recherche::HorsLigne);
+        assert_eq!(trier("{}", "0.1.0"), Recherche::HorsLigne);
     }
 
     #[test]

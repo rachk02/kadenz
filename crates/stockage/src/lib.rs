@@ -1,6 +1,7 @@
 //! Accès SQLite de Kadenz (cahier des charges, sections 1, 10.3 et 11).
 
 pub mod audit;
+pub mod chiffrement;
 pub mod comptes;
 pub mod documents;
 pub mod droits;
@@ -65,6 +66,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0003_instantane_entreprise.sql"),
     include_str!("migrations/0004_lien_documents.sql"),
     include_str!("migrations/0005_bordereau.sql"),
+    include_str!("migrations/0006_affichage.sql"),
 ];
 
 #[derive(Debug)]
@@ -172,12 +174,25 @@ pub struct BilanImport {
     pub ignorees: Vec<(usize, String)>,
 }
 
-/// Ouvre (ou crée) la base au chemin donné et applique les migrations en attente.
+/// Ouvre (ou crée) la base chiffrée au chemin donné et applique les migrations
+/// en attente. Une base encore en clair est d'abord chiffrée (voir
+/// [`chiffrement::chiffrer_base_en_clair`]) ; la clé est créée avec une base
+/// neuve, dans `kadenz.cle` à côté d'elle.
 pub fn ouvrir(chemin: &Path) -> Resultat<Connection> {
     if let Some(dossier) = chemin.parent() {
         std::fs::create_dir_all(dossier)?;
     }
+    let fichier_cle = chiffrement::chemin_cle(chemin);
+    let neuve = std::fs::metadata(chemin)
+        .map(|m| m.len() == 0)
+        .unwrap_or(true);
+    let a_chiffrer = chiffrement::en_clair(chemin)?;
+    let cle = chiffrement::cle(&fichier_cle, neuve || a_chiffrer)?;
+    if a_chiffrer {
+        chiffrement::chiffrer_base_en_clair(chemin, &cle)?;
+    }
     let mut conn = Connection::open(chemin)?;
+    chiffrement::appliquer_cle(&conn, &cle)?;
     conn.pragma_update(None, "journal_mode", "WAL")?;
     preparer(&mut conn)?;
     // Socle seul tant que la licence n'est pas appliquée (licence::appliquer).
@@ -331,18 +346,43 @@ pub fn prochain_rang(
     Ok(rang)
 }
 
-/// Sauvegarde cohérente de la base ouverte vers `destination`, par l'API de
-/// sauvegarde en ligne de SQLite (jamais une copie brute du fichier).
-pub fn sauvegarder(conn: &Connection, destination: &Path) -> Resultat<()> {
+/// Sauvegarde cohérente de la base ouverte vers `destination`, chiffrée par
+/// `mot_de_passe` (et non par la clé du poste) pour pouvoir être restaurée sur
+/// un autre poste ou un autre compte. Par l'API de sauvegarde en ligne de
+/// SQLite, jamais une copie brute du fichier ; un fichier existant est remplacé.
+pub fn sauvegarder(conn: &Connection, destination: &Path, mot_de_passe: &str) -> Resultat<()> {
+    if mot_de_passe.chars().count() < comptes::LONGUEUR_MIN_MOT_DE_PASSE {
+        return Err(refus(
+            "le mot de passe de la sauvegarde doit compter au moins {} caractères",
+            &[&comptes::LONGUEUR_MIN_MOT_DE_PASSE],
+        ));
+    }
     if let Some(dossier) = destination.parent() {
         std::fs::create_dir_all(dossier)?;
     }
-    conn.backup(
-        rusqlite::MAIN_DB,
-        destination,
-        None::<fn(rusqlite::backup::Progress)>,
+    match std::fs::remove_file(destination) {
+        Err(e) if e.kind() != std::io::ErrorKind::NotFound => return Err(e.into()),
+        _ => {}
+    }
+    let mut cible = Connection::open(destination)?;
+    chiffrement::appliquer_cle(&cible, mot_de_passe)?;
+    rusqlite::backup::Backup::new(conn, &mut cible)?.run_to_completion(
+        256,
+        std::time::Duration::ZERO,
+        None,
     )?;
     Ok(())
+}
+
+/// Ouvre une sauvegarde faite par [`sauvegarder`], avec son mot de passe.
+pub fn ouvrir_sauvegarde(chemin: &Path, mot_de_passe: &str) -> Resultat<Connection> {
+    if !chemin.is_file() {
+        return Err(refus("sauvegarde introuvable : {}", &[&chemin.display()]));
+    }
+    let conn = Connection::open_with_flags(chemin, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+    chiffrement::appliquer_cle(&conn, mot_de_passe)
+        .map_err(|_| Erreur::Validation("mot de passe de la sauvegarde incorrect".into()))?;
+    Ok(conn)
 }
 
 #[cfg(test)]
@@ -487,24 +527,95 @@ mod tests {
         assert!(r.is_err(), "un brouillon ne doit pas porter de numéro");
     }
 
-    #[test]
-    fn sauvegarde_lisible() {
-        let conn = base();
-        prochain_rang(&conn, TypeDocument::Facture, 2026, 5).unwrap();
-        let dossier = std::env::temp_dir().join(format!("kadenz-test-{}", std::process::id()));
-        let cible = dossier.join("sauvegarde.sqlite");
-        sauvegarder(&conn, &cible).unwrap();
+    fn dossier_essai(nom: &str) -> std::path::PathBuf {
+        let dossier = std::env::temp_dir().join(format!("kadenz-{nom}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dossier);
+        std::fs::create_dir_all(&dossier).unwrap();
+        dossier
+    }
 
-        let copie = ouvrir(&cible).unwrap();
-        let n: u32 = copie
-            .query_row(
-                "SELECT dernier_numero FROM compteur_numerotation",
-                [],
-                |r| r.get(0),
-            )
-            .unwrap();
-        assert_eq!(n, 1);
+    fn dernier_numero(conn: &Connection) -> u32 {
+        conn.query_row(
+            "SELECT dernier_numero FROM compteur_numerotation",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn base_neuve_chiffree() {
+        let dossier = dossier_essai("neuve");
+        let chemin = dossier.join("kadenz.sqlite");
+        let conn = ouvrir(&chemin).unwrap();
+        prochain_rang(&conn, TypeDocument::Facture, 2026, 5).unwrap();
+        drop(conn);
+        assert!(
+            chemin.with_extension("cle").is_file(),
+            "clé créée à côté de la base"
+        );
+        assert!(!chiffrement::en_clair(&chemin).unwrap(), "fichier chiffré");
+        // Sans la clé, la base ne se lit pas.
+        let brute = Connection::open(&chemin).unwrap();
+        assert!(
+            brute
+                .query_row("SELECT count(*) FROM sqlite_master", [], |r| r
+                    .get::<_, i64>(0))
+                .is_err()
+        );
+        drop(brute);
+        // Avec elle, si : réouverture normale.
+        let conn = ouvrir(&chemin).unwrap();
+        assert_eq!(dernier_numero(&conn), 1);
+        drop(conn);
+        // Clé disparue : erreur claire, la base n'est pas recréée.
+        std::fs::remove_file(chemin.with_extension("cle")).unwrap();
+        assert!(ouvrir(&chemin).is_err());
+        let _ = std::fs::remove_dir_all(dossier);
+    }
+
+    #[test]
+    fn base_en_clair_convertie() {
+        let dossier = dossier_essai("conversion");
+        let chemin = dossier.join("kadenz.sqlite");
+        {
+            // Base de l'ancienne version : en clair, en mode WAL.
+            let mut conn = Connection::open(&chemin).unwrap();
+            conn.pragma_update(None, "journal_mode", "WAL").unwrap();
+            preparer(&mut conn).unwrap();
+            prochain_rang(&conn, TypeDocument::Facture, 2026, 5).unwrap();
+            prochain_rang(&conn, TypeDocument::Facture, 2026, 5).unwrap();
+        }
+        assert!(chiffrement::en_clair(&chemin).unwrap());
+        let conn = ouvrir(&chemin).unwrap();
+        assert_eq!(dernier_numero(&conn), 2, "données gardées");
+        drop(conn);
+        assert!(!chiffrement::en_clair(&chemin).unwrap(), "fichier chiffré");
+        assert!(!dossier.join("kadenz.sqlite.en-clair").exists());
+        assert!(!dossier.join("kadenz.sqlite.chiffrement").exists());
+        let _ = std::fs::remove_dir_all(dossier);
+    }
+
+    #[test]
+    fn sauvegarde_par_mot_de_passe() {
+        let dossier = dossier_essai("sauvegarde");
+        let conn = ouvrir(&dossier.join("kadenz.sqlite")).unwrap();
+        prochain_rang(&conn, TypeDocument::Facture, 2026, 5).unwrap();
+        let cible = dossier.join("copie").join("sauvegarde.kadenz");
+        assert!(
+            sauvegarder(&conn, &cible, "court").is_err(),
+            "mot de passe trop court"
+        );
+        sauvegarder(&conn, &cible, "motdepasse-sauvegarde").unwrap();
+        assert!(
+            !chiffrement::en_clair(&cible).unwrap(),
+            "sauvegarde chiffrée"
+        );
+        assert!(ouvrir_sauvegarde(&cible, "mauvais-mot-de-passe").is_err());
+        let copie = ouvrir_sauvegarde(&cible, "motdepasse-sauvegarde").unwrap();
+        assert_eq!(dernier_numero(&copie), 1);
         drop(copie);
+        drop(conn);
         let _ = std::fs::remove_dir_all(dossier);
     }
 }

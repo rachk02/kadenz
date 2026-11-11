@@ -24,6 +24,36 @@ pub struct Utilisateur {
     pub actif: bool,
     /// Langue de l'interface choisie par le compte.
     pub langue: Langue,
+    /// Navigation choisie par le compte.
+    pub navigation: Navigation,
+    /// Animations de l'interface, coupées si `false`.
+    pub animations: bool,
+}
+
+/// Navigation de l'interface, choisie par compte (décision de l'utilisateur du
+/// 2026-11-11) : bandeau en haut, par défaut, ou barre latérale repliable.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Navigation {
+    #[default]
+    Bandeau,
+    Barre,
+}
+
+impl Navigation {
+    pub fn code(self) -> &'static str {
+        match self {
+            Navigation::Bandeau => "bandeau",
+            Navigation::Barre => "barre",
+        }
+    }
+
+    pub fn depuis_code(code: &str) -> Option<Self> {
+        match code {
+            "bandeau" => Some(Navigation::Bandeau),
+            "barre" => Some(Navigation::Barre),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -102,10 +132,12 @@ fn ligne_vers_utilisateur(r: &rusqlite::Row<'_>) -> rusqlite::Result<Utilisateur
         actif: r.get(4)?,
         // Code inconnu (impossible avec la contrainte) : français par défaut.
         langue: Langue::depuis_code(&r.get::<_, String>(5)?).unwrap_or_default(),
+        navigation: Navigation::depuis_code(&r.get::<_, String>(6)?).unwrap_or_default(),
+        animations: r.get(7)?,
     })
 }
 
-const COLONNES: &str = "id, nom_complet, identifiant, role, actif, langue";
+const COLONNES: &str = "id, nom_complet, identifiant, role, actif, langue, navigation, animations";
 
 pub fn lire(conn: &Connection, id: i64) -> Resultat<Option<Utilisateur>> {
     Ok(conn
@@ -201,6 +233,8 @@ pub(crate) fn creer_sans_controle(
         role: nouveau.role,
         actif: true,
         langue: Langue::default(),
+        navigation: Navigation::default(),
+        animations: true,
     })
 }
 
@@ -217,7 +251,8 @@ pub fn connecter(
                 "SELECT {COLONNES}, mot_de_passe_hache FROM utilisateur WHERE identifiant = ?1"
             ),
             [identifiant.trim()],
-            |r| Ok((ligne_vers_utilisateur(r)?, r.get(6)?)),
+            // Le hachage suit les colonnes de COLONNES.
+            |r| Ok((ligne_vers_utilisateur(r)?, r.get(8)?)),
         )
         .optional()?;
     match trouve {
@@ -415,10 +450,72 @@ pub fn changer_langue(conn: &Connection, acteur: &Utilisateur, langue: Langue) -
     )
 }
 
+/// Choix de l'affichage (navigation, animations) pour son propre compte. Aucun
+/// droit requis, comme pour la langue ; le compte est relu en base (il doit
+/// être actif).
+pub fn changer_affichage(
+    conn: &Connection,
+    acteur: &Utilisateur,
+    navigation: Navigation,
+    animations: bool,
+) -> Resultat<()> {
+    let ancien: Option<(String, bool)> = conn
+        .query_row(
+            "SELECT navigation, animations FROM utilisateur WHERE id = ?1 AND actif = 1",
+            [acteur.id],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .optional()?;
+    let Some((ancienne_navigation, anciennes_animations)) = ancien else {
+        return Err(Erreur::Validation("compte inconnu ou désactivé".into()));
+    };
+    if ancienne_navigation == navigation.code() && anciennes_animations == animations {
+        return Ok(());
+    }
+    conn.execute(
+        "UPDATE utilisateur SET navigation = ?1, animations = ?2 WHERE id = ?3",
+        params![navigation.code(), animations, acteur.id],
+    )?;
+    audit::journaliser(
+        conn,
+        Entree {
+            entite: "utilisateur",
+            entite_id: acteur.id,
+            action: "changement_affichage",
+            ancienne_valeur: Some(
+                json!({ "navigation": ancienne_navigation, "animations": anciennes_animations }),
+            ),
+            nouvelle_valeur: Some(
+                json!({ "navigation": navigation.code(), "animations": animations }),
+            ),
+            utilisateur_id: Some(acteur.id),
+        },
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::ouvrir_en_memoire;
+
+    #[test]
+    fn affichage_du_compte() {
+        let conn = ouvrir_en_memoire().unwrap();
+        let admin = crate::droits::tests::compte(&conn, "admin", Role::Admin);
+        assert_eq!(admin.navigation, Navigation::Bandeau);
+        assert!(admin.animations);
+        changer_affichage(&conn, &admin, Navigation::Barre, false).unwrap();
+        let relu = lire(&conn, admin.id).unwrap().unwrap();
+        assert_eq!(
+            (relu.navigation, relu.animations),
+            (Navigation::Barre, false)
+        );
+        let refus = conn.execute(
+            "UPDATE utilisateur SET navigation = 'ruban' WHERE id = ?1",
+            [admin.id],
+        );
+        assert!(refus.is_err(), "navigation hors liste refusée");
+    }
 
     #[test]
     fn langue_du_compte() {

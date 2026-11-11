@@ -11,6 +11,13 @@ members = [
     "crates/maj",
     "crates/app",
 ]
+# Copies de crates tiers modifiées : hors des vérifications de l'espace de travail.
+exclude = ["vendor"]
+
+# Chiffrement de la base (cahier, section 13) : libsqlite3-sys compile
+# l'amalgamation de SQLite3 Multiple Ciphers au lieu de celle de SQLite.
+[patch.crates-io]
+libsqlite3-sys = { path = "vendor/libsqlite3-sys" }
 
 [workspace.package]
 version = "0.1.0"
