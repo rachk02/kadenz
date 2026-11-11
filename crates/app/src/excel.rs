@@ -412,8 +412,11 @@ pub(crate) fn document(conn: &Connection, id: i64) -> Export {
     let montants = t.a_des_montants();
     let livree = matches!(t, TypeDocument::Livraison | TypeDocument::BonCommande);
 
-    let mut entete = vec![
-        info("Numéro", d.numero.clone().unwrap_or_default()),
+    let mut entete = Vec::new();
+    if let Some(n) = &d.numero {
+        entete.push(info("Numéro", n.clone()));
+    }
+    entete.extend([
         info("Statut", tr(&d.statut.to_string())),
         info("Date", Some(s.date)),
         info(
@@ -423,7 +426,7 @@ pub(crate) fn document(conn: &Connection, id: i64) -> Export {
             },
             d.tiers.nom.clone(),
         ),
-    ];
+    ]);
     for (libelle, valeur) in [
         ("Adresse", &d.tiers.adresse),
         ("IFU", &d.tiers.ifu),
@@ -468,11 +471,13 @@ pub(crate) fn document(conn: &Connection, id: i64) -> Export {
             12.0,
         ));
     }
+    // Observations avant les montants : les totaux s'alignent sur les deux
+    // dernières colonnes, Prix unitaire et Montant.
+    colonnes.push(col("Observations", 30.0));
     if montants {
         colonnes.push(col("Prix unitaire", 14.0));
         colonnes.push(col("Montant", 16.0));
     }
-    colonnes.push(col("Observations", 30.0));
     let lignes = s
         .lignes
         .iter()
@@ -486,13 +491,13 @@ pub(crate) fn document(conn: &Connection, id: i64) -> Export {
             if livree {
                 v.push(Valeur::Quantite(l.quantite_livree));
             }
+            v.push(l.observations.clone().into());
             if montants {
                 v.push(Valeur::Montant(l.prix));
                 v.push(Valeur::Montant(
                     d.totaux_lignes.get(i).copied().unwrap_or_default(),
                 ));
             }
-            v.push(l.observations.clone().into());
             v
         })
         .collect();

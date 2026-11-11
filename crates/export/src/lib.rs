@@ -98,6 +98,7 @@ struct Formats {
     montant_gras: Format,
     quantite: Format,
     pourcentage: Format,
+    pourcentage_entier: Format,
     entier: Format,
     date: Format,
 }
@@ -118,6 +119,7 @@ impl Formats {
             montant,
             quantite: Format::new().set_num_format("General"),
             pourcentage: Format::new().set_num_format("0.##\" %\""),
+            pourcentage_entier: Format::new().set_num_format("0\" %\""),
             entier: Format::new().set_num_format("0"),
             date: Format::new()
                 .set_num_format("dd/mm/yyyy")
@@ -152,7 +154,13 @@ fn ecrire(
             f.write_number_with_format(ligne, col, *q as f64 / 1000.0, &formats.quantite)?;
         }
         Valeur::Pourcentage(p) => {
-            f.write_number_with_format(ligne, col, *p as f64 / 100.0, &formats.pourcentage)?;
+            // Sans partie décimale, « 0.## » laisserait le séparateur (« 18. % »).
+            let format = if p % 100 == 0 {
+                &formats.pourcentage_entier
+            } else {
+                &formats.pourcentage
+            };
+            f.write_number_with_format(ligne, col, *p as f64 / 100.0, format)?;
         }
         Valeur::Entier(n) => {
             f.write_number_with_format(ligne, col, *n as f64, &formats.entier)?;
