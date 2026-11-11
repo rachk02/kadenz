@@ -6,6 +6,7 @@ mod factures;
 mod graphiques;
 mod import_ecran;
 mod impression;
+mod licence;
 mod paiements;
 mod pdf;
 mod pilotage;
@@ -77,6 +78,8 @@ struct Etat {
     /// Document à ouvrir dès l'affichage de la page de son type (document créé
     /// ou lien suivi depuis la fiche d'un autre type).
     document_a_ouvrir: Option<i64>,
+    /// Identifiant de ce poste pour la licence (vide s'il n'a pas pu être lu).
+    poste: String,
 }
 
 impl Etat {
@@ -91,6 +94,7 @@ impl Etat {
             facture: None,
             type_document: TypeDocument::Facture,
             document_a_ouvrir: None,
+            poste: licence::poste_local(),
         }
     }
 }
@@ -111,6 +115,7 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     d.set_gerer_utilisateurs(possede(Droit::GererUtilisateurs));
 
     // Les libellés et les icônes du menu sont dans fenetre-principale.slint.
+    // Les pages des modules que la licence n'active pas sont retirées du menu.
     let mut menu = Vec::new();
     if possede(Droit::Consulter) {
         menu.extend([
@@ -127,6 +132,7 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
             Page::Tiers,
             Page::Produits,
         ]);
+        menu.retain(|p| licence::page_active(&etat.conn, *p));
     }
     if possede(Droit::GererParametres) {
         menu.extend([Page::Entreprise, Page::Parametres]);
@@ -139,9 +145,16 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     }
     menu.push(Page::APropos);
 
-    // La page en cours reste affichée si le menu la contient encore.
+    // La page en cours reste affichée si le menu la contient encore ; sinon les
+    // Factures (socle), ou à défaut la première page du menu.
     let page = fenetre.get_page();
-    fenetre.set_page(if menu.contains(&page) { page } else { menu[0] });
+    fenetre.set_page(if menu.contains(&page) {
+        page
+    } else if menu.contains(&Page::Factures) {
+        Page::Factures
+    } else {
+        menu[0]
+    });
     fenetre.set_menu(ModelRc::new(VecModel::from(menu)));
 }
 
@@ -254,6 +267,15 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
         let mut etat = e.borrow_mut();
         match installation::installer(&mut etat.conn, &init) {
             Ok(admin) => {
+                if let Some(f) = f.upgrade() {
+                    licence::enregistrer_cle_assistant(
+                        &f,
+                        &etat.conn,
+                        &admin,
+                        &donnees.cle_licence,
+                        &etat.poste,
+                    );
+                }
                 etat.utilisateur = Some(admin);
                 if let Some(f) = f.upgrade() {
                     afficher_session(&f, &etat);
@@ -309,6 +331,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     paiements::brancher(fenetre, &etat);
     pilotage::brancher(fenetre, &etat);
     impression::brancher(fenetre, &etat);
+    licence::brancher(fenetre, &etat);
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
     fenetre.on_changer_langue(move |rang| {
@@ -370,6 +393,11 @@ fn main() -> Result<(), slint::PlatformError> {
     match demarrage {
         Ok((conn, ecran)) => {
             let etat = Rc::new(RefCell::new(Etat::nouveau(conn)));
+            {
+                // Licence d'abord : le menu de la session en dépend.
+                let e = etat.borrow();
+                licence::ouvrir(&fenetre, &e.conn, &e.poste);
+            }
             afficher_session(&fenetre, &etat.borrow());
             fenetre.set_ecran(match ecran {
                 // Premier lancement : présentation, puis assistant.

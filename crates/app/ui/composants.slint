@@ -113,6 +113,18 @@ export global Droits {
     in property <bool> gerer-utilisateurs;
 }
 
+// Modules activés par la licence de ce poste (jalon J9), recalculés à l'ouverture
+// de la base et au remplacement de la clé. Un module désactivé est masqué.
+export global Modules {
+    in property <bool> devis;
+    in property <bool> proforma;
+    in property <bool> bons-commande;
+    in property <bool> livraisons;
+    in property <bool> paiements;
+    in property <bool> tableau-de-bord;
+    in property <bool> relances;
+}
+
 // Libellé de section dans un panneau.
 export component Section inherits Text {
     horizontal-alignment: Theme.debut;

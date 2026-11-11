@@ -2444,3 +2444,87 @@ msgstr "Signatory and name"
 
 msgid "Aperçu sur un document d'exemple"
 msgstr "Preview on a sample document"
+
+msgid "Aucune clé : socle seul"
+msgstr "No key: core only"
+
+msgid "Clé de licence"
+msgstr "Licence key"
+
+msgid "Clé enregistrée."
+msgstr "Key saved."
+
+msgid "Clé invalide, socle seul : {}"
+msgstr "Invalid key, core only: {}"
+
+msgid "Copier"
+msgstr "Copy"
+
+msgid "Enregistrer la clé"
+msgstr "Save the key"
+
+msgid "Identifiant du poste"
+msgstr "Workstation ID"
+
+msgid "La licence est liée à ce poste. Sans clé valide, seul le socle est disponible : tiers, produits, factures, avoirs et administration ; les données des autres modules sont gardées."
+msgstr "The licence is tied to this workstation. Without a valid key, only the core is available: parties, products, invoices, credit notes and administration; the data of the other modules is kept."
+
+msgid "La licence est liée à ce poste. Transmettez l'identifiant ci-dessous pour recevoir la clé, puis collez-la ici. Sans clé, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La clé peut aussi être saisie plus tard, dans les Paramètres."
+msgstr "The licence is tied to this workstation. Send the ID below to receive the key, then paste it here. Without a key, only the core is available: parties, products, invoices, credit notes and administration. The key can also be entered later, in the Settings."
+
+msgid "Licence : aucune clé, socle seul"
+msgstr "Licence: no key, core only"
+
+msgid "Licence : {}"
+msgstr "Licence: {}"
+
+msgid "Licence valide"
+msgstr "Valid licence"
+
+msgid "Modules"
+msgstr "Modules"
+
+msgid "Remplacer la clé"
+msgstr "Replace the key"
+
+msgid "Transmettez cet identifiant pour recevoir la clé de ce poste."
+msgstr "Send this ID to receive the key for this workstation."
+
+msgid "activé"
+msgstr "enabled"
+
+msgid "clé valide pour {}, modules : {}"
+msgstr "valid key for {}, modules: {}"
+
+msgid "non activé"
+msgstr "not enabled"
+
+msgid "Émise le"
+msgstr "Issued on"
+
+msgid "Proformas"
+msgstr "Pro forma invoices"
+
+msgid "clé de licence illisible"
+msgstr "unreadable licence key"
+
+msgid "signature de la clé de licence invalide"
+msgstr "invalid licence key signature"
+
+msgid "version de clé de licence non prise en charge : {}"
+msgstr "unsupported licence key version: {}"
+
+msgid "clé de licence émise pour un autre poste ({})"
+msgstr "licence key issued for another workstation ({})"
+
+msgid "module inconnu dans la clé de licence : {}"
+msgstr "unknown module in the licence key: {}"
+
+msgid "le module « {} » exige le module « {} »"
+msgstr "the “{}” module requires the “{}” module"
+
+msgid "clé publique de vérification absente : générer la paire de clés avec kadenz-editeur"
+msgstr "verification public key missing: generate the key pair with kadenz-editeur"
+
+msgid "le module « {} » n'est pas activé par la licence de ce poste"
+msgstr "the “{}” module is not enabled by this workstation's licence"

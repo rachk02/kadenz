@@ -2444,3 +2444,87 @@ msgstr "الموقّع والاسم"
 
 msgid "Aperçu sur un document d'exemple"
 msgstr "معاينة على مستند نموذجي"
+
+msgid "Aucune clé : socle seul"
+msgstr "لا يوجد مفتاح: الأساس فقط"
+
+msgid "Clé de licence"
+msgstr "مفتاح الترخيص"
+
+msgid "Clé enregistrée."
+msgstr "تم حفظ المفتاح."
+
+msgid "Clé invalide, socle seul : {}"
+msgstr "مفتاح غير صالح، الأساس فقط: {}"
+
+msgid "Copier"
+msgstr "نسخ"
+
+msgid "Enregistrer la clé"
+msgstr "حفظ المفتاح"
+
+msgid "Identifiant du poste"
+msgstr "معرّف الجهاز"
+
+msgid "La licence est liée à ce poste. Sans clé valide, seul le socle est disponible : tiers, produits, factures, avoirs et administration ; les données des autres modules sont gardées."
+msgstr "الترخيص مرتبط بهذا الجهاز. بدون مفتاح صالح، يتوفر الأساس فقط: الأطراف والمنتجات والفواتير والإشعارات الدائنة والإدارة؛ وتُحفظ بيانات الوحدات الأخرى."
+
+msgid "La licence est liée à ce poste. Transmettez l'identifiant ci-dessous pour recevoir la clé, puis collez-la ici. Sans clé, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La clé peut aussi être saisie plus tard, dans les Paramètres."
+msgstr "الترخيص مرتبط بهذا الجهاز. أرسل المعرّف أدناه لتتلقى المفتاح، ثم الصقه هنا. بدون مفتاح، يتوفر الأساس فقط: الأطراف والمنتجات والفواتير والإشعارات الدائنة والإدارة. ويمكن إدخال المفتاح لاحقًا من الإعدادات."
+
+msgid "Licence : aucune clé, socle seul"
+msgstr "الترخيص: لا يوجد مفتاح، الأساس فقط"
+
+msgid "Licence : {}"
+msgstr "الترخيص: {}"
+
+msgid "Licence valide"
+msgstr "ترخيص صالح"
+
+msgid "Modules"
+msgstr "الوحدات"
+
+msgid "Remplacer la clé"
+msgstr "استبدال المفتاح"
+
+msgid "Transmettez cet identifiant pour recevoir la clé de ce poste."
+msgstr "أرسل هذا المعرّف لتتلقى مفتاح هذا الجهاز."
+
+msgid "activé"
+msgstr "مفعّلة"
+
+msgid "clé valide pour {}, modules : {}"
+msgstr "مفتاح صالح لـ {}، الوحدات: {}"
+
+msgid "non activé"
+msgstr "غير مفعّلة"
+
+msgid "Émise le"
+msgstr "تاريخ الإصدار"
+
+msgid "Proformas"
+msgstr "الفواتير المبدئية"
+
+msgid "clé de licence illisible"
+msgstr "مفتاح ترخيص غير مقروء"
+
+msgid "signature de la clé de licence invalide"
+msgstr "توقيع مفتاح الترخيص غير صالح"
+
+msgid "version de clé de licence non prise en charge : {}"
+msgstr "إصدار مفتاح ترخيص غير مدعوم: {}"
+
+msgid "clé de licence émise pour un autre poste ({})"
+msgstr "مفتاح ترخيص صادر لجهاز آخر ({})"
+
+msgid "module inconnu dans la clé de licence : {}"
+msgstr "وحدة غير معروفة في مفتاح الترخيص: {}"
+
+msgid "le module « {} » exige le module « {} »"
+msgstr "الوحدة «{}» تتطلب الوحدة «{}»"
+
+msgid "clé publique de vérification absente : générer la paire de clés avec kadenz-editeur"
+msgstr "المفتاح العام للتحقق غير موجود: أنشئ زوج المفاتيح باستخدام kadenz-editeur"
+
+msgid "le module « {} » n'est pas activé par la licence de ce poste"
+msgstr "الوحدة «{}» غير مفعّلة بترخيص هذا الجهاز"

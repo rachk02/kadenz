@@ -2,7 +2,7 @@
 // (cahier des charges, sections 5.1 et 5.4).
 
 import { ComboBox, ScrollView, TextEdit } from "std-widgets.slint";
-import { Bouton, Champ, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Bouton, Champ, MessageRetour, Modules, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct FicheEntrepriseUi {
     nom: string,
@@ -681,77 +681,89 @@ export component PageParametres inherits ScrollView {
                     }
                 }
 
-                Section {
-                    text: @tr("Lettre de relance");
-                }
+                // Lettre de relance : masquée quand la licence n'active pas le module Relances.
+                Rectangle {
+                    height: Modules.relances ? bloc-relance.preferred-height : 0px;
+                    visible: Modules.relances;
+                    clip: true;
 
-                Text {
-                    text: @tr("Imprimée depuis la page Relances, toujours en français. Dans l'objet et le texte, les champs suivants reçoivent, dans l'ordre, le numéro, la date, l'échéance, le reste dû et les jours de retard de la facture :");
-                    color: Theme.texte-secondaire;
-                    horizontal-alignment: Theme.debut;
-                    wrap: word-wrap;
-                }
+                    bloc-relance := VerticalLayout {
+                        width: parent.width;
+                        spacing: 12px;
 
-                // Noms de champs, jamais traduits : ils doivent rester tels quels dans le texte.
-                Text {
-                    text: "{numero}   {date}   {echeance}   {reste}   {retard}";
-                    horizontal-alignment: Theme.debut;
-                }
+                        Section {
+                            text: @tr("Lettre de relance");
+                        }
 
-                titre-relance := Champ {
-                    libelle: @tr("Titre imprimé");
-                }
+                        Text {
+                            text: @tr("Imprimée depuis la page Relances, toujours en français. Dans l'objet et le texte, les champs suivants reçoivent, dans l'ordre, le numéro, la date, l'échéance, le reste dû et les jours de retard de la facture :");
+                            color: Theme.texte-secondaire;
+                            horizontal-alignment: Theme.debut;
+                            wrap: word-wrap;
+                        }
 
-                objet-relance := Champ {
-                    libelle: @tr("Objet");
-                }
+                        // Noms de champs, jamais traduits : ils doivent rester tels quels dans le texte.
+                        Text {
+                            text: "{numero}   {date}   {echeance}   {reste}   {retard}";
+                            horizontal-alignment: Theme.debut;
+                        }
 
-                VerticalLayout {
-                    spacing: 4px;
+                        titre-relance := Champ {
+                            libelle: @tr("Titre imprimé");
+                        }
 
-                    Text {
-                        text: @tr("Texte avant le tableau récapitulatif (une ligne vide sépare deux paragraphes)");
-                        font-size: 12px;
-                        color: Theme.texte-secondaire;
-                        horizontal-alignment: Theme.debut;
-                        wrap: word-wrap;
-                    }
+                        objet-relance := Champ {
+                            libelle: @tr("Objet");
+                        }
 
-                    avant-relance := TextEdit {
-                        height: 110px;
-                        wrap: word-wrap;
-                    }
-                }
+                        VerticalLayout {
+                            spacing: 4px;
 
-                VerticalLayout {
-                    spacing: 4px;
+                            Text {
+                                text: @tr("Texte avant le tableau récapitulatif (une ligne vide sépare deux paragraphes)");
+                                font-size: 12px;
+                                color: Theme.texte-secondaire;
+                                horizontal-alignment: Theme.debut;
+                                wrap: word-wrap;
+                            }
 
-                    Text {
-                        text: @tr("Texte après le tableau récapitulatif");
-                        font-size: 12px;
-                        color: Theme.texte-secondaire;
-                        horizontal-alignment: Theme.debut;
-                        wrap: word-wrap;
-                    }
+                            avant-relance := TextEdit {
+                                height: 110px;
+                                wrap: word-wrap;
+                            }
+                        }
 
-                    apres-relance := TextEdit {
-                        height: 110px;
-                        wrap: word-wrap;
-                    }
-                }
+                        VerticalLayout {
+                            spacing: 4px;
 
-                signataire-relance := Champ {
-                    libelle: @tr("Signataire (vide : aucune signature)");
-                }
+                            Text {
+                                text: @tr("Texte après le tableau récapitulatif");
+                                font-size: 12px;
+                                color: Theme.texte-secondaire;
+                                horizontal-alignment: Theme.debut;
+                                wrap: word-wrap;
+                            }
 
-                Rangee {
-                    alignment: start;
+                            apres-relance := TextEdit {
+                                height: 110px;
+                                wrap: word-wrap;
+                            }
+                        }
 
-                    Bouton {
-                        text: @tr("Texte par défaut de la lettre");
-                        clicked => {
-                            root.relance-defaut = ParametresApi.relance-par-defaut();
-                            root.afficher-relance(root.relance-defaut);
+                        signataire-relance := Champ {
+                            libelle: @tr("Signataire (vide : aucune signature)");
+                        }
+
+                        Rangee {
+                            alignment: start;
+
+                            Bouton {
+                                text: @tr("Texte par défaut de la lettre");
+                                clicked => {
+                                    root.relance-defaut = ParametresApi.relance-par-defaut();
+                                    root.afficher-relance(root.relance-defaut);
+                                }
+                            }
                         }
                     }
                 }

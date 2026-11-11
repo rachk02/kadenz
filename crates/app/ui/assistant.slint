@@ -1,10 +1,11 @@
 // Assistant de premier lancement (cahier des charges, section 4.1).
-// L'étape de licence s'ajoutera en tête au jalon J9. L'import des produits et des
+// L'étape de licence est en tête (jalon J9) : clé facultative. L'import des produits et des
 // tiers se fait depuis les écrans Tiers et Produits ; l'étape d'import facultative
 // de l'assistant reste à ajouter.
 
 import { CheckBox } from "std-widgets.slint";
-import { Bouton, Champ, MessageErreur, Rangee, Theme, Titre } from "composants.slint";
+import { Bouton, Champ, MessageErreur, Rangee, Section, Theme, Titre } from "composants.slint";
+import { IdentifiantPoste, LicenceApi, SaisieCle, VerificationUi } from "licence.slint";
 
 export struct DonneesAssistant {
     nom: string,
@@ -28,6 +29,8 @@ export struct DonneesAssistant {
     taux-retenue: string,
     modes-paiement: string,
     orthographe-traditionnelle: bool,
+    // Clé de licence vérifiée à la première étape, vide pour le socle seul.
+    cle-licence: string,
 }
 
 export component EcranAssistant inherits Rectangle {
@@ -40,9 +43,13 @@ export component EcranAssistant inherits Rectangle {
     // Renvoie un message d'erreur, ou une chaîne vide si l'installation a réussi.
     callback terminer(DonneesAssistant) -> string;
 
-    property <[string]> etapes: [@tr("Entreprise"), @tr("Administrateur"), @tr("Taux et paiements"), @tr("Récapitulatif")];
+    property <[string]> etapes: [@tr("Licence"), @tr("Entreprise"), @tr("Administrateur"), @tr("Taux et paiements"), @tr("Récapitulatif")];
     property <int> etape: 0;
     property <string> erreur;
+    property <string> cle-licence;
+    // Résumé de la clé vérifiée (client et modules), vide sans clé.
+    property <string> resume-licence;
+    property <VerificationUi> verification;
 
     property <string> nom;
     property <string> adresse;
@@ -68,13 +75,22 @@ export component EcranAssistant inherits Rectangle {
     property <bool> orthographe-traditionnelle: false;
 
     function suivant() {
-        if (root.etape == 0 && root.nom == "") {
+        if (root.etape == 0 && root.cle-licence != "") {
+            root.verification = LicenceApi.verifier(root.cle-licence);
+        }
+        if (root.etape == 0 && root.cle-licence != "" && !root.verification.ok) {
+            root.erreur = root.verification.message;
+            root.resume-licence = "";
+        } else if (root.etape == 1 && root.nom == "") {
             root.erreur = @tr("Le nom de l'entreprise est obligatoire.");
-        } else if (root.etape == 1 && (root.admin-nom == "" || root.admin-identifiant == "")) {
+        } else if (root.etape == 2 && (root.admin-nom == "" || root.admin-identifiant == "")) {
             root.erreur = @tr("Le nom complet et l'identifiant sont obligatoires.");
-        } else if (root.etape == 1 && root.admin-mot-de-passe != root.admin-confirmation) {
+        } else if (root.etape == 2 && root.admin-mot-de-passe != root.admin-confirmation) {
             root.erreur = @tr("Les deux mots de passe ne correspondent pas.");
         } else {
+            if (root.etape == 0) {
+                root.resume-licence = root.cle-licence == "" ? "" : root.verification.message;
+            }
             root.erreur = "";
             root.etape += 1;
         }
@@ -155,7 +171,28 @@ export component EcranAssistant inherits Rectangle {
                         color: Theme.texte-secondaire;
                     }
 
-                    if root.etape == 0: GridLayout {
+                    if root.etape == 0: VerticalLayout {
+                        spacing: 12px;
+
+                        Text {
+                            horizontal-alignment: Theme.debut;
+                            text: @tr("La licence est liée à ce poste. Transmettez l'identifiant ci-dessous pour recevoir la clé, puis collez-la ici. Sans clé, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La clé peut aussi être saisie plus tard, dans les Paramètres.");
+                            color: Theme.texte-secondaire;
+                            wrap: word-wrap;
+                        }
+
+                        Section {
+                            text: @tr("Identifiant du poste");
+                        }
+
+                        IdentifiantPoste { }
+
+                        SaisieCle {
+                            cle <=> root.cle-licence;
+                        }
+                    }
+
+                    if root.etape == 1: GridLayout {
                         spacing: 12px;
                         Row {
                             Champ {
@@ -237,7 +274,7 @@ export component EcranAssistant inherits Rectangle {
                         }
                     }
 
-                    if root.etape == 1: VerticalLayout {
+                    if root.etape == 2: VerticalLayout {
                         spacing: 12px;
 
                         Text {
@@ -270,7 +307,7 @@ export component EcranAssistant inherits Rectangle {
                         }
                     }
 
-                    if root.etape == 2: VerticalLayout {
+                    if root.etape == 3: VerticalLayout {
                         spacing: 12px;
 
                         Text {
@@ -306,8 +343,15 @@ export component EcranAssistant inherits Rectangle {
                         }
                     }
 
-                    if root.etape == 3: VerticalLayout {
+                    if root.etape == 4: VerticalLayout {
                         spacing: 8px;
+
+                        Text {
+                            horizontal-alignment: Theme.debut;
+                            text: root.resume-licence == "" ? @tr("Licence : aucune clé, socle seul") : @tr("Licence : {}", root.resume-licence);
+                            color: Theme.texte;
+                            wrap: word-wrap;
+                        }
 
                         Text {
                             horizontal-alignment: Theme.debut;
@@ -391,6 +435,7 @@ export component EcranAssistant inherits Rectangle {
                                     taux-retenue: root.taux-retenue,
                                     modes-paiement: root.modes-paiement,
                                     orthographe-traditionnelle: root.orthographe-traditionnelle,
+                                    cle-licence: root.cle-licence,
                                 });
                             }
                         }

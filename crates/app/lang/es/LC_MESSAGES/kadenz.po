@@ -2444,3 +2444,87 @@ msgstr "Firmante y nombre"
 
 msgid "Aperçu sur un document d'exemple"
 msgstr "Vista previa en un documento de ejemplo"
+
+msgid "Aucune clé : socle seul"
+msgstr "Sin clave: solo la base"
+
+msgid "Clé de licence"
+msgstr "Clave de licencia"
+
+msgid "Clé enregistrée."
+msgstr "Clave guardada."
+
+msgid "Clé invalide, socle seul : {}"
+msgstr "Clave no válida, solo la base: {}"
+
+msgid "Copier"
+msgstr "Copiar"
+
+msgid "Enregistrer la clé"
+msgstr "Guardar la clave"
+
+msgid "Identifiant du poste"
+msgstr "Identificador del equipo"
+
+msgid "La licence est liée à ce poste. Sans clé valide, seul le socle est disponible : tiers, produits, factures, avoirs et administration ; les données des autres modules sont gardées."
+msgstr "La licencia está vinculada a este equipo. Sin una clave válida, solo está disponible la base: terceros, productos, facturas, notas de crédito y administración; los datos de los demás módulos se conservan."
+
+msgid "La licence est liée à ce poste. Transmettez l'identifiant ci-dessous pour recevoir la clé, puis collez-la ici. Sans clé, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La clé peut aussi être saisie plus tard, dans les Paramètres."
+msgstr "La licencia está vinculada a este equipo. Envíe el identificador siguiente para recibir la clave y péguela aquí. Sin clave, solo está disponible la base: terceros, productos, facturas, notas de crédito y administración. La clave también puede introducirse más tarde, en los Parámetros."
+
+msgid "Licence : aucune clé, socle seul"
+msgstr "Licencia: sin clave, solo la base"
+
+msgid "Licence : {}"
+msgstr "Licencia: {}"
+
+msgid "Licence valide"
+msgstr "Licencia válida"
+
+msgid "Modules"
+msgstr "Módulos"
+
+msgid "Remplacer la clé"
+msgstr "Reemplazar la clave"
+
+msgid "Transmettez cet identifiant pour recevoir la clé de ce poste."
+msgstr "Envíe este identificador para recibir la clave de este equipo."
+
+msgid "activé"
+msgstr "activado"
+
+msgid "clé valide pour {}, modules : {}"
+msgstr "clave válida para {}, módulos: {}"
+
+msgid "non activé"
+msgstr "no activado"
+
+msgid "Émise le"
+msgstr "Emitida el"
+
+msgid "Proformas"
+msgstr "Facturas proforma"
+
+msgid "clé de licence illisible"
+msgstr "clave de licencia ilegible"
+
+msgid "signature de la clé de licence invalide"
+msgstr "firma de la clave de licencia no válida"
+
+msgid "version de clé de licence non prise en charge : {}"
+msgstr "versión de clave de licencia no admitida: {}"
+
+msgid "clé de licence émise pour un autre poste ({})"
+msgstr "clave de licencia emitida para otro equipo ({})"
+
+msgid "module inconnu dans la clé de licence : {}"
+msgstr "módulo desconocido en la clave de licencia: {}"
+
+msgid "le module « {} » exige le module « {} »"
+msgstr "el módulo «{}» requiere el módulo «{}»"
+
+msgid "clé publique de vérification absente : générer la paire de clés avec kadenz-editeur"
+msgstr "falta la clave pública de verificación: genere el par de claves con kadenz-editeur"
+
+msgid "le module « {} » n'est pas activé par la licence de ce poste"
+msgstr "el módulo «{}» no está activado por la licencia de este equipo"

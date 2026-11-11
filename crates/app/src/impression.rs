@@ -193,6 +193,23 @@ fn actualiser(
     }
 }
 
+/// Types proposés dans « Bas des documents » : ceux que `actif` retient (modules de
+/// la licence), avec leur rang dans l'ordre des types du domaine.
+pub(crate) fn appliquer_types_bas(
+    fenetre: &FenetrePrincipale,
+    actif: impl Fn(TypeDocument) -> bool,
+) {
+    let (libelles, rangs): (Vec<SharedString>, Vec<i32>) = TypeDocument::TOUS
+        .iter()
+        .enumerate()
+        .filter(|(_, t)| actif(**t))
+        .map(|(rang, t)| (SharedString::from(tr(&t.to_string())), rang as i32))
+        .unzip();
+    let api = fenetre.global::<ImpressionApi>();
+    api.set_types_bas(ModelRc::new(VecModel::from(libelles)));
+    api.set_rangs_bas(ModelRc::new(VecModel::from(rangs)));
+}
+
 pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
     let api = fenetre.global::<ImpressionApi>();
     api.set_gabarits(ModelRc::new(VecModel::from(

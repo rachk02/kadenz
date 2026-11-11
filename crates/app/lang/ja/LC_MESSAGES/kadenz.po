@@ -2444,3 +2444,87 @@ msgstr "署名者と氏名"
 
 msgid "Aperçu sur un document d'exemple"
 msgstr "サンプル書類でのプレビュー"
+
+msgid "Aucune clé : socle seul"
+msgstr "キーなし：基本機能のみ"
+
+msgid "Clé de licence"
+msgstr "ライセンスキー"
+
+msgid "Clé enregistrée."
+msgstr "キーを保存しました。"
+
+msgid "Clé invalide, socle seul : {}"
+msgstr "無効なキー、基本機能のみ：{}"
+
+msgid "Copier"
+msgstr "コピー"
+
+msgid "Enregistrer la clé"
+msgstr "キーを保存"
+
+msgid "Identifiant du poste"
+msgstr "端末ID"
+
+msgid "La licence est liée à ce poste. Sans clé valide, seul le socle est disponible : tiers, produits, factures, avoirs et administration ; les données des autres modules sont gardées."
+msgstr "ライセンスはこの端末に紐づいています。有効なキーがない場合、使えるのは基本機能（取引先、商品、請求書、クレジットノート、管理）のみです。他のモジュールのデータは保持されます。"
+
+msgid "La licence est liée à ce poste. Transmettez l'identifiant ci-dessous pour recevoir la clé, puis collez-la ici. Sans clé, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La clé peut aussi être saisie plus tard, dans les Paramètres."
+msgstr "ライセンスはこの端末に紐づいています。下のIDを送ってキーを受け取り、ここに貼り付けてください。キーがない場合、使えるのは基本機能（取引先、商品、請求書、クレジットノート、管理）のみです。キーは後から設定で入力することもできます。"
+
+msgid "Licence : aucune clé, socle seul"
+msgstr "ライセンス：キーなし、基本機能のみ"
+
+msgid "Licence : {}"
+msgstr "ライセンス：{}"
+
+msgid "Licence valide"
+msgstr "有効なライセンス"
+
+msgid "Modules"
+msgstr "モジュール"
+
+msgid "Remplacer la clé"
+msgstr "キーを置き換える"
+
+msgid "Transmettez cet identifiant pour recevoir la clé de ce poste."
+msgstr "この端末のキーを受け取るには、このIDを送ってください。"
+
+msgid "activé"
+msgstr "有効"
+
+msgid "clé valide pour {}, modules : {}"
+msgstr "{} 向けの有効なキー、モジュール：{}"
+
+msgid "non activé"
+msgstr "無効"
+
+msgid "Émise le"
+msgstr "発行日"
+
+msgid "Proformas"
+msgstr "見積請求書"
+
+msgid "clé de licence illisible"
+msgstr "ライセンスキーを読み取れません"
+
+msgid "signature de la clé de licence invalide"
+msgstr "ライセンスキーの署名が無効です"
+
+msgid "version de clé de licence non prise en charge : {}"
+msgstr "対応していないライセンスキーのバージョン：{}"
+
+msgid "clé de licence émise pour un autre poste ({})"
+msgstr "別の端末向けに発行されたライセンスキーです（{}）"
+
+msgid "module inconnu dans la clé de licence : {}"
+msgstr "ライセンスキーに不明なモジュールがあります：{}"
+
+msgid "le module « {} » exige le module « {} »"
+msgstr "「{}」モジュールには「{}」モジュールが必要です"
+
+msgid "clé publique de vérification absente : générer la paire de clés avec kadenz-editeur"
+msgstr "検証用の公開鍵がありません：kadenz-editeur で鍵ペアを生成してください"
+
+msgid "le module « {} » n'est pas activé par la licence de ce poste"
+msgstr "「{}」モジュールはこの端末のライセンスで有効になっていません"

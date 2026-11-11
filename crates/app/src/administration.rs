@@ -453,7 +453,10 @@ fn brancher_parametres(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let enregistrer = || -> kadenz_stockage::Resultat<()> {
             let tx = etat.conn.unchecked_transaction()?;
             parametres::enregistrer(&tx, acteur, &p)?;
-            relances::enregistrer_textes(&tx, acteur, &relance_depuis_ui(&saisie.relance))?;
+            // Lettre de relance masquée sans le module Relances : ses textes restent.
+            if crate::licence::actif(&tx, kadenz_domaine::module::Module::Relances) {
+                relances::enregistrer_textes(&tx, acteur, &relance_depuis_ui(&saisie.relance))?;
+            }
             tx.commit()?;
             Ok(())
         };

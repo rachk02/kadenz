@@ -2444,3 +2444,87 @@ msgstr "签署人及姓名"
 
 msgid "Aperçu sur un document d'exemple"
 msgstr "示例单据预览"
+
+msgid "Aucune clé : socle seul"
+msgstr "无密钥：仅基础功能"
+
+msgid "Clé de licence"
+msgstr "许可证密钥"
+
+msgid "Clé enregistrée."
+msgstr "密钥已保存。"
+
+msgid "Clé invalide, socle seul : {}"
+msgstr "密钥无效，仅基础功能：{}"
+
+msgid "Copier"
+msgstr "复制"
+
+msgid "Enregistrer la clé"
+msgstr "保存密钥"
+
+msgid "Identifiant du poste"
+msgstr "本机标识"
+
+msgid "La licence est liée à ce poste. Sans clé valide, seul le socle est disponible : tiers, produits, factures, avoirs et administration ; les données des autres modules sont gardées."
+msgstr "许可证与本机绑定。没有有效密钥时，仅提供基础功能：往来单位、产品、发票、红字发票和管理；其他模块的数据会保留。"
+
+msgid "La licence est liée à ce poste. Transmettez l'identifiant ci-dessous pour recevoir la clé, puis collez-la ici. Sans clé, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La clé peut aussi être saisie plus tard, dans les Paramètres."
+msgstr "许可证与本机绑定。请发送下面的标识以获取密钥，然后粘贴到此处。没有密钥时，仅提供基础功能：往来单位、产品、发票、红字发票和管理。密钥也可以稍后在设置中输入。"
+
+msgid "Licence : aucune clé, socle seul"
+msgstr "许可证：无密钥，仅基础功能"
+
+msgid "Licence : {}"
+msgstr "许可证：{}"
+
+msgid "Licence valide"
+msgstr "许可证有效"
+
+msgid "Modules"
+msgstr "模块"
+
+msgid "Remplacer la clé"
+msgstr "更换密钥"
+
+msgid "Transmettez cet identifiant pour recevoir la clé de ce poste."
+msgstr "请发送此标识以获取本机的密钥。"
+
+msgid "activé"
+msgstr "已启用"
+
+msgid "clé valide pour {}, modules : {}"
+msgstr "{} 的有效密钥，模块：{}"
+
+msgid "non activé"
+msgstr "未启用"
+
+msgid "Émise le"
+msgstr "签发日期"
+
+msgid "Proformas"
+msgstr "形式发票"
+
+msgid "clé de licence illisible"
+msgstr "许可证密钥无法读取"
+
+msgid "signature de la clé de licence invalide"
+msgstr "许可证密钥签名无效"
+
+msgid "version de clé de licence non prise en charge : {}"
+msgstr "不支持的许可证密钥版本：{}"
+
+msgid "clé de licence émise pour un autre poste ({})"
+msgstr "许可证密钥是为另一台计算机签发的（{}）"
+
+msgid "module inconnu dans la clé de licence : {}"
+msgstr "许可证密钥中有未知模块：{}"
+
+msgid "le module « {} » exige le module « {} »"
+msgstr "“{}”模块需要“{}”模块"
+
+msgid "clé publique de vérification absente : générer la paire de clés avec kadenz-editeur"
+msgstr "缺少验证公钥：请使用 kadenz-editeur 生成密钥对"
+
+msgid "le module « {} » n'est pas activé par la licence de ce poste"
+msgstr "本机许可证未启用“{}”模块"

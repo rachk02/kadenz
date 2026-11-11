@@ -2444,3 +2444,87 @@ msgstr "İmzalayan ve adı"
 
 msgid "Aperçu sur un document d'exemple"
 msgstr "Örnek belge üzerinde önizleme"
+
+msgid "Aucune clé : socle seul"
+msgstr "Anahtar yok: yalnızca temel"
+
+msgid "Clé de licence"
+msgstr "Lisans anahtarı"
+
+msgid "Clé enregistrée."
+msgstr "Anahtar kaydedildi."
+
+msgid "Clé invalide, socle seul : {}"
+msgstr "Geçersiz anahtar, yalnızca temel: {}"
+
+msgid "Copier"
+msgstr "Kopyala"
+
+msgid "Enregistrer la clé"
+msgstr "Anahtarı kaydet"
+
+msgid "Identifiant du poste"
+msgstr "İş istasyonu kimliği"
+
+msgid "La licence est liée à ce poste. Sans clé valide, seul le socle est disponible : tiers, produits, factures, avoirs et administration ; les données des autres modules sont gardées."
+msgstr "Lisans bu iş istasyonuna bağlıdır. Geçerli bir anahtar olmadan yalnızca temel kullanılabilir: cariler, ürünler, faturalar, iade faturaları ve yönetim; diğer modüllerin verileri korunur."
+
+msgid "La licence est liée à ce poste. Transmettez l'identifiant ci-dessous pour recevoir la clé, puis collez-la ici. Sans clé, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La clé peut aussi être saisie plus tard, dans les Paramètres."
+msgstr "Lisans bu iş istasyonuna bağlıdır. Anahtarı almak için aşağıdaki kimliği iletin, ardından anahtarı buraya yapıştırın. Anahtar olmadan yalnızca temel kullanılabilir: cariler, ürünler, faturalar, iade faturaları ve yönetim. Anahtar daha sonra Ayarlar'dan da girilebilir."
+
+msgid "Licence : aucune clé, socle seul"
+msgstr "Lisans: anahtar yok, yalnızca temel"
+
+msgid "Licence : {}"
+msgstr "Lisans: {}"
+
+msgid "Licence valide"
+msgstr "Geçerli lisans"
+
+msgid "Modules"
+msgstr "Modüller"
+
+msgid "Remplacer la clé"
+msgstr "Anahtarı değiştir"
+
+msgid "Transmettez cet identifiant pour recevoir la clé de ce poste."
+msgstr "Bu iş istasyonunun anahtarını almak için bu kimliği iletin."
+
+msgid "activé"
+msgstr "etkin"
+
+msgid "clé valide pour {}, modules : {}"
+msgstr "{} için geçerli anahtar, modüller: {}"
+
+msgid "non activé"
+msgstr "etkin değil"
+
+msgid "Émise le"
+msgstr "Düzenlenme tarihi"
+
+msgid "Proformas"
+msgstr "Proforma faturalar"
+
+msgid "clé de licence illisible"
+msgstr "okunamayan lisans anahtarı"
+
+msgid "signature de la clé de licence invalide"
+msgstr "geçersiz lisans anahtarı imzası"
+
+msgid "version de clé de licence non prise en charge : {}"
+msgstr "desteklenmeyen lisans anahtarı sürümü: {}"
+
+msgid "clé de licence émise pour un autre poste ({})"
+msgstr "başka bir iş istasyonu için düzenlenmiş lisans anahtarı ({})"
+
+msgid "module inconnu dans la clé de licence : {}"
+msgstr "lisans anahtarında bilinmeyen modül: {}"
+
+msgid "le module « {} » exige le module « {} »"
+msgstr "“{}” modülü “{}” modülünü gerektirir"
+
+msgid "clé publique de vérification absente : générer la paire de clés avec kadenz-editeur"
+msgstr "doğrulama genel anahtarı yok: anahtar çiftini kadenz-editeur ile oluşturun"
+
+msgid "le module « {} » n'est pas activé par la licence de ce poste"
+msgstr "“{}” modülü bu iş istasyonunun lisansıyla etkinleştirilmemiş"

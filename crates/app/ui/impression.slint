@@ -44,6 +44,10 @@ export global ImpressionApi {
     in property <string> erreur-entete;
     in property <string> erreur-pied;
     in property <string> erreur-marges;
+    // Types proposés dans « Bas des documents » : ceux des modules activés par la
+    // licence, avec leur rang dans l'ordre des types du domaine.
+    in property <[string]> types-bas;
+    in property <[int]> rangs-bas;
 
     callback ouvrir() -> MiseEnPageUi;
     callback par-defaut() -> MiseEnPageUi;
@@ -137,7 +141,8 @@ export component PageImpression inherits Rectangle {
     property <Retour> retour;
     // Bas de chaque type ; le type choisi est édité dans les cases.
     property <[BasUi]> bas;
-    property <int> rang-type: 0;
+    // Rang du type édité dans l'ordre du domaine (index de root.bas).
+    property <int> rang-type: ImpressionApi.rangs-bas[0];
 
     function bas-saisi() -> BasUi {
         return {
@@ -349,11 +354,11 @@ export component PageImpression inherits Rectangle {
                 }
 
                 ComboBox {
-                    model: [@tr("Devis"), @tr("Proforma"), @tr("Bon de commande"), @tr("Bordereau de livraison"), @tr("Facture"), @tr("Avoir")];
-                    current-index: root.rang-type;
+                    model: ImpressionApi.types-bas;
+                    current-index: 0;
                     selected => {
                         root.bas[root.rang-type] = root.bas-saisi();
-                        root.rang-type = self.current-index;
+                        root.rang-type = ImpressionApi.rangs-bas[self.current-index];
                         root.afficher-bas();
                         ImpressionApi.actualiser(root.saisie(), root.bas-saisi(), root.rang-type);
                     }

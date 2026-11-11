@@ -15,6 +15,7 @@ use kadenz_domaine::calcul::{
     Montant, Pourcentage, Quantite, Taux, Totaux, calculer_totaux, total_ligne,
 };
 use kadenz_domaine::lettres::{Orthographe, en_lettres_majuscule};
+use kadenz_domaine::module::Module;
 use kadenz_domaine::role::Droit;
 use kadenz_domaine::saisie;
 use kadenz_domaine::texte::{cle_comparaison, contient};
@@ -914,7 +915,8 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
         document.is_some() && t != TypeDocument::Avoir && !issu_facture && droit_brouillon;
     let peut_creer_bordereau = t == TypeDocument::Facture
         && valide_ou_envoye
-        && possede(etat, Droit::brouillon(TypeDocument::Livraison));
+        && possede(etat, Droit::brouillon(TypeDocument::Livraison))
+        && crate::licence::actif(&etat.conn, Module::Livraisons);
     let bordereau_possible = t == TypeDocument::Facture && restes.iter().any(|r| *r > 0);
     let livraison = t == TypeDocument::Livraison;
     let visas_modifiables =
@@ -1005,7 +1007,8 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
         peut_creer_avoir,
         avoir_possible,
         montant_du: montant_du.into(),
-        avec_reglements: situation.is_some(),
+        avec_reglements: situation.is_some()
+            && crate::licence::actif(&etat.conn, Module::Paiements),
         peut_saisir_reglement,
         du_reglements: montant_situation(situation.map(|s| s.montant_du)).into(),
         regle: montant_situation(situation.map(|s| s.regle)).into(),
@@ -1255,6 +1258,12 @@ fn ouvrir_document(f: &FenetrePrincipale, etat: &EtatPartage, id: i64, retour: R
         Ok(None) => return retour_erreur("ce document n'existe plus"),
         Err(erreur) => return retour_erreur(erreur),
     };
+    // Document d'un module que la licence n'active pas : sa page est masquée.
+    if let Some(m) = t.module()
+        && let Err(erreur) = kadenz_stockage::licence::exiger(&guard.conn, m)
+    {
+        return retour_erreur(erreur);
+    }
     if t == guard.type_document {
         if let Err(message) = ouvrir_fiche(f, &mut guard, Some(id)) {
             return retour_erreur(message);

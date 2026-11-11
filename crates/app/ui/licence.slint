@@ -1,0 +1,187 @@
+// Licence du poste (jalon J9) : identifiant du poste à transmettre pour recevoir
+// une clé, état de la licence, modules activés, remplacement de la clé. Sans clé
+// valide, seul le socle est disponible (référentiels, administration, factures et
+// avoirs) ; les données des modules sont gardées.
+import { LineEdit, ScrollView, TextEdit } from "std-widgets.slint";
+import { Bouton, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+
+export struct ModuleUi {
+    libelle: string,
+    actif: bool,
+}
+
+// Clé vérifiée sans base, pour l'étape de l'assistant.
+export struct VerificationUi {
+    ok: bool,
+    message: string,
+}
+
+export global LicenceApi {
+    // Identifiant de ce poste, au format XXXX-XXXX-XXXX-XXXX.
+    in property <string> poste;
+    // État en clair : aucune licence, clé invalide et pourquoi, ou licence valide.
+    in property <string> etat;
+    in property <bool> valide;
+    in property <string> client;
+    in property <string> emise-le;
+    in property <[ModuleUi]> modules;
+
+    callback verifier(cle: string) -> VerificationUi;
+    callback enregistrer(cle: string) -> Retour;
+}
+
+// Identifiant du poste en lecture seule, avec un bouton qui le copie.
+export component IdentifiantPoste inherits Rangee {
+    spacing: 8px;
+
+    champ := LineEdit {
+        text: LicenceApi.poste;
+        read-only: true;
+        font-size: 14px;
+        width: 260px;
+    }
+
+    Bouton {
+        text: @tr("Copier");
+        clicked => {
+            champ.select-all();
+            champ.copy();
+        }
+    }
+}
+
+// Saisie d'une clé de licence : texte long, collé tel qu'il a été reçu.
+export component SaisieCle inherits VerticalLayout {
+    in-out property <string> cle;
+    spacing: 4px;
+
+    Text {
+        horizontal-alignment: Theme.debut;
+        text: @tr("Clé de licence");
+        font-size: 12px;
+        color: Theme.texte-secondaire;
+    }
+
+    TextEdit {
+        text <=> root.cle;
+        font-family: "Consolas";
+        font-size: 12px;
+        wrap: char-wrap;
+        height: 88px;
+    }
+}
+
+component LigneLicence inherits GridLayout {
+    in property <string> libelle;
+    in property <string> valeur;
+    spacing: 16px;
+
+    Text {
+        row: 0;
+        col: Theme.rtl ? 1 : 0;
+        width: 160px;
+        horizontal-alignment: Theme.debut;
+        text: root.libelle;
+        color: Theme.texte-secondaire;
+    }
+
+    Text {
+        row: 0;
+        col: Theme.rtl ? 0 : 1;
+        horizontal-alignment: Theme.debut;
+        text: root.valeur;
+        color: Theme.texte;
+        wrap: word-wrap;
+    }
+}
+
+export component PageLicence inherits ScrollView {
+    property <string> cle;
+    property <Retour> retour;
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 12px;
+        alignment: start;
+
+        Titre {
+            text: @tr("Licence");
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("La licence est liée à ce poste. Sans clé valide, seul le socle est disponible : tiers, produits, factures, avoirs et administration ; les données des autres modules sont gardées.");
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        Section {
+            text: @tr("Identifiant du poste");
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Transmettez cet identifiant pour recevoir la clé de ce poste.");
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        IdentifiantPoste { }
+
+        Section {
+            text: @tr("État");
+        }
+
+        LigneLicence {
+            libelle: @tr("Licence");
+            valeur: LicenceApi.etat;
+        }
+
+        if LicenceApi.valide: LigneLicence {
+            libelle: @tr("Client");
+            valeur: LicenceApi.client;
+        }
+
+        if LicenceApi.valide: LigneLicence {
+            libelle: @tr("Émise le");
+            valeur: LicenceApi.emise-le;
+        }
+
+        Section {
+            text: @tr("Modules");
+        }
+
+        for module in LicenceApi.modules: LigneLicence {
+            libelle: module.libelle;
+            valeur: module.actif ? @tr("activé") : @tr("non activé");
+        }
+
+        Section {
+            text: @tr("Remplacer la clé");
+        }
+
+        SaisieCle {
+            cle <=> root.cle;
+        }
+
+        Rangee {
+            spacing: 8px;
+            alignment: start;
+
+            Bouton {
+                text: @tr("Enregistrer la clé");
+                primary: true;
+                clicked => {
+                    root.retour = LicenceApi.enregistrer(root.cle);
+                    if (root.retour.ok) {
+                        root.cle = "";
+                    }
+                }
+            }
+        }
+
+        MessageRetour {
+            retour: root.retour;
+        }
+    }
+}
