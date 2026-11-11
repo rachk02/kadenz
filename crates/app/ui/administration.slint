@@ -424,6 +424,27 @@ export component PageParametres inherits ScrollView {
     property <TexteDocumentUi> defaut;
     property <TextesRelanceUi> relance-defaut;
 
+    // Retour aux textes par défaut en attente de la fenêtre de confirmation :
+    // 1 pour les textes du type affiché, 2 pour la lettre de relance.
+    property <int> defaut-demande: 0;
+    property <int> reponses: Confirmation.reponses;
+    changed reponses => {
+        if (self.defaut-demande != 0) {
+            if (Confirmation.accepte) {
+                if (self.defaut-demande == 1) {
+                    root.defaut = ParametresApi.textes-par-defaut(root.rang-texte);
+                    titre-doc.valeur = root.defaut.titre;
+                    phrase-doc.valeur = root.defaut.phrase;
+                    signataire-doc.valeur = root.defaut.signataire;
+                } else {
+                    root.relance-defaut = ParametresApi.relance-par-defaut();
+                    root.afficher-relance(root.relance-defaut);
+                }
+            }
+            self.defaut-demande = 0;
+        }
+    }
+
     function afficher-relance(t: TextesRelanceUi) {
         titre-relance.valeur = t.titre;
         objet-relance.valeur = t.objet;
@@ -709,10 +730,8 @@ export component PageParametres inherits ScrollView {
                     Bouton {
                         text: @tr("Textes par défaut de ce type");
                         clicked => {
-                            root.defaut = ParametresApi.textes-par-defaut(root.rang-texte);
-                            titre-doc.valeur = root.defaut.titre;
-                            phrase-doc.valeur = root.defaut.phrase;
-                            signataire-doc.valeur = root.defaut.signataire;
+                            root.defaut-demande = 1;
+                            Confirmation.demander(@tr("Remplacer le titre, la phrase et le signataire de ce type par les textes par défaut ? Rien n'est enregistré avant « Enregistrer »."), @tr("Remplacer"), false);
                         }
                     }
                 }
@@ -841,8 +860,8 @@ export component PageParametres inherits ScrollView {
                             Bouton {
                                 text: @tr("Texte par défaut de la lettre");
                                 clicked => {
-                                    root.relance-defaut = ParametresApi.relance-par-defaut();
-                                    root.afficher-relance(root.relance-defaut);
+                                    root.defaut-demande = 2;
+                                    Confirmation.demander(@tr("Remplacer la lettre de relance par le texte par défaut ? Rien n'est enregistré avant « Enregistrer »."), @tr("Remplacer"), false);
                                 }
                             }
                         }

@@ -2741,3 +2741,9 @@ msgstr "استبدال الصلاحيات المحدّدة بمصفوفة دفت
 
 msgid "Revenir à la matrice"
 msgstr "العودة إلى المصفوفة"
+
+msgid "Remplacer le titre, la phrase et le signataire de ce type par les textes par défaut ? Rien n'est enregistré avant « Enregistrer »."
+msgstr "استبدال العنوان والعبارة والموقّع لهذا النوع بالنصوص الافتراضية؟ لا يُحفظ شيء قبل الضغط على «حفظ»."
+
+msgid "Remplacer la lettre de relance par le texte par défaut ? Rien n'est enregistré avant « Enregistrer »."
+msgstr "استبدال رسالة التذكير بالنص الافتراضي؟ لا يُحفظ شيء قبل الضغط على «حفظ»."

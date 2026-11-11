@@ -157,7 +157,8 @@ export component FenetreAlerte inherits Rectangle {
     width: min(ligne.preferred-width, root.largeur-fenetre - 48px);
     height: 40px;
     x: (root.largeur-fenetre - self.width) / 2;
-    y: root.hauteur-fenetre - self.height - 24px + (Alerte.visible ? 0px : 12px);
+    // Assez haut pour laisser visible le bouton qu'on vient de cliquer en bas de page.
+    y: root.hauteur-fenetre - self.height - 64px + (Alerte.visible ? 0px : 12px);
     animate y { duration: Affichage.duree-longue; easing: ease-out; }
     opacity: Alerte.visible ? 1 : 0;
     animate opacity { duration: Affichage.duree; }

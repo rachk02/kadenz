@@ -2741,3 +2741,9 @@ msgstr "İşaretli yetkiler şartnamedeki matrisle değiştirilsin mi? \"Yetkile
 
 msgid "Revenir à la matrice"
 msgstr "Matrise dön"
+
+msgid "Remplacer le titre, la phrase et le signataire de ce type par les textes par défaut ? Rien n'est enregistré avant « Enregistrer »."
+msgstr "Bu türün başlığı, cümlesi ve imzacısı varsayılan metinlerle değiştirilsin mi? \"Kaydet\" düğmesine basılana kadar hiçbir şey kaydedilmez."
+
+msgid "Remplacer la lettre de relance par le texte par défaut ? Rien n'est enregistré avant « Enregistrer »."
+msgstr "Hatırlatma mektubu varsayılan metinle değiştirilsin mi? \"Kaydet\" düğmesine basılana kadar hiçbir şey kaydedilmez."

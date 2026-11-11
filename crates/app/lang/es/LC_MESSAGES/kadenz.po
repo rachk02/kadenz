@@ -2741,3 +2741,9 @@ msgstr "¿Sustituir los derechos marcados por la matriz del pliego de condicione
 
 msgid "Revenir à la matrice"
 msgstr "Volver a la matriz"
+
+msgid "Remplacer le titre, la phrase et le signataire de ce type par les textes par défaut ? Rien n'est enregistré avant « Enregistrer »."
+msgstr "¿Sustituir el título, la frase y el firmante de este tipo por los textos predeterminados? No se guarda nada hasta pulsar «Guardar»."
+
+msgid "Remplacer la lettre de relance par le texte par défaut ? Rien n'est enregistré avant « Enregistrer »."
+msgstr "¿Sustituir la carta de recordatorio por el texto predeterminado? No se guarda nada hasta pulsar «Guardar»."

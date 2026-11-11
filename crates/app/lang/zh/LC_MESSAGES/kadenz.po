@@ -2741,3 +2741,9 @@ msgstr "要用规格书中的矩阵替换已勾选的权限吗？点击“保存
 
 msgid "Revenir à la matrice"
 msgstr "恢复矩阵"
+
+msgid "Remplacer le titre, la phrase et le signataire de ce type par les textes par défaut ? Rien n'est enregistré avant « Enregistrer »."
+msgstr "要将此类型的标题、语句和签署人替换为默认文本吗？点击“保存”之前不会保存任何内容。"
+
+msgid "Remplacer la lettre de relance par le texte par défaut ? Rien n'est enregistré avant « Enregistrer »."
+msgstr "要将催款函替换为默认文本吗？点击“保存”之前不会保存任何内容。"

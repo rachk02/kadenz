@@ -2741,3 +2741,9 @@ msgstr "チェックした権限を仕様書の権限表に置き換えますか
 
 msgid "Revenir à la matrice"
 msgstr "権限表に戻す"
+
+msgid "Remplacer le titre, la phrase et le signataire de ce type par les textes par défaut ? Rien n'est enregistré avant « Enregistrer »."
+msgstr "この種類のタイトル、文、署名者を既定のテキストに置き換えますか？「保存」を押すまで何も保存されません。"
+
+msgid "Remplacer la lettre de relance par le texte par défaut ? Rien n'est enregistré avant « Enregistrer »."
+msgstr "督促状を既定のテキストに置き換えますか？「保存」を押すまで何も保存されません。"
