@@ -109,7 +109,9 @@ fn depuis_json(
             signataire: t("signataire"),
         },
         couleur: couleur_depuis_texte(&t("couleur")).unwrap_or(parametres::COULEUR_PAR_DEFAUT),
-        orthographe: Orthographe::depuis_code(&t("orthographe")).unwrap_or_default(),
+        // Un instantané sans orthographe date d'avant le réglage : la rectifiée,
+        // défaut de l'époque, reste celle du document.
+        orthographe: Orthographe::depuis_code(&t("orthographe")).unwrap_or(Orthographe::Rectifiee),
         // Un instantané antérieur à J8b garde la mise en page d'origine.
         mise_en_page: v
             .get("mise_en_page")

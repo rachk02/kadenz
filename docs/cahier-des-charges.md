@@ -33,6 +33,8 @@
 | 2.27 | 2026-11-11 | J10 tranché : mise à jour téléchargée, empreinte SHA-256 vérifiée, installateur lancé puis fermeture de Kadenz (section 16) ; export Excel de tous les registres, tels qu'affichés, et d'un document sur une feuille complète (en-tête, lignes, totaux) |
 | 2.28 | 2026-11-11 | Jalon J10 validé par l'utilisateur, dernier jalon de la feuille de route ; essai de l'installateur sur le poste de développement autorisé |
 | 2.29 | 2026-11-11 | Essai de l'installateur : l'utilisateur le juge incomplet et demande l'identité de Kadenz dans l'assistant, le choix du dossier d'installation, des cases pour les raccourcis du bureau et du menu Démarrer, le lancement de Kadenz à la fin et le choix de la langue d'installation au début ; sans le module Paiements, la colonne Paiement du registre (écran et export Excel) est masquée |
+| 2.30 | 2026-11-11 | Montant en lettres en orthographe traditionnelle par défaut (question 3 revue) ; K découpé à toutes les tailles d'icône ; assistant d'installation au thème de Kadenz, langue au choix, dossier, raccourcis au choix, lancement à la fin (section 16) |
+| 2.31 | 2026-11-11 | Éditeur Mcarre (installateur, propriétés de kadenz.exe, écran À propos) ; mentions de Slint retirées de l'écran À propos et du README, seul le badge « Made with Slint » exigé par la licence restant (section 14) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -131,7 +133,7 @@ Cette modularité est une modularité de configuration et de code (crates, modul
 - Chaque type de document a deux écrans : Liste (registre) et Fiche (création, consultation), comme « Création / Liste » dans l'Excel.
 - Chaque liste se filtre (numéro, tiers, période, statut, état de paiement) et se trie par colonne. Colonnes : celles de l'Excel (n°, date, tiers, montant TTC, état de paiement, mode de paiement, document), plus le statut.
 - Raccourcis clavier : Ctrl+N nouveau, Ctrl+S enregistrer, Ctrl+P imprimer, Ctrl+F rechercher. Livrés en J5 dans les pages des documents de vente (Devis, Proformas, Factures, Avoirs) : Ctrl+N crée un document depuis le registre seulement, jamais depuis une fiche ouverte, pour ne pas perdre une saisie en cours ; Ctrl+S agit comme le bouton d'enregistrement affiché ; Ctrl+P exporte le PDF d'un document déjà enregistré ; Ctrl+F place le curseur dans la recherche du registre.
-- Écran « À propos » accessible depuis la navigation, avec l'attribution Slint (section 14).
+- Écran « À propos » accessible depuis la navigation, avec l'éditeur (Mcarre) ; l'attribution Slint est portée par le badge du README public (section 14).
 
 ### 4.2 Fiche document (spécifié)
 
@@ -472,7 +474,7 @@ Livré au jalon J4 : depuis la fiche d'une facture, « Aperçu PDF » pour un br
 
 ## 14. Licences (spécifié)
 
-- Slint est utilisé sous la licence Slint Royalty-free 2.0, gratuite pour une application desktop à condition d'afficher le composant `AboutSlint` dans un écran ou dialogue "À propos" accessible depuis le menu principal, ou d'afficher le badge Slint sur une page web publique, de préférence celle du téléchargement. Retenu (décision de l'utilisateur du 2026-11-10, qui a fait retirer `AboutSlint` de l'écran « À propos ») : badge « Made with Slint » en tête du README du dépôt public, d'où se téléchargent les versions ; l'écran « À propos » cite Slint et sa licence parmi les composants tiers. Cette attribution ne vaut que tant que le dépôt reste public : s'il devient privé, il faut remettre `AboutSlint` ou prendre la licence commerciale. Une licence commerciale payante existe si aucune attribution n'est souhaitée.
+- Slint est utilisé sous la licence Slint Royalty-free 2.0, gratuite pour une application desktop à condition d'afficher le composant `AboutSlint` dans un écran ou dialogue "À propos" accessible depuis le menu principal, ou d'afficher le badge Slint sur une page web publique, de préférence celle du téléchargement. Retenu (décision de l'utilisateur du 2026-11-10, qui a fait retirer `AboutSlint` de l'écran « À propos ») : badge « Made with Slint » en tête du README du dépôt public, d'où se téléchargent les versions ; l'écran « À propos » ne cite plus Slint, et le README ne garde de Slint que ce badge et une phrase de licence (décision de l'utilisateur du 2026-11-11 : tout retirer sauf l'attribution exigée). Cette attribution ne vaut que tant que le dépôt reste public : s'il devient privé, il faut remettre `AboutSlint` ou prendre la licence commerciale. Une licence commerciale payante existe si aucune attribution n'est souhaitée.
 - SQLite est dans le domaine public ; `rusqlite` est sous licence MIT.
 
 ---
@@ -498,6 +500,7 @@ Livré au jalon J4 : depuis la fiche d'une facture, « Aperçu PDF » pour un br
 - Au démarrage, l'application vérifie s'il existe une version plus récente parmi les releases GitHub et propose de l'installer ; l'utilisateur confirme. Hors connexion, la vérification échoue sans message bloquant.
 - Mise en oeuvre (J10, décisions de l'utilisateur du 2026-11-11) : une fois par lancement, sur un fil secondaire, l'application interroge la dernière release publiée (`api.github.com/repos/rachk02/kadenz/releases/latest`, ni brouillon ni préversion) et compare son tag à sa propre version, numériquement. La seule information envoyée est l'en-tête `User-Agent: Kadenz/<version>` : ni poste, ni licence, ni client. Toute erreur reste silencieuse ; la variable `KADENZ_SANS_MAJ` désactive la vérification. Dans les versions de développement seulement, `KADENZ_MAJ_JSON` désigne un fichier JSON local lu à la place de la réponse de GitHub, pour essayer l'invite.
 - Si l'utilisateur accepte, Kadenz télécharge `KadenzSetup-X.Y.Z.exe`, vérifie son empreinte SHA-256 contre le fichier `KadenzSetup-X.Y.Z.exe.sha256` publié avec la release (sans empreinte ou si elle ne correspond pas, rien n'est lancé), ouvre l'installateur (Windows demande l'autorisation d'administrateur) puis se ferme. `scripts/release.ps1` produit et publie ce fichier d'empreinte.
+- Assistant d'installation (demandes de l'utilisateur du 2026-11-11, après son premier essai) : identité de Kadenz (bandeau Nuit avec le K découpé et le nom en Manrope, couleurs de l'application, icône de la fenêtre) ; première page : choix de la langue de l'assistant parmi les sept langues de Kadenz, retenue pour la réparation et la désinstallation ; deuxième page : dossier d'installation (Program Files par défaut, Kadenz étant une application 64 bits ; tout autre dossier au choix) et cases « raccourci sur le bureau » et « menu Démarrer », cochées par défaut ; à la fin, bouton « Lancer Kadenz ». Thème généré par `installateur/theme/generer.py`.
 - Technologie d'installateur : WiX (paquet MSI), outil déjà présent sur le poste de développement. À l'étude : signature du code de l'exécutable et de l'installateur, qui demande un certificat et l'accord de l'utilisateur.
 
 ## 17. Hors périmètre V1
@@ -515,7 +518,7 @@ Livré au jalon J4 : depuis la fiche d'une facture, « Aperçu PDF » pour un br
 
 1. **Mois du numéro** : tranchée le 2026-11-09, mois (et année) de la date du document.
 2. **Arrondi** : tranchée le 2026-11-09, arrondi au franc le plus proche, la moitié vers le haut.
-3. **Montant en lettres** : tranchée le 2026-11-09, orthographe rectifiée de 1990 (traits d'union partout) par défaut ; l'orthographe traditionnelle reste disponible par réglage. L'Excel mélangeait les deux usages ("Soixante dix mille sept cent quarante", "Cent-cinquante mille").
+3. **Montant en lettres** : tranchée le 2026-11-09, orthographe rectifiée de 1990 (traits d'union partout) par défaut ; **revue le 2026-11-11 : orthographe traditionnelle par défaut**, la rectifiée restant disponible par réglage (un document validé garde l'orthographe figée à sa validation). L'Excel mélangeait les deux usages ("Soixante dix mille sept cent quarante", "Cent-cinquante mille").
 4. **Modularité commerciale** : tranchée le 2026-11-09, modules activés par clé de licence (sections 3.2 et 15).
 5. **Avoir** : tranchée le 2026-11-09, préfixe A (section 6.7).
 6. **Conversion** : tranchée le 2026-11-09, conversion possible dès Validé.

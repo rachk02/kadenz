@@ -2,8 +2,9 @@
   Paquet MSI de Kadenz (cahier des charges, section 16), enveloppé par
   KadenzSetup.wxs dans l'installateur KadenzSetup-<version>.exe.
 
-  Installation pour tout le poste dans Program Files\Kadenz, raccourcis du menu
-  Démarrer et du bureau, désinstallation depuis les paramètres de Windows.
+  Installation pour tout le poste, par défaut dans Program Files\Kadenz (dossier
+  choisi dans l'assistant : propriété INSTALLFOLDER), raccourcis du menu Démarrer
+  et du bureau au choix, désinstallation depuis les paramètres de Windows.
   La base de données vit dans %APPDATA%\Kadenz : ni l'installation ni la
   désinstallation n'y touchent, les données de l'entreprise restent en place.
 
@@ -32,25 +33,34 @@
       <Directory Id="INSTALLFOLDER" Name="Kadenz" />
     </StandardDirectory>
 
+    <!-- Raccourcis choisis dans l'assistant (cases cochées par défaut) ; la
+         ligne de commande peut les écarter : RACCOURCIBUREAU=0, RACCOURCIMENU=0. -->
+    <Property Id="RACCOURCIBUREAU" Value="1" Secure="yes" />
+    <Property Id="RACCOURCIMENU" Value="1" Secure="yes" />
+
     <Feature Id="Kadenz" Title="Kadenz">
-      <!-- Raccourcis portés par le fichier : installés pour tous les comptes du poste. -->
       <Component Directory="INSTALLFOLDER">
-        <File Id="kadenz.exe" Source="$(var.Exe)" Name="kadenz.exe" KeyPath="yes">
-          <Shortcut Id="RaccourciMenu"
-                    Directory="ProgramMenuFolder"
-                    Name="Kadenz"
-                    Description="Gestion commerciale"
-                    WorkingDirectory="INSTALLFOLDER"
-                    Icon="kadenz.ico"
-                    Advertise="no" />
-          <Shortcut Id="RaccourciBureau"
-                    Directory="DesktopFolder"
-                    Name="Kadenz"
-                    Description="Gestion commerciale"
-                    WorkingDirectory="INSTALLFOLDER"
-                    Icon="kadenz.ico"
-                    Advertise="no" />
-        </File>
+        <File Id="kadenz.exe" Source="$(var.Exe)" Name="kadenz.exe" KeyPath="yes" />
+      </Component>
+      <!-- Raccourcis pour tous les comptes du poste ; une valeur de registre
+           sert de chemin clé à chaque composant. -->
+      <Component Id="RaccourciMenu" Directory="ProgramMenuFolder" Condition="RACCOURCIMENU = &quot;1&quot;">
+        <Shortcut Id="RaccourciMenu"
+                  Name="Kadenz"
+                  Description="Gestion commerciale"
+                  Target="[INSTALLFOLDER]kadenz.exe"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="kadenz.ico" />
+        <RegistryValue Root="HKMU" Key="Software\Kadenz" Name="RaccourciMenu" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+      <Component Id="RaccourciBureau" Directory="DesktopFolder" Condition="RACCOURCIBUREAU = &quot;1&quot;">
+        <Shortcut Id="RaccourciBureau"
+                  Name="Kadenz"
+                  Description="Gestion commerciale"
+                  Target="[INSTALLFOLDER]kadenz.exe"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="kadenz.ico" />
+        <RegistryValue Root="HKMU" Key="Software\Kadenz" Name="RaccourciBureau" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </Feature>
   </Package>

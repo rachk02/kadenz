@@ -23,7 +23,7 @@
 #>
 param(
     [switch]$SansCompilation,
-    [string]$Editeur = 'Kadenz'
+    [string]$Editeur = 'Mcarre'
 )
 
 $ErrorActionPreference = 'Stop'

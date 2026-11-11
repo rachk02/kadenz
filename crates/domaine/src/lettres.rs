@@ -11,10 +11,12 @@
 //! (dans quatre-vingts) prennent un s quand ils sont multipliés et terminent le
 //! nombre, ou précèdent « million » ou « milliard » ; « mille » est invariable.
 
+/// Orthographe du montant en lettres ; la traditionnelle par défaut (décision
+/// de l'utilisateur du 2026-11-11, qui remplace celle du 2026-11-09).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Orthographe {
-    #[default]
     Rectifiee,
+    #[default]
     Traditionnelle,
 }
 

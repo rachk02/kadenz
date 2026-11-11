@@ -15,6 +15,11 @@ fn main() {
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
         let mut ressource = winresource::WindowsResource::new();
         ressource.set_icon("kadenz.ico");
+        // Éditeur affiché dans les propriétés du fichier (décision de
+        // l'utilisateur du 2026-11-11), comme dans l'installateur.
+        ressource.set("CompanyName", "Mcarre");
+        ressource.set("ProductName", "Kadenz");
+        ressource.set("FileDescription", "Kadenz, gestion commerciale");
         ressource
             .compile()
             .expect("compilation de la ressource Windows (icône)");

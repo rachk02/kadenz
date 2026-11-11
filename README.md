@@ -9,8 +9,8 @@ La spécification de référence est le [cahier des charges](docs/cahier-des-cha
 ## Technologies
 
 - Rust, édition 2024
-- Interface : [Slint](https://slint.dev) 1.18
 - Base de données : SQLite embarqué, via `rusqlite`
+- PDF : `krilla` ; export Excel : `rust_xlsxwriter`
 
 ## Structure
 
@@ -19,7 +19,12 @@ La spécification de référence est le [cahier des charges](docs/cahier-des-cha
 | `crates/domaine` | `kadenz-domaine` | Règles métier pures : statuts, calculs, numérotation, paiements, droits |
 | `crates/stockage` | `kadenz-stockage` | SQLite : ouverture, migrations, compteurs, sauvegarde |
 | `crates/import` | `kadenz-import` | Lecture des fichiers CSV et Excel à importer, aperçu ligne par ligne |
-| `crates/app` | `kadenz` | Application Slint |
+| `crates/pdf` | `kadenz-pdf` | Documents, listes et lettres en PDF |
+| `crates/licence` | `kadenz-licence` | Clé de licence signée, identifiant du poste |
+| `crates/editeur` | `kadenz-editeur` | Outil de l'éditeur (clés de licence), jamais distribué |
+| `crates/export` | `kadenz-export` | Export Excel des registres et des documents |
+| `crates/maj` | `kadenz-maj` | Recherche et installation des mises à jour |
+| `crates/app` | `kadenz` | Application : écrans et orchestration |
 
 ## Développement
 
@@ -50,8 +55,8 @@ L'intégration continue GitHub (`.github/workflows/ci.yml`) vérifie format, Cli
 
 ## Installateur Windows
 
-`.\installateur\construire.ps1` produit `target\installateur\KadenzSetup-X.Y.Z.exe` : installation pour tout le poste dans `Program Files\Kadenz`, raccourcis du menu Démarrer et du bureau, désinstallation depuis les paramètres de Windows. La base dans `%APPDATA%\Kadenz` n'est jamais touchée, ni à l'installation ni à la désinstallation. Prérequis : WiX 5 (`dotnet tool install --global wix --version 5.0.1`) et `wix extension add -g WixToolset.BootstrapperApplications.wixext/5.0.1`. Rien n'est signé.
+`.\installateur\construire.ps1` produit `target\installateur\KadenzSetup-X.Y.Z.exe`, éditeur Mcarre : assistant aux couleurs de Kadenz, langue choisie à la première page parmi les sept de l'application, dossier d'installation au choix (`Program Files\Kadenz` par défaut), raccourcis du bureau et du menu Démarrer au choix, lancement de Kadenz à la fin, désinstallation depuis les paramètres de Windows. Le thème de l'assistant est généré par `installateur\theme\generer.py`, les icônes par `docs\marque\generer_icones.py` (Pillow requis). La base dans `%APPDATA%\Kadenz` n'est jamais touchée, ni à l'installation ni à la désinstallation. Prérequis : WiX 5 (`dotnet tool install --global wix --version 5.0.1`) et `wix extension add -g WixToolset.BootstrapperApplications.wixext/5.0.1`. Rien n'est signé.
 
 ## Licence
 
-Logiciel propriétaire, tous droits réservés. Slint est utilisé sous la licence Slint Royalty-free 2.0. L'attribution qu'elle exige est faite par le badge « Made with Slint » en tête de cette page publique, d'où se téléchargent les versions (section 2, option (b) de la licence) ; le badge doit donc y rester. L'écran « À propos » de l'application cite Slint et sa licence parmi les composants tiers.
+Logiciel propriétaire, tous droits réservés, édité par Mcarre. Le badge en tête de cette page est l'attribution exigée par la licence Royalty-free 2.0 de la bibliothèque d'interface : il doit rester sur cette page publique, d'où se téléchargent les versions.

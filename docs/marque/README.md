@@ -26,7 +26,7 @@ Les 9 planches (primary logo, logomark, tone & mood, color system, brand pattern
 
 ## Symbole
 
-Le K cadencé : un fût, un bras, et une jambe découpée en trois temps égaux. Grille de 48 unités, fût de 9 unités, pente des bras 1,25. Sous 48 px, la version réduite (jambe pleine) remplace le symbole découpé.
+Le K cadencé : un fût, un bras, et une jambe découpée en trois temps égaux. Grille de 48 unités, fût de 9 unités, pente des bras 1,25. Le symbole découpé sert à toutes les tailles, y compris sous 48 px (décision de l'utilisateur du 2026-11-11) ; la version réduite à jambe pleine (`kadenz-icone-petite.svg`) n'est plus utilisée pour les icônes. `generer_icones.py` régénère `crates/app/kadenz.ico` et les PNG de `crates/app/ui/icones/` à partir du symbole découpé (Pillow requis).
 
 ## Fichiers
 
@@ -38,7 +38,7 @@ Le K cadencé : un fût, un bras, et une jambe découpée en trois temps égaux.
 | `kadenz-logo-empile.svg`, `kadenz-logo-empile-negatif.svg` | Formats carrés et verticaux |
 | `kadenz-symbole.svg`, `-blanc.svg`, `-noir.svg` | Symbole seul, sans tuile |
 | `kadenz-icone.svg` | Icône d'application, 48 px et plus |
-| `kadenz-icone-petite.svg` | Icône réduite, 16 à 32 px |
+| `kadenz-icone-petite.svg` | Icône réduite à jambe pleine, plus utilisée pour les icônes (2026-11-11) |
 | `generer.py` | Regénère tous les SVG (fontTools et Manrope requis) |
 
 Zone de protection : un quart de la hauteur de la tuile autour du logo. Taille minimale : 120 px ou 30 mm de large en horizontal, 64 px ou 18 mm en empilé.

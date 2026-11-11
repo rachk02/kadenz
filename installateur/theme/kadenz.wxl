@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par installateur/theme/generer.py : modifier ce script, pas ce fichier. -->
+<WixLocalization Culture="fr-FR" Language="1036" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <String Id="Caption" Value="Kadenz" />
+  <String Id="ConfirmCancelMessage" Value="Voulez-vous vraiment annuler ? / Are you sure you want to cancel?" />
+  <String Id="ExecuteUpgradeRelatedBundleMessage" Value="Version précédente / Previous version" />
+  <String Id="OverallProgressPackageText" Value="[ProgressPackageName]" />
+  <String Id="FilesInUseTitle" Value="Fichiers en cours d'utilisation / Files in use" />
+  <String Id="FilesInUseLabel" Value="Ces applications utilisent des fichiers à mettre à jour : / These applications are using files that need to be updated:" />
+  <String Id="FilesInUseNetfxCloseRadioButton" Value="Fermer les applications / Close the applications" />
+  <String Id="FilesInUseCloseRadioButton" Value="Fermer les applications et les relancer / Close and restart the applications" />
+  <String Id="FilesInUseDontCloseRadioButton" Value="Ne pas fermer (redémarrage nécessaire) / Do not close (restart required)" />
+  <String Id="FilesInUseRetryButton" Value="Réessayer / Retry" />
+  <String Id="FilesInUseIgnoreButton" Value="Ignorer / Ignore" />
+  <String Id="FilesInUseExitButton" Value="Quitter / Exit" />
+  <String Id="fr_Bienvenue" Value="Bienvenue dans l'installation de Kadenz" />
+  <String Id="en_Bienvenue" Value="Welcome to Kadenz Setup" />
+  <String Id="ar_Bienvenue" Value="مرحبًا بك في تثبيت Kadenz" />
+  <String Id="ja_Bienvenue" Value="Kadenz のセットアップへようこそ" />
+  <String Id="zh_Bienvenue" Value="欢迎使用 Kadenz 安装程序" />
+  <String Id="tr_Bienvenue" Value="Kadenz kurulumuna hoş geldiniz" />
+  <String Id="es_Bienvenue" Value="Bienvenido a la instalación de Kadenz" />
+  <String Id="fr_Intro" Value="Kadenz, logiciel de gestion commerciale, va être installé sur cet ordinateur." />
+  <String Id="en_Intro" Value="Kadenz, business management software, will be installed on this computer." />
+  <String Id="ar_Intro" Value="سيتم تثبيت Kadenz، برنامج الإدارة التجارية، على هذا الحاسوب." />
+  <String Id="ja_Intro" Value="販売管理ソフト Kadenz をこのパソコンにインストールします。" />
+  <String Id="zh_Intro" Value="将在此计算机上安装商务管理软件 Kadenz。" />
+  <String Id="tr_Intro" Value="Ticari yönetim yazılımı Kadenz bu bilgisayara kurulacak." />
+  <String Id="es_Intro" Value="Kadenz, software de gestión comercial, se instalará en este equipo." />
+  <String Id="fr_Dossier" Value="Dossier d'installation :" />
+  <String Id="en_Dossier" Value="Installation folder:" />
+  <String Id="ar_Dossier" Value="مجلد التثبيت:" />
+  <String Id="ja_Dossier" Value="インストール先フォルダー:" />
+  <String Id="zh_Dossier" Value="安装文件夹：" />
+  <String Id="tr_Dossier" Value="Kurulum klasörü:" />
+  <String Id="es_Dossier" Value="Carpeta de instalación:" />
+  <String Id="fr_Parcourir" Value="Parcourir..." />
+  <String Id="en_Parcourir" Value="Browse..." />
+  <String Id="ar_Parcourir" Value="استعراض..." />
+  <String Id="ja_Parcourir" Value="参照..." />
+  <String Id="zh_Parcourir" Value="浏览..." />
+  <String Id="tr_Parcourir" Value="Gözat..." />
+  <String Id="es_Parcourir" Value="Examinar..." />
+  <String Id="fr_Bureau" Value="Créer un raccourci sur le bureau" />
+  <String Id="en_Bureau" Value="Create a desktop shortcut" />
+  <String Id="ar_Bureau" Value="إنشاء اختصار على سطح المكتب" />
+  <String Id="ja_Bureau" Value="デスクトップにショートカットを作成する" />
+  <String Id="zh_Bureau" Value="在桌面创建快捷方式" />
+  <String Id="tr_Bureau" Value="Masaüstüne kısayol oluştur" />
+  <String Id="es_Bureau" Value="Crear un acceso directo en el escritorio" />
+  <String Id="fr_Menu" Value="Ajouter Kadenz au menu Démarrer" />
+  <String Id="en_Menu" Value="Add Kadenz to the Start menu" />
+  <String Id="ar_Menu" Value="إضافة Kadenz إلى قائمة ابدأ" />
+  <String Id="ja_Menu" Value="スタート メニューに Kadenz を追加する" />
+  <String Id="zh_Menu" Value="将 Kadenz 添加到“开始”菜单" />
+  <String Id="tr_Menu" Value="Kadenz'i Başlat menüsüne ekle" />
+  <String Id="es_Menu" Value="Añadir Kadenz al menú Inicio" />
+  <String Id="fr_Donnees" Value="Les données de l'entreprise sont enregistrées dans le profil de chaque compte Windows ; une désinstallation ne les supprime pas." />
+  <String Id="en_Donnees" Value="Company data is stored in each Windows account's profile; uninstalling does not delete it." />
+  <String Id="ar_Donnees" Value="تُحفظ بيانات الشركة في ملف تعريف كل حساب Windows، ولا تؤدي إزالة التثبيت إلى حذفها." />
+  <String Id="ja_Donnees" Value="会社のデータは各 Windows アカウントのプロファイルに保存され、アンインストールしても削除されません。" />
+  <String Id="zh_Donnees" Value="公司数据保存在每个 Windows 帐户的个人资料中，卸载不会删除这些数据。" />
+  <String Id="tr_Donnees" Value="Şirket verileri her Windows hesabının profilinde saklanır; kaldırma işlemi bunları silmez." />
+  <String Id="es_Donnees" Value="Los datos de la empresa se guardan en el perfil de cada cuenta de Windows; la desinstalación no los elimina." />
+  <String Id="fr_Retour" Value="Retour" />
+  <String Id="en_Retour" Value="Back" />
+  <String Id="ar_Retour" Value="السابق" />
+  <String Id="ja_Retour" Value="戻る" />
+  <String Id="zh_Retour" Value="上一步" />
+  <String Id="tr_Retour" Value="Önceki" />
+  <String Id="es_Retour" Value="Anterior" />
+  <String Id="fr_Suivant" Value="Suivant" />
+  <String Id="en_Suivant" Value="Next" />
+  <String Id="ar_Suivant" Value="التالي" />
+  <String Id="ja_Suivant" Value="次へ" />
+  <String Id="zh_Suivant" Value="下一步" />
+  <String Id="tr_Suivant" Value="Sonraki" />
+  <String Id="es_Suivant" Value="Siguiente" />
+  <String Id="fr_Installer" Value="Installer" />
+  <String Id="en_Installer" Value="Install" />
+  <String Id="ar_Installer" Value="تثبيت" />
+  <String Id="ja_Installer" Value="インストール" />
+  <String Id="zh_Installer" Value="安装" />
+  <String Id="tr_Installer" Value="Yükle" />
+  <String Id="es_Installer" Value="Instalar" />
+  <String Id="fr_Annuler" Value="Annuler" />
+  <String Id="en_Annuler" Value="Cancel" />
+  <String Id="ar_Annuler" Value="إلغاء" />
+  <String Id="ja_Annuler" Value="キャンセル" />
+  <String Id="zh_Annuler" Value="取消" />
+  <String Id="tr_Annuler" Value="İptal" />
+  <String Id="es_Annuler" Value="Cancelar" />
+  <String Id="fr_Fermer" Value="Fermer" />
+  <String Id="en_Fermer" Value="Close" />
+  <String Id="ar_Fermer" Value="إغلاق" />
+  <String Id="ja_Fermer" Value="閉じる" />
+  <String Id="zh_Fermer" Value="关闭" />
+  <String Id="tr_Fermer" Value="Kapat" />
+  <String Id="es_Fermer" Value="Cerrar" />
+  <String Id="fr_Lancer" Value="Lancer Kadenz" />
+  <String Id="en_Lancer" Value="Launch Kadenz" />
+  <String Id="ar_Lancer" Value="تشغيل Kadenz" />
+  <String Id="ja_Lancer" Value="Kadenz を起動" />
+  <String Id="zh_Lancer" Value="启动 Kadenz" />
+  <String Id="tr_Lancer" Value="Kadenz'i başlat" />
+  <String Id="es_Lancer" Value="Iniciar Kadenz" />
+  <String Id="fr_Redemarrer" Value="Redémarrer" />
+  <String Id="en_Redemarrer" Value="Restart" />
+  <String Id="ar_Redemarrer" Value="إعادة التشغيل" />
+  <String Id="ja_Redemarrer" Value="再起動" />
+  <String Id="zh_Redemarrer" Value="重新启动" />
+  <String Id="tr_Redemarrer" Value="Yeniden başlat" />
+  <String Id="es_Redemarrer" Value="Reiniciar" />
+  <String Id="fr_Reparer" Value="Réparer" />
+  <String Id="en_Reparer" Value="Repair" />
+  <String Id="ar_Reparer" Value="إصلاح" />
+  <String Id="ja_Reparer" Value="修復" />
+  <String Id="zh_Reparer" Value="修复" />
+  <String Id="tr_Reparer" Value="Onar" />
+  <String Id="es_Reparer" Value="Reparar" />
+  <String Id="fr_Desinstaller" Value="Désinstaller" />
+  <String Id="en_Desinstaller" Value="Uninstall" />
+  <String Id="ar_Desinstaller" Value="إزالة التثبيت" />
+  <String Id="ja_Desinstaller" Value="アンインストール" />
+  <String Id="zh_Desinstaller" Value="卸载" />
+  <String Id="tr_Desinstaller" Value="Kaldır" />
+  <String Id="es_Desinstaller" Value="Desinstalar" />
+  <String Id="fr_EnCours" Value="Installation en cours" />
+  <String Id="en_EnCours" Value="Installing" />
+  <String Id="ar_EnCours" Value="جارٍ التثبيت" />
+  <String Id="ja_EnCours" Value="インストールしています" />
+  <String Id="zh_EnCours" Value="正在安装" />
+  <String Id="tr_EnCours" Value="Kuruluyor" />
+  <String Id="es_EnCours" Value="Instalando" />
+  <String Id="fr_DesinstallationEnCours" Value="Désinstallation en cours" />
+  <String Id="en_DesinstallationEnCours" Value="Uninstalling" />
+  <String Id="ar_DesinstallationEnCours" Value="جارٍ إزالة التثبيت" />
+  <String Id="ja_DesinstallationEnCours" Value="アンインストールしています" />
+  <String Id="zh_DesinstallationEnCours" Value="正在卸载" />
+  <String Id="tr_DesinstallationEnCours" Value="Kaldırılıyor" />
+  <String Id="es_DesinstallationEnCours" Value="Desinstalando" />
+  <String Id="fr_ReparationEnCours" Value="Réparation en cours" />
+  <String Id="en_ReparationEnCours" Value="Repairing" />
+  <String Id="ar_ReparationEnCours" Value="جارٍ الإصلاح" />
+  <String Id="ja_ReparationEnCours" Value="修復しています" />
+  <String Id="zh_ReparationEnCours" Value="正在修复" />
+  <String Id="tr_ReparationEnCours" Value="Onarılıyor" />
+  <String Id="es_ReparationEnCours" Value="Reparando" />
+  <String Id="fr_Installe" Value="Kadenz est installé" />
+  <String Id="en_Installe" Value="Kadenz is installed" />
+  <String Id="ar_Installe" Value="تم تثبيت Kadenz" />
+  <String Id="ja_Installe" Value="Kadenz のインストールが完了しました" />
+  <String Id="zh_Installe" Value="Kadenz 已安装" />
+  <String Id="tr_Installe" Value="Kadenz kuruldu" />
+  <String Id="es_Installe" Value="Kadenz se ha instalado" />
+  <String Id="fr_Desinstalle" Value="Kadenz est désinstallé" />
+  <String Id="en_Desinstalle" Value="Kadenz has been uninstalled" />
+  <String Id="ar_Desinstalle" Value="تمت إزالة تثبيت Kadenz" />
+  <String Id="ja_Desinstalle" Value="Kadenz をアンインストールしました" />
+  <String Id="zh_Desinstalle" Value="Kadenz 已卸载" />
+  <String Id="tr_Desinstalle" Value="Kadenz kaldırıldı" />
+  <String Id="es_Desinstalle" Value="Kadenz se ha desinstalado" />
+  <String Id="fr_Repare" Value="Kadenz est réparé" />
+  <String Id="en_Repare" Value="Kadenz has been repaired" />
+  <String Id="ar_Repare" Value="تم إصلاح Kadenz" />
+  <String Id="ja_Repare" Value="Kadenz を修復しました" />
+  <String Id="zh_Repare" Value="Kadenz 已修复" />
+  <String Id="tr_Repare" Value="Kadenz onarıldı" />
+  <String Id="es_Repare" Value="Kadenz se ha reparado" />
+  <String Id="fr_Echec" Value="L'installation a échoué" />
+  <String Id="en_Echec" Value="Setup failed" />
+  <String Id="ar_Echec" Value="فشل التثبيت" />
+  <String Id="ja_Echec" Value="インストールに失敗しました" />
+  <String Id="zh_Echec" Value="安装失败" />
+  <String Id="tr_Echec" Value="Kurulum başarısız oldu" />
+  <String Id="es_Echec" Value="La instalación ha fallado" />
+  <String Id="fr_EchecDesinstallation" Value="La désinstallation a échoué" />
+  <String Id="en_EchecDesinstallation" Value="Uninstall failed" />
+  <String Id="ar_EchecDesinstallation" Value="فشلت إزالة التثبيت" />
+  <String Id="ja_EchecDesinstallation" Value="アンインストールに失敗しました" />
+  <String Id="zh_EchecDesinstallation" Value="卸载失败" />
+  <String Id="tr_EchecDesinstallation" Value="Kaldırma başarısız oldu" />
+  <String Id="es_EchecDesinstallation" Value="La desinstalación ha fallado" />
+  <String Id="fr_Journal" Value="Pour en savoir plus, ouvrez le &lt;a href=&quot;#&quot;&gt;journal d'installation&lt;/a&gt;." />
+  <String Id="en_Journal" Value='For more information, open the &lt;a href="#"&gt;setup log&lt;/a&gt;.' />
+  <String Id="ar_Journal" Value='لمزيد من المعلومات، افتح &lt;a href="#"&gt;سجل التثبيت&lt;/a&gt;.' />
+  <String Id="ja_Journal" Value='詳しくは&lt;a href="#"&gt;セットアップ ログ&lt;/a&gt;を開いてください。' />
+  <String Id="zh_Journal" Value='有关详细信息，请打开&lt;a href="#"&gt;安装日志&lt;/a&gt;。' />
+  <String Id="tr_Journal" Value='Daha fazla bilgi için &lt;a href="#"&gt;kurulum günlüğünü&lt;/a&gt; açın.' />
+  <String Id="es_Journal" Value='Para más información, abra el &lt;a href="#"&gt;registro de instalación&lt;/a&gt;.' />
+  <String Id="fr_RedemarrageRequis" Value="Redémarrez l'ordinateur pour terminer." />
+  <String Id="en_RedemarrageRequis" Value="Restart the computer to finish." />
+  <String Id="ar_RedemarrageRequis" Value="أعد تشغيل الحاسوب لإكمال العملية." />
+  <String Id="ja_RedemarrageRequis" Value="完了するにはパソコンを再起動してください。" />
+  <String Id="zh_RedemarrageRequis" Value="请重新启动计算机以完成操作。" />
+  <String Id="tr_RedemarrageRequis" Value="Tamamlamak için bilgisayarı yeniden başlatın." />
+  <String Id="es_RedemarrageRequis" Value="Reinicie el equipo para terminar." />
+  <String Id="fr_Maintenance" Value="Que voulez-vous faire ?" />
+  <String Id="en_Maintenance" Value="What would you like to do?" />
+  <String Id="ar_Maintenance" Value="ماذا تريد أن تفعل؟" />
+  <String Id="ja_Maintenance" Value="実行する操作を選んでください。" />
+  <String Id="zh_Maintenance" Value="您想执行什么操作？" />
+  <String Id="tr_Maintenance" Value="Ne yapmak istiyorsunuz?" />
+  <String Id="es_Maintenance" Value="¿Qué desea hacer?" />
+  <String Id="fr_Aide" Value="Options de la ligne de commande : /install, /repair, /uninstall, /quiet, /passive, /log fichier." />
+  <String Id="en_Aide" Value="Command line options: /install, /repair, /uninstall, /quiet, /passive, /log file." />
+  <String Id="ar_Aide" Value="خيارات سطر الأوامر: /install و/repair و/uninstall و/quiet و/passive و/log ملف." />
+  <String Id="ja_Aide" Value="コマンド ライン オプション: /install、/repair、/uninstall、/quiet、/passive、/log ファイル。" />
+  <String Id="zh_Aide" Value="命令行选项：/install、/repair、/uninstall、/quiet、/passive、/log 文件。" />
+  <String Id="tr_Aide" Value="Komut satırı seçenekleri: /install, /repair, /uninstall, /quiet, /passive, /log dosya." />
+  <String Id="es_Aide" Value="Opciones de la línea de comandos: /install, /repair, /uninstall, /quiet, /passive, /log archivo." />
+</WixLocalization>
