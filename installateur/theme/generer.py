@@ -7,8 +7,8 @@ l'installateur n'a pas besoin de Python) :
   première page ;
 - kadenz.wxl : chaînes de ces textes, et chaînes que WixStdBA utilise
   lui-même (confirmation d'annulation, fichiers en cours d'utilisation) ;
-- logo.png et logoside.png : identité de Kadenz, tirée de crates/app/kadenz.ico,
-  couleurs et police Manrope de l'application (crates/app/ui).
+- logo.png et logoside.png : identité de Kadenz (docs/marque), icône tirée de
+  crates/app/kadenz.ico, bandeau latéral Bleu vif avec le logo en négatif.
 
 Usage : python installateur/theme/generer.py (Pillow requis).
 """
@@ -16,7 +16,7 @@ Usage : python installateur/theme/generer.py (Pillow requis).
 from pathlib import Path
 from xml.sax.saxutils import escape, quoteattr
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 
 ICI = Path(__file__).resolve().parent
 RACINE = ICI.parent.parent
@@ -33,9 +33,10 @@ LANGUES = [
     ("es", "Español"),
 ]
 
-# Couleurs de l'application (crates/app/ui/composants.slint, global Theme).
-NUIT = "#1a2259"
-ACCENT = "#2d3a8c"
+# Couleurs de la marque (docs/marque ; crates/app/ui/composants.slint, global
+# Theme) : Nuit pour les titres, Bleu vif pour l'accent et le bandeau latéral.
+NUIT = "#1a1033"
+ACCENT = "#1f4fd8"
 TEXTE_SECONDAIRE = "#52606d"
 
 TEXTES = {
@@ -448,15 +449,24 @@ def images():
     icone = icone.convert("RGBA")
     icone.resize((64, 64), Image.LANCZOS).save(ICI / "logo.png")
 
-    # Bandeau latéral : fond « nuit » de l'application, icône, nom en Manrope.
+    # Bandeau latéral, comme les bandeaux de marque de l'application
+    # (docs/marque) : aplat Bleu vif, logo en négatif empilé. Symbole et mot
+    # sont découpés dans le logo horizontal négatif rendu par le kit de marque
+    # (symbole de x 21 à 324, mot de x 390 à 1165, sur 1200 x 400).
+    negatif = Image.open(RACINE / "docs" / "marque" / "png" / "kadenz-logo-horizontal-negatif-1200.png").convert("RGBA")
+    symbole = negatif.crop((0, 0, 360, 400))
+    symbole = symbole.crop(symbole.getchannel("A").getbbox())
+    mot = negatif.crop((360, 0, 1200, 400))
+    mot = mot.crop(mot.getchannel("A").getbbox())
+
     largeur, hauteur = 180, 460
-    cote = Image.new("RGBA", (largeur, hauteur), NUIT)
-    taille = 96
-    cote.alpha_composite(icone.resize((taille, taille), Image.LANCZOS), ((largeur - taille) // 2, 60))
-    dessin = ImageDraw.Draw(cote)
-    police = ImageFont.truetype(str(RACINE / "crates" / "app" / "ui" / "polices" / "Manrope-ExtraBold.ttf"), 30)
-    boite = dessin.textbbox((0, 0), "Kadenz", font=police)
-    dessin.text(((largeur - (boite[2] - boite[0])) // 2 - boite[0], 176), "Kadenz", font=police, fill="white")
+    cote = Image.new("RGBA", (largeur, hauteur), ACCENT)
+    cote_symbole = 76
+    symbole = symbole.resize((cote_symbole, cote_symbole), Image.LANCZOS)
+    cote.alpha_composite(symbole, ((largeur - cote_symbole) // 2, 64))
+    largeur_mot = 124
+    mot = mot.resize((largeur_mot, round(mot.height * largeur_mot / mot.width)), Image.LANCZOS)
+    cote.alpha_composite(mot, ((largeur - largeur_mot) // 2, 64 + cote_symbole + 26))
     cote.convert("RGB").save(ICI / "logoside.png")
 
 
