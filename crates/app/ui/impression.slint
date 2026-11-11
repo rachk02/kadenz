@@ -210,6 +210,14 @@ export component PageImpression inherits Rectangle {
         ImpressionApi.actualiser(root.saisie(), root.bas-saisi(), root.rang-type);
     }
 
+    // Page étroite (Paramètres à côté d'une barre latérale) : la colonne des réglages
+    // rétrécit et l'aperçu aussi, pour rester visible pendant la saisie.
+    in property <bool> etroit;
+
+    // Largeur de l'aperçu : la place laissée par la colonne des réglages (500 px)
+    // et les marges, entre 240 et 420 px ; en page étroite, un peu plus du quart de la page.
+    property <length> largeur-apercu: root.etroit ? max(140px, min(300px, (root.width - 3 * 24px) * 0.28)) : max(240px, min(420px, root.width - 500px - 3 * 24px));
+
     init => {
         root.bas = ImpressionApi.ouvrir-bas();
         root.charger(ImpressionApi.ouvrir());
@@ -222,13 +230,13 @@ export component PageImpression inherits Rectangle {
         padding-bottom: 0px;
         spacing: 24px;
 
-        ScrollView {
+        colonne := ScrollView {
             row: 0;
             col: Theme.rtl ? 1 : 0;
-            width: 500px;
+            width: root.etroit ? root.width - 3 * 24px - root.largeur-apercu : 500px;
 
             VerticalLayout {
-                width: 480px;
+                width: colonne.width - 20px;
                 spacing: 12px;
                 padding-bottom: 24px;
                 alignment: start;
@@ -562,9 +570,11 @@ export component PageImpression inherits Rectangle {
                     }
                 }
 
+                // Boutons à la ligne quand la colonne est étroite (aucun texte à la ligne ici).
                 Rangee {
                     spacing: 8px;
                     alignment: start;
+                    flex-wrap: FlexboxLayoutWrap.wrap;
 
                     Bouton {
                         text: @tr("Enregistrer");
@@ -613,14 +623,18 @@ export component PageImpression inherits Rectangle {
             padding-top: 4px;
             alignment: start;
 
+            // À la ligne : le titre ne doit pas élargir la colonne au-delà de l'aperçu.
             Section {
+                width: root.largeur-apercu;
                 text: @tr("Aperçu sur un document d'exemple");
+                wrap: word-wrap;
             }
 
-            // Page A4 (210 x 297) rendue par le moteur d'impression.
+            // Page A4 (210 x 297) rendue par le moteur d'impression ; elle rétrécit
+            // quand la place manque (Paramètres à côté d'une barre latérale).
             Rectangle {
-                width: 420px;
-                height: 594px;
+                width: root.largeur-apercu;
+                height: root.largeur-apercu * 297 / 210;
                 background: white;
                 border-width: 1px;
                 border-color: Theme.bordure;

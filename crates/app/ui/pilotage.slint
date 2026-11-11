@@ -587,6 +587,17 @@ component DernieresFactures inherits Carte {
 export component PageTableauDeBord inherits ScrollView {
     property <string> erreur-filtre;
     property <Retour> retour;
+    // Indicateurs des ventes sur cinq colonnes, ou trois quand la page est étroite
+    // (barre latérale épinglée) ; colonnes inversées de droite à gauche.
+    property <int> colonnes: root.width < 1050px ? 3 : 5;
+
+    pure function colonne(rang: int) -> int {
+        Theme.rtl ? root.colonnes - 1 - mod(rang, root.colonnes) : mod(rang, root.colonnes)
+    }
+
+    pure function ligne(rang: int) -> int {
+        floor(rang / root.colonnes)
+    }
 
     function filtrer() {
         root.erreur-filtre = PilotageApi.filtrer(annee.current-index, du.text, au.text);
@@ -607,7 +618,7 @@ export component PageTableauDeBord inherits ScrollView {
             Rectangle { }
 
             annee := ComboBox {
-                width: 170px;
+                width: 150px;
                 model: PilotageApi.annees;
                 selected => {
                     du.text = "";
@@ -648,39 +659,51 @@ export component PageTableauDeBord inherits ScrollView {
             text: @tr("Ventes");
         }
 
-        Rangee {
+        GridLayout {
             spacing: 12px;
 
             Indicateur {
+                row: root.ligne(0);
+                col: root.colonne(0);
                 libelle: @tr("Chiffre d'affaires HT");
                 valeur: PilotageApi.ca-ht;
             }
 
             Indicateur {
+                row: root.ligne(1);
+                col: root.colonne(1);
                 libelle: @tr("TVA");
                 valeur: PilotageApi.tva;
             }
 
             Indicateur {
+                row: root.ligne(2);
+                col: root.colonne(2);
                 libelle: @tr("Chiffre d'affaires TTC");
                 valeur: PilotageApi.ca-ttc;
             }
 
             Indicateur {
+                row: root.ligne(3);
+                col: root.colonne(3);
                 libelle: @tr("Total payé");
                 valeur: PilotageApi.paye;
                 couleur-valeur: Theme.succes;
             }
 
             Indicateur {
+                row: root.ligne(4);
+                col: root.colonne(4);
                 libelle: @tr("Total impayé");
                 valeur: PilotageApi.impaye;
                 couleur-valeur: Theme.erreur;
             }
         }
 
+        // Cartes à la ligne quand la page est étroite (aucun texte à la ligne dans ces cartes).
         Rangee {
             spacing: 12px;
+            flex-wrap: FlexboxLayoutWrap.wrap;
 
             CarteAnneau {
                 titre: @tr("CA par état de paiement");
@@ -705,8 +728,10 @@ export component PageTableauDeBord inherits ScrollView {
             Tendance { }
         }
 
+        // Cartes à la ligne quand la page est étroite (aucun texte à la ligne dans ces cartes).
         Rangee {
             spacing: 12px;
+            flex-wrap: FlexboxLayoutWrap.wrap;
 
             TopClients { }
 
@@ -721,8 +746,10 @@ export component PageTableauDeBord inherits ScrollView {
             text: @tr("Achats");
         }
 
+        // Cartes à la ligne quand la page est étroite (aucun texte à la ligne dans ces cartes).
         Rangee {
             spacing: 12px;
+            flex-wrap: FlexboxLayoutWrap.wrap;
 
             Indicateur {
                 libelle: @tr("Total des bons de commande");

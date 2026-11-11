@@ -7,6 +7,7 @@ import { PageEntreprise, PageParametres } from "administration.slint";
 import { PageUtilisateurs } from "utilisateurs.slint";
 import { PageImpression } from "impression.slint";
 import { PageLicence } from "licence.slint";
+import { Infobulle } from "navigation.slint";
 
 export enum Rubrique {
     mon-compte,
@@ -565,7 +566,58 @@ component PageAPropos inherits VerticalLayout {
     Rectangle { }
 }
 
+// Rubrique de la liste compacte : l'icône seule, le libellé en infobulle à côté.
+component EntreeCompacte inherits Rectangle {
+    in property <string> libelle;
+    in property <image> icone;
+    in property <bool> actif;
+    callback clique();
+
+    height: 36px;
+    border-radius: 4px;
+    background: root.actif ? Theme.accent : (zone.has-hover ? Theme.accent-survol : transparent);
+    animate background { duration: Affichage.duree; }
+
+    accessible-role: button;
+    accessible-label: root.libelle;
+    accessible-action-default => {
+        root.clique();
+    }
+
+    Image {
+        width: 18px;
+        height: 18px;
+        source: root.icone;
+        colorize: root.actif ? white : Theme.texte-secondaire;
+    }
+
+    zone := TouchArea {
+        clicked => {
+            Infobulle.texte = "";
+            root.clique();
+        }
+        changed has-hover => {
+            if (!self.has-hover && Infobulle.texte == root.libelle) {
+                Infobulle.texte = "";
+            }
+        }
+    }
+
+    // De droite à gauche, Infobulle.x est le bord droit de l'infobulle.
+    Timer {
+        interval: 450ms;
+        running: zone.has-hover && Infobulle.texte != root.libelle;
+        triggered => {
+            Infobulle.x = Theme.rtl ? root.absolute-position.x - 8px : root.absolute-position.x + root.width + 8px;
+            Infobulle.y = root.absolute-position.y + 5px;
+            Infobulle.texte = root.libelle;
+        }
+    }
+}
+
 // Liste des rubriques au début du sens de lecture, page de la rubrique à côté.
+// Fenêtre étroite : la liste ne garde que les icônes ; page étroite : les rubriques
+// larges (Entreprise, Impression, Utilisateurs) se réorganisent.
 export component PageReglages inherits Rectangle {
     in property <string> version-logiciel;
     in property <string> nom-entreprise;
@@ -576,21 +628,30 @@ export component PageReglages inherits Rectangle {
     callback changer-mot-de-passe(string, string, string) -> string;
     callback changer-langue(int) -> string;
     callback revoir-presentation();
+    callback deconnecter();
 
-    property <length> largeur-liste: 272px;
+    property <bool> liste-compacte: root.width < 860px;
+    property <length> marge-liste: root.liste-compacte ? 8px : 12px;
+    property <length> largeur-liste: root.liste-compacte ? 72px : 288px;
+    property <bool> page-etroite: root.width - root.largeur-liste < 840px;
 
-    // Liste des rubriques.
+    // Liste des rubriques : panneau blanc détaché, à bordure égale, pour la distinguer
+    // de la barre de l'application (fond gris) ; déconnexion en bas du panneau.
     Rectangle {
-        x: Theme.rtl ? parent.width - self.width : 0px;
-        width: root.largeur-liste;
-        height: parent.height;
-        background: Theme.fond-lateral;
+        x: Theme.rtl ? parent.width - self.width - root.marge-liste : root.marge-liste;
+        y: root.marge-liste;
+        width: root.largeur-liste - root.marge-liste;
+        height: parent.height - 2 * root.marge-liste;
+        background: white;
+        border-width: 1px;
+        border-color: Theme.bordure;
+        border-radius: 4px;
 
         VerticalLayout {
-            padding: 14px;
+            padding: root.liste-compacte ? 9px : 10px;
             spacing: 2px;
 
-            Titre {
+            if !root.liste-compacte: Titre {
                 text: @tr("Paramètres");
             }
 
@@ -605,14 +666,41 @@ export component PageReglages inherits Rectangle {
                     alignment: start;
                     spacing: 2px;
 
-                    for r in ReglagesApi.rubriques: ElementNavigation {
-                        libelle: Rubriques.libelle(r);
-                        icone: Rubriques.icone(r);
-                        actif: ReglagesApi.rubrique == r;
-                        clique => {
-                            ReglagesApi.rubrique = r;
+                    for r in ReglagesApi.rubriques: VerticalLayout {
+                        if !root.liste-compacte: ElementNavigation {
+                            libelle: Rubriques.libelle(r);
+                            icone: Rubriques.icone(r);
+                            actif: ReglagesApi.rubrique == r;
+                            clique => {
+                                ReglagesApi.rubrique = r;
+                            }
+                        }
+
+                        if root.liste-compacte: EntreeCompacte {
+                            libelle: Rubriques.libelle(r);
+                            icone: Rubriques.icone(r);
+                            actif: ReglagesApi.rubrique == r;
+                            clique => {
+                                ReglagesApi.rubrique = r;
+                            }
                         }
                     }
+                }
+            }
+
+            if !root.liste-compacte: ElementNavigation {
+                libelle: @tr("Se déconnecter");
+                icone: @image-url("icones/actions/deconnexion.svg");
+                clique => {
+                    root.deconnecter();
+                }
+            }
+
+            if root.liste-compacte: EntreeCompacte {
+                libelle: @tr("Se déconnecter");
+                icone: @image-url("icones/actions/deconnexion.svg");
+                clique => {
+                    root.deconnecter();
                 }
             }
         }
@@ -657,7 +745,9 @@ export component PageReglages inherits Rectangle {
 
         if ReglagesApi.rubrique == Rubrique.navigation: PageNavigation { }
 
-        if ReglagesApi.rubrique == Rubrique.entreprise: PageEntreprise { }
+        if ReglagesApi.rubrique == Rubrique.entreprise: PageEntreprise {
+            etroit: root.page-etroite;
+        }
 
         if ReglagesApi.rubrique == Rubrique.documents: PageParametres {
             partie: 0;
@@ -674,9 +764,13 @@ export component PageReglages inherits Rectangle {
             titre: @tr("Textes imprimés et exports");
         }
 
-        if ReglagesApi.rubrique == Rubrique.impression: PageImpression { }
+        if ReglagesApi.rubrique == Rubrique.impression: PageImpression {
+            etroit: root.page-etroite;
+        }
 
-        if ReglagesApi.rubrique == Rubrique.utilisateurs: PageUtilisateurs { }
+        if ReglagesApi.rubrique == Rubrique.utilisateurs: PageUtilisateurs {
+            etroit: root.page-etroite;
+        }
 
         if ReglagesApi.rubrique == Rubrique.licence: PageLicence { }
 

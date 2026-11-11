@@ -239,7 +239,6 @@ export component ContenuBarre inherits VerticalLayout {
     in property <string> infobulle-bascule;
     callback choisi(Page);
     callback basculer();
-    callback deconnecter();
 
     padding: 10px;
     spacing: 4px;
@@ -320,13 +319,6 @@ export component ContenuBarre inherits VerticalLayout {
             overflow: elide;
         }
 
-        BoutonIcone {
-            icone: @image-url("icones/actions/deconnexion.svg");
-            infobulle: @tr("Se déconnecter");
-            clique => {
-                root.deconnecter();
-            }
-        }
     }
 }
 
@@ -512,22 +504,14 @@ component MarqueBandeau inherits HorizontalLayout {
     }
 }
 
-// Fin du bandeau : Paramètres, nom du compte, déconnexion.
+// Fin du bandeau : Paramètres et nom du compte (la déconnexion est dans les Paramètres).
 component CompteBandeau inherits HorizontalLayout {
     in property <string> utilisateur;
     in property <Page> page;
     callback choisi(Page);
-    callback deconnecter();
 
     spacing: 6px;
 
-    if Theme.rtl: BoutonIcone {
-        icone: @image-url("icones/actions/deconnexion.svg");
-        infobulle: @tr("Se déconnecter");
-        clique => {
-            root.deconnecter();
-        }
-    }
 
     if Theme.rtl: Text {
         vertical-alignment: center;
@@ -556,13 +540,6 @@ component CompteBandeau inherits HorizontalLayout {
         overflow: elide;
     }
 
-    if !Theme.rtl: BoutonIcone {
-        icone: @image-url("icones/actions/deconnexion.svg");
-        infobulle: @tr("Se déconnecter");
-        clique => {
-            root.deconnecter();
-        }
-    }
 }
 
 // Groupes du bandeau, dans l'ordre de lecture.
@@ -648,7 +625,6 @@ export component BandeauHaut inherits Rectangle {
     in property <string> utilisateur;
     in property <Page> page;
     callback choisi(Page);
-    callback deconnecter();
 
     height: 52px;
     background: Theme.fond-lateral;
@@ -677,9 +653,6 @@ export component BandeauHaut inherits Rectangle {
             choisi(p) => {
                 root.choisi(p);
             }
-            deconnecter => {
-                root.deconnecter();
-            }
         }
 
         Rectangle {
@@ -691,9 +664,6 @@ export component BandeauHaut inherits Rectangle {
             page: root.page;
             choisi(p) => {
                 root.choisi(p);
-            }
-            deconnecter => {
-                root.deconnecter();
             }
         }
 

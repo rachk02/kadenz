@@ -14,7 +14,7 @@ import { PageTableauDeBord, PilotageApi } from "pilotage.slint";
 import { ImpressionApi } from "impression.slint";
 import { LicenceApi } from "licence.slint";
 import { InviteMiseAJour, MiseAJourApi } from "maj.slint";
-import { BandeauHaut, BoutonIcone, ContenuBarre, InfobulleFenetre, Menu, Page, PanneauFlottant } from "navigation.slint";
+import { BandeauHaut, BoutonIcone, ContenuBarre, Infobulle, InfobulleFenetre, Menu, Page, PanneauFlottant } from "navigation.slint";
 import { PageReglages, ReglagesApi, Rubrique } from "reglages.slint";
 
 export { Affichage, DonneesAssistant, Droits, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, TiersApi, UtilisateursApi }
@@ -128,6 +128,8 @@ export component FenetrePrincipale inherits Window {
             if (root.barre && e.modifiers.control && (e.text == "b" || e.text == "B")) {
                 root.barre-epinglee = !root.barre-epinglee;
                 root.barre-flottante = false;
+                // L'infobulle du bouton de bascule ne correspond plus à son état.
+                Infobulle.texte = "";
                 return accept;
             }
             return reject;
@@ -140,9 +142,6 @@ export component FenetrePrincipale inherits Window {
                 page: root.page;
                 choisi(p) => {
                     root.choisir(p);
-                }
-                deconnecter => {
-                    root.deconnecter();
                 }
             }
 
@@ -172,9 +171,6 @@ export component FenetrePrincipale inherits Window {
                         }
                         basculer => {
                             root.barre-epinglee = false;
-                        }
-                        deconnecter => {
-                            root.deconnecter();
                         }
                     }
                 }
@@ -263,6 +259,9 @@ export component FenetrePrincipale inherits Window {
                                 root.presentation-depuis-a-propos = true;
                                 root.ecran = Ecran.presentation;
                             }
+                            deconnecter => {
+                                root.deconnecter();
+                            }
                         }
 
                         // Recouvre l'écran Tiers ou Produits pendant un import.
@@ -293,9 +292,6 @@ export component FenetrePrincipale inherits Window {
             basculer => {
                 root.barre-epinglee = true;
                 root.barre-flottante = false;
-            }
-            deconnecter => {
-                root.deconnecter();
             }
         }
 

@@ -7,6 +7,7 @@ mod factures;
 mod graphiques;
 mod import_ecran;
 mod impression;
+mod instance;
 mod licence;
 mod maj;
 mod paiements;
@@ -479,6 +480,10 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
 }
 
 fn main() -> Result<(), slint::PlatformError> {
+    // Base déjà ouverte par une autre instance : sa fenêtre revient au premier plan.
+    if !instance::prendre(&chemin_base()) {
+        return Ok(());
+    }
     let fenetre = FenetrePrincipale::new()?;
     // Interface en français au démarrage, quelle que soit la langue de Windows, jusqu'à
     // la connexion d'un compte (voir traduction::choisir_demarrage).

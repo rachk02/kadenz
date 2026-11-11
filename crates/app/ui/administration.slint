@@ -156,6 +156,8 @@ component CadreLogo inherits VerticalLayout {
 }
 
 export component PageEntreprise inherits ScrollView {
+    // Page étroite (Paramètres à côté d'une barre latérale) : les logos passent sous la fiche.
+    in property <bool> etroit;
     property <Retour> retour;
     property <Retour> retour-logo-principal;
     property <Retour> retour-logo-secondaire;
@@ -219,7 +221,7 @@ export component PageEntreprise inherits ScrollView {
 
             GridLayout {
                 row: 0;
-                col: Theme.rtl ? 1 : 0;
+                col: root.etroit ? 0 : (Theme.rtl ? 1 : 0);
                 spacing: 12px;
                 horizontal-stretch: 2;
 
@@ -316,9 +318,10 @@ export component PageEntreprise inherits ScrollView {
             }
 
             VerticalLayout {
-                row: 0;
-                col: Theme.rtl ? 0 : 1;
-                width: 280px;
+                row: root.etroit ? 1 : 0;
+                col: root.etroit ? 0 : (Theme.rtl ? 0 : 1);
+                min-width: root.etroit ? 0px : 280px;
+                max-width: root.etroit ? 100000px : 280px;
                 spacing: 16px;
                 alignment: start;
 
@@ -459,8 +462,10 @@ export component PageParametres inherits ScrollView {
         HorizontalLayout {
             alignment: Theme.rangee-debut;
 
+            // 560 px au plus ; moins quand la page est étroite (barre latérale épinglée).
             VerticalLayout {
-                width: 560px;
+                max-width: 560px;
+                horizontal-stretch: 1;
                 spacing: 0px;
 
                 Bloc {
