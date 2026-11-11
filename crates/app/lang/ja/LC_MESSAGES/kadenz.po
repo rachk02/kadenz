@@ -2250,17 +2250,11 @@ msgstr "スキーマのバージョン"
 msgid "Les données restent sur ce poste, dans une base locale SQLite."
 msgstr "データはこのパソコンのローカル SQLite データベースに保存されます。"
 
-msgid "Interface"
-msgstr "インターフェース"
-
 msgid "Polices"
 msgstr "フォント"
 
 msgid "Base de données"
 msgstr "データベース"
-
-msgid "Slint 1.18, sous licence Slint Royalty-free 2.0."
-msgstr "Slint 1.18（Slint Royalty-free 2.0 ライセンス）。"
 
 msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
 msgstr "Inter と Manrope（SIL Open Font License 1.1）。"
@@ -2666,3 +2660,6 @@ msgstr "受領数量"
 
 msgid "Total HT"
 msgstr "税抜合計"
+
+msgid "Éditeur"
+msgstr "発行元"

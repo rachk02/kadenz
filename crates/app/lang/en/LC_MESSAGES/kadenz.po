@@ -2250,17 +2250,11 @@ msgstr "Schema version"
 msgid "Les données restent sur ce poste, dans une base locale SQLite."
 msgstr "Data stays on this computer, in a local SQLite database."
 
-msgid "Interface"
-msgstr "Interface"
-
 msgid "Polices"
 msgstr "Fonts"
 
 msgid "Base de données"
 msgstr "Database"
-
-msgid "Slint 1.18, sous licence Slint Royalty-free 2.0."
-msgstr "Slint 1.18, under the Slint Royalty-free 2.0 license."
 
 msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
 msgstr "Inter and Manrope, under the SIL Open Font License 1.1."
@@ -2666,3 +2660,6 @@ msgstr "Quantity received"
 
 msgid "Total HT"
 msgstr "Total excl. tax"
+
+msgid "Éditeur"
+msgstr "Publisher"

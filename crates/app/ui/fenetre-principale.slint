@@ -237,8 +237,7 @@ export component FenetrePrincipale inherits Window {
     callback changer-mot-de-passe(string, string, string) -> string;
     callback changer-langue(int) -> string;
 
-    // Construit par l'application à chaque connexion. « À propos » y figure toujours :
-    // il porte l'attribution exigée par la licence Slint Royalty-free 2.0 (cahier, section 14).
+    // Construit par l'application à chaque connexion. « À propos » y figure toujours.
     in property <[Page]> menu;
     in-out property <Page> page: Page.tableau-de-bord;
 
@@ -611,6 +610,13 @@ export component FenetrePrincipale inherits Window {
                             valeur: root.version-logiciel;
                         }
 
+                        // Nom propre de l'éditeur, non traduit (décision de l'utilisateur
+                        // du 2026-11-11).
+                        LigneAPropos {
+                            libelle: @tr("Éditeur");
+                            valeur: "Mcarre";
+                        }
+
                         LigneAPropos {
                             libelle: @tr("Licence");
                             valeur: @tr("Logiciel propriétaire, tous droits réservés.");
@@ -661,11 +667,6 @@ export component FenetrePrincipale inherits Window {
                         col: 0;
                         colspan: 2;
                         titre: @tr("Composants tiers");
-
-                        LigneAPropos {
-                            libelle: @tr("Interface");
-                            valeur: @tr("Slint 1.18, sous licence Slint Royalty-free 2.0.");
-                        }
 
                         LigneAPropos {
                             libelle: @tr("Polices");

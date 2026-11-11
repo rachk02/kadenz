@@ -2250,17 +2250,11 @@ msgstr "架构版本"
 msgid "Les données restent sur ce poste, dans une base locale SQLite."
 msgstr "数据保存在本机的本地 SQLite 数据库中。"
 
-msgid "Interface"
-msgstr "界面"
-
 msgid "Polices"
 msgstr "字体"
 
 msgid "Base de données"
 msgstr "数据库"
-
-msgid "Slint 1.18, sous licence Slint Royalty-free 2.0."
-msgstr "Slint 1.18，采用 Slint Royalty-free 2.0 许可证。"
 
 msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
 msgstr "Inter 和 Manrope，采用 SIL Open Font License 1.1 许可证。"
@@ -2666,3 +2660,6 @@ msgstr "已收货数量"
 
 msgid "Total HT"
 msgstr "不含税合计"
+
+msgid "Éditeur"
+msgstr "发布者"

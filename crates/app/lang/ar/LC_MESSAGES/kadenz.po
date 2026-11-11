@@ -2250,17 +2250,11 @@ msgstr "إصدار المخطط"
 msgid "Les données restent sur ce poste, dans une base locale SQLite."
 msgstr "تبقى البيانات على هذا الجهاز، في قاعدة بيانات SQLite محلية."
 
-msgid "Interface"
-msgstr "الواجهة"
-
 msgid "Polices"
 msgstr "الخطوط"
 
 msgid "Base de données"
 msgstr "قاعدة البيانات"
-
-msgid "Slint 1.18, sous licence Slint Royalty-free 2.0."
-msgstr "Slint 1.18، بترخيص Slint Royalty-free 2.0."
 
 msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
 msgstr "Inter وManrope، بترخيص SIL Open Font License 1.1."
@@ -2666,3 +2660,6 @@ msgstr "الكمية المستلمة"
 
 msgid "Total HT"
 msgstr "الإجمالي دون ضريبة"
+
+msgid "Éditeur"
+msgstr "الناشر"

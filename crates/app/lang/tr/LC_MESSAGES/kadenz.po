@@ -2250,17 +2250,11 @@ msgstr "Şema sürümü"
 msgid "Les données restent sur ce poste, dans une base locale SQLite."
 msgstr "Veriler bu bilgisayarda, yerel bir SQLite veritabanında kalır."
 
-msgid "Interface"
-msgstr "Arayüz"
-
 msgid "Polices"
 msgstr "Yazı tipleri"
 
 msgid "Base de données"
 msgstr "Veritabanı"
-
-msgid "Slint 1.18, sous licence Slint Royalty-free 2.0."
-msgstr "Slint 1.18, Slint Royalty-free 2.0 lisansıyla."
 
 msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
 msgstr "Inter ve Manrope, SIL Open Font License 1.1 lisansıyla."
@@ -2666,3 +2660,6 @@ msgstr "Alınan miktar"
 
 msgid "Total HT"
 msgstr "KDV hariç toplam"
+
+msgid "Éditeur"
+msgstr "Yayımcı"
