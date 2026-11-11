@@ -62,13 +62,13 @@
   <String Id="zh_Donnees" Value="公司数据保存在每个 Windows 帐户的个人资料中，卸载不会删除这些数据。" />
   <String Id="tr_Donnees" Value="Şirket verileri her Windows hesabının profilinde saklanır; kaldırma işlemi bunları silmez." />
   <String Id="es_Donnees" Value="Los datos de la empresa se guardan en el perfil de cada cuenta de Windows; la desinstalación no los elimina." />
-  <String Id="fr_Retour" Value="Retour" />
-  <String Id="en_Retour" Value="Back" />
-  <String Id="ar_Retour" Value="السابق" />
-  <String Id="ja_Retour" Value="戻る" />
-  <String Id="zh_Retour" Value="上一步" />
-  <String Id="tr_Retour" Value="Önceki" />
-  <String Id="es_Retour" Value="Anterior" />
+  <String Id="fr_Precedent" Value="Précédent" />
+  <String Id="en_Precedent" Value="Back" />
+  <String Id="ar_Precedent" Value="السابق" />
+  <String Id="ja_Precedent" Value="戻る" />
+  <String Id="zh_Precedent" Value="上一步" />
+  <String Id="tr_Precedent" Value="Önceki" />
+  <String Id="es_Precedent" Value="Anterior" />
   <String Id="fr_Suivant" Value="Suivant" />
   <String Id="en_Suivant" Value="Next" />
   <String Id="ar_Suivant" Value="التالي" />
@@ -97,6 +97,27 @@
   <String Id="zh_Fermer" Value="关闭" />
   <String Id="tr_Fermer" Value="Kapat" />
   <String Id="es_Fermer" Value="Cerrar" />
+  <String Id="fr_Terminer" Value="Terminer" />
+  <String Id="en_Terminer" Value="Finish" />
+  <String Id="ar_Terminer" Value="إنهاء" />
+  <String Id="ja_Terminer" Value="完了" />
+  <String Id="zh_Terminer" Value="完成" />
+  <String Id="tr_Terminer" Value="Bitir" />
+  <String Id="es_Terminer" Value="Finalizar" />
+  <String Id="fr_Slogan" Value="Gestion commerciale" />
+  <String Id="en_Slogan" Value="Sales management" />
+  <String Id="ar_Slogan" Value="الإدارة التجارية" />
+  <String Id="ja_Slogan" Value="販売管理" />
+  <String Id="zh_Slogan" Value="商务管理" />
+  <String Id="tr_Slogan" Value="Ticari yönetim" />
+  <String Id="es_Slogan" Value="Gestión comercial" />
+  <String Id="fr_InstalleDans" Value="Kadenz est installé dans :" />
+  <String Id="en_InstalleDans" Value="Kadenz has been installed in:" />
+  <String Id="ar_InstalleDans" Value="تم تثبيت Kadenz في:" />
+  <String Id="ja_InstalleDans" Value="Kadenz のインストール先:" />
+  <String Id="zh_InstalleDans" Value="Kadenz 已安装到：" />
+  <String Id="tr_InstalleDans" Value="Kadenz'in kurulduğu klasör:" />
+  <String Id="es_InstalleDans" Value="Kadenz se ha instalado en:" />
   <String Id="fr_Lancer" Value="Lancer Kadenz" />
   <String Id="en_Lancer" Value="Launch Kadenz" />
   <String Id="ar_Lancer" Value="تشغيل Kadenz" />
@@ -146,13 +167,13 @@
   <String Id="zh_ReparationEnCours" Value="正在修复" />
   <String Id="tr_ReparationEnCours" Value="Onarılıyor" />
   <String Id="es_ReparationEnCours" Value="Reparando" />
-  <String Id="fr_Installe" Value="Kadenz est installé" />
-  <String Id="en_Installe" Value="Kadenz is installed" />
-  <String Id="ar_Installe" Value="تم تثبيت Kadenz" />
-  <String Id="ja_Installe" Value="Kadenz のインストールが完了しました" />
-  <String Id="zh_Installe" Value="Kadenz 已安装" />
-  <String Id="tr_Installe" Value="Kadenz kuruldu" />
-  <String Id="es_Installe" Value="Kadenz se ha instalado" />
+  <String Id="fr_Installe" Value="Installation terminée" />
+  <String Id="en_Installe" Value="Installation complete" />
+  <String Id="ar_Installe" Value="اكتمل التثبيت" />
+  <String Id="ja_Installe" Value="インストールが完了しました" />
+  <String Id="zh_Installe" Value="安装完成" />
+  <String Id="tr_Installe" Value="Kurulum tamamlandı" />
+  <String Id="es_Installe" Value="Instalación completada" />
   <String Id="fr_Desinstalle" Value="Kadenz est désinstallé" />
   <String Id="en_Desinstalle" Value="Kadenz has been uninstalled" />
   <String Id="ar_Desinstalle" Value="تمت إزالة تثبيت Kadenz" />

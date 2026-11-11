@@ -62,6 +62,52 @@ $msi = Join-Path $sortie 'Kadenz.msi'
 $setup = Join-Path $sortie "KadenzSetup-$version.exe"
 $communes = @('-arch', 'x64', '-d', "Version=$version", '-d', "Editeur=$Editeur", '-d', "Icone=$icone")
 
+# Extension de l'assistant (extension\kadenzbaf.cpp) : bouton Suivant et case
+# « Lancer Kadenz », que WixStdBA ne sait pas faire seul. Compilée avec MSVC,
+# contre les en-têtes et bibliothèques des paquets NuGet WiX 5.0.1, téléchargés
+# une fois dans target\installateur\wix-natif.
+$natif = Join-Path $sortie 'wix-natif'
+$paquets = @('wixtoolset.dutil', 'wixtoolset.bootstrapperapplicationapi', 'wixtoolset.wixstandardbootstrapperapplicationfunctionapi')
+foreach ($paquet in $paquets) {
+    $dossier = Join-Path $natif $paquet
+    if (-not (Test-Path $dossier)) {
+        $nupkg = Join-Path $natif "$paquet.zip"
+        New-Item -ItemType Directory -Force $natif | Out-Null
+        Invoke-WebRequest -UseBasicParsing -Uri "https://api.nuget.org/v3-flatcontainer/$paquet/5.0.1/$paquet.5.0.1.nupkg" -OutFile $nupkg
+        Expand-Archive -Path $nupkg -DestinationPath $dossier
+        Remove-Item $nupkg
+    }
+}
+$vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+$vs = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+if (-not $vs) { throw "MSVC (outils C++ x64) introuvable : il compile l'extension de l'assistant" }
+$vcvars = Join-Path $vs 'VC\Auxiliary\Build\vcvars64.bat'
+$extension = Join-Path $PSScriptRoot 'extension'
+$baf = Join-Path $sortie 'kadenzbaf.dll'
+$inclusions = @(
+    "$natif\wixtoolset.dutil\build\native\include",
+    "$natif\wixtoolset.bootstrapperapplicationapi\build\native\include",
+    "$natif\wixtoolset.wixstandardbootstrapperapplicationfunctionapi\lib\native\include"
+) | ForEach-Object { "/I`"$_`"" }
+$bibliotheques = @(
+    "$natif\wixtoolset.wixstandardbootstrapperapplicationfunctionapi\lib\native\v14\x64\wixstdfn.lib",
+    "$natif\wixtoolset.bootstrapperapplicationapi\build\native\v14\x64\balutil.lib",
+    "$natif\wixtoolset.dutil\build\native\v14\x64\dutil.lib"
+) | ForEach-Object { "`"$_`"" }
+$systeme = 'user32.lib advapi32.lib ole32.lib oleaut32.lib shell32.lib shlwapi.lib comctl32.lib gdiplus.lib msimg32.lib wininet.lib version.lib crypt32.lib rpcrt4.lib msi.lib'
+# Passage par un fichier .cmd : les guillemets d'une ligne cmd /c ne survivent
+# pas à Windows PowerShell 5.1.
+$script = Join-Path $sortie 'compiler-extension.cmd'
+@(
+    '@echo off',
+    "set `"PATH=%PATH%;$(Split-Path $vswhere)`"",
+    "call `"$vcvars`" >nul || exit /b 1",
+    "cl /nologo /O2 /EHsc /MT /W3 /DUNICODE /D_UNICODE /LD $($inclusions -join ' ') `"$extension\kadenzbaf.cpp`" /Fo`"$sortie\\`" /Fe`"$baf`" /link /DEF:`"$extension\kadenzbaf.def`" $($bibliotheques -join ' ') $systeme"
+) | Set-Content -Encoding ascii $script
+& cmd /c $script
+if ($LASTEXITCODE -ne 0) { throw "échec de la compilation de l'extension de l'assistant" }
+$communes += @('-d', "Extension=$baf")
+
 Executer wix (@('build', (Join-Path $PSScriptRoot 'Kadenz.wxs'), '-d', "Exe=$exe", '-o', $msi) + $communes)
 # Contrôles ICE de Windows Installer. ICE43 et ICE57 sont écartés : ils supposent
 # une installation par compte (raccourcis du menu Démarrer et du bureau dans le

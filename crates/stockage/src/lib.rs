@@ -195,7 +195,98 @@ pub fn ouvrir_en_memoire() -> Resultat<Connection> {
 
 fn preparer(conn: &mut Connection) -> Resultat<()> {
     conn.pragma_update(None, "foreign_keys", "ON")?;
-    migrer(conn)
+    migrer(conn)?;
+    completer_schema(conn)
+}
+
+/// Complète une base créée pendant le développement, avant que les premières
+/// migrations ne soient figées (0001_initial.sql a changé le 9 novembre 2026
+/// sans nouvelle migration) : une telle base porte le bon `user_version` mais
+/// il lui manque des colonnes, d'où « no such column » à l'usage.
+///
+/// Le schéma de référence est celui que produisent les migrations sur une base
+/// vide ; ce qui y manque est ajouté (tables, colonnes, index, déclencheurs),
+/// rien n'est retiré ni modifié. Sur une base à jour, rien n'est écrit.
+fn completer_schema(conn: &mut Connection) -> Resultat<()> {
+    let reference = Connection::open_in_memory()?;
+    for sql in MIGRATIONS {
+        reference.execute_batch(sql)?;
+    }
+    let objets = |c: &Connection, types: &str| -> Resultat<Vec<(String, String)>> {
+        let mut req = c.prepare(&format!(
+            "SELECT name, sql FROM sqlite_master
+             WHERE type IN ({types}) AND sql IS NOT NULL AND name NOT LIKE 'sqlite_%'
+             ORDER BY rowid"
+        ))?;
+        let lignes = req
+            .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?
+            .collect::<Result<_, _>>()?;
+        Ok(lignes)
+    };
+    let tables_base: Vec<String> = objets(conn, "'table'")?
+        .into_iter()
+        .map(|(nom, _)| nom)
+        .collect();
+
+    let tx = conn.transaction()?;
+    for (table, creation) in objets(&reference, "'table'")? {
+        if !tables_base.contains(&table) {
+            tx.execute_batch(&creation)?;
+            continue;
+        }
+        let presentes = colonnes(&tx, &table)?;
+        for colonne in colonnes(&reference, &table)? {
+            if presentes.iter().any(|p| p.nom == colonne.nom) {
+                continue;
+            }
+            // ALTER TABLE n'accepte NOT NULL qu'avec une valeur par défaut.
+            let mut declaration = format!(
+                "ALTER TABLE \"{table}\" ADD COLUMN \"{}\" {}",
+                colonne.nom, colonne.type_sql
+            );
+            if let Some(defaut) = &colonne.defaut {
+                if colonne.non_nulle {
+                    declaration.push_str(" NOT NULL");
+                }
+                declaration.push_str(&format!(" DEFAULT {defaut}"));
+            }
+            tx.execute_batch(&declaration)?;
+        }
+    }
+    let noms_base: Vec<String> = objets(&tx, "'index', 'trigger', 'view'")?
+        .into_iter()
+        .map(|(nom, _)| nom)
+        .collect();
+    for (nom, creation) in objets(&reference, "'index', 'trigger', 'view'")? {
+        if !noms_base.contains(&nom) {
+            tx.execute_batch(&creation)?;
+        }
+    }
+    tx.commit()?;
+    Ok(())
+}
+
+struct Colonne {
+    nom: String,
+    type_sql: String,
+    non_nulle: bool,
+    defaut: Option<String>,
+}
+
+fn colonnes(conn: &Connection, table: &str) -> Resultat<Vec<Colonne>> {
+    let mut req =
+        conn.prepare("SELECT name, type, \"notnull\", dflt_value FROM pragma_table_info(?1)")?;
+    let lignes = req
+        .query_map([table], |r| {
+            Ok(Colonne {
+                nom: r.get(0)?,
+                type_sql: r.get(1)?,
+                non_nulle: r.get(2)?,
+                defaut: r.get(3)?,
+            })
+        })?
+        .collect::<Result<_, _>>()?;
+    Ok(lignes)
 }
 
 /// Version de schéma connue de cette version de l'application.
@@ -282,6 +373,39 @@ mod tests {
             .pragma_query_value(None, "user_version", |r| r.get(0))
             .unwrap();
         assert_eq!(v, version_schema_application());
+    }
+
+    #[test]
+    fn schema_de_developpement_complete() {
+        // Base au bon user_version mais créée avant des modifications de
+        // 0001_initial.sql : colonnes et index manquants.
+        let mut conn = base();
+        conn.execute_batch(
+            "DROP INDEX document_par_source;
+             ALTER TABLE document DROP COLUMN date_echeance;
+             ALTER TABLE entreprise DROP COLUMN logo2;",
+        )
+        .unwrap();
+        completer_schema(&mut conn).unwrap();
+        let noms = |t: &str| -> Vec<String> {
+            colonnes(&conn, t)
+                .unwrap()
+                .into_iter()
+                .map(|c| c.nom)
+                .collect()
+        };
+        assert!(noms("document").contains(&"date_echeance".to_string()));
+        assert!(noms("entreprise").contains(&"logo2".to_string()));
+        let index: u32 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_master WHERE name = 'document_par_source'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(index, 1);
+        // Une base à jour reste inchangée.
+        completer_schema(&mut conn).unwrap();
     }
 
     #[test]

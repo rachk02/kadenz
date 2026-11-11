@@ -1,14 +1,15 @@
-<!--
+﻿<!--
   Installateur KadenzSetup-<version>.exe (cahier des charges, section 16) :
   assistant WixStdBA au thème de Kadenz (theme\kadenz.thm, généré par
   theme\generer.py), qui installe le paquet Kadenz.msi.
 
   Pages : choix de la langue de l'assistant parmi les sept langues de Kadenz,
   puis dossier d'installation et raccourcis du bureau et du menu Démarrer,
-  progression, et fin avec le bouton « Lancer Kadenz » (lancé avec les droits
-  du compte, sans élévation). Aucune licence n'est affichée : le dépôt n'en
-  définit pas. Variables passées par construire.ps1 : Version, Msi (chemin de
-  Kadenz.msi), Editeur, Icone.
+  progression avec le détail des actions, et fin avec la case « Lancer Kadenz »
+  (lancé au clic sur Terminer, avec les droits du compte, sans élévation).
+  Aucune licence n'est affichée : le dépôt n'en définit pas. Variables passées
+  par construire.ps1 : Version, Msi (chemin de Kadenz.msi), Editeur, Icone,
+  Extension (chemin de kadenzbaf.dll).
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
@@ -18,7 +19,7 @@
           UpgradeCode="39f20fc0-e088-4792-85bb-29b2cc47d5ef"
           IconSourceFile="$(var.Icone)">
     <BootstrapperApplication>
-      <bal:WixStandardBootstrapperApplication Theme="none"
+      <bal:WixStandardBootstrapperApplication Theme="hyperlinkSidebarLicense"
                                               ThemeFile="$(sys.SOURCEFILEDIR)theme\kadenz.thm"
                                               LocalizationFile="$(sys.SOURCEFILEDIR)theme\kadenz.wxl"
                                               LogoFile="$(sys.SOURCEFILEDIR)theme\logo.png"
@@ -27,13 +28,20 @@
                                               LaunchTarget="[InstallFolder]\kadenz.exe"
                                               LaunchWorkingFolder="[InstallFolder]" />
       <Payload SourceFile="$(var.Icone)" Name="kadenz.ico" />
+      <!-- Extension de l'assistant (extension\kadenzbaf.cpp) : Suivant, Précédent, case « Lancer Kadenz ». -->
+      <Payload SourceFile="$(var.Extension)" Name="kadenzbaf.dll" bal:BAFunctions="yes" />
     </BootstrapperApplication>
 
     <!-- Langue de l'assistant, retenue pour la réparation et la désinstallation. -->
-    <Variable Name="KadenzLangue" Type="string" Value="fr" Persisted="yes" bal:Overridable="yes" />
+    <!-- Vide au départ : la première étape de l'assistant la fait choisir. -->
+    <Variable Name="KadenzLangue" Persisted="yes" bal:Overridable="yes" />
     <Variable Name="InstallFolder" Type="formatted" Value="[ProgramFiles64Folder]Kadenz" Persisted="yes" bal:Overridable="yes" />
     <Variable Name="RaccourciBureau" Type="numeric" Value="1" bal:Overridable="yes" />
     <Variable Name="RaccourciMenu" Type="numeric" Value="1" bal:Overridable="yes" />
+    <!-- Étape de la page Install : 1 langue, 2 dossier et installation (changée par l'extension). -->
+    <Variable Name="KadenzEtape" Type="numeric" Value="1" />
+    <!-- Case « Lancer Kadenz » de la page de fin, cochée par défaut. -->
+    <Variable Name="LancerKadenz" Type="numeric" Value="1" />
 
     <Chain>
       <MsiPackage SourceFile="$(var.Msi)">

@@ -102,11 +102,32 @@ TEXTES = {
         "tr": "Şirket verileri her Windows hesabının profilinde saklanır; kaldırma işlemi bunları silmez.",
         "es": "Los datos de la empresa se guardan en el perfil de cada cuenta de Windows; la desinstalación no los elimina.",
     },
-    "Retour": {"fr": "Retour", "en": "Back", "ar": "السابق", "ja": "戻る", "zh": "上一步", "tr": "Önceki", "es": "Anterior"},
+    "Precedent": {"fr": "Précédent", "en": "Back", "ar": "السابق", "ja": "戻る", "zh": "上一步", "tr": "Önceki", "es": "Anterior"},
     "Suivant": {"fr": "Suivant", "en": "Next", "ar": "التالي", "ja": "次へ", "zh": "下一步", "tr": "Sonraki", "es": "Siguiente"},
     "Installer": {"fr": "Installer", "en": "Install", "ar": "تثبيت", "ja": "インストール", "zh": "安装", "tr": "Yükle", "es": "Instalar"},
     "Annuler": {"fr": "Annuler", "en": "Cancel", "ar": "إلغاء", "ja": "キャンセル", "zh": "取消", "tr": "İptal", "es": "Cancelar"},
     "Fermer": {"fr": "Fermer", "en": "Close", "ar": "إغلاق", "ja": "閉じる", "zh": "关闭", "tr": "Kapat", "es": "Cerrar"},
+    "Terminer": {"fr": "Terminer", "en": "Finish", "ar": "إنهاء", "ja": "完了", "zh": "完成", "tr": "Bitir", "es": "Finalizar"},
+    # Sous-titre de Kadenz, repris des traductions de l'application
+    # (crates/app/lang/*/LC_MESSAGES/kadenz.po).
+    "Slogan": {
+        "fr": "Gestion commerciale",
+        "en": "Sales management",
+        "ar": "الإدارة التجارية",
+        "ja": "販売管理",
+        "zh": "商务管理",
+        "tr": "Ticari yönetim",
+        "es": "Gestión comercial",
+    },
+    "InstalleDans": {
+        "fr": "Kadenz est installé dans :",
+        "en": "Kadenz has been installed in:",
+        "ar": "تم تثبيت Kadenz في:",
+        "ja": "Kadenz のインストール先:",
+        "zh": "Kadenz 已安装到：",
+        "tr": "Kadenz'in kurulduğu klasör:",
+        "es": "Kadenz se ha instalado en:",
+    },
     "Lancer": {
         "fr": "Lancer Kadenz",
         "en": "Launch Kadenz",
@@ -147,13 +168,13 @@ TEXTES = {
         "es": "Reparando",
     },
     "Installe": {
-        "fr": "Kadenz est installé",
-        "en": "Kadenz is installed",
-        "ar": "تم تثبيت Kadenz",
-        "ja": "Kadenz のインストールが完了しました",
-        "zh": "Kadenz 已安装",
-        "tr": "Kadenz kuruldu",
-        "es": "Kadenz se ha instalado",
+        "fr": "Installation terminée",
+        "en": "Installation complete",
+        "ar": "اكتمل التثبيت",
+        "ja": "インストールが完了しました",
+        "zh": "安装完成",
+        "tr": "Kurulum tamamlandı",
+        "es": "Instalación completada",
     },
     "Desinstalle": {
         "fr": "Kadenz est désinstallé",
@@ -283,40 +304,58 @@ def bouton(nom_controle, texte_cle, x, largeur=96, action="", condition=""):
     return f"<Button {attributs}>{textes(texte_cle)}{action}</Button>"
 
 
-def theme():
+def boutons_radio(condition=""):
+    """Langues de Kadenz, nommées dans leur propre langue, liées à KadenzLangue."""
     radios = []
     for i, (code, nom) in enumerate(LANGUES):
         radios.append(
-            f'<RadioButton Value="{code}" X="{X + 8}" Y="{120 + i * 34}" Width="-20" Height="26" '
-            f'TabStop="{"yes" if i == 0 else "no"}" FontId="3"><Text>{escape(nom)}</Text></RadioButton>'
+            f'<RadioButton Value="{code}" X="{X + 8}" Y="{116 + i * 32}" Width="-20" Height="26" '
+            f'TabStop="{"yes" if i == 0 else "no"}" FontId="3"{condition}><Text>{escape(nom)}</Text></RadioButton>'
         )
+    return f'<RadioButtons Name="KadenzLangue">{"".join(radios)}</RadioButtons>'
+
+
+# WixStdBA ne suit pas les changements de page faits par le thème : la page
+# masquée au début de l'installation est toujours « Install ». La langue, puis
+# le dossier et l'installation, sont donc deux étapes de cette même page,
+# selon KadenzEtape. Un bouton du thème ne sait pas changer une variable : ce
+# sont Suivant et Précédent, via l'extension (installateur/extension), qui la
+# passent à 2 ou à 1 avant que leur ChangePageAction réaffiche la page. Choisir
+# une langue traduit aussitôt la page, sans changer d'étape.
+ETAPE_LANGUE = ' VisibleCondition="KadenzEtape = 1"'
+ETAPE_DOSSIER = ' VisibleCondition="KadenzEtape = 2"'
+# WixBundleAction : 3 et 4 désinstallation, 8 réparation (BOOTSTRAPPER_ACTION).
+PAS_DESINSTALLATION = 'NOT (WixBundleAction = 3 OR WixBundleAction = 4)'
+
+
+def theme():
+    L, E = ETAPE_LANGUE, ETAPE_DOSSIER
     pages = [
         f'<Page Name="Loading">{COTE}</Page>',
         f'<Page Name="Help">{COTE}{titre("Bienvenue")}'
         f'<Label X="{X}" Y="110" Width="-20" Height="-60" FontId="3" DisablePrefix="yes">{textes("Aide")}</Label>'
         + bouton("HelpCloseButton", "Fermer", -20, action="<CloseWindowAction />")
         + "</Page>",
-        # Première page : choix de la langue, noms des langues dans leur langue.
         f'<Page Name="Install">{COTE}'
-        f'<Label X="{X}" Y="24" Width="-20" Height="40" FontId="1" DisablePrefix="yes">Kadenz</Label>'
-        f'<Label X="{X}" Y="76" Width="-20" Height="30" FontId="2" DisablePrefix="yes">{escape(PAGE_LANGUE_TITRE)}</Label>'
-        f'<RadioButtons Name="KadenzLangue">{"".join(radios)}</RadioButtons>'
-        + bouton("SuivantButton", "Suivant", -124, action='<ChangePageAction Page="Options" />')
-        + bouton("InstallCancelButton", "Annuler", -20, action="<CloseWindowAction />")
-        + "</Page>",
-        # Deuxième page : dossier, raccourcis, puis installation.
-        f'<Page Name="Options">{COTE}{titre("Bienvenue")}'
-        f'<Label X="{X}" Y="96" Width="-20" Height="40" FontId="3" DisablePrefix="yes">{textes("Intro")}</Label>'
-        f'<Label X="{X}" Y="150" Width="-20" Height="20" FontId="3" DisablePrefix="yes">{textes("Dossier")}</Label>'
-        f'<Editbox Name="InstallFolder" X="{X}" Y="174" Width="-124" Height="24" TabStop="yes" FontId="3" FileSystemAutoComplete="yes" />'
-        f'<Button Name="BrowseButton" X="-20" Y="173" Width="96" Height="26" TabStop="yes" FontId="3">'
+        # Étape 1 : choix de la langue ; Suivant seulement, actif une fois la
+        # langue choisie.
+        f'<Label X="{X}" Y="24" Width="-20" Height="40" FontId="1" DisablePrefix="yes"{L}>Kadenz</Label>'
+        f'<Label X="{X}" Y="76" Width="-20" Height="30" FontId="2" DisablePrefix="yes"{L}>{escape(PAGE_LANGUE_TITRE)}</Label>'
+        + boutons_radio(L)
+        + bouton("SuivantButton", "Suivant", -20, action='<ChangePageAction Page="Install" />',
+                 condition=f'{L.strip()} EnableCondition="KadenzLangue"')
+        # Étape 2 : dossier, raccourcis, installation, dans la langue choisie.
+        + f'<Label X="{X}" Y="24" Width="-20" Height="64" FontId="1" DisablePrefix="yes"{E}>{textes("Bienvenue")}</Label>'
+        f'<Label X="{X}" Y="96" Width="-20" Height="44" FontId="3" DisablePrefix="yes"{E}>{textes("Intro")}</Label>'
+        f'<Label X="{X}" Y="150" Width="-20" Height="20" FontId="3" DisablePrefix="yes"{E}>{textes("Dossier")}</Label>'
+        f'<Editbox Name="InstallFolder" X="{X}" Y="174" Width="-124" Height="24" TabStop="yes" FontId="3" FileSystemAutoComplete="yes"{E} />'
+        f'<Button Name="BrowseButton" X="-20" Y="173" Width="96" Height="26" TabStop="yes" FontId="3"{E}>'
         f'{textes("Parcourir")}<BrowseDirectoryAction VariableName="InstallFolder" /></Button>'
-        f'<Checkbox Name="RaccourciBureau" X="{X}" Y="220" Width="-20" Height="24" TabStop="yes" FontId="3">{textes("Bureau")}</Checkbox>'
-        f'<Checkbox Name="RaccourciMenu" X="{X}" Y="250" Width="-20" Height="24" TabStop="yes" FontId="3">{textes("Menu")}</Checkbox>'
-        f'<Label X="{X}" Y="292" Width="-20" Height="60" FontId="4" DisablePrefix="yes">{textes("Donnees")}</Label>'
-        + bouton("RetourButton", "Retour", -228, action='<ChangePageAction Page="Install" />')
-        + bouton("InstallButton", "Installer", -124)
-        + bouton("OptionsCancelButton", "Annuler", -20, action="<CloseWindowAction />")
+        f'<Checkbox Name="RaccourciBureau" X="{X}" Y="220" Width="-20" Height="24" TabStop="yes" FontId="3"{E}>{textes("Bureau")}</Checkbox>'
+        f'<Checkbox Name="RaccourciMenu" X="{X}" Y="250" Width="-20" Height="24" TabStop="yes" FontId="3"{E}>{textes("Menu")}</Checkbox>'
+        f'<Label X="{X}" Y="292" Width="-20" Height="60" FontId="4" DisablePrefix="yes"{E}>{textes("Donnees")}</Label>'
+        + bouton("PrecedentButton", "Precedent", -124, action='<ChangePageAction Page="Install" />', condition=E.strip())
+        + bouton("InstallButton", "Installer", -20, condition=E.strip())
         + "</Page>",
         f'<Page Name="Progress">{COTE}'
         f'<Label X="{X}" Y="24" Width="-20" Height="64" FontId="1" DisablePrefix="yes">{textes("EnCours")}'
@@ -331,6 +370,8 @@ def theme():
         + "</Label>"
         f'<Label Name="OverallProgressPackageText" X="{X}" Y="110" Width="-20" Height="20" FontId="3" DisablePrefix="yes">#(loc.OverallProgressPackageText)</Label>'
         f'<Progressbar Name="OverallCalculatedProgressbar" X="{X}" Y="136" Width="-20" Height="18" />'
+        # Détail : action de Windows Installer en cours.
+        f'<Label Name="ExecuteProgressActionDataText" X="{X}" Y="166" Width="-20" Height="60" FontId="4" DisablePrefix="yes" />'
         + bouton("ProgressCancelButton", "Annuler", -20)
         + "</Page>",
         f'<Page Name="Modify">{COTE}'
@@ -352,11 +393,18 @@ def theme():
             for c, _ in LANGUES
         )
         + "</Label>"
-        f'<Label X="{X}" Y="110" Width="-20" Height="60" FontId="4" DisablePrefix="yes">{textes("Donnees")}</Label>'
-        f'<Label X="{X}" Y="-60" Width="-20" Height="34" FontId="3" DisablePrefix="yes" VisibleCondition="WixStdBARestartRequired">{textes("RedemarrageRequis")}</Label>'
-        + bouton("LaunchButton", "Lancer", -124, largeur=140, condition='HideWhenDisabled="yes"')
+        # Identité de Kadenz, puis le dossier choisi.
+        f'<ImageControl X="{X}" Y="100" Width="64" Height="64" ImageFile="logo.png" />'
+        f'<Label X="{X + 80}" Y="102" Width="-20" Height="34" FontId="1" DisablePrefix="yes">Kadenz</Label>'
+        f'<Label X="{X + 80}" Y="138" Width="-20" Height="24" FontId="2" DisablePrefix="yes">{textes("Slogan")}</Label>'
+        f'<Label X="{X}" Y="190" Width="-20" Height="20" FontId="3" DisablePrefix="yes" VisibleCondition={quoteattr(PAS_DESINSTALLATION)}>{textes("InstalleDans")}</Label>'
+        f'<Label X="{X}" Y="212" Width="-20" Height="40" FontId="3" DisablePrefix="yes" VisibleCondition={quoteattr(PAS_DESINSTALLATION)}>[InstallFolder]</Label>'
+        f'<Label X="{X}" Y="262" Width="-20" Height="60" FontId="4" DisablePrefix="yes">{textes("Donnees")}</Label>'
+        f'<Label X="{X}" Y="-90" Width="-20" Height="34" FontId="3" DisablePrefix="yes" VisibleCondition="WixStdBARestartRequired">{textes("RedemarrageRequis")}</Label>'
+        # Case lue par l'extension au clic sur Terminer, qui lance alors Kadenz.
+        f'<Checkbox Name="LancerKadenz" X="{X}" Y="-58" Width="-20" Height="24" TabStop="yes" FontId="3" VisibleCondition={quoteattr(PAS_DESINSTALLATION)}>{textes("Lancer")}</Checkbox>'
         + bouton("SuccessRestartButton", "Redemarrer", -124, largeur=140, condition='HideWhenDisabled="yes"')
-        + bouton("SuccessCloseButton", "Fermer", -20, action="<CloseWindowAction />")
+        + bouton("TerminerButton", "Terminer", -20, action="<CloseWindowAction />")
         + "</Page>",
         f'<Page Name="Failure">{COTE}'
         f'<Label X="{X}" Y="24" Width="-20" Height="64" FontId="1" DisablePrefix="yes">{textes("Echec")}'
