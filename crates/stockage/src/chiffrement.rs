@@ -78,10 +78,10 @@ pub fn cle(fichier: &Path, creer: bool) -> Resultat<String> {
             fs::write(fichier, protegee)?;
             Ok(cle)
         }
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Err(Erreur::Validation(format!(
-            "clé de la base introuvable : {}",
-            fichier.display()
-        ))),
+        // Sans chemin : le message est affiché tel quel (et traduit) à l'écran.
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            Err(Erreur::Validation("clé de la base introuvable".into()))
+        }
         Err(e) => Err(e.into()),
     }
 }
