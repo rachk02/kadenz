@@ -1,6 +1,6 @@
 import { Bouton, Champ, MessageErreur, Rangee, Theme, Titre } from "composants.slint";
 
-// Écran de connexion : panneau de marque Kadenz à gauche (logo, motif Cadence),
+// Écran de connexion : panneau de marque Kadenz à gauche (logo, motif Quatre pièces),
 // formulaire à droite sous le nom de l'entreprise qui utilise l'installation.
 export component EcranConnexion inherits Rectangle {
     in property <string> nom-entreprise;
@@ -26,13 +26,13 @@ export component EcranConnexion inherits Rectangle {
         remplit: true;
         Rectangle {
             width: max(340px, min(460px, root.width * 0.4));
-            background: Theme.nuit;
+            background: Theme.accent;
             clip: true;
 
             Image {
                 width: parent.width;
                 height: parent.height;
-                source: @image-url("icones/motif-cadence.svg");
+                source: @image-url("icones/motif-quatre-pieces.svg");
                 image-fit: cover;
             }
 
@@ -50,32 +50,6 @@ export component EcranConnexion inherits Rectangle {
 
                 Rectangle { }
 
-                // Les trois temps de la marque, en Ambre pour le dernier.
-                VerticalLayout {
-                    spacing: 6px;
-                    // Décalage vers la fin de la ligne : vers la gauche en arabe.
-                    Rectangle {
-                        x: Theme.rtl ? parent.width - self.width : 0px;
-                        width: 56px;
-                        height: 4px;
-                        background: white;
-                    }
-
-                    Rectangle {
-                        x: Theme.rtl ? parent.width - self.width - 10px : 10px;
-                        width: 56px;
-                        height: 4px;
-                        background: white;
-                    }
-
-                    Rectangle {
-                        x: Theme.rtl ? parent.width - self.width - 20px : 20px;
-                        width: 56px;
-                        height: 4px;
-                        background: Theme.ambre;
-                    }
-                }
-
                 Text {
                     horizontal-alignment: Theme.debut;
                     text: @tr("Gestion commerciale");
@@ -89,7 +63,7 @@ export component EcranConnexion inherits Rectangle {
                 Text {
                     horizontal-alignment: Theme.debut;
                     text: @tr("Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements.");
-                    color: #c5cae0;
+                    color: #d6e0fa;
                     font-size: 14px;
                     wrap: word-wrap;
                 }
@@ -101,7 +75,7 @@ export component EcranConnexion inherits Rectangle {
                 Text {
                     horizontal-alignment: Theme.debut;
                     text: @tr("Version {}", root.version-logiciel);
-                    color: #9aa3c7;
+                    color: #c9d6f7;
                     font-size: 12px;
                 }
             }

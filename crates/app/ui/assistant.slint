@@ -101,14 +101,14 @@ export component EcranAssistant inherits Rectangle {
 
     Rangee {
         remplit: true;
-        // Bandeau de marque : logo Kadenz et étapes, sur le motif Cadence (docs/marque).
+        // Bandeau de marque : logo Kadenz et étapes, sur le motif Quatre pièces (docs/marque).
         Rectangle {
             width: 240px;
-            background: Theme.nuit;
+            background: Theme.accent;
             clip: true;
 
             Image {
-                source: @image-url("icones/motif-cadence.svg");
+                source: @image-url("icones/motif-quatre-pieces.svg");
                 width: parent.width;
                 height: parent.height;
                 image-fit: cover;
@@ -137,7 +137,7 @@ export component EcranAssistant inherits Rectangle {
                         width: 6px;
                         height: 6px;
                         cross-axis-self-alignment: CrossAxisAlignment.center;
-                        background: i == root.etape ? Theme.ambre : transparent;
+                        background: i == root.etape ? white : transparent;
                     }
 
                     Text {
@@ -145,7 +145,7 @@ export component EcranAssistant inherits Rectangle {
                         text: nom;
                         font-size: 13px;
                         font-weight: i == root.etape ? 600 : 400;
-                        color: i == root.etape ? white : #c5cae0;
+                        color: i == root.etape ? white : #d6e0fa;
                     }
                 }
             }

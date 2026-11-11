@@ -26,13 +26,11 @@ export global Theme {
     out property <TextHorizontalAlignment> fin: root.rtl ? TextHorizontalAlignment.left : TextHorizontalAlignment.right;
     out property <LayoutAlignment> rangee-debut: root.rtl ? LayoutAlignment.end : LayoutAlignment.start;
     out property <LayoutAlignment> rangee-fin: root.rtl ? LayoutAlignment.start : LayoutAlignment.end;
-    // Couleurs de la marque : Indigo (accent), Nuit pour les fonds sombres, Ambre en
-    // touche d'accent (jamais en texte sur blanc ; Ambre foncé pour cet usage).
-    out property <color> nuit: #1a2259;
-    out property <color> ambre: #e3a23b;
-    out property <color> ambre-fonce: #a8650f;
-    out property <color> accent: #2d3a8c;
-    out property <color> accent-survol: #e8eaf6;
+    // Couleurs de la marque (docs/marque, version Bleu) : Bleu vif (accent et bandeaux
+    // de marque), Nuit pour les bulles et alertes sombres.
+    out property <color> nuit: #1a1033;
+    out property <color> accent: #1f4fd8;
+    out property <color> accent-survol: #e8eefc;
     out property <color> texte: #1f2933;
     out property <color> texte-secondaire: #52606d;
     out property <color> erreur: #b42318;
@@ -257,8 +255,8 @@ export component Titre inherits Text {
     color: Theme.texte;
 }
 
-// Symbole de la marque (docs/marque) : tuile Indigo, jambe du K en trois temps.
-// Le K découpé sert à toutes les tailles, petites comprises (décision de l'utilisateur du 2026-11-11).
+// Symbole de la marque (docs/marque) : quatre pièces (carré, quart de disque, triangle,
+// disque) en blanc sur une tuile Bleu vif, dans la petite coupe aux jeux élargis.
 export component Symbole inherits Image {
     source: @image-url("icones/kadenz-icone.svg");
     image-rendering: smooth;
@@ -266,7 +264,7 @@ export component Symbole inherits Image {
 
 // Bouton aux couleurs de la marque, à la place du Button standard (dont l'accent suit
 // celui de Windows). Même interface : text, primary, enabled, clicked.
-// Principal : fond Indigo, texte blanc. Secondaire : fond blanc, bordure, texte Encre.
+// Principal : fond Bleu vif, texte blanc. Secondaire : fond blanc, bordure, texte Encre.
 // Clavier : Tab pour l'atteindre, Entrée ou Espace pour l'activer.
 export component Bouton inherits Rectangle {
     in property <string> text;
@@ -291,10 +289,10 @@ export component Bouton inherits Rectangle {
     border-radius: 4px;
     border-width: root.primary ? 0px : 1px;
     border-color: Theme.bordure;
-    background: !root.enabled ? (root.primary ? #9aa3c7 : Theme.fond-lateral)
+    background: !root.enabled ? (root.primary ? #9ab0ed : Theme.fond-lateral)
         : root.primary && root.danger ? (zone.pressed ? #7a150e : zone.has-hover ? #951c13 : Theme.erreur)
-        : root.primary ? (zone.pressed ? #1f2866 : zone.has-hover ? #25307a : Theme.accent)
-        : (zone.pressed ? #dfe2f1 : zone.has-hover ? Theme.accent-survol : white);
+        : root.primary ? (zone.pressed ? #163a9e : zone.has-hover ? #1a43b8 : Theme.accent)
+        : (zone.pressed ? #d3defa : zone.has-hover ? Theme.accent-survol : white);
     animate background { duration: Affichage.duree; }
 
     accessible-role: button;
@@ -481,7 +479,7 @@ export component MessageErreur inherits Text {
 }
 
 // Entrée du menu latéral : icône Kadenz (ui/icones/menu, traits droits) et libellé.
-// L'entrée active est sur fond Indigo, avec un repère Ambre à gauche.
+// L'entrée active est sur fond Bleu vif.
 export component ElementNavigation inherits Rectangle {
     in property <string> libelle;
     in property <image> icone;

@@ -25,7 +25,7 @@ use crate::{
 
 /// Couleurs des secteurs par mode de paiement, reprises dans l'ordre puis en boucle.
 const PALETTE: [u32; 8] = [
-    0x2d3a8c, 0xe3a23b, 0x067647, 0x2e90fa, 0x7a5af8, 0x0e9384, 0xc11574, 0x98a2b3,
+    0x1f4fd8, 0xe3a23b, 0x067647, 0x2e90fa, 0x7a5af8, 0x0e9384, 0xc11574, 0x98a2b3,
 ];
 
 fn couleur(rgb: u32) -> Color {

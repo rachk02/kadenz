@@ -451,18 +451,18 @@ component PageAPropos inherits VerticalLayout {
         }
     }
 
-    // Bandeau de marque : logo, motif Cadence, rôle du logiciel.
+    // Bandeau de marque : logo, motif Quatre pièces, rôle du logiciel.
     Rectangle {
         height: 168px;
         border-radius: 4px;
-        background: Theme.nuit;
+        background: Theme.accent;
         clip: true;
 
         Image {
             x: Theme.rtl ? 0 : parent.width - self.width;
             width: min(360px, parent.width / 2);
             height: parent.height;
-            source: @image-url("icones/motif-cadence.svg");
+            source: @image-url("icones/motif-quatre-pieces.svg");
             image-fit: cover;
         }
 
@@ -491,7 +491,7 @@ component PageAPropos inherits VerticalLayout {
             Text {
                 horizontal-alignment: Theme.debut;
                 text: @tr("Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements.");
-                color: #c5cae0;
+                color: #d6e0fa;
                 font-size: 13px;
                 wrap: word-wrap;
             }

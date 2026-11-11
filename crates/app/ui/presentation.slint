@@ -42,13 +42,13 @@ export component EcranPresentation inherits Rectangle {
         // Bandeau de marque, comme sur l'écran de connexion.
         Rectangle {
             width: max(300px, min(420px, root.width * 0.35));
-            background: Theme.nuit;
+            background: Theme.accent;
             clip: true;
 
             Image {
                 width: parent.width;
                 height: parent.height;
-                source: @image-url("icones/motif-cadence.svg");
+                source: @image-url("icones/motif-quatre-pieces.svg");
                 image-fit: cover;
             }
 
@@ -79,7 +79,7 @@ export component EcranPresentation inherits Rectangle {
                 Text {
                     horizontal-alignment: Theme.debut;
                     text: @tr("Version {}", root.version-logiciel);
-                    color: #9aa3c7;
+                    color: #c9d6f7;
                     font-size: 12px;
                 }
             }
@@ -91,7 +91,7 @@ export component EcranPresentation inherits Rectangle {
 
             Rectangle { }
 
-            // Étapes : la page en cours en Ambre.
+            // Étapes : la page en cours en Bleu vif.
             Rangee {
                 alignment: start;
                 spacing: 8px;
@@ -99,7 +99,7 @@ export component EcranPresentation inherits Rectangle {
                 for i in root.nombre: Rectangle {
                     width: 40px;
                     height: 4px;
-                    background: i == root.page ? Theme.ambre : #d5d9e6;
+                    background: i == root.page ? Theme.accent : Theme.bordure;
                 }
             }
 
