@@ -108,11 +108,105 @@ export struct Retour {
 // Message de résultat, vert en cas de succès, rouge sinon.
 export component MessageRetour inherits Text {
     in property <Retour> retour;
-    text: root.retour.message;
+    // Vrai : un succès part en alerte brève (Alerte) ; seules les erreurs restent ici.
+    in property <bool> erreurs-seules: false;
+    property <bool> montre: root.retour.message != "" && !(root.erreurs-seules && root.retour.ok);
+    text: root.montre ? root.retour.message : "";
     color: root.retour.ok ? Theme.succes : Theme.erreur;
     horizontal-alignment: Theme.debut;
     wrap: word-wrap;
-    visible: root.retour.message != "";
+    visible: root.montre;
+    height: root.montre ? self.preferred-height : 0px;
+}
+
+// Alerte brève (révision 2.34) : message de réussite affiché quelques secondes en
+// bas de la fenêtre ; une nouvelle alerte remplace la précédente.
+export global Alerte {
+    in-out property <string> texte;
+    in-out property <bool> visible;
+    in-out property <int> numero;
+
+    public function montrer(texte: string) {
+        root.texte = texte;
+        root.visible = true;
+        root.numero += 1;
+    }
+
+    // Retour d'une action : alerte s'il est réussi et porte un message.
+    public function retour(r: Retour) {
+        if (r.ok && r.message != "") {
+            root.montrer(r.message);
+        }
+    }
+}
+
+export component FenetreAlerte inherits Rectangle {
+    in property <length> largeur-fenetre;
+    in property <length> hauteur-fenetre;
+
+    width: min(ligne.preferred-width, root.largeur-fenetre - 48px);
+    height: 40px;
+    x: (root.largeur-fenetre - self.width) / 2;
+    y: root.hauteur-fenetre - self.height - 24px + (Alerte.visible ? 0px : 12px);
+    animate y { duration: Affichage.duree-longue; easing: ease-out; }
+    opacity: Alerte.visible ? 1 : 0;
+    animate opacity { duration: Affichage.duree; }
+    visible: self.opacity > 0;
+    background: Theme.nuit;
+    border-radius: 4px;
+    drop-shadow-blur: 16px;
+    drop-shadow-offset-y: 6px;
+    drop-shadow-color: #0f172a40;
+
+    accessible-role: text;
+    accessible-label: Alerte.texte;
+
+    // Un clic referme l'alerte.
+    TouchArea {
+        clicked => {
+            Alerte.visible = false;
+        }
+    }
+
+    // Carré vert au début du sens de lecture (la Rangee s'inverse de droite à gauche).
+    ligne := Rangee {
+        padding-left: 16px;
+        padding-right: 16px;
+        spacing: 10px;
+        alignment: center;
+
+        VerticalLayout {
+            alignment: center;
+
+            Rectangle {
+                width: 8px;
+                height: 8px;
+                background: #3ccb7f;
+            }
+        }
+
+        Text {
+            text: Alerte.texte;
+            color: white;
+            font-size: 13px;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+    }
+
+    // Trois secondes d'affichage ; une nouvelle alerte relance le compte.
+    minuteur := Timer {
+        interval: 3s;
+        running: Alerte.visible;
+        triggered => {
+            Alerte.visible = false;
+        }
+    }
+
+    property <int> numero: Alerte.numero;
+    changed numero => {
+        minuteur.restart();
+    }
 }
 
 // Droits du compte connecté, recalculés à chaque connexion depuis la matrice.

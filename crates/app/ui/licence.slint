@@ -3,7 +3,7 @@
 // valide, seul le socle est disponible (référentiels, administration, factures et
 // avoirs) ; les données des modules sont gardées.
 import { LineEdit, ScrollView, TextEdit } from "std-widgets.slint";
-import { Bouton, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct ModuleUi {
     libelle: string,
@@ -173,6 +173,7 @@ export component PageLicence inherits ScrollView {
                 primary: true;
                 clicked => {
                     root.retour = LicenceApi.enregistrer(root.cle);
+                    Alerte.retour(root.retour);
                     if (root.retour.ok) {
                         root.cle = "";
                     }
@@ -181,6 +182,7 @@ export component PageLicence inherits ScrollView {
         }
 
         MessageRetour {
+            erreurs-seules: true;
             retour: root.retour;
         }
     }

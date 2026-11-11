@@ -2,7 +2,7 @@
 // (cahier des charges, sections 5.1 et 5.4).
 
 import { ComboBox, ScrollView, TextEdit } from "std-widgets.slint";
-import { Bouton, Champ, Confirmation, MessageRetour, Modules, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Champ, Confirmation, MessageRetour, Modules, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct FicheEntrepriseUi {
     nom: string,
@@ -151,6 +151,7 @@ component CadreLogo inherits VerticalLayout {
     }
 
     if root.retour.message != "": MessageRetour {
+        erreurs-seules: true;
         retour: root.retour;
     }
 }
@@ -169,8 +170,10 @@ export component PageEntreprise inherits ScrollView {
             if (Confirmation.accepte) {
                 if (self.logo-a-retirer == 0) {
                     root.retour-logo-principal = EntrepriseApi.retirer-logo(0);
+                    Alerte.retour(root.retour-logo-principal);
                 } else {
                     root.retour-logo-secondaire = EntrepriseApi.retirer-logo(1);
+                    Alerte.retour(root.retour-logo-secondaire);
                 }
             }
             self.logo-a-retirer = -1;
@@ -323,6 +326,7 @@ export component PageEntreprise inherits ScrollView {
                             primary: true;
                             clicked => {
                                 root.retour = EntrepriseApi.enregistrer(root.saisie());
+                                Alerte.retour(root.retour);
                             }
                         }
                     }
@@ -331,6 +335,7 @@ export component PageEntreprise inherits ScrollView {
                 // Sous le bouton : un texte à la ligne dans une Rangee ferait boucler la mise en page.
                 Row {
                     MessageRetour {
+                        erreurs-seules: true;
                         colspan: 2;
                         retour: root.retour;
                     }
@@ -363,6 +368,7 @@ export component PageEntreprise inherits ScrollView {
                     retour: root.retour-logo-principal;
                     choisir => {
                         root.retour-logo-principal = EntrepriseApi.choisir-logo(0);
+                        Alerte.retour(root.retour-logo-principal);
                     }
                     retirer => {
                         root.demander-retrait(0);
@@ -376,6 +382,7 @@ export component PageEntreprise inherits ScrollView {
                     retour: root.retour-logo-secondaire;
                     choisir => {
                         root.retour-logo-secondaire = EntrepriseApi.choisir-logo(1);
+                        Alerte.retour(root.retour-logo-secondaire);
                     }
                     retirer => {
                         root.demander-retrait(1);
@@ -878,6 +885,7 @@ export component PageParametres inherits ScrollView {
                                     signataire: signataire-relance.valeur,
                                 },
                             });
+                            Alerte.retour(root.retour);
                             if (root.retour.ok) {
                                 root.charger(ParametresApi.ouvrir());
                             }
@@ -891,6 +899,7 @@ export component PageParametres inherits ScrollView {
                 }
 
                 MessageRetour {
+                    erreurs-seules: true;
                     retour: root.retour;
                 }
             }

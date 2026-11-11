@@ -2,7 +2,7 @@
 // (cahier des charges, sections 10.1 et 10.2).
 
 import { CheckBox, ComboBox, ScrollView, StandardTableView, TabWidget } from "std-widgets.slint";
-import { Bouton, Champ, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Champ, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct CompteUi {
     nom: string,
@@ -154,6 +154,7 @@ component OngletComptes inherits ScrollView {
                     enabled: role.current-index != root.compte.role;
                     clicked => {
                         root.retour = UtilisateursApi.changer-role(role.current-index);
+                        Alerte.retour(root.retour);
                         root.charger(UtilisateursApi.compte-courant());
                     }
                 }
@@ -162,6 +163,7 @@ component OngletComptes inherits ScrollView {
                     text: root.compte.actif ? @tr("Désactiver") : @tr("Réactiver");
                     clicked => {
                         root.retour = UtilisateursApi.basculer-actif();
+                        Alerte.retour(root.retour);
                         root.charger(UtilisateursApi.compte-courant());
                     }
                 }
@@ -199,8 +201,10 @@ component OngletComptes inherits ScrollView {
                     clicked => {
                         if (root.compte.existe) {
                             root.retour = UtilisateursApi.reinitialiser(mot-de-passe.valeur, confirmation.valeur);
+                            Alerte.retour(root.retour);
                         } else {
                             root.retour = UtilisateursApi.creer(nom.valeur, identifiant.valeur, role.current-index, mot-de-passe.valeur, confirmation.valeur);
+                            Alerte.retour(root.retour);
                         }
                         if (root.retour.ok) {
                             root.charger(UtilisateursApi.compte-courant());
@@ -210,6 +214,7 @@ component OngletComptes inherits ScrollView {
             }
 
             MessageRetour {
+                erreurs-seules: true;
                 retour: root.retour;
             }
 
@@ -301,6 +306,7 @@ component OngletDroits inherits ScrollView {
                 primary: true;
                 clicked => {
                     root.retour = UtilisateursApi.enregistrer-matrice();
+                    Alerte.retour(root.retour);
                 }
             }
 
@@ -316,6 +322,7 @@ component OngletDroits inherits ScrollView {
         // Sous les boutons et non dans leur rangée : un texte à la ligne dans une
         // Rangee (FlexboxLayout) ferait boucler le calcul de largeur de la page défilante.
         MessageRetour {
+            erreurs-seules: true;
             retour: root.retour;
         }
     }

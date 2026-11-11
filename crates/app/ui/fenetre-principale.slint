@@ -1,6 +1,6 @@
 // Fenêtre principale : écrans de démarrage, puis application avec sa navigation
 // (bandeau ou barre latérale, navigation.slint) et ses pages.
-import { Affichage, Confirmation, Droits, FenetreConfirmation, MessageErreur, Modules, Rangee, Theme, Titre } from "composants.slint";
+import { Affichage, Confirmation, Droits, FenetreAlerte, FenetreConfirmation, MessageErreur, Modules, Rangee, Theme, Titre } from "composants.slint";
 import { EcranAssistant, DonneesAssistant } from "assistant.slint";
 import { EcranConnexion } from "connexion.slint";
 import { EcranPresentation } from "presentation.slint";
@@ -320,6 +320,12 @@ export component FenetrePrincipale inherits Window {
 
     InfobulleFenetre {
         largeur-fenetre: root.width;
+    }
+
+    // Alerte brève de réussite, en bas de la fenêtre.
+    FenetreAlerte {
+        largeur-fenetre: root.width;
+        hauteur-fenetre: root.height;
     }
 
     // Demande de confirmation commune, au-dessus de tout.

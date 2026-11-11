@@ -2,7 +2,7 @@
 // liste de rubriques, chacune ouvrant sa page. La liste ne montre que les rubriques
 // que les droits du compte et la licence ouvrent (construite par l'application).
 import { CheckBox, ComboBox, ScrollView } from "std-widgets.slint";
-import { Affichage, Bouton, Champ, Confirmation, ElementNavigation, MessageErreur, Section, Theme, Titre } from "composants.slint";
+import { Affichage, Alerte, Bouton, Champ, Confirmation, ElementNavigation, MessageErreur, Section, Theme, Titre } from "composants.slint";
 import { PageEntreprise, PageParametres } from "administration.slint";
 import { PageUtilisateurs } from "utilisateurs.slint";
 import { PageImpression } from "impression.slint";
@@ -87,7 +87,6 @@ component PageMonCompte inherits VerticalLayout {
     property <string> nouveau;
     property <string> confirmation;
     property <string> erreur;
-    property <bool> reussi;
 
     padding: 24px;
     spacing: 12px;
@@ -158,12 +157,6 @@ component PageMonCompte inherits VerticalLayout {
                 text: root.erreur;
             }
 
-            if root.reussi: Text {
-                horizontal-alignment: Theme.debut;
-                text: @tr("Mot de passe modifié.");
-                color: Theme.succes;
-            }
-
             HorizontalLayout {
                 alignment: Theme.rangee-debut;
 
@@ -172,11 +165,11 @@ component PageMonCompte inherits VerticalLayout {
                     primary: true;
                     clicked => {
                         root.erreur = root.changer-mot-de-passe(root.ancien, root.nouveau, root.confirmation);
-                        root.reussi = root.erreur == "";
-                        if (root.reussi) {
+                        if (root.erreur == "") {
                             root.ancien = "";
                             root.nouveau = "";
                             root.confirmation = "";
+                            Alerte.montrer(@tr("Mot de passe modifié."));
                         }
                     }
                 }

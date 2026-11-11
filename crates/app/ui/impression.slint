@@ -2,7 +2,7 @@
 // page en contenu libre avec variables de l'entreprise, aperçu en direct sur une
 // facture d'exemple, feuille de calibrage. Au droit « Gérer les paramètres ».
 import { CheckBox, ComboBox, ScrollView, TextEdit } from "std-widgets.slint";
-import { Bouton, Champ, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Champ, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct MiseEnPageUi {
     gabarit: int,
@@ -582,6 +582,7 @@ export component PageImpression inherits Rectangle {
                         clicked => {
                             root.bas[root.rang-type] = root.bas-saisi();
                             root.retour = ImpressionApi.enregistrer(root.saisie(), root.bas);
+                            Alerte.retour(root.retour);
                         }
                     }
 
@@ -598,11 +599,13 @@ export component PageImpression inherits Rectangle {
                         text: @tr("Tester l'impression");
                         clicked => {
                             root.retour = ImpressionApi.tester(root.saisie());
+                            Alerte.retour(root.retour);
                         }
                     }
                 }
 
                 MessageRetour {
+                    erreurs-seules: true;
                     retour: root.retour;
                 }
 
