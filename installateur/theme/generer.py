@@ -93,15 +93,6 @@ TEXTES = {
         "tr": "Kadenz'i Başlat menüsüne ekle",
         "es": "Añadir Kadenz al menú Inicio",
     },
-    "Donnees": {
-        "fr": "Les données de l'entreprise sont enregistrées dans le profil de chaque compte Windows ; une désinstallation ne les supprime pas.",
-        "en": "Company data is stored in each Windows account's profile; uninstalling does not delete it.",
-        "ar": "تُحفظ بيانات الشركة في ملف تعريف كل حساب Windows، ولا تؤدي إزالة التثبيت إلى حذفها.",
-        "ja": "会社のデータは各 Windows アカウントのプロファイルに保存され、アンインストールしても削除されません。",
-        "zh": "公司数据保存在每个 Windows 帐户的个人资料中，卸载不会删除这些数据。",
-        "tr": "Şirket verileri her Windows hesabının profilinde saklanır; kaldırma işlemi bunları silmez.",
-        "es": "Los datos de la empresa se guardan en el perfil de cada cuenta de Windows; la desinstalación no los elimina.",
-    },
     "Precedent": {"fr": "Précédent", "en": "Back", "ar": "السابق", "ja": "戻る", "zh": "上一步", "tr": "Önceki", "es": "Anterior"},
     "Suivant": {"fr": "Suivant", "en": "Next", "ar": "التالي", "ja": "次へ", "zh": "下一步", "tr": "Sonraki", "es": "Siguiente"},
     "Installer": {"fr": "Installer", "en": "Install", "ar": "تثبيت", "ja": "インストール", "zh": "安装", "tr": "Yükle", "es": "Instalar"},
@@ -326,6 +317,20 @@ ETAPE_LANGUE = ' VisibleCondition="KadenzEtape = 1"'
 ETAPE_DOSSIER = ' VisibleCondition="KadenzEtape = 2"'
 # WixBundleAction : 3 et 4 désinstallation, 8 réparation (BOOTSTRAPPER_ACTION).
 PAS_DESINSTALLATION = 'NOT (WixBundleAction = 3 OR WixBundleAction = 4)'
+DESINSTALLATION = "WixBundleAction = 3 OR WixBundleAction = 4"
+REPARATION = "WixBundleAction = 8"
+
+
+def selon_action(condition, nom):
+    """Textes d'un titre pour une action (désinstallation, réparation), placés
+    après ses textes d'installation : le français pour l'action seule, puis
+    chaque langue (la dernière condition vraie l'emporte)."""
+    lignes = [f"<Text Condition={quoteattr(condition)}>#(loc.{cle(nom, 'fr')})</Text>"]
+    for code, _ in LANGUES:
+        lignes.append(
+            f"<Text Condition={quoteattr(f'({condition}) AND KadenzLangue = \"{code}\"')}>#(loc.{cle(nom, code)})</Text>"
+        )
+    return "".join(lignes)
 
 
 def theme():
@@ -353,20 +358,13 @@ def theme():
         f'{textes("Parcourir")}<BrowseDirectoryAction VariableName="InstallFolder" /></Button>'
         f'<Checkbox Name="RaccourciBureau" X="{X}" Y="220" Width="-20" Height="24" TabStop="yes" FontId="3"{E}>{textes("Bureau")}</Checkbox>'
         f'<Checkbox Name="RaccourciMenu" X="{X}" Y="250" Width="-20" Height="24" TabStop="yes" FontId="3"{E}>{textes("Menu")}</Checkbox>'
-        f'<Label X="{X}" Y="292" Width="-20" Height="60" FontId="4" DisablePrefix="yes"{E}>{textes("Donnees")}</Label>'
         + bouton("PrecedentButton", "Precedent", -124, action='<ChangePageAction Page="Install" />', condition=E.strip())
         + bouton("InstallButton", "Installer", -20, condition=E.strip())
         + "</Page>",
         f'<Page Name="Progress">{COTE}'
         f'<Label X="{X}" Y="24" Width="-20" Height="64" FontId="1" DisablePrefix="yes">{textes("EnCours")}'
-        + "".join(
-            f'<Text Condition={quoteattr(f"(WixBundleAction = 3 OR WixBundleAction = 4) AND KadenzLangue = {chr(34)}{c}{chr(34)}")}>#(loc.{cle("DesinstallationEnCours", c)})</Text>'
-            for c, _ in LANGUES
-        )
-        + "".join(
-            f'<Text Condition={quoteattr(f"WixBundleAction = 8 AND KadenzLangue = {chr(34)}{c}{chr(34)}")}>#(loc.{cle("ReparationEnCours", c)})</Text>'
-            for c, _ in LANGUES
-        )
+        + selon_action(DESINSTALLATION, "DesinstallationEnCours")
+        + selon_action(REPARATION, "ReparationEnCours")
         + "</Label>"
         f'<Label Name="OverallProgressPackageText" X="{X}" Y="110" Width="-20" Height="20" FontId="3" DisablePrefix="yes">#(loc.OverallProgressPackageText)</Label>'
         f'<Progressbar Name="OverallCalculatedProgressbar" X="{X}" Y="136" Width="-20" Height="18" />'
@@ -377,21 +375,14 @@ def theme():
         f'<Page Name="Modify">{COTE}'
         f'<Label X="{X}" Y="24" Width="-20" Height="40" FontId="1" DisablePrefix="yes">Kadenz</Label>'
         f'<Label X="{X}" Y="76" Width="-20" Height="30" FontId="2" DisablePrefix="yes">{textes("Maintenance")}</Label>'
-        f'<Label X="{X}" Y="120" Width="-20" Height="60" FontId="4" DisablePrefix="yes">{textes("Donnees")}</Label>'
         + bouton("RepairButton", "Reparer", -228, condition='HideWhenDisabled="yes"')
         + bouton("UninstallButton", "Desinstaller", -124)
         + bouton("ModifyCancelButton", "Annuler", -20, action="<CloseWindowAction />")
         + "</Page>",
         f'<Page Name="Success">{COTE}'
         f'<Label X="{X}" Y="24" Width="-20" Height="64" FontId="1" DisablePrefix="yes">{textes("Installe")}'
-        + "".join(
-            f'<Text Condition={quoteattr(f"(WixBundleAction = 3 OR WixBundleAction = 4) AND KadenzLangue = {chr(34)}{c}{chr(34)}")}>#(loc.{cle("Desinstalle", c)})</Text>'
-            for c, _ in LANGUES
-        )
-        + "".join(
-            f'<Text Condition={quoteattr(f"WixBundleAction = 8 AND KadenzLangue = {chr(34)}{c}{chr(34)}")}>#(loc.{cle("Repare", c)})</Text>'
-            for c, _ in LANGUES
-        )
+        + selon_action(DESINSTALLATION, "Desinstalle")
+        + selon_action(REPARATION, "Repare")
         + "</Label>"
         # Identité de Kadenz, puis le dossier choisi.
         f'<ImageControl X="{X}" Y="100" Width="64" Height="64" ImageFile="logo.png" />'
@@ -399,7 +390,6 @@ def theme():
         f'<Label X="{X + 80}" Y="138" Width="-20" Height="24" FontId="2" DisablePrefix="yes">{textes("Slogan")}</Label>'
         f'<Label X="{X}" Y="190" Width="-20" Height="20" FontId="3" DisablePrefix="yes" VisibleCondition={quoteattr(PAS_DESINSTALLATION)}>{textes("InstalleDans")}</Label>'
         f'<Label X="{X}" Y="212" Width="-20" Height="40" FontId="3" DisablePrefix="yes" VisibleCondition={quoteattr(PAS_DESINSTALLATION)}>[InstallFolder]</Label>'
-        f'<Label X="{X}" Y="262" Width="-20" Height="60" FontId="4" DisablePrefix="yes">{textes("Donnees")}</Label>'
         f'<Label X="{X}" Y="-90" Width="-20" Height="34" FontId="3" DisablePrefix="yes" VisibleCondition="WixStdBARestartRequired">{textes("RedemarrageRequis")}</Label>'
         # Case lue par l'extension au clic sur Terminer, qui lance alors Kadenz.
         f'<Checkbox Name="LancerKadenz" X="{X}" Y="-58" Width="-20" Height="24" TabStop="yes" FontId="3" VisibleCondition={quoteattr(PAS_DESINSTALLATION)}>{textes("Lancer")}</Checkbox>'
@@ -408,10 +398,7 @@ def theme():
         + "</Page>",
         f'<Page Name="Failure">{COTE}'
         f'<Label X="{X}" Y="24" Width="-20" Height="64" FontId="1" DisablePrefix="yes">{textes("Echec")}'
-        + "".join(
-            f'<Text Condition={quoteattr(f"(WixBundleAction = 3 OR WixBundleAction = 4) AND KadenzLangue = {chr(34)}{c}{chr(34)}")}>#(loc.{cle("EchecDesinstallation", c)})</Text>'
-            for c, _ in LANGUES
-        )
+        + selon_action(DESINSTALLATION, "EchecDesinstallation")
         + "</Label>"
         f'<Hypertext Name="FailureLogFileLink" X="{X}" Y="110" Width="-20" Height="40" FontId="3" TabStop="yes" HideWhenDisabled="yes">{textes("Journal")}</Hypertext>'
         f'<Hypertext Name="FailureMessageText" X="{X}" Y="160" Width="-20" Height="120" FontId="3" TabStop="yes" HideWhenDisabled="yes" />'
