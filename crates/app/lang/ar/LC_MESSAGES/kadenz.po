@@ -576,9 +576,6 @@ msgstr "اسم المستخدم إلزامي ولا يحتوي على مسافا
 msgid "l'installation initiale a déjà été faite"
 msgstr "تم التثبيت الأولي من قبل"
 
-msgid "La base de données ({}) n'a pas pu être ouverte : {}"
-msgstr "تعذّر فتح قاعدة البيانات ({}): {}"
-
 msgid "la fiche entreprise n'existe pas encore"
 msgstr "بطاقة الشركة غير موجودة بعد"
 
@@ -2705,3 +2702,27 @@ msgstr "هل تريد إزالة هذا الشعار؟"
 
 msgid "Se déconnecter de Kadenz ?"
 msgstr "هل تريد تسجيل الخروج من Kadenz؟"
+
+msgid "La base de données n'a pas pu être ouverte : {}"
+msgstr "تعذّر فتح قاعدة البيانات: {}"
+
+msgid "clé de la base introuvable"
+msgstr "مفتاح قاعدة البيانات غير موجود"
+
+msgid "clé de la base illisible : elle a été créée sur un autre poste ou un autre compte Windows"
+msgstr "تعذّرت قراءة مفتاح قاعدة البيانات: أُنشئ على جهاز آخر أو في حساب Windows آخر"
+
+msgid "clé de la base endommagée"
+msgstr "مفتاح قاعدة البيانات تالف"
+
+msgid "la base ne s'ouvre pas avec sa clé : clé ou fichier de la base endommagé"
+msgstr "لا تُفتح قاعدة البيانات بمفتاحها: المفتاح أو ملف قاعدة البيانات تالف"
+
+msgid "protection de la clé par Windows impossible"
+msgstr "تعذّر على Windows حماية المفتاح"
+
+msgid "mot de passe de la sauvegarde incorrect"
+msgstr "كلمة مرور النسخة الاحتياطية غير صحيحة"
+
+msgid "le mot de passe de la sauvegarde doit compter au moins {} caractères"
+msgstr "يجب أن تتكوّن كلمة مرور النسخة الاحتياطية من {} أحرف على الأقل"

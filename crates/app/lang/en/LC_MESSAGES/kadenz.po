@@ -576,9 +576,6 @@ msgstr "the username is required and contains no spaces"
 msgid "l'installation initiale a déjà été faite"
 msgstr "the initial installation has already been done"
 
-msgid "La base de données ({}) n'a pas pu être ouverte : {}"
-msgstr "The database ({}) could not be opened: {}"
-
 msgid "la fiche entreprise n'existe pas encore"
 msgstr "the company record does not exist yet"
 
@@ -2705,3 +2702,27 @@ msgstr "Remove this logo?"
 
 msgid "Se déconnecter de Kadenz ?"
 msgstr "Sign out of Kadenz?"
+
+msgid "La base de données n'a pas pu être ouverte : {}"
+msgstr "The database could not be opened: {}"
+
+msgid "clé de la base introuvable"
+msgstr "database key not found"
+
+msgid "clé de la base illisible : elle a été créée sur un autre poste ou un autre compte Windows"
+msgstr "database key unreadable: it was created on another computer or another Windows account"
+
+msgid "clé de la base endommagée"
+msgstr "database key damaged"
+
+msgid "la base ne s'ouvre pas avec sa clé : clé ou fichier de la base endommagé"
+msgstr "the database does not open with its key: the key or the database file is damaged"
+
+msgid "protection de la clé par Windows impossible"
+msgstr "Windows could not protect the key"
+
+msgid "mot de passe de la sauvegarde incorrect"
+msgstr "incorrect backup password"
+
+msgid "le mot de passe de la sauvegarde doit compter au moins {} caractères"
+msgstr "the backup password must contain at least {} characters"

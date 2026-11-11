@@ -576,9 +576,6 @@ msgstr "ユーザー ID は必須で、空白を含められません。"
 msgid "l'installation initiale a déjà été faite"
 msgstr "初回セットアップはすでに完了しています。"
 
-msgid "La base de données ({}) n'a pas pu être ouverte : {}"
-msgstr "データベース（{}）を開けませんでした：{}"
-
 msgid "la fiche entreprise n'existe pas encore"
 msgstr "会社情報がまだ登録されていません。"
 
@@ -2705,3 +2702,27 @@ msgstr "このロゴを削除しますか?"
 
 msgid "Se déconnecter de Kadenz ?"
 msgstr "Kadenz からログアウトしますか?"
+
+msgid "La base de données n'a pas pu être ouverte : {}"
+msgstr "データベースを開けませんでした：{}"
+
+msgid "clé de la base introuvable"
+msgstr "データベースのキーが見つかりません"
+
+msgid "clé de la base illisible : elle a été créée sur un autre poste ou un autre compte Windows"
+msgstr "データベースのキーを読み取れません：別のコンピューターまたは別の Windows アカウントで作成されています"
+
+msgid "clé de la base endommagée"
+msgstr "データベースのキーが破損しています"
+
+msgid "la base ne s'ouvre pas avec sa clé : clé ou fichier de la base endommagé"
+msgstr "データベースがキーで開けません：キーまたはデータベース ファイルが破損しています"
+
+msgid "protection de la clé par Windows impossible"
+msgstr "Windows でキーを保護できませんでした"
+
+msgid "mot de passe de la sauvegarde incorrect"
+msgstr "バックアップのパスワードが正しくありません"
+
+msgid "le mot de passe de la sauvegarde doit compter au moins {} caractères"
+msgstr "バックアップのパスワードは {} 文字以上にしてください"

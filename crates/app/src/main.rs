@@ -513,10 +513,15 @@ fn main() -> Result<(), slint::PlatformError> {
             brancher(&fenetre, etat);
         }
         Err(erreur) => {
+            // L'emplacement des données ne s'affiche pas : il va dans erreurs.log.
+            consigner_erreur(&format!(
+                "Ouverture de la base {} impossible : {erreur}",
+                chemin.display()
+            ));
             fenetre.set_message_demarrage(
                 traduction::trf(
-                    "La base de données ({}) n'a pas pu être ouverte : {}",
-                    &[&chemin.display(), &traduction::tr(&erreur.to_string())],
+                    "La base de données n'a pas pu être ouverte : {}",
+                    &[&referentiels::texte_erreur_ref(&erreur)],
                 )
                 .into(),
             );

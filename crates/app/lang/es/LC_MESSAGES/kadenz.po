@@ -576,9 +576,6 @@ msgstr "el identificador es obligatorio y no contiene espacios"
 msgid "l'installation initiale a déjà été faite"
 msgstr "la instalación inicial ya se ha realizado"
 
-msgid "La base de données ({}) n'a pas pu être ouverte : {}"
-msgstr "No se pudo abrir la base de datos ({}): {}"
-
 msgid "la fiche entreprise n'existe pas encore"
 msgstr "la ficha de empresa aún no existe"
 
@@ -2705,3 +2702,27 @@ msgstr "¿Quitar este logotipo?"
 
 msgid "Se déconnecter de Kadenz ?"
 msgstr "¿Cerrar sesión en Kadenz?"
+
+msgid "La base de données n'a pas pu être ouverte : {}"
+msgstr "No se pudo abrir la base de datos: {}"
+
+msgid "clé de la base introuvable"
+msgstr "no se encuentra la clave de la base de datos"
+
+msgid "clé de la base illisible : elle a été créée sur un autre poste ou un autre compte Windows"
+msgstr "clave de la base de datos ilegible: se creó en otro equipo o en otra cuenta de Windows"
+
+msgid "clé de la base endommagée"
+msgstr "clave de la base de datos dañada"
+
+msgid "la base ne s'ouvre pas avec sa clé : clé ou fichier de la base endommagé"
+msgstr "la base de datos no se abre con su clave: la clave o el archivo de la base de datos está dañado"
+
+msgid "protection de la clé par Windows impossible"
+msgstr "Windows no pudo proteger la clave"
+
+msgid "mot de passe de la sauvegarde incorrect"
+msgstr "contraseña de la copia de seguridad incorrecta"
+
+msgid "le mot de passe de la sauvegarde doit compter au moins {} caractères"
+msgstr "la contraseña de la copia de seguridad debe tener al menos {} caracteres"

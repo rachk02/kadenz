@@ -264,6 +264,7 @@ export component Bouton inherits Rectangle {
     in property <bool> danger: false;
     in property <bool> enabled: true;
     callback clicked();
+    out property <bool> a-le-focus: clavier.has-focus;
 
     // Donne le focus clavier au bouton (fenêtre de confirmation).
     public function focaliser() {
@@ -396,6 +397,16 @@ export component FenetreConfirmation inherits Rectangle {
         key-pressed(e) => {
             if (e.text == Key.Escape) {
                 Confirmation.repondre(false);
+                return accept;
+            }
+            // Tab reste dans la fenêtre : il passe d'un bouton à l'autre et
+            // n'atteint jamais l'écran recouvert.
+            if (e.text == Key.Tab || e.text == Key.Backtab) {
+                if (revenir.a-le-focus) {
+                    confirmer.focaliser();
+                } else {
+                    revenir.focaliser();
+                }
                 return accept;
             }
             return reject;

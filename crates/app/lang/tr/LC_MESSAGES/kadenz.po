@@ -576,9 +576,6 @@ msgstr "kullanıcı adı zorunludur ve boşluk içermez"
 msgid "l'installation initiale a déjà été faite"
 msgstr "ilk kurulum zaten yapıldı"
 
-msgid "La base de données ({}) n'a pas pu être ouverte : {}"
-msgstr "Veritabanı ({}) açılamadı: {}"
-
 msgid "la fiche entreprise n'existe pas encore"
 msgstr "şirket kartı henüz mevcut değil"
 
@@ -2705,3 +2702,27 @@ msgstr "Bu logo kaldırılsın mı?"
 
 msgid "Se déconnecter de Kadenz ?"
 msgstr "Kadenz'den çıkış yapılsın mı?"
+
+msgid "La base de données n'a pas pu être ouverte : {}"
+msgstr "Veritabanı açılamadı: {}"
+
+msgid "clé de la base introuvable"
+msgstr "veritabanı anahtarı bulunamadı"
+
+msgid "clé de la base illisible : elle a été créée sur un autre poste ou un autre compte Windows"
+msgstr "veritabanı anahtarı okunamıyor: başka bir bilgisayarda veya başka bir Windows hesabında oluşturulmuş"
+
+msgid "clé de la base endommagée"
+msgstr "veritabanı anahtarı bozuk"
+
+msgid "la base ne s'ouvre pas avec sa clé : clé ou fichier de la base endommagé"
+msgstr "veritabanı kendi anahtarıyla açılmıyor: anahtar veya veritabanı dosyası bozuk"
+
+msgid "protection de la clé par Windows impossible"
+msgstr "anahtar Windows tarafından korunamadı"
+
+msgid "mot de passe de la sauvegarde incorrect"
+msgstr "yedekleme parolası yanlış"
+
+msgid "le mot de passe de la sauvegarde doit compter au moins {} caractères"
+msgstr "yedekleme parolası en az {} karakter içermelidir"

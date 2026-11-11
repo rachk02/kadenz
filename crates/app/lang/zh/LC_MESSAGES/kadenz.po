@@ -576,9 +576,6 @@ msgstr "用户名为必填项，且不能包含空格。"
 msgid "l'installation initiale a déjà été faite"
 msgstr "初始安装已完成。"
 
-msgid "La base de données ({}) n'a pas pu être ouverte : {}"
-msgstr "无法打开数据库（{}）：{}"
-
 msgid "la fiche entreprise n'existe pas encore"
 msgstr "公司信息尚未创建。"
 
@@ -2705,3 +2702,27 @@ msgstr "要移除此标志吗？"
 
 msgid "Se déconnecter de Kadenz ?"
 msgstr "要退出登录 Kadenz 吗？"
+
+msgid "La base de données n'a pas pu être ouverte : {}"
+msgstr "无法打开数据库：{}"
+
+msgid "clé de la base introuvable"
+msgstr "找不到数据库密钥"
+
+msgid "clé de la base illisible : elle a été créée sur un autre poste ou un autre compte Windows"
+msgstr "无法读取数据库密钥：它是在另一台电脑或另一个 Windows 帐户上创建的"
+
+msgid "clé de la base endommagée"
+msgstr "数据库密钥已损坏"
+
+msgid "la base ne s'ouvre pas avec sa clé : clé ou fichier de la base endommagé"
+msgstr "数据库无法用其密钥打开：密钥或数据库文件已损坏"
+
+msgid "protection de la clé par Windows impossible"
+msgstr "Windows 无法保护密钥"
+
+msgid "mot de passe de la sauvegarde incorrect"
+msgstr "备份密码不正确"
+
+msgid "le mot de passe de la sauvegarde doit compter au moins {} caractères"
+msgstr "备份密码至少需要 {} 个字符"
