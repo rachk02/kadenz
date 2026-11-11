@@ -21,12 +21,15 @@ export global PaiementsApi {
     callback filtrer-reglements(sens: int, mode: int, du: string, au: string) -> string;
     callback ouvrir-reglement(ligne: int) -> Retour;
     callback imprimer-registre() -> Retour;
+    // Exports Excel des lignes affichées (jalon J10).
+    callback exporter-registre() -> Retour;
 
     // Suivi fournisseurs : bons de commande non payés.
     in property <[[StandardListViewItem]]> fournisseurs;
     in property <string> resume-fournisseurs;
     callback filtrer-fournisseurs(texte: string);
     callback ouvrir-fournisseur(ligne: int) -> Retour;
+    callback exporter-fournisseurs() -> Retour;
 
     // Relances : factures échues non payées.
     in property <[[StandardListViewItem]]> relances;
@@ -35,6 +38,7 @@ export global PaiementsApi {
     callback ouvrir-relance(ligne: int) -> Retour;
     callback lettre-relance(ligne: int) -> Retour;
     callback imprimer-relances() -> Retour;
+    callback exporter-relances() -> Retour;
 }
 
 component Resume inherits Text {
@@ -63,6 +67,13 @@ export component PageReglements inherits VerticalLayout {
         }
 
         Rectangle { }
+
+        Bouton {
+            text: @tr("Exporter en Excel");
+            clicked => {
+                root.retour = PaiementsApi.exporter-registre();
+            }
+        }
 
         Bouton {
             text: @tr("Imprimer le registre");
@@ -179,8 +190,21 @@ export component PageSuiviFournisseurs inherits VerticalLayout {
     padding: 24px;
     spacing: 12px;
 
-    Titre {
-        text: @tr("Suivi fournisseurs");
+    Rangee {
+        spacing: 8px;
+
+        Titre {
+            text: @tr("Suivi fournisseurs");
+        }
+
+        Rectangle { }
+
+        Bouton {
+            text: @tr("Exporter en Excel");
+            clicked => {
+                root.retour = PaiementsApi.exporter-fournisseurs();
+            }
+        }
     }
 
     recherche := LineEdit {
@@ -242,6 +266,13 @@ export component PageRelances inherits VerticalLayout {
         }
 
         Rectangle { }
+
+        Bouton {
+            text: @tr("Exporter en Excel");
+            clicked => {
+                root.retour = PaiementsApi.exporter-relances();
+            }
+        }
 
         Bouton {
             text: @tr("Imprimer la liste");

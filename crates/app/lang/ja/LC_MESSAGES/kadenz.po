@@ -2528,3 +2528,141 @@ msgstr "検証用の公開鍵がありません：kadenz-editeur で鍵ペアを
 
 msgid "le module « {} » n'est pas activé par la licence de ce poste"
 msgstr "「{}」モジュールはこの端末のライセンスで有効になっていません"
+
+msgid "Enregistrer le fichier Excel"
+msgstr "Excel ファイルを保存"
+
+msgid "Exporter en Excel"
+msgstr "Excel にエクスポート"
+
+msgid "Fichier Excel enregistré : {}"
+msgstr "Excel ファイルを保存しました：{}"
+
+msgid "écriture du fichier Excel impossible : {}"
+msgstr "Excel ファイルを書き込めません：{}"
+
+msgid "Installer"
+msgstr "インストール"
+
+msgid "L'installateur se télécharge, son empreinte est vérifiée, puis il démarre et Kadenz se ferme. Les données de ce poste sont gardées."
+msgstr "インストーラーをダウンロードしてフィンガープリントを確認した後、インストーラーが起動して Kadenz は終了します。この端末のデータは保持されます。"
+
+msgid "La version {} de Kadenz est disponible."
+msgstr "Kadenz のバージョン {} が利用できます。"
+
+msgid "Mise à jour disponible"
+msgstr "アップデートがあります"
+
+msgid "Nouveautés"
+msgstr "新機能"
+
+msgid "Plus tard"
+msgstr "後で"
+
+msgid "Téléchargement : {} Mo sur {} Mo ({} %)"
+msgstr "ダウンロード中：{} MB / {} MB（{}%）"
+
+msgid "Téléchargement : {} Mo"
+msgstr "ダウンロード中：{} MB"
+
+msgid "Téléchargement en cours"
+msgstr "ダウンロード中"
+
+msgid "téléchargement impossible : {}"
+msgstr "ダウンロードできません：{}"
+
+msgid "la release ne contient pas d'empreinte SHA-256 de l'installateur"
+msgstr "リリースにインストーラーの SHA-256 フィンガープリントがありません"
+
+msgid "empreinte SHA-256 illisible"
+msgstr "SHA-256 フィンガープリントを読み取れません"
+
+msgid "l'installateur téléchargé ne correspond pas à son empreinte : fichier supprimé"
+msgstr "ダウンロードしたインストーラーがフィンガープリントと一致しません：ファイルを削除しました"
+
+msgid "écriture de l'installateur impossible : {}"
+msgstr "インストーラーを書き込めません：{}"
+
+msgid "lancement de l'installateur impossible : {}"
+msgstr "インストーラーを起動できません：{}"
+
+msgid "Exporté le"
+msgstr "エクスポート日"
+
+msgid "Registre des devis"
+msgstr "見積書台帳"
+
+msgid "Registre des proformas"
+msgstr "見積請求書台帳"
+
+msgid "Registre des bons de commande"
+msgstr "発注書台帳"
+
+msgid "Registre des bordereaux de livraison"
+msgstr "納品書台帳"
+
+msgid "Registre des factures"
+msgstr "請求書台帳"
+
+msgid "Registre des avoirs"
+msgstr "クレジットノート台帳"
+
+msgid "Numéro"
+msgstr "番号"
+
+msgid "Total TTC"
+msgstr "税込合計"
+
+msgid "Actif"
+msgstr "有効"
+
+msgid "Oui"
+msgstr "はい"
+
+msgid "Non"
+msgstr "いいえ"
+
+msgid "Encaissements (factures)"
+msgstr "入金（請求書）"
+
+msgid "Décaissements (bons de commande)"
+msgstr "出金（発注書）"
+
+msgid "Encaissements et décaissements"
+msgstr "入金と出金"
+
+msgid "Du"
+msgstr "開始日"
+
+msgid "Au"
+msgstr "終了日"
+
+msgid "dont {}"
+msgstr "うち {}"
+
+msgid "Registre des règlements"
+msgstr "支払台帳"
+
+msgid "Document"
+msgstr "書類"
+
+msgid "Retard (jours)"
+msgstr "遅延（日）"
+
+msgid "Factures échues"
+msgstr "期限切れの請求書"
+
+msgid "Bons de commande non payés"
+msgstr "未払いの発注書"
+
+msgid "Document d'origine"
+msgstr "元の書類"
+
+msgid "Quantité livrée"
+msgstr "納品数量"
+
+msgid "Quantité reçue"
+msgstr "受領数量"
+
+msgid "Total HT"
+msgstr "税抜合計"

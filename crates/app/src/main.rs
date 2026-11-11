@@ -2,11 +2,13 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod administration;
+mod excel;
 mod factures;
 mod graphiques;
 mod import_ecran;
 mod impression;
 mod licence;
+mod maj;
 mod paiements;
 mod pdf;
 mod pilotage;
@@ -158,6 +160,13 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     fenetre.set_menu(ModelRc::new(VecModel::from(menu)));
 }
 
+/// Le compte connecté gère-t-il les paramètres ? (Invite de mise à jour, J10.)
+fn gere_parametres(etat: &Etat) -> bool {
+    etat.utilisateur
+        .as_ref()
+        .is_some_and(|u| droits::possede(&etat.conn, u, Droit::GererParametres).unwrap_or(false))
+}
+
 /// Réglages d'affichage propres à la langue retenue (code de traduction::choisir).
 fn appliquer_langue(fenetre: &FenetrePrincipale, code: &str) {
     fenetre.global::<Theme>().set_chinois(code == "zh");
@@ -279,6 +288,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
                 etat.utilisateur = Some(admin);
                 if let Some(f) = f.upgrade() {
                     afficher_session(&f, &etat);
+                    maj::verifier_apres_connexion(&f, gere_parametres(&etat));
                 }
                 SharedString::new()
             }
@@ -294,6 +304,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
                 etat.utilisateur = Some(utilisateur);
                 if let Some(f) = f.upgrade() {
                     afficher_session(&f, &etat);
+                    maj::verifier_apres_connexion(&f, gere_parametres(&etat));
                 }
                 SharedString::new()
             }
@@ -332,6 +343,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     pilotage::brancher(fenetre, &etat);
     impression::brancher(fenetre, &etat);
     licence::brancher(fenetre, &etat);
+    maj::brancher(fenetre);
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
     fenetre.on_changer_langue(move |rang| {

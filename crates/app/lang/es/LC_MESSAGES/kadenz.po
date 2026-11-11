@@ -2528,3 +2528,141 @@ msgstr "falta la clave pública de verificación: genere el par de claves con ka
 
 msgid "le module « {} » n'est pas activé par la licence de ce poste"
 msgstr "el módulo «{}» no está activado por la licencia de este equipo"
+
+msgid "Enregistrer le fichier Excel"
+msgstr "Guardar el archivo de Excel"
+
+msgid "Exporter en Excel"
+msgstr "Exportar a Excel"
+
+msgid "Fichier Excel enregistré : {}"
+msgstr "Archivo de Excel guardado: {}"
+
+msgid "écriture du fichier Excel impossible : {}"
+msgstr "no se puede escribir el archivo de Excel: {}"
+
+msgid "Installer"
+msgstr "Instalar"
+
+msgid "L'installateur se télécharge, son empreinte est vérifiée, puis il démarre et Kadenz se ferme. Les données de ce poste sont gardées."
+msgstr "El instalador se descarga y se verifica su huella; después se inicia y Kadenz se cierra. Los datos de este equipo se conservan."
+
+msgid "La version {} de Kadenz est disponible."
+msgstr "La versión {} de Kadenz está disponible."
+
+msgid "Mise à jour disponible"
+msgstr "Actualización disponible"
+
+msgid "Nouveautés"
+msgstr "Novedades"
+
+msgid "Plus tard"
+msgstr "Más tarde"
+
+msgid "Téléchargement : {} Mo sur {} Mo ({} %)"
+msgstr "Descarga: {} MB de {} MB ({} %)"
+
+msgid "Téléchargement : {} Mo"
+msgstr "Descarga: {} MB"
+
+msgid "Téléchargement en cours"
+msgstr "Descarga en curso"
+
+msgid "téléchargement impossible : {}"
+msgstr "no se puede descargar: {}"
+
+msgid "la release ne contient pas d'empreinte SHA-256 de l'installateur"
+msgstr "la versión publicada no contiene la huella SHA-256 del instalador"
+
+msgid "empreinte SHA-256 illisible"
+msgstr "huella SHA-256 ilegible"
+
+msgid "l'installateur téléchargé ne correspond pas à son empreinte : fichier supprimé"
+msgstr "el instalador descargado no coincide con su huella: archivo eliminado"
+
+msgid "écriture de l'installateur impossible : {}"
+msgstr "no se puede escribir el instalador: {}"
+
+msgid "lancement de l'installateur impossible : {}"
+msgstr "no se puede iniciar el instalador: {}"
+
+msgid "Exporté le"
+msgstr "Exportado el"
+
+msgid "Registre des devis"
+msgstr "Registro de presupuestos"
+
+msgid "Registre des proformas"
+msgstr "Registro de facturas proforma"
+
+msgid "Registre des bons de commande"
+msgstr "Registro de órdenes de compra"
+
+msgid "Registre des bordereaux de livraison"
+msgstr "Registro de albaranes de entrega"
+
+msgid "Registre des factures"
+msgstr "Registro de facturas"
+
+msgid "Registre des avoirs"
+msgstr "Registro de notas de crédito"
+
+msgid "Numéro"
+msgstr "Número"
+
+msgid "Total TTC"
+msgstr "Total con impuestos"
+
+msgid "Actif"
+msgstr "Activo"
+
+msgid "Oui"
+msgstr "Sí"
+
+msgid "Non"
+msgstr "No"
+
+msgid "Encaissements (factures)"
+msgstr "Cobros (facturas)"
+
+msgid "Décaissements (bons de commande)"
+msgstr "Pagos (órdenes de compra)"
+
+msgid "Encaissements et décaissements"
+msgstr "Cobros y pagos"
+
+msgid "Du"
+msgstr "Desde"
+
+msgid "Au"
+msgstr "Hasta"
+
+msgid "dont {}"
+msgstr "de los cuales {}"
+
+msgid "Registre des règlements"
+msgstr "Registro de pagos"
+
+msgid "Document"
+msgstr "Documento"
+
+msgid "Retard (jours)"
+msgstr "Retraso (días)"
+
+msgid "Factures échues"
+msgstr "Facturas vencidas"
+
+msgid "Bons de commande non payés"
+msgstr "Órdenes de compra no pagadas"
+
+msgid "Document d'origine"
+msgstr "Documento de origen"
+
+msgid "Quantité livrée"
+msgstr "Cantidad entregada"
+
+msgid "Quantité reçue"
+msgstr "Cantidad recibida"
+
+msgid "Total HT"
+msgstr "Total sin impuestos"

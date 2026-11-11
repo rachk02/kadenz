@@ -2528,3 +2528,141 @@ msgstr "المفتاح العام للتحقق غير موجود: أنشئ زو�
 
 msgid "le module « {} » n'est pas activé par la licence de ce poste"
 msgstr "الوحدة «{}» غير مفعّلة بترخيص هذا الجهاز"
+
+msgid "Enregistrer le fichier Excel"
+msgstr "حفظ ملف Excel"
+
+msgid "Exporter en Excel"
+msgstr "تصدير إلى Excel"
+
+msgid "Fichier Excel enregistré : {}"
+msgstr "تم حفظ ملف Excel: {}"
+
+msgid "écriture du fichier Excel impossible : {}"
+msgstr "تعذّرت كتابة ملف Excel: {}"
+
+msgid "Installer"
+msgstr "تثبيت"
+
+msgid "L'installateur se télécharge, son empreinte est vérifiée, puis il démarre et Kadenz se ferme. Les données de ce poste sont gardées."
+msgstr "يُنزَّل المثبّت ويُتحقق من بصمته، ثم يبدأ ويُغلق Kadenz. وتُحفظ بيانات هذا الجهاز."
+
+msgid "La version {} de Kadenz est disponible."
+msgstr "الإصدار {} من Kadenz متاح."
+
+msgid "Mise à jour disponible"
+msgstr "تحديث متاح"
+
+msgid "Nouveautés"
+msgstr "الجديد"
+
+msgid "Plus tard"
+msgstr "لاحقًا"
+
+msgid "Téléchargement : {} Mo sur {} Mo ({} %)"
+msgstr "التنزيل: {} م.ب من {} م.ب ({}٪)"
+
+msgid "Téléchargement : {} Mo"
+msgstr "التنزيل: {} م.ب"
+
+msgid "Téléchargement en cours"
+msgstr "جارٍ التنزيل"
+
+msgid "téléchargement impossible : {}"
+msgstr "تعذّر التنزيل: {}"
+
+msgid "la release ne contient pas d'empreinte SHA-256 de l'installateur"
+msgstr "لا يتضمن الإصدار بصمة SHA-256 للمثبّت"
+
+msgid "empreinte SHA-256 illisible"
+msgstr "بصمة SHA-256 غير مقروءة"
+
+msgid "l'installateur téléchargé ne correspond pas à son empreinte : fichier supprimé"
+msgstr "المثبّت الذي تم تنزيله لا يطابق بصمته: حُذف الملف"
+
+msgid "écriture de l'installateur impossible : {}"
+msgstr "تعذّرت كتابة المثبّت: {}"
+
+msgid "lancement de l'installateur impossible : {}"
+msgstr "تعذّر تشغيل المثبّت: {}"
+
+msgid "Exporté le"
+msgstr "تاريخ التصدير"
+
+msgid "Registre des devis"
+msgstr "سجل عروض الأسعار"
+
+msgid "Registre des proformas"
+msgstr "سجل الفواتير المبدئية"
+
+msgid "Registre des bons de commande"
+msgstr "سجل أوامر الشراء"
+
+msgid "Registre des bordereaux de livraison"
+msgstr "سجل مذكرات التسليم"
+
+msgid "Registre des factures"
+msgstr "سجل الفواتير"
+
+msgid "Registre des avoirs"
+msgstr "سجل الإشعارات الدائنة"
+
+msgid "Numéro"
+msgstr "الرقم"
+
+msgid "Total TTC"
+msgstr "الإجمالي شامل الضريبة"
+
+msgid "Actif"
+msgstr "نشط"
+
+msgid "Oui"
+msgstr "نعم"
+
+msgid "Non"
+msgstr "لا"
+
+msgid "Encaissements (factures)"
+msgstr "المقبوضات (الفواتير)"
+
+msgid "Décaissements (bons de commande)"
+msgstr "المدفوعات (أوامر الشراء)"
+
+msgid "Encaissements et décaissements"
+msgstr "المقبوضات والمدفوعات"
+
+msgid "Du"
+msgstr "من"
+
+msgid "Au"
+msgstr "إلى"
+
+msgid "dont {}"
+msgstr "منها {}"
+
+msgid "Registre des règlements"
+msgstr "سجل التسويات"
+
+msgid "Document"
+msgstr "المستند"
+
+msgid "Retard (jours)"
+msgstr "التأخير (أيام)"
+
+msgid "Factures échues"
+msgstr "الفواتير المستحقة"
+
+msgid "Bons de commande non payés"
+msgstr "أوامر الشراء غير المدفوعة"
+
+msgid "Document d'origine"
+msgstr "المستند الأصلي"
+
+msgid "Quantité livrée"
+msgstr "الكمية المسلّمة"
+
+msgid "Quantité reçue"
+msgstr "الكمية المستلمة"
+
+msgid "Total HT"
+msgstr "الإجمالي دون ضريبة"

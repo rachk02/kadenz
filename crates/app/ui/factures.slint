@@ -236,6 +236,9 @@ export global FacturesApi {
     // PDF du document enregistré : aperçu filigrané pour un brouillon, document
     // définitif une fois validé, filigrane « ANNULÉ » s'il est annulé.
     callback exporter-pdf() -> Retour;
+    // Exports Excel (jalon J10) : lignes affichées du registre, ou le document ouvert.
+    callback exporter-registre() -> Retour;
+    callback exporter-excel() -> Retour;
     // Chacune ouvre le brouillon créé, dans la page de son type.
     callback convertir() -> Retour;
     callback dupliquer(annuler-original: bool) -> Retour;
@@ -259,6 +262,7 @@ export global FacturesApi {
 
 component Registre inherits VerticalLayout {
     property <string> erreur-filtre;
+    property <Retour> retour;
 
     function filtrer() {
         root.erreur-filtre = FacturesApi.filtrer(recherche.text, statut.current-index, FacturesApi.avec-paiement ? paiement.current-index : 0, du.text, au.text);
@@ -275,6 +279,13 @@ component Registre inherits VerticalLayout {
         }
 
         Rectangle { }
+
+        Bouton {
+            text: @tr("Exporter en Excel");
+            clicked => {
+                root.retour = FacturesApi.exporter-registre();
+            }
+        }
 
         if FacturesApi.peut-creer: Bouton {
             text: FacturesApi.textes.nouveau;
@@ -327,6 +338,10 @@ component Registre inherits VerticalLayout {
                 root.filtrer();
             }
         }
+    }
+
+    if root.retour.message != "": MessageRetour {
+        retour: root.retour;
     }
 
     if root.erreur-filtre != "": Text {
@@ -1382,6 +1397,14 @@ component Fiche inherits ScrollView {
                 clicked => {
                     root.confirmation = 0;
                     root.retour = FacturesApi.exporter-pdf();
+                }
+            }
+
+            if root.fiche.existe: Bouton {
+                text: @tr("Exporter en Excel");
+                clicked => {
+                    root.confirmation = 0;
+                    root.retour = FacturesApi.exporter-excel();
                 }
             }
 

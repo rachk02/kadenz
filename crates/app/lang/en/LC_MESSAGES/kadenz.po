@@ -2528,3 +2528,141 @@ msgstr "verification public key missing: generate the key pair with kadenz-edite
 
 msgid "le module « {} » n'est pas activé par la licence de ce poste"
 msgstr "the “{}” module is not enabled by this workstation's licence"
+
+msgid "Enregistrer le fichier Excel"
+msgstr "Save the Excel file"
+
+msgid "Exporter en Excel"
+msgstr "Export to Excel"
+
+msgid "Fichier Excel enregistré : {}"
+msgstr "Excel file saved: {}"
+
+msgid "écriture du fichier Excel impossible : {}"
+msgstr "cannot write the Excel file: {}"
+
+msgid "Installer"
+msgstr "Install"
+
+msgid "L'installateur se télécharge, son empreinte est vérifiée, puis il démarre et Kadenz se ferme. Les données de ce poste sont gardées."
+msgstr "The installer is downloaded and its fingerprint checked, then it starts and Kadenz closes. The data on this workstation is kept."
+
+msgid "La version {} de Kadenz est disponible."
+msgstr "Kadenz version {} is available."
+
+msgid "Mise à jour disponible"
+msgstr "Update available"
+
+msgid "Nouveautés"
+msgstr "What's new"
+
+msgid "Plus tard"
+msgstr "Later"
+
+msgid "Téléchargement : {} Mo sur {} Mo ({} %)"
+msgstr "Downloading: {} MB of {} MB ({}%)"
+
+msgid "Téléchargement : {} Mo"
+msgstr "Downloading: {} MB"
+
+msgid "Téléchargement en cours"
+msgstr "Downloading"
+
+msgid "téléchargement impossible : {}"
+msgstr "download failed: {}"
+
+msgid "la release ne contient pas d'empreinte SHA-256 de l'installateur"
+msgstr "the release has no SHA-256 fingerprint for the installer"
+
+msgid "empreinte SHA-256 illisible"
+msgstr "unreadable SHA-256 fingerprint"
+
+msgid "l'installateur téléchargé ne correspond pas à son empreinte : fichier supprimé"
+msgstr "the downloaded installer does not match its fingerprint: file deleted"
+
+msgid "écriture de l'installateur impossible : {}"
+msgstr "cannot write the installer: {}"
+
+msgid "lancement de l'installateur impossible : {}"
+msgstr "cannot start the installer: {}"
+
+msgid "Exporté le"
+msgstr "Exported on"
+
+msgid "Registre des devis"
+msgstr "Quote register"
+
+msgid "Registre des proformas"
+msgstr "Pro forma invoice register"
+
+msgid "Registre des bons de commande"
+msgstr "Purchase order register"
+
+msgid "Registre des bordereaux de livraison"
+msgstr "Delivery note register"
+
+msgid "Registre des factures"
+msgstr "Invoice register"
+
+msgid "Registre des avoirs"
+msgstr "Credit note register"
+
+msgid "Numéro"
+msgstr "Number"
+
+msgid "Total TTC"
+msgstr "Total incl. tax"
+
+msgid "Actif"
+msgstr "Active"
+
+msgid "Oui"
+msgstr "Yes"
+
+msgid "Non"
+msgstr "No"
+
+msgid "Encaissements (factures)"
+msgstr "Receipts (invoices)"
+
+msgid "Décaissements (bons de commande)"
+msgstr "Disbursements (purchase orders)"
+
+msgid "Encaissements et décaissements"
+msgstr "Receipts and disbursements"
+
+msgid "Du"
+msgstr "From"
+
+msgid "Au"
+msgstr "To"
+
+msgid "dont {}"
+msgstr "of which {}"
+
+msgid "Registre des règlements"
+msgstr "Payment register"
+
+msgid "Document"
+msgstr "Document"
+
+msgid "Retard (jours)"
+msgstr "Delay (days)"
+
+msgid "Factures échues"
+msgstr "Overdue invoices"
+
+msgid "Bons de commande non payés"
+msgstr "Unpaid purchase orders"
+
+msgid "Document d'origine"
+msgstr "Source document"
+
+msgid "Quantité livrée"
+msgstr "Quantity delivered"
+
+msgid "Quantité reçue"
+msgstr "Quantity received"
+
+msgid "Total HT"
+msgstr "Total excl. tax"

@@ -285,6 +285,13 @@ fn brancher_tiers(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         fiche_tiers_ui(choisi.as_ref(), type_par_defaut(&etat.tiers.filtre))
     });
 
+    // Export Excel des fiches affichées (jalon J10).
+    let e = etat.clone();
+    api.on_exporter(move || {
+        let etat = e.borrow();
+        crate::paiements::exporter(crate::excel::tiers(&etat.conn, &etat.tiers.lignes))
+    });
+
     let (f, e) = (fenetre.as_weak(), etat.clone());
     api.on_nouvelle(move || {
         let mut etat = e.borrow_mut();
@@ -507,6 +514,13 @@ fn brancher_produits(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             .cloned();
         etat.produits.selection = choisi.as_ref().map(|p| p.id);
         fiche_produit_ui(choisi.as_ref(), sens_par_defaut(&etat.produits.filtre))
+    });
+
+    // Export Excel des fiches affichées (jalon J10).
+    let e = etat.clone();
+    api.on_exporter(move || {
+        let etat = e.borrow();
+        crate::paiements::exporter(crate::excel::produits(&etat.conn, &etat.produits.lignes))
     });
 
     let (f, e) = (fenetre.as_weak(), etat.clone());

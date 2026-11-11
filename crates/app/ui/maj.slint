@@ -1,0 +1,105 @@
+// Mise à jour (jalon J10) : une version plus récente a été trouvée au démarrage.
+// L'invite propose de télécharger et lancer l'installateur, ou de remettre à plus
+// tard ; Kadenz se ferme quand l'installateur démarre.
+import { ScrollView } from "std-widgets.slint";
+import { Bouton, Section, Theme, Titre } from "composants.slint";
+
+export global MiseAJourApi {
+    // Vrai quand une mise à jour attend une réponse.
+    in-out property <bool> visible;
+    in property <string> version;
+    in property <string> notes;
+    // Téléchargement en cours : boutons inactifs.
+    in property <bool> en-cours;
+    // Avancement du téléchargement, ou message d'erreur.
+    in property <string> etat;
+    in property <bool> erreur;
+
+    callback installer();
+    callback plus-tard();
+}
+
+export component InviteMiseAJour inherits Rectangle {
+    background: #0f172a80;
+
+    // Les clics ne doivent pas atteindre l'écran recouvert.
+    TouchArea { }
+
+    Rectangle {
+        width: 520px;
+        height: min(contenu.preferred-height, root.height - 48px);
+        background: white;
+        border-radius: 4px;
+        border-width: 1px;
+        border-color: Theme.bordure;
+
+        contenu := VerticalLayout {
+            padding: 24px;
+            spacing: 12px;
+
+            Titre {
+                text: @tr("Mise à jour disponible");
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("La version {} de Kadenz est disponible.", MiseAJourApi.version);
+                color: Theme.texte;
+                wrap: word-wrap;
+            }
+
+            if MiseAJourApi.notes != "": Section {
+                text: @tr("Nouveautés");
+            }
+
+            if MiseAJourApi.notes != "": ScrollView {
+                height: min(notes.preferred-height, 220px);
+
+                notes := Text {
+                    width: parent.width - 16px;
+                    horizontal-alignment: Theme.debut;
+                    text: MiseAJourApi.notes;
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("L'installateur se télécharge, son empreinte est vérifiée, puis il démarre et Kadenz se ferme. Les données de ce poste sont gardées.");
+                color: Theme.texte-secondaire;
+                font-size: 12px;
+                wrap: word-wrap;
+            }
+
+            if MiseAJourApi.etat != "": Text {
+                horizontal-alignment: Theme.debut;
+                text: MiseAJourApi.etat;
+                color: MiseAJourApi.erreur ? Theme.erreur : Theme.texte;
+                wrap: word-wrap;
+            }
+
+            HorizontalLayout {
+                spacing: 8px;
+                alignment: end;
+
+                Bouton {
+                    text: @tr("Plus tard");
+                    enabled: !MiseAJourApi.en-cours;
+                    clicked => {
+                        MiseAJourApi.plus-tard();
+                    }
+                }
+
+                Bouton {
+                    text: @tr("Installer");
+                    primary: true;
+                    enabled: !MiseAJourApi.en-cours;
+                    clicked => {
+                        MiseAJourApi.installer();
+                    }
+                }
+            }
+        }
+    }
+}

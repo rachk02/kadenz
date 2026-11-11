@@ -12,8 +12,9 @@ import { PageReglements, PageRelances, PageSuiviFournisseurs, PaiementsApi, Tota
 import { PageTableauDeBord, PilotageApi } from "pilotage.slint";
 import { ImpressionApi, PageImpression } from "impression.slint";
 import { LicenceApi, PageLicence } from "licence.slint";
+import { InviteMiseAJour, MiseAJourApi } from "maj.slint";
 
-export { DonneesAssistant, Droits, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, TiersApi, UtilisateursApi }
+export { DonneesAssistant, Droits, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, presentation, assistant, connexion, application }
@@ -681,5 +682,11 @@ export component FenetrePrincipale inherits Window {
                 Rectangle { }
             }
         }
+    }
+
+    // Invite de mise à jour (jalon J10), par-dessus l'application.
+    if root.ecran == Ecran.application && MiseAJourApi.visible: InviteMiseAJour {
+        width: root.width;
+        height: root.height;
     }
 }

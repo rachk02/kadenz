@@ -2528,3 +2528,141 @@ msgstr "缺少验证公钥：请使用 kadenz-editeur 生成密钥对"
 
 msgid "le module « {} » n'est pas activé par la licence de ce poste"
 msgstr "本机许可证未启用“{}”模块"
+
+msgid "Enregistrer le fichier Excel"
+msgstr "保存 Excel 文件"
+
+msgid "Exporter en Excel"
+msgstr "导出到 Excel"
+
+msgid "Fichier Excel enregistré : {}"
+msgstr "Excel 文件已保存：{}"
+
+msgid "écriture du fichier Excel impossible : {}"
+msgstr "无法写入 Excel 文件：{}"
+
+msgid "Installer"
+msgstr "安装"
+
+msgid "L'installateur se télécharge, son empreinte est vérifiée, puis il démarre et Kadenz se ferme. Les données de ce poste sont gardées."
+msgstr "安装程序下载并校验指纹后启动，Kadenz 随即关闭。本机数据会保留。"
+
+msgid "La version {} de Kadenz est disponible."
+msgstr "Kadenz {} 版本已发布。"
+
+msgid "Mise à jour disponible"
+msgstr "有可用更新"
+
+msgid "Nouveautés"
+msgstr "新功能"
+
+msgid "Plus tard"
+msgstr "稍后"
+
+msgid "Téléchargement : {} Mo sur {} Mo ({} %)"
+msgstr "正在下载：{} MB / {} MB（{}%）"
+
+msgid "Téléchargement : {} Mo"
+msgstr "正在下载：{} MB"
+
+msgid "Téléchargement en cours"
+msgstr "正在下载"
+
+msgid "téléchargement impossible : {}"
+msgstr "无法下载：{}"
+
+msgid "la release ne contient pas d'empreinte SHA-256 de l'installateur"
+msgstr "该发布版本不含安装程序的 SHA-256 指纹"
+
+msgid "empreinte SHA-256 illisible"
+msgstr "SHA-256 指纹无法读取"
+
+msgid "l'installateur téléchargé ne correspond pas à son empreinte : fichier supprimé"
+msgstr "下载的安装程序与其指纹不符：文件已删除"
+
+msgid "écriture de l'installateur impossible : {}"
+msgstr "无法写入安装程序：{}"
+
+msgid "lancement de l'installateur impossible : {}"
+msgstr "无法启动安装程序：{}"
+
+msgid "Exporté le"
+msgstr "导出日期"
+
+msgid "Registre des devis"
+msgstr "报价单登记簿"
+
+msgid "Registre des proformas"
+msgstr "形式发票登记簿"
+
+msgid "Registre des bons de commande"
+msgstr "采购订单登记簿"
+
+msgid "Registre des bordereaux de livraison"
+msgstr "送货单登记簿"
+
+msgid "Registre des factures"
+msgstr "发票登记簿"
+
+msgid "Registre des avoirs"
+msgstr "红字发票登记簿"
+
+msgid "Numéro"
+msgstr "编号"
+
+msgid "Total TTC"
+msgstr "含税合计"
+
+msgid "Actif"
+msgstr "有效"
+
+msgid "Oui"
+msgstr "是"
+
+msgid "Non"
+msgstr "否"
+
+msgid "Encaissements (factures)"
+msgstr "收款（发票）"
+
+msgid "Décaissements (bons de commande)"
+msgstr "付款（采购订单）"
+
+msgid "Encaissements et décaissements"
+msgstr "收款与付款"
+
+msgid "Du"
+msgstr "起"
+
+msgid "Au"
+msgstr "止"
+
+msgid "dont {}"
+msgstr "其中 {}"
+
+msgid "Registre des règlements"
+msgstr "收付款登记簿"
+
+msgid "Document"
+msgstr "单据"
+
+msgid "Retard (jours)"
+msgstr "逾期（天）"
+
+msgid "Factures échues"
+msgstr "逾期发票"
+
+msgid "Bons de commande non payés"
+msgstr "未付款采购订单"
+
+msgid "Document d'origine"
+msgstr "来源单据"
+
+msgid "Quantité livrée"
+msgstr "已交付数量"
+
+msgid "Quantité reçue"
+msgstr "已收货数量"
+
+msgid "Total HT"
+msgstr "不含税合计"

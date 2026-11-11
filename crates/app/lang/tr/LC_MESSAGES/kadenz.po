@@ -2528,3 +2528,141 @@ msgstr "doğrulama genel anahtarı yok: anahtar çiftini kadenz-editeur ile olu�
 
 msgid "le module « {} » n'est pas activé par la licence de ce poste"
 msgstr "“{}” modülü bu iş istasyonunun lisansıyla etkinleştirilmemiş"
+
+msgid "Enregistrer le fichier Excel"
+msgstr "Excel dosyasını kaydet"
+
+msgid "Exporter en Excel"
+msgstr "Excel'e aktar"
+
+msgid "Fichier Excel enregistré : {}"
+msgstr "Excel dosyası kaydedildi: {}"
+
+msgid "écriture du fichier Excel impossible : {}"
+msgstr "Excel dosyası yazılamıyor: {}"
+
+msgid "Installer"
+msgstr "Yükle"
+
+msgid "L'installateur se télécharge, son empreinte est vérifiée, puis il démarre et Kadenz se ferme. Les données de ce poste sont gardées."
+msgstr "Yükleyici indirilir ve parmak izi doğrulanır; ardından başlar ve Kadenz kapanır. Bu iş istasyonundaki veriler korunur."
+
+msgid "La version {} de Kadenz est disponible."
+msgstr "Kadenz {} sürümü kullanılabilir."
+
+msgid "Mise à jour disponible"
+msgstr "Güncelleme mevcut"
+
+msgid "Nouveautés"
+msgstr "Yenilikler"
+
+msgid "Plus tard"
+msgstr "Daha sonra"
+
+msgid "Téléchargement : {} Mo sur {} Mo ({} %)"
+msgstr "İndiriliyor: {} MB / {} MB (%{})"
+
+msgid "Téléchargement : {} Mo"
+msgstr "İndiriliyor: {} MB"
+
+msgid "Téléchargement en cours"
+msgstr "İndiriliyor"
+
+msgid "téléchargement impossible : {}"
+msgstr "indirme başarısız: {}"
+
+msgid "la release ne contient pas d'empreinte SHA-256 de l'installateur"
+msgstr "sürüm, yükleyicinin SHA-256 parmak izini içermiyor"
+
+msgid "empreinte SHA-256 illisible"
+msgstr "okunamayan SHA-256 parmak izi"
+
+msgid "l'installateur téléchargé ne correspond pas à son empreinte : fichier supprimé"
+msgstr "indirilen yükleyici parmak iziyle eşleşmiyor: dosya silindi"
+
+msgid "écriture de l'installateur impossible : {}"
+msgstr "yükleyici yazılamıyor: {}"
+
+msgid "lancement de l'installateur impossible : {}"
+msgstr "yükleyici başlatılamıyor: {}"
+
+msgid "Exporté le"
+msgstr "Dışa aktarma tarihi"
+
+msgid "Registre des devis"
+msgstr "Teklif kaydı"
+
+msgid "Registre des proformas"
+msgstr "Proforma fatura kaydı"
+
+msgid "Registre des bons de commande"
+msgstr "Satın alma siparişi kaydı"
+
+msgid "Registre des bordereaux de livraison"
+msgstr "İrsaliye kaydı"
+
+msgid "Registre des factures"
+msgstr "Fatura kaydı"
+
+msgid "Registre des avoirs"
+msgstr "İade faturası kaydı"
+
+msgid "Numéro"
+msgstr "Numara"
+
+msgid "Total TTC"
+msgstr "KDV dahil toplam"
+
+msgid "Actif"
+msgstr "Etkin"
+
+msgid "Oui"
+msgstr "Evet"
+
+msgid "Non"
+msgstr "Hayır"
+
+msgid "Encaissements (factures)"
+msgstr "Tahsilatlar (faturalar)"
+
+msgid "Décaissements (bons de commande)"
+msgstr "Ödemeler (satın alma siparişleri)"
+
+msgid "Encaissements et décaissements"
+msgstr "Tahsilatlar ve ödemeler"
+
+msgid "Du"
+msgstr "Başlangıç"
+
+msgid "Au"
+msgstr "Bitiş"
+
+msgid "dont {}"
+msgstr "bunun {} kısmı"
+
+msgid "Registre des règlements"
+msgstr "Ödeme kaydı"
+
+msgid "Document"
+msgstr "Belge"
+
+msgid "Retard (jours)"
+msgstr "Gecikme (gün)"
+
+msgid "Factures échues"
+msgstr "Vadesi geçmiş faturalar"
+
+msgid "Bons de commande non payés"
+msgstr "Ödenmemiş satın alma siparişleri"
+
+msgid "Document d'origine"
+msgstr "Kaynak belge"
+
+msgid "Quantité livrée"
+msgstr "Teslim edilen miktar"
+
+msgid "Quantité reçue"
+msgstr "Alınan miktar"
+
+msgid "Total HT"
+msgstr "KDV hariç toplam"

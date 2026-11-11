@@ -1885,6 +1885,26 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         })
     });
 
+    // Exports Excel (jalon J10) : registre tel qu'affiché, ou document ouvert.
+    let e = etat.clone();
+    api.on_exporter_registre(move || {
+        let etat = e.borrow();
+        crate::paiements::exporter(crate::excel::registre_documents(
+            &etat.conn,
+            etat.type_document,
+            &etat.factures.lignes,
+        ))
+    });
+
+    let e = etat.clone();
+    api.on_exporter_excel(move || {
+        let etat = e.borrow();
+        let Some(id) = etat.facture.as_ref().and_then(|ed| ed.id) else {
+            return retour_erreur("enregistrer d'abord le document");
+        };
+        crate::paiements::exporter(crate::excel::document(&etat.conn, id))
+    });
+
     let e = etat.clone();
     api.on_exporter_pdf(move || {
         let etat = e.borrow();

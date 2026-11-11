@@ -85,6 +85,32 @@ pub(crate) fn enregistrer_pdf(octets: &[u8], nom: &str, dossier: Option<String>)
     retour_ok(trf("PDF enregistré : {}", &[&chemin.display()]))
 }
 
+/// Enregistre un classeur Excel là où l'utilisateur le choisit, puis l'ouvre dans
+/// l'application associée aux fichiers .xlsx (jalon J10).
+pub(crate) fn enregistrer_xlsx(octets: &[u8], nom: &str) -> Retour {
+    let Some(chemin) = rfd::FileDialog::new()
+        .set_title(tr("Enregistrer le fichier Excel"))
+        .set_file_name(nom)
+        .add_filter("Excel", &["xlsx"])
+        .save_file()
+    else {
+        return Retour::default();
+    };
+    if let Err(erreur) = std::fs::write(&chemin, octets) {
+        return retour_erreur(trf("écriture du fichier Excel impossible : {}", &[&erreur]));
+    }
+    let _ = std::process::Command::new("explorer").arg(&chemin).spawn();
+    retour_ok(trf("Fichier Excel enregistré : {}", &[&chemin.display()]))
+}
+
+/// Export Excel construit par `excel.rs` : enregistré, ou le message d'erreur.
+pub(crate) fn exporter(resultat: Result<(Vec<u8>, String), String>) -> Retour {
+    match resultat {
+        Ok((octets, nom)) => enregistrer_xlsx(&octets, &nom),
+        Err(erreur) => retour_erreur(erreur),
+    }
+}
+
 fn afficher_reglements(f: &FenetrePrincipale, etat: &EtatPartage, listes: &mut Listes) {
     let api = f.global::<PaiementsApi>();
     let etat = etat.borrow();
@@ -358,5 +384,32 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             Ok((octets, nom)) => enregistrer_pdf(&octets, &nom, None),
             Err(message) => retour_erreur(tr(&message)),
         }
+    });
+
+    // Exports Excel des lignes affichées (jalon J10).
+    let (e, l) = (etat.clone(), listes.clone());
+    api.on_exporter_registre(move || {
+        let etat = e.borrow();
+        let filtre = l.borrow().filtre.clone();
+        match reglements::registre(&etat.conn, &filtre) {
+            Ok(r) => exporter(crate::excel::registre_reglements(&etat.conn, &r, &filtre)),
+            Err(erreur) => retour_erreur(texte_erreur(erreur)),
+        }
+    });
+
+    let (e, l) = (etat.clone(), listes.clone());
+    api.on_exporter_fournisseurs(move || {
+        exporter(crate::excel::bons_non_payes(
+            &e.borrow().conn,
+            &l.borrow().fournisseurs,
+        ))
+    });
+
+    let (e, l) = (etat.clone(), listes.clone());
+    api.on_exporter_relances(move || {
+        exporter(crate::excel::factures_echues(
+            &e.borrow().conn,
+            &l.borrow().relances,
+        ))
     });
 }

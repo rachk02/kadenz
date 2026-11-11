@@ -41,6 +41,8 @@ export global TiersApi {
     callback trier(colonne: int, croissant: bool);
     callback selectionner(ligne: int) -> FicheTiersUi;
     callback nouvelle() -> FicheTiersUi;
+    // Export Excel des fiches affichées, filtre compris (jalon J10).
+    callback exporter() -> Retour;
     callback fiche-courante() -> FicheTiersUi;
     callback enregistrer(fiche: FicheTiersUi) -> Retour;
     callback retirer() -> Retour;
@@ -57,6 +59,8 @@ export global ProduitsApi {
     callback trier(colonne: int, croissant: bool);
     callback selectionner(ligne: int) -> FicheProduitUi;
     callback nouvelle() -> FicheProduitUi;
+    // Export Excel des fiches affichées, filtre compris (jalon J10).
+    callback exporter() -> Retour;
     callback fiche-courante() -> FicheProduitUi;
     callback enregistrer(fiche: FicheProduitUi) -> Retour;
     callback retirer() -> Retour;
@@ -215,6 +219,13 @@ export component PageTiers inherits VerticalLayout {
             text: @tr("Fiches désactivées");
             toggled => {
                 root.filtrer();
+            }
+        }
+
+        Bouton {
+            text: @tr("Exporter en Excel");
+            clicked => {
+                root.retour = TiersApi.exporter();
             }
         }
 
@@ -448,6 +459,13 @@ export component PageProduits inherits VerticalLayout {
             text: @tr("Fiches désactivées");
             toggled => {
                 root.filtrer();
+            }
+        }
+
+        Bouton {
+            text: @tr("Exporter en Excel");
+            clicked => {
+                root.retour = ProduitsApi.exporter();
             }
         }
 
