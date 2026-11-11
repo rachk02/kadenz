@@ -10,7 +10,7 @@
          et qu'une section existe dans CHANGELOG.md ;
       3. lance format, Clippy et tests sur tout l'espace de travail ;
       4. compile kadenz.exe en mode release, puis l'installateur KadenzSetup-X.Y.Z.exe
-         (installateur\construire.ps1, WiX 5) ;
+         (installateur\construire.ps1, WiX 5), tous deux signés avec -Certificat ;
       5. crée le tag annoté vX.Y.Z, le pousse, et crée la release GitHub avec
          l'exécutable, l'installateur et son empreinte SHA-256 (.sha256).
 
@@ -19,6 +19,12 @@
 
 .PARAMETER Simulation
     Exécute les vérifications et la compilation, sans créer de tag ni de release.
+
+.PARAMETER Certificat
+    Empreinte SHA-1 du certificat de signature de code, transmise à
+    installateur\construire.ps1. Sans elle, une publication réelle est refusée :
+    un fichier non signé est pris pour un virus par certains antivirus
+    (Kaspersky, PDM:Trojan.Win32.Generic, essai du 2026-11-11).
 
 .EXAMPLE
     .\scripts\release.ps1 -Version 0.1.0 -Simulation
@@ -29,7 +35,9 @@ param(
     [ValidatePattern('^\d+\.\d+\.\d+$')]
     [string]$Version,
 
-    [switch]$Simulation
+    [switch]$Simulation,
+
+    [string]$Certificat = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -75,13 +83,15 @@ Executer $cargo @('test', '--workspace')
 
 Etape "Compilation release"
 Executer $cargo @('build', '--release', '-p', 'kadenz')
-$exe = Join-Path $racine 'target\release\kadenz.exe'
-$livrable = Join-Path $racine "target\release\kadenz-$Version-windows-x64.exe"
-Copy-Item $exe $livrable -Force
-
 Etape "Installateur"
-& (Join-Path $PSScriptRoot '..\installateur\construire.ps1') -SansCompilation
+if (-not $Certificat -and -not $Simulation) {
+    throw "publication refusée sans -Certificat : les fichiers livrés doivent être signés"
+}
+& (Join-Path $PSScriptRoot '..\installateur\construire.ps1') -SansCompilation -Certificat $Certificat
 if ($LASTEXITCODE -ne 0) { throw "échec de la construction de l'installateur" }
+# kadenz.exe livré seul : la copie signée par construire.ps1.
+$livrable = Join-Path $racine "target\installateur\kadenz-$Version-windows-x64.exe"
+Copy-Item (Join-Path $racine 'target\installateur\kadenz.exe') $livrable -Force
 $installateur = Join-Path $racine "target\installateur\KadenzSetup-$Version.exe"
 if (-not (Test-Path $installateur)) { throw "installateur introuvable : $installateur" }
 

@@ -6,8 +6,10 @@
     1. compile kadenz.exe en mode release (sauf -SansCompilation) ;
     2. construit le paquet MSI (Kadenz.wxs) et le soumet aux contrôles ICE ;
     3. l'enveloppe dans l'installateur .exe (KadenzSetup.wxs).
-    Rien n'est signé ni publié : la signature demande un certificat et l'accord de
-    l'utilisateur, la publication passe par scripts\release.ps1.
+    Avec -Certificat, signe chaque fichier exécutable livré (signtool, SHA-256,
+    horodatage) : kadenz.exe, l'extension de l'assistant, le paquet MSI, le moteur
+    Burn de l'installateur puis l'installateur lui-même. Sans certificat, rien
+    n'est signé. La publication passe par scripts\release.ps1.
 
     Prérequis : WiX 5 (`dotnet tool install --global wix --version 5.0.1`) et son
     extension `wix extension add -g WixToolset.BootstrapperApplications.wixext/5.0.1`.
@@ -18,12 +20,22 @@
 .PARAMETER Editeur
     Éditeur affiché par Windows (programmes installés, propriétés du fichier).
 
+.PARAMETER Certificat
+    Empreinte SHA-1 du certificat de signature de code, dans le magasin de
+    certificats de Windows (CurrentUser\My ou LocalMachine\My).
+
+.PARAMETER Horodatage
+    Serveur d'horodatage RFC 3161 : la signature reste valide après
+    l'expiration du certificat.
+
 .EXAMPLE
     .\installateur\construire.ps1
 #>
 param(
     [switch]$SansCompilation,
-    [string]$Editeur = 'Mcarre'
+    [string]$Editeur = 'Mcarre',
+    [string]$Certificat = '',
+    [string]$Horodatage = 'http://time.certum.pl'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -33,6 +45,20 @@ Set-Location $racine
 function Executer([string]$exe, [string[]]$arguments) {
     & $exe @arguments
     if ($LASTEXITCODE -ne 0) { throw "échec : $exe $($arguments -join ' ')" }
+}
+
+$signtool = $null
+if ($Certificat) {
+    $signtool = Get-ChildItem (Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\bin\*\x64\signtool.exe') -ErrorAction SilentlyContinue |
+        Sort-Object FullName | Select-Object -Last 1 -ExpandProperty FullName
+    if (-not $signtool) { throw "signtool.exe introuvable (Windows SDK) : il signe les fichiers livrés" }
+}
+
+# Signe un fichier puis vérifie sa signature (stratégie Authenticode).
+function Signer([string]$fichier) {
+    if (-not $signtool) { return }
+    Executer $signtool @('sign', '/sha1', $Certificat, '/fd', 'sha256', '/tr', $Horodatage, '/td', 'sha256', '/d', 'Kadenz', $fichier)
+    Executer $signtool @('verify', '/pa', '/q', $fichier)
 }
 
 $cargoToml = Get-Content -Raw (Join-Path $racine 'Cargo.toml')
@@ -46,17 +72,22 @@ if (-not $SansCompilation) {
     if (-not (Test-Path $cargo)) { $cargo = 'cargo' }
     Executer $cargo @('build', '--release', '-p', 'kadenz')
 }
-$exe = Join-Path $racine 'target\release\kadenz.exe'
-if (-not (Test-Path $exe)) { throw "kadenz.exe introuvable : $exe" }
-# Garde-fou : un kadenz.exe plus ancien que le dernier commit n'est pas celui du
-# code livré (un installateur a déjà embarqué par erreur le socle du premier jour).
-$dernierCommit = [DateTime]::Parse((git -C $racine log -1 --format=%cI))
-if ((Get-Item $exe).LastWriteTime -lt $dernierCommit) {
-    throw "kadenz.exe ($((Get-Item $exe).LastWriteTime)) est plus ancien que le dernier commit ($dernierCommit) : relancer sans -SansCompilation"
+$compile = Join-Path $racine 'target\release\kadenz.exe'
+if (-not (Test-Path $compile)) { throw "kadenz.exe introuvable : $compile" }
+# Garde-fou : un kadenz.exe plus ancien que le dernier commit du code Rust n'est
+# pas celui du code livré (un installateur a déjà embarqué par erreur le socle du
+# premier jour). Les commits de l'installateur seul ne comptent pas.
+$dernierCommit = [DateTime]::Parse((git -C $racine log -1 --format=%cI -- crates Cargo.toml Cargo.lock))
+if ((Get-Item $compile).LastWriteTime -lt $dernierCommit) {
+    throw "kadenz.exe ($((Get-Item $compile).LastWriteTime)) est plus ancien que le dernier commit ($dernierCommit) : relancer sans -SansCompilation"
 }
 
 $sortie = Join-Path $racine 'target\installateur'
 New-Item -ItemType Directory -Force $sortie | Out-Null
+# Copie livrée (signée avec -Certificat) : celle du paquet MSI et de la release.
+$exe = Join-Path $sortie 'kadenz.exe'
+Copy-Item $compile $exe -Force
+Signer $exe
 $icone = Join-Path $racine 'crates\app\kadenz.ico'
 $msi = Join-Path $sortie 'Kadenz.msi'
 $setup = Join-Path $sortie "KadenzSetup-$version.exe"
@@ -106,6 +137,7 @@ $script = Join-Path $sortie 'compiler-extension.cmd'
 ) | Set-Content -Encoding ascii $script
 & cmd /c $script
 if ($LASTEXITCODE -ne 0) { throw "échec de la compilation de l'extension de l'assistant" }
+Signer $baf
 $communes += @('-d', "Extension=$baf")
 
 Executer wix (@('build', (Join-Path $PSScriptRoot 'Kadenz.wxs'), '-d', "Exe=$exe", '-o', $msi) + $communes)
@@ -114,6 +146,18 @@ Executer wix (@('build', (Join-Path $PSScriptRoot 'Kadenz.wxs'), '-d', "Exe=$exe
 # profil), alors que le paquet est installé pour tout le poste (ALLUSERS=1), où
 # ces dossiers sont ceux de tous les comptes.
 Executer wix @('msi', 'validate', '-sice', 'ICE43', '-sice', 'ICE57', $msi)
+Signer $msi
 Executer wix (@('build', (Join-Path $PSScriptRoot 'KadenzSetup.wxs'), '-ext', 'WixToolset.BootstrapperApplications.wixext', '-d', "Msi=$msi", '-o', $setup) + $communes)
-
-Write-Host "Installateur prêt : $setup"
+if ($signtool) {
+    # Le moteur Burn, qui lit la suite de l'installateur, se signe à part :
+    # détaché, signé, rattaché, puis l'installateur entier est signé.
+    $moteur = Join-Path $sortie 'moteur.exe'
+    Executer wix @('burn', 'detach', $setup, '-engine', $moteur)
+    Signer $moteur
+    Executer wix @('burn', 'reattach', $setup, '-engine', $moteur, '-o', $setup)
+    Remove-Item $moteur
+    Signer $setup
+    Write-Host "Installateur signé : $setup"
+} else {
+    Write-Host "Installateur prêt, non signé : $setup"
+}
