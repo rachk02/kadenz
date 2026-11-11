@@ -58,6 +58,10 @@ pub(crate) struct Courbe {
     pub trace: String,
     /// Surface sous le trait, fermée sur l'axe du bas ; vide comme le trait.
     pub aire: String,
+    /// Trait et surface retournés de gauche à droite, pour l'affichage de droite à
+    /// gauche (les points, eux, sont retournés par l'écran).
+    pub trace_miroir: String,
+    pub aire_miroir: String,
     /// Position de chaque point, en fraction de la largeur et de la hauteur.
     pub points: Vec<(f32, f32)>,
 }
@@ -87,27 +91,44 @@ pub(crate) fn courbe(valeurs: &[i64]) -> Courbe {
             (x, y)
         })
         .collect();
-    let mut trace = String::new();
-    let mut aire = String::new();
-    if n >= 2 {
-        for (i, (x, y)) in points.iter().enumerate() {
-            let lettre = if i == 0 { 'M' } else { 'L' };
-            let _ = write!(trace, "{lettre} {x:.3} {y:.3} ");
-        }
-        let _ = write!(aire, "M 0 {HAUTEUR_COURBE} ");
-        for (x, y) in &points {
-            let _ = write!(aire, "L {x:.3} {y:.3} ");
-        }
-        let _ = write!(aire, "L {LARGEUR_COURBE} {HAUTEUR_COURBE} Z");
-    }
+    let (trace, aire) = chemins(&points);
+    // Miroir : points pris de la fin vers le début, pour que le trait aille toujours
+    // de gauche à droite et que la surface reste fermée sans se croiser.
+    let miroir: Vec<(f64, f64)> = points
+        .iter()
+        .rev()
+        .map(|(x, y)| (LARGEUR_COURBE - x, *y))
+        .collect();
+    let (trace_miroir, aire_miroir) = chemins(&miroir);
     Courbe {
-        trace: trace.trim_end().to_string(),
+        trace,
         aire,
+        trace_miroir,
+        aire_miroir,
         points: points
             .iter()
             .map(|(x, y)| ((x / LARGEUR_COURBE) as f32, (y / HAUTEUR_COURBE) as f32))
             .collect(),
     }
+}
+
+/// Trait et surface d'une suite de points rangés de gauche à droite ; vides s'il y
+/// a moins de deux points.
+fn chemins(points: &[(f64, f64)]) -> (String, String) {
+    let mut trace = String::new();
+    let mut aire = String::new();
+    if points.len() >= 2 {
+        for (i, (x, y)) in points.iter().enumerate() {
+            let lettre = if i == 0 { 'M' } else { 'L' };
+            let _ = write!(trace, "{lettre} {x:.3} {y:.3} ");
+        }
+        let _ = write!(aire, "M 0 {HAUTEUR_COURBE} ");
+        for (x, y) in points {
+            let _ = write!(aire, "L {x:.3} {y:.3} ");
+        }
+        let _ = write!(aire, "L {LARGEUR_COURBE} {HAUTEUR_COURBE} Z");
+    }
+    (trace.trim_end().to_string(), aire)
 }
 
 /// Longueur de chaque barre, en fraction de la plus grande valeur (0 si toutes
@@ -193,6 +214,15 @@ mod tests {
             "M 0 100 L 0.000 100.000 L 150.000 0.000 L 300.000 50.000 L 300 100 Z"
         );
         assert_eq!(c.points, vec![(0.0, 1.0), (0.5, 0.0), (1.0, 0.5)]);
+        // Miroir : le dernier point passe à gauche, le premier à droite.
+        assert_eq!(
+            c.trace_miroir,
+            "M 0.000 50.000 L 150.000 0.000 L 300.000 100.000"
+        );
+        assert_eq!(
+            c.aire_miroir,
+            "M 0 100 L 0.000 50.000 L 150.000 0.000 L 300.000 100.000 L 300 100 Z"
+        );
     }
 
     #[test]

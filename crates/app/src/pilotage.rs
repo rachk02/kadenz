@@ -169,12 +169,16 @@ fn afficher(api: &PilotageApi, i: &Indicateurs, du: NaiveDate, au: NaiveDate) {
     if valeurs_tendance.iter().all(|m| *m == 0) {
         api.set_trace(SharedString::new());
         api.set_aire(SharedString::new());
+        api.set_trace_miroir(SharedString::new());
+        api.set_aire_miroir(SharedString::new());
         api.set_points(modele(Vec::<PointUi>::new()));
         api.set_tendance_max(SharedString::new());
     } else {
         let c = courbe(&valeurs_tendance);
         api.set_trace(c.trace.into());
         api.set_aire(c.aire.into());
+        api.set_trace_miroir(c.trace_miroir.into());
+        api.set_aire_miroir(c.aire_miroir.into());
         api.set_points(modele(
             c.points
                 .iter()

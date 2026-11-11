@@ -59,6 +59,9 @@ export global PilotageApi {
     // Tendance : trait et surface dans le repère 300 x 100, puis les points.
     in property <string> trace;
     in property <string> aire;
+    // Les mêmes, retournés pour l'affichage de droite à gauche.
+    in property <string> trace-miroir;
+    in property <string> aire-miroir;
     in property <[PointUi]> points;
     in property <string> tendance-debut;
     in property <string> tendance-fin;
@@ -307,7 +310,7 @@ component Tendance inherits Carte {
                 viewbox-width: 300;
                 viewbox-height: 100;
                 fit: fill;
-                commands: PilotageApi.aire;
+                commands: Theme.rtl ? PilotageApi.aire-miroir : PilotageApi.aire;
                 fill: #2d3a8c1f;
             }
 
@@ -317,7 +320,7 @@ component Tendance inherits Carte {
                 viewbox-width: 300;
                 viewbox-height: 100;
                 fit: fill;
-                commands: PilotageApi.trace;
+                commands: Theme.rtl ? PilotageApi.trace-miroir : PilotageApi.trace;
                 stroke: Theme.accent;
                 stroke-width: 2px;
             }
