@@ -2726,3 +2726,18 @@ msgstr "incorrect backup password"
 
 msgid "le mot de passe de la sauvegarde doit compter au moins {} caractères"
 msgstr "the backup password must contain at least {} characters"
+
+msgid "Remplacer la mise en page par celle par défaut ? Rien n'est enregistré avant « Enregistrer »."
+msgstr "Replace the layout with the default one? Nothing is saved until you click \"Save\"."
+
+msgid "Rétablir"
+msgstr "Restore"
+
+msgid "Désactiver le compte {} ? Il ne pourra plus se connecter."
+msgstr "Deactivate the account {}? It will no longer be able to sign in."
+
+msgid "Remplacer les droits cochés par la matrice du cahier des charges ? Rien n'est enregistré avant « Enregistrer les droits »."
+msgstr "Replace the checked rights with the specification matrix? Nothing is saved until you click \"Save rights\"."
+
+msgid "Revenir à la matrice"
+msgstr "Restore the matrix"

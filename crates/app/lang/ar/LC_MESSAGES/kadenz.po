@@ -2726,3 +2726,18 @@ msgstr "كلمة مرور النسخة الاحتياطية غير صحيحة"
 
 msgid "le mot de passe de la sauvegarde doit compter au moins {} caractères"
 msgstr "يجب أن تتكوّن كلمة مرور النسخة الاحتياطية من {} أحرف على الأقل"
+
+msgid "Remplacer la mise en page par celle par défaut ? Rien n'est enregistré avant « Enregistrer »."
+msgstr "استبدال التخطيط بالتخطيط الافتراضي؟ لا يُحفظ شيء قبل الضغط على «حفظ»."
+
+msgid "Rétablir"
+msgstr "استعادة"
+
+msgid "Désactiver le compte {} ? Il ne pourra plus se connecter."
+msgstr "تعطيل الحساب {}؟ لن يتمكّن من تسجيل الدخول بعد ذلك."
+
+msgid "Remplacer les droits cochés par la matrice du cahier des charges ? Rien n'est enregistré avant « Enregistrer les droits »."
+msgstr "استبدال الصلاحيات المحدّدة بمصفوفة دفتر الشروط؟ لا يُحفظ شيء قبل الضغط على «حفظ الصلاحيات»."
+
+msgid "Revenir à la matrice"
+msgstr "العودة إلى المصفوفة"

@@ -2726,3 +2726,18 @@ msgstr "备份密码不正确"
 
 msgid "le mot de passe de la sauvegarde doit compter au moins {} caractères"
 msgstr "备份密码至少需要 {} 个字符"
+
+msgid "Remplacer la mise en page par celle par défaut ? Rien n'est enregistré avant « Enregistrer »."
+msgstr "要将版式替换为默认版式吗？点击“保存”之前不会保存任何内容。"
+
+msgid "Rétablir"
+msgstr "恢复"
+
+msgid "Désactiver le compte {} ? Il ne pourra plus se connecter."
+msgstr "要停用帐户 {} 吗？该帐户将无法再登录。"
+
+msgid "Remplacer les droits cochés par la matrice du cahier des charges ? Rien n'est enregistré avant « Enregistrer les droits »."
+msgstr "要用规格书中的矩阵替换已勾选的权限吗？点击“保存权限”之前不会保存任何内容。"
+
+msgid "Revenir à la matrice"
+msgstr "恢复矩阵"

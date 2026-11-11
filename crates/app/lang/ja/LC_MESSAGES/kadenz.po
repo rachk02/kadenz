@@ -2726,3 +2726,18 @@ msgstr "バックアップのパスワードが正しくありません"
 
 msgid "le mot de passe de la sauvegarde doit compter au moins {} caractères"
 msgstr "バックアップのパスワードは {} 文字以上にしてください"
+
+msgid "Remplacer la mise en page par celle par défaut ? Rien n'est enregistré avant « Enregistrer »."
+msgstr "レイアウトを既定のものに置き換えますか？「保存」を押すまで何も保存されません。"
+
+msgid "Rétablir"
+msgstr "戻す"
+
+msgid "Désactiver le compte {} ? Il ne pourra plus se connecter."
+msgstr "アカウント {} を無効化しますか？ログインできなくなります。"
+
+msgid "Remplacer les droits cochés par la matrice du cahier des charges ? Rien n'est enregistré avant « Enregistrer les droits »."
+msgstr "チェックした権限を仕様書の権限表に置き換えますか？「権限を保存」を押すまで何も保存されません。"
+
+msgid "Revenir à la matrice"
+msgstr "権限表に戻す"

@@ -2,7 +2,7 @@
 // page en contenu libre avec variables de l'entreprise, aperçu en direct sur une
 // facture d'exemple, feuille de calibrage. Au droit « Gérer les paramètres ».
 import { CheckBox, ComboBox, ScrollView, TextEdit } from "std-widgets.slint";
-import { Alerte, Bouton, Champ, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Confirmation, Champ, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct MiseEnPageUi {
     gabarit: int,
@@ -138,6 +138,20 @@ component Aide inherits Rangee {
 }
 
 export component PageImpression inherits Rectangle {
+    // Retour à la mise en page par défaut, en attente de la fenêtre de confirmation.
+    property <bool> retablissement-demande: false;
+    property <int> reponses: Confirmation.reponses;
+    changed reponses => {
+        if (self.retablissement-demande) {
+            self.retablissement-demande = false;
+            if (Confirmation.accepte) {
+                root.bas = ImpressionApi.bas-par-defaut();
+                root.charger(ImpressionApi.par-defaut());
+                root.retour = { ok: true, message: "" };
+            }
+        }
+    }
+
     property <Retour> retour;
     // Bas de chaque type ; le type choisi est édité dans les cases.
     property <[BasUi]> bas;
@@ -589,9 +603,8 @@ export component PageImpression inherits Rectangle {
                     Bouton {
                         text: @tr("Rétablir la mise en page par défaut");
                         clicked => {
-                            root.bas = ImpressionApi.bas-par-defaut();
-                            root.charger(ImpressionApi.par-defaut());
-                            root.retour = { ok: true, message: "" };
+                            root.retablissement-demande = true;
+                            Confirmation.demander(@tr("Remplacer la mise en page par celle par défaut ? Rien n'est enregistré avant « Enregistrer »."), @tr("Rétablir"), false);
                         }
                     }
 

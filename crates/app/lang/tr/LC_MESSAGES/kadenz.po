@@ -2726,3 +2726,18 @@ msgstr "yedekleme parolası yanlış"
 
 msgid "le mot de passe de la sauvegarde doit compter au moins {} caractères"
 msgstr "yedekleme parolası en az {} karakter içermelidir"
+
+msgid "Remplacer la mise en page par celle par défaut ? Rien n'est enregistré avant « Enregistrer »."
+msgstr "Sayfa düzeni varsayılanla değiştirilsin mi? \"Kaydet\" düğmesine basılana kadar hiçbir şey kaydedilmez."
+
+msgid "Rétablir"
+msgstr "Geri yükle"
+
+msgid "Désactiver le compte {} ? Il ne pourra plus se connecter."
+msgstr "{} hesabı devre dışı bırakılsın mı? Artık oturum açamayacak."
+
+msgid "Remplacer les droits cochés par la matrice du cahier des charges ? Rien n'est enregistré avant « Enregistrer les droits »."
+msgstr "İşaretli yetkiler şartnamedeki matrisle değiştirilsin mi? \"Yetkileri kaydet\" düğmesine basılana kadar hiçbir şey kaydedilmez."
+
+msgid "Revenir à la matrice"
+msgstr "Matrise dön"

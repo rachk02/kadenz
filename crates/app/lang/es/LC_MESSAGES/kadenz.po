@@ -2726,3 +2726,18 @@ msgstr "contraseña de la copia de seguridad incorrecta"
 
 msgid "le mot de passe de la sauvegarde doit compter au moins {} caractères"
 msgstr "la contraseña de la copia de seguridad debe tener al menos {} caracteres"
+
+msgid "Remplacer la mise en page par celle par défaut ? Rien n'est enregistré avant « Enregistrer »."
+msgstr "¿Sustituir el diseño por el predeterminado? No se guarda nada hasta pulsar «Guardar»."
+
+msgid "Rétablir"
+msgstr "Restablecer"
+
+msgid "Désactiver le compte {} ? Il ne pourra plus se connecter."
+msgstr "¿Desactivar la cuenta {}? Ya no podrá iniciar sesión."
+
+msgid "Remplacer les droits cochés par la matrice du cahier des charges ? Rien n'est enregistré avant « Enregistrer les droits »."
+msgstr "¿Sustituir los derechos marcados por la matriz del pliego de condiciones? No se guarda nada hasta pulsar «Guardar los derechos»."
+
+msgid "Revenir à la matrice"
+msgstr "Volver a la matriz"

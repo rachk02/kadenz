@@ -2,7 +2,7 @@
 // (cahier des charges, sections 10.1 et 10.2).
 
 import { CheckBox, ComboBox, ScrollView, StandardTableView, TabWidget } from "std-widgets.slint";
-import { Alerte, Bouton, Champ, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Confirmation, Champ, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct CompteUi {
     nom: string,
@@ -44,6 +44,24 @@ export global UtilisateursApi {
 }
 
 component OngletComptes inherits ScrollView {
+    // Désactivation demandée, en attente de la fenêtre de confirmation.
+    property <bool> desactivation-demandee: false;
+    property <int> reponses: Confirmation.reponses;
+    changed reponses => {
+        if (self.desactivation-demandee) {
+            self.desactivation-demandee = false;
+            if (Confirmation.accepte) {
+                root.basculer();
+            }
+        }
+    }
+
+    function basculer() {
+        root.retour = UtilisateursApi.basculer-actif();
+        Alerte.retour(root.retour);
+        root.charger(UtilisateursApi.compte-courant());
+    }
+
     // Page étroite (Paramètres à côté d'une barre latérale) : le formulaire passe sous la liste.
     in property <bool> etroit;
     property <CompteUi> compte;
@@ -162,9 +180,13 @@ component OngletComptes inherits ScrollView {
                 Bouton {
                     text: root.compte.actif ? @tr("Désactiver") : @tr("Réactiver");
                     clicked => {
-                        root.retour = UtilisateursApi.basculer-actif();
-                        Alerte.retour(root.retour);
-                        root.charger(UtilisateursApi.compte-courant());
+                        // Seule la désactivation demande confirmation : elle coupe l'accès du compte.
+                        if (root.compte.actif) {
+                            root.desactivation-demandee = true;
+                            Confirmation.demander(@tr("Désactiver le compte {} ? Il ne pourra plus se connecter.", root.compte.identifiant), @tr("Désactiver"), true);
+                        } else {
+                            root.basculer();
+                        }
                     }
                 }
             }
@@ -224,6 +246,19 @@ component OngletComptes inherits ScrollView {
 }
 
 component OngletDroits inherits ScrollView {
+    // Retour à la matrice par défaut, en attente de la fenêtre de confirmation.
+    property <bool> retour-matrice-demande: false;
+    property <int> reponses: Confirmation.reponses;
+    changed reponses => {
+        if (self.retour-matrice-demande) {
+            self.retour-matrice-demande = false;
+            if (Confirmation.accepte) {
+                root.retour = { };
+                UtilisateursApi.matrice-par-defaut();
+            }
+        }
+    }
+
     // Page étroite : colonnes des rôles resserrées pour laisser de la place aux libellés.
     in property <bool> etroit;
     property <Retour> retour;
@@ -313,8 +348,8 @@ component OngletDroits inherits ScrollView {
             Bouton {
                 text: @tr("Revenir à la matrice du cahier des charges");
                 clicked => {
-                    root.retour = { };
-                    UtilisateursApi.matrice-par-defaut();
+                    root.retour-matrice-demande = true;
+                    Confirmation.demander(@tr("Remplacer les droits cochés par la matrice du cahier des charges ? Rien n'est enregistré avant « Enregistrer les droits »."), @tr("Revenir à la matrice"), false);
                 }
             }
         }
