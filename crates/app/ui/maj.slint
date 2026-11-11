@@ -56,6 +56,7 @@ export component InviteMiseAJour inherits Rectangle {
                 height: min(notes.preferred-height, 220px);
 
                 notes := Text {
+                    x: 0px;
                     width: parent.width - 16px;
                     horizontal-alignment: Theme.debut;
                     text: MiseAJourApi.notes;
