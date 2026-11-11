@@ -12,7 +12,8 @@
       4. compile kadenz.exe en mode release, puis l'installateur KadenzSetup-X.Y.Z.exe
          (installateur\construire.ps1, WiX 5), tous deux signés avec -Certificat ;
       5. crée le tag annoté vX.Y.Z, le pousse, et crée la release GitHub avec
-         l'exécutable, l'installateur et son empreinte SHA-256 (.sha256).
+         l'exécutable, l'installateur KadenzSetup-X.Y.Z.exe, le paquet
+         Kadenz-X.Y.Z.msi et leurs empreintes SHA-256 (.sha256).
 
 .PARAMETER Version
     Version à publier, sans le "v" (ex. 0.1.0).
@@ -95,14 +96,23 @@ Copy-Item (Join-Path $racine 'target\installateur\kadenz.exe') $livrable -Force
 $installateur = Join-Path $racine "target\installateur\KadenzSetup-$Version.exe"
 if (-not (Test-Path $installateur)) { throw "installateur introuvable : $installateur" }
 
-# Empreinte SHA-256 de l'installateur, vérifiée par la mise à jour intégrée
-# (kadenz-maj) avant tout lancement : « <hex>  <nom> ».
-$empreinte = "$installateur.sha256"
-$hex = (Get-FileHash -Algorithm SHA256 -Path $installateur).Hash.ToLowerInvariant()
-[System.IO.File]::WriteAllText($empreinte, "$hex  $(Split-Path -Leaf $installateur)`n", [System.Text.UTF8Encoding]::new($false))
+# Paquet MSI seul (signé par construire.ps1), pour un déploiement par GPO ou
+# msiexec ; nommé avec la version, comme l'installateur.
+$paquet = Join-Path $racine "target\installateur\Kadenz-$Version.msi"
+Copy-Item (Join-Path $racine 'target\installateur\Kadenz.msi') $paquet -Force
+
+# Empreinte SHA-256 « <hex>  <nom> ». Celle de l'installateur est vérifiée par
+# la mise à jour intégrée (kadenz-maj) avant tout lancement.
+function Empreinte([string]$fichier) {
+    $hex = (Get-FileHash -Algorithm SHA256 -Path $fichier).Hash.ToLowerInvariant()
+    [System.IO.File]::WriteAllText("$fichier.sha256", "$hex  $(Split-Path -Leaf $fichier)`n", [System.Text.UTF8Encoding]::new($false))
+    "$fichier.sha256"
+}
+$empreinte = Empreinte $installateur
+$empreintePaquet = Empreinte $paquet
 
 if ($Simulation) {
-    Etape "Simulation terminée : $livrable, $installateur et son empreinte prêts, aucun tag ni release créés"
+    Etape "Simulation terminée : $livrable, $installateur, $paquet et leurs empreintes prêts, aucun tag ni release créés"
     exit 0
 }
 
@@ -114,7 +124,7 @@ Executer git @('push', 'origin', $tag)
 $notes = [regex]::Match($changelog, "(?ms)^## \[$([regex]::Escape($Version))\][^\n]*\n(.*?)(?=^## \[|\z)").Groups[1].Value.Trim()
 $fichierNotes = Join-Path ([System.IO.Path]::GetTempPath()) "kadenz-notes-$Version.md"
 Set-Content -Path $fichierNotes -Value $notes -Encoding utf8
-Executer gh @('release', 'create', $tag, $livrable, $installateur, $empreinte, '--title', "Kadenz $Version", '--notes-file', $fichierNotes)
+Executer gh @('release', 'create', $tag, $livrable, $installateur, $empreinte, $paquet, $empreintePaquet, '--title', "Kadenz $Version", '--notes-file', $fichierNotes)
 Remove-Item $fichierNotes
 
 Etape "Release $tag publiée"

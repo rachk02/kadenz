@@ -50,12 +50,13 @@ L'intégration continue GitHub (`.github/workflows/ci.yml`) vérifie format, Cli
 
 ```
 .\scripts\release.ps1 -Version 0.1.0 -Simulation   # vérifications et compilation, sans publier
-.\scripts\release.ps1 -Version 0.1.0               # tag vX.Y.Z, push du tag, release GitHub avec kadenz.exe et l'installateur
+.\scripts\release.ps1 -Version 0.1.0               # tag vX.Y.Z, push du tag, release GitHub avec kadenz.exe, l'installateur .exe, le paquet .msi et leurs empreintes
 ```
 
 ## Installateur Windows
 
-`.\installateur\construire.ps1` produit `target\installateur\KadenzSetup-X.Y.Z.exe`, éditeur Mcarre : assistant aux couleurs de Kadenz, langue choisie à la première page parmi les sept de l'application, dossier d'installation au choix (`Program Files\Kadenz` par défaut), raccourcis du bureau et du menu Démarrer au choix, lancement de Kadenz à la fin, désinstallation depuis les paramètres de Windows. Le thème de l'assistant est généré par `installateur\theme\generer.py`, les icônes par `docs\marque\generer_icones.py` (Pillow requis). La base dans `%APPDATA%\Kadenz` n'est jamais touchée, ni à l'installation ni à la désinstallation. Prérequis : WiX 5 (`dotnet tool install --global wix --version 5.0.1`) et `wix extension add -g WixToolset.BootstrapperApplications.wixext/5.0.1`. Avec `-Certificat <empreinte>`, le script signe kadenz.exe, l'extension de l'assistant, le paquet MSI et l'installateur (signtool du Windows SDK) ; `scriptselease.ps1` refuse de publier sans certificat.
+`.\installateur\construire.ps1` produit `target\installateur\KadenzSetup-X.Y.Z.exe`, éditeur Mcarre : assistant aux couleurs de Kadenz, langue choisie à la première page parmi les sept de l'application, dossier d'installation au choix (`Program Files\Kadenz` par défaut), raccourcis du bureau et du menu Démarrer au choix, lancement de Kadenz à la fin, désinstallation depuis les paramètres de Windows. Le thème de l'assistant est généré par `installateur\theme\generer.py`, les icônes par `docs\marque\generer_icones.py` (Pillow requis). La base dans `%APPDATA%\Kadenz` n'est jamais touchée, ni à l'installation ni à la désinstallation. Prérequis : WiX 5 (`dotnet tool install --global wix --version 5.0.1`) et `wix extension add -g WixToolset.BootstrapperApplications.wixext/5.0.1`. Avec `-Certificat <empreinte>`, le script signe kadenz.exe, l'extension de l'assistant, le paquet MSI et l'installateur (signtool du Windows SDK) ; `scripts
+elease.ps1` refuse de publier sans certificat.
 
 ## Licence
 
