@@ -111,9 +111,6 @@ msgstr "açık oturum yok"
 msgid "Avoir"
 msgstr "İade faturası"
 
-msgid "Base : {} (schéma {})"
-msgstr "Veritabanı: {} (şema {})"
-
 msgid "Base de données : SQLite, dans le domaine public."
 msgstr "Veritabanı: SQLite, kamu malı."
 
@@ -221,9 +218,6 @@ msgstr "Tanınan sütunlar: {}."
 
 msgid "Commercial"
 msgstr "Satış"
-
-msgid "Composants tiers"
-msgstr "Üçüncü taraf bileşenler"
 
 msgid "Comptable"
 msgstr "Muhasebeci"
@@ -2241,26 +2235,8 @@ msgstr "Diller"
 msgid "Données de ce poste"
 msgstr "Bu bilgisayardaki veriler"
 
-msgid "Fichier de la base"
-msgstr "Veritabanı dosyası"
-
-msgid "Version du schéma"
-msgstr "Şema sürümü"
-
 msgid "Les données restent sur ce poste, dans une base locale SQLite."
 msgstr "Veriler bu bilgisayarda, yerel bir SQLite veritabanında kalır."
-
-msgid "Polices"
-msgstr "Yazı tipleri"
-
-msgid "Base de données"
-msgstr "Veritabanı"
-
-msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
-msgstr "Inter ve Manrope, SIL Open Font License 1.1 lisansıyla."
-
-msgid "SQLite, dans le domaine public."
-msgstr "SQLite, kamu malı."
 
 msgid "Impression"
 msgstr "Yazdırma"
@@ -2663,3 +2639,6 @@ msgstr "KDV hariç toplam"
 
 msgid "Éditeur"
 msgstr "Yayımcı"
+
+msgid "erreur de base de données ; le détail est enregistré dans le fichier erreurs.log"
+msgstr "veritabanı hatası; ayrıntılar erreurs.log dosyasına kaydedildi"

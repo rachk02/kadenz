@@ -111,9 +111,6 @@ msgstr "no session open"
 msgid "Avoir"
 msgstr "Credit note"
 
-msgid "Base : {} (schéma {})"
-msgstr "Database: {} (schema {})"
-
 msgid "Base de données : SQLite, dans le domaine public."
 msgstr "Database: SQLite, in the public domain."
 
@@ -221,9 +218,6 @@ msgstr "Recognized columns: {}."
 
 msgid "Commercial"
 msgstr "Sales"
-
-msgid "Composants tiers"
-msgstr "Third-party components"
 
 msgid "Comptable"
 msgstr "Accountant"
@@ -2241,26 +2235,8 @@ msgstr "Languages"
 msgid "Données de ce poste"
 msgstr "Data on this computer"
 
-msgid "Fichier de la base"
-msgstr "Database file"
-
-msgid "Version du schéma"
-msgstr "Schema version"
-
 msgid "Les données restent sur ce poste, dans une base locale SQLite."
 msgstr "Data stays on this computer, in a local SQLite database."
-
-msgid "Polices"
-msgstr "Fonts"
-
-msgid "Base de données"
-msgstr "Database"
-
-msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
-msgstr "Inter and Manrope, under the SIL Open Font License 1.1."
-
-msgid "SQLite, dans le domaine public."
-msgstr "SQLite, in the public domain."
 
 msgid "Impression"
 msgstr "Printing"
@@ -2663,3 +2639,6 @@ msgstr "Total excl. tax"
 
 msgid "Éditeur"
 msgstr "Publisher"
+
+msgid "erreur de base de données ; le détail est enregistré dans le fichier erreurs.log"
+msgstr "database error; the details are saved in the erreurs.log file"

@@ -111,9 +111,6 @@ msgstr "ログインしていません。"
 msgid "Avoir"
 msgstr "クレジットノート"
 
-msgid "Base : {} (schéma {})"
-msgstr "データベース：{}（スキーマ {}）"
-
 msgid "Base de données : SQLite, dans le domaine public."
 msgstr "データベース：SQLite（パブリックドメイン）。"
 
@@ -221,9 +218,6 @@ msgstr "認識された列：{}。"
 
 msgid "Commercial"
 msgstr "営業"
-
-msgid "Composants tiers"
-msgstr "サードパーティ製コンポーネント"
 
 msgid "Comptable"
 msgstr "経理"
@@ -2241,26 +2235,8 @@ msgstr "言語"
 msgid "Données de ce poste"
 msgstr "このパソコンのデータ"
 
-msgid "Fichier de la base"
-msgstr "データベースファイル"
-
-msgid "Version du schéma"
-msgstr "スキーマのバージョン"
-
 msgid "Les données restent sur ce poste, dans une base locale SQLite."
 msgstr "データはこのパソコンのローカル SQLite データベースに保存されます。"
-
-msgid "Polices"
-msgstr "フォント"
-
-msgid "Base de données"
-msgstr "データベース"
-
-msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
-msgstr "Inter と Manrope（SIL Open Font License 1.1）。"
-
-msgid "SQLite, dans le domaine public."
-msgstr "SQLite（パブリックドメイン）。"
 
 msgid "Impression"
 msgstr "印刷"
@@ -2663,3 +2639,6 @@ msgstr "税抜合計"
 
 msgid "Éditeur"
 msgstr "発行元"
+
+msgid "erreur de base de données ; le détail est enregistré dans le fichier erreurs.log"
+msgstr "データベース エラー。詳細は erreurs.log ファイルに保存されました"

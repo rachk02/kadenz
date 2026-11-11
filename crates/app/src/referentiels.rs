@@ -39,7 +39,7 @@ impl<T, F: Default> Default for Vue<T, F> {
     }
 }
 
-pub(crate) fn retour_ok(message: impl std::fmt::Display) -> Retour {
+pub(crate) fn retour_ok(message: impl std::fmt::Display + 'static) -> Retour {
     Retour {
         ok: true,
         message: phrase(message),
@@ -65,8 +65,14 @@ pub(crate) fn texte_erreur(erreur: Erreur) -> String {
     texte_erreur_ref(&erreur)
 }
 
-fn texte_erreur_ref(erreur: &Erreur) -> String {
+pub(crate) fn texte_erreur_ref(erreur: &Erreur) -> String {
     match erreur {
+        // La requête et le message de SQLite ne s'affichent pas : un message court,
+        // le détail dans erreurs.log.
+        Erreur::Sqlite(_) => {
+            crate::consigner_erreur(&erreur.to_string());
+            tr("erreur de base de données ; le détail est enregistré dans le fichier erreurs.log")
+        }
         Erreur::ValidationComposee { modele, valeurs } => {
             let valeurs: Vec<String> = valeurs.iter().map(|v| tr(v)).collect();
             let arguments: Vec<&dyn std::fmt::Display> = valeurs

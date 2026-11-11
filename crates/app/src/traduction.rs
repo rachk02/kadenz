@@ -284,8 +284,8 @@ mod tests {
     fn remplace_les_arguments_dans_l_ordre() {
         choisir("fr");
         assert_eq!(
-            trf("Base : {} (schéma {})", &[&"a.sqlite", &3]),
-            "Base : a.sqlite (schéma 3)"
+            trf("Administrateur : {} ({})", &[&"Awa", &"awa"]),
+            "Administrateur : Awa (awa)"
         );
         assert_eq!(trf("{} et {}", &[&1]), "1 et {}");
     }

@@ -215,12 +215,8 @@ export component FenetrePrincipale inherits Window {
     property <bool> presentation-depuis-a-propos;
     property <int> onglet-parametres: 0;
     in property <string> message-demarrage;
-    in property <string> etat-base;
     in property <string> nom-entreprise;
     in property <string> version-logiciel;
-    // Page À propos : fichier de la base ouverte et version de son schéma.
-    in property <string> chemin-base;
-    in property <string> schema-base;
     in property <string> utilisateur-nom;
     in property <string> utilisateur-identifiant;
     in property <string> utilisateur-role;
@@ -393,14 +389,6 @@ export component FenetrePrincipale inherits Window {
                     clicked => {
                         root.deconnecter();
                     }
-                }
-
-                Text {
-                    horizontal-alignment: Theme.debut;
-                    text: root.etat-base;
-                    font-size: 11px;
-                    color: Theme.texte-secondaire;
-                    wrap: word-wrap;
                 }
             }
         }
@@ -643,39 +631,12 @@ export component FenetrePrincipale inherits Window {
                             valeur: root.nom-entreprise;
                         }
 
-                        LigneAPropos {
-                            libelle: @tr("Fichier de la base");
-                            valeur: root.chemin-base;
-                        }
-
-                        LigneAPropos {
-                            libelle: @tr("Version du schéma");
-                            valeur: root.schema-base;
-                        }
-
                         Text {
                             horizontal-alignment: Theme.debut;
                             text: @tr("Les données restent sur ce poste, dans une base locale SQLite.");
                             font-size: 12px;
                             color: Theme.texte-secondaire;
                             wrap: word-wrap;
-                        }
-                    }
-
-                    CarteAPropos {
-                        row: 1;
-                        col: 0;
-                        colspan: 2;
-                        titre: @tr("Composants tiers");
-
-                        LigneAPropos {
-                            libelle: @tr("Polices");
-                            valeur: @tr("Inter et Manrope, sous licence SIL Open Font License 1.1.");
-                        }
-
-                        LigneAPropos {
-                            libelle: @tr("Base de données");
-                            valeur: @tr("SQLite, dans le domaine public.");
                         }
                     }
                 }

@@ -111,9 +111,6 @@ msgstr "لا توجد جلسة مفتوحة"
 msgid "Avoir"
 msgstr "إشعار دائن"
 
-msgid "Base : {} (schéma {})"
-msgstr "قاعدة البيانات: {} (المخطط {})"
-
 msgid "Base de données : SQLite, dans le domaine public."
 msgstr "قاعدة البيانات: SQLite، ضمن الملك العام."
 
@@ -221,9 +218,6 @@ msgstr "الأعمدة المعروفة: {}."
 
 msgid "Commercial"
 msgstr "التجاري"
-
-msgid "Composants tiers"
-msgstr "مكونات خارجية"
 
 msgid "Comptable"
 msgstr "المحاسب"
@@ -2241,26 +2235,8 @@ msgstr "اللغات"
 msgid "Données de ce poste"
 msgstr "بيانات هذا الجهاز"
 
-msgid "Fichier de la base"
-msgstr "ملف قاعدة البيانات"
-
-msgid "Version du schéma"
-msgstr "إصدار المخطط"
-
 msgid "Les données restent sur ce poste, dans une base locale SQLite."
 msgstr "تبقى البيانات على هذا الجهاز، في قاعدة بيانات SQLite محلية."
-
-msgid "Polices"
-msgstr "الخطوط"
-
-msgid "Base de données"
-msgstr "قاعدة البيانات"
-
-msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
-msgstr "Inter وManrope، بترخيص SIL Open Font License 1.1."
-
-msgid "SQLite, dans le domaine public."
-msgstr "SQLite، ضمن الملك العام."
 
 msgid "Impression"
 msgstr "الطباعة"
@@ -2663,3 +2639,6 @@ msgstr "الإجمالي دون ضريبة"
 
 msgid "Éditeur"
 msgstr "الناشر"
+
+msgid "erreur de base de données ; le détail est enregistré dans le fichier erreurs.log"
+msgstr "خطأ في قاعدة البيانات؛ حُفظت التفاصيل في الملف erreurs.log"

@@ -1766,7 +1766,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             (Ok(numero), Ok(())) => retour_ok(message_validation(t, &numero)),
             (Err(erreur), _) => retour_erreur(trf(
                 "brouillon enregistré, mais validation refusée : {}",
-                &[&tr(&erreur.to_string())],
+                &[&texte_erreur(erreur)],
             )),
             (Ok(_), Err(message)) => retour_erreur(message),
         }

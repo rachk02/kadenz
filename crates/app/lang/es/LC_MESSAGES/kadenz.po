@@ -111,9 +111,6 @@ msgstr "ninguna sesión abierta"
 msgid "Avoir"
 msgstr "Nota de crédito"
 
-msgid "Base : {} (schéma {})"
-msgstr "Base de datos: {} (esquema {})"
-
 msgid "Base de données : SQLite, dans le domaine public."
 msgstr "Base de datos: SQLite, de dominio público."
 
@@ -221,9 +218,6 @@ msgstr "Columnas reconocidas: {}."
 
 msgid "Commercial"
 msgstr "Comercial"
-
-msgid "Composants tiers"
-msgstr "Componentes de terceros"
 
 msgid "Comptable"
 msgstr "Contable"
@@ -2241,26 +2235,8 @@ msgstr "Idiomas"
 msgid "Données de ce poste"
 msgstr "Datos de este equipo"
 
-msgid "Fichier de la base"
-msgstr "Archivo de la base"
-
-msgid "Version du schéma"
-msgstr "Versión del esquema"
-
 msgid "Les données restent sur ce poste, dans une base locale SQLite."
 msgstr "Los datos permanecen en este equipo, en una base SQLite local."
-
-msgid "Polices"
-msgstr "Fuentes"
-
-msgid "Base de données"
-msgstr "Base de datos"
-
-msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
-msgstr "Inter y Manrope, bajo licencia SIL Open Font License 1.1."
-
-msgid "SQLite, dans le domaine public."
-msgstr "SQLite, de dominio público."
 
 msgid "Impression"
 msgstr "Impresión"
@@ -2663,3 +2639,6 @@ msgstr "Total sin impuestos"
 
 msgid "Éditeur"
 msgstr "Editor"
+
+msgid "erreur de base de données ; le détail est enregistré dans le fichier erreurs.log"
+msgstr "error de base de datos; el detalle se guarda en el archivo erreurs.log"

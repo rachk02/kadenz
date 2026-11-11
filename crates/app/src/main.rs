@@ -52,10 +52,36 @@ fn chemin_base() -> PathBuf {
     racine.join("Kadenz").join("kadenz.sqlite")
 }
 
+/// Détail technique d'une erreur, gardé hors de l'écran : ajouté au fichier
+/// erreurs.log, à côté de la base. Au-delà d'un mégaoctet, le fichier repart de zéro.
+pub(crate) fn consigner_erreur(detail: &str) {
+    use std::io::Write;
+    if cfg!(test) {
+        return;
+    }
+    let chemin = chemin_base().with_file_name("erreurs.log");
+    let trop_gros = std::fs::metadata(&chemin).is_ok_and(|m| m.len() > 1_048_576);
+    let mut options = std::fs::OpenOptions::new();
+    if trop_gros {
+        options.write(true).create(true).truncate(true);
+    } else {
+        options.append(true).create(true);
+    }
+    if let Ok(mut fichier) = options.open(&chemin) {
+        let horodatage = chrono::Local::now().format("%Y-%m-%d %H:%M:%S");
+        let _ = writeln!(fichier, "[{horodatage}] {detail}");
+    }
+}
+
 /// Met la première lettre d'un message en majuscule et termine par un point.
-/// Le message est d'abord traduit dans la langue choisie (traduction::tr).
-fn phrase(message: impl std::fmt::Display) -> SharedString {
-    let texte = traduction::tr(&message.to_string());
+/// Le message est d'abord traduit dans la langue choisie (traduction::tr) ; une
+/// erreur du stockage passe par referentiels::texte_erreur (jamais de requête SQL
+/// à l'écran).
+fn phrase(message: impl std::fmt::Display + 'static) -> SharedString {
+    let texte = match (&message as &dyn std::any::Any).downcast_ref::<kadenz_stockage::Erreur>() {
+        Some(erreur) => referentiels::texte_erreur_ref(erreur),
+        None => traduction::tr(&message.to_string()),
+    };
     let mut caracteres = texte.chars();
     let mut s: String = match caracteres.next() {
         Some(c) => c.to_uppercase().chain(caracteres).collect(),
@@ -173,23 +199,6 @@ fn appliquer_langue(fenetre: &FenetrePrincipale, code: &str) {
 }
 
 fn afficher_session(fenetre: &FenetrePrincipale, etat: &Etat) {
-    // Recalculé ici pour suivre la langue du compte.
-    let chemin = etat.conn.path().unwrap_or_default().to_string();
-    fenetre.set_chemin_base(chemin.as_str().into());
-    fenetre.set_schema_base(
-        kadenz_stockage::version_schema_application()
-            .to_string()
-            .into(),
-    );
-    let afficher_etat_base = || {
-        fenetre.set_etat_base(
-            traduction::trf(
-                "Base : {} (schéma {})",
-                &[&chemin, &kadenz_stockage::version_schema_application()],
-            )
-            .into(),
-        );
-    };
     if let Some(u) = &etat.utilisateur {
         // Langue du compte, avant tout texte construit ici.
         appliquer_langue(fenetre, traduction::choisir(u.langue.code()));
@@ -204,7 +213,6 @@ fn afficher_session(fenetre: &FenetrePrincipale, etat: &Etat) {
         appliquer_droits(fenetre, etat);
         fenetre.set_ecran(Ecran::Application);
     }
-    afficher_etat_base();
     if let Ok(Some(e)) = entreprise::lire(&etat.conn) {
         fenetre.set_nom_entreprise(e.nom.into());
     }

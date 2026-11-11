@@ -111,9 +111,6 @@ msgstr "没有已打开的会话。"
 msgid "Avoir"
 msgstr "贷项通知单"
 
-msgid "Base : {} (schéma {})"
-msgstr "数据库：{}（架构 {}）"
-
 msgid "Base de données : SQLite, dans le domaine public."
 msgstr "数据库：SQLite，属于公有领域。"
 
@@ -221,9 +218,6 @@ msgstr "已识别的列：{}。"
 
 msgid "Commercial"
 msgstr "销售"
-
-msgid "Composants tiers"
-msgstr "第三方组件"
 
 msgid "Comptable"
 msgstr "会计"
@@ -2241,26 +2235,8 @@ msgstr "语言"
 msgid "Données de ce poste"
 msgstr "本机数据"
 
-msgid "Fichier de la base"
-msgstr "数据库文件"
-
-msgid "Version du schéma"
-msgstr "架构版本"
-
 msgid "Les données restent sur ce poste, dans une base locale SQLite."
 msgstr "数据保存在本机的本地 SQLite 数据库中。"
-
-msgid "Polices"
-msgstr "字体"
-
-msgid "Base de données"
-msgstr "数据库"
-
-msgid "Inter et Manrope, sous licence SIL Open Font License 1.1."
-msgstr "Inter 和 Manrope，采用 SIL Open Font License 1.1 许可证。"
-
-msgid "SQLite, dans le domaine public."
-msgstr "SQLite，属于公有领域。"
 
 msgid "Impression"
 msgstr "打印"
@@ -2663,3 +2639,6 @@ msgstr "不含税合计"
 
 msgid "Éditeur"
 msgstr "发布者"
+
+msgid "erreur de base de données ; le détail est enregistré dans le fichier erreurs.log"
+msgstr "数据库错误；详细信息已保存在 erreurs.log 文件中"
