@@ -41,6 +41,16 @@ export global Theme {
     out property <color> bordure: #d9dce3;
 }
 
+// Préférences d'affichage du compte connecté (migration 0006) : navigation par
+// bandeau en haut (0, par défaut) ou par barre latérale repliable (1), animations.
+// Animations coupées : toutes les durées tombent à zéro.
+export global Affichage {
+    in-out property <int> navigation: 0;
+    in-out property <bool> animations: true;
+    out property <duration> duree: root.animations ? 160ms : 0ms;
+    out property <duration> duree-longue: root.animations ? 220ms : 0ms;
+}
+
 // Rangée horizontale qui suit le sens de lecture : à utiliser à la place de
 // HorizontalLayout (même comportement de gauche à droite : éléments étirés selon
 // horizontal-stretch, sans retour à la ligne), inversée de droite à gauche.
@@ -171,6 +181,7 @@ export component Bouton inherits Rectangle {
     background: !root.enabled ? (root.primary ? #9aa3c7 : Theme.fond-lateral)
         : root.primary ? (zone.pressed ? #1f2866 : zone.has-hover ? #25307a : Theme.accent)
         : (zone.pressed ? #dfe2f1 : zone.has-hover ? Theme.accent-survol : white);
+    animate background { duration: Affichage.duree; }
 
     accessible-role: button;
     accessible-label: root.text;
@@ -247,6 +258,7 @@ export component ElementNavigation inherits Rectangle {
     height: 36px;
     border-radius: 4px;
     background: root.actif ? Theme.accent : (zone.has-hover ? Theme.accent-survol : transparent);
+    animate background { duration: Affichage.duree; }
 
     accessible-role: button;
     accessible-label: root.libelle;

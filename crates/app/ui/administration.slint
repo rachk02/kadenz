@@ -363,7 +363,30 @@ export component PageEntreprise inherits ScrollView {
     }
 }
 
+// Bloc d'une rubrique des Paramètres : masqué hors de sa rubrique (hauteur nulle),
+// ses champs restent chargés et partent avec l'enregistrement commun.
+component Bloc inherits Rectangle {
+    in property <bool> montre;
+
+    height: root.montre ? contenu.preferred-height : 0px;
+    visible: root.montre;
+    clip: true;
+
+    contenu := VerticalLayout {
+        width: parent.width;
+        spacing: 12px;
+        padding-bottom: 12px;
+
+        @children
+    }
+}
+
+// Réglages communs, découpés en rubriques : 0 documents (taux, délais, numérotation,
+// montant en lettres), 1 paiements (modes, lettre de relance), 2 textes imprimés et
+// dossiers d'export. Un seul enregistrement pour toutes les parties.
 export component PageParametres inherits ScrollView {
+    in property <int> partie: 0;
+    in property <string> titre;
     property <Retour> retour;
     // Textes de chaque type ; le type affiché est édité dans les champs.
     property <[TexteDocumentUi]> textes;
@@ -428,7 +451,7 @@ export component PageParametres inherits ScrollView {
         alignment: start;
 
         Titre {
-            text: @tr("Paramètres");
+            text: root.titre;
         }
 
         // Une seule colonne, calée au début du sens de lecture ; HorizontalLayout et non Rangee :
@@ -438,7 +461,10 @@ export component PageParametres inherits ScrollView {
 
             VerticalLayout {
                 width: 560px;
-                spacing: 12px;
+                spacing: 0px;
+
+                Bloc {
+                montre: root.partie == 0;
 
                 Section {
                     text: @tr("Taux proposés dans les documents");
@@ -461,14 +487,6 @@ export component PageParametres inherits ScrollView {
 
                 retenue := Champ {
                     libelle: @tr("Retenue à la source (%)");
-                }
-
-                Section {
-                    text: @tr("Paiements");
-                }
-
-                modes := Champ {
-                    libelle: @tr("Modes de paiement, séparés par des points-virgules");
                 }
 
                 Section {
@@ -569,6 +587,25 @@ export component PageParametres inherits ScrollView {
                     color: Theme.texte-secondaire;
                     wrap: word-wrap;
                 }
+
+                Section {
+                    text: @tr("Montant en lettres");
+                }
+
+                orthographe := ComboBox {
+                    model: [@tr("Orthographe rectifiée (1990)"), @tr("Orthographe traditionnelle")];
+                }
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: orthographe.current-index == 0 ? ParametresApi.exemple-rectifiee : ParametresApi.exemple-traditionnelle;
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+                }
+
+                Bloc {
+                montre: root.partie == 2;
 
                 Section {
                     text: @tr("Documents imprimés");
@@ -680,6 +717,18 @@ export component PageParametres inherits ScrollView {
                         }
                     }
                 }
+                }
+
+                Bloc {
+                montre: root.partie == 1;
+
+                Section {
+                    text: @tr("Paiements");
+                }
+
+                modes := Champ {
+                    libelle: @tr("Modes de paiement, séparés par des points-virgules");
+                }
 
                 // Lettre de relance : masquée quand la licence n'active pas le module Relances.
                 Rectangle {
@@ -767,20 +816,6 @@ export component PageParametres inherits ScrollView {
                         }
                     }
                 }
-
-                Section {
-                    text: @tr("Montant en lettres");
-                }
-
-                orthographe := ComboBox {
-                    model: [@tr("Orthographe rectifiée (1990)"), @tr("Orthographe traditionnelle")];
-                }
-
-                Text {
-                    horizontal-alignment: Theme.debut;
-                    text: orthographe.current-index == 0 ? ParametresApi.exemple-rectifiee : ParametresApi.exemple-traditionnelle;
-                    color: Theme.texte-secondaire;
-                    wrap: word-wrap;
                 }
 
                 Rangee {
@@ -826,16 +861,12 @@ export component PageParametres inherits ScrollView {
                 }
 
                 // Sous le bouton : un texte à la ligne dans une Rangee ferait boucler la mise en page.
-                MessageRetour {
-                    retour: root.retour;
+                Rectangle {
+                    height: 12px;
                 }
 
-                Text {
-                    horizontal-alignment: Theme.debut;
-                    text: @tr("La matrice des droits par rôle se règle dans l'écran Utilisateurs.");
-                    font-size: 12px;
-                    color: Theme.texte-secondaire;
-                    wrap: word-wrap;
+                MessageRetour {
+                    retour: root.retour;
                 }
             }
         }

@@ -585,9 +585,6 @@ msgstr "No se pudo abrir la base de datos ({}): {}"
 msgid "la fiche entreprise n'existe pas encore"
 msgstr "la ficha de empresa aún no existe"
 
-msgid "La matrice des droits par rôle se règle dans l'écran Utilisateurs."
-msgstr "La matriz de derechos por rol se configura en la pantalla Usuarios."
-
 msgid "Langue de l'interface"
 msgstr "Idioma de la interfaz"
 
@@ -719,9 +716,6 @@ msgstr "Modificación de la forma de pago o de las observaciones"
 
 msgid "Modifier ou désactiver un client, un fournisseur, un produit"
 msgstr "Modificar o desactivar un cliente, un proveedor, un producto"
-
-msgid "Module en cours de construction."
-msgstr "Módulo en construcción."
 
 msgid "Mon compte"
 msgstr "Mi cuenta"
@@ -2241,9 +2235,6 @@ msgstr "Los datos permanecen en este equipo, en una base SQLite local."
 msgid "Impression"
 msgstr "Impresión"
 
-msgid "Général"
-msgstr "General"
-
 msgid "Insérer la variable"
 msgstr "Insertar la variable"
 
@@ -2642,3 +2633,72 @@ msgstr "Editor"
 
 msgid "erreur de base de données ; le détail est enregistré dans le fichier erreurs.log"
 msgstr "error de base de datos; el detalle se guarda en el archivo erreurs.log"
+
+msgid "Replier la barre latérale (Ctrl+B)"
+msgstr "Contraer la barra lateral (Ctrl+B)"
+
+msgid "Afficher la barre latérale (Ctrl+B)"
+msgstr "Mostrar la barra lateral (Ctrl+B)"
+
+msgid "Épingler la barre latérale (Ctrl+B)"
+msgstr "Fijar la barra lateral (Ctrl+B)"
+
+msgid "Documents"
+msgstr "Documentos"
+
+msgid "Référentiels"
+msgstr "Datos maestros"
+
+msgid "Navigation et affichage"
+msgstr "Navegación y visualización"
+
+msgid "Textes imprimés et exports"
+msgstr "Textos impresos y exportaciones"
+
+msgid "Mises à jour"
+msgstr "Actualizaciones"
+
+msgid "Réglages propres à votre compte : chaque utilisateur choisit les siens."
+msgstr "Ajustes propios de su cuenta: cada usuario elige los suyos."
+
+msgid "Navigation"
+msgstr "Navegación"
+
+msgid "Bandeau en haut"
+msgstr "Barra superior"
+
+msgid "Menus déroulants Documents, Paiements et Référentiels en haut de la fenêtre."
+msgstr "Menús desplegables Documentos, Pagos y Datos maestros en la parte superior de la ventana."
+
+msgid "Barre latérale"
+msgstr "Barra lateral"
+
+msgid "Menu sur le côté, repliable avec Ctrl+B ; repliée, elle s'ouvre au survol de son bouton."
+msgstr "Menú lateral que se contrae con Ctrl+B; contraído, se abre al pasar sobre su botón."
+
+msgid "Animations"
+msgstr "Animaciones"
+
+msgid "Animer les transitions, les survols et l'ouverture des panneaux"
+msgstr "Animar las transiciones, el paso del puntero y la apertura de los paneles"
+
+msgid "Version installée : {}"
+msgstr "Versión instalada: {}"
+
+msgid "Kadenz cherche aussi une mise à jour à chaque connexion d'un compte qui gère les paramètres."
+msgstr "Kadenz también busca una actualización cada vez que inicia sesión una cuenta que gestiona los ajustes."
+
+msgid "Rechercher une mise à jour"
+msgstr "Buscar una actualización"
+
+msgid "Recherche impossible : le serveur des mises à jour ne répond pas. Vérifiez la connexion à Internet."
+msgstr "No se puede buscar: el servidor de actualizaciones no responde. Compruebe la conexión a Internet."
+
+msgid "Recherche en cours"
+msgstr "Buscando"
+
+msgid "Kadenz est à jour."
+msgstr "Kadenz está actualizado."
+
+msgid "La version {} est disponible."
+msgstr "La versión {} está disponible."

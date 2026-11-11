@@ -1,0 +1,711 @@
+// Navigation (révision 2.34 du cahier) : deux modes au choix de chaque compte.
+// - Bandeau en haut (par défaut) : menus déroulants Documents, Paiements, Référentiels,
+//   à la manière d'Office.
+// - Barre latérale repliable : Ctrl+B ou le bouton du haut la replie ; repliée, le
+//   survol du bouton fait glisser un panneau détaché, avec ombre, par-dessus le
+//   contenu ; il repart quand le pointeur s'en va sans clic.
+// De droite à gauche, la barre et le panneau passent à droite et glissent depuis la droite.
+import { ScrollView } from "std-widgets.slint";
+import { Affichage, Bouton, ElementNavigation, Symbole, Theme } from "composants.slint";
+
+// Pages de travail, plus les Paramètres (rubriques, voir reglages.slint).
+export enum Page {
+    tableau-de-bord,
+    devis,
+    proforma,
+    bons-commande,
+    livraisons,
+    factures,
+    avoirs,
+    reglements,
+    suivi-fournisseurs,
+    relances,
+    tiers,
+    produits,
+    parametres,
+}
+
+// Menu du compte connecté, rangé par groupe, construit par l'application selon les
+// droits et la licence.
+export global Menu {
+    in property <bool> tableau-de-bord;
+    in property <[Page]> documents;
+    in property <[Page]> paiements;
+    in property <[Page]> referentiels;
+}
+
+// Libellés et icônes, calculés ici pour suivre un changement de langue sans
+// reconstruire le menu.
+export global Pages {
+    public pure function libelle(p: Page) -> string {
+        if (p == Page.tableau-de-bord) { return @tr("Tableau de bord"); }
+        if (p == Page.devis) { return @tr("Devis"); }
+        if (p == Page.proforma) { return @tr("Proforma"); }
+        if (p == Page.bons-commande) { return @tr("Bons de commande"); }
+        if (p == Page.livraisons) { return @tr("Livraisons"); }
+        if (p == Page.factures) { return @tr("Factures"); }
+        if (p == Page.avoirs) { return @tr("Avoirs"); }
+        if (p == Page.reglements) { return @tr("Règlements"); }
+        if (p == Page.suivi-fournisseurs) { return @tr("Suivi fournisseurs"); }
+        if (p == Page.relances) { return @tr("Relances"); }
+        if (p == Page.tiers) { return @tr("Tiers"); }
+        if (p == Page.produits) { return @tr("Produits"); }
+        return @tr("Paramètres");
+    }
+
+    public pure function icone(p: Page) -> image {
+        if (p == Page.tableau-de-bord) { return @image-url("icones/menu/tableau-de-bord.svg"); }
+        if (p == Page.devis) { return @image-url("icones/menu/devis.svg"); }
+        if (p == Page.proforma) { return @image-url("icones/menu/proforma.svg"); }
+        if (p == Page.bons-commande) { return @image-url("icones/menu/bons-commande.svg"); }
+        if (p == Page.livraisons) { return @image-url("icones/menu/livraisons.svg"); }
+        if (p == Page.factures) { return @image-url("icones/menu/factures.svg"); }
+        if (p == Page.avoirs) { return @image-url("icones/menu/avoirs.svg"); }
+        if (p == Page.reglements) { return @image-url("icones/menu/reglements.svg"); }
+        if (p == Page.suivi-fournisseurs) { return @image-url("icones/menu/suivi-fournisseurs.svg"); }
+        if (p == Page.relances) { return @image-url("icones/menu/relances.svg"); }
+        if (p == Page.tiers) { return @image-url("icones/menu/tiers.svg"); }
+        if (p == Page.produits) { return @image-url("icones/menu/produits.svg"); }
+        return @image-url("icones/menu/parametres.svg");
+    }
+
+    // Groupe d'une page : 1 documents, 2 paiements, 3 référentiels, 0 hors groupe.
+    public pure function groupe(p: Page) -> int {
+        if (p == Page.devis || p == Page.proforma || p == Page.bons-commande || p == Page.livraisons || p == Page.factures || p == Page.avoirs) { return 1; }
+        if (p == Page.reglements || p == Page.suivi-fournisseurs || p == Page.relances) { return 2; }
+        if (p == Page.tiers || p == Page.produits) { return 3; }
+        return 0;
+    }
+}
+
+// Infobulle commune, dessinée au-dessus de tout par la fenêtre (InfobulleFenetre).
+export global Infobulle {
+    in-out property <string> texte;
+    in-out property <length> x;
+    in-out property <length> y;
+}
+
+export component InfobulleFenetre inherits Rectangle {
+    in property <length> largeur-fenetre;
+
+    // De droite à gauche, Infobulle.x est le bord droit du bouton.
+    x: max(4px, min(Theme.rtl ? Infobulle.x - self.width : Infobulle.x, root.largeur-fenetre - self.width - 4px));
+    y: Infobulle.y;
+    width: etiquette.preferred-width + 16px;
+    height: 26px;
+    visible: Infobulle.texte != "";
+    background: Theme.nuit;
+    border-radius: 4px;
+
+    etiquette := Text {
+        text: Infobulle.texte;
+        color: white;
+        font-size: 12px;
+        vertical-alignment: center;
+        horizontal-alignment: center;
+    }
+}
+
+// Petit bouton carré à icône ; l'infobulle apparaît après un court survol.
+export component BoutonIcone inherits Rectangle {
+    in property <image> icone;
+    in property <string> infobulle;
+    out property <bool> survol: zone.has-hover;
+    callback clique();
+
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    background: zone.pressed ? #dfe2f1 : zone.has-hover ? Theme.accent-survol : transparent;
+    animate background { duration: Affichage.duree; }
+
+    accessible-role: button;
+    accessible-label: root.infobulle;
+    accessible-action-default => {
+        root.clique();
+    }
+
+    Image {
+        width: 18px;
+        height: 18px;
+        source: root.icone;
+        colorize: Theme.texte;
+    }
+
+    zone := TouchArea {
+        clicked => {
+            Infobulle.texte = "";
+            root.clique();
+        }
+        changed has-hover => {
+            if (!self.has-hover && Infobulle.texte == root.infobulle) {
+                Infobulle.texte = "";
+            }
+        }
+    }
+
+    Timer {
+        interval: 450ms;
+        running: zone.has-hover && Infobulle.texte != root.infobulle;
+        triggered => {
+            Infobulle.x = Theme.rtl ? root.absolute-position.x + root.width : root.absolute-position.x;
+            Infobulle.y = root.absolute-position.y + root.height + 6px;
+            Infobulle.texte = root.infobulle;
+        }
+    }
+}
+
+component Legende inherits VerticalLayout {
+    in property <string> text;
+
+    padding-top: 14px;
+    padding-bottom: 4px;
+    padding-left: 12px;
+    padding-right: 12px;
+
+    Text {
+        horizontal-alignment: Theme.debut;
+        text: root.text;
+        font-size: 11px;
+        font-weight: 700;
+        color: Theme.texte-secondaire;
+    }
+}
+
+// Entrées du menu, par groupe : pour la barre latérale et son panneau flottant.
+component ListeMenu inherits VerticalLayout {
+    in property <Page> page;
+    callback choisi(Page);
+
+    alignment: start;
+    spacing: 2px;
+
+    if Menu.tableau-de-bord: ElementNavigation {
+        libelle: Pages.libelle(Page.tableau-de-bord);
+        icone: Pages.icone(Page.tableau-de-bord);
+        actif: root.page == Page.tableau-de-bord;
+        clique => {
+            root.choisi(Page.tableau-de-bord);
+        }
+    }
+
+    if Menu.documents.length > 0: Legende {
+        text: @tr("Documents");
+    }
+
+    for p in Menu.documents: ElementNavigation {
+        libelle: Pages.libelle(p);
+        icone: Pages.icone(p);
+        actif: root.page == p;
+        clique => {
+            root.choisi(p);
+        }
+    }
+
+    if Menu.paiements.length > 0: Legende {
+        text: @tr("Paiements");
+    }
+
+    for p in Menu.paiements: ElementNavigation {
+        libelle: Pages.libelle(p);
+        icone: Pages.icone(p);
+        actif: root.page == p;
+        clique => {
+            root.choisi(p);
+        }
+    }
+
+    if Menu.referentiels.length > 0: Legende {
+        text: @tr("Référentiels");
+    }
+
+    for p in Menu.referentiels: ElementNavigation {
+        libelle: Pages.libelle(p);
+        icone: Pages.icone(p);
+        actif: root.page == p;
+        clique => {
+            root.choisi(p);
+        }
+    }
+}
+
+// Contenu de la barre latérale, épinglée ou flottante : marque et bouton de repli en
+// haut, menu au milieu, Paramètres et compte en bas.
+export component ContenuBarre inherits VerticalLayout {
+    in property <string> nom-entreprise;
+    in property <string> utilisateur;
+    in property <Page> page;
+    // Libellé du bouton du haut : replier (barre épinglée) ou épingler (panneau flottant).
+    in property <string> infobulle-bascule;
+    callback choisi(Page);
+    callback basculer();
+    callback deconnecter();
+
+    padding: 10px;
+    spacing: 4px;
+
+    HorizontalLayout {
+        spacing: 8px;
+        alignment: stretch;
+
+        if !Theme.rtl: BoutonIcone {
+            icone: @image-url("icones/actions/barre.svg");
+            infobulle: root.infobulle-bascule;
+            clique => {
+                root.basculer();
+            }
+        }
+
+        if !Theme.rtl: Symbole {
+            width: 22px;
+            height: 22px;
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            vertical-alignment: center;
+            text: root.nom-entreprise;
+            font-family: Theme.police-titre;
+            font-size: 15px;
+            font-weight: 700;
+            color: Theme.texte;
+            overflow: elide;
+        }
+
+        // De droite à gauche : le symbole reste collé au nom, du côté du début.
+        if Theme.rtl: Symbole {
+            width: 22px;
+            height: 22px;
+        }
+
+        if Theme.rtl: BoutonIcone {
+            icone: @image-url("icones/actions/barre.svg");
+            infobulle: root.infobulle-bascule;
+            clique => {
+                root.basculer();
+            }
+        }
+    }
+
+    ScrollView {
+        vertical-stretch: 1;
+
+        ListeMenu {
+            page: root.page;
+            choisi(p) => {
+                root.choisi(p);
+            }
+        }
+    }
+
+    ElementNavigation {
+        libelle: Pages.libelle(Page.parametres);
+        icone: Pages.icone(Page.parametres);
+        actif: root.page == Page.parametres;
+        clique => {
+            root.choisi(Page.parametres);
+        }
+    }
+
+    HorizontalLayout {
+        padding-top: 6px;
+        spacing: 8px;
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            vertical-alignment: center;
+            text: root.utilisateur;
+            font-size: 12px;
+            color: Theme.texte;
+            overflow: elide;
+        }
+
+        BoutonIcone {
+            icone: @image-url("icones/actions/deconnexion.svg");
+            infobulle: @tr("Se déconnecter");
+            clique => {
+                root.deconnecter();
+            }
+        }
+    }
+}
+
+// Panneau flottant de la barre repliée : détaché du bord, avec ombre.
+export component PanneauFlottant inherits Rectangle {
+    in property <bool> ouvert;
+    in property <length> largeur-fenetre;
+    out property <bool> survol: zone.has-hover;
+
+    width: 264px;
+    // Fermé, il attend hors de la fenêtre, ombre comprise.
+    x: Theme.rtl ? (root.ouvert ? root.largeur-fenetre - self.width - 8px : root.largeur-fenetre + 40px)
+        : (root.ouvert ? 8px : -self.width - 40px);
+    opacity: root.ouvert ? 1 : 0;
+    animate x, opacity {
+        duration: Affichage.duree-longue;
+        easing: ease-out;
+    }
+    background: Theme.fond-lateral;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: Theme.bordure;
+    drop-shadow-blur: 24px;
+    drop-shadow-offset-y: 6px;
+    drop-shadow-color: #0f172a38;
+
+    // Garde le survol sur tout le panneau, entrées comprises ; les clics passent aux entrées.
+    zone := TouchArea {
+        @children
+    }
+}
+
+// Groupe du bandeau : bouton à libellé et chevron, liste déroulante des pages.
+component GroupeBandeau inherits Rectangle {
+    in property <string> libelle;
+    in property <[Page]> pages;
+    in property <bool> actif;
+    in property <Page> page;
+    callback choisi(Page);
+
+    width: etiquette.preferred-width + 40px;
+    height: 34px;
+    border-radius: 4px;
+    background: root.actif ? Theme.accent : zone.has-hover ? Theme.accent-survol : transparent;
+    animate background { duration: Affichage.duree; }
+
+    accessible-role: button;
+    accessible-label: root.libelle;
+    accessible-action-default => {
+        liste.show();
+    }
+
+    etiquette := Text {
+        x: Theme.rtl ? parent.width - 12px - self.width : 12px;
+        text: root.libelle;
+        color: root.actif ? white : Theme.texte;
+        font-weight: root.actif ? 600 : 500;
+        font-size: 14px;
+        vertical-alignment: center;
+    }
+
+    Image {
+        x: Theme.rtl ? 8px : parent.width - 8px - self.width;
+        width: 12px;
+        height: 12px;
+        source: @image-url("icones/actions/suivant.svg");
+        transform-rotation: 90deg;
+        colorize: root.actif ? white : Theme.texte-secondaire;
+    }
+
+    zone := TouchArea {
+        clicked => {
+            liste.show();
+        }
+    }
+
+    liste := PopupWindow {
+        x: Theme.rtl ? root.width - 260px : 0px;
+        y: root.height + 4px;
+        width: 260px;
+
+        Rectangle {
+            property <bool> montre;
+            init => {
+                self.montre = true;
+            }
+            opacity: self.montre ? 1 : 0;
+            animate opacity { duration: Affichage.duree; }
+            background: white;
+            border-radius: 4px;
+            border-width: 1px;
+            border-color: Theme.bordure;
+            drop-shadow-blur: 18px;
+            drop-shadow-offset-y: 4px;
+            drop-shadow-color: #0f172a30;
+
+            VerticalLayout {
+                padding: 6px;
+                spacing: 2px;
+
+                for p in root.pages: ElementNavigation {
+                    libelle: Pages.libelle(p);
+                    icone: Pages.icone(p);
+                    actif: root.page == p;
+                    clique => {
+                        root.choisi(p);
+                        liste.close();
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Entrée directe du bandeau (Tableau de bord, Paramètres).
+component EntreeBandeau inherits Rectangle {
+    in property <string> libelle;
+    in property <image> icone;
+    in property <bool> actif;
+    callback clique();
+
+    width: etiquette.preferred-width + 44px;
+    height: 34px;
+    border-radius: 4px;
+    background: root.actif ? Theme.accent : zone.has-hover ? Theme.accent-survol : transparent;
+    animate background { duration: Affichage.duree; }
+
+    accessible-role: button;
+    accessible-label: root.libelle;
+    accessible-action-default => {
+        root.clique();
+    }
+
+    Image {
+        x: Theme.rtl ? parent.width - 10px - self.width : 10px;
+        width: 16px;
+        height: 16px;
+        source: root.icone;
+        colorize: root.actif ? white : Theme.texte-secondaire;
+    }
+
+    etiquette := Text {
+        x: Theme.rtl ? 10px : 32px;
+        text: root.libelle;
+        color: root.actif ? white : Theme.texte;
+        font-weight: root.actif ? 600 : 500;
+        font-size: 14px;
+        vertical-alignment: center;
+    }
+
+    zone := TouchArea {
+        clicked => {
+            root.clique();
+        }
+    }
+}
+
+// Marque du bandeau : symbole et nom de l'entreprise.
+component MarqueBandeau inherits HorizontalLayout {
+    in property <string> nom-entreprise;
+
+    spacing: 8px;
+
+    if !Theme.rtl: Symbole {
+        width: 24px;
+        height: 24px;
+    }
+
+    Text {
+        vertical-alignment: center;
+        text: root.nom-entreprise;
+        font-family: Theme.police-titre;
+        font-size: 15px;
+        font-weight: 700;
+        color: Theme.texte;
+        max-width: 200px;
+        overflow: elide;
+    }
+
+    if Theme.rtl: Symbole {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+// Fin du bandeau : Paramètres, nom du compte, déconnexion.
+component CompteBandeau inherits HorizontalLayout {
+    in property <string> utilisateur;
+    in property <Page> page;
+    callback choisi(Page);
+    callback deconnecter();
+
+    spacing: 6px;
+
+    if Theme.rtl: BoutonIcone {
+        icone: @image-url("icones/actions/deconnexion.svg");
+        infobulle: @tr("Se déconnecter");
+        clique => {
+            root.deconnecter();
+        }
+    }
+
+    if Theme.rtl: Text {
+        vertical-alignment: center;
+        text: root.utilisateur;
+        font-size: 12px;
+        color: Theme.texte;
+        max-width: 220px;
+        overflow: elide;
+    }
+
+    EntreeBandeau {
+        libelle: Pages.libelle(Page.parametres);
+        icone: Pages.icone(Page.parametres);
+        actif: root.page == Page.parametres;
+        clique => {
+            root.choisi(Page.parametres);
+        }
+    }
+
+    if !Theme.rtl: Text {
+        vertical-alignment: center;
+        text: root.utilisateur;
+        font-size: 12px;
+        color: Theme.texte;
+        max-width: 220px;
+        overflow: elide;
+    }
+
+    if !Theme.rtl: BoutonIcone {
+        icone: @image-url("icones/actions/deconnexion.svg");
+        infobulle: @tr("Se déconnecter");
+        clique => {
+            root.deconnecter();
+        }
+    }
+}
+
+// Groupes du bandeau, dans l'ordre de lecture.
+component GroupesBandeau inherits HorizontalLayout {
+    in property <Page> page;
+    callback choisi(Page);
+
+    spacing: 4px;
+
+    if Menu.tableau-de-bord && !Theme.rtl: EntreeBandeau {
+        libelle: Pages.libelle(Page.tableau-de-bord);
+        icone: Pages.icone(Page.tableau-de-bord);
+        actif: root.page == Page.tableau-de-bord;
+        clique => {
+            root.choisi(Page.tableau-de-bord);
+        }
+    }
+
+    if Menu.documents.length > 0 && !Theme.rtl: GroupeBandeau {
+        libelle: @tr("Documents");
+        pages: Menu.documents;
+        actif: Pages.groupe(root.page) == 1;
+        page: root.page;
+        choisi(p) => {
+            root.choisi(p);
+        }
+    }
+
+    if Menu.paiements.length > 0: GroupeBandeau {
+        libelle: @tr("Paiements");
+        pages: Menu.paiements;
+        actif: Pages.groupe(root.page) == 2;
+        page: root.page;
+        choisi(p) => {
+            root.choisi(p);
+        }
+    }
+
+    if Menu.referentiels.length > 0 && !Theme.rtl: GroupeBandeau {
+        libelle: @tr("Référentiels");
+        pages: Menu.referentiels;
+        actif: Pages.groupe(root.page) == 3;
+        page: root.page;
+        choisi(p) => {
+            root.choisi(p);
+        }
+    }
+
+    // De droite à gauche : mêmes entrées, ordre inversé autour de Paiements.
+    if Menu.referentiels.length > 0 && Theme.rtl: GroupeBandeau {
+        libelle: @tr("Référentiels");
+        pages: Menu.referentiels;
+        actif: Pages.groupe(root.page) == 3;
+        page: root.page;
+        choisi(p) => {
+            root.choisi(p);
+        }
+    }
+
+    if Menu.documents.length > 0 && Theme.rtl: GroupeBandeau {
+        libelle: @tr("Documents");
+        pages: Menu.documents;
+        actif: Pages.groupe(root.page) == 1;
+        page: root.page;
+        choisi(p) => {
+            root.choisi(p);
+        }
+    }
+
+    if Menu.tableau-de-bord && Theme.rtl: EntreeBandeau {
+        libelle: Pages.libelle(Page.tableau-de-bord);
+        icone: Pages.icone(Page.tableau-de-bord);
+        actif: root.page == Page.tableau-de-bord;
+        clique => {
+            root.choisi(Page.tableau-de-bord);
+        }
+    }
+}
+
+// Bandeau du haut : marque, groupes de pages, Paramètres et compte.
+export component BandeauHaut inherits Rectangle {
+    in property <string> nom-entreprise;
+    in property <string> utilisateur;
+    in property <Page> page;
+    callback choisi(Page);
+    callback deconnecter();
+
+    height: 52px;
+    background: Theme.fond-lateral;
+
+    HorizontalLayout {
+        padding-left: 14px;
+        padding-right: 14px;
+        padding-top: 9px;
+        padding-bottom: 9px;
+        spacing: 16px;
+
+        if !Theme.rtl: MarqueBandeau {
+            nom-entreprise: root.nom-entreprise;
+        }
+
+        if !Theme.rtl: GroupesBandeau {
+            page: root.page;
+            choisi(p) => {
+                root.choisi(p);
+            }
+        }
+
+        if Theme.rtl: CompteBandeau {
+            utilisateur: root.utilisateur;
+            page: root.page;
+            choisi(p) => {
+                root.choisi(p);
+            }
+            deconnecter => {
+                root.deconnecter();
+            }
+        }
+
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+
+        if !Theme.rtl: CompteBandeau {
+            utilisateur: root.utilisateur;
+            page: root.page;
+            choisi(p) => {
+                root.choisi(p);
+            }
+            deconnecter => {
+                root.deconnecter();
+            }
+        }
+
+        if Theme.rtl: GroupesBandeau {
+            page: root.page;
+            choisi(p) => {
+                root.choisi(p);
+            }
+        }
+
+        if Theme.rtl: MarqueBandeau {
+            nom-entreprise: root.nom-entreprise;
+        }
+    }
+}

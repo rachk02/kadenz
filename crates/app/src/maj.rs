@@ -6,11 +6,11 @@ use std::cell::{Cell, RefCell};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use kadenz_domaine::message::MessageCompose;
-use kadenz_maj::MiseAJour;
+use kadenz_maj::{MiseAJour, Recherche};
 use slint::ComponentHandle;
 
 use crate::traduction::{tr, trf};
-use crate::{FenetrePrincipale, MiseAJourApi};
+use crate::{FenetrePrincipale, MiseAJourApi, ReglagesApi};
 
 /// Une seule vérification par lancement, même après plusieurs connexions.
 static VERIFIEE: AtomicBool = AtomicBool::new(false);
@@ -68,7 +68,51 @@ fn echec(f: &FenetrePrincipale, message: MessageCompose) {
     api.set_en_cours(false);
 }
 
+/// Paramètres, rubrique Mises à jour : recherche à la demande, sur un fil secondaire.
+/// Une version plus récente ouvre l'invite habituelle.
+fn brancher_recherche(fenetre: &FenetrePrincipale) {
+    let f = fenetre.as_weak();
+    fenetre.global::<ReglagesApi>().on_rechercher_maj(move || {
+        let Some(fenetre) = f.upgrade() else {
+            return;
+        };
+        let api = fenetre.global::<ReglagesApi>();
+        api.set_recherche_en_cours(true);
+        api.set_erreur_maj(false);
+        api.set_etat_maj(tr("Recherche en cours").into());
+        let f = f.clone();
+        std::thread::spawn(move || {
+            let recherche = kadenz_maj::rechercher();
+            let _ = f.upgrade_in_event_loop(move |f| {
+                let api = f.global::<ReglagesApi>();
+                api.set_recherche_en_cours(false);
+                match recherche {
+                    Recherche::Disponible(m) => {
+                        api.set_erreur_maj(false);
+                        api.set_etat_maj(
+                            trf("La version {} est disponible.", &[&m.version]).into(),
+                        );
+                        proposer(&f, m);
+                    }
+                    Recherche::AJour => {
+                        api.set_erreur_maj(false);
+                        api.set_etat_maj(tr("Kadenz est à jour.").into());
+                    }
+                    Recherche::HorsLigne => {
+                        api.set_erreur_maj(true);
+                        api.set_etat_maj(
+                            tr("Recherche impossible : le serveur des mises à jour ne répond pas. Vérifiez la connexion à Internet.")
+                                .into(),
+                        );
+                    }
+                }
+            });
+        });
+    });
+}
+
 pub(crate) fn brancher(fenetre: &FenetrePrincipale) {
+    brancher_recherche(fenetre);
     let api = fenetre.global::<MiseAJourApi>();
 
     let f = fenetre.as_weak();

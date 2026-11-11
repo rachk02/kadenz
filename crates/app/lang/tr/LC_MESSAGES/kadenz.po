@@ -585,9 +585,6 @@ msgstr "Veritabanı ({}) açılamadı: {}"
 msgid "la fiche entreprise n'existe pas encore"
 msgstr "şirket kartı henüz mevcut değil"
 
-msgid "La matrice des droits par rôle se règle dans l'écran Utilisateurs."
-msgstr "Role göre yetki tablosu Kullanıcılar ekranında ayarlanır."
-
 msgid "Langue de l'interface"
 msgstr "Arayüz dili"
 
@@ -719,9 +716,6 @@ msgstr "Ödeme yöntemi veya notlar değiştirildi"
 
 msgid "Modifier ou désactiver un client, un fournisseur, un produit"
 msgstr "Müşteri, tedarikçi, ürün değiştir veya devre dışı bırak"
-
-msgid "Module en cours de construction."
-msgstr "Modül yapım aşamasında."
 
 msgid "Mon compte"
 msgstr "Hesabım"
@@ -2241,9 +2235,6 @@ msgstr "Veriler bu bilgisayarda, yerel bir SQLite veritabanında kalır."
 msgid "Impression"
 msgstr "Yazdırma"
 
-msgid "Général"
-msgstr "Genel"
-
 msgid "Insérer la variable"
 msgstr "Değişkeni ekle"
 
@@ -2642,3 +2633,72 @@ msgstr "Yayımcı"
 
 msgid "erreur de base de données ; le détail est enregistré dans le fichier erreurs.log"
 msgstr "veritabanı hatası; ayrıntılar erreurs.log dosyasına kaydedildi"
+
+msgid "Replier la barre latérale (Ctrl+B)"
+msgstr "Kenar çubuğunu daralt (Ctrl+B)"
+
+msgid "Afficher la barre latérale (Ctrl+B)"
+msgstr "Kenar çubuğunu göster (Ctrl+B)"
+
+msgid "Épingler la barre latérale (Ctrl+B)"
+msgstr "Kenar çubuğunu sabitle (Ctrl+B)"
+
+msgid "Documents"
+msgstr "Belgeler"
+
+msgid "Référentiels"
+msgstr "Ana veriler"
+
+msgid "Navigation et affichage"
+msgstr "Gezinme ve görünüm"
+
+msgid "Textes imprimés et exports"
+msgstr "Yazdırılan metinler ve dışa aktarmalar"
+
+msgid "Mises à jour"
+msgstr "Güncellemeler"
+
+msgid "Réglages propres à votre compte : chaque utilisateur choisit les siens."
+msgstr "Hesabınıza özel ayarlar: her kullanıcı kendi ayarlarını seçer."
+
+msgid "Navigation"
+msgstr "Gezinme"
+
+msgid "Bandeau en haut"
+msgstr "Üst çubuk"
+
+msgid "Menus déroulants Documents, Paiements et Référentiels en haut de la fenêtre."
+msgstr "Pencerenin üstünde Belgeler, Ödemeler ve Ana veriler açılır menüleri."
+
+msgid "Barre latérale"
+msgstr "Kenar çubuğu"
+
+msgid "Menu sur le côté, repliable avec Ctrl+B ; repliée, elle s'ouvre au survol de son bouton."
+msgstr "Ctrl+B ile daraltılan yan menü; daraltıldığında düğmesinin üzerine gelince açılır."
+
+msgid "Animations"
+msgstr "Animasyonlar"
+
+msgid "Animer les transitions, les survols et l'ouverture des panneaux"
+msgstr "Geçişleri, üzerine gelmeyi ve panellerin açılmasını canlandır"
+
+msgid "Version installée : {}"
+msgstr "Kurulu sürüm: {}"
+
+msgid "Kadenz cherche aussi une mise à jour à chaque connexion d'un compte qui gère les paramètres."
+msgstr "Kadenz, ayarları yöneten bir hesap her oturum açtığında da güncelleme arar."
+
+msgid "Rechercher une mise à jour"
+msgstr "Güncelleme ara"
+
+msgid "Recherche impossible : le serveur des mises à jour ne répond pas. Vérifiez la connexion à Internet."
+msgstr "Arama yapılamıyor: güncelleme sunucusu yanıt vermiyor. İnternet bağlantısını kontrol edin."
+
+msgid "Recherche en cours"
+msgstr "Aranıyor"
+
+msgid "Kadenz est à jour."
+msgstr "Kadenz güncel."
+
+msgid "La version {} est disponible."
+msgstr "{} sürümü mevcut."

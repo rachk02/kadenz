@@ -1,0 +1,695 @@
+// Paramètres en rubriques (révision 2.34 du cahier), comme sur un téléphone : une
+// liste de rubriques, chacune ouvrant sa page. La liste ne montre que les rubriques
+// que les droits du compte et la licence ouvrent (construite par l'application).
+import { CheckBox, ComboBox, ScrollView } from "std-widgets.slint";
+import { Affichage, Bouton, Champ, ElementNavigation, MessageErreur, Section, Theme, Titre } from "composants.slint";
+import { PageEntreprise, PageParametres } from "administration.slint";
+import { PageUtilisateurs } from "utilisateurs.slint";
+import { PageImpression } from "impression.slint";
+import { PageLicence } from "licence.slint";
+
+export enum Rubrique {
+    mon-compte,
+    navigation,
+    entreprise,
+    documents,
+    paiements,
+    textes,
+    impression,
+    utilisateurs,
+    licence,
+    mises-a-jour,
+    a-propos,
+}
+
+export global ReglagesApi {
+    in property <[Rubrique]> rubriques;
+    in-out property <Rubrique> rubrique: Rubrique.mon-compte;
+
+    // Navigation (0 bandeau, 1 barre) et animations du compte connecté ; renvoie un
+    // message d'erreur, ou une chaîne vide.
+    callback changer-affichage(int, bool) -> string;
+
+    // Recherche d'une mise à jour à la demande, sur un fil secondaire.
+    callback rechercher-maj();
+    in property <bool> recherche-en-cours;
+    in property <string> etat-maj;
+    in property <bool> erreur-maj;
+}
+
+// Libellé et icône de chaque rubrique.
+global Rubriques {
+public pure function libelle(r: Rubrique) -> string {
+    if (r == Rubrique.mon-compte) { return @tr("Mon compte"); }
+    if (r == Rubrique.navigation) { return @tr("Navigation et affichage"); }
+    if (r == Rubrique.entreprise) { return @tr("Entreprise"); }
+    if (r == Rubrique.documents) { return @tr("Documents"); }
+    if (r == Rubrique.paiements) { return @tr("Paiements"); }
+    if (r == Rubrique.textes) { return @tr("Textes imprimés et exports"); }
+    if (r == Rubrique.impression) { return @tr("Impression"); }
+    if (r == Rubrique.utilisateurs) { return @tr("Utilisateurs"); }
+    if (r == Rubrique.licence) { return @tr("Licence"); }
+    if (r == Rubrique.mises-a-jour) { return @tr("Mises à jour"); }
+    return @tr("À propos");
+}
+
+public pure function icone(r: Rubrique) -> image {
+    if (r == Rubrique.mon-compte) { return @image-url("icones/menu/mon-compte.svg"); }
+    if (r == Rubrique.navigation) { return @image-url("icones/menu/navigation.svg"); }
+    if (r == Rubrique.entreprise) { return @image-url("icones/menu/entreprise.svg"); }
+    if (r == Rubrique.documents) { return @image-url("icones/menu/documents.svg"); }
+    if (r == Rubrique.paiements) { return @image-url("icones/menu/paiements.svg"); }
+    if (r == Rubrique.textes) { return @image-url("icones/menu/exports.svg"); }
+    if (r == Rubrique.impression) { return @image-url("icones/menu/impression.svg"); }
+    if (r == Rubrique.utilisateurs) { return @image-url("icones/menu/utilisateurs.svg"); }
+    if (r == Rubrique.licence) { return @image-url("icones/menu/licence.svg"); }
+    if (r == Rubrique.mises-a-jour) { return @image-url("icones/menu/mises-a-jour.svg"); }
+    return @image-url("icones/menu/a-propos.svg");
+}
+}
+
+component PageMonCompte inherits VerticalLayout {
+    in property <string> utilisateur-nom;
+    in property <string> utilisateur-identifiant;
+    in property <string> utilisateur-role;
+
+    // Rang de la langue du compte, dans l'ordre de Langue::TOUTES (domaine).
+    in-out property <int> langue;
+
+    // Renvoient un message d'erreur, ou une chaîne vide si le changement a réussi.
+    callback changer-mot-de-passe(string, string, string) -> string;
+    callback changer-langue(int) -> string;
+
+    property <string> erreur-langue;
+
+    property <string> ancien;
+    property <string> nouveau;
+    property <string> confirmation;
+    property <string> erreur;
+    property <bool> reussi;
+
+    padding: 24px;
+    spacing: 12px;
+
+    Titre {
+        text: @tr("Mon compte");
+    }
+
+    Text {
+        horizontal-alignment: Theme.debut;
+        text: @tr("{} ({}), rôle : {}", root.utilisateur-nom, root.utilisateur-identifiant, root.utilisateur-role);
+        color: Theme.texte-secondaire;
+    }
+
+    Section {
+        text: @tr("Langue de l'interface");
+    }
+
+    HorizontalLayout {
+        alignment: Theme.rangee-debut;
+
+        // Chaque langue est écrite dans sa propre langue, pour être reconnue
+        // quelle que soit celle de l'interface.
+        ComboBox {
+            width: 220px;
+            model: ["Français", "English", "العربية", "日本語", "中文", "Türkçe", "Español"];
+            current-index <=> root.langue;
+            selected => {
+                root.erreur-langue = root.changer-langue(self.current-index);
+            }
+        }
+    }
+
+    if root.erreur-langue != "": MessageErreur {
+        text: root.erreur-langue;
+    }
+
+    Section {
+        text: @tr("Changer de mot de passe");
+    }
+
+    HorizontalLayout {
+        alignment: Theme.rangee-debut;
+
+        VerticalLayout {
+            width: 360px;
+            spacing: 12px;
+
+            Champ {
+                libelle: @tr("Mot de passe actuel");
+                secret: true;
+                valeur <=> root.ancien;
+            }
+
+            Champ {
+                libelle: @tr("Nouveau mot de passe (8 caractères au moins)");
+                secret: true;
+                valeur <=> root.nouveau;
+            }
+
+            Champ {
+                libelle: @tr("Confirmation du nouveau mot de passe");
+                secret: true;
+                valeur <=> root.confirmation;
+            }
+
+            if root.erreur != "": MessageErreur {
+                text: root.erreur;
+            }
+
+            if root.reussi: Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Mot de passe modifié.");
+                color: Theme.succes;
+            }
+
+            HorizontalLayout {
+                alignment: Theme.rangee-debut;
+
+                Bouton {
+                    text: @tr("Enregistrer");
+                    primary: true;
+                    clicked => {
+                        root.erreur = root.changer-mot-de-passe(root.ancien, root.nouveau, root.confirmation);
+                        root.reussi = root.erreur == "";
+                        if (root.reussi) {
+                            root.ancien = "";
+                            root.nouveau = "";
+                            root.confirmation = "";
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Rectangle { }
+}
+
+// Choix d'un mode de navigation : carte avec un schéma de la fenêtre.
+component CarteNavigation inherits Rectangle {
+    in property <string> titre;
+    in property <string> texte;
+    // Schéma : bandeau en haut (false) ou barre sur le côté (true).
+    in property <bool> barre;
+    in property <bool> choisi;
+    callback clique();
+
+    width: 260px;
+    height: contenu.preferred-height;
+    border-radius: 4px;
+    border-width: root.choisi ? 2px : 1px;
+    border-color: root.choisi ? Theme.accent : Theme.bordure;
+    background: root.choisi ? Theme.accent-survol : zone.has-hover ? Theme.fond-lateral : white;
+    animate background, border-color { duration: Affichage.duree; }
+
+    accessible-role: button;
+    accessible-label: root.titre;
+    accessible-action-default => {
+        root.clique();
+    }
+
+    contenu := VerticalLayout {
+        padding: 14px;
+        spacing: 8px;
+
+        // Schéma de la fenêtre.
+        Rectangle {
+            height: 96px;
+            border-width: 1px;
+            border-color: Theme.bordure;
+            border-radius: 2px;
+            background: white;
+
+            Rectangle {
+                x: root.barre && Theme.rtl ? parent.width - self.width - 1px : 1px;
+                y: 1px;
+                width: root.barre ? 52px : parent.width - 2px;
+                height: root.barre ? parent.height - 2px : 16px;
+                background: root.choisi ? Theme.accent : Theme.texte-secondaire;
+                opacity: 0.85;
+            }
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: root.titre;
+            font-weight: 700;
+            color: Theme.texte;
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: root.texte;
+            font-size: 12px;
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+    }
+
+    zone := TouchArea {
+        clicked => {
+            root.clique();
+        }
+    }
+}
+
+component PageNavigation inherits ScrollView {
+    property <string> erreur;
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 12px;
+        alignment: start;
+
+        Titre {
+            text: @tr("Navigation et affichage");
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Réglages propres à votre compte : chaque utilisateur choisit les siens.");
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        Section {
+            text: @tr("Navigation");
+        }
+
+        HorizontalLayout {
+            alignment: Theme.rangee-debut;
+            spacing: 16px;
+
+            if !Theme.rtl: CarteNavigation {
+                titre: @tr("Bandeau en haut");
+                texte: @tr("Menus déroulants Documents, Paiements et Référentiels en haut de la fenêtre.");
+                barre: false;
+                choisi: Affichage.navigation == 0;
+                clique => {
+                    root.erreur = ReglagesApi.changer-affichage(0, Affichage.animations);
+                }
+            }
+
+            CarteNavigation {
+                titre: @tr("Barre latérale");
+                texte: @tr("Menu sur le côté, repliable avec Ctrl+B ; repliée, elle s'ouvre au survol de son bouton.");
+                barre: true;
+                choisi: Affichage.navigation == 1;
+                clique => {
+                    root.erreur = ReglagesApi.changer-affichage(1, Affichage.animations);
+                }
+            }
+
+            if Theme.rtl: CarteNavigation {
+                titre: @tr("Bandeau en haut");
+                texte: @tr("Menus déroulants Documents, Paiements et Référentiels en haut de la fenêtre.");
+                barre: false;
+                choisi: Affichage.navigation == 0;
+                clique => {
+                    root.erreur = ReglagesApi.changer-affichage(0, Affichage.animations);
+                }
+            }
+        }
+
+        Section {
+            text: @tr("Animations");
+        }
+
+        HorizontalLayout {
+            alignment: Theme.rangee-debut;
+
+            CheckBox {
+                text: @tr("Animer les transitions, les survols et l'ouverture des panneaux");
+                checked: Affichage.animations;
+                toggled => {
+                    root.erreur = ReglagesApi.changer-affichage(Affichage.navigation, self.checked);
+                }
+            }
+        }
+
+        if root.erreur != "": MessageErreur {
+            text: root.erreur;
+        }
+    }
+}
+
+component PageMisesAJour inherits VerticalLayout {
+    in property <string> version-logiciel;
+
+    padding: 24px;
+    spacing: 12px;
+    alignment: start;
+
+    Titre {
+        text: @tr("Mises à jour");
+    }
+
+    Text {
+        horizontal-alignment: Theme.debut;
+        text: @tr("Version installée : {}", root.version-logiciel);
+        color: Theme.texte;
+    }
+
+    Text {
+        horizontal-alignment: Theme.debut;
+        text: @tr("Kadenz cherche aussi une mise à jour à chaque connexion d'un compte qui gère les paramètres.");
+        color: Theme.texte-secondaire;
+        wrap: word-wrap;
+    }
+
+    HorizontalLayout {
+        alignment: Theme.rangee-debut;
+
+        Bouton {
+            text: @tr("Rechercher une mise à jour");
+            primary: true;
+            enabled: !ReglagesApi.recherche-en-cours;
+            clicked => {
+                ReglagesApi.rechercher-maj();
+            }
+        }
+    }
+
+    if ReglagesApi.etat-maj != "": Text {
+        horizontal-alignment: Theme.debut;
+        text: ReglagesApi.etat-maj;
+        color: ReglagesApi.erreur-maj ? Theme.erreur : Theme.texte;
+        wrap: word-wrap;
+    }
+}
+
+// Carte de la page À propos : titre de section, puis ses lignes.
+component CarteAPropos inherits Rectangle {
+    in property <string> titre;
+
+    border-width: 1px;
+    border-color: Theme.bordure;
+    border-radius: 4px;
+
+    VerticalLayout {
+        padding: 20px;
+        spacing: 10px;
+        alignment: start;
+
+        Section {
+            text: root.titre;
+        }
+
+        @children
+    }
+}
+
+// Ligne libellé / valeur ; de droite à gauche, le libellé passe à droite.
+component LigneAPropos inherits GridLayout {
+    in property <string> libelle;
+    in property <string> valeur;
+
+    spacing: 12px;
+
+    Text {
+        row: 0;
+        col: Theme.rtl ? 1 : 0;
+        width: 150px;
+        horizontal-alignment: Theme.debut;
+        text: root.libelle;
+        font-size: 13px;
+        color: Theme.texte-secondaire;
+    }
+
+    Text {
+        row: 0;
+        col: Theme.rtl ? 0 : 1;
+        horizontal-alignment: Theme.debut;
+        text: root.valeur;
+        font-size: 13px;
+        color: Theme.texte;
+        wrap: word-wrap;
+    }
+}
+
+component PageAPropos inherits VerticalLayout {
+    in property <string> version-logiciel;
+    in property <string> nom-entreprise;
+    callback revoir-presentation();
+
+    padding: 24px;
+    spacing: 20px;
+
+    HorizontalLayout {
+        spacing: 8px;
+
+        if !Theme.rtl: Titre {
+            text: @tr("À propos");
+        }
+
+        Rectangle { }
+
+        Bouton {
+            text: @tr("Revoir la présentation");
+            clicked => {
+                root.revoir-presentation();
+            }
+        }
+
+        if Theme.rtl: Titre {
+            text: @tr("À propos");
+        }
+    }
+
+    // Bandeau de marque : logo, motif Cadence, rôle du logiciel.
+    Rectangle {
+        height: 168px;
+        border-radius: 4px;
+        background: Theme.nuit;
+        clip: true;
+
+        Image {
+            x: Theme.rtl ? 0 : parent.width - self.width;
+            width: min(360px, parent.width / 2);
+            height: parent.height;
+            source: @image-url("icones/motif-cadence.svg");
+            image-fit: cover;
+        }
+
+        VerticalLayout {
+            padding: 28px;
+            spacing: 10px;
+            alignment: center;
+
+            Image {
+                width: 170px;
+                height: 46px;
+                source: @image-url("icones/kadenz-logo-horizontal-negatif.svg");
+                image-fit: contain;
+                horizontal-alignment: Theme.rtl ? ImageHorizontalAlignment.right : ImageHorizontalAlignment.left;
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Gestion commerciale");
+                color: white;
+                font-family: Theme.police-titre;
+                font-size: 20px;
+                font-weight: 800;
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements.");
+                color: #c5cae0;
+                font-size: 13px;
+                wrap: word-wrap;
+            }
+        }
+    }
+
+    // Grille et non Rangee : les textes à la ligne y gardent une hauteur stable.
+    // Les colonnes s'échangent de droite à gauche.
+    GridLayout {
+        spacing: 20px;
+
+        CarteAPropos {
+            row: 0;
+            col: Theme.rtl ? 1 : 0;
+            titre: @tr("Logiciel");
+
+            LigneAPropos {
+                libelle: @tr("Version");
+                valeur: root.version-logiciel;
+            }
+
+            // Nom propre de l'éditeur, non traduit (décision de l'utilisateur
+            // du 2026-11-11).
+            LigneAPropos {
+                libelle: @tr("Éditeur");
+                valeur: "Mcarre";
+            }
+
+            LigneAPropos {
+                libelle: @tr("Licence");
+                valeur: @tr("Logiciel propriétaire, tous droits réservés.");
+            }
+
+            LigneAPropos {
+                libelle: @tr("Système");
+                valeur: @tr("Windows, mono-poste.");
+            }
+
+            LigneAPropos {
+                libelle: @tr("Langues");
+                valeur: "Français, English, Español, Türkçe, العربية, 日本語, 中文";
+            }
+        }
+
+        CarteAPropos {
+            row: 0;
+            col: Theme.rtl ? 0 : 1;
+            titre: @tr("Données de ce poste");
+
+            LigneAPropos {
+                libelle: @tr("Entreprise");
+                valeur: root.nom-entreprise;
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Les données restent sur ce poste, dans une base locale SQLite.");
+                font-size: 12px;
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+        }
+    }
+
+    Rectangle { }
+}
+
+// Liste des rubriques au début du sens de lecture, page de la rubrique à côté.
+export component PageReglages inherits Rectangle {
+    in property <string> version-logiciel;
+    in property <string> nom-entreprise;
+    in property <string> utilisateur-nom;
+    in property <string> utilisateur-identifiant;
+    in property <string> utilisateur-role;
+    in-out property <int> utilisateur-langue;
+    callback changer-mot-de-passe(string, string, string) -> string;
+    callback changer-langue(int) -> string;
+    callback revoir-presentation();
+
+    property <length> largeur-liste: 272px;
+
+    // Liste des rubriques.
+    Rectangle {
+        x: Theme.rtl ? parent.width - self.width : 0px;
+        width: root.largeur-liste;
+        height: parent.height;
+        background: Theme.fond-lateral;
+
+        VerticalLayout {
+            padding: 14px;
+            spacing: 2px;
+
+            Titre {
+                text: @tr("Paramètres");
+            }
+
+            Rectangle {
+                height: 10px;
+            }
+
+            ScrollView {
+                vertical-stretch: 1;
+
+                VerticalLayout {
+                    alignment: start;
+                    spacing: 2px;
+
+                    for r in ReglagesApi.rubriques: ElementNavigation {
+                        libelle: Rubriques.libelle(r);
+                        icone: Rubriques.icone(r);
+                        actif: ReglagesApi.rubrique == r;
+                        clique => {
+                            ReglagesApi.rubrique = r;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Page de la rubrique ; elle apparaît en fondu à chaque changement.
+    contenu := Rectangle {
+        x: Theme.rtl ? 0px : root.largeur-liste;
+        width: parent.width - root.largeur-liste;
+        height: parent.height;
+
+        property <Rubrique> affichee: ReglagesApi.rubrique;
+        property <float> fondu: 1;
+        changed affichee => {
+            self.fondu = 0;
+            apparition.running = true;
+        }
+        opacity: self.fondu;
+        animate opacity { duration: Affichage.duree; }
+
+        apparition := Timer {
+            interval: 1ms;
+            running: false;
+            triggered => {
+                self.running = false;
+                contenu.fondu = 1;
+            }
+        }
+
+        if ReglagesApi.rubrique == Rubrique.mon-compte: PageMonCompte {
+            utilisateur-nom: root.utilisateur-nom;
+            utilisateur-identifiant: root.utilisateur-identifiant;
+            utilisateur-role: root.utilisateur-role;
+            langue <=> root.utilisateur-langue;
+            changer-mot-de-passe(ancien, nouveau, confirmation) => {
+                root.changer-mot-de-passe(ancien, nouveau, confirmation)
+            }
+            changer-langue(rang) => {
+                root.changer-langue(rang)
+            }
+        }
+
+        if ReglagesApi.rubrique == Rubrique.navigation: PageNavigation { }
+
+        if ReglagesApi.rubrique == Rubrique.entreprise: PageEntreprise { }
+
+        if ReglagesApi.rubrique == Rubrique.documents: PageParametres {
+            partie: 0;
+            titre: @tr("Documents");
+        }
+
+        if ReglagesApi.rubrique == Rubrique.paiements: PageParametres {
+            partie: 1;
+            titre: @tr("Paiements");
+        }
+
+        if ReglagesApi.rubrique == Rubrique.textes: PageParametres {
+            partie: 2;
+            titre: @tr("Textes imprimés et exports");
+        }
+
+        if ReglagesApi.rubrique == Rubrique.impression: PageImpression { }
+
+        if ReglagesApi.rubrique == Rubrique.utilisateurs: PageUtilisateurs { }
+
+        if ReglagesApi.rubrique == Rubrique.licence: PageLicence { }
+
+        if ReglagesApi.rubrique == Rubrique.mises-a-jour: PageMisesAJour {
+            version-logiciel: root.version-logiciel;
+        }
+
+        if ReglagesApi.rubrique == Rubrique.a-propos: PageAPropos {
+            version-logiciel: root.version-logiciel;
+            nom-entreprise: root.nom-entreprise;
+            revoir-presentation => {
+                root.revoir-presentation();
+            }
+        }
+    }
+}

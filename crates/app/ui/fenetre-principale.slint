@@ -1,219 +1,31 @@
-import { ComboBox, ScrollView } from "std-widgets.slint";
-import { Bouton, Champ, Droits, ElementNavigation, Modules, MessageErreur, Rangee, Section, Theme, Titre } from "composants.slint";
+// Fenêtre principale : écrans de démarrage, puis application avec sa navigation
+// (bandeau ou barre latérale, navigation.slint) et ses pages.
+import { Affichage, Droits, MessageErreur, Modules, Rangee, Theme, Titre } from "composants.slint";
 import { EcranAssistant, DonneesAssistant } from "assistant.slint";
 import { EcranConnexion } from "connexion.slint";
 import { EcranPresentation } from "presentation.slint";
 import { PageProduits, PageTiers, ProduitsApi, TiersApi } from "referentiels.slint";
-import { EntrepriseApi, PageEntreprise, PageParametres, ParametresApi } from "administration.slint";
-import { PageUtilisateurs, UtilisateursApi } from "utilisateurs.slint";
+import { EntrepriseApi, ParametresApi } from "administration.slint";
+import { UtilisateursApi } from "utilisateurs.slint";
 import { ImportApi, PanneauImport } from "import.slint";
 import { FacturesApi, PageFactures } from "factures.slint";
 import { PageReglements, PageRelances, PageSuiviFournisseurs, PaiementsApi, TotalUi } from "paiements.slint";
 import { PageTableauDeBord, PilotageApi } from "pilotage.slint";
-import { ImpressionApi, PageImpression } from "impression.slint";
-import { LicenceApi, PageLicence } from "licence.slint";
+import { ImpressionApi } from "impression.slint";
+import { LicenceApi } from "licence.slint";
 import { InviteMiseAJour, MiseAJourApi } from "maj.slint";
+import { BandeauHaut, BoutonIcone, ContenuBarre, InfobulleFenetre, Menu, Page, PanneauFlottant } from "navigation.slint";
+import { PageReglages, ReglagesApi, Rubrique } from "reglages.slint";
 
-export { DonneesAssistant, Droits, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, TiersApi, UtilisateursApi }
+export { Affichage, DonneesAssistant, Droits, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, presentation, assistant, connexion, application }
-
-// Pages de l'application ; le menu n'affiche que celles que les droits du compte ouvrent.
-export enum Page {
-    tableau-de-bord,
-    devis,
-    proforma,
-    bons-commande,
-    livraisons,
-    factures,
-    avoirs,
-    reglements,
-    suivi-fournisseurs,
-    relances,
-    tiers,
-    produits,
-    entreprise,
-    parametres,
-    utilisateurs,
-    mon-compte,
-    a-propos,
-}
-
-component PageMonCompte inherits VerticalLayout {
-    in property <string> utilisateur-nom;
-    in property <string> utilisateur-identifiant;
-    in property <string> utilisateur-role;
-
-    // Rang de la langue du compte, dans l'ordre de Langue::TOUTES (domaine).
-    in-out property <int> langue;
-
-    // Renvoient un message d'erreur, ou une chaîne vide si le changement a réussi.
-    callback changer-mot-de-passe(string, string, string) -> string;
-    callback changer-langue(int) -> string;
-
-    property <string> erreur-langue;
-
-    property <string> ancien;
-    property <string> nouveau;
-    property <string> confirmation;
-    property <string> erreur;
-    property <bool> reussi;
-
-    padding: 24px;
-    spacing: 12px;
-
-    Titre {
-        text: @tr("Mon compte");
-    }
-
-    Text {
-        horizontal-alignment: Theme.debut;
-        text: @tr("{} ({}), rôle : {}", root.utilisateur-nom, root.utilisateur-identifiant, root.utilisateur-role);
-        color: Theme.texte-secondaire;
-    }
-
-    Text {
-        horizontal-alignment: Theme.debut;
-        text: @tr("Langue de l'interface");
-        font-weight: 700;
-        color: Theme.texte;
-    }
-
-    Rangee {
-        alignment: start;
-
-        // Chaque langue est écrite dans sa propre langue, pour être reconnue
-        // quelle que soit celle de l'interface.
-        ComboBox {
-            width: 220px;
-            model: ["Français", "English", "العربية", "日本語", "中文", "Türkçe", "Español"];
-            current-index <=> root.langue;
-            selected => {
-                root.erreur-langue = root.changer-langue(self.current-index);
-            }
-        }
-    }
-
-    if root.erreur-langue != "": MessageErreur {
-        text: root.erreur-langue;
-    }
-
-    Text {
-        horizontal-alignment: Theme.debut;
-        text: @tr("Changer de mot de passe");
-        font-weight: 700;
-        color: Theme.texte;
-    }
-
-    Rangee {
-        alignment: start;
-
-        VerticalLayout {
-            width: 360px;
-            spacing: 12px;
-
-            Champ {
-                libelle: @tr("Mot de passe actuel");
-                secret: true;
-                valeur <=> root.ancien;
-            }
-
-            Champ {
-                libelle: @tr("Nouveau mot de passe (8 caractères au moins)");
-                secret: true;
-                valeur <=> root.nouveau;
-            }
-
-            Champ {
-                libelle: @tr("Confirmation du nouveau mot de passe");
-                secret: true;
-                valeur <=> root.confirmation;
-            }
-
-            if root.erreur != "": MessageErreur {
-                text: root.erreur;
-            }
-
-            if root.reussi: Text {
-                horizontal-alignment: Theme.debut;
-                text: @tr("Mot de passe modifié.");
-                color: Theme.succes;
-            }
-
-            Bouton {
-                text: @tr("Enregistrer");
-                primary: true;
-                clicked => {
-                    root.erreur = root.changer-mot-de-passe(root.ancien, root.nouveau, root.confirmation);
-                    root.reussi = root.erreur == "";
-                    if (root.reussi) {
-                        root.ancien = "";
-                        root.nouveau = "";
-                        root.confirmation = "";
-                    }
-                }
-            }
-        }
-    }
-
-    Rectangle { }
-}
-
-// Carte de la page À propos : titre de section, puis ses lignes.
-component CarteAPropos inherits Rectangle {
-    in property <string> titre;
-
-    border-width: 1px;
-    border-color: Theme.bordure;
-    border-radius: 4px;
-
-    VerticalLayout {
-        padding: 20px;
-        spacing: 10px;
-        alignment: start;
-
-        Section {
-            text: root.titre;
-        }
-
-        @children
-    }
-}
-
-// Ligne libellé / valeur ; de droite à gauche, le libellé passe à droite.
-component LigneAPropos inherits GridLayout {
-    in property <string> libelle;
-    in property <string> valeur;
-
-    spacing: 12px;
-
-    Text {
-        row: 0;
-        col: Theme.rtl ? 1 : 0;
-        width: 150px;
-        horizontal-alignment: Theme.debut;
-        text: root.libelle;
-        font-size: 13px;
-        color: Theme.texte-secondaire;
-    }
-
-    Text {
-        row: 0;
-        col: Theme.rtl ? 0 : 1;
-        horizontal-alignment: Theme.debut;
-        text: root.valeur;
-        font-size: 13px;
-        color: Theme.texte;
-        wrap: word-wrap;
-    }
-}
 
 export component FenetrePrincipale inherits Window {
     in-out property <Ecran> ecran: Ecran.demarrage-impossible;
     // Présentation revue depuis « À propos » : elle ramène à l'application.
     property <bool> presentation-depuis-a-propos;
-    property <int> onglet-parametres: 0;
     in property <string> message-demarrage;
     in property <string> nom-entreprise;
     in property <string> version-logiciel;
@@ -233,53 +45,26 @@ export component FenetrePrincipale inherits Window {
     callback changer-mot-de-passe(string, string, string) -> string;
     callback changer-langue(int) -> string;
 
-    // Construit par l'application à chaque connexion. « À propos » y figure toujours.
-    in property <[Page]> menu;
+    // Page affichée ; le menu (global Menu) est construit par l'application à chaque connexion.
     in-out property <Page> page: Page.tableau-de-bord;
 
-    property <bool> page-en-construction: root.page != Page.tableau-de-bord && root.page != Page.devis && root.page != Page.proforma && root.page != Page.bons-commande && root.page != Page.livraisons && root.page != Page.factures && root.page != Page.avoirs && root.page != Page.reglements && root.page != Page.suivi-fournisseurs && root.page != Page.relances && root.page != Page.tiers && root.page != Page.produits && root.page != Page.entreprise && root.page != Page.parametres && root.page != Page.utilisateurs && root.page != Page.mon-compte && root.page != Page.a-propos;
+    // Barre latérale : épinglée (dans la mise en page) ou repliée ; repliée, le
+    // panneau flottant s'ouvre au survol du bouton et repart quand le pointeur s'en va.
+    property <bool> barre-epinglee: true;
+    property <bool> barre-flottante: false;
+    property <bool> survol-bascule;
+    property <bool> barre: Affichage.navigation == 1;
+    property <string> utilisateur: root.utilisateur-nom + " (" + root.utilisateur-role + ")";
 
-    // Libellé de chaque page, dans la langue choisie : calculé ici et non stocké,
-    // pour suivre un changement de langue sans reconstruire le menu.
-    pure function libelle-page(p: Page) -> string {
-        if (p == Page.tableau-de-bord) { return @tr("Tableau de bord"); }
-        if (p == Page.devis) { return @tr("Devis"); }
-        if (p == Page.proforma) { return @tr("Proforma"); }
-        if (p == Page.bons-commande) { return @tr("Bons de commande"); }
-        if (p == Page.livraisons) { return @tr("Livraisons"); }
-        if (p == Page.factures) { return @tr("Factures"); }
-        if (p == Page.avoirs) { return @tr("Avoirs"); }
-        if (p == Page.reglements) { return @tr("Règlements"); }
-        if (p == Page.suivi-fournisseurs) { return @tr("Suivi fournisseurs"); }
-        if (p == Page.relances) { return @tr("Relances"); }
-        if (p == Page.tiers) { return @tr("Tiers"); }
-        if (p == Page.produits) { return @tr("Produits"); }
-        if (p == Page.entreprise) { return @tr("Entreprise"); }
-        if (p == Page.parametres) { return @tr("Paramètres"); }
-        if (p == Page.utilisateurs) { return @tr("Utilisateurs"); }
-        if (p == Page.mon-compte) { return @tr("Mon compte"); }
-        return @tr("À propos");
+    changed survol-bascule => {
+        if (root.survol-bascule && !root.barre-epinglee) {
+            root.barre-flottante = true;
+        }
     }
 
-    // Icône Kadenz de chaque entrée du menu (ui/icones/menu).
-    pure function icone-page(p: Page) -> image {
-        if (p == Page.tableau-de-bord) { return @image-url("icones/menu/tableau-de-bord.svg"); }
-        if (p == Page.devis) { return @image-url("icones/menu/devis.svg"); }
-        if (p == Page.proforma) { return @image-url("icones/menu/proforma.svg"); }
-        if (p == Page.bons-commande) { return @image-url("icones/menu/bons-commande.svg"); }
-        if (p == Page.livraisons) { return @image-url("icones/menu/livraisons.svg"); }
-        if (p == Page.factures) { return @image-url("icones/menu/factures.svg"); }
-        if (p == Page.avoirs) { return @image-url("icones/menu/avoirs.svg"); }
-        if (p == Page.reglements) { return @image-url("icones/menu/reglements.svg"); }
-        if (p == Page.suivi-fournisseurs) { return @image-url("icones/menu/suivi-fournisseurs.svg"); }
-        if (p == Page.relances) { return @image-url("icones/menu/relances.svg"); }
-        if (p == Page.tiers) { return @image-url("icones/menu/tiers.svg"); }
-        if (p == Page.produits) { return @image-url("icones/menu/produits.svg"); }
-        if (p == Page.entreprise) { return @image-url("icones/menu/entreprise.svg"); }
-        if (p == Page.parametres) { return @image-url("icones/menu/parametres.svg"); }
-        if (p == Page.utilisateurs) { return @image-url("icones/menu/utilisateurs.svg"); }
-        if (p == Page.mon-compte) { return @image-url("icones/menu/mon-compte.svg"); }
-        return @image-url("icones/menu/a-propos.svg");
+    function choisir(p: Page) {
+        root.page = p;
+        root.barre-flottante = false;
     }
 
     title: root.nom-entreprise == "" ? "Kadenz" : root.nom-entreprise;
@@ -334,314 +119,192 @@ export component FenetrePrincipale inherits Window {
         }
     }
 
-    if root.ecran == Ecran.application: Rangee {
-        remplit: true;
-        Rectangle {
-            width: 220px;
-            background: Theme.fond-lateral;
+    // Ctrl+B replie ou déplie la barre latérale (mode barre seulement).
+    if root.ecran == Ecran.application: FocusScope {
+        init => {
+            self.focus();
+        }
+        key-pressed(e) => {
+            if (root.barre && e.modifiers.control && (e.text == "b" || e.text == "B")) {
+                root.barre-epinglee = !root.barre-epinglee;
+                root.barre-flottante = false;
+                return accept;
+            }
+            return reject;
+        }
 
-            VerticalLayout {
-                padding: 12px;
-                spacing: 4px;
-
-                Text {
-                    horizontal-alignment: Theme.debut;
-                    text: root.nom-entreprise;
-                    font-size: 16px;
-                    font-weight: 700;
-                    color: Theme.texte;
-                    wrap: word-wrap;
+        VerticalLayout {
+            if !root.barre: BandeauHaut {
+                nom-entreprise: root.nom-entreprise;
+                utilisateur: root.utilisateur;
+                page: root.page;
+                choisi(p) => {
+                    root.choisir(p);
                 }
-
-                Rectangle {
-                    height: 8px;
+                deconnecter => {
+                    root.deconnecter();
                 }
+            }
 
-                // Le menu défile quand la fenêtre est trop basse pour toutes ses entrées.
-                ScrollView {
-                    vertical-stretch: 1;
+            Rangee {
+                remplit: true;
 
-                    VerticalLayout {
-                        alignment: start;
-                        spacing: 4px;
+                // Barre épinglée : sa largeur s'anime quand on la replie ou la déplie.
+                if root.barre: Rectangle {
+                    width: root.barre-epinglee ? 248px : 0px;
+                    animate width {
+                        duration: Affichage.duree-longue;
+                        easing: ease-out;
+                    }
+                    background: Theme.fond-lateral;
+                    clip: true;
 
-                        for element in root.menu: ElementNavigation {
-                            libelle: root.libelle-page(element);
-                            icone: root.icone-page(element);
-                            actif: root.page == element;
-                            clique => {
-                                root.page = element;
-                            }
+                    ContenuBarre {
+                        x: Theme.rtl ? parent.width - self.width : 0px;
+                        width: 248px;
+                        height: parent.height;
+                        nom-entreprise: root.nom-entreprise;
+                        utilisateur: root.utilisateur;
+                        page: root.page;
+                        infobulle-bascule: @tr("Replier la barre latérale (Ctrl+B)");
+                        choisi(p) => {
+                            root.choisir(p);
+                        }
+                        basculer => {
+                            root.barre-epinglee = false;
+                        }
+                        deconnecter => {
+                            root.deconnecter();
                         }
                     }
                 }
 
-                Text {
-                    horizontal-alignment: Theme.debut;
-                    text: root.utilisateur-nom + " (" + root.utilisateur-role + ")";
-                    font-size: 12px;
-                    color: Theme.texte;
-                    wrap: word-wrap;
-                }
+                VerticalLayout {
+                    horizontal-stretch: 1;
 
-                Bouton {
-                    text: @tr("Se déconnecter");
-                    clicked => {
-                        root.deconnecter();
+                    // Barre repliée : une ligne mince garde le bouton qui la rouvre.
+                    if root.barre && !root.barre-epinglee: HorizontalLayout {
+                        height: 44px;
+                        padding-top: 6px;
+                        padding-bottom: 6px;
+                        padding-left: 10px;
+                        padding-right: 10px;
+                        alignment: Theme.rangee-debut;
+
+                        BoutonIcone {
+                            icone: @image-url("icones/actions/barre.svg");
+                            infobulle: @tr("Afficher la barre latérale (Ctrl+B)");
+                            changed survol => {
+                                root.survol-bascule = self.survol;
+                            }
+                            clique => {
+                                root.barre-epinglee = true;
+                                root.barre-flottante = false;
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        vertical-stretch: 1;
+
+                        // Un écran commun pour les documents ; le type est le rang dans
+                        // TypeDocument::TOUS (0 devis, 1 proforma, 2 bon de commande,
+                        // 3 bordereau, 4 facture, 5 avoir).
+                        if root.page == Page.tableau-de-bord: PageTableauDeBord { }
+
+                        if root.page == Page.devis: PageFactures {
+                            type-document: 0;
+                        }
+
+                        if root.page == Page.proforma: PageFactures {
+                            type-document: 1;
+                        }
+
+                        if root.page == Page.bons-commande: PageFactures {
+                            type-document: 2;
+                        }
+
+                        if root.page == Page.livraisons: PageFactures {
+                            type-document: 3;
+                        }
+
+                        if root.page == Page.factures: PageFactures {
+                            type-document: 4;
+                        }
+
+                        if root.page == Page.avoirs: PageFactures {
+                            type-document: 5;
+                        }
+
+                        if root.page == Page.reglements: PageReglements { }
+
+                        if root.page == Page.suivi-fournisseurs: PageSuiviFournisseurs { }
+
+                        if root.page == Page.relances: PageRelances { }
+
+                        if root.page == Page.tiers: PageTiers { }
+
+                        if root.page == Page.produits: PageProduits { }
+
+                        if root.page == Page.parametres: PageReglages {
+                            version-logiciel: root.version-logiciel;
+                            nom-entreprise: root.nom-entreprise;
+                            utilisateur-nom: root.utilisateur-nom;
+                            utilisateur-identifiant: root.utilisateur-identifiant;
+                            utilisateur-role: root.utilisateur-role;
+                            utilisateur-langue <=> root.utilisateur-langue;
+                            changer-mot-de-passe(ancien, nouveau, confirmation) => {
+                                root.changer-mot-de-passe(ancien, nouveau, confirmation)
+                            }
+                            changer-langue(rang) => {
+                                root.changer-langue(rang)
+                            }
+                            revoir-presentation => {
+                                root.presentation-depuis-a-propos = true;
+                                root.ecran = Ecran.presentation;
+                            }
+                        }
+
+                        // Recouvre l'écran Tiers ou Produits pendant un import.
+                        if ImportApi.actif: PanneauImport { }
                     }
                 }
             }
         }
+    }
 
-        Rectangle {
-            if root.page-en-construction: VerticalLayout {
-                padding: 24px;
-                spacing: 12px;
+    // Panneau flottant de la barre repliée, par-dessus le contenu.
+    if root.ecran == Ecran.application && root.barre && !root.barre-epinglee: panneau := PanneauFlottant {
+        y: 8px;
+        height: root.height - 16px;
+        largeur-fenetre: root.width;
+        ouvert: root.barre-flottante;
 
-                Titre {
-                    text: root.libelle-page(root.page);
-                }
-
-                Text {
-                    horizontal-alignment: Theme.debut;
-                    text: @tr("Module en cours de construction.");
-                    color: Theme.texte-secondaire;
-                }
-
-                Rectangle { }
+        ContenuBarre {
+            width: parent.width;
+            height: parent.height;
+            nom-entreprise: root.nom-entreprise;
+            utilisateur: root.utilisateur;
+            page: root.page;
+            infobulle-bascule: @tr("Épingler la barre latérale (Ctrl+B)");
+            choisi(p) => {
+                root.choisir(p);
             }
-
-            // Un écran commun pour les documents de vente ; le type est le rang dans
-            // TypeDocument::TOUS (0 devis, 1 proforma, 4 facture, 5 avoir).
-            if root.page == Page.tableau-de-bord: PageTableauDeBord { }
-
-            if root.page == Page.devis: PageFactures {
-                type-document: 0;
+            basculer => {
+                root.barre-epinglee = true;
+                root.barre-flottante = false;
             }
-
-            if root.page == Page.proforma: PageFactures {
-                type-document: 1;
+            deconnecter => {
+                root.deconnecter();
             }
+        }
 
-            if root.page == Page.bons-commande: PageFactures {
-                type-document: 2;
-            }
-
-            if root.page == Page.livraisons: PageFactures {
-                type-document: 3;
-            }
-
-            if root.page == Page.reglements: PageReglements { }
-
-            if root.page == Page.suivi-fournisseurs: PageSuiviFournisseurs { }
-
-            if root.page == Page.relances: PageRelances { }
-
-            if root.page == Page.factures: PageFactures {
-                type-document: 4;
-            }
-
-            if root.page == Page.avoirs: PageFactures {
-                type-document: 5;
-            }
-
-            if root.page == Page.tiers: PageTiers { }
-
-            if root.page == Page.produits: PageProduits { }
-
-            if root.page == Page.entreprise: PageEntreprise { }
-
-            // Paramètres en trois onglets : réglages généraux, impression (jalon J8b), licence (J9).
-            if root.page == Page.parametres: VerticalLayout {
-                Rangee {
-                    padding-left: 24px;
-                    padding-right: 24px;
-                    padding-top: 16px;
-                    spacing: 8px;
-                    alignment: start;
-                    // Hauteur des boutons, quel que soit l'onglet affiché dessous.
-                    vertical-stretch: 0;
-
-                    Bouton {
-                        text: @tr("Général");
-                        primary: root.onglet-parametres == 0;
-                        clicked => {
-                            root.onglet-parametres = 0;
-                        }
-                    }
-
-                    Bouton {
-                        text: @tr("Impression");
-                        primary: root.onglet-parametres == 1;
-                        clicked => {
-                            root.onglet-parametres = 1;
-                        }
-                    }
-
-                    Bouton {
-                        text: @tr("Licence");
-                        primary: root.onglet-parametres == 2;
-                        clicked => {
-                            root.onglet-parametres = 2;
-                        }
-                    }
-                }
-
-                if root.onglet-parametres == 0: PageParametres { }
-
-                if root.onglet-parametres == 1: PageImpression {
-                    vertical-stretch: 1;
-                }
-
-                if root.onglet-parametres == 2: PageLicence { }
-            }
-
-            if root.page == Page.utilisateurs: PageUtilisateurs { }
-
-            // Recouvre l'écran Tiers ou Produits pendant un import.
-            if ImportApi.actif: PanneauImport { }
-
-            if root.page == Page.mon-compte: PageMonCompte {
-                utilisateur-nom: root.utilisateur-nom;
-                utilisateur-identifiant: root.utilisateur-identifiant;
-                utilisateur-role: root.utilisateur-role;
-                langue <=> root.utilisateur-langue;
-                changer-mot-de-passe(ancien, nouveau, confirmation) => {
-                    root.changer-mot-de-passe(ancien, nouveau, confirmation)
-                }
-                changer-langue(rang) => {
-                    root.changer-langue(rang)
-                }
-            }
-
-            if root.page == Page.a-propos: VerticalLayout {
-                padding: 24px;
-                spacing: 20px;
-
-                Rangee {
-                    spacing: 8px;
-
-                    Titre {
-                        text: @tr("À propos");
-                    }
-
-                    Rectangle { }
-
-                    Bouton {
-                        text: @tr("Revoir la présentation");
-                        clicked => {
-                            root.presentation-depuis-a-propos = true;
-                            root.ecran = Ecran.presentation;
-                        }
-                    }
-                }
-
-                // Bandeau de marque : logo, motif Cadence, rôle du logiciel.
-                Rectangle {
-                    height: 168px;
-                    border-radius: 4px;
-                    background: Theme.nuit;
-                    clip: true;
-
-                    Image {
-                        x: Theme.rtl ? 0px : parent.width - self.width;
-                        width: min(360px, parent.width / 2);
-                        height: parent.height;
-                        source: @image-url("icones/motif-cadence.svg");
-                        image-fit: cover;
-                    }
-
-                    VerticalLayout {
-                        padding: 28px;
-                        spacing: 10px;
-                        alignment: center;
-
-                        Image {
-                            width: 170px;
-                            height: 46px;
-                            source: @image-url("icones/kadenz-logo-horizontal-negatif.svg");
-                            image-fit: contain;
-                            horizontal-alignment: Theme.rtl ? ImageHorizontalAlignment.right : ImageHorizontalAlignment.left;
-                        }
-
-                        Text {
-                            horizontal-alignment: Theme.debut;
-                            text: @tr("Gestion commerciale");
-                            color: white;
-                            font-family: Theme.police-titre;
-                            font-size: 20px;
-                            font-weight: 800;
-                        }
-
-                        Text {
-                            horizontal-alignment: Theme.debut;
-                            text: @tr("Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements.");
-                            color: #c5cae0;
-                            font-size: 13px;
-                            wrap: word-wrap;
-                        }
-                    }
-                }
-
-                // Grille et non Rangee : les textes à la ligne y gardent une hauteur stable.
-                // Les colonnes s'échangent de droite à gauche.
-                GridLayout {
-                    spacing: 20px;
-
-                    CarteAPropos {
-                        row: 0;
-                        col: Theme.rtl ? 1 : 0;
-                        titre: @tr("Logiciel");
-
-                        LigneAPropos {
-                            libelle: @tr("Version");
-                            valeur: root.version-logiciel;
-                        }
-
-                        // Nom propre de l'éditeur, non traduit (décision de l'utilisateur
-                        // du 2026-11-11).
-                        LigneAPropos {
-                            libelle: @tr("Éditeur");
-                            valeur: "Mcarre";
-                        }
-
-                        LigneAPropos {
-                            libelle: @tr("Licence");
-                            valeur: @tr("Logiciel propriétaire, tous droits réservés.");
-                        }
-
-                        LigneAPropos {
-                            libelle: @tr("Système");
-                            valeur: @tr("Windows, mono-poste.");
-                        }
-
-                        LigneAPropos {
-                            libelle: @tr("Langues");
-                            valeur: "Français, English, Español, Türkçe, العربية, 日本語, 中文";
-                        }
-                    }
-
-                    CarteAPropos {
-                        row: 0;
-                        col: Theme.rtl ? 0 : 1;
-                        titre: @tr("Données de ce poste");
-
-                        LigneAPropos {
-                            libelle: @tr("Entreprise");
-                            valeur: root.nom-entreprise;
-                        }
-
-                        Text {
-                            horizontal-alignment: Theme.debut;
-                            text: @tr("Les données restent sur ce poste, dans une base locale SQLite.");
-                            font-size: 12px;
-                            color: Theme.texte-secondaire;
-                            wrap: word-wrap;
-                        }
-                    }
-                }
-
-                Rectangle { }
+        // Le panneau repart quand le pointeur a quitté le bouton et le panneau.
+        Timer {
+            interval: 300ms;
+            running: root.barre-flottante && !root.survol-bascule && !panneau.survol;
+            triggered => {
+                root.barre-flottante = false;
             }
         }
     }
@@ -650,5 +313,9 @@ export component FenetrePrincipale inherits Window {
     if root.ecran == Ecran.application && MiseAJourApi.visible: InviteMiseAJour {
         width: root.width;
         height: root.height;
+    }
+
+    InfobulleFenetre {
+        largeur-fenetre: root.width;
     }
 }

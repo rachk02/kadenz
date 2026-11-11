@@ -585,9 +585,6 @@ msgstr "无法打开数据库（{}）：{}"
 msgid "la fiche entreprise n'existe pas encore"
 msgstr "公司信息尚未创建。"
 
-msgid "La matrice des droits par rôle se règle dans l'écran Utilisateurs."
-msgstr "按角色划分的权限矩阵在“用户”界面中设置。"
-
 msgid "Langue de l'interface"
 msgstr "界面语言"
 
@@ -719,9 +716,6 @@ msgstr "修改付款方式或备注"
 
 msgid "Modifier ou désactiver un client, un fournisseur, un produit"
 msgstr "修改或停用客户、供应商、产品"
-
-msgid "Module en cours de construction."
-msgstr "模块正在建设中。"
 
 msgid "Mon compte"
 msgstr "我的账户"
@@ -2241,9 +2235,6 @@ msgstr "数据保存在本机的本地 SQLite 数据库中。"
 msgid "Impression"
 msgstr "打印"
 
-msgid "Général"
-msgstr "常规"
-
 msgid "Insérer la variable"
 msgstr "插入变量"
 
@@ -2642,3 +2633,72 @@ msgstr "发布者"
 
 msgid "erreur de base de données ; le détail est enregistré dans le fichier erreurs.log"
 msgstr "数据库错误；详细信息已保存在 erreurs.log 文件中"
+
+msgid "Replier la barre latérale (Ctrl+B)"
+msgstr "收起侧边栏 (Ctrl+B)"
+
+msgid "Afficher la barre latérale (Ctrl+B)"
+msgstr "显示侧边栏 (Ctrl+B)"
+
+msgid "Épingler la barre latérale (Ctrl+B)"
+msgstr "固定侧边栏 (Ctrl+B)"
+
+msgid "Documents"
+msgstr "单据"
+
+msgid "Référentiels"
+msgstr "基础资料"
+
+msgid "Navigation et affichage"
+msgstr "导航与显示"
+
+msgid "Textes imprimés et exports"
+msgstr "打印文本与导出"
+
+msgid "Mises à jour"
+msgstr "更新"
+
+msgid "Réglages propres à votre compte : chaque utilisateur choisit les siens."
+msgstr "您账户专属的设置：每位用户自行选择。"
+
+msgid "Navigation"
+msgstr "导航"
+
+msgid "Bandeau en haut"
+msgstr "顶部栏"
+
+msgid "Menus déroulants Documents, Paiements et Référentiels en haut de la fenêtre."
+msgstr "窗口顶部的单据、付款和基础资料下拉菜单。"
+
+msgid "Barre latérale"
+msgstr "侧边栏"
+
+msgid "Menu sur le côté, repliable avec Ctrl+B ; repliée, elle s'ouvre au survol de son bouton."
+msgstr "侧边菜单，可用 Ctrl+B 收起；收起后，将指针悬停在其按钮上即可打开。"
+
+msgid "Animations"
+msgstr "动画"
+
+msgid "Animer les transitions, les survols et l'ouverture des panneaux"
+msgstr "为切换、悬停和面板打开添加动画"
+
+msgid "Version installée : {}"
+msgstr "已安装版本：{}"
+
+msgid "Kadenz cherche aussi une mise à jour à chaque connexion d'un compte qui gère les paramètres."
+msgstr "每当管理设置的账户登录时，Kadenz 也会检查更新。"
+
+msgid "Rechercher une mise à jour"
+msgstr "检查更新"
+
+msgid "Recherche impossible : le serveur des mises à jour ne répond pas. Vérifiez la connexion à Internet."
+msgstr "无法检查：更新服务器无响应。请检查互联网连接。"
+
+msgid "Recherche en cours"
+msgstr "正在检查"
+
+msgid "Kadenz est à jour."
+msgstr "Kadenz 已是最新版本。"
+
+msgid "La version {} est disponible."
+msgstr "版本 {} 现已推出。"

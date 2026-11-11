@@ -585,9 +585,6 @@ msgstr "データベース（{}）を開けませんでした：{}"
 msgid "la fiche entreprise n'existe pas encore"
 msgstr "会社情報がまだ登録されていません。"
 
-msgid "La matrice des droits par rôle se règle dans l'écran Utilisateurs."
-msgstr "役割ごとの権限表は「ユーザー」画面で設定します。"
-
 msgid "Langue de l'interface"
 msgstr "表示言語"
 
@@ -719,9 +716,6 @@ msgstr "支払方法または備考の変更"
 
 msgid "Modifier ou désactiver un client, un fournisseur, un produit"
 msgstr "顧客・仕入先・商品の変更・無効化"
-
-msgid "Module en cours de construction."
-msgstr "このモジュールは準備中です。"
 
 msgid "Mon compte"
 msgstr "マイアカウント"
@@ -2241,9 +2235,6 @@ msgstr "データはこのパソコンのローカル SQLite データベース�
 msgid "Impression"
 msgstr "印刷"
 
-msgid "Général"
-msgstr "一般"
-
 msgid "Insérer la variable"
 msgstr "変数を挿入"
 
@@ -2642,3 +2633,72 @@ msgstr "発行元"
 
 msgid "erreur de base de données ; le détail est enregistré dans le fichier erreurs.log"
 msgstr "データベース エラー。詳細は erreurs.log ファイルに保存されました"
+
+msgid "Replier la barre latérale (Ctrl+B)"
+msgstr "サイドバーを折りたたむ (Ctrl+B)"
+
+msgid "Afficher la barre latérale (Ctrl+B)"
+msgstr "サイドバーを表示 (Ctrl+B)"
+
+msgid "Épingler la barre latérale (Ctrl+B)"
+msgstr "サイドバーを固定 (Ctrl+B)"
+
+msgid "Documents"
+msgstr "書類"
+
+msgid "Référentiels"
+msgstr "マスターデータ"
+
+msgid "Navigation et affichage"
+msgstr "ナビゲーションと表示"
+
+msgid "Textes imprimés et exports"
+msgstr "印刷テキストとエクスポート"
+
+msgid "Mises à jour"
+msgstr "アップデート"
+
+msgid "Réglages propres à votre compte : chaque utilisateur choisit les siens."
+msgstr "アカウントごとの設定です。各ユーザーが自分で選びます。"
+
+msgid "Navigation"
+msgstr "ナビゲーション"
+
+msgid "Bandeau en haut"
+msgstr "上部バー"
+
+msgid "Menus déroulants Documents, Paiements et Référentiels en haut de la fenêtre."
+msgstr "ウィンドウ上部に書類、支払い、マスターデータのドロップダウン メニューを表示します。"
+
+msgid "Barre latérale"
+msgstr "サイドバー"
+
+msgid "Menu sur le côté, repliable avec Ctrl+B ; repliée, elle s'ouvre au survol de son bouton."
+msgstr "Ctrl+B で折りたためるサイド メニューです。折りたたむと、ボタンにポインターを置くと開きます。"
+
+msgid "Animations"
+msgstr "アニメーション"
+
+msgid "Animer les transitions, les survols et l'ouverture des panneaux"
+msgstr "切り替え、ポインターを置いたとき、パネルの開閉をアニメーションで表示する"
+
+msgid "Version installée : {}"
+msgstr "インストール済みのバージョン: {}"
+
+msgid "Kadenz cherche aussi une mise à jour à chaque connexion d'un compte qui gère les paramètres."
+msgstr "設定を管理するアカウントがサインインするたびにも、Kadenz はアップデートを確認します。"
+
+msgid "Rechercher une mise à jour"
+msgstr "アップデートを確認"
+
+msgid "Recherche impossible : le serveur des mises à jour ne répond pas. Vérifiez la connexion à Internet."
+msgstr "確認できません。アップデート サーバーが応答しません。インターネット接続を確認してください。"
+
+msgid "Recherche en cours"
+msgstr "確認しています"
+
+msgid "Kadenz est à jour."
+msgstr "Kadenz は最新です。"
+
+msgid "La version {} est disponible."
+msgstr "バージョン {} を利用できます。"

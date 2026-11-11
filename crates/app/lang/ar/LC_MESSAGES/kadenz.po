@@ -585,9 +585,6 @@ msgstr "تعذّر فتح قاعدة البيانات ({}): {}"
 msgid "la fiche entreprise n'existe pas encore"
 msgstr "بطاقة الشركة غير موجودة بعد"
 
-msgid "La matrice des droits par rôle se règle dans l'écran Utilisateurs."
-msgstr "تُضبط مصفوفة الصلاحيات حسب الدور في شاشة المستخدمين."
-
 msgid "Langue de l'interface"
 msgstr "لغة الواجهة"
 
@@ -719,9 +716,6 @@ msgstr "تعديل طريقة الدفع أو الملاحظات"
 
 msgid "Modifier ou désactiver un client, un fournisseur, un produit"
 msgstr "تعديل أو تعطيل عميل أو مورد أو منتج"
-
-msgid "Module en cours de construction."
-msgstr "الوحدة قيد الإنشاء."
 
 msgid "Mon compte"
 msgstr "حسابي"
@@ -2241,9 +2235,6 @@ msgstr "تبقى البيانات على هذا الجهاز، في قاعدة �
 msgid "Impression"
 msgstr "الطباعة"
 
-msgid "Général"
-msgstr "عام"
-
 msgid "Insérer la variable"
 msgstr "إدراج المتغير"
 
@@ -2642,3 +2633,72 @@ msgstr "الناشر"
 
 msgid "erreur de base de données ; le détail est enregistré dans le fichier erreurs.log"
 msgstr "خطأ في قاعدة البيانات؛ حُفظت التفاصيل في الملف erreurs.log"
+
+msgid "Replier la barre latérale (Ctrl+B)"
+msgstr "طيّ الشريط الجانبي (Ctrl+B)"
+
+msgid "Afficher la barre latérale (Ctrl+B)"
+msgstr "إظهار الشريط الجانبي (Ctrl+B)"
+
+msgid "Épingler la barre latérale (Ctrl+B)"
+msgstr "تثبيت الشريط الجانبي (Ctrl+B)"
+
+msgid "Documents"
+msgstr "المستندات"
+
+msgid "Référentiels"
+msgstr "البيانات المرجعية"
+
+msgid "Navigation et affichage"
+msgstr "التنقل والعرض"
+
+msgid "Textes imprimés et exports"
+msgstr "النصوص المطبوعة والتصدير"
+
+msgid "Mises à jour"
+msgstr "التحديثات"
+
+msgid "Réglages propres à votre compte : chaque utilisateur choisit les siens."
+msgstr "إعدادات خاصة بحسابك: يختار كل مستخدم إعداداته."
+
+msgid "Navigation"
+msgstr "التنقل"
+
+msgid "Bandeau en haut"
+msgstr "الشريط العلوي"
+
+msgid "Menus déroulants Documents, Paiements et Référentiels en haut de la fenêtre."
+msgstr "قوائم منسدلة للمستندات والمدفوعات والبيانات المرجعية أعلى النافذة."
+
+msgid "Barre latérale"
+msgstr "الشريط الجانبي"
+
+msgid "Menu sur le côté, repliable avec Ctrl+B ; repliée, elle s'ouvre au survol de son bouton."
+msgstr "قائمة جانبية تُطوى بـ Ctrl+B؛ وعند طيّها تُفتح بتمرير المؤشر فوق زرها."
+
+msgid "Animations"
+msgstr "الحركات"
+
+msgid "Animer les transitions, les survols et l'ouverture des panneaux"
+msgstr "تحريك الانتقالات والتمرير وفتح اللوحات"
+
+msgid "Version installée : {}"
+msgstr "الإصدار المثبت: {}"
+
+msgid "Kadenz cherche aussi une mise à jour à chaque connexion d'un compte qui gère les paramètres."
+msgstr "يبحث Kadenz أيضًا عن تحديث عند كل تسجيل دخول لحساب يدير الإعدادات."
+
+msgid "Rechercher une mise à jour"
+msgstr "البحث عن تحديث"
+
+msgid "Recherche impossible : le serveur des mises à jour ne répond pas. Vérifiez la connexion à Internet."
+msgstr "تعذّر البحث: خادم التحديثات لا يستجيب. تحقّق من الاتصال بالإنترنت."
+
+msgid "Recherche en cours"
+msgstr "جارٍ البحث"
+
+msgid "Kadenz est à jour."
+msgstr "Kadenz محدّث."
+
+msgid "La version {} est disponible."
+msgstr "الإصدار {} متاح."

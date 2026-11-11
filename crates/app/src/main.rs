@@ -22,10 +22,13 @@ use std::rc::Rc;
 
 use kadenz_domaine::langue::Langue;
 use kadenz_domaine::lettres::Orthographe;
+use kadenz_domaine::module::Module;
 use kadenz_domaine::role::Droit;
 use kadenz_domaine::saisie;
 use kadenz_stockage::Connexion;
-use kadenz_stockage::comptes::{self, EtatInstallation, NouvelUtilisateur, Utilisateur};
+use kadenz_stockage::comptes::{
+    self, EtatInstallation, Navigation, NouvelUtilisateur, Utilisateur,
+};
 use kadenz_stockage::documents::TypeDocument;
 use kadenz_stockage::droits;
 use kadenz_stockage::entreprise::{self, Entreprise};
@@ -142,7 +145,7 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     d.set_gerer_parametres(possede(Droit::GererParametres));
     d.set_gerer_utilisateurs(possede(Droit::GererUtilisateurs));
 
-    // Les libellés et les icônes du menu sont dans fenetre-principale.slint.
+    // Les libellés et les icônes du menu sont dans navigation.slint.
     // Les pages des modules que la licence n'active pas sont retirées du menu.
     let mut menu = Vec::new();
     if possede(Droit::Consulter) {
@@ -162,16 +165,30 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
         ]);
         menu.retain(|p| licence::page_active(&etat.conn, *p));
     }
-    if possede(Droit::GererParametres) {
-        menu.extend([Page::Entreprise, Page::Parametres]);
-    }
-    if possede(Droit::GererUtilisateurs) {
-        menu.push(Page::Utilisateurs);
-    }
-    if etat.utilisateur.is_some() {
-        menu.push(Page::MonCompte);
-    }
-    menu.push(Page::APropos);
+    // Les Paramètres sont ouverts à tous : Mon compte, la navigation et À propos
+    // en font partie.
+    menu.push(Page::Parametres);
+
+    let groupe = |pages: &[Page]| -> ModelRc<Page> {
+        let retenues: Vec<Page> = pages.iter().copied().filter(|p| menu.contains(p)).collect();
+        ModelRc::new(VecModel::from(retenues))
+    };
+    let m = fenetre.global::<Menu>();
+    m.set_tableau_de_bord(menu.contains(&Page::TableauDeBord));
+    m.set_documents(groupe(&[
+        Page::Devis,
+        Page::Proforma,
+        Page::BonsCommande,
+        Page::Livraisons,
+        Page::Factures,
+        Page::Avoirs,
+    ]));
+    m.set_paiements(groupe(&[
+        Page::Reglements,
+        Page::SuiviFournisseurs,
+        Page::Relances,
+    ]));
+    m.set_referentiels(groupe(&[Page::Tiers, Page::Produits]));
 
     // La page en cours reste affichée si le menu la contient encore ; sinon les
     // Factures (socle), ou à défaut la première page du menu.
@@ -183,7 +200,29 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     } else {
         menu[0]
     });
-    fenetre.set_menu(ModelRc::new(VecModel::from(menu)));
+
+    // Rubriques des Paramètres, selon les droits et la licence.
+    let gere = possede(Droit::GererParametres);
+    let mut rubriques = vec![Rubrique::MonCompte, Rubrique::Navigation];
+    if gere {
+        rubriques.extend([Rubrique::Entreprise, Rubrique::Documents]);
+        if licence::actif(&etat.conn, Module::Paiements) {
+            rubriques.push(Rubrique::Paiements);
+        }
+        rubriques.extend([Rubrique::Textes, Rubrique::Impression]);
+    }
+    if possede(Droit::GererUtilisateurs) {
+        rubriques.push(Rubrique::Utilisateurs);
+    }
+    if gere {
+        rubriques.extend([Rubrique::Licence, Rubrique::MisesAJour]);
+    }
+    rubriques.push(Rubrique::APropos);
+    let r = fenetre.global::<ReglagesApi>();
+    if !rubriques.contains(&r.get_rubrique()) {
+        r.set_rubrique(Rubrique::MonCompte);
+    }
+    r.set_rubriques(ModelRc::new(VecModel::from(rubriques)));
 }
 
 /// Le compte connecté gère-t-il les paramètres ? (Invite de mise à jour, J10.)
@@ -191,6 +230,16 @@ fn gere_parametres(etat: &Etat) -> bool {
     etat.utilisateur
         .as_ref()
         .is_some_and(|u| droits::possede(&etat.conn, u, Droit::GererParametres).unwrap_or(false))
+}
+
+/// Préférences d'affichage du compte : navigation et animations.
+fn appliquer_affichage(fenetre: &FenetrePrincipale, u: &Utilisateur) {
+    let a = fenetre.global::<Affichage>();
+    a.set_navigation(match u.navigation {
+        Navigation::Bandeau => 0,
+        Navigation::Barre => 1,
+    });
+    a.set_animations(u.animations);
 }
 
 /// Réglages d'affichage propres à la langue retenue (code de traduction::choisir).
@@ -210,6 +259,7 @@ fn afficher_session(fenetre: &FenetrePrincipale, etat: &Etat) {
         fenetre.set_utilisateur_nom(u.nom_complet.as_str().into());
         fenetre.set_utilisateur_identifiant(u.identifiant.as_str().into());
         fenetre.set_utilisateur_role(traduction::tr(&u.role.to_string()).into());
+        appliquer_affichage(fenetre, u);
         appliquer_droits(fenetre, etat);
         fenetre.set_ecran(Ecran::Application);
     }
@@ -380,6 +430,37 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
             Err(erreur) => phrase(erreur),
         }
     });
+
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    fenetre
+        .global::<ReglagesApi>()
+        .on_changer_affichage(move |navigation, animations| {
+            let navigation = if navigation == 1 {
+                Navigation::Barre
+            } else {
+                Navigation::Bandeau
+            };
+            let mut etat = e.borrow_mut();
+            let Some(utilisateur) = etat.utilisateur.clone() else {
+                return phrase("aucune session ouverte");
+            };
+            let resultat =
+                comptes::changer_affichage(&etat.conn, &utilisateur, navigation, animations);
+            if resultat.is_ok()
+                && let Some(u) = etat.utilisateur.as_mut()
+            {
+                u.navigation = navigation;
+                u.animations = animations;
+            }
+            // Dans tous les cas, l'écran reprend les préférences enregistrées du compte.
+            if let (Some(f), Some(u)) = (f.upgrade(), etat.utilisateur.as_ref()) {
+                appliquer_affichage(&f, u);
+            }
+            match resultat {
+                Ok(()) => SharedString::new(),
+                Err(erreur) => phrase(erreur),
+            }
+        });
 
     let e = etat;
     fenetre.on_changer_mot_de_passe(move |ancien, nouveau, confirmation| {
