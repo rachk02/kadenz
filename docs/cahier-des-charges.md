@@ -31,6 +31,8 @@
 | 2.25 | 2026-11-11 | Jalon J9, décisions de l'utilisateur : socle seul sans clé valide, paire de clés générée par l'éditeur lui-même, clé d'essai pour le poste de développement, modules désactivés refusés aussi par le stockage ; signature Ed25519 et identifiant de poste tiré du MachineGuid (section 15) |
 | 2.26 | 2026-11-11 | Jalon J9 validé par l'utilisateur ; passage à J10 (mises à jour, export Excel) |
 | 2.27 | 2026-11-11 | J10 tranché : mise à jour téléchargée, empreinte SHA-256 vérifiée, installateur lancé puis fermeture de Kadenz (section 16) ; export Excel de tous les registres, tels qu'affichés, et d'un document sur une feuille complète (en-tête, lignes, totaux) |
+| 2.28 | 2026-11-11 | Jalon J10 validé par l'utilisateur, dernier jalon de la feuille de route ; essai de l'installateur sur le poste de développement autorisé |
+| 2.29 | 2026-11-11 | Essai de l'installateur : l'utilisateur le juge incomplet et demande l'identité de Kadenz dans l'assistant, le choix du dossier d'installation, des cases pour les raccourcis du bureau et du menu Démarrer, le lancement de Kadenz à la fin et le choix de la langue d'installation au début ; sans le module Paiements, la colonne Paiement du registre (écran et export Excel) est masquée |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 

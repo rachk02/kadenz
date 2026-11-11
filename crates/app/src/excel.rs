@@ -96,7 +96,11 @@ pub(crate) fn registre_documents(
 ) -> Export {
     exiger(conn, t.module())?;
     let montants = t.a_des_montants();
-    let paiement = t.recoit_des_reglements();
+    let reglable = t.recoit_des_reglements();
+    // Sans le module Paiements, l'état de paiement n'est pas suivi : la colonne
+    // est masquée comme à l'écran (décision de l'utilisateur du 2026-11-11).
+    let paiement =
+        reglable && licence::module_actif(conn, Module::Paiements).map_err(texte_erreur)?;
     let mut colonnes = vec![
         col("Numéro", 16.0),
         col("Date", 12.0),
@@ -104,9 +108,11 @@ pub(crate) fn registre_documents(
         col("Libellé", 30.0),
         col("Statut", 18.0),
     ];
-    if paiement {
+    if reglable {
         colonnes.push(col("Mode de paiement", 18.0));
         colonnes.push(col("Échéance", 12.0));
+    }
+    if paiement {
         colonnes.push(col("Paiement", 16.0));
     }
     if montants {
@@ -122,9 +128,11 @@ pub(crate) fn registre_documents(
                 d.libelle.clone().into(),
                 tr(&d.statut.to_string()).into(),
             ];
-            if paiement {
+            if reglable {
                 v.push(d.mode_paiement.clone().into());
                 v.push(d.date_echeance.into());
+            }
+            if paiement {
                 v.push(
                     d.etat_paiement
                         .map(|e| tr(&e.to_string()))
