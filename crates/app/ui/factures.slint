@@ -166,6 +166,8 @@ export global FacturesApi {
     in property <[string]> statuts;
     // Filtre et bandeau de paiement : seulement pour un type qui reçoit des règlements.
     in property <bool> avec-paiement;
+    // Colonne de l'état de paiement dans le registre : retirée sans le module Paiements.
+    in property <bool> colonne-paiement: true;
     // PDF disponible pour ce type.
     in property <bool> avec-pdf;
     // Faux pour le bordereau de livraison : ni prix, ni taux, ni totaux.
@@ -262,6 +264,18 @@ export global FacturesApi {
 
 component Registre inherits VerticalLayout {
     property <string> erreur-filtre;
+    // Nombre de colonnes affichées : 5 pour le bordereau, 8 sans la colonne Paiement, 9 sinon.
+    property <int> nb-colonnes: !FacturesApi.avec-montants ? 5 : FacturesApi.colonne-paiement ? 9 : 8;
+
+    // Colonne cliquée vers le rang attendu par `trier` (ordre de gauche à droite, à
+    // neuf colonnes) : miroir de droite à gauche, puis saut de la colonne Paiement absente.
+    pure function colonne-logique(c: int) -> int {
+        return root.sans-paiement(Theme.rtl ? root.nb-colonnes - 1 - c : c);
+    }
+
+    pure function sans-paiement(c: int) -> int {
+        return FacturesApi.avec-montants && !FacturesApi.colonne-paiement && c >= 6 ? c + 1 : c;
+    }
     property <Retour> retour;
 
     function filtrer() {
@@ -365,6 +379,24 @@ component Registre inherits VerticalLayout {
             { title: FacturesApi.textes.tiers, min-width: 130px, horizontal-stretch: 2 },
             { title: @tr("Libellé"), min-width: 110px, horizontal-stretch: 2 },
             { title: @tr("Statut"), min-width: 140px, horizontal-stretch: 0 },
+        ]) : !FacturesApi.colonne-paiement ? (Theme.rtl ? [
+            { title: @tr("Échéance"), min-width: 85px, horizontal-stretch: 0 },
+            { title: @tr("Mode"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Statut"), min-width: 80px, horizontal-stretch: 0 },
+            { title: @tr("Montant TTC"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Libellé"), min-width: 110px, horizontal-stretch: 2 },
+            { title: FacturesApi.textes.tiers, min-width: 130px, horizontal-stretch: 2 },
+            { title: @tr("Date"), min-width: 85px, horizontal-stretch: 0 },
+            { title: @tr("N°"), min-width: 110px, horizontal-stretch: 1 },
+        ] : [
+            { title: @tr("N°"), min-width: 110px, horizontal-stretch: 1 },
+            { title: @tr("Date"), min-width: 85px, horizontal-stretch: 0 },
+            { title: FacturesApi.textes.tiers, min-width: 130px, horizontal-stretch: 2 },
+            { title: @tr("Libellé"), min-width: 110px, horizontal-stretch: 2 },
+            { title: @tr("Montant TTC"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Statut"), min-width: 80px, horizontal-stretch: 0 },
+            { title: @tr("Mode"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Échéance"), min-width: 85px, horizontal-stretch: 0 },
         ]) : Theme.rtl ? [
             { title: @tr("Échéance"), min-width: 85px, horizontal-stretch: 0 },
             { title: @tr("Mode"), min-width: 100px, horizontal-stretch: 1 },
@@ -392,10 +424,10 @@ component Registre inherits VerticalLayout {
             FacturesApi.selectionner(ligne);
         }
         sort-ascending(colonne) => {
-            FacturesApi.trier(Theme.rtl ? 8 - colonne : colonne, true);
+            FacturesApi.trier(root.colonne-logique(colonne), true);
         }
         sort-descending(colonne) => {
-            FacturesApi.trier(Theme.rtl ? 8 - colonne : colonne, false);
+            FacturesApi.trier(root.colonne-logique(colonne), false);
         }
     }
 

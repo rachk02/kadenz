@@ -440,7 +440,9 @@ fn type_au_rang(rang: i32) -> TypeDocument {
 
 // ---------------------------------------------------------------- Registre
 
-fn cellules(d: &ResumeDocument, montants: bool) -> Vec<String> {
+/// Cellules d'une ligne du registre. Sans le module Paiements (`paiement` faux), la
+/// colonne de l'état de paiement est retirée : sans règlement saisi, elle serait fausse.
+fn cellules(d: &ResumeDocument, montants: bool, paiement: bool) -> Vec<String> {
     if !montants {
         return vec![
             d.numero.clone().unwrap_or_else(|| tr("(brouillon)")),
@@ -450,19 +452,24 @@ fn cellules(d: &ResumeDocument, montants: bool) -> Vec<String> {
             tr(&d.statut.to_string()),
         ];
     }
-    vec![
+    let mut c = vec![
         d.numero.clone().unwrap_or_else(|| tr("(brouillon)")),
         date_en_texte(d.date),
         d.tiers_nom.clone(),
         d.libelle.clone(),
         saisie::montant_en_texte(d.montant_ttc),
         tr(&d.statut.to_string()),
-        d.etat_paiement
-            .map(|e| tr(&e.to_string()))
-            .unwrap_or_default(),
-        d.mode_paiement.clone(),
-        d.date_echeance.map(date_en_texte).unwrap_or_default(),
-    ]
+    ];
+    if paiement {
+        c.push(
+            d.etat_paiement
+                .map(|e| tr(&e.to_string()))
+                .unwrap_or_default(),
+        );
+    }
+    c.push(d.mode_paiement.clone());
+    c.push(d.date_echeance.map(date_en_texte).unwrap_or_default());
+    c
 }
 
 fn trier(lignes: &mut [ResumeDocument], colonne: i32, croissant: bool, montants: bool) {
@@ -503,8 +510,13 @@ fn afficher_registre(f: &FenetrePrincipale, etat: &mut Etat) {
                 trier(&mut lignes, colonne, croissant, t.a_des_montants());
             }
             let montants = t.a_des_montants();
+            let paiement = crate::licence::actif(&etat.conn, Module::Paiements);
+            api.set_colonne_paiement(paiement);
             api.set_registre(modele_lignes(
-                lignes.iter().map(|d| cellules(d, montants)).collect(),
+                lignes
+                    .iter()
+                    .map(|d| cellules(d, montants, paiement))
+                    .collect(),
             ));
             api.set_resume(resume_registre(t, lignes.len()).into());
             etat.factures.lignes = lignes;
@@ -869,13 +881,16 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
     let montant_situation =
         |m: Option<Montant>| m.map(saisie::montant_en_texte).unwrap_or_default();
 
+    // État de paiement en tête de fiche : masqué sans le module Paiements.
     let paiement = match &document {
-        Some(d) => documents::etat_paiement_de(&etat.conn, d)
-            .ok()
-            .flatten()
-            .map(|e: EtatPaiement| tr(&e.to_string()))
-            .unwrap_or_default(),
-        None => String::new(),
+        Some(d) if crate::licence::actif(&etat.conn, Module::Paiements) => {
+            documents::etat_paiement_de(&etat.conn, d)
+                .ok()
+                .flatten()
+                .map(|e: EtatPaiement| tr(&e.to_string()))
+                .unwrap_or_default()
+        }
+        _ => String::new(),
     };
     let titre = titre_fiche(
         t,
@@ -1374,7 +1389,9 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 None => tr("Tous les statuts"),
             },
         )));
-        api.set_avec_paiement(t.recoit_des_reglements());
+        api.set_avec_paiement(
+            t.recoit_des_reglements() && crate::licence::actif(&etat.conn, Module::Paiements),
+        );
         api.set_avec_retenue(t.retenue_applicable());
         api.set_avec_montants(t.a_des_montants());
         api.set_avec_pdf(true);

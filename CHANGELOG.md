@@ -34,6 +34,7 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 - Jalon J10, écrans : bouton « Exporter en Excel » sur chaque registre (documents de chaque type, tiers, produits, règlements, suivi fournisseurs, relances), qui reprend les lignes affichées avec leur filtre et leur tri, et dans les actions de la fiche d'un document ; enregistrement par la boîte de Windows puis ouverture du fichier ; invite de mise à jour après la connexion d'un compte qui gère les paramètres (version, nouveautés, Installer ou Plus tard, avancement du téléchargement, Kadenz fermé au lancement de l'installateur) ; traductions dans les six langues.
 
 ### Modifié
+- Registre des documents : sans le module Paiements, la colonne et le filtre de l'état de paiement sont masqués, comme la mention « Paiement » en tête de fiche (décision de l'utilisateur du 2026-11-11) ; le mode de paiement et l'échéance restent affichés ; le tri par colonne suit les colonnes affichées, de droite à gauche compris.
 - PDF : la bande verticale de couleur à gauche des pages est retirée (factures et autres documents, lettre de relance, registres), marges gauche et droite égales ; la couleur principale reste sur le titre et l'en-tête du tableau.
 
 ### Corrigé
