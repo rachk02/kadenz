@@ -27,6 +27,7 @@
 | 2.21 | 2026-11-10 | Règles de calcul du tableau de bord et graphiques par chemins Slint validés par l'utilisateur (section 9) ; bande verticale de couleur retirée des PDF (section 12) ; réglages d'impression spécifiés (en-tête et pied de page libres, gabarits, papier pré-imprimé, marges et calibrage) pour un nouveau jalon J8b inséré avant J9 (sections 5.4, 12, 18 et 19) |
 | 2.22 | 2026-11-10 | Jalon J8b, domaine, stockage et PDF : règles de rendu des zones d'en-tête et de pied de page, des gabarits et des marges, appliquées aussi aux lettres de relance et aux listes (section 12, provisoires, à confirmer avec les questions 13 à 16) |
 | 2.23 | 2026-11-10 | Bas des documents réglable par type (lignes de totaux, montant en lettres, visas, dates, signataire) et style du pied de page au choix, décisions de l'utilisateur d'après ses modèles Excel du bon de commande et du bordereau (section 12) |
+| 2.24 | 2026-11-11 | Jalon J8b validé par l'utilisateur : règles de rendu de la section 12 confirmées, questions 13 à 16 tranchées ; passage à J9 |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -426,7 +427,7 @@ Réglages d'impression (spécifié, jalon J8b, décision de l'utilisateur du 202
 - Instantané : contenu des zones, gabarit et marges sont figés à la validation avec les données de l'entreprise, les logos et les textes ; les variables sont résolues sur les valeurs figées, la réimpression reste identique. Un brouillon s'imprime en aperçu avec les valeurs du moment.
 - Aperçu en direct : le PDF réel est rastérisé en image pour l'écran des Paramètres (essai de hayro, moteur de rendu PDF en Rust pur, au début de J8b ; objectif inférieur à 100 ms par page à 600 px de large, sinon bouton « Actualiser l'aperçu » ; repli sur l'ouverture du PDF dans la visionneuse de Windows si le rendu n'est pas fidèle).
 
-Règles de rendu (provisoires, jalon J8b, en attente de confirmation par l'utilisateur avec les questions 13 à 16) :
+Règles de rendu (jalon J8b, validées par l'utilisateur le 2026-11-11) :
 - Mise en page par défaut : elle reproduit la mise en page d'origine (logo principal à gauche du bloc entreprise, logo secondaire à droite au-dessus du titre, mentions centrées en pied de page). Elle sert aussi aux documents validés avant J8b, dont l'instantané ne contient pas de mise en page.
 - Logos dans l'en-tête : un logo non centré en première ligne de la zone se place à gauche du texte ; un logo non centré en dernière ligne se place à droite, au-dessus du titre ; un logo centré ou placé ailleurs s'insère dans le fil de la zone. Un logo absent n'imprime rien.
 - Mentions vides : une ligne dont toutes les variables sont vides disparaît ; dans une ligne de mentions séparées par « · », une mention dont les variables sont vides disparaît avec son libellé et son séparateur.
@@ -439,7 +440,7 @@ Bas des documents (décision de l'utilisateur du 2026-11-10, d'après ses modèl
 - Éléments à cocher : chaque ligne de totaux (montant HT, remise, base TVA, TVA, retenue, montant TTC), montant en lettres, visa du client, visa du fournisseur, date de réception, date de livraison, signataire et son nom. Les totaux se calculent toujours automatiquement ; seules les lignes cochées s'impriment.
 - Option « masquer les lignes à zéro » : une ligne de total nulle ne s'imprime pas, la base TVA non plus quand elle égale le montant HT (aucune remise) ; le montant TTC reste toujours imprimé s'il est coché.
 - Les totaux peuvent s'imprimer sur un bordereau de livraison : ce sont ceux du document (quantités commandées, aux prix et taux repris de la facture).
-- Mise en page (provisoire) : totaux à droite, observations à gauche, phrase du montant en lettres, puis les visas et les dates en cases sur deux colonnes (client à gauche avec la date de réception, fournisseur à droite avec la date de livraison), le signataire et son nom sous la colonne de droite.
+- Mise en page : totaux à droite, observations à gauche, phrase du montant en lettres, puis les visas et les dates en cases sur deux colonnes (client à gauche avec la date de réception, fournisseur à droite avec la date de livraison), le signataire et son nom sous la colonne de droite.
 - Réglage d'origine : documents à montants, toutes les lignes de totaux (lignes à zéro masquées), montant en lettres et signataire ; bordereau, visas, dates et signataire, sans totaux.
 - Style du pied de page au choix : discret (trait fin gris, mentions en gris) ou accentué (trait épais de la couleur principale sur toute la largeur, mentions en gras).
 
@@ -511,10 +512,10 @@ Livré au jalon J4 : depuis la fiche d'une facture, « Aperçu PDF » pour un br
 10. **Délais par défaut** : tranchée le 2026-11-09, la durée de validité des devis et le délai de paiement des factures restent vides par défaut (réglages de la section 5.4) ; aucune date d'échéance n'est calculée tant que l'entreprise ne les renseigne pas.
 11. **Import dans l'assistant** : tranchée le 2026-11-09, l'étape d'import des tiers et des produits dans l'assistant de premier lancement est reportée ; l'import reste disponible depuis les écrans Tiers et Produits.
 12. **Réglage de la numérotation** : tranchée le 2026-11-09, un numéro à compteur annuel s'écrit `{Préfixe}{AAAA}-{rang}`, ex. `F2026-0001` (section 6.1) ; le réglage complet de la section 5.4 est livré.
-13. **Gabarits d'impression** (à l'étude, J8b) : nombre de gabarits au lancement et leurs variantes finales (logo secondaire, dense ou aéré).
-14. **Gabarit « Bande latérale »** (à l'étude, J8b) : écarté par la décision du 2026-11-10 de retirer la bande verticale des PDF, sauf avis contraire de l'utilisateur.
-15. **Marges et contenu d'impression** (à l'étude, J8b) : marges globales ou par gabarit ; un contenu d'en-tête et de pied commun à tous les documents ou des variantes par type.
-16. **Variables d'impression** (à l'étude, J8b) : champs de l'entreprise et logo seulement, ou aussi champs du document (numéro, date, montant TTC) dans le pied de page. Les règles de rendu provisoires de la section 12 (placement des logos, mentions vides, tailles, gabarit Compact, portée sur les lettres et les listes) sont à confirmer avec ces questions.
+13. **Gabarits d'impression** : tranchée le 2026-11-11 (validation de J8b), trois gabarits au lancement : Classique, Compact et Papier pré-imprimé.
+14. **Gabarit « Bande latérale »** : tranchée le 2026-11-11, écarté (bande verticale retirée des PDF le 2026-11-10).
+15. **Marges et contenu d'impression** : tranchée le 2026-11-11, marges, en-tête et pied de page communs à tous les documents ; le bas des documents se règle par type.
+16. **Variables d'impression** : tranchée le 2026-11-11, champs de l'entreprise et logos ; les règles de rendu de la section 12 (placement des logos, mentions vides, tailles, gabarit Compact, portée sur les lettres et les listes) sont confirmées.
 
 ---
 
