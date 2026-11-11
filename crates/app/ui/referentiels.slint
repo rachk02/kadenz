@@ -2,7 +2,7 @@
 // Une liste filtrable et triable à gauche, la fiche sélectionnée à droite.
 
 import { CheckBox, ComboBox, LineEdit, StandardTableView } from "std-widgets.slint";
-import { Bouton, Champ, Confirmation, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Champ, Confirmation, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 import { ImportApi } from "import.slint";
 
 // Fiche telle que l'écran la manipule ; `existe` est faux pour une nouvelle fiche.
@@ -349,17 +349,17 @@ export component PageTiers inherits VerticalLayout {
                 modifiable: root.modifiable;
                 peut-retirer: Droits.modifier-referentiel;
                 enregistrer => {
-                    root.retour = TiersApi.enregistrer(root.saisie());
+                    root.retour = Alerte.relayer(TiersApi.enregistrer(root.saisie()));
                     if (root.retour.ok) {
                         root.charger(TiersApi.fiche-courante());
                     }
                 }
                 retirer => {
-                    root.retour = TiersApi.retirer();
+                    root.retour = Alerte.relayer(TiersApi.retirer());
                     root.charger(TiersApi.fiche-courante());
                 }
                 reactiver => {
-                    root.retour = TiersApi.reactiver();
+                    root.retour = Alerte.relayer(TiersApi.reactiver());
                     root.charger(TiersApi.fiche-courante());
                 }
             }
@@ -563,17 +563,17 @@ export component PageProduits inherits VerticalLayout {
                 modifiable: root.modifiable;
                 peut-retirer: Droits.modifier-referentiel;
                 enregistrer => {
-                    root.retour = ProduitsApi.enregistrer(root.saisie());
+                    root.retour = Alerte.relayer(ProduitsApi.enregistrer(root.saisie()));
                     if (root.retour.ok) {
                         root.charger(ProduitsApi.fiche-courante());
                     }
                 }
                 retirer => {
-                    root.retour = ProduitsApi.retirer();
+                    root.retour = Alerte.relayer(ProduitsApi.retirer());
                     root.charger(ProduitsApi.fiche-courante());
                 }
                 reactiver => {
-                    root.retour = ProduitsApi.reactiver();
+                    root.retour = Alerte.relayer(ProduitsApi.reactiver());
                     root.charger(ProduitsApi.fiche-courante());
                 }
             }

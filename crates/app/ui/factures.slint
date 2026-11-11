@@ -4,7 +4,7 @@
 // les textes propres au type : cet écran ne fait qu'afficher et transmettre la saisie.
 
 import { CheckBox, ComboBox, LineEdit, ScrollView, StandardTableView } from "std-widgets.slint";
-import { Bouton, Champ, Confirmation, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Champ, Confirmation, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct LigneFactureUi {
     // 0 pour une ligne libre, sans produit d'origine.
@@ -543,7 +543,7 @@ component Fiche inherits ScrollView {
             self.confirmation = 0;
         } else if (self.reglement-a-supprimer != 0) {
             if (Confirmation.accepte) {
-                root.retour-reglement = FacturesApi.supprimer-reglement(root.reglement-a-supprimer);
+                root.retour-reglement = Alerte.relayer(FacturesApi.supprimer-reglement(root.reglement-a-supprimer));
                 root.recharger-si-besoin();
             }
             self.reglement-a-supprimer = 0;
@@ -555,15 +555,15 @@ component Fiche inherits ScrollView {
     // Action confirmée : valider, annuler, corriger, confirmer la livraison ou supprimer.
     function executer-confirmation() {
         if (root.confirmation == 1) {
-            root.retour = FacturesApi.valider(root.saisie());
+            root.retour = Alerte.relayer(FacturesApi.valider(root.saisie()));
         } else if (root.confirmation == 2) {
-            root.retour = FacturesApi.annuler-document();
+            root.retour = Alerte.relayer(FacturesApi.annuler-document());
         } else if (root.confirmation == 4) {
-            root.retour = FacturesApi.dupliquer(true);
+            root.retour = Alerte.relayer(FacturesApi.dupliquer(true));
         } else if (root.confirmation == 5) {
-            root.retour = FacturesApi.confirmer-livraison(root.visa-client, root.visa-fournisseur, root.date-livraison, root.date-reception);
+            root.retour = Alerte.relayer(FacturesApi.confirmer-livraison(root.visa-client, root.visa-fournisseur, root.date-livraison, root.date-reception));
         } else {
-            root.retour = FacturesApi.supprimer();
+            root.retour = Alerte.relayer(FacturesApi.supprimer());
         }
         root.recharger-si-besoin();
         // Validée ou annulée, la fiche n'est plus modifiable : les champs
@@ -633,9 +633,9 @@ component Fiche inherits ScrollView {
     function enregistrer-administratif() {
         root.confirmation = 0;
         if (FacturesApi.avec-montants) {
-            root.retour = FacturesApi.enregistrer-administratif(root.mode-index, observations.valeur);
+            root.retour = Alerte.relayer(FacturesApi.enregistrer-administratif(root.mode-index, observations.valeur));
         } else {
-            root.retour = FacturesApi.enregistrer-livraison(root.visa-client, root.visa-fournisseur, root.date-livraison, root.date-reception, observations.valeur);
+            root.retour = Alerte.relayer(FacturesApi.enregistrer-livraison(root.visa-client, root.visa-fournisseur, root.date-livraison, root.date-reception, observations.valeur));
         }
         root.recharger-si-besoin();
     }
@@ -646,7 +646,7 @@ component Fiche inherits ScrollView {
     changed demande-enregistrer => {
         if (root.fiche.modifiable) {
             root.confirmation = 0;
-            root.retour = FacturesApi.enregistrer(root.saisie());
+            root.retour = Alerte.relayer(FacturesApi.enregistrer(root.saisie()));
             root.recharger-si-besoin();
         } else if (root.fiche.admin-modifiable) {
             root.enregistrer-administratif();
@@ -892,7 +892,7 @@ component Fiche inherits ScrollView {
                                 root.filtre-client = "";
                                 client.current-index = FacturesApi.rang-nouveau-client;
                                 root.fiche.tiers-detail = FacturesApi.client-choisi(client.current-index);
-                                root.retour = root.retour-client;
+                                root.retour = Alerte.relayer(root.retour-client);
                                 root.creation-client = false;
                                 FacturesApi.demande-focus += 1;
                             }
@@ -1226,7 +1226,7 @@ component Fiche inherits ScrollView {
                     primary: true;
                     clicked => {
                         root.confirmation = 0;
-                        root.retour = FacturesApi.enregistrer-reception();
+                        root.retour = Alerte.relayer(FacturesApi.enregistrer-reception());
                         root.recharger-si-besoin();
                     }
                 }
@@ -1429,7 +1429,7 @@ component Fiche inherits ScrollView {
                 primary: !root.fiche.peut-valider;
                 clicked => {
                     root.confirmation = 0;
-                    root.retour = FacturesApi.enregistrer(root.saisie());
+                    root.retour = Alerte.relayer(FacturesApi.enregistrer(root.saisie()));
                     root.recharger-si-besoin();
                 }
             }
@@ -1463,7 +1463,7 @@ component Fiche inherits ScrollView {
                 text: FacturesApi.textes.marquer-envoye;
                 clicked => {
                     root.confirmation = 0;
-                    root.retour = FacturesApi.marquer-envoye();
+                    root.retour = Alerte.relayer(FacturesApi.marquer-envoye());
                     root.recharger-si-besoin();
                 }
             }
@@ -1510,7 +1510,7 @@ component Fiche inherits ScrollView {
                 text: @tr("Convertir en facture");
                 clicked => {
                     root.confirmation = 0;
-                    root.retour = FacturesApi.convertir();
+                    root.retour = Alerte.relayer(FacturesApi.convertir());
                     root.recharger-si-besoin();
                 }
             }
@@ -1520,7 +1520,7 @@ component Fiche inherits ScrollView {
                 enabled: root.fiche.bordereau-possible;
                 clicked => {
                     root.confirmation = 0;
-                    root.retour = FacturesApi.creer-bordereau();
+                    root.retour = Alerte.relayer(FacturesApi.creer-bordereau());
                     root.recharger-si-besoin();
                 }
             }
@@ -1530,7 +1530,7 @@ component Fiche inherits ScrollView {
                 enabled: root.fiche.avoir-possible;
                 clicked => {
                     root.confirmation = 0;
-                    root.retour = FacturesApi.creer-avoir();
+                    root.retour = Alerte.relayer(FacturesApi.creer-avoir());
                     root.recharger-si-besoin();
                 }
             }
@@ -1541,11 +1541,11 @@ component Fiche inherits ScrollView {
                     root.confirmation = 0;
                     // Un brouillon est d'abord enregistré : la copie reprend la saisie affichée.
                     if (root.fiche.modifiable) {
-                        root.retour = FacturesApi.enregistrer(root.saisie());
+                        root.retour = Alerte.relayer(FacturesApi.enregistrer(root.saisie()));
                         root.recharger-si-besoin();
                     }
                     if (!root.fiche.modifiable || root.retour.ok) {
-                        root.retour = FacturesApi.dupliquer(false);
+                        root.retour = Alerte.relayer(FacturesApi.dupliquer(false));
                         root.recharger-si-besoin();
                     }
                 }
@@ -1733,7 +1733,7 @@ component Fiche inherits ScrollView {
                 primary: true;
                 clicked => {
                     root.reglement-a-supprimer = 0;
-                    root.retour-reglement = FacturesApi.ajouter-reglement(root.reglement-date, root.reglement-montant, root.reglement-mode, root.reglement-reference);
+                    root.retour-reglement = Alerte.relayer(FacturesApi.ajouter-reglement(root.reglement-date, root.reglement-montant, root.reglement-mode, root.reglement-reference));
                     root.recharger-si-besoin();
                 }
             }

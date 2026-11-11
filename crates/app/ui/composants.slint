@@ -138,6 +138,16 @@ export global Alerte {
             root.montrer(r.message);
         }
     }
+
+    // Comme retour, puis rend le retour sans son message de réussite : la page
+    // n'affiche plus que les erreurs.
+    public function relayer(r: Retour) -> Retour {
+        if (r.ok && r.message != "") {
+            root.montrer(r.message);
+            return { ok: true, message: "" };
+        }
+        return r;
+    }
 }
 
 export component FenetreAlerte inherits Rectangle {
