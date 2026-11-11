@@ -1,0 +1,15 @@
+[package]
+name = "kadenz-maj"
+description = "Mises à jour de Kadenz : recherche d'une release GitHub plus récente, téléchargement vérifié, lancement de l'installateur."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+kadenz-domaine.workspace = true
+ureq.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { workspace = true, features = ["Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }

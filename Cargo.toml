@@ -7,6 +7,8 @@ members = [
     "crates/pdf",
     "crates/licence",
     "crates/editeur",
+    "crates/export",
+    "crates/maj",
     "crates/app",
 ]
 
@@ -21,6 +23,8 @@ kadenz-stockage = { path = "crates/stockage" }
 kadenz-import = { path = "crates/import" }
 kadenz-pdf = { path = "crates/pdf" }
 kadenz-licence = { path = "crates/licence" }
+kadenz-export = { path = "crates/export" }
+kadenz-maj = { path = "crates/maj" }
 rusqlite = { version = "0.41.1", features = ["bundled", "backup"] }
 slint = { version = "1.18.1", features = ["raw-window-handle-06"] }
 slint-build = "1.18.1"
@@ -44,6 +48,11 @@ sha2 = "0.10.9"
 base64 = "0.22.1"
 getrandom = "0.3.4"
 windows-sys = "0.61.2"
+# Export Excel (J10) : écriture des classeurs xlsx, dates chrono natives.
+rust_xlsxwriter = { version = "0.102.0", features = ["chrono"] }
+# Mises à jour (J10) : requête HTTPS vers les releases GitHub, TLS du système
+# (schannel) et ses certificats racines.
+ureq = { version = "3.5.1", default-features = false, features = ["native-tls-no-default"] }
 
 # Argon2 non optimisé met plusieurs secondes par hachage : on optimise les
 # dépendances même en mode debug pour que connexion et tests restent rapides.

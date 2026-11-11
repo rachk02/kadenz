@@ -12,7 +12,7 @@
       4. compile kadenz.exe en mode release, puis l'installateur KadenzSetup-X.Y.Z.exe
          (installateur\construire.ps1, WiX 5) ;
       5. crée le tag annoté vX.Y.Z, le pousse, et crée la release GitHub avec
-         l'exécutable et l'installateur.
+         l'exécutable, l'installateur et son empreinte SHA-256 (.sha256).
 
 .PARAMETER Version
     Version à publier, sans le "v" (ex. 0.1.0).
@@ -85,8 +85,14 @@ if ($LASTEXITCODE -ne 0) { throw "échec de la construction de l'installateur" }
 $installateur = Join-Path $racine "target\installateur\KadenzSetup-$Version.exe"
 if (-not (Test-Path $installateur)) { throw "installateur introuvable : $installateur" }
 
+# Empreinte SHA-256 de l'installateur, vérifiée par la mise à jour intégrée
+# (kadenz-maj) avant tout lancement : « <hex>  <nom> ».
+$empreinte = "$installateur.sha256"
+$hex = (Get-FileHash -Algorithm SHA256 -Path $installateur).Hash.ToLowerInvariant()
+[System.IO.File]::WriteAllText($empreinte, "$hex  $(Split-Path -Leaf $installateur)`n", [System.Text.UTF8Encoding]::new($false))
+
 if ($Simulation) {
-    Etape "Simulation terminée : $livrable et $installateur prêts, aucun tag ni release créés"
+    Etape "Simulation terminée : $livrable, $installateur et son empreinte prêts, aucun tag ni release créés"
     exit 0
 }
 
@@ -98,7 +104,7 @@ Executer git @('push', 'origin', $tag)
 $notes = [regex]::Match($changelog, "(?ms)^## \[$([regex]::Escape($Version))\][^\n]*\n(.*?)(?=^## \[|\z)").Groups[1].Value.Trim()
 $fichierNotes = Join-Path ([System.IO.Path]::GetTempPath()) "kadenz-notes-$Version.md"
 Set-Content -Path $fichierNotes -Value $notes -Encoding utf8
-Executer gh @('release', 'create', $tag, $livrable, $installateur, '--title', "Kadenz $Version", '--notes-file', $fichierNotes)
+Executer gh @('release', 'create', $tag, $livrable, $installateur, $empreinte, '--title', "Kadenz $Version", '--notes-file', $fichierNotes)
 Remove-Item $fichierNotes
 
 Etape "Release $tag publiée"

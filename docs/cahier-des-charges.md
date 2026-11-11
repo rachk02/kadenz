@@ -29,6 +29,8 @@
 | 2.23 | 2026-11-10 | Bas des documents réglable par type (lignes de totaux, montant en lettres, visas, dates, signataire) et style du pied de page au choix, décisions de l'utilisateur d'après ses modèles Excel du bon de commande et du bordereau (section 12) |
 | 2.24 | 2026-11-11 | Jalon J8b validé par l'utilisateur : règles de rendu de la section 12 confirmées, questions 13 à 16 tranchées ; passage à J9 |
 | 2.25 | 2026-11-11 | Jalon J9, décisions de l'utilisateur : socle seul sans clé valide, paire de clés générée par l'éditeur lui-même, clé d'essai pour le poste de développement, modules désactivés refusés aussi par le stockage ; signature Ed25519 et identifiant de poste tiré du MachineGuid (section 15) |
+| 2.26 | 2026-11-11 | Jalon J9 validé par l'utilisateur ; passage à J10 (mises à jour, export Excel) |
+| 2.27 | 2026-11-11 | J10 tranché : mise à jour téléchargée, empreinte SHA-256 vérifiée, installateur lancé puis fermeture de Kadenz (section 16) ; export Excel de tous les registres, tels qu'affichés, et d'un document sur une feuille complète (en-tête, lignes, totaux) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -229,6 +231,7 @@ Règles (décisions de l'utilisateur du 2026-11-09, spécifié) :
 
 ### 6.8 Exports et imports (spécifié)
 - Export Excel des registres (listes filtrées) et des documents.
+  - Mise en oeuvre (J10) : chaque registre (documents par type, clients et fournisseurs, produits, règlements, factures échues, bons de commande non payés) exporte les lignes affichées, filtre et tri compris, avec ses totaux. Un document s'exporte sur une feuille : en-tête (numéro, statut, date, tiers, taux), lignes, totaux. Montants, quantités et dates sont de vrais nombres et de vraies dates Excel ; les libellés suivent la langue de l'application ; un module absent de la licence est refusé comme à l'écran.
 - Import CSV ou Excel du catalogue produits et des tiers, avec aperçu et rapport d'erreurs avant enregistrement, proposé au premier lancement et dans les référentiels.
   - Formats : CSV (UTF-8 ou Windows-1252, séparateur point-virgule, virgule ou tabulation détecté), Excel (xlsx, xls) et OpenDocument (ods, première feuille remplie).
   - En-têtes reconnus sans tenir compte de la casse ni des accents, dont ceux de l'outil Excel d'origine (DÉSIGNATION, RÉFÉRENCE, PRIX ; NOM, ADRESSE/BOÎTE POSTALE, TELEPHONE, Localisation, IFU). Une colonne non reconnue est signalée et n'est pas importée.
@@ -491,6 +494,8 @@ Livré au jalon J4 : depuis la fiche d'une facture, « Aperçu PDF » pour un br
 
 - Installateur Windows classique pour le déploiement chez le client : KadenzSetup.exe (assistant d'installation, raccourcis du menu Démarrer et du bureau, désinstallation), publié avec chaque release en plus de kadenz.exe. Avancé après J7, avant J8 (décision de l'utilisateur du 2026-11-10) ; la vérification des mises à jour reste au jalon J10.
 - Au démarrage, l'application vérifie s'il existe une version plus récente parmi les releases GitHub et propose de l'installer ; l'utilisateur confirme. Hors connexion, la vérification échoue sans message bloquant.
+- Mise en oeuvre (J10, décisions de l'utilisateur du 2026-11-11) : une fois par lancement, sur un fil secondaire, l'application interroge la dernière release publiée (`api.github.com/repos/rachk02/kadenz/releases/latest`, ni brouillon ni préversion) et compare son tag à sa propre version, numériquement. La seule information envoyée est l'en-tête `User-Agent: Kadenz/<version>` : ni poste, ni licence, ni client. Toute erreur reste silencieuse ; la variable `KADENZ_SANS_MAJ` désactive la vérification.
+- Si l'utilisateur accepte, Kadenz télécharge `KadenzSetup-X.Y.Z.exe`, vérifie son empreinte SHA-256 contre le fichier `KadenzSetup-X.Y.Z.exe.sha256` publié avec la release (sans empreinte ou si elle ne correspond pas, rien n'est lancé), ouvre l'installateur (Windows demande l'autorisation d'administrateur) puis se ferme. `scripts/release.ps1` produit et publie ce fichier d'empreinte.
 - Technologie d'installateur : WiX (paquet MSI), outil déjà présent sur le poste de développement. À l'étude : signature du code de l'exécutable et de l'installateur, qui demande un certificat et l'accord de l'utilisateur.
 
 ## 17. Hors périmètre V1
