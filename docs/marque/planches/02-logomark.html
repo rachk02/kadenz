@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Kadenz, symbole</title>
+<style>
+@font-face{font-family:Inter;src:url(polices/Inter.woff2) format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:Manrope;src:url(polices/Manrope.woff2) format("woff2");font-weight:200 800;font-display:swap}
+body{margin:0}em,i{font-style:normal}
+@page{size:1200px 760px;margin:0}
+.planche{width:1200px;height:760px;box-sizing:border-box;padding:48px 56px;background:#fff;color:#1f2933;font-family:Inter,sans-serif;display:flex;flex-direction:column;gap:26px;overflow:hidden;break-after:page}
+.ent{display:flex;justify-content:space-between;align-items:baseline}
+.num{font-family:Manrope,sans-serif;font-weight:800;font-size:15px;color:#1f4fd8;letter-spacing:.08em;margin-right:16px}
+h1{display:inline;margin:0;font-family:Manrope,sans-serif;font-weight:800;font-size:32px;letter-spacing:-.01em}
+.sous{margin:0;font-size:14px;color:#52606d;max-width:620px;text-align:right}
+.case{border-radius:4px;position:relative;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+.bord{border:1px solid #d9dce3}
+.leg{position:absolute;left:18px;bottom:14px;font-size:12px;color:#52606d}
+.leg.c{color:#d6e0fa}
+.petit{font-size:12px;color:#52606d;line-height:1.5}
+.t3{font-family:Manrope,sans-serif;font-weight:700;font-size:16px;margin:0 0 8px}
+p{margin:0}
+</style>
+</head>
+<body>
+<div class="planche"><div class="ent"><div><span class="num">02</span><h1>Logomark</h1></div><p class="sous">Carré, quart de disque, triangle, disque</p></div><div style="display:grid;grid-template-columns:400px 1fr;gap:28px;flex:1">
+<div class="case bord" style="flex-direction:column;gap:6px"><svg viewBox="-28 -28 312 312" style="height:330px"><rect x="0" y="0" width="256" height="256" fill="none" stroke="#d9dce3" stroke-width="1"/><path fill="#e8eefc" d="M16 16 L120 16 L120 120 L16 120 Z M136 120 L136 14.44 A105.56 105.56 0 0 1 241.56 120 Z M16 136 L120 240 L16 240 Z M134.44 188 A53.56 53.56 0 1 1 241.56 188 A53.56 53.56 0 1 1 134.44 188 Z"/><line x1="16" y1="0" x2="16" y2="256" stroke="#1f4fd8" stroke-opacity=".35" stroke-width=".8"/><line x1="0" y1="16" x2="256" y2="16" stroke="#1f4fd8" stroke-opacity=".35" stroke-width=".8"/><line x1="120" y1="0" x2="120" y2="256" stroke="#1f4fd8" stroke-opacity=".35" stroke-width=".8"/><line x1="0" y1="120" x2="256" y2="120" stroke="#1f4fd8" stroke-opacity=".35" stroke-width=".8"/><line x1="136" y1="0" x2="136" y2="256" stroke="#1f4fd8" stroke-opacity=".35" stroke-width=".8"/><line x1="0" y1="136" x2="256" y2="136" stroke="#1f4fd8" stroke-opacity=".35" stroke-width=".8"/><line x1="240" y1="0" x2="240" y2="256" stroke="#1f4fd8" stroke-opacity=".35" stroke-width=".8"/><line x1="0" y1="240" x2="256" y2="240" stroke="#1f4fd8" stroke-opacity=".35" stroke-width=".8"/><g font-family="Inter" font-size="9" fill="#52606d"><text x="0" y="-10">0</text><text x="12" y="-10">16</text><text x="64" y="-10">case 104</text><text x="121" y="-10">jeu 16</text><text x="222" y="-10">240</text><text x="248" y="-10">256</text></g></svg>
+<p class="petit" style="text-align:center;padding:0 22px">Canevas de 256, marge de 16, jeu de 16, case de 104.<br>Débord optique : quart de disque + 1,5 %, disque + 3 %.</p></div>
+<div style="display:flex;flex-direction:column;gap:22px">
+<div><p class="t3">Icône d'application, de la plus grande à la plus petite</p>
+<div style="display:flex;align-items:flex-end;gap:26px"><div style="display:flex;flex-direction:column;align-items:center;gap:8px"><img src="../kadenz-icone.svg" alt="" style="height:96px;"><span class="petit">96 px</span></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px"><img src="../kadenz-icone.svg" alt="" style="height:64px;"><span class="petit">64 px</span></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px"><img src="../kadenz-icone.svg" alt="" style="height:48px;"><span class="petit">48 px</span></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px"><img src="../kadenz-icone.svg" alt="" style="height:32px;"><span class="petit">32 px</span></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px"><img src="../kadenz-icone.svg" alt="" style="height:24px;"><span class="petit">24 px</span></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px"><img src="../kadenz-icone.svg" alt="" style="height:16px;"><span class="petit">16 px</span></div></div>
+<p class="petit" style="margin-top:10px">L'icône emploie la petite coupe : jeux de 26 au lieu de 16, sans débord, pour que les pièces restent séparées à 16 px.</p></div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px"><div class="case bord" style="background:#ffffff;height:96px"><img src="../kadenz-symbole.svg" alt="" style="height:60px;"></div><div class="case" style="background:#1f4fd8;height:96px"><img src="../kadenz-symbole-blanc.svg" alt="" style="height:60px;"></div><div class="case" style="background:#1a1033;height:96px"><img src="../kadenz-symbole-blanc.svg" alt="" style="height:60px;"></div><div class="case bord" style="background:#ffffff;height:96px"><img src="../kadenz-symbole-noir.svg" alt="" style="height:60px;"></div></div>
+<div class="bord" style="border-radius:4px;padding:20px 22px"><p class="t3">Ce que dit le symbole</p>
+<p class="petit" style="font-size:13px">Quatre formes simples s'emboîtent sur une grille de deux par deux, comme les modules que la licence assemble : ventes, commandes, livraisons, paiements. Le disque marque le temps fort de la cadence. Sans tuile, le symbole s'emploie seul en Bleu vif, en blanc ou en noir, jamais déformé ni pivoté.</p></div>
+</div></div></div></body>
+</html>

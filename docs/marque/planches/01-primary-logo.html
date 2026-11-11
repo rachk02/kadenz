@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Kadenz, logo principal</title>
+<style>
+@font-face{font-family:Inter;src:url(polices/Inter.woff2) format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:Manrope;src:url(polices/Manrope.woff2) format("woff2");font-weight:200 800;font-display:swap}
+body{margin:0}em,i{font-style:normal}
+@page{size:1200px 760px;margin:0}
+.planche{width:1200px;height:760px;box-sizing:border-box;padding:48px 56px;background:#fff;color:#1f2933;font-family:Inter,sans-serif;display:flex;flex-direction:column;gap:26px;overflow:hidden;break-after:page}
+.ent{display:flex;justify-content:space-between;align-items:baseline}
+.num{font-family:Manrope,sans-serif;font-weight:800;font-size:15px;color:#1f4fd8;letter-spacing:.08em;margin-right:16px}
+h1{display:inline;margin:0;font-family:Manrope,sans-serif;font-weight:800;font-size:32px;letter-spacing:-.01em}
+.sous{margin:0;font-size:14px;color:#52606d;max-width:620px;text-align:right}
+.case{border-radius:4px;position:relative;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+.bord{border:1px solid #d9dce3}
+.leg{position:absolute;left:18px;bottom:14px;font-size:12px;color:#52606d}
+.leg.c{color:#d6e0fa}
+.petit{font-size:12px;color:#52606d;line-height:1.5}
+.t3{font-family:Manrope,sans-serif;font-weight:700;font-size:16px;margin:0 0 8px}
+p{margin:0}
+</style>
+</head>
+<body>
+<div class="planche"><div class="ent"><div><span class="num">01</span><h1>Primary logo</h1></div><p class="sous">Quatre pièces et le mot « kadenz », en une seule couleur : Bleu vif</p></div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:300px 270px;gap:20px">
+<div class="case" style="grid-column:span 2;background:#f4f5f9"><img src="../kadenz-logo-horizontal.svg" alt="" style="height:112px;"><span class="leg">Version horizontale, usage par défaut</span></div>
+<div class="case bord"><img src="../kadenz-logo-empile.svg" alt="" style="height:170px;"><span class="leg">Version empilée, formats carrés</span></div>
+<div class="case" style="background:#1f4fd8"><img src="../kadenz-logo-horizontal-negatif.svg" alt="" style="height:64px;"><span class="leg c">Négatif sur Bleu vif</span></div>
+<div class="case bord"><img src="../kadenz-logo-horizontal-mono.svg" alt="" style="height:64px;"><span class="leg">Une couleur : tampon, impression noire</span></div>
+<div class="case bord" style="flex-direction:column;align-items:flex-start;justify-content:center;padding:26px;gap:14px">
+<div><p class="t3">Zone de protection</p><p class="petit">La moitié du côté d'une case du symbole, tout autour du logo. Elle suit la taille du logo.</p></div>
+<div><p class="t3">Tailles minimales</p><p class="petit">Horizontal : 120 px ou 30 mm de large. Empilé : 64 px ou 18 mm. Symbole : 16 px ou 6 mm.</p></div>
+<div><p class="t3">Mot</p><p class="petit">« kadenz » en Inter SemiBold, vectorisé, en Nuit sur fond clair.</p></div>
+</div></div></div></body>
+</html>

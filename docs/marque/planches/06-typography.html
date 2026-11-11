@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Kadenz, typographie</title>
+<style>
+@font-face{font-family:Inter;src:url(polices/Inter.woff2) format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:Manrope;src:url(polices/Manrope.woff2) format("woff2");font-weight:200 800;font-display:swap}
+body{margin:0}em,i{font-style:normal}
+@page{size:1200px 760px;margin:0}
+.planche{width:1200px;height:760px;box-sizing:border-box;padding:48px 56px;background:#fff;color:#1f2933;font-family:Inter,sans-serif;display:flex;flex-direction:column;gap:26px;overflow:hidden;break-after:page}
+.ent{display:flex;justify-content:space-between;align-items:baseline}
+.num{font-family:Manrope,sans-serif;font-weight:800;font-size:15px;color:#1f4fd8;letter-spacing:.08em;margin-right:16px}
+h1{display:inline;margin:0;font-family:Manrope,sans-serif;font-weight:800;font-size:32px;letter-spacing:-.01em}
+.sous{margin:0;font-size:14px;color:#52606d;max-width:620px;text-align:right}
+.case{border-radius:4px;position:relative;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+.bord{border:1px solid #d9dce3}
+.leg{position:absolute;left:18px;bottom:14px;font-size:12px;color:#52606d}
+.leg.c{color:#d6e0fa}
+.petit{font-size:12px;color:#52606d;line-height:1.5}
+.t3{font-family:Manrope,sans-serif;font-weight:700;font-size:16px;margin:0 0 8px}
+p{margin:0}
+</style>
+</head>
+<body>
+<div class="planche"><div class="ent"><div><span class="num">06</span><h1>Typography</h1></div><p class="sous">Deux familles libres (SIL Open Font License 1.1), embarquées dans l'application</p></div><div style="display:grid;grid-template-columns:330px 1fr;gap:24px;flex:1">
+<div style="display:flex;flex-direction:column;gap:14px">
+<div class="bord" style="border-radius:4px;padding:20px 22px;display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between"><span class="petit">Titres</span><span class="petit">OFL 1.1</span></div><span style="font-family:Manrope;font-weight:800;font-size:76px;line-height:1">Aa</span><span style="font-family:Manrope;font-weight:700;font-size:22px">Manrope</span><span class="petit">Bold 700 · ExtraBold 800</span></div>
+<div class="bord" style="border-radius:4px;padding:20px 22px;display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between"><span class="petit">Texte, interface, chiffres, mot du logo</span><span class="petit">OFL 1.1</span></div><span style="font-family:Inter;font-weight:800;font-size:76px;line-height:1">Aa</span><span style="font-family:Inter;font-weight:700;font-size:22px">Inter</span><span class="petit">Regular 400 · Medium 500 · SemiBold 600 · Bold 700</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div class="bord" style="border-radius:4px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center">
+<div><p style="font-size:15px;letter-spacing:.02em">ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>abcdefghijklmnopqrstuvwxyz éèêàçùôî</p></div>
+<div style="text-align:right;font-variant-numeric:tabular-nums;font-size:16px;font-weight:600;line-height:1.4">1 111 111<br>888 888<br>4 047</div></div>
+<p class="petit">Les montants s'affichent en chiffres tabulaires (tnum) pour rester alignés en colonne.</p>
+<div style="display:grid;grid-template-columns:220px 1fr;align-items:baseline;gap:16px;border-bottom:1px solid #d9dce3;padding-bottom:8px"><span class="petit">Titre 1 · Manrope 800 · 36/44</span><span style="font-family:Manrope;font-weight:800;font-size:34px">Gestion commerciale</span></div><div style="display:grid;grid-template-columns:220px 1fr;align-items:baseline;gap:16px;border-bottom:1px solid #d9dce3;padding-bottom:8px"><span class="petit">Titre 2 · Manrope 700 · 24/32</span><span style="font-family:Manrope;font-weight:700;font-size:24px">Devis, proforma, factures</span></div><div style="display:grid;grid-template-columns:220px 1fr;align-items:baseline;gap:16px;border-bottom:1px solid #d9dce3;padding-bottom:8px"><span class="petit">Titre 3 · Manrope 700 · 18/26</span><span style="font-family:Manrope;font-weight:700;font-size:18px">Bons de commande et bordereaux</span></div><div style="display:grid;grid-template-columns:220px 1fr;align-items:baseline;gap:16px;border-bottom:1px solid #d9dce3;padding-bottom:8px"><span class="petit">Corps · Inter 400 · 15/24</span><span style="font-family:Inter;font-size:15px">Logiciel Windows de gestion commerciale, installé indépendamment chez chaque entreprise cliente.</span></div><div style="display:grid;grid-template-columns:220px 1fr;align-items:baseline;gap:16px;border-bottom:1px solid #d9dce3;padding-bottom:8px"><span class="petit">Libellé · Inter 500 · 13/18</span><span style="font-family:Inter;font-weight:500;font-size:13px">Se connecter · Enregistrer · Mon compte</span></div><div style="display:grid;grid-template-columns:220px 1fr;align-items:baseline;gap:16px;border-bottom:1px solid #d9dce3;padding-bottom:8px"><span class="petit">Surtitre · Manrope 800 · 12, capitales</span><span style="font-family:Manrope;font-weight:800;font-size:12px;letter-spacing:.08em;color:#1f4fd8">PAIEMENTS</span></div>
+</div></div></div></body>
+</html>

@@ -44,7 +44,10 @@ Statut : **« Quatre pièces », version Bleu**, validée par l'utilisateur le 2
 | `png/installateur-logo.png` | Icône en 64 x 64 px |
 | `png/kadenz-logo-horizontal-1200.png`, `-negatif-1200.png` | Logo en image pour les usages sans SVG |
 | `web/` | Favicon (.ico, .svg, PNG 16 à 48), icônes 180, 192 et 512, icône masquable, manifeste et extrait `<head>` pour le futur site |
-| `planches/` | Planche de contrôle du kit et présentation en situation (PNG) |
+| `planches/01-primary-logo.html` à `09-brand-mockups.html` | Neuf planches de l'identité : logo principal, symbole, ton, couleurs, motif, typographie, signalétique, papeterie, mises en situation |
+| `planches/images/`, `planches/kadenz-identite.pdf` | Les neuf planches en PNG (2400 x 1520) et en PDF (une planche par page) |
+| `planches/generer_planches.py` | Regénère planches, PNG et PDF : `python docs/marque/planches/generer_planches.py .` (Chrome requis) |
+| `planches/planche-kit.png`, `presentation-01.png` à `-04.png` | Planche de contrôle du kit et présentation en situation |
 | `generer.py` | Regénère tous les SVG : `python docs/marque/generer.py .` (fontTools requis) |
 
 Les PNG, le `.ico` et les icônes web ont été rendus avec les scripts du skill logo-design (`render_png.py`, `export_variants.py`, rendu par Chrome), sans Pillow.

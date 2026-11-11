@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Kadenz, système de couleurs</title>
+<style>
+@font-face{font-family:Inter;src:url(polices/Inter.woff2) format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:Manrope;src:url(polices/Manrope.woff2) format("woff2");font-weight:200 800;font-display:swap}
+body{margin:0}em,i{font-style:normal}
+@page{size:1200px 760px;margin:0}
+.planche{width:1200px;height:760px;box-sizing:border-box;padding:48px 56px;background:#fff;color:#1f2933;font-family:Inter,sans-serif;display:flex;flex-direction:column;gap:26px;overflow:hidden;break-after:page}
+.ent{display:flex;justify-content:space-between;align-items:baseline}
+.num{font-family:Manrope,sans-serif;font-weight:800;font-size:15px;color:#1f4fd8;letter-spacing:.08em;margin-right:16px}
+h1{display:inline;margin:0;font-family:Manrope,sans-serif;font-weight:800;font-size:32px;letter-spacing:-.01em}
+.sous{margin:0;font-size:14px;color:#52606d;max-width:620px;text-align:right}
+.case{border-radius:4px;position:relative;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+.bord{border:1px solid #d9dce3}
+.leg{position:absolute;left:18px;bottom:14px;font-size:12px;color:#52606d}
+.leg.c{color:#d6e0fa}
+.petit{font-size:12px;color:#52606d;line-height:1.5}
+.t3{font-family:Manrope,sans-serif;font-weight:700;font-size:16px;margin:0 0 8px}
+p{margin:0}
+</style>
+</head>
+<body>
+<div class="planche"><div class="ent"><div><span class="num">04</span><h1>Color System</h1></div><p class="sous">Une couleur de marque, le Bleu vif, et les neutres déjà en place dans l'application</p></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px"><div style="background:#1f4fd8;color:#fff;border-radius:4px;padding:22px;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;height:210px;box-sizing:border-box"><span style="font-family:Manrope;font-weight:800;font-size:22px">Bleu vif</span><span style="font-size:14px">#1F4FD8 · RVB 31 79 216</span><span style="font-size:13px;opacity:.9">Couleur de marque, jeton accent</span><span style="font-size:13px;opacity:.9">Blanc dessus : 6,6:1</span></div><div style="background:#1a1033;color:#fff;border-radius:4px;padding:22px;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;height:210px;box-sizing:border-box"><span style="font-family:Manrope;font-weight:800;font-size:22px">Nuit</span><span style="font-size:14px">#1A1033 · RVB 26 16 51</span><span style="font-size:13px;opacity:.9">Mot du logo, bulles et alertes sombres</span><span style="font-size:13px;opacity:.9">Blanc dessus : 18,0:1</span></div><div style="background:#e8eefc;color:#1f2933;border-radius:4px;padding:22px;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;height:210px;box-sizing:border-box;border:1px solid #d9dce3"><span style="font-family:Manrope;font-weight:800;font-size:22px">Bleu pâle</span><span style="font-size:14px">#E8EEFC · RVB 232 238 252</span><span style="font-size:13px;opacity:.9">Survol, jeton accent-survol</span><span style="font-size:13px;opacity:.9">Bleu vif dessus : 5,7:1</span></div></div>
+<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:14px"><div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:4px;background:#1F2933;border:1px solid #d9dce3"></div><span style="font-weight:600;font-size:13px">Encre</span><span class="petit">#1F2933<br>texte · 14,8:1</span></div><div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:4px;background:#52606D;border:1px solid #d9dce3"></div><span style="font-weight:600;font-size:13px">Ardoise</span><span class="petit">#52606D<br>texte-secondaire · 6,5:1</span></div><div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:4px;background:#D9DCE3;border:1px solid #d9dce3"></div><span style="font-weight:600;font-size:13px">Trait</span><span class="petit">#D9DCE3<br>bordure</span></div><div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:4px;background:#F4F5F9;border:1px solid #d9dce3"></div><span style="font-weight:600;font-size:13px">Brume</span><span class="petit">#F4F5F9<br>fond-lateral</span></div><div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:4px;background:#FFFFFF;border:1px solid #d9dce3"></div><span style="font-weight:600;font-size:13px">Blanc</span><span class="petit">#FFFFFF<br>fond, papier</span></div><div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:4px;background:#067647;border:1px solid #d9dce3"></div><span style="font-weight:600;font-size:13px">Succès</span><span class="petit">#067647<br>succes · 5,7:1</span></div><div style="display:flex;flex-direction:column;gap:6px"><div style="height:64px;border-radius:4px;background:#B42318;border:1px solid #d9dce3"></div><span style="font-weight:600;font-size:13px">Erreur</span><span class="petit">#B42318<br>erreur · 6,6:1</span></div></div>
+<div style="display:flex;flex-direction:column;gap:8px"><p class="t3" style="margin:0">Proportions d'usage (indicatives)</p><div style="display:flex;height:34px;border-radius:4px;overflow:hidden;border:1px solid #d9dce3"><div style="flex:60;background:#f4f5f9"></div><div style="flex:25;background:#1f4fd8"></div><div style="flex:15;background:#1a1033"></div></div><div style="display:flex;font-size:12px;color:#52606d"><span style="flex:60">Blanc et Brume, 60 %</span><span style="flex:25">Bleu vif, 25 %</span><span style="flex:15">Nuit et Encre, 15 %</span></div>
+<p class="petit">Contrastes calculés selon WCAG 2.1, cible 4,5:1 pour le texte. Sur les bandeaux Bleu vif, textes secondaires en #D6E0FA (5,0:1). CMJN approchés et Pantone à faire établir par l'imprimeur.</p></div></div></body>
+</html>
