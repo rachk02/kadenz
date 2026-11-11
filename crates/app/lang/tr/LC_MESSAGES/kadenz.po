@@ -516,9 +516,6 @@ msgstr "Tedarikçi"
 msgid "Fournisseurs"
 msgstr "Tedarikçiler"
 
-msgid "Garder"
-msgstr "Koru"
-
 msgid "Gestion commerciale"
 msgstr "Ticari yönetim"
 
@@ -2702,3 +2699,9 @@ msgstr "Kadenz güncel."
 
 msgid "La version {} est disponible."
 msgstr "{} sürümü mevcut."
+
+msgid "Retirer ce logo ?"
+msgstr "Bu logo kaldırılsın mı?"
+
+msgid "Se déconnecter de Kadenz ?"
+msgstr "Kadenz'den çıkış yapılsın mı?"

@@ -516,9 +516,6 @@ msgstr "供应商"
 msgid "Fournisseurs"
 msgstr "供应商"
 
-msgid "Garder"
-msgstr "保留"
-
 msgid "Gestion commerciale"
 msgstr "商务管理"
 
@@ -2702,3 +2699,9 @@ msgstr "Kadenz 已是最新版本。"
 
 msgid "La version {} est disponible."
 msgstr "版本 {} 现已推出。"
+
+msgid "Retirer ce logo ?"
+msgstr "要移除此标志吗？"
+
+msgid "Se déconnecter de Kadenz ?"
+msgstr "要退出登录 Kadenz 吗？"

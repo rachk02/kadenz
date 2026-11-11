@@ -516,9 +516,6 @@ msgstr "仕入先"
 msgid "Fournisseurs"
 msgstr "仕入先"
 
-msgid "Garder"
-msgstr "残す"
-
 msgid "Gestion commerciale"
 msgstr "販売管理"
 
@@ -2702,3 +2699,9 @@ msgstr "Kadenz は最新です。"
 
 msgid "La version {} est disponible."
 msgstr "バージョン {} を利用できます。"
+
+msgid "Retirer ce logo ?"
+msgstr "このロゴを削除しますか?"
+
+msgid "Se déconnecter de Kadenz ?"
+msgstr "Kadenz からログアウトしますか?"

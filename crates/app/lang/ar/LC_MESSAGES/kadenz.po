@@ -516,9 +516,6 @@ msgstr "المورد"
 msgid "Fournisseurs"
 msgstr "الموردون"
 
-msgid "Garder"
-msgstr "الإبقاء"
-
 msgid "Gestion commerciale"
 msgstr "الإدارة التجارية"
 
@@ -2702,3 +2699,9 @@ msgstr "Kadenz محدّث."
 
 msgid "La version {} est disponible."
 msgstr "الإصدار {} متاح."
+
+msgid "Retirer ce logo ?"
+msgstr "هل تريد إزالة هذا الشعار؟"
+
+msgid "Se déconnecter de Kadenz ?"
+msgstr "هل تريد تسجيل الخروج من Kadenz؟"

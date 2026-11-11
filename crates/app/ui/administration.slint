@@ -2,7 +2,7 @@
 // (cahier des charges, sections 5.1 et 5.4).
 
 import { ComboBox, ScrollView, TextEdit } from "std-widgets.slint";
-import { Bouton, Champ, MessageRetour, Modules, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Bouton, Champ, Confirmation, MessageRetour, Modules, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct FicheEntrepriseUi {
     nom: string,
@@ -161,6 +161,26 @@ export component PageEntreprise inherits ScrollView {
     property <Retour> retour;
     property <Retour> retour-logo-principal;
     property <Retour> retour-logo-secondaire;
+    // Logo dont le retrait attend la fenêtre de confirmation (-1 aucun).
+    property <int> logo-a-retirer: -1;
+    property <int> reponses: Confirmation.reponses;
+    changed reponses => {
+        if (self.logo-a-retirer >= 0) {
+            if (Confirmation.accepte) {
+                if (self.logo-a-retirer == 0) {
+                    root.retour-logo-principal = EntrepriseApi.retirer-logo(0);
+                } else {
+                    root.retour-logo-secondaire = EntrepriseApi.retirer-logo(1);
+                }
+            }
+            self.logo-a-retirer = -1;
+        }
+    }
+
+    function demander-retrait(rang: int) {
+        root.logo-a-retirer = rang;
+        Confirmation.demander(@tr("Retirer ce logo ?"), @tr("Retirer"), true);
+    }
 
     function charger(f: FicheEntrepriseUi) {
         nom.valeur = f.nom;
@@ -345,7 +365,7 @@ export component PageEntreprise inherits ScrollView {
                         root.retour-logo-principal = EntrepriseApi.choisir-logo(0);
                     }
                     retirer => {
-                        root.retour-logo-principal = EntrepriseApi.retirer-logo(0);
+                        root.demander-retrait(0);
                     }
                 }
 
@@ -358,7 +378,7 @@ export component PageEntreprise inherits ScrollView {
                         root.retour-logo-secondaire = EntrepriseApi.choisir-logo(1);
                     }
                     retirer => {
-                        root.retour-logo-secondaire = EntrepriseApi.retirer-logo(1);
+                        root.demander-retrait(1);
                     }
                 }
             }

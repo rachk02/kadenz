@@ -166,8 +166,15 @@ export component Symbole inherits Image {
 export component Bouton inherits Rectangle {
     in property <string> text;
     in property <bool> primary: false;
+    // Avec primary : bouton rouge des actions qui suppriment ou annulent.
+    in property <bool> danger: false;
     in property <bool> enabled: true;
     callback clicked();
+
+    // Donne le focus clavier au bouton (fenêtre de confirmation).
+    public function focaliser() {
+        clavier.focus();
+    }
 
     min-width: max(72px, etiquette.preferred-width + 24px);
     preferred-width: etiquette.preferred-width + 32px;
@@ -179,6 +186,7 @@ export component Bouton inherits Rectangle {
     border-width: root.primary ? 0px : 1px;
     border-color: Theme.bordure;
     background: !root.enabled ? (root.primary ? #9aa3c7 : Theme.fond-lateral)
+        : root.primary && root.danger ? (zone.pressed ? #7a150e : zone.has-hover ? #951c13 : Theme.erreur)
         : root.primary ? (zone.pressed ? #1f2866 : zone.has-hover ? #25307a : Theme.accent)
         : (zone.pressed ? #dfe2f1 : zone.has-hover ? Theme.accent-survol : white);
     animate background { duration: Affichage.duree; }
@@ -198,7 +206,7 @@ export component Bouton inherits Rectangle {
         height: parent.height + 6px;
         border-radius: 6px;
         border-width: 2px;
-        border-color: Theme.accent;
+        border-color: root.danger ? Theme.erreur : Theme.accent;
         visible: clavier.has-focus;
     }
 
@@ -236,6 +244,115 @@ export component Bouton inherits Rectangle {
             mouse-cursor: pointer;
             clicked => {
                 root.clicked();
+            }
+        }
+    }
+}
+
+// Demande de confirmation commune (révision 2.34) : une seule fenêtre, dessinée
+// par la fenêtre principale au-dessus de tout. Un écran appelle demander() et garde
+// sa propre demande en cours ; à la réponse, accepte est posé puis reponses avance :
+// l'écran qui a une demande en cours agit (ou non) puis l'oublie.
+export global Confirmation {
+    in-out property <bool> ouverte;
+    in-out property <string> message;
+    in-out property <string> bouton;
+    in-out property <bool> danger;
+    in-out property <bool> accepte;
+    in-out property <int> reponses;
+
+    public function demander(message: string, bouton: string, danger: bool) {
+        root.message = message;
+        root.bouton = bouton;
+        root.danger = danger;
+        root.ouverte = true;
+    }
+
+    public function repondre(accepte: bool) {
+        root.accepte = accepte;
+        root.ouverte = false;
+        root.reponses += 1;
+    }
+}
+
+// Fenêtre de confirmation : fond voilé, message, Revenir et le bouton d'action
+// (rouge pour une suppression ou une annulation). Échap revient ; Entrée active le
+// bouton qui a le focus, Revenir d'abord quand l'action est destructrice.
+export component FenetreConfirmation inherits Rectangle {
+    property <bool> ouverte: Confirmation.ouverte;
+    changed ouverte => {
+        if (self.ouverte) {
+            if (Confirmation.danger) {
+                revenir.focaliser();
+            } else {
+                confirmer.focaliser();
+            }
+        }
+    }
+
+    opacity: Confirmation.ouverte ? 1 : 0;
+    animate opacity { duration: Affichage.duree; }
+    visible: self.opacity > 0;
+    background: #0f172a80;
+
+    // Les clics ne doivent pas atteindre l'écran recouvert.
+    TouchArea { }
+
+    FocusScope {
+        key-pressed(e) => {
+            if (e.text == Key.Escape) {
+                Confirmation.repondre(false);
+                return accept;
+            }
+            return reject;
+        }
+
+        carte := Rectangle {
+            width: min(460px, root.width - 48px);
+            height: contenu.preferred-height;
+            y: (root.height - self.height) / 2 + (Confirmation.ouverte ? 0px : 12px);
+            animate y { duration: Affichage.duree-longue; easing: ease-out; }
+            background: white;
+            border-radius: 4px;
+            border-width: 1px;
+            border-color: Theme.bordure;
+            drop-shadow-blur: 24px;
+            drop-shadow-offset-y: 8px;
+            drop-shadow-color: #0f172a33;
+
+            contenu := VerticalLayout {
+                padding: 24px;
+                spacing: 20px;
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: Confirmation.message;
+                    color: Theme.texte;
+                    font-size: 14px;
+                    wrap: word-wrap;
+                }
+
+                // Boutons en fin de ligne ; la Rangee s'inverse de droite à gauche.
+                Rangee {
+                    alignment: end;
+                    spacing: 8px;
+
+                    revenir := Bouton {
+                        text: @tr("Revenir");
+                        clicked => {
+                            Confirmation.repondre(false);
+                        }
+                    }
+
+                    confirmer := Bouton {
+                        text: Confirmation.bouton;
+                        primary: true;
+                        danger: Confirmation.danger;
+                        clicked => {
+                            Confirmation.repondre(true);
+                        }
+                    }
+                }
             }
         }
     }

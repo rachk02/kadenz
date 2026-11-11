@@ -2,7 +2,7 @@
 // Une liste filtrable et triable à gauche, la fiche sélectionnée à droite.
 
 import { CheckBox, ComboBox, LineEdit, StandardTableView } from "std-widgets.slint";
-import { Bouton, Champ, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Bouton, Champ, Confirmation, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 import { ImportApi } from "import.slint";
 
 // Fiche telle que l'écran la manipule ; `existe` est faux pour une nouvelle fiche.
@@ -77,7 +77,17 @@ component ActionsFiche inherits VerticalLayout {
     callback retirer();
     callback reactiver();
 
+    // Retrait demandé, en attente de la fenêtre de confirmation commune.
     property <bool> confirmer: false;
+    property <int> reponses: Confirmation.reponses;
+    changed reponses => {
+        if (self.confirmer) {
+            self.confirmer = false;
+            if (Confirmation.accepte) {
+                root.retirer();
+            }
+        }
+    }
 
     spacing: 8px;
     vertical-stretch: 0;
@@ -95,10 +105,14 @@ component ActionsFiche inherits VerticalLayout {
             }
         }
 
-        if root.existe && root.actif && root.peut-retirer && !root.confirmer: Bouton {
+        if root.existe && root.actif && root.peut-retirer: Bouton {
             text: @tr("Retirer");
             clicked => {
                 root.confirmer = true;
+                Confirmation.demander(
+                    @tr("Retirer cette fiche ? Elle est supprimée si aucun document ne la cite, sinon seulement désactivée."),
+                    @tr("Confirmer le retrait"),
+                    true);
             }
         }
 
@@ -115,37 +129,6 @@ component ActionsFiche inherits VerticalLayout {
         text: @tr("Lecture seule : votre rôle ne permet pas de modifier une fiche existante.");
         color: Theme.texte-secondaire;
         wrap: word-wrap;
-    }
-
-    if root.confirmer: VerticalLayout {
-        spacing: 8px;
-
-        Text {
-            horizontal-alignment: Theme.debut;
-            text: @tr("Retirer cette fiche ? Elle est supprimée si aucun document ne la cite, sinon seulement désactivée.");
-            wrap: word-wrap;
-            color: Theme.texte;
-        }
-
-        Rangee {
-            spacing: 8px;
-            alignment: start;
-
-            Bouton {
-                text: @tr("Confirmer le retrait");
-                clicked => {
-                    root.confirmer = false;
-                    root.retirer();
-                }
-            }
-
-            Bouton {
-                text: @tr("Garder");
-                clicked => {
-                    root.confirmer = false;
-                }
-            }
-        }
     }
 }
 

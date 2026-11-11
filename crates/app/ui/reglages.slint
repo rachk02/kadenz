@@ -2,7 +2,7 @@
 // liste de rubriques, chacune ouvrant sa page. La liste ne montre que les rubriques
 // que les droits du compte et la licence ouvrent (construite par l'application).
 import { CheckBox, ComboBox, ScrollView } from "std-widgets.slint";
-import { Affichage, Bouton, Champ, ElementNavigation, MessageErreur, Section, Theme, Titre } from "composants.slint";
+import { Affichage, Bouton, Champ, Confirmation, ElementNavigation, MessageErreur, Section, Theme, Titre } from "composants.slint";
 import { PageEntreprise, PageParametres } from "administration.slint";
 import { PageUtilisateurs } from "utilisateurs.slint";
 import { PageImpression } from "impression.slint";
@@ -630,6 +630,23 @@ export component PageReglages inherits Rectangle {
     callback revoir-presentation();
     callback deconnecter();
 
+    // Déconnexion demandée, en attente de la fenêtre de confirmation commune.
+    property <bool> deconnexion-demandee: false;
+    property <int> reponses: Confirmation.reponses;
+    changed reponses => {
+        if (self.deconnexion-demandee) {
+            self.deconnexion-demandee = false;
+            if (Confirmation.accepte) {
+                root.deconnecter();
+            }
+        }
+    }
+
+    function demander-deconnexion() {
+        root.deconnexion-demandee = true;
+        Confirmation.demander(@tr("Se déconnecter de Kadenz ?"), @tr("Se déconnecter"), false);
+    }
+
     property <bool> liste-compacte: root.width < 860px;
     property <length> marge-liste: root.liste-compacte ? 8px : 12px;
     property <length> largeur-liste: root.liste-compacte ? 72px : 288px;
@@ -692,7 +709,7 @@ export component PageReglages inherits Rectangle {
                 libelle: @tr("Se déconnecter");
                 icone: @image-url("icones/actions/deconnexion.svg");
                 clique => {
-                    root.deconnecter();
+                    root.demander-deconnexion();
                 }
             }
 
@@ -700,7 +717,7 @@ export component PageReglages inherits Rectangle {
                 libelle: @tr("Se déconnecter");
                 icone: @image-url("icones/actions/deconnexion.svg");
                 clique => {
-                    root.deconnecter();
+                    root.demander-deconnexion();
                 }
             }
         }

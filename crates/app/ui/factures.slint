@@ -4,7 +4,7 @@
 // les textes propres au type : cet écran ne fait qu'afficher et transmettre la saisie.
 
 import { CheckBox, ComboBox, LineEdit, ScrollView, StandardTableView } from "std-widgets.slint";
-import { Bouton, Champ, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Bouton, Champ, Confirmation, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct LigneFactureUi {
     // 0 pour une ligne libre, sans produit d'origine.
@@ -515,9 +515,61 @@ component Fiche inherits ScrollView {
     property <int> reglement-a-supprimer;
     property <Retour> retour-reglement;
     // 0 aucune, 1 valider, 2 annuler, 3 supprimer, 4 corriger, 5 confirmer la livraison.
+    // La demande s'affiche dans la fenêtre de confirmation commune (composants.slint).
     property <int> confirmation: 0;
+    changed confirmation => {
+        if (self.confirmation != 0) {
+            Confirmation.demander(
+                self.confirmation == 1 ? FacturesApi.textes.confirmer-validation : (self.confirmation == 2 ? FacturesApi.textes.confirmer-annulation : (self.confirmation == 4 ? @tr("Corriger ce document ? Il est annulé, son numéro conservé, et une copie modifiable est créée en brouillon.") : self.confirmation == 5 ? @tr("Confirmer la livraison ? Le statut passe en livraison partielle ou complète selon les quantités livrées ; le bordereau ne pourra plus être annulé.") : @tr("Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit."))),
+                self.confirmation == 1 ? @tr("Confirmer la validation") : (self.confirmation == 2 ? @tr("Confirmer l'annulation") : (self.confirmation == 4 ? @tr("Confirmer la correction") : self.confirmation == 5 ? @tr("Confirmer la livraison") : @tr("Confirmer la suppression"))),
+                self.confirmation == 2 || self.confirmation == 3 || self.confirmation == 4);
+        }
+    }
+    changed reglement-a-supprimer => {
+        if (self.reglement-a-supprimer != 0) {
+            Confirmation.demander(
+                @tr("Supprimer ce règlement ? La suppression est inscrite dans l'historique du document, avec son montant."),
+                @tr("Confirmer la suppression"),
+                true);
+        }
+    }
+    // Réponse de la fenêtre de confirmation : seule la demande en cours de cet écran agit.
+    property <int> reponses: Confirmation.reponses;
+    changed reponses => {
+        if (self.confirmation != 0) {
+            if (Confirmation.accepte) {
+                root.executer-confirmation();
+            }
+            self.confirmation = 0;
+        } else if (self.reglement-a-supprimer != 0) {
+            if (Confirmation.accepte) {
+                root.retour-reglement = FacturesApi.supprimer-reglement(root.reglement-a-supprimer);
+                root.recharger-si-besoin();
+            }
+            self.reglement-a-supprimer = 0;
+        }
+    }
     property <int> version-chargee: -1;
     property <string> date-precedente;
+
+    // Action confirmée : valider, annuler, corriger, confirmer la livraison ou supprimer.
+    function executer-confirmation() {
+        if (root.confirmation == 1) {
+            root.retour = FacturesApi.valider(root.saisie());
+        } else if (root.confirmation == 2) {
+            root.retour = FacturesApi.annuler-document();
+        } else if (root.confirmation == 4) {
+            root.retour = FacturesApi.dupliquer(true);
+        } else if (root.confirmation == 5) {
+            root.retour = FacturesApi.confirmer-livraison(root.visa-client, root.visa-fournisseur, root.date-livraison, root.date-reception);
+        } else {
+            root.retour = FacturesApi.supprimer();
+        }
+        root.recharger-si-besoin();
+        // Validée ou annulée, la fiche n'est plus modifiable : les champs
+        // de saisie des produits disparaissent, peut-être avec le focus.
+        FacturesApi.demande-focus += 1;
+    }
 
     function charger(f: FicheFactureUi) {
         root.version-chargee = FacturesApi.version-fiche;
@@ -1508,52 +1560,6 @@ component Fiche inherits ScrollView {
             }
         }
 
-        if root.confirmation != 0: VerticalLayout {
-            spacing: 8px;
-
-            Text {
-                horizontal-alignment: Theme.debut;
-                text: root.confirmation == 1 ? FacturesApi.textes.confirmer-validation : (root.confirmation == 2 ? FacturesApi.textes.confirmer-annulation : (root.confirmation == 4 ? @tr("Corriger ce document ? Il est annulé, son numéro conservé, et une copie modifiable est créée en brouillon.") : root.confirmation == 5 ? @tr("Confirmer la livraison ? Le statut passe en livraison partielle ou complète selon les quantités livrées ; le bordereau ne pourra plus être annulé.") : @tr("Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit.")));
-                color: Theme.texte;
-                wrap: word-wrap;
-            }
-
-            Rangee {
-                spacing: 8px;
-                alignment: start;
-
-                Bouton {
-                    text: root.confirmation == 1 ? @tr("Confirmer la validation") : (root.confirmation == 2 ? @tr("Confirmer l'annulation") : (root.confirmation == 4 ? @tr("Confirmer la correction") : root.confirmation == 5 ? @tr("Confirmer la livraison") : @tr("Confirmer la suppression")));
-                    primary: true;
-                    clicked => {
-                        if (root.confirmation == 1) {
-                            root.retour = FacturesApi.valider(root.saisie());
-                        } else if (root.confirmation == 2) {
-                            root.retour = FacturesApi.annuler-document();
-                        } else if (root.confirmation == 4) {
-                            root.retour = FacturesApi.dupliquer(true);
-                        } else if (root.confirmation == 5) {
-                            root.retour = FacturesApi.confirmer-livraison(root.visa-client, root.visa-fournisseur, root.date-livraison, root.date-reception);
-                        } else {
-                            root.retour = FacturesApi.supprimer();
-                        }
-                        root.confirmation = 0;
-                        root.recharger-si-besoin();
-                        // Validée ou annulée, la fiche n'est plus modifiable : les champs
-                        // de saisie des produits disparaissent, peut-être avec le focus.
-                        FacturesApi.demande-focus += 1;
-                    }
-                }
-
-                Bouton {
-                    text: @tr("Revenir");
-                    clicked => {
-                        root.confirmation = 0;
-                    }
-                }
-            }
-        }
-
         if root.retour.message != "": MessageRetour {
             retour: root.retour;
         }
@@ -1678,35 +1684,6 @@ component Fiche inherits ScrollView {
                         root.retour-reglement = { };
                         root.reglement-a-supprimer = reglement.id;
                     }
-                }
-            }
-        }
-
-        if root.reglement-a-supprimer != 0: Text {
-            horizontal-alignment: Theme.debut;
-            text: @tr("Supprimer ce règlement ? La suppression est inscrite dans l'historique du document, avec son montant.");
-            color: Theme.texte;
-            wrap: word-wrap;
-        }
-
-        if root.reglement-a-supprimer != 0: Rangee {
-            alignment: start;
-            spacing: 8px;
-
-            Bouton {
-                text: @tr("Confirmer la suppression");
-                primary: true;
-                clicked => {
-                    root.retour-reglement = FacturesApi.supprimer-reglement(root.reglement-a-supprimer);
-                    root.reglement-a-supprimer = 0;
-                    root.recharger-si-besoin();
-                }
-            }
-
-            Bouton {
-                text: @tr("Revenir");
-                clicked => {
-                    root.reglement-a-supprimer = 0;
                 }
             }
         }

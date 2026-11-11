@@ -1,6 +1,6 @@
 // Fenêtre principale : écrans de démarrage, puis application avec sa navigation
 // (bandeau ou barre latérale, navigation.slint) et ses pages.
-import { Affichage, Droits, MessageErreur, Modules, Rangee, Theme, Titre } from "composants.slint";
+import { Affichage, Confirmation, Droits, FenetreConfirmation, MessageErreur, Modules, Rangee, Theme, Titre } from "composants.slint";
 import { EcranAssistant, DonneesAssistant } from "assistant.slint";
 import { EcranConnexion } from "connexion.slint";
 import { EcranPresentation } from "presentation.slint";
@@ -124,8 +124,15 @@ export component FenetrePrincipale inherits Window {
         init => {
             self.focus();
         }
+        // Fenêtre de confirmation refermée : le focus revient ici, pour Ctrl+B.
+        property <bool> confirmation-ouverte: Confirmation.ouverte;
+        changed confirmation-ouverte => {
+            if (!self.confirmation-ouverte) {
+                self.focus();
+            }
+        }
         key-pressed(e) => {
-            if (root.barre && e.modifiers.control && (e.text == "b" || e.text == "B")) {
+            if (root.barre && !Confirmation.ouverte && e.modifiers.control && (e.text == "b" || e.text == "B")) {
                 root.barre-epinglee = !root.barre-epinglee;
                 root.barre-flottante = false;
                 // L'infobulle du bouton de bascule ne correspond plus à son état.
@@ -313,5 +320,11 @@ export component FenetrePrincipale inherits Window {
 
     InfobulleFenetre {
         largeur-fenetre: root.width;
+    }
+
+    // Demande de confirmation commune, au-dessus de tout.
+    FenetreConfirmation {
+        width: root.width;
+        height: root.height;
     }
 }

@@ -516,9 +516,6 @@ msgstr "Supplier"
 msgid "Fournisseurs"
 msgstr "Suppliers"
 
-msgid "Garder"
-msgstr "Keep"
-
 msgid "Gestion commerciale"
 msgstr "Sales management"
 
@@ -2702,3 +2699,9 @@ msgstr "Kadenz is up to date."
 
 msgid "La version {} est disponible."
 msgstr "Version {} is available."
+
+msgid "Retirer ce logo ?"
+msgstr "Remove this logo?"
+
+msgid "Se déconnecter de Kadenz ?"
+msgstr "Sign out of Kadenz?"
