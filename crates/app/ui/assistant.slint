@@ -72,7 +72,8 @@ export component EcranAssistant inherits Rectangle {
     property <string> taux-remise: root.defaut-taux-remise;
     property <string> taux-retenue: root.defaut-taux-retenue;
     property <string> modes-paiement: root.defaut-modes-paiement;
-    property <bool> orthographe-traditionnelle: false;
+    // Orthographe traditionnelle par défaut (décision de l'utilisateur du 2026-11-11).
+    property <bool> orthographe-traditionnelle: true;
 
     function suivant() {
         if (root.etape == 0 && root.cle-licence != "") {

@@ -143,7 +143,7 @@ export component Titre inherits Text {
 }
 
 // Symbole de la marque (docs/marque) : tuile Indigo, jambe du K en trois temps.
-// En dessous de 48 px, préférer la version réduite à jambe pleine (docs/marque/kadenz-icone-petite.svg).
+// Le K découpé sert à toutes les tailles, petites comprises (décision de l'utilisateur du 2026-11-11).
 export component Symbole inherits Image {
     source: @image-url("icones/kadenz-icone.svg");
     image-rendering: smooth;
