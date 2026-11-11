@@ -247,6 +247,7 @@ fn achats(conn: &Connection, du: NaiveDate, au: NaiveDate) -> Resultat<Achats> {
 /// Indicateurs des ventes et des achats du `du` au `au`, dates incluses. Une
 /// période vide (fin avant le début) donne des indicateurs à zéro.
 pub fn indicateurs(conn: &Connection, du: NaiveDate, au: NaiveDate) -> Resultat<Indicateurs> {
+    crate::licence::exiger(conn, kadenz_domaine::module::Module::TableauDeBord)?;
     Ok(Indicateurs {
         ventes: ventes(conn, du, au)?,
         achats: achats(conn, du, au)?,

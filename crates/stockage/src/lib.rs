@@ -7,6 +7,7 @@ pub mod droits;
 pub mod entreprise;
 pub mod impression;
 pub mod installation;
+pub mod licence;
 pub mod mise_en_page;
 pub mod parametres;
 pub mod pilotage;
@@ -179,13 +180,16 @@ pub fn ouvrir(chemin: &Path) -> Resultat<Connection> {
     let mut conn = Connection::open(chemin)?;
     conn.pragma_update(None, "journal_mode", "WAL")?;
     preparer(&mut conn)?;
+    // Socle seul tant que la licence n'est pas appliquée (licence::appliquer).
+    licence::preparer(&conn, false)?;
     Ok(conn)
 }
 
-/// Base en mémoire, pour les tests.
+/// Base en mémoire, pour les tests : tous les modules y sont actifs.
 pub fn ouvrir_en_memoire() -> Resultat<Connection> {
     let mut conn = Connection::open_in_memory()?;
     preparer(&mut conn)?;
+    licence::preparer(&conn, true)?;
     Ok(conn)
 }
 

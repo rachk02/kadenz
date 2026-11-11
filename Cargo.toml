@@ -1,6 +1,14 @@
 [workspace]
 resolver = "3"
-members = ["crates/domaine", "crates/stockage", "crates/import", "crates/pdf", "crates/app"]
+members = [
+    "crates/domaine",
+    "crates/stockage",
+    "crates/import",
+    "crates/pdf",
+    "crates/licence",
+    "crates/editeur",
+    "crates/app",
+]
 
 [workspace.package]
 version = "0.1.0"
@@ -12,6 +20,7 @@ kadenz-domaine = { path = "crates/domaine" }
 kadenz-stockage = { path = "crates/stockage" }
 kadenz-import = { path = "crates/import" }
 kadenz-pdf = { path = "crates/pdf" }
+kadenz-licence = { path = "crates/licence" }
 rusqlite = { version = "0.41.1", features = ["bundled", "backup"] }
 slint = { version = "1.18.1", features = ["raw-window-handle-06"] }
 slint-build = "1.18.1"
@@ -29,6 +38,12 @@ rustybuzz = "0.20.1"
 # Rendu des PDF en image pour l'aperçu des réglages d'impression (J8b) ; nos PDF
 # embarquent leurs polices.
 hayro = { version = "0.9.0", default-features = false }
+# Licence (J9) : signature Ed25519 des clés, empreinte du poste, encodage.
+ed25519-dalek = "2.2.0"
+sha2 = "0.10.9"
+base64 = "0.22.1"
+getrandom = "0.3.4"
+windows-sys = "0.61.2"
 
 # Argon2 non optimisé met plusieurs secondes par hachage : on optimise les
 # dépendances même en mode debug pour que connexion et tests restent rapides.

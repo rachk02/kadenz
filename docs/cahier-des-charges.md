@@ -28,6 +28,7 @@
 | 2.22 | 2026-11-10 | Jalon J8b, domaine, stockage et PDF : règles de rendu des zones d'en-tête et de pied de page, des gabarits et des marges, appliquées aussi aux lettres de relance et aux listes (section 12, provisoires, à confirmer avec les questions 13 à 16) |
 | 2.23 | 2026-11-10 | Bas des documents réglable par type (lignes de totaux, montant en lettres, visas, dates, signataire) et style du pied de page au choix, décisions de l'utilisateur d'après ses modèles Excel du bon de commande et du bordereau (section 12) |
 | 2.24 | 2026-11-11 | Jalon J8b validé par l'utilisateur : règles de rendu de la section 12 confirmées, questions 13 à 16 tranchées ; passage à J9 |
+| 2.25 | 2026-11-11 | Jalon J9, décisions de l'utilisateur : socle seul sans clé valide, paire de clés générée par l'éditeur lui-même, clé d'essai pour le poste de développement, modules désactivés refusés aussi par le stockage ; signature Ed25519 et identifiant de poste tiré du MachineGuid (section 15) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
@@ -479,7 +480,12 @@ Livré au jalon J4 : depuis la fiche d'une facture, « Aperçu PDF » pour un br
 - Liaison au poste : l'application affiche un identifiant de poste, que le client transmet à l'éditeur ; la clé n'est valide que sur ce poste. Un changement de PC demande une nouvelle clé.
 - La clé est saisie dans l'assistant de premier lancement et peut être remplacée plus tard (ajout de modules, changement de poste).
 - Outil éditeur séparé, jamais distribué aux clients, pour générer les clés ; la clé privée de signature reste chez l'éditeur et n'est jamais versionnée.
-- À l'étude : algorithme de signature, composition de l'identifiant de poste (assez stable pour survivre aux mises à jour Windows), comportement si la clé devient invalide (proposition : lecture seule, sans perte de données).
+- Sans clé, ou avec une clé refusée (signature fausse, autre poste) : socle seul (référentiels, administration, factures et avoirs) ; les modules sont masqués et leurs données gardées, elles réapparaissent avec une clé valide (décision de l'utilisateur du 2026-11-11). Les postes mis à jour depuis la v0.1.0, sans clé, gardent ainsi l'accès à leurs factures.
+- Un module désactivé est masqué dans les écrans et ses opérations sont refusées aussi par le stockage (création, modification, validation, conversion, duplication et annulation des documents de ce type ; création d'un bordereau ; règlements ; relances ; indicateurs du tableau de bord) ; la lecture des registres reste permise. Les modules actifs ne sont jamais écrits dans le fichier de la base : ils sont recalculés à chaque ouverture à partir de la clé.
+- Signature Ed25519 (crate `ed25519-dalek`, Rust pur). Format de la clé : `KADENZ-<données>.<signature>` en base64 URL, données en JSON (version, client, poste, modules, date d'émission), sur une ligne d'environ 350 à 450 caractères.
+- Identifiant de poste : empreinte SHA-256 du MachineGuid de Windows, 80 bits en base 32 de Crockford, quatre groupes de quatre caractères (ex. « 6VBZ-Z2E3-KFW9-N6QX »). Il survit aux mises à jour de Windows et change à la réinstallation du système ou au changement de PC.
+- Outil éditeur `kadenz-editeur` (crate séparé, jamais empaqueté par l'installateur) : `generer <dossier>` crée la paire de clés (clé privée dans un dossier hors dépôt choisi par l'éditeur, qui lance lui-même la commande), `poste` affiche l'identifiant du poste, `emettre` produit une clé.
+- Développement : une vraie clé d'essai, émise pour le poste de développement avec tous les modules, sert aux vérifications ; aucune dérogation dans le code (décision de l'utilisateur du 2026-11-11).
 
 ## 16. Installation et mises à jour (spécifié, forme à l'étude)
 

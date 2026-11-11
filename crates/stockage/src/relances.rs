@@ -111,6 +111,7 @@ pub fn enregistrer_textes(
     acteur: &Utilisateur,
     textes: &TextesRelance,
 ) -> Resultat<()> {
+    crate::licence::exiger(conn, kadenz_domaine::module::Module::Relances)?;
     exiger(conn, acteur, Droit::GererParametres)?;
     if textes.titre.trim().is_empty() {
         return Err(Erreur::Validation(
@@ -194,6 +195,7 @@ pub fn lettre(
     facture_id: i64,
     aujourd_hui: NaiveDate,
 ) -> Resultat<LettreRelance> {
+    crate::licence::exiger(conn, kadenz_domaine::module::Module::Relances)?;
     let du = reglements::factures_echues(conn, aujourd_hui)?
         .into_iter()
         .find(|d| d.id == facture_id)

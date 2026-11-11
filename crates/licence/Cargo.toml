@@ -1,0 +1,16 @@
+[package]
+name = "kadenz-licence"
+description = "Clé de licence de Kadenz : format, signature Ed25519, identifiant de poste."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+kadenz-domaine.workspace = true
+ed25519-dalek.workspace = true
+base64.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { workspace = true, features = ["Win32_System_Registry"] }

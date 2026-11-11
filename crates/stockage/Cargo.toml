@@ -7,7 +7,11 @@ publish.workspace = true
 
 [dependencies]
 kadenz-domaine.workspace = true
+kadenz-licence.workspace = true
 rusqlite.workspace = true
 argon2.workspace = true
 chrono.workspace = true
 serde_json.workspace = true
+
+[dev-dependencies]
+ed25519-dalek.workspace = true

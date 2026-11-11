@@ -7,3 +7,6 @@ docs_of_interest/
 # Clés de signature des licences : jamais versionnées
 *.pem
 *.key
+
+# Clé privée de l'éditeur : jamais dans le dépôt.
+kadenz-cle-privee.hex
