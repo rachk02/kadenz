@@ -18,6 +18,7 @@
 | 0.14 | 2026-11-12 | Décision 40 : lecture seule aussi sans licence ou avec une licence refusée. |
 | 0.15 | 2026-11-12 | Décisions 41 à 43 (F4) : un poste inscrit sans licence valide, postes en trop gardés, découverte sans le nom de l'entreprise. |
 | 0.16 | 2026-11-12 | Décision 44 : port 47380 gardé ; découverte coupée si son port UDP est pris, sans empêcher le service de démarrer. |
+| 0.17 | 2026-11-12 | Décisions 45 à 47 (F5) : copie locale séparée de la base V1 sur un poste relié, consultation seule quand le serveur est injoignable en attendant F6, rubrique « Sauvegardes » cachée sur un poste relié. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -80,6 +81,9 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 42. **Licence qui réduit les postes** : une licence qui permet moins de postes qu'il n'y en a d'inscrits ne retire aucun poste ; les nouvelles inscriptions sont refusées tant que l'Admin n'a pas retiré de poste ou pris une licence plus large.
 43. **Découverte sur le réseau local** : la réponse du serveur donne le nom de la machine seul ; le nom de l'entreprise s'affiche après la saisie du code d'inscription.
 44. **Port du serveur** : le port 47380 est gardé, en TCP pour les sessions et en UDP pour la découverte ; il n'est attribué à aucun service par l'IANA et reste hors de la plage dynamique de Windows, sans qu'aucun port puisse être garanti libre. Si le port UDP est pris, le service démarre sans découverte et l'erreur s'affiche dans la fenêtre du serveur ; les postes le joignent par le code complet ou l'adresse saisie. Le port se change avec l'option `--port` du service.
+45. **Copie locale d'un poste relié** : un poste relié garde la copie des données du serveur dans une base séparée de sa base V1, qui reste intacte pour la reprise de ses données (F7) ; les données locales et celles du serveur ne se mélangent jamais.
+46. **Serveur injoignable en F5** : tout reste consultable dans la copie locale, et les écritures sont inactives avec la raison « Serveur injoignable », comme en lecture seule ; le travail hors connexion (file d'envoi, conflits) vient en F6.
+47. **Sauvegardes sur un poste relié** : la rubrique « Sauvegardes » des Paramètres est cachée, les données étant sauvegardées sur le serveur.
 
 ## 3. Candidats
 
