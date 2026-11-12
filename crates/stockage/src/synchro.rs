@@ -56,7 +56,9 @@ pub(crate) fn preparer(conn: &Connection) -> Resultat<()> {
     completer_uids(conn)
 }
 
-fn completer_uids(conn: &Connection) -> Resultat<()> {
+/// Identifiant global donné aux lignes qui n'en ont pas (le serveur l'appelle
+/// aussi pour un compte créé depuis l'ouverture de la base).
+pub fn completer_uids(conn: &Connection) -> Resultat<()> {
     for table in TABLES {
         let ids: Vec<i64> = conn
             .prepare(&format!("SELECT id FROM {table} WHERE uid IS NULL"))?

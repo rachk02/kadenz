@@ -49,16 +49,32 @@ pub fn appliquer_cle(conn: &Connection, cle: &str) -> Resultat<()> {
         .map_err(|_| Erreur::BaseIndechiffrable)
 }
 
+/// Portée de la protection Windows (DPAPI) d'une donnée.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Portee {
+    /// Compte Windows courant (poste, comme en V1).
+    Compte,
+    /// Toute la machine (serveur, lu par le service sans session ouverte) :
+    /// n'importe quel compte de la machine qui lit le fichier peut le
+    /// déchiffrer, la protection repose alors sur les droits du fichier.
+    Machine,
+}
+
 /// Clé de la base, lue dans `kadenz.cle`. Absente : créée si `creer`, sinon
 /// erreur (base chiffrée dont la clé a disparu).
 pub fn cle(fichier: &Path, creer: bool) -> Resultat<String> {
+    cle_avec(fichier, creer, Portee::Compte)
+}
+
+/// Comme [`cle`], avec la portée de protection voulue.
+pub fn cle_avec(fichier: &Path, creer: bool, portee: Portee) -> Resultat<String> {
     match fs::read(fichier) {
         Ok(protegee) => {
             let octets = dpapi::deproteger(&protegee).ok_or(Erreur::CleAutreCompte)?;
             String::from_utf8(octets).map_err(|_| Erreur::CleEndommagee)
         }
         Err(e) if e.kind() == std::io::ErrorKind::NotFound && creer => {
-            let (cle, protegee) = nouvelle_cle()?;
+            let (cle, protegee) = nouvelle_cle_avec(portee)?;
             fs::write(fichier, protegee)?;
             Ok(cle)
         }
@@ -70,11 +86,15 @@ pub fn cle(fichier: &Path, creer: bool) -> Resultat<String> {
 /// Nouvelle clé tirée de l'aléa du système : la clé, et sa forme protégée par
 /// Windows à écrire dans `kadenz.cle`.
 pub(crate) fn nouvelle_cle() -> Resultat<(String, Vec<u8>)> {
+    nouvelle_cle_avec(Portee::Compte)
+}
+
+fn nouvelle_cle_avec(portee: Portee) -> Resultat<(String, Vec<u8>)> {
     let mut alea = [0u8; 32];
     getrandom::fill(&mut alea)
         .map_err(|e| Erreur::Validation(format!("aléa du système indisponible : {e}")))?;
     let cle: String = alea.iter().map(|o| format!("{o:02x}")).collect();
-    let protegee = dpapi::proteger(cle.as_bytes())
+    let protegee = dpapi::proteger(cle.as_bytes(), portee)
         .ok_or_else(|| Erreur::Validation("protection de la clé par Windows impossible".into()))?;
     Ok((cle, protegee))
 }
@@ -158,6 +178,17 @@ pub(crate) fn comptes_par_table(conn: &Connection) -> Resultat<Vec<(String, i64)
         .collect()
 }
 
+/// Protège une donnée par Windows, avec la portée voulue (clé privée TLS du
+/// serveur, par exemple).
+pub fn proteger(donnee: &[u8], portee: Portee) -> Option<Vec<u8>> {
+    dpapi::proteger(donnee, portee)
+}
+
+/// Déprotège une donnée protégée par [`proteger`] (quelle que soit sa portée).
+pub fn deproteger(donnee: &[u8]) -> Option<Vec<u8>> {
+    dpapi::deproteger(donnee)
+}
+
 pub(crate) fn avec_suffixe(base: &Path, suffixe: &str) -> PathBuf {
     avec_suffixe_brut(base, &format!(".{suffixe}"))
 }
@@ -172,8 +203,11 @@ pub(crate) fn avec_suffixe_brut(base: &Path, suffixe: &str) -> PathBuf {
 pub(crate) mod dpapi {
     use windows_sys::Win32::Foundation::LocalFree;
     use windows_sys::Win32::Security::Cryptography::{
-        CRYPT_INTEGER_BLOB, CRYPTPROTECT_UI_FORBIDDEN, CryptProtectData, CryptUnprotectData,
+        CRYPT_INTEGER_BLOB, CRYPTPROTECT_LOCAL_MACHINE, CRYPTPROTECT_UI_FORBIDDEN,
+        CryptProtectData, CryptUnprotectData,
     };
+
+    use super::Portee;
 
     /// Libellé enregistré avec la donnée protégée.
     const DESCRIPTION: &[u16] = &[
@@ -190,7 +224,11 @@ pub(crate) mod dpapi {
         }
     }
 
-    pub fn proteger(donnee: &[u8]) -> Option<Vec<u8>> {
+    pub fn proteger(donnee: &[u8], portee: Portee) -> Option<Vec<u8>> {
+        let drapeaux = match portee {
+            Portee::Compte => CRYPTPROTECT_UI_FORBIDDEN,
+            Portee::Machine => CRYPTPROTECT_UI_FORBIDDEN | CRYPTPROTECT_LOCAL_MACHINE,
+        };
         let entree = CRYPT_INTEGER_BLOB {
             cbData: u32::try_from(donnee.len()).ok()?,
             pbData: donnee.as_ptr().cast_mut(),
@@ -207,7 +245,7 @@ pub(crate) mod dpapi {
                 std::ptr::null(),
                 std::ptr::null(),
                 std::ptr::null(),
-                CRYPTPROTECT_UI_FORBIDDEN,
+                drapeaux,
                 &mut resultat,
             )
         };
@@ -242,7 +280,7 @@ pub(crate) mod dpapi {
 /// Hors de Windows (développement seulement) : clé conservée telle quelle.
 #[cfg(not(windows))]
 pub(crate) mod dpapi {
-    pub fn proteger(donnee: &[u8]) -> Option<Vec<u8>> {
+    pub fn proteger(donnee: &[u8], _portee: super::Portee) -> Option<Vec<u8>> {
         Some(donnee.to_vec())
     }
     pub fn deproteger(donnee: &[u8]) -> Option<Vec<u8>> {

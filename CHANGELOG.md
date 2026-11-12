@@ -6,6 +6,7 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 
 ### Ajouté
 - Jalon F1 des fondations : identifiant global (UUID version 7) sur les comptes, tiers, produits, documents et règlements, et identifiant de l'entreprise, posés aussi sur les bases V1 migrées ; crate `kadenz-protocole` (opérations, résultats, changements) ; application des opérations des postes par les règles habituelles du stockage, une opération renvoyée recevant le même résultat sans être appliquée deux fois (une validation rend toujours le même numéro) ; conflits entre postes, opérations en attente pour un compte ou un droit hors connexion, suite numérotée des changements tenue par la base (migration 0007). Rien n'est encore visible à l'écran.
+- Jalon F2 des fondations : crate `kadenz-serveur` (service Windows `KadenzServeur`, mode console, commande `empreinte`) avec sa base de référence chiffrée par une clé protégée au niveau de la machine, dossier des données réservé à SYSTEM et aux Administrateurs ; crate `kadenz-client` pour les postes ; sessions TLS 1.3 avec épinglage du certificat du serveur et certificat de chaque poste, postes inscrits (migration 0008), frontière de confiance (poste et compte de chaque opération contrôlés), limites de taille, de délai, de connexions simultanées et de tentatives de connexion. Rien n'est encore visible à l'écran ; l'installateur du serveur suit.
 
 ## [0.2.2] - 2026-11-12
 

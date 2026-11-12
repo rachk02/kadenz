@@ -204,9 +204,10 @@ pub fn enregistrer_reglage(
     let mut brut = reglage_brut(chemin_base)?;
     if let Some(mot_de_passe) = mot_de_passe {
         verifier_longueur(mot_de_passe)?;
-        let protege = dpapi::proteger(mot_de_passe.as_bytes()).ok_or_else(|| {
-            Erreur::Validation("protection du mot de passe par Windows impossible".into())
-        })?;
+        let protege = dpapi::proteger(mot_de_passe.as_bytes(), chiffrement::Portee::Compte)
+            .ok_or_else(|| {
+                Erreur::Validation("protection du mot de passe par Windows impossible".into())
+            })?;
         brut.insert("mot_de_passe".into(), Value::String(en_hexa(&protege)));
     }
     let dossier_texte = dossier.to_str().ok_or_else(|| {

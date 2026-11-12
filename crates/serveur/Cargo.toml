@@ -1,0 +1,21 @@
+[package]
+name = "kadenz-serveur"
+description = "Serveur Kadenz de l'entreprise (phase 2) : service Windows, base de référence, TLS 1.3 avec les postes."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+kadenz-protocole.workspace = true
+kadenz-stockage.workspace = true
+kadenz-client.workspace = true
+rusqlite.workspace = true
+rustls.workspace = true
+chrono.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-service.workspace = true
+windows-sys = { workspace = true, features = ["Win32_Foundation", "Win32_Security", "Win32_Security_Authorization"] }
+
+[dev-dependencies]
+kadenz-domaine.workspace = true

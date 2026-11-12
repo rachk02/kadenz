@@ -12,6 +12,8 @@
 
 use serde::{Deserialize, Serialize};
 
+pub mod messages;
+
 /// Version du protocole, annoncée à la connexion (F2) : un poste d'une autre
 /// version est refusé.
 pub const VERSION: u32 = 1;

@@ -12,6 +12,7 @@ pub mod licence;
 pub mod mise_en_page;
 pub mod parametres;
 pub mod pilotage;
+pub mod postes;
 pub mod produits;
 pub mod reglements;
 pub mod relances;
@@ -70,6 +71,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0005_bordereau.sql"),
     include_str!("migrations/0006_affichage.sql"),
     include_str!("migrations/0007_synchro.sql"),
+    include_str!("migrations/0008_postes.sql"),
 ];
 
 #[derive(Debug)]
@@ -216,6 +218,31 @@ pub fn ouvrir(chemin: &Path) -> Resultat<Connection> {
     preparer(&mut conn)?;
     // Socle seul tant que la licence n'est pas appliquée (licence::appliquer).
     licence::preparer(&conn, false)?;
+    Ok(conn)
+}
+
+/// Ouvre (ou crée) la base du serveur de l'entreprise (phase 2, F2) : chiffrée
+/// comme celle d'un poste, mais avec une clé protégée par Windows au niveau de
+/// la machine, pour que le service la lise sans session ouverte. Les droits du
+/// dossier (SYSTEM et Administrateurs) sont posés par le serveur. Tous les
+/// modules y sont actifs en attendant la licence d'entreprise (F3).
+pub fn ouvrir_serveur(chemin: &Path) -> Resultat<Connection> {
+    if let Some(dossier) = chemin.parent() {
+        std::fs::create_dir_all(dossier)?;
+    }
+    let neuve = std::fs::metadata(chemin)
+        .map(|m| m.len() == 0)
+        .unwrap_or(true);
+    let cle = chiffrement::cle_avec(
+        &chiffrement::chemin_cle(chemin),
+        neuve,
+        chiffrement::Portee::Machine,
+    )?;
+    let mut conn = Connection::open(chemin)?;
+    chiffrement::appliquer_cle(&conn, &cle)?;
+    conn.pragma_update(None, "journal_mode", "WAL")?;
+    preparer(&mut conn)?;
+    licence::preparer(&conn, true)?;
     Ok(conn)
 }
 
