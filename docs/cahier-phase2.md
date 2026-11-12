@@ -6,6 +6,7 @@
 | 0.2 | 2026-11-12 | Premières décisions de l'utilisateur : les sept candidats entrent dans la phase 2, plus les chantiers jugés nécessaires ; serveur installable chez le client et hébergé ; comptabilité comme produit suivant de la suite ; licence par abonnement. Chantiers de fondation ajoutés (proposés, à valider), ordre proposé, questions mises à jour. |
 | 0.3 | 2026-11-12 | Décisions suivantes : travail hors connexion, lecture seule à l'échéance, licences V1 perpétuelles, chantiers et ordre de la 0.2 validés. Relecture de kadenz-34 (stockage, licence, installateur) : étape 0 « pont V1 » proposée, points techniques de la section 6, nouvelles questions dont la numérotation hors connexion. |
 | 0.4 | 2026-11-12 | Décisions : validation au retour du serveur pour numéroter, données hébergées jamais lisibles par l'éditeur, serveur chez le client sous Windows seulement, pont V1 validé. Conséquences notées (chiffrement côté client face aux traitements du serveur, règles de conflit de la synchronisation). |
+| 0.5 | 2026-11-12 | Décisions 13 à 15 : serveur aveugle (il ne lit jamais les données), versions de la phase 2 publiées dans le même dépôt sans jamais le drapeau Latest, cadrage du pont V1. Rédaction de kadenz-34 : règles du pont V1 (4.0), protocole de synchronisation et de numérotation à la place d'une API métier (4.3), mise en oeuvre du serveur aveugle et ses conséquences (4.4) ; question 8.2 réglée. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -36,6 +37,9 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 10. **Données hébergées** : jamais lisibles par l'éditeur ; le client seul garde la clé. Une clé perdue rend les données perdues (voir 4.4).
 11. **Système du serveur installé chez le client** : Windows seulement (service Windows, un seul installateur).
 12. **Pont V1** : l'étape 0 (4.0) est validée ; elle passe avant toute release de la phase 2.
+13. **Serveur aveugle** : pour tenir la décision 10, le serveur ne lit jamais les données. Il relaie la synchronisation chiffrée, attribue les numéros et tient un journal en ajout seul ; les traitements restent sur les postes (4.3 et 4.4).
+14. **Publication de la phase 2** : dans le même dépôt GitHub, sans jamais le drapeau Latest, réservé à la V1 ; `scripts/release.ps1` fera respecter cette règle (4.0).
+15. **Cadrage du pont V1** : les règles a à e de 4.0 sont validées, y compris la génération des deux nouvelles clés par l'utilisateur avec `kadenz-editeur` au moment de coder.
 
 ## 3. Candidats
 
@@ -49,7 +53,7 @@ Chaque candidat décrit ce qu'il recouvrirait, ce qu'il touche dans la V1 et ce 
 - Conséquence de la décision 5 : chaque poste garde une copie locale des données dont il a besoin et une file des opérations faites hors connexion ; au retour du réseau, le serveur les applique et signale les conflits. Selon kadenz-34, la base SQLite chiffrée de la V1 peut servir de copie locale.
 - Conséquence de la décision 9 : hors connexion, les documents restent en brouillon ; la validation et la numérotation se font sur le serveur.
 - Conflits à régler (kadenz-34) : fiches tiers et produits modifiées sur deux postes, droits changés ou compte désactivé pendant une coupure, et plus tard le stock (deux postes hors connexion qui vendent le même dernier article). Qui l'emporte : question 8.1.
-- Reste ouvert : base de données côté serveur.
+- Reste ouvert : stockage côté serveur. Avec la décision 13, il ne conserve que des données chiffrées, des compteurs de numérotation et un journal (4.4).
 
 ### 3.2 Export comptable SYSCOHADA
 
@@ -86,18 +90,27 @@ Chaque candidat décrit ce qu'il recouvrirait, ce qu'il touche dans la V1 et ce 
 - Recouvre au minimum un site public. Son objet reste à préciser : site de présentation de Kadenz (le produit), espace client relié au serveur (3.1), espace d'abonnement (4.1).
 - Pour tout site public, la liste de contrôle SEO de l'utilisateur s'applique (plan du site, robots, balises canoniques et langues, titres et descriptions uniques, données structurées tirées du contenu réel, images, performances mobiles, Search Console préparée pour l'utilisateur).
 - À savoir : objet, langues, nom de domaine, hébergement, contenus disponibles (textes, captures, tarifs) ; rien ne sera inventé pour remplir une page.
+- Conséquence de la décision 13 : un espace client ne peut montrer les données de l'entreprise qu'en les déchiffrant dans le navigateur, avec la clé du client ; sinon il se limite à l'abonnement et aux téléchargements.
 
 ## 4. Chantiers ajoutés
 
-Les chantiers 4.1 à 4.5 sont validés (décision 8), le chantier 4.0, proposé par kadenz-34, aussi (décision 12).
+Les chantiers 4.1 à 4.5 sont validés (décision 8), le chantier 4.0, proposé par kadenz-34, aussi (décisions 12 et 15).
 
-### 4.0 Pont V1 (validé, décision 12)
+### 4.0 Pont V1 (validé, décisions 12, 14 et 15)
 
 Une petite version V1, publiée avant toute version de la phase 2, pour que les postes déjà installés ne soient pas mis en difficulté par celle-ci. Constats vérifiés dans le code le 2026-11-12 :
 
 - **Mises à jour** : `kadenz-maj` interroge `releases/latest` (`crates/maj/src/lib.rs`, `DERNIERE_RELEASE`) et propose toute version plus grande. Une version de la phase 2 publiée en Latest serait proposée à tous les postes V1 sous licence perpétuelle (décision 7). Il faut d'abord livrer une règle de compatibilité : même version majeure, champ « mise à jour possible depuis » dans la release, ou canal distinct.
 - **Clé de licence** : une seule clé publique embarquée, sans identifiant (`crates/licence/src/lib.rs`, `CLE_PUBLIQUE`). Le portail d'abonnement (4.1) mettra une clé de signature en ligne ; les postes installés doivent déjà accepter une liste de clés avec un identifiant, pour permettre une rotation.
 - **Intégrité des mises à jour** : elle repose sur le fichier `.sha256` publié dans la même release ; un compte GitHub compromis suffirait à piéger la mise à jour de tous les postes. Une signature Ed25519 du manifeste de mise à jour, indépendante du certificat de code, ferme ce risque.
+
+Règles retenues (décisions 14 et 15) :
+
+- **a. Drapeau Latest réservé à la V1.** Les postes en v0.2.1 et avant interrogent `releases/latest` et le feront tant qu'ils n'auront pas installé le pont. Aucune version de la phase 2 ne porte donc jamais ce drapeau, bien que publiée dans le même dépôt. `scripts/release.ps1` le fait respecter : une version d'une autre génération que la V1 est publiée sans le drapeau Latest, et le script refuse de la marquer ainsi.
+- **b. Manifeste de mise à jour signé.** Chaque release joint un fichier `kadenz-maj.json` : version, génération (`v1` pour la V1), version minimale depuis laquelle la mise à jour est permise, nom et empreinte SHA-256 de l'installateur. Il est signé en Ed25519 par une clé de mise à jour, distincte de celle des licences. Un poste qui a installé le pont parcourt la liste des releases, et non plus seulement `releases/latest`. Il ne retient que les manifestes à signature valide, de sa génération, et dont la version minimale ne dépasse pas la sienne. L'empreinte de l'installateur reste vérifiée avant tout lancement, comme aujourd'hui.
+- **c. Clés de licence avec identifiant.** Le format de la licence reçoit un identifiant de clé, et l'application une liste de clés publiques acceptées. Une licence déjà émise, sans identifiant, reste vérifiée par la clé actuelle : les licences perpétuelles (décision 7) restent valables sans rien faire. Le pont embarque dès maintenant la clé publique suivante, générée au moment de coder et gardée hors ligne. Le portail d'abonnement (4.1) pourra ainsi changer de clé de signature sans nouvelle mise à jour des postes V1.
+- **d. Clés générées par l'utilisateur.** La clé de mise à jour et la clé de licence suivante sont générées par l'utilisateur avec `kadenz-editeur`, au moment de coder. Leurs parties privées restent hors du dépôt, comme la clé de licence actuelle ; seules les clés publiques sont embarquées.
+- **e. Écrans.** Presque rien ne change : deux ou trois messages traduits dans les sept langues (mise à jour refusée pour signature invalide ; existence d'une nouvelle génération de Kadenz, qui s'installe séparément, si on choisit de l'annoncer).
 
 ### 4.1 Abonnement et portail de licences
 
@@ -117,14 +130,18 @@ Une petite version V1, publiée avant toute version de la phase 2, pour que les 
 
 - Pourquoi : la comptabilité vient ensuite (décision 3) ; ce qui est commun aux deux produits doit être séparé avant de bâtir le serveur, pour ne pas le refaire.
 - Recouvre : entreprise, comptes et droits, tiers (clients et fournisseurs), paramètres fiscaux, licence et modules, journal d'audit, partagés par les produits de la suite.
-- Frontière de l'API (kadenz-34) : avec un serveur, les postes n'ouvrent plus la base ; droits, validation, numérotation et audit s'exécutent côté serveur, et le stockage actuel devient le coeur du serveur derrière une API. Cette frontière est à fixer ici, avant tout écran multi-poste.
+- Frontière entre postes et serveur (kadenz-34, revue avec la décision 13) : ce n'est pas une API métier côté serveur, mais un protocole de synchronisation et de numérotation. Chaque poste garde sa base locale chiffrée et la logique métier : saisie, calculs, droits, validation, PDF, exports, comme en V1. Le serveur ne connaît que des opérations chiffrées à relayer entre les postes, les compteurs de numérotation et le journal. Ce protocole est à fixer ici, avant tout écran multi-poste ; le stockage de la V1 en est la base côté poste.
 
 ### 4.4 Sécurité et exploitation du serveur
 
 - Pourquoi : la forme hébergée (décision 2) met des données d'entreprises clientes sur un serveur exploité par l'éditeur.
 - Recouvre : authentification des postes et des comptes, chiffrement des échanges, séparation des données entre entreprises, sauvegardes côté serveur, journal des accès, mises à jour du serveur.
 - Points techniques (kadenz-34) : une base par entreprise (séparation naturelle, sauvegarde et restauration par client, réutilisation du format `.kzs`) ou une base partagée entre clients, choix structurant ; la clé de chiffrement actuelle, protégée par un compte Windows, ne se transpose pas à un service ; côté serveur, les sauvegardes deviennent planifiées, avec rotation et restauration par l'administrateur, le `.kzs` restant le format d'échange.
-- Conséquence de la décision 10 (données jamais lisibles par l'éditeur) : la clé des données reste chez le client. Cela heurte la frontière prévue en 4.3, où le serveur exécute droits, validation, numérotation et audit, donc lit les données. Voies à départager lors de la spécification : le serveur ne déchiffre qu'en mémoire, avec une clé fournie par le client à l'ouverture (protège les données au repos et les sauvegardes, pas contre un exploitant qui inspecterait la mémoire du serveur en marche) ; ou le serveur ne stocke que des données chiffrées et ne tient que ce qui n'exige pas de les lire (numéros, synchronisation), les traitements restant sur les postes. Il faut aussi un moyen de secours pour le client (clé de récupération remise à l'abonnement), faute de quoi une clé perdue rend les données perdues. Ce point ne concerne pas le serveur installé chez le client, où l'éditeur n'a pas accès.
+- Mise en oeuvre de la décision 10 : serveur aveugle (décision 13). L'autre voie examinée, un serveur qui déchiffre en mémoire avec une clé fournie par le client, a été écartée : l'exploitant aurait la clé en mémoire pendant les sessions et pourrait lire les données. Cette voie ne protège que les données au repos et les sauvegardes. Le serveur aveugle prolonge le travail hors connexion (décision 5), qui impose déjà aux postes une copie locale et les traitements. Le même serveur sert l'installation chez le client et la forme hébergée.
+- **Numérotation** : à la validation, le poste n'envoie au serveur que le type de document, l'année et le mois ; le serveur rend le rang suivant de façon atomique (règle de `prochain_rang` en V1) et le poste scelle le document. Ce que le serveur voit, à écrire tel quel dans la spécification : le type, le mois et le rythme des validations, jamais les montants, les lignes ni les tiers.
+- **Clés** : une clé de données par entreprise, tirée de l'aléa du système. Elle est enveloppée pour chaque compte (clé dérivée du mot de passe par Argon2, déjà utilisé en V1 pour les mots de passe), pour chaque poste (protection Windows, comme `kadenz.cle` en V1) et par une clé de récupération imprimée sur papier, remise au client. L'éditeur n'en détient aucune. Tout perdre, comptes, postes et clé de récupération, rend les données perdues, comme en V1 sans sauvegarde : à dire au client.
+- **Droits et preuve** : les droits sont appliqués par les postes, comme en V1 ; le serveur ne peut pas les imposer. Pour l'attribution, chaque opération est signée par le compte qui la fait (Ed25519). Le journal du serveur est chaîné par empreintes : il reste vérifiable et infalsifiable, bien que chiffré.
+- **Conséquences sur les autres chantiers** : l'envoi par email (3.4) et l'export SYSCOHADA (3.2) partent des postes ; l'espace client du site (3.7) ne montre les données qu'en les déchiffrant dans le navigateur ; les sauvegardes côté serveur sont des blocs chiffrés, que seul le client peut restaurer avec sa clé ; la reprise d'une base V1 (4.2) se fait par un poste, qui lit le `.kzs` et verse les données chiffrées dans le serveur.
 
 ### 4.5 Signature du code
 
@@ -145,6 +162,7 @@ Une petite version V1, publiée avant toute version de la phase 2, pour que les 
 
 - 4.0 (pont V1) précède toute release de la phase 2.
 - 3.1 (serveur) conditionne un espace client sur le site (3.7) et change la façon de faire la sauvegarde, la licence et les mises à jour.
+- 4.3 (protocole de synchronisation et de numérotation) précède les écrans multi-poste et 4.2 (reprise par un poste) ; 4.4 (clés de l'entreprise et de récupération) précède toute synchronisation réelle.
 - 4.1 (abonnement) dépend du garde-fou d'horloge et du lien au serveur ou à l'entreprise (4.1, points techniques).
 - 3.2 (export comptable) est plus simple si 3.5 (multi-devise) n'est pas encore là, et doit être revu quand 3.5 arrive.
 - 3.3 (stock) s'appuie sur les réceptions et livraisons de la V1 ; un stock partagé entre postes dépend du serveur.
@@ -167,12 +185,12 @@ Une petite version V1, publiée avant toute version de la phase 2, pour que les 
 
 ### Réglées le 2026-11-12
 
-- Périmètre, forme du serveur, produit suivant, modèle de licence, hors connexion, échéance, licences V1, plan, numérotation hors connexion, données hébergées, système du serveur, pont V1 (décisions 1 à 12).
+- Périmètre, forme du serveur, produit suivant, modèle de licence, hors connexion, échéance, licences V1, plan, numérotation hors connexion, données hébergées, système du serveur, pont V1 (décisions 1 à 12) ; serveur aveugle, publication de la phase 2, cadrage du pont V1 (décisions 13 à 15).
 
 ### Nouvelles
 
 1. **Conflits de synchronisation** : quand une fiche (client, fournisseur, produit) a été modifiée sur deux postes pendant une coupure, qui l'emporte : la dernière modification, le serveur, ou une personne qui choisit ? Et un compte désactivé ou des droits changés pendant la coupure prennent-ils effet dès le retour, en annulant les opérations faites hors connexion par ce compte ?
-2. **Données hébergées, mise en oeuvre** : laquelle des deux voies de 4.4 (déchiffrement en mémoire avec une clé fournie par le client, ou serveur qui ne lit jamais les données) ? À trancher lors de la spécification de 4.4, avec ses conséquences expliquées.
+2. **Données hébergées, mise en oeuvre** : réglée le 2026-11-12, serveur aveugle (décision 13, conséquences en 4.4).
 3. **Fusion d'installations V1** : une entreprise qui a plusieurs postes V1 indépendants peut-elle les fusionner dans un même serveur (avec renumérotation ou séries distinctes), ou la reprise se limite-t-elle à une base V1 par entreprise ?
 4. **Lecture seule** : confirmer qu'à l'échéance la consultation, l'impression et l'export des données déjà saisies restent toujours possibles.
 5. **Abonnement, forme** : période (mensuelle, annuelle), unité (par entreprise, par poste, par utilisateur), moyen de paiement envisagé, délai de grâce.
