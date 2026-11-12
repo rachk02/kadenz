@@ -8,6 +8,7 @@
 | 0.4 | 2026-11-12 | Décisions : validation au retour du serveur pour numéroter, données hébergées jamais lisibles par l'éditeur, serveur chez le client sous Windows seulement, pont V1 validé. Conséquences notées (chiffrement côté client face aux traitements du serveur, règles de conflit de la synchronisation). |
 | 0.5 | 2026-11-12 | Décisions 13 à 15 : serveur aveugle (il ne lit jamais les données), versions de la phase 2 publiées dans le même dépôt sans jamais le drapeau Latest, cadrage du pont V1. Rédaction de kadenz-34 : règles du pont V1 (4.0), protocole de synchronisation et de numérotation à la place d'une API métier (4.3), mise en oeuvre du serveur aveugle et ses conséquences (4.4) ; question 8.2 réglée. |
 | 0.6 | 2026-11-12 | Pont V1 publié en v0.2.2. Décisions 16 à 24 pour les fondations : serveur sur une machine de l'entreprise, accès à distance optionnel par un relais sur le VPS de l'éditeur ; conflits tranchés par une personne ; opérations d'un compte désactivé hors connexion mises en attente ; une seule base V1 reprise ; lecture seule avec consultation, impression et export ; forme de l'abonnement ; zones OHADA ; 5 à 20 postes ; certificat plus tard. Questions mises à jour. |
+| 0.7 | 2026-11-12 | Décisions 25 à 27 : avertissements d'échéance à 30 jours, 7 jours et la veille, à l'Admin puis à tous les comptes dans les derniers jours ; revendeurs avec un compte sur le portail. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -47,9 +48,12 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 19. **Reprise V1** : une seule base V1 est reprise dans le serveur d'une entreprise ; les autres installations V1 restent consultables à part. Pas de fusion.
 20. **Lecture seule** : à l'échéance, la consultation, l'impression et l'export (PDF, Excel) des données déjà saisies restent toujours possibles ; seules la saisie et la validation sont bloquées.
 21. **Forme de l'abonnement** : mensuel ou annuel, au choix du client ; compté par entreprise, avec un nombre de postes inclus et des postes en plus ; paiement par virement ou chèque, par carte bancaire en ligne, ou en espèces auprès de l'éditeur ou d'un revendeur (Mobile Money non retenu pour l'instant) ; aucun délai de grâce : lecture seule dès le lendemain de l'échéance, avec des avertissements avant.
-22. **Zones visées** : plus large que la V1 : UEMOA (franc CFA de la BCEAO), CEMAC (franc CFA de la BEAC) et autres pays OHADA (Guinée, Comores, RD Congo). Les devises, la TVA et les règles de facturation de chaque pays sont à vérifier sur des sources (question 8.10).
+22. **Zones visées** : plus large que la V1 : UEMOA (franc CFA de la BCEAO), CEMAC (franc CFA de la BEAC) et autres pays OHADA (Guinée, Comores, RD Congo). Les devises, la TVA et les règles de facturation de chaque pays sont à vérifier sur des sources (question 8.8).
 23. **Taille des entreprises clientes** : 5 à 20 postes en général.
 24. **Certificat de signature du code** : plus tard ; il faudra l'avoir avant la première mise en service du serveur chez un client.
+25. **Avertissements d'échéance** : Kadenz prévient 30 jours avant la fin de l'abonnement, puis 7 jours avant, puis la veille.
+26. **Destinataires des avertissements** : l'Admin seulement au début, puis tous les comptes dans les derniers jours (à partir du rappel des 7 jours, précision à confirmer à la spécification de 4.1).
+27. **Revendeurs** : un revendeur a un compte sur le portail ; il enregistre lui-même les paiements de ses clients et renouvelle leurs licences. L'éditeur garde la vue sur tout.
 
 ## 3. Candidats
 
@@ -198,24 +202,22 @@ Règles retenues (décisions 14 et 15) :
 
 ### Réglées le 2026-11-12
 
-- Décisions 1 à 24 (section 2). Les questions 1 à 6 et 13 de la version 0.5 sont réglées : conflits (décisions 17 et 18), données hébergées (13), fusion V1 (19), lecture seule (20), abonnement (21), clients visés (22 et 23), hébergement (16).
+- Décisions 1 à 27 (section 2) ; avertissements d'échéance et revendeurs réglés par les décisions 25 à 27. Les questions 1 à 6 et 13 de la version 0.5 sont réglées : conflits (décisions 17 et 18), données hébergées (13), fusion V1 (19), lecture seule (20), abonnement (21), clients visés (22 et 23), hébergement (16).
 
 ### Ouvertes pour les fondations
 
 1. **VPS** : prestataire et pays, à préciser au moment de la souscription (le relais et le site en dépendent).
-2. **Avertissements avant l'échéance** : combien de jours avant la fin de l'abonnement Kadenz prévient-il, et qui (Admin seulement, ou tous les comptes) ?
-3. **Revendeurs** : un revendeur peut-il enregistrer lui-même un paiement et renouveler une licence (accès au portail), ou passe-t-il toujours par l'éditeur ?
-4. **Postes inclus** : combien de postes dans l'abonnement de base, et le prix des postes en plus ; rien n'est fixé ici sans vos chiffres.
+2. **Postes inclus** : combien de postes dans l'abonnement de base, et le prix des postes en plus ; rien n'est fixé ici sans vos chiffres.
 
 ### Ouvertes pour les chantiers métier
 
-5. **SYSCOHADA** : quel format de sortie, pour quel logiciel comptable en attendant la comptabilité Kadenz, et quelle source fait foi pour le plan de comptes (comptable, texte de référence) ?
-6. **Stock** : méthode de valorisation, un ou plusieurs dépôts, stock négatif permis ?
-7. **Email** : messagerie de l'entreprise ou service tiers ; relances envoyées automatiquement ou à la main ?
-8. **Multi-devise** : en plus de la devise de l'entreprise (décision 22), quelles devises étrangères, et comment le taux est-il fixé ?
-9. **Signature électronique** : image ou cachet, certificat numérique, ou signature du client à distance ?
-10. **Fiscalité par pays** : pour chaque pays visé (décision 22), quelle source fait foi pour la TVA, les mentions obligatoires des factures et la numérotation ?
-11. **Site web** : objet (présentation de Kadenz, espace client, abonnement), langues, nom de domaine, contenus disponibles ?
+3. **SYSCOHADA** : quel format de sortie, pour quel logiciel comptable en attendant la comptabilité Kadenz, et quelle source fait foi pour le plan de comptes (comptable, texte de référence) ?
+4. **Stock** : méthode de valorisation, un ou plusieurs dépôts, stock négatif permis ?
+5. **Email** : messagerie de l'entreprise ou service tiers ; relances envoyées automatiquement ou à la main ?
+6. **Multi-devise** : en plus de la devise de l'entreprise (décision 22), quelles devises étrangères, et comment le taux est-il fixé ?
+7. **Signature électronique** : image ou cachet, certificat numérique, ou signature du client à distance ?
+8. **Fiscalité par pays** : pour chaque pays visé (décision 22), quelle source fait foi pour la TVA, les mentions obligatoires des factures et la numérotation ?
+9. **Site web** : objet (présentation de Kadenz, espace client, abonnement), langues, nom de domaine, contenus disponibles ?
 
 ## 9. Hors de ce document
 
