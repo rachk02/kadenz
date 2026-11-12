@@ -545,4 +545,3 @@ fn main() -> Result<(), slint::PlatformError> {
     }
     resultat
 }
-

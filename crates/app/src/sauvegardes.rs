@@ -125,7 +125,9 @@ fn restaurer_en_session(
         Ok(conn) => e.conn = conn,
         Err(erreur) => {
             // La base ne se rouvre pas : l'écran de démarrage impossible prend le relais.
-            crate::consigner_erreur(&format!("Réouverture de la base après restauration : {erreur}"));
+            crate::consigner_erreur(&format!(
+                "Réouverture de la base après restauration : {erreur}"
+            ));
             drop(e);
             fenetre.set_message_demarrage(message_demarrage(&erreur).into());
             fenetre.set_ecran(crate::Ecran::DemarrageImpossible);
