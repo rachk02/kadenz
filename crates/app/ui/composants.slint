@@ -26,11 +26,14 @@ export global Theme {
     out property <TextHorizontalAlignment> fin: root.rtl ? TextHorizontalAlignment.left : TextHorizontalAlignment.right;
     out property <LayoutAlignment> rangee-debut: root.rtl ? LayoutAlignment.end : LayoutAlignment.start;
     out property <LayoutAlignment> rangee-fin: root.rtl ? LayoutAlignment.start : LayoutAlignment.end;
-    // Couleurs de la marque (docs/marque, version Bleu) : Bleu vif (accent et bandeaux
-    // de marque), Nuit pour les bulles et alertes sombres.
-    out property <color> nuit: #1a1033;
-    out property <color> accent: #1f4fd8;
-    out property <color> accent-survol: #e8eefc;
+    // Couleurs de la marque (docs/marque) : Indigo (accent, logo), Nuit pour les panneaux
+    // de marque, les bulles et les alertes sombres ; couleurs de l'ancienne identité,
+    // reprises le 2026-11-12 à la demande de l'utilisateur.
+    out property <color> nuit: #1a2259;
+    out property <color> accent: #2d3a8c;
+    out property <color> accent-survol: #e8eaf6;
+    // Ambre : touche d'accent sur les fonds sombres (jamais en texte sur blanc).
+    out property <color> ambre: #e3a23b;
     out property <color> texte: #1f2933;
     out property <color> texte-secondaire: #52606d;
     out property <color> erreur: #b42318;
@@ -262,6 +265,33 @@ export component Titre inherits Text {
 // bas (textes) sont arrondies à des rangées entières, pour qu'aucune pièce ne soit rognée.
 // motif-quatre-pieces.svg : 6 colonnes et 20 rangées ; 20 est un multiple du cycle de 4 rangées,
 // les deux images empilées se raccordent sans couture.
+// Les trois temps de la marque (ancienne identité) : deux traits blancs décalés, le
+// troisième en Ambre. Décalage vers la fin de la ligne : vers la gauche en arabe.
+export component TroisTemps inherits VerticalLayout {
+    spacing: 6px;
+
+    Rectangle {
+        x: Theme.rtl ? parent.width - self.width : 0px;
+        width: 56px;
+        height: 4px;
+        background: white;
+    }
+
+    Rectangle {
+        x: Theme.rtl ? parent.width - self.width - 10px : 10px;
+        width: 56px;
+        height: 4px;
+        background: white;
+    }
+
+    Rectangle {
+        x: Theme.rtl ? parent.width - self.width - 20px : 20px;
+        width: 56px;
+        height: 4px;
+        background: Theme.ambre;
+    }
+}
+
 export component MotifMarque inherits Rectangle {
     in property <length> pas: 80px;
     in property <length> haut: 0px;
@@ -288,12 +318,31 @@ export component MotifMarque inherits Rectangle {
         image-fit: fill;
     }
 
+    // Deuxième colonne de tuiles : 6 colonnes est aussi un multiple du cycle du motif.
+    Image {
+        x: 6 * root.pas;
+        y: 0;
+        width: 6 * root.pas;
+        height: 20 * root.pas;
+        source: @image-url("icones/motif-quatre-pieces.svg");
+        image-fit: fill;
+    }
+
+    Image {
+        x: 6 * root.pas;
+        y: 20 * root.pas;
+        width: 6 * root.pas;
+        height: 20 * root.pas;
+        source: @image-url("icones/motif-quatre-pieces.svg");
+        image-fit: fill;
+    }
+
     Rectangle {
         x: 0;
         y: 0;
         width: root.width;
         height: root.fin-haut;
-        background: Theme.accent;
+        background: Theme.nuit;
     }
 
     Rectangle {
@@ -301,7 +350,7 @@ export component MotifMarque inherits Rectangle {
         y: root.debut-bas;
         width: root.width;
         height: max(0px, root.height - root.debut-bas);
-        background: Theme.accent;
+        background: Theme.nuit;
     }
 }
 
@@ -337,10 +386,10 @@ export component Bouton inherits Rectangle {
     border-radius: 4px;
     border-width: root.primary ? 0px : 1px;
     border-color: Theme.bordure;
-    background: !root.enabled ? (root.primary ? #9ab0ed : Theme.fond-lateral)
+    background: !root.enabled ? (root.primary ? #9aa3c7 : Theme.fond-lateral)
         : root.primary && root.danger ? (zone.pressed ? #7a150e : zone.has-hover ? #951c13 : Theme.erreur)
-        : root.primary ? (zone.pressed ? #163a9e : zone.has-hover ? #1a43b8 : Theme.accent)
-        : (zone.pressed ? #d3defa : zone.has-hover ? Theme.accent-survol : white);
+        : root.primary ? (zone.pressed ? #1f2866 : zone.has-hover ? #25307a : Theme.accent)
+        : (zone.pressed ? #dfe2f1 : zone.has-hover ? Theme.accent-survol : white);
     animate background { duration: Affichage.duree; }
 
     accessible-role: button;

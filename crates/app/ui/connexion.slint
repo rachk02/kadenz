@@ -1,4 +1,4 @@
-import { Bouton, Champ, MessageErreur, MotifMarque, Rangee, Theme, Titre } from "composants.slint";
+import { Bouton, Champ, MessageErreur, MotifMarque, Rangee, Theme, Titre, TroisTemps } from "composants.slint";
 
 // Écran de connexion : panneau de marque Kadenz à gauche (logo, motif Quatre pièces),
 // formulaire à droite sous le nom de l'entreprise qui utilise l'installation.
@@ -26,16 +26,16 @@ export component EcranConnexion inherits Rectangle {
         remplit: true;
         Rectangle {
             width: max(340px, min(460px, root.width * 0.4));
-            background: Theme.accent;
+            background: Theme.nuit;
             clip: true;
 
+            // Motif sur tout le panneau, en pièces serrées, comme le motif de l'ancienne identité.
             MotifMarque {
                 x: 0;
                 y: 0;
                 width: parent.width;
                 height: parent.height;
-                haut: 100px;
-                bas: 280px;
+                pas: 40px;
             }
 
             VerticalLayout {
@@ -52,6 +52,8 @@ export component EcranConnexion inherits Rectangle {
 
                 Rectangle { }
 
+                TroisTemps { }
+
                 Text {
                     horizontal-alignment: Theme.debut;
                     text: @tr("Gestion commerciale");
@@ -65,7 +67,7 @@ export component EcranConnexion inherits Rectangle {
                 Text {
                     horizontal-alignment: Theme.debut;
                     text: @tr("Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements.");
-                    color: #d6e0fa;
+                    color: #c5cae0;
                     font-size: 14px;
                     wrap: word-wrap;
                 }
@@ -77,7 +79,7 @@ export component EcranConnexion inherits Rectangle {
                 Text {
                     horizontal-alignment: Theme.debut;
                     text: @tr("Version {}", root.version-logiciel);
-                    color: #c9d6f7;
+                    color: #9aa3c7;
                     font-size: 12px;
                 }
             }

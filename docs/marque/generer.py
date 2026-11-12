@@ -1,4 +1,4 @@
-"""Marque Kadenz, « Quatre pièces », version Bleu (validée le 2026-11-11).
+"""Marque Kadenz, « Quatre pièces », validée le 2026-11-11 ; couleurs Indigo et Nuit depuis le 2026-11-12.
 
 Autonome : géométrie, mots vectorisés (fontTools, Space Grotesk 600 tirée de la police variable
 de docs/marque/planches/polices) et tous les SVG.
@@ -25,9 +25,10 @@ BLANC = "#FFFFFF"
 VERSIONS = {
     # aplat : couleur de la tuile et des surfaces ; clair : (pièces, disque, mot) sur fond clair ;
     # fonce : (pièces, disque, mot) sur l'aplat ou un fond sombre ; module : (traits, pièce pleine).
-    "bleu": {"nom": "Bleu", "aplat": "#1F4FD8",
-             "clair": ("#1F4FD8", "#1F4FD8", "#1A1033"), "fonce": (BLANC, BLANC, BLANC),
-             "module": ("#1F4FD8", "#1F4FD8"), "motif": ("#1F4FD8", "#2A59DF")},
+    # Indigo et Nuit de l'ancienne identité (v0.1.1), repris le 2026-11-12 à la demande de l'utilisateur.
+    "bleu": {"nom": "Indigo", "aplat": "#2D3A8C",
+             "clair": ("#2D3A8C", "#2D3A8C", "#1A2259"), "fonce": (BLANC, BLANC, BLANC),
+             "module": ("#2D3A8C", "#2D3A8C"), "motif": ("#1A2259", "#232C6B")},
 }
 
 

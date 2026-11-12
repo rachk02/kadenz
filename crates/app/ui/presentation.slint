@@ -1,7 +1,7 @@
 // Pages de présentation (cahier, section 4.1) : affichées au premier lancement,
 // avant l'assistant, et depuis « À propos ». Elles ne décrivent que des fonctions
 // livrées.
-import { Bouton, MotifMarque, Rangee, Theme } from "composants.slint";
+import { Bouton, MotifMarque, Rangee, Theme, TroisTemps } from "composants.slint";
 
 export component EcranPresentation inherits Rectangle {
     in property <string> version-logiciel;
@@ -42,16 +42,16 @@ export component EcranPresentation inherits Rectangle {
         // Bandeau de marque, comme sur l'écran de connexion.
         Rectangle {
             width: max(300px, min(420px, root.width * 0.35));
-            background: Theme.accent;
+            background: Theme.nuit;
             clip: true;
 
+            // Motif sur tout le panneau, en pièces serrées, comme le motif de l'ancienne identité.
             MotifMarque {
                 x: 0;
                 y: 0;
                 width: parent.width;
                 height: parent.height;
-                haut: 100px;
-                bas: 200px;
+                pas: 40px;
             }
 
             VerticalLayout {
@@ -68,6 +68,8 @@ export component EcranPresentation inherits Rectangle {
 
                 Rectangle { }
 
+                TroisTemps { }
+
                 Text {
                     horizontal-alignment: Theme.debut;
                     text: @tr("Gestion commerciale");
@@ -81,7 +83,7 @@ export component EcranPresentation inherits Rectangle {
                 Text {
                     horizontal-alignment: Theme.debut;
                     text: @tr("Version {}", root.version-logiciel);
-                    color: #c9d6f7;
+                    color: #9aa3c7;
                     font-size: 12px;
                 }
             }

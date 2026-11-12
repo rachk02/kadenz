@@ -2,21 +2,21 @@
 
 Identité de l'éditeur et du logiciel. Elle n'apparaît jamais sur les documents produits pour les clients (cahier des charges, section 1) : chaque installation garde l'identité de l'entreprise utilisatrice.
 
-Statut : **« Quatre pièces », version Bleu**, validée par l'utilisateur le 2026-11-11 et intégrée à l'application. Elle remplace le K cadencé du 2026-11-09, conservé dans `archives/k-cadence-2026-11-09/`.
+Statut : **« Quatre pièces »**, validée par l'utilisateur le 2026-11-11 et intégrée à l'application ; couleurs Indigo et Nuit de l'ancienne identité, motif plein et trois temps (blanc, blanc, Ambre) repris le 2026-11-12 à sa demande (la version Bleu vif reste dans l'historique git). Elle remplace le K cadencé du 2026-11-09, conservé dans `archives/k-cadence-2026-11-09/`.
 
 ## Le logo
 
 - **Idée** : quatre formes simples (carré, quart de disque, triangle, disque) s'emboîtent sur une grille de deux par deux, comme les modules que la licence assemble ; le disque marque le temps fort de la cadence.
-- **Une seule couleur** : symbole Bleu vif sur fond clair, symbole tout blanc sur le Bleu vif. Le mot « kadenz » est en Nuit sur fond clair, en blanc sur le Bleu vif.
+- **Une seule couleur** : symbole Indigo sur fond clair, symbole tout blanc sur l'Indigo ou la Nuit. Le mot « kadenz » est en Nuit sur fond clair, en blanc sur fond sombre.
 - **Versions** : logo horizontal (principal), logo empilé, symbole seul, mot seul, icône (symbole sur tuile).
 - **Mot** : Space Grotesk 600 (choix de l'utilisateur du 2026-11-12), interlettrage resserré de 1 %, hampes à la hauteur de l'ancien mot en Inter ; vectorisé (aucune police n'est nécessaire pour afficher le logo).
 
 ## Dans l'application
 
-- `crates/app/ui/composants.slint` : jetons de couleur `accent` (Bleu vif), `accent-survol`, `nuit` ; composant `Symbole` (icône sur tuile).
+- `crates/app/ui/composants.slint` : jetons de couleur `accent` (Indigo), `accent-survol`, `nuit`, `ambre` ; composants `Symbole` (icône sur tuile), `MotifMarque` (motif) et `TroisTemps` (les trois traits).
 - `crates/app/ui/icones/` : `kadenz-icone.svg`, `kadenz-logo-horizontal.svg`, `kadenz-logo-horizontal-negatif.svg`, `kadenz-32.png`, `kadenz-64.png`, `kadenz-256.png`, `motif-quatre-pieces.svg`.
 - `crates/app/kadenz.ico` : icône de `kadenz.exe` (16 à 256 px), intégrée par `build.rs` via `winresource`.
-- Bandeaux de marque (connexion, présentation, assistant, réglages) : aplat Bleu vif, motif Quatre pièces, logo en négatif.
+- Bandeaux de marque (connexion, présentation, assistant, réglages) : aplat Nuit, motif Quatre pièces serré (pas de 40 px) sur tout le panneau, logo en négatif ; trois temps au-dessus de « Gestion commerciale » (connexion, présentation).
 - Installateur : `installateur/theme/logo.png` et `logoside.png` sont produits par `installateur/theme/generer.py` à partir de `crates/app/kadenz.ico`.
 
 ## Construction
@@ -31,7 +31,7 @@ Statut : **« Quatre pièces », version Bleu**, validée par l'utilisateur le 2
 | Fichier | Usage |
 |---|---|
 | `kadenz-logo-horizontal.svg` | Logo principal, sur fond clair |
-| `kadenz-logo-horizontal-negatif.svg` | Logo principal, sur le Bleu vif ou un fond sombre |
+| `kadenz-logo-horizontal-negatif.svg` | Logo principal, sur l'Indigo, la Nuit ou un fond sombre |
 | `kadenz-logo-horizontal-mono.svg` | Noir, tampon et impression en une couleur |
 | `kadenz-logo-empile.svg`, `-negatif.svg` | Formats carrés et verticaux |
 | `kadenz-symbole.svg`, `-negatif.svg`, `-noir.svg`, `-blanc.svg` | Symbole seul, sans tuile |
@@ -65,9 +65,11 @@ Autour du logo, laisser libre au moins **la moitié du côté d'une case** du sy
 
 | Nom | HEX | RVB | CMJN (approché) | Contraste sur blanc | Rôle | Jeton Slint |
 |---|---|---|---|---|---|---|
-| Bleu vif | `#1F4FD8` | 31 79 216 | 86 63 0 15 | 6,6:1 | Couleur de marque, bandeaux, boutons principaux | `accent` |
-| Nuit | `#1A1033` | 26 16 51 | 49 69 0 80 | 18,0:1 | Mot du logo sur fond clair, bulles et alertes sombres | `nuit` |
-| Bleu pâle | `#E8EEFC` | 232 238 252 | 8 6 0 1 | 1,2:1 | Survol | `accent-survol` |
+| Indigo | `#2D3A8C` | 45 58 140 | 68 59 0 45 | 10,0:1 | Couleur du logo, boutons principaux, accent | `accent` |
+| Nuit | `#1A2259` | 26 34 89 | 71 62 0 65 | 14,8:1 | Bandeaux de marque, mot du logo sur fond clair, bulles et alertes sombres | `nuit` |
+| Pièces du motif | `#232C6B` | 35 44 107 | 67 59 0 58 | 12,8:1 | Pièces du motif sur la Nuit | (motif-quatre-pieces.svg) |
+| Ambre | `#E3A23B` | 227 162 59 | 0 29 74 11 | 2,2:1 | Troisième temps, touche sur fond sombre ; jamais en texte sur blanc | `ambre` |
+| Indigo pâle | `#E8EAF6` | 232 234 246 | 6 5 0 4 | 1,2:1 | Survol | `accent-survol` |
 | Encre | `#1F2933` | 31 41 51 | 39 20 0 80 | 14,8:1 | Texte | `texte` |
 | Ardoise | `#52606D` | 82 96 109 | 25 12 0 57 | 6,5:1 | Texte secondaire | `texte-secondaire` |
 | Trait | `#D9DCE3` | 217 220 227 | 4 3 0 11 | 1,4:1 | Bordures | `bordure` |
@@ -77,9 +79,9 @@ Autour du logo, laisser libre au moins **la moitié du côté d'une case** du sy
 
 Les valeurs CMJN sont une conversion directe, à faire vérifier par l'imprimeur sur épreuve. Aucune référence Pantone n'est donnée : elle se choisit sur nuancier physique.
 
-Sur les bandeaux Bleu vif, les textes secondaires sont en `#D6E0FA` (5,0:1) et la version en `#C9D6F7` (4,6:1).
+Sur les bandeaux Nuit, les textes secondaires sont en `#C5CAE0` (9,1:1), la version en `#9AA3C7` (6,0:1) ; l'Ambre y atteint 6,7:1.
 
-**Associations permises** : logo couleur sur blanc ; logo blanc sur le Bleu vif ; logo blanc sur Nuit ; logo noir sur blanc. Sur une photo, utiliser la version blanche ou noire sur une zone calme, ou l'icône sur sa tuile.
+**Associations permises** : logo couleur sur blanc ; logo blanc sur l'Indigo ; logo blanc sur Nuit ; logo noir sur blanc. Sur une photo, utiliser la version blanche ou noire sur une zone calme, ou l'icône sur sa tuile.
 
 ## Modules (proposition)
 

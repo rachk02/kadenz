@@ -105,7 +105,7 @@ export component EcranAssistant inherits Rectangle {
         // Bandeau de marque : logo Kadenz et étapes, sur le motif Quatre pièces (docs/marque).
         Rectangle {
             width: 240px;
-            background: Theme.accent;
+            background: Theme.nuit;
             clip: true;
 
             MotifMarque {
@@ -114,7 +114,6 @@ export component EcranAssistant inherits Rectangle {
                 width: parent.width;
                 height: parent.height;
                 pas: 40px;
-                haut: 240px;
             }
 
             VerticalLayout {
@@ -148,7 +147,7 @@ export component EcranAssistant inherits Rectangle {
                         text: nom;
                         font-size: 13px;
                         font-weight: i == root.etape ? 600 : 400;
-                        color: i == root.etape ? white : #d6e0fa;
+                        color: i == root.etape ? white : #c5cae0;
                     }
                 }
             }
