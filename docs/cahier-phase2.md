@@ -9,6 +9,7 @@
 | 0.5 | 2026-11-12 | Décisions 13 à 15 : serveur aveugle (il ne lit jamais les données), versions de la phase 2 publiées dans le même dépôt sans jamais le drapeau Latest, cadrage du pont V1. Rédaction de kadenz-34 : règles du pont V1 (4.0), protocole de synchronisation et de numérotation à la place d'une API métier (4.3), mise en oeuvre du serveur aveugle et ses conséquences (4.4) ; question 8.2 réglée. |
 | 0.6 | 2026-11-12 | Pont V1 publié en v0.2.2. Décisions 16 à 24 pour les fondations : serveur sur une machine de l'entreprise, accès à distance optionnel par un relais sur le VPS de l'éditeur ; conflits tranchés par une personne ; opérations d'un compte désactivé hors connexion mises en attente ; une seule base V1 reprise ; lecture seule avec consultation, impression et export ; forme de l'abonnement ; zones OHADA ; 5 à 20 postes ; certificat plus tard. Questions mises à jour. |
 | 0.7 | 2026-11-12 | Décisions 25 à 27 : avertissements d'échéance à 30 jours, 7 jours et la veille, à l'Admin puis à tous les comptes dans les derniers jours ; revendeurs avec un compte sur le portail. |
+| 0.8 | 2026-11-12 | Décision 28 : serveur de confiance chez l'entreprise, base chiffrée au repos, à la place du serveur aveugle (décision 13), le relais restant aveugle par un chiffrement de bout en bout. Décision 29 : licences signées par une clé de portail en ligne, avec un émetteur dans chaque licence, aucune clé chez les revendeurs. Sections 4.3 et 4.4 à reprendre par kadenz-34 dans `docs/spec-synchronisation.md`. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -39,7 +40,7 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 10. **Données hébergées** : jamais lisibles par l'éditeur ; le client seul garde la clé. Une clé perdue rend les données perdues (voir 4.4).
 11. **Système du serveur installé chez le client** : Windows seulement (service Windows, un seul installateur).
 12. **Pont V1** : l'étape 0 (4.0) est validée ; elle passe avant toute release de la phase 2.
-13. **Serveur aveugle** : pour tenir la décision 10, le serveur ne lit jamais les données. Il relaie la synchronisation chiffrée, attribue les numéros et tient un journal en ajout seul ; les traitements restent sur les postes (4.3 et 4.4).
+13. **Serveur aveugle** (remplacée par la décision 28) : pour tenir la décision 10, le serveur ne lit jamais les données. Il relaie la synchronisation chiffrée, attribue les numéros et tient un journal en ajout seul ; les traitements restent sur les postes (4.3 et 4.4).
 14. **Publication de la phase 2** : dans le même dépôt GitHub, sans jamais le drapeau Latest, réservé à la V1 ; `scripts/release.ps1` fera respecter cette règle (4.0).
 15. **Cadrage du pont V1** : les règles a à e de 4.0 sont validées, y compris la génération des deux nouvelles clés par l'utilisateur avec `kadenz-editeur` au moment de coder. Pont publié en v0.2.2 le 2026-11-12.
 16. **Serveur et accès à distance** (précise la décision 2) : le serveur Kadenz est installé sur une machine de l'entreprise ; les postes du bureau s'y connectent en réseau local. Un accès à distance peut être activé en option : les postes hors du bureau passent alors par un relais sur le VPS de l'éditeur, que l'utilisateur va prendre, et qui portera aussi le site web, dans des conteneurs. Le relais ne fait que transmettre les échanges chiffrés entre le poste distant et le serveur de l'entreprise, sans rien conserver ; si ce serveur est éteint, le poste distant travaille hors connexion (décision 5). Les données de l'entreprise ne sont donc jamais stockées chez l'éditeur.
@@ -54,6 +55,8 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 25. **Avertissements d'échéance** : Kadenz prévient 30 jours avant la fin de l'abonnement, puis 7 jours avant, puis la veille.
 26. **Destinataires des avertissements** : l'Admin seulement au début, puis tous les comptes dans les derniers jours (à partir du rappel des 7 jours, précision à confirmer à la spécification de 4.1).
 27. **Revendeurs** : un revendeur a un compte sur le portail ; il enregistre lui-même les paiements de ses clients et renouvelle leurs licences. L'éditeur garde la vue sur tout.
+28. **Serveur de confiance** (remplace la décision 13, à la suite de la décision 16) : le serveur étant chez l'entreprise et non chez l'éditeur, il lit ses données, chiffrées au repos sur son disque ; il impose les droits, l'heure, la validation et la numérotation, aide à trancher les conflits et fait des sauvegardes lisibles par l'entreprise. Le relais du VPS reste aveugle : les échanges entre un poste distant et le serveur sont chiffrés de bout en bout, l'éditeur ne lit rien (décision 10 tenue). Risque accepté : une personne qui vole la machine serveur en marche, ou qui l'administre dans l'entreprise, peut lire les données.
+29. **Clé du portail et revendeurs** : le portail signe toutes les licences d'abonnement avec une seule clé de portail, en ligne sur le VPS ; chaque licence porte, dans ses données signées, son émetteur (l'éditeur ou l'identifiant du revendeur). Les revendeurs n'ont jamais de clé, ils agissent par leur compte sur le portail, qui garde la trace. La clé de portail est la clé suivante embarquée par le pont V1 (`crates/licence/cle-publique-suivante.hex`) ; la clé actuelle reste hors ligne chez l'éditeur pour les licences V1. Si le VPS est compromis, la clé du portail est révoquée et remplacée par une mise à jour (recommandation de kadenz-34, validée).
 
 ## 3. Candidats
 
@@ -67,7 +70,7 @@ Chaque candidat décrit ce qu'il recouvrirait, ce qu'il touche dans la V1 et ce 
 - Conséquence de la décision 5 : chaque poste garde une copie locale des données dont il a besoin et une file des opérations faites hors connexion ; au retour du réseau, le serveur les applique et signale les conflits. Selon kadenz-34, la base SQLite chiffrée de la V1 peut servir de copie locale.
 - Conséquence de la décision 9 : hors connexion, les documents restent en brouillon ; la validation et la numérotation se font sur le serveur.
 - Conflits à régler (kadenz-34) : fiches tiers et produits modifiées sur deux postes, droits changés ou compte désactivé pendant une coupure, et plus tard le stock (deux postes hors connexion qui vendent le même dernier article). Règles retenues : décisions 17 et 18 ; le stock reste à traiter avec 3.3.
-- Reste ouvert : stockage côté serveur. Avec la décision 13, il ne conserve que des données chiffrées, des compteurs de numérotation et un journal (4.4).
+- Stockage côté serveur : base de l'entreprise chiffrée au repos, lue par le serveur (décision 28) ; détail dans `docs/spec-synchronisation.md` (kadenz-34, à l'étude).
 
 ### 3.2 Export comptable SYSCOHADA
 
@@ -106,7 +109,7 @@ Chaque candidat décrit ce qu'il recouvrirait, ce qu'il touche dans la V1 et ce 
 - Pour tout site public, la liste de contrôle SEO de l'utilisateur s'applique (plan du site, robots, balises canoniques et langues, titres et descriptions uniques, données structurées tirées du contenu réel, images, performances mobiles, Search Console préparée pour l'utilisateur).
 - À savoir : objet, langues, nom de domaine, hébergement, contenus disponibles (textes, captures, tarifs) ; rien ne sera inventé pour remplir une page.
 - Hébergement : sur le VPS de l'éditeur, dans des conteneurs, à côté du relais d'accès à distance (décision 16).
-- Conséquence de la décision 13 : un espace client ne peut montrer les données de l'entreprise qu'en les déchiffrant dans le navigateur, avec la clé du client ; sinon il se limite à l'abonnement et aux téléchargements.
+- Espace client : les données de l'entreprise ne sont jamais sur le VPS (décisions 16 et 28) ; un espace client sur le site se limite donc à l'abonnement, aux licences et aux téléchargements, sauf à passer par le relais vers le serveur de l'entreprise, chiffré de bout en bout.
 
 ## 4. Chantiers ajoutés
 
@@ -132,6 +135,7 @@ Règles retenues (décisions 14 et 15) :
 
 - Pourquoi : la licence par abonnement (décision 4) remplace, pour les nouvelles licences, une clé perpétuelle vérifiée hors ligne par une licence datée qu'il faut renouveler.
 - Recouvre : émission et renouvellement des licences (aujourd'hui l'outil `kadenz-editeur`, manuel) ; suivi des abonnements par entreprise ; passage en lecture seule à l'échéance (décisions 6 et 20) ; paiement.
+- Émission (décision 29) : clé de portail en ligne, émetteur dans chaque licence, comptes revendeurs sans clé ; identifiant d'entreprise commun avec le protocole de synchronisation (kadenz-34).
 - Forme retenue (décision 21) : mensuel ou annuel ; par entreprise avec postes inclus et postes en plus ; virement ou chèque, carte en ligne, espèces auprès de l'éditeur ou d'un revendeur ; pas de délai de grâce. Les paiements hors ligne supposent qu'une personne (l'éditeur, ou un revendeur) enregistre le paiement et renouvelle la licence ; la carte en ligne suppose un prestataire de paiement sur le site.
 - Touche : la licence V1 (section 15 du cahier V1 : Ed25519, liaison au poste, modules), l'assistant de premier lancement, le site (3.7).
 - Points techniques (kadenz-34) : une licence datée vérifiée hors connexion (décision 5) dépend de l'horloge du poste, l'échéance y compris (décision 6), il faut un garde-fou contre le retour en arrière (dernière date vue, conservée) et l'heure du serveur quand il est joignable ; le lien au poste ne convient plus : la licence se lie à l'entreprise, donc à son serveur, avec le nombre de postes permis (décision 21).
@@ -202,7 +206,7 @@ Règles retenues (décisions 14 et 15) :
 
 ### Réglées le 2026-11-12
 
-- Décisions 1 à 27 (section 2) ; avertissements d'échéance et revendeurs réglés par les décisions 25 à 27. Les questions 1 à 6 et 13 de la version 0.5 sont réglées : conflits (décisions 17 et 18), données hébergées (13), fusion V1 (19), lecture seule (20), abonnement (21), clients visés (22 et 23), hébergement (16).
+- Décisions 1 à 29 (section 2) ; avertissements d'échéance et revendeurs réglés par les décisions 25 à 27. Les questions 1 à 6 et 13 de la version 0.5 sont réglées : conflits (décisions 17 et 18), données hébergées (13), fusion V1 (19), lecture seule (20), abonnement (21), clients visés (22 et 23), hébergement (16).
 
 ### Ouvertes pour les fondations
 
