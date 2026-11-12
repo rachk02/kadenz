@@ -50,7 +50,7 @@ L'intégration continue GitHub (`.github/workflows/ci.yml`) vérifie format, Cli
 
 ```
 .\scripts\release.ps1 -Version 0.1.0 -Simulation   # vérifications et compilation, sans publier
-.\scripts\release.ps1 -Version 0.1.0               # tag vX.Y.Z, push du tag, release GitHub avec kadenz.exe, l'installateur .exe, le paquet .msi et leurs empreintes
+.\scripts\release.ps1 -Version 0.1.0               # tag vX.Y.Z, push du tag, release GitHub avec l'installateur .exe, le paquet .msi et leurs empreintes
 ```
 
 ## Installateur Windows

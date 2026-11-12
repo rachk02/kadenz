@@ -12,8 +12,9 @@
       4. compile kadenz.exe en mode release, puis l'installateur KadenzSetup-X.Y.Z.exe
          (installateur\construire.ps1, WiX 5), tous deux signés avec -Certificat ;
       5. crée le tag annoté vX.Y.Z, le pousse, et crée la release GitHub avec
-         l'exécutable, l'installateur KadenzSetup-X.Y.Z.exe, le paquet
-         Kadenz-X.Y.Z.msi et leurs empreintes SHA-256 (.sha256).
+         l'installateur KadenzSetup-X.Y.Z.exe, le paquet Kadenz-X.Y.Z.msi et
+         leurs empreintes SHA-256 (.sha256) ; pas de kadenz.exe seul (décision
+         de l'utilisateur du 2026-11-12).
 
 .PARAMETER Version
     Version à publier, sans le "v" (ex. 0.1.0).
@@ -90,9 +91,6 @@ if (-not $Certificat -and -not $Simulation) {
 }
 & (Join-Path $PSScriptRoot '..\installateur\construire.ps1') -SansCompilation -Certificat $Certificat
 if ($LASTEXITCODE -ne 0) { throw "échec de la construction de l'installateur" }
-# kadenz.exe livré seul : la copie signée par construire.ps1.
-$livrable = Join-Path $racine "target\installateur\kadenz-$Version-windows-x64.exe"
-Copy-Item (Join-Path $racine 'target\installateur\kadenz.exe') $livrable -Force
 $installateur = Join-Path $racine "target\installateur\KadenzSetup-$Version.exe"
 if (-not (Test-Path $installateur)) { throw "installateur introuvable : $installateur" }
 
@@ -112,7 +110,7 @@ $empreinte = Empreinte $installateur
 $empreintePaquet = Empreinte $paquet
 
 if ($Simulation) {
-    Etape "Simulation terminée : $livrable, $installateur, $paquet et leurs empreintes prêts, aucun tag ni release créés"
+    Etape "Simulation terminée : $installateur, $paquet et leurs empreintes prêts, aucun tag ni release créés"
     exit 0
 }
 
@@ -124,7 +122,7 @@ Executer git @('push', 'origin', $tag)
 $notes = [regex]::Match($changelog, "(?ms)^## \[$([regex]::Escape($Version))\][^\n]*\n(.*?)(?=^## \[|\z)").Groups[1].Value.Trim()
 $fichierNotes = Join-Path ([System.IO.Path]::GetTempPath()) "kadenz-notes-$Version.md"
 Set-Content -Path $fichierNotes -Value $notes -Encoding utf8
-Executer gh @('release', 'create', $tag, $livrable, $installateur, $empreinte, $paquet, $empreintePaquet, '--title', "Kadenz $Version", '--notes-file', $fichierNotes)
+Executer gh @('release', 'create', $tag, $installateur, $empreinte, $paquet, $empreintePaquet, '--title', "Kadenz $Version", '--notes-file', $fichierNotes)
 Remove-Item $fichierNotes
 
 Etape "Release $tag publiée"
