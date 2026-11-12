@@ -2918,3 +2918,15 @@ msgstr "Kadenz {} جيل جديد: يُثبَّت بشكل منفصل."
 
 msgid "clé de signature de la licence inconnue : {}"
 msgstr "مفتاح توقيع الترخيص غير معروف: {}"
+
+msgid "action non autorisée pour votre rôle : « {} »"
+msgstr "إجراء غير مسموح به لدورك: «{}»"
+
+msgid "élément inconnu sur le serveur : {}"
+msgstr "عنصر غير معروف على الخادم: {}"
+
+msgid "compte inconnu sur le serveur"
+msgstr "حساب غير معروف على الخادم"
+
+msgid "opération illisible"
+msgstr "عملية غير مقروءة"

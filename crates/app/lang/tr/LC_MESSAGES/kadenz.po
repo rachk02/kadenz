@@ -2918,3 +2918,15 @@ msgstr "Kadenz {} yeni bir nesildir: ayrı olarak kurulur."
 
 msgid "clé de signature de la licence inconnue : {}"
 msgstr "bilinmeyen lisans imza anahtarı: {}"
+
+msgid "action non autorisée pour votre rôle : « {} »"
+msgstr "rolünüz için izin verilmeyen işlem: “{}”"
+
+msgid "élément inconnu sur le serveur : {}"
+msgstr "sunucuda bilinmeyen öğe: {}"
+
+msgid "compte inconnu sur le serveur"
+msgstr "sunucuda bilinmeyen hesap"
+
+msgid "opération illisible"
+msgstr "okunamayan işlem"

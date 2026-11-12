@@ -86,6 +86,11 @@ pub(crate) fn texte_erreur_ref(erreur: &Erreur) -> String {
             "la base est au schéma {}, cette version de l'application ne connaît que le schéma {}",
             &[base, application],
         ),
+        // Le libellé du droit est traduit à part, le modèle aussi.
+        Erreur::Interdit(droit) => trf(
+            kadenz_stockage::synchro::MODELE_INTERDIT,
+            &[&tr(&droit.to_string())],
+        ),
         autre => tr(&autre.to_string()),
     }
 }
@@ -621,4 +626,15 @@ fn brancher_produits(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
 pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
     brancher_tiers(fenetre, etat);
     brancher_produits(fenetre, etat);
+}
+
+#[cfg(test)]
+mod tests {
+    /// Messages d'erreur rendus par le serveur aux postes : six traductions chacun.
+    #[test]
+    fn textes_de_la_synchronisation_traduits() {
+        let manquants =
+            crate::traduction::sans_traduction(&kadenz_stockage::synchro::MODELES_ERREUR);
+        assert!(manquants.is_empty(), "sans traduction : {manquants:?}");
+    }
 }

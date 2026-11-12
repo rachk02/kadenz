@@ -2918,3 +2918,15 @@ msgstr "Kadenz {} は新しい世代です。別途インストールします�
 
 msgid "clé de signature de la licence inconnue : {}"
 msgstr "不明なライセンス署名キー：{}"
+
+msgid "action non autorisée pour votre rôle : « {} »"
+msgstr "このロールでは許可されていない操作です：「{}」"
+
+msgid "élément inconnu sur le serveur : {}"
+msgstr "サーバーに存在しない項目です：{}"
+
+msgid "compte inconnu sur le serveur"
+msgstr "サーバーに存在しないアカウントです"
+
+msgid "opération illisible"
+msgstr "読み取れない操作です"

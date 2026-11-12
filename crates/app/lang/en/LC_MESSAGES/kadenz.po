@@ -2918,3 +2918,15 @@ msgstr "Kadenz {} is a new generation: it is installed separately."
 
 msgid "clé de signature de la licence inconnue : {}"
 msgstr "unknown licence signing key: {}"
+
+msgid "action non autorisée pour votre rôle : « {} »"
+msgstr "action not allowed for your role: “{}”"
+
+msgid "élément inconnu sur le serveur : {}"
+msgstr "item unknown on the server: {}"
+
+msgid "compte inconnu sur le serveur"
+msgstr "account unknown on the server"
+
+msgid "opération illisible"
+msgstr "unreadable operation"

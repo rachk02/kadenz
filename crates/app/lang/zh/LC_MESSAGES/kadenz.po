@@ -2918,3 +2918,15 @@ msgstr "Kadenz {} 是新一代版本：需单独安装。"
 
 msgid "clé de signature de la licence inconnue : {}"
 msgstr "未知的许可证签名密钥：{}"
+
+msgid "action non autorisée pour votre rôle : « {} »"
+msgstr "您的角色不允许此操作：“{}”"
+
+msgid "élément inconnu sur le serveur : {}"
+msgstr "服务器上不存在该项目：{}"
+
+msgid "compte inconnu sur le serveur"
+msgstr "服务器上不存在该账户"
+
+msgid "opération illisible"
+msgstr "无法读取的操作"
