@@ -12,8 +12,8 @@ pub mod droits;
 
 use std::collections::HashMap;
 use std::fs;
-use std::io::{self, Write};
-use std::net::{SocketAddr, TcpListener, TcpStream};
+use std::io::{self, Read, Write};
+use std::net::{Shutdown, SocketAddr, TcpListener, TcpStream};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -63,6 +63,10 @@ pub struct Config {
     pub connexions_max: usize,
     /// Délai d'attente de chaque lecture et écriture sur une connexion.
     pub delai_lecture: Duration,
+    /// Délai total de l'ouverture d'une session (poignée de main TLS puis
+    /// `Bonjour`) : une connexion qui envoie un octet de temps en temps ne
+    /// garde pas sa place.
+    pub delai_ouverture: Duration,
     /// Droits du dossier posés à sa création et vérifiés au démarrage. Coupé
     /// seulement pour les essais, sous un compte sans droits d'administrateur.
     pub controle_droits: bool,
@@ -75,6 +79,7 @@ impl Config {
             adresse: SocketAddr::from(([0, 0, 0, 0], PORT_PAR_DEFAUT)),
             connexions_max: 64,
             delai_lecture: Duration::from_secs(60),
+            delai_ouverture: Duration::from_secs(10),
             controle_droits: true,
         }
     }
@@ -97,20 +102,23 @@ pub fn empreinte_du_dossier(dossier: &Path) -> Result<String, String> {
 }
 
 fn preparer_dossier(config: &Config) -> Result<(), String> {
-    let nouveau = !config.dossier.exists();
+    // Un dossier vide, créé par un autre que le service, est traité comme neuf.
+    let nouveau = fs::read_dir(&config.dossier)
+        .map(|mut d| d.next().is_none())
+        .unwrap_or(true);
     fs::create_dir_all(&config.dossier)
         .map_err(|e| format!("dossier {} non créé : {e}", config.dossier.display()))?;
     if config.controle_droits {
         if nouveau {
             droits::restreindre(&config.dossier)?;
         }
-        let en_trop = droits::verifier(&config.dossier)?;
-        if !en_trop.is_empty() {
+        let ecarts = droits::verifier(&config.dossier)?;
+        if !ecarts.is_empty() {
             return Err(format!(
-                "le dossier {} est accessible à d'autres comptes que SYSTEM et les \
-                 Administrateurs ({}) : démarrage refusé",
+                "le dossier {} doit appartenir à SYSTEM ou aux Administrateurs et leur être \
+                 réservé ({}) : démarrage refusé",
                 config.dossier.display(),
-                en_trop.join(", ")
+                ecarts.join(", ")
             ));
         }
     }
@@ -254,7 +262,7 @@ impl Base {
     }
 }
 
-/// Échecs de connexion, comptés par poste et par identifiant.
+/// Échecs de connexion, comptés par poste.
 #[derive(Default)]
 struct Essais(HashMap<String, (u32, Instant)>);
 
@@ -300,6 +308,7 @@ struct Contexte {
     base: Base,
     tls: Arc<ServerConfig>,
     delai: Duration,
+    ouverture: Duration,
     entreprise: String,
     essais: Mutex<Essais>,
 }
@@ -338,6 +347,7 @@ impl Serveur {
             base: base.clone(),
             tls,
             delai: config.delai_lecture,
+            ouverture: config.delai_ouverture,
             entreprise,
             essais: Mutex::new(Essais::default()),
         });
@@ -428,15 +438,72 @@ fn ecouter(ecoute: TcpListener, contexte: Arc<Contexte>, arret: Arc<AtomicBool>,
     }
 }
 
-type Flux = StreamOwned<ServerConnection, TcpStream>;
+/// Connexion TCP dont chaque lecture et écriture attend au plus `delai`, et
+/// jamais au-delà de `fin` quand elle est fixée.
+struct Echeance {
+    tcp: TcpStream,
+    delai: Duration,
+    fin: Option<Instant>,
+}
+
+impl Echeance {
+    fn borner(&self, ecriture: bool) -> io::Result<()> {
+        let mut delai = self.delai;
+        if let Some(fin) = self.fin {
+            let reste = fin.saturating_duration_since(Instant::now());
+            if reste.is_zero() {
+                return Err(io::Error::new(io::ErrorKind::TimedOut, "délai dépassé"));
+            }
+            delai = delai.min(reste);
+        }
+        if ecriture {
+            self.tcp.set_write_timeout(Some(delai))
+        } else {
+            self.tcp.set_read_timeout(Some(delai))
+        }
+    }
+}
+
+impl Read for Echeance {
+    fn read(&mut self, tampon: &mut [u8]) -> io::Result<usize> {
+        self.borner(false)?;
+        self.tcp.read(tampon)
+    }
+}
+
+impl Write for Echeance {
+    fn write(&mut self, octets: &[u8]) -> io::Result<usize> {
+        self.borner(true)?;
+        self.tcp.write(octets)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.tcp.flush()
+    }
+}
+
+type Flux = StreamOwned<ServerConnection, Echeance>;
 
 fn repondre(flux: &mut Flux, reponse: &Reponse) -> io::Result<()> {
     messages::ecrire(flux, reponse)
 }
 
+/// Termine la session. Ce que le poste a déjà envoyé est lu et jeté avant de
+/// fermer (une seconde, 1 Mio au plus) : sinon Windows coupe la connexion et
+/// le poste peut perdre la dernière réponse.
 fn fermer(flux: &mut Flux) {
     flux.conn.send_close_notify();
     let _ = flux.flush();
+    let _ = flux.sock.tcp.shutdown(Shutdown::Write);
+    flux.sock.fin = Some(Instant::now() + Duration::from_secs(1));
+    let mut tampon = [0u8; 4096];
+    let mut total = 0;
+    while total < 1 << 20 {
+        match flux.sock.read(&mut tampon) {
+            Ok(0) | Err(_) => break,
+            Ok(n) => total += n,
+        }
+    }
 }
 
 /// Lit une requête ; une trame trop grande ou illisible reçoit un rejet et
@@ -459,21 +526,25 @@ fn lire(flux: &mut Flux) -> Option<Requete> {
 }
 
 fn session(contexte: &Contexte, tcp: TcpStream) {
-    let preparee = tcp
-        .set_read_timeout(Some(contexte.delai))
-        .and_then(|_| tcp.set_write_timeout(Some(contexte.delai)))
-        .and_then(|_| tcp.set_nodelay(true));
+    if tcp.set_nodelay(true).is_err() {
+        return;
+    }
     let Ok(connexion) = ServerConnection::new(contexte.tls.clone()) else {
         return;
     };
-    if preparee.is_err() {
-        return;
-    }
-    let mut flux = StreamOwned::new(connexion, tcp);
-    // La poignée de main TLS se fait à la première lecture.
-    let Some(premiere) = lire(&mut flux) else {
-        return;
+    let sock = Echeance {
+        tcp,
+        delai: contexte.delai,
+        fin: Some(Instant::now() + contexte.ouverture),
     };
+    let mut flux = StreamOwned::new(connexion, sock);
+    // Poignée de main, puis inscription du poste vérifiée avant de lire quoi
+    // que ce soit de lui.
+    while flux.conn.is_handshaking() {
+        if flux.conn.complete_io(&mut flux.sock).is_err() {
+            return;
+        }
+    }
     let Some(poste) = flux
         .conn
         .peer_certificates()
@@ -491,6 +562,9 @@ fn session(contexte: &Contexte, tcp: TcpStream) {
         }
         _ => return fermer(&mut flux),
     }
+    let Some(premiere) = lire(&mut flux) else {
+        return;
+    };
     let accueil = match premiere {
         Requete::Bonjour { version } if version == VERSION => Reponse::Bienvenue {
             version: VERSION,
@@ -502,18 +576,15 @@ fn session(contexte: &Contexte, tcp: TcpStream) {
             return fermer(&mut flux);
         }
         _ => {
-            let _ = repondre(
-                &mut flux,
-                &Reponse::Rejet {
-                    motif: "Bonjour attendu en premier".into(),
-                },
-            );
+            let _ = repondre(&mut flux, &rejet("Bonjour attendu en premier"));
             return fermer(&mut flux);
         }
     };
     if repondre(&mut flux, &accueil).is_err() {
         return;
     }
+    // Session ouverte : seul le délai de chaque lecture compte désormais.
+    flux.sock.fin = None;
     let mut compte: Option<String> = None;
     while let Some(requete) = lire(&mut flux) {
         let reponse = traiter(contexte, &poste, &mut compte, requete);
@@ -589,20 +660,25 @@ fn connexion(
     identifiant: String,
     mot_de_passe: String,
 ) -> Reponse {
-    let cles = [
-        format!("poste:{poste}"),
-        format!("compte:{}", identifiant.trim().to_lowercase()),
-    ];
-    let essais = |f: &mut dyn FnMut(&mut Essais) -> u64| {
-        let mut garde = contexte.essais.lock().unwrap_or_else(|e| e.into_inner());
-        f(&mut garde)
+    // Échecs comptés par poste, tous identifiants confondus : un poste qui
+    // essaie des mots de passe est freiné, sans pouvoir bloquer un compte
+    // utilisé depuis un autre poste.
+    let cles = [format!("poste:{poste}")];
+    let verrou = || contexte.essais.lock().unwrap_or_else(|e| e.into_inner());
+    // L'essai compte comme un échec dès maintenant, sous le verrou, et il est
+    // effacé si le mot de passe est bon : des sessions parallèles du même
+    // poste n'obtiennent pas plus d'essais.
+    let attente_si_echec = {
+        let mut essais = verrou();
+        let maintenant = Instant::now();
+        let attente = essais.attente(&cles, maintenant);
+        if attente > 0 {
+            return Reponse::ConnexionRefusee {
+                attente_secondes: attente,
+            };
+        }
+        essais.echec(&cles, maintenant)
     };
-    let attente = essais(&mut |e| e.attente(&cles, Instant::now()));
-    if attente > 0 {
-        return Reponse::ConnexionRefusee {
-            attente_secondes: attente,
-        };
-    }
     let resultat = contexte.base.executer(move |c| {
         let utilisateur = comptes::connecter(c, &identifiant, &mot_de_passe)?;
         let uid = match synchro::uid_de(c, Entite::Utilisateur, utilisateur.id)? {
@@ -616,10 +692,7 @@ fn connexion(
     });
     match resultat {
         Ok(Ok((Some(uid), nom_complet))) => {
-            essais(&mut |e| {
-                e.reussite(&cles);
-                0
-            });
+            verrou().reussite(&cles);
             *compte = Some(uid.clone());
             Reponse::Connecte {
                 compte: uid,
@@ -629,7 +702,7 @@ fn connexion(
         Ok(Err(Erreur::ConnexionRefusee)) => {
             *compte = None;
             Reponse::ConnexionRefusee {
-                attente_secondes: essais(&mut |e| e.echec(&cles, Instant::now())),
+                attente_secondes: attente_si_echec,
             }
         }
         Ok(Ok((None, _))) => rejet("compte sans identifiant global"),
@@ -651,15 +724,14 @@ mod tests {
         assert_eq!(duree_attente(30), ATTENTE_MAX);
         let mut essais = Essais::default();
         let t = Instant::now();
-        let poste_a = ["poste:a".to_string(), "compte:x".to_string()];
+        let poste_a = ["poste:a".to_string()];
         assert_eq!(essais.echec(&poste_a, t), 0);
         assert_eq!(essais.echec(&poste_a, t), 0);
         assert_eq!(essais.echec(&poste_a, t), 5);
-        // Le même compte depuis un autre poste attend aussi.
-        let poste_b = ["poste:b".to_string(), "compte:x".to_string()];
-        assert_eq!(essais.attente(&poste_b, t), 5);
+        // Un autre poste n'attend pas.
+        assert_eq!(essais.attente(&["poste:b".to_string()], t), 0);
         assert_eq!(essais.attente(&poste_a, t + Duration::from_secs(5)), 0);
         essais.reussite(&poste_a);
-        assert_eq!(essais.attente(&poste_b, t), 0);
+        assert_eq!(essais.attente(&poste_a, t), 0);
     }
 }

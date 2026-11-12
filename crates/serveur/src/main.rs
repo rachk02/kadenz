@@ -3,7 +3,9 @@
 //! - `kadenz-serveur service [--dossier D] [--port P]` : lancé par le
 //!   gestionnaire de services de Windows (service `KadenzServeur`).
 //! - `kadenz-serveur console [--dossier D] [--port P] [--sans-controle-droits]` :
-//!   même serveur au premier plan, pour un essai.
+//!   même serveur au premier plan, pour un essai. À lancer en administrateur :
+//!   le dossier des données est réservé à SYSTEM et aux Administrateurs ;
+//!   `--sans-controle-droits` sert aux essais dans un autre dossier.
 //! - `kadenz-serveur empreinte [--dossier D]` : empreinte du certificat du
 //!   serveur, à donner aux postes pour l'inscription.
 

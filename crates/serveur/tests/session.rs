@@ -274,13 +274,67 @@ fn attente_apres_des_echecs_de_connexion() {
         client.connexion("admin", MOT_DE_PASSE),
         Err(ErreurClient::CompteRefuse { attente_secondes }) if attente_secondes > 0
     ));
-    // Le même compte depuis un autre poste attend aussi.
+    // Un autre poste n'est pas freiné : le poste fautif ne bloque pas le compte.
     let autre = poste_inscrit(&serveur);
     let mut client = connecter(&serveur, &autre).unwrap();
-    assert!(matches!(
-        client.connexion("admin", MOT_DE_PASSE),
-        Err(ErreurClient::CompteRefuse { .. })
-    ));
+    assert!(client.connexion("admin", MOT_DE_PASSE).is_ok());
+}
+
+#[test]
+fn sessions_paralleles_sans_essais_en_plus() {
+    let serveur = demarrer("paralleles", DELAI_CLIENT, 16);
+    installer(&serveur);
+    let poste = poste_inscrit(&serveur);
+    let clients: Vec<Client> = (0..10)
+        .map(|_| connecter(&serveur, &poste).unwrap())
+        .collect();
+    let fils: Vec<_> = clients
+        .into_iter()
+        .map(|mut client| {
+            thread::spawn(move || match client.connexion("admin", "mauvais") {
+                Err(ErreurClient::CompteRefuse { attente_secondes }) => attente_secondes,
+                autre => panic!("{autre:?}"),
+            })
+        })
+        .collect();
+    let attentes: Vec<u64> = fils.into_iter().map(|f| f.join().unwrap()).collect();
+    // Deux essais libres au plus, quel que soit le nombre de sessions ; les
+    // autres sont refusés avec une attente.
+    let libres = attentes.iter().filter(|&&a| a == 0).count();
+    assert!(libres <= 2, "{attentes:?}");
+}
+
+#[test]
+fn ouverture_de_session_bornee() {
+    let mut config = Config::nouvelle(dossier("ouverture"));
+    config.adresse = SocketAddr::from(([127, 0, 0, 1], 0));
+    config.delai_lecture = Duration::from_secs(2);
+    config.delai_ouverture = Duration::from_millis(500);
+    config.controle_droits = false;
+    let serveur = Serveur::demarrer(config).unwrap();
+    // Début d'enregistrement TLS, puis un octet toutes les 200 ms, chaque fois
+    // sous le délai de lecture : la connexion est coupée au délai d'ouverture.
+    let mut lent = TcpStream::connect(serveur.adresse()).unwrap();
+    lent.write_all(&[0x16, 0x03, 0x01, 0x00, 0xff]).unwrap();
+    let mut envoi = lent.try_clone().unwrap();
+    thread::spawn(move || {
+        for _ in 0..25 {
+            thread::sleep(Duration::from_millis(200));
+            if envoi.write_all(&[0]).is_err() {
+                break;
+            }
+        }
+    });
+    lent.set_read_timeout(Some(Duration::from_secs(5))).unwrap();
+    let debut = Instant::now();
+    let mut octet = [0u8; 1];
+    let lu = lent.read(&mut octet);
+    assert!(matches!(lu, Ok(0) | Err(_)), "{lu:?}");
+    assert!(
+        debut.elapsed() < Duration::from_millis(1800),
+        "{:?}",
+        debut.elapsed()
+    );
 }
 
 #[test]
