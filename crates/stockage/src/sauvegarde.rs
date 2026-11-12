@@ -469,23 +469,34 @@ pub fn restaurer(chemin_base: &Path, sauvegarde: &Path, mot_de_passe: &str) -> R
         }
     }
 
-    let suffixe = format!(".avant-restauration-{}", Local::now().format(FORMAT_DATE));
+    let mut a_ecarter = vec![
+        chemin_base.to_path_buf(),
+        avec_suffixe_brut(chemin_base, "-wal"),
+        avec_suffixe_brut(chemin_base, "-shm"),
+    ];
+    if nouvelle_cle.is_some() {
+        a_ecarter.push(fichier_cle.clone());
+    }
+    // Un seul suffixe pour la base et sa clé, libre pour chacun des fichiers :
+    // fs::rename remplacerait sans prévenir un fichier déjà mis de côté.
+    let racine = format!(".avant-restauration-{}", Local::now().format(FORMAT_DATE));
+    let mut suffixe = racine.clone();
+    let mut rang = 2;
+    while a_ecarter
+        .iter()
+        .any(|f| avec_suffixe_brut(f, &suffixe).exists())
+    {
+        suffixe = format!("{racine}-{rang}");
+        rang += 1;
+    }
     let mut ecartes: Vec<(PathBuf, PathBuf)> = Vec::new();
     let mut cle_ecrite = false;
     let echange = (|| -> Resultat<()> {
-        let mut a_ecarter = vec![
-            chemin_base.to_path_buf(),
-            avec_suffixe_brut(chemin_base, "-wal"),
-            avec_suffixe_brut(chemin_base, "-shm"),
-        ];
-        if nouvelle_cle.is_some() {
-            a_ecarter.push(fichier_cle.clone());
-        }
-        for fichier in a_ecarter {
+        for fichier in &a_ecarter {
             if fichier.exists() {
-                let destination = avec_suffixe_brut(&fichier, &suffixe);
-                fs::rename(&fichier, &destination)?;
-                ecartes.push((fichier, destination));
+                let destination = avec_suffixe_brut(fichier, &suffixe);
+                fs::rename(fichier, &destination)?;
+                ecartes.push((fichier.clone(), destination));
             }
         }
         if let Some(protegee) = &nouvelle_cle {
@@ -821,6 +832,18 @@ mod tests {
         ));
         restaurer(&chemin, &sauvegarde, MOT_DE_PASSE).unwrap();
         assert_eq!(marque(&crate::ouvrir(&chemin).unwrap()), "sauvé");
+        // Deux restaurations, souvent dans la même seconde : rien n'est écrasé.
+        let bases = fs::read_dir(chemin.parent().unwrap())
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .filter(|e| {
+                let nom = e.file_name().to_string_lossy().into_owned();
+                nom.starts_with("kadenz.sqlite.avant-restauration-")
+                    && !nom.contains("-wal")
+                    && !nom.contains("-shm")
+            })
+            .count();
+        assert_eq!(bases, 2, "chaque base écartée est gardée");
     }
 
     #[test]
