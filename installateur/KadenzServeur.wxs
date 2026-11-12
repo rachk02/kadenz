@@ -1,0 +1,80 @@
+<!--
+  Paquet MSI du serveur Kadenz de l'entreprise (phase 2, jalon F2), construit
+  par construire-serveur.ps1 : KadenzServeur-<version>.msi, à installer en
+  administrateur sur la machine serveur.
+
+  - kadenz-serveur.exe dans Program Files\Kadenz Serveur ;
+  - service Windows KadenzServeur (démarrage automatique, compte SYSTEM,
+    redémarré après une panne), lancé à la fin de l'installation ;
+  - règle du pare-feu de Windows pour le port 47380 en TCP.
+
+  Le dossier des données (%ProgramData%\Kadenz\Serveur : base, clé, certificat)
+  n'est ni créé ni effacé par le paquet. Le service le crée à son premier
+  démarrage et le réserve à SYSTEM et aux Administrateurs (spécification de
+  synchronisation, section 8) ; un dossier créé par le paquet hériterait des
+  droits de ProgramData. La désinstallation laisse les données en place.
+
+  Variables passées par construire-serveur.ps1 : Version, Exe (chemin de
+  kadenz-serveur.exe), Editeur, Icone.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
+     xmlns:fw="http://wixtoolset.org/schemas/v4/wxs/firewall">
+  <Package Name="Kadenz Serveur"
+           Manufacturer="$(var.Editeur)"
+           Version="$(var.Version)"
+           UpgradeCode="29be84ea-fc1b-4716-a2d3-cf495b5f5f3d"
+           Language="1036"
+           Codepage="1252"
+           Scope="perMachine">
+    <SummaryInformation Description="Kadenz Serveur, serveur de l'entreprise" Manufacturer="$(var.Editeur)" />
+
+    <MajorUpgrade DowngradeErrorMessage="Une version plus récente de Kadenz Serveur est déjà installée." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Icon Id="kadenz.ico" SourceFile="$(var.Icone)" />
+    <Property Id="ARPPRODUCTICON" Value="kadenz.ico" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Kadenz Serveur" />
+    </StandardDirectory>
+
+    <Feature Id="KadenzServeur" Title="Kadenz Serveur">
+      <Component Directory="INSTALLFOLDER">
+        <File Id="kadenz_serveur.exe" Source="$(var.Exe)" Name="kadenz-serveur.exe" KeyPath="yes">
+          <fw:FirewallException Id="PareFeuKadenzServeur"
+                                Name="Kadenz Serveur"
+                                Description="Connexions des postes Kadenz au serveur de l'entreprise (TLS 1.3)"
+                                Port="47380"
+                                Protocol="tcp"
+                                Scope="any"
+                                Profile="all" />
+        </File>
+        <ServiceInstall Id="KadenzServeur"
+                        Name="KadenzServeur"
+                        DisplayName="Kadenz Serveur"
+                        Description="Serveur Kadenz de l'entreprise : base de référence et connexions des postes."
+                        Type="ownProcess"
+                        Start="auto"
+                        Account="LocalSystem"
+                        ErrorControl="normal"
+                        Arguments="service"
+                        Vital="yes">
+          <util:ServiceConfig FirstFailureActionType="restart"
+                              SecondFailureActionType="restart"
+                              ThirdFailureActionType="none"
+                              RestartServiceDelayInSeconds="60"
+                              ResetPeriodInDays="1" />
+        </ServiceInstall>
+        <!-- Arrêt avant une mise à jour ou une désinstallation, en attendant
+             qu'il soit fait. -->
+        <ServiceControl Id="ArretKadenzServeur" Name="KadenzServeur" Stop="both" Remove="uninstall" Wait="yes" />
+        <!-- Démarrage à la fin de l'installation, sans l'attendre : un échec
+             (port déjà pris, par exemple) est noté dans kadenz-serveur.log
+             sans annuler l'installation. -->
+        <ServiceControl Id="DemarrageKadenzServeur" Name="KadenzServeur" Start="install" Wait="no" />
+      </Component>
+    </Feature>
+  </Package>
+</Wix>
