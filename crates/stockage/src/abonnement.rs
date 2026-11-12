@@ -242,8 +242,8 @@ pub fn appliquer_avec(
 }
 
 /// Postes permis sans abonnement actif (sans licence, licence refusée ou
-/// échue) : un seul, celui de l'Admin qui installera la licence depuis un
-/// poste (décisions 30 et 41).
+/// échue) : un seul, le temps d'installer la licence depuis ce poste
+/// (décision 41).
 pub const POSTES_SANS_ABONNEMENT_ACTIF: u32 = 1;
 
 /// Nombre de postes que l'abonnement permet d'inscrire. Une licence qui

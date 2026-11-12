@@ -701,14 +701,14 @@ fn installation_avec_licence_tout_ou_rien() {
         .base(move |c| {
             // Licence d'une autre entreprise : rien n'est installé.
             let autre = licence("autre-entreprise", 365, 0);
-            assert!(admin::installer_avec(c, &init(), &autre, &cles).is_err());
+            assert!(admin::installer_avec(c, &init(), Some(&autre), &cles).is_err());
             assert_eq!(
                 comptes::etat_installation(c).unwrap(),
                 comptes::EtatInstallation::AssistantRequis
             );
             let entreprise = synchro::identifiant_entreprise(c).unwrap();
             let bonne = licence(&entreprise, 365, 0);
-            admin::installer_avec(c, &init(), &bonne, &cles).unwrap();
+            admin::installer_avec(c, &init(), Some(&bonne), &cles).unwrap();
             assert_eq!(
                 comptes::etat_installation(c).unwrap(),
                 comptes::EtatInstallation::ConnexionRequise
@@ -717,4 +717,64 @@ fn installation_avec_licence_tout_ou_rien() {
             assert_eq!(etat.statut, Statut::Actif);
         })
         .unwrap();
+}
+
+#[test]
+fn installation_sans_licence() {
+    let serveur = demarrer("installation-sans-licence", Duration::from_secs(5), 8);
+    let cles = vec![cle_portail().verifying_key()];
+    serveur
+        .base(move |c| {
+            let init = InstallationInitiale {
+                entreprise: Entreprise {
+                    nom: "Entreprise Essai".into(),
+                    ..Default::default()
+                },
+                admin: NouvelUtilisateur {
+                    nom_complet: "Administrateur".into(),
+                    identifiant: "admin".into(),
+                    mot_de_passe: MOT_DE_PASSE.into(),
+                    role: Role::Admin,
+                },
+                parametres: Parametres::default(),
+            };
+            admin::installer_avec(c, &init, None, &cles).unwrap();
+            let etat = abonnement::appliquer_avec(c, abonnement::horloge(), &cles).unwrap();
+            assert_eq!(etat.statut, Statut::Absent);
+            assert_eq!(abonnement::postes_permis(&etat), 1);
+        })
+        .unwrap();
+}
+
+#[test]
+fn inscription_bornee_par_le_delai_d_ouverture() {
+    let mut config = Config::nouvelle(dossier("inscription-lente"));
+    config.adresse = SocketAddr::from(([127, 0, 0, 1], 0));
+    config.delai_lecture = Duration::from_secs(2);
+    config.delai_ouverture = Duration::from_millis(500);
+    config.controle_droits = false;
+    config.cles_portail = vec![cle_portail().verifying_key()];
+    let serveur = Serveur::demarrer(config).unwrap();
+    // Poste non inscrit : poignée de main, longueur de trame annoncée, puis
+    // plus rien. La connexion est coupée au délai d'ouverture.
+    let identite = Identite::nouvelle("poste").unwrap();
+    let mut client = Client::ouvrir_sans_message(
+        &serveur.adresse().to_string(),
+        serveur.empreinte(),
+        &identite,
+        DELAI_CLIENT,
+    )
+    .unwrap();
+    let flux = client.flux();
+    flux.write_all(&100u32.to_be_bytes()).unwrap();
+    flux.flush().unwrap();
+    let debut = Instant::now();
+    let mut octet = [0u8; 1];
+    let lu = flux.read(&mut octet);
+    assert!(matches!(lu, Ok(0) | Err(_)), "{lu:?}");
+    assert!(
+        debut.elapsed() < Duration::from_millis(1800),
+        "{:?}",
+        debut.elapsed()
+    );
 }

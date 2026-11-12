@@ -130,13 +130,15 @@ pub fn code_complet(conn: &Connection, dossier: &Path, code: &CodeCree) -> Resul
     .encoder())
 }
 
-/// Assistant d'un serveur neuf (décision 40) : crée l'entreprise et le premier
-/// Admin et enregistre la licence d'abonnement, tout ou rien. Une licence
-/// refusée n'installe rien.
+/// Assistant d'un serveur neuf : crée l'entreprise et le premier Admin et
+/// enregistre la licence d'abonnement, tout ou rien ; une licence refusée
+/// n'installe rien. Sans licence, le serveur est en lecture seule (décision
+/// 40) et un seul poste peut s'inscrire, le temps d'installer la licence
+/// depuis ce poste (décision 41).
 pub fn installer(
     conn: &mut Connection,
     init: &InstallationInitiale,
-    licence: &str,
+    licence: Option<&str>,
 ) -> Result<Utilisateur, Erreur> {
     installer_avec(
         conn,
@@ -150,13 +152,16 @@ pub fn installer(
 pub fn installer_avec(
     conn: &mut Connection,
     init: &InstallationInitiale,
-    licence: &str,
+    licence: Option<&str>,
     cles_portail: &[kadenz_licence::VerifyingKey],
 ) -> Result<Utilisateur, Erreur> {
     conn.execute_batch("BEGIN IMMEDIATE")?;
-    let resultat = installation::installer(conn, init).and_then(|admin| {
-        abonnement::enregistrer_avec(conn, &admin, licence, abonnement::horloge(), cles_portail)
-            .map(|_| admin)
+    let resultat = installation::installer(conn, init).and_then(|admin| match licence {
+        Some(cle) => {
+            abonnement::enregistrer_avec(conn, &admin, cle, abonnement::horloge(), cles_portail)
+                .map(|_| admin)
+        }
+        None => Ok(admin),
     });
     match resultat {
         Ok(admin) => {

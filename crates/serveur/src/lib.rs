@@ -411,6 +411,14 @@ impl Serveur {
         let ecoute = TcpListener::bind(config.adresse)
             .map_err(|e| format!("écoute sur {} impossible : {e}", config.adresse))?;
         let adresse = ecoute.local_addr().map_err(|e| e.to_string())?;
+        let udp = if config.decouverte {
+            Some(
+                UdpSocket::bind(adresse)
+                    .map_err(|e| format!("découverte sur {adresse} impossible : {e}"))?,
+            )
+        } else {
+            None
+        };
         admin::noter_port(&conn, adresse.port())?;
         let base = Base::lancer(conn);
         let contexte = Arc::new(Contexte {
@@ -429,16 +437,10 @@ impl Serveur {
             let max = config.connexions_max;
             thread::spawn(move || ecouter(ecoute, contexte, arret, max))
         };
-        let decouverte = if config.decouverte {
-            let socket = UdpSocket::bind(adresse)
-                .map_err(|e| format!("découverte sur {adresse} impossible : {e}"))?;
+        let decouverte = udp.map(|socket| {
             let arret = arret.clone();
-            Some(thread::spawn(move || {
-                repondre_decouverte(socket, adresse.port(), arret)
-            }))
-        } else {
-            None
-        };
+            thread::spawn(move || repondre_decouverte(socket, adresse.port(), arret))
+        });
         Ok(Serveur {
             adresse,
             empreinte: identite.empreinte(),

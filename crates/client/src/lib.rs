@@ -355,6 +355,18 @@ impl Client {
         }
     }
 
+    /// Comme [`Client::ouvrir`], sans aucun message : pour les tests du
+    /// serveur.
+    #[doc(hidden)]
+    pub fn ouvrir_sans_message(
+        adresse: &str,
+        empreinte_serveur: &str,
+        identite: &Identite,
+        delai: Duration,
+    ) -> Result<Client, ErreurClient> {
+        Client::ouvrir(adresse, empreinte_serveur, identite, delai)
+    }
+
     /// Connexion TCP et TLS épinglé, sans message.
     fn ouvrir(
         adresse: &str,
