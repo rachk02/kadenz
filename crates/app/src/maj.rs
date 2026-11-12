@@ -98,6 +98,23 @@ fn brancher_recherche(fenetre: &FenetrePrincipale) {
                         api.set_erreur_maj(false);
                         api.set_etat_maj(tr("Kadenz est à jour.").into());
                     }
+                    Recherche::Refusee => {
+                        api.set_erreur_maj(true);
+                        api.set_etat_maj(
+                            tr("Une version plus récente a été trouvée, mais sa signature n'est pas valide : elle n'est pas proposée.")
+                                .into(),
+                        );
+                    }
+                    Recherche::AutreGeneration(version) => {
+                        api.set_erreur_maj(false);
+                        api.set_etat_maj(
+                            trf(
+                                "Kadenz {} est une nouvelle génération : elle s'installe séparément.",
+                                &[&version],
+                            )
+                            .into(),
+                        );
+                    }
                     Recherche::HorsLigne => {
                         api.set_erreur_maj(true);
                         api.set_etat_maj(

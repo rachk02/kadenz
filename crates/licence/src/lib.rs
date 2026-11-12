@@ -8,6 +8,11 @@
 //!
 //! La clé privée ne vit que chez l'éditeur, hors du dépôt ; seul l'outil
 //! `kadenz-editeur` s'en sert, pour émettre les clés.
+//!
+//! Rotation (cahier de la phase 2, pont V1, règle c) : l'application accepte
+//! une liste de clés publiques, l'actuelle et la suivante. Une licence porte
+//! l'identifiant de la clé qui l'a signée (champ `cle`) ; une licence sans ce
+//! champ, émise avant le pont, est vérifiée par la clé actuelle.
 
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
@@ -24,6 +29,12 @@ const VERSION: u64 = 1;
 /// Clé publique de vérification de l'éditeur, en hexadécimal (64 caractères),
 /// produite par `kadenz-editeur generer`.
 const CLE_PUBLIQUE: &str = include_str!("../cle-publique.hex");
+
+/// Clé publique suivante, générée d'avance et gardée hors ligne : le portail
+/// d'abonnement pourra signer avec elle sans nouvelle mise à jour des postes.
+/// Fichier vide tant qu'elle n'est pas générée (aucune release possible alors,
+/// voir [`controler_cles_embarquees`]).
+const CLE_PUBLIQUE_SUIVANTE: &str = include_str!("../cle-publique-suivante.hex");
 
 /// Contenu d'une clé de licence.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -46,6 +57,7 @@ pub const MODELES_ERREUR: &[&str] = &[
     "module inconnu dans la clé de licence : {}",
     "le module « {} » exige le module « {} »",
     "clé publique de vérification absente : générer la paire de clés avec kadenz-editeur",
+    "clé de signature de la licence inconnue : {}",
 ];
 
 fn erreur(modele: &'static str) -> MessageCompose {
@@ -84,6 +96,34 @@ pub fn cle_publique() -> Result<VerifyingKey, MessageCompose> {
     })
 }
 
+/// Identifiant d'une clé publique : les 16 premiers caractères hexadécimaux de
+/// l'empreinte SHA-256 de ses octets.
+pub fn identifiant_cle(cle: &VerifyingKey) -> String {
+    en_hex(&Sha256::digest(cle.as_bytes())[..8])
+}
+
+/// Clés publiques acceptées, l'actuelle d'abord ; un fichier vide (clé suivante
+/// pas encore générée) est ignoré.
+pub fn cles_publiques() -> Vec<VerifyingKey> {
+    [CLE_PUBLIQUE, CLE_PUBLIQUE_SUIVANTE]
+        .into_iter()
+        .filter_map(cle_publique_depuis_hex)
+        .collect()
+}
+
+/// Contrôle avant publication : la clé actuelle et la clé suivante embarquées
+/// sont valides et distinctes.
+pub fn controler_cles_embarquees() -> Result<(), String> {
+    let actuelle = cle_publique_depuis_hex(CLE_PUBLIQUE)
+        .ok_or("crates/licence/cle-publique.hex : clé publique absente ou invalide")?;
+    let suivante = cle_publique_depuis_hex(CLE_PUBLIQUE_SUIVANTE)
+        .ok_or("crates/licence/cle-publique-suivante.hex : clé publique absente ou invalide")?;
+    if actuelle == suivante {
+        return Err("la clé de licence suivante est identique à la clé actuelle".into());
+    }
+    Ok(())
+}
+
 fn octets_hex<const N: usize>(texte: &str) -> Option<[u8; N]> {
     let texte = texte.trim();
     if texte.len() != 2 * N {
@@ -116,6 +156,7 @@ pub fn emettre(licence: &Licence, cle_privee: &SigningKey) -> Result<String, Mes
         "poste": licence.poste,
         "modules": normaliser(&licence.modules)?.iter().map(|m| m.code()).collect::<Vec<_>>(),
         "emise_le": licence.emise_le,
+        "cle": identifiant_cle(&cle_privee.verifying_key()),
     })
     .to_string();
     let signature = cle_privee.sign(donnees.as_bytes());
@@ -126,9 +167,13 @@ pub fn emettre(licence: &Licence, cle_privee: &SigningKey) -> Result<String, Mes
     ))
 }
 
-/// Vérifie une clé avec la clé publique embarquée, pour le poste donné.
+/// Vérifie une clé avec les clés publiques embarquées, pour le poste donné.
 pub fn verifier(cle: &str, poste: &str) -> Result<Licence, MessageCompose> {
-    verifier_avec(cle, poste, &cle_publique()?)
+    let cles = cles_publiques();
+    if cles.is_empty() {
+        return Err(cle_publique().unwrap_err());
+    }
+    verifier_parmi(cle, poste, &cles)
 }
 
 /// Vérifie une clé avec une clé publique donnée, pour le poste donné.
@@ -137,17 +182,38 @@ pub fn verifier_avec(
     poste: &str,
     cle_publique: &VerifyingKey,
 ) -> Result<Licence, MessageCompose> {
+    verifier_parmi(cle, poste, std::slice::from_ref(cle_publique))
+}
+
+/// Vérifie une clé parmi des clés publiques, la première étant l'actuelle :
+/// celle que désigne le champ `cle`, ou la première si la licence n'en a pas.
+pub fn verifier_parmi(
+    cle: &str,
+    poste: &str,
+    cles_publiques: &[VerifyingKey],
+) -> Result<Licence, MessageCompose> {
     let cle: String = cle.chars().filter(|c| !c.is_whitespace()).collect();
     let corps = cle.strip_prefix(PREFIXE).ok_or_else(illisible)?;
     let (donnees, signature) = corps.split_once('.').ok_or_else(illisible)?;
     let donnees = URL_SAFE_NO_PAD.decode(donnees).map_err(|_| illisible())?;
     let signature = URL_SAFE_NO_PAD.decode(signature).map_err(|_| illisible())?;
     let signature = Signature::from_slice(&signature).map_err(|_| illisible())?;
+    // Le champ `cle` ne sert qu'à choisir la clé : la signature est vérifiée
+    // ensuite, sur toutes les données, ce champ compris.
+    let v: Value = serde_json::from_slice(&donnees).map_err(|_| illisible())?;
+    let cle_publique = match v.get("cle").and_then(Value::as_str) {
+        Some(id) => cles_publiques
+            .iter()
+            .find(|c| identifiant_cle(c) == id)
+            .ok_or_else(|| {
+                MessageCompose::new("clé de signature de la licence inconnue : {}", &[&id])
+            })?,
+        None => cles_publiques.first().ok_or_else(illisible)?,
+    };
     cle_publique
         .verify(&donnees, &signature)
         .map_err(|_| erreur("signature de la clé de licence invalide"))?;
 
-    let v: Value = serde_json::from_slice(&donnees).map_err(|_| illisible())?;
     let version = v.get("version").and_then(Value::as_u64).unwrap_or(0);
     if version != VERSION {
         return Err(MessageCompose::new(
@@ -285,6 +351,72 @@ mod tests {
         // Espaces et retours à la ligne d'un copier-coller ignorés.
         let coupee = format!("{}\n {}", &cle[..20], &cle[20..]);
         assert!(verifier_avec(&coupee, "ABCD-EFGH-JKMN-PQRS", &publique).is_ok());
+    }
+
+    #[test]
+    fn rotation_des_cles() {
+        let (actuelle, publique_actuelle) = paire();
+        let suivante = SigningKey::from_bytes(&[8u8; 32]);
+        let cles = [publique_actuelle, suivante.verifying_key()];
+        let poste = "ABCD-EFGH-JKMN-PQRS";
+
+        // Licence signée par la clé suivante : choisie par son identifiant.
+        let nouvelle = emettre(&licence(), &suivante).unwrap();
+        assert_eq!(
+            verifier_parmi(&nouvelle, poste, &cles).unwrap().client,
+            "Client Essai"
+        );
+        // Un poste qui ne connaît que la clé actuelle la refuse.
+        assert_eq!(
+            verifier_parmi(&nouvelle, poste, &cles[..1])
+                .unwrap_err()
+                .modele,
+            "clé de signature de la licence inconnue : {}"
+        );
+
+        // Licence d'avant le pont, sans champ `cle` : vérifiée par la clé actuelle.
+        let donnees = json!({
+            "version": VERSION,
+            "client": "Ancien client",
+            "poste": poste,
+            "modules": ["devis"],
+            "emise_le": "2026-11-10",
+        })
+        .to_string();
+        let signature = actuelle.sign(donnees.as_bytes());
+        let ancienne = format!(
+            "{PREFIXE}{}.{}",
+            URL_SAFE_NO_PAD.encode(donnees.as_bytes()),
+            URL_SAFE_NO_PAD.encode(signature.to_bytes())
+        );
+        assert_eq!(
+            verifier_parmi(&ancienne, poste, &cles).unwrap().client,
+            "Ancien client"
+        );
+        // Changer le champ `cle` casse la signature.
+        let emise = emettre(&licence(), &actuelle).unwrap();
+        let (d, sig) = emise
+            .strip_prefix(PREFIXE)
+            .unwrap()
+            .split_once('.')
+            .unwrap();
+        let json = String::from_utf8(URL_SAFE_NO_PAD.decode(d).unwrap()).unwrap();
+        let id_actuel = identifiant_cle(&publique_actuelle);
+        let id_suivant = identifiant_cle(&suivante.verifying_key());
+        let forgee = format!(
+            "{PREFIXE}{}.{sig}",
+            URL_SAFE_NO_PAD.encode(json.replace(&id_actuel, &id_suivant))
+        );
+        assert_eq!(
+            verifier_parmi(&forgee, poste, &cles).unwrap_err().modele,
+            "signature de la clé de licence invalide"
+        );
+    }
+
+    #[test]
+    fn cle_actuelle_embarquee() {
+        assert!(cle_publique().is_ok());
+        assert_eq!(identifiant_cle(&cle_publique().unwrap()).len(), 16);
     }
 
     #[test]

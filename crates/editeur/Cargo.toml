@@ -11,3 +11,5 @@ kadenz-licence.workspace = true
 ed25519-dalek.workspace = true
 getrandom.workspace = true
 chrono.workspace = true
+kadenz-maj.workspace = true
+sha2.workspace = true

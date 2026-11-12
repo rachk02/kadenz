@@ -2997,6 +2997,8 @@ dependencies = [
  "getrandom 0.3.4",
  "kadenz-domaine",
  "kadenz-licence",
+ "kadenz-maj",
+ "sha2",
 ]
 
 [[package]]
@@ -3034,6 +3036,7 @@ dependencies = [
 name = "kadenz-maj"
 version = "0.2.1"
 dependencies = [
+ "ed25519-dalek",
  "kadenz-domaine",
  "serde_json",
  "sha2",
