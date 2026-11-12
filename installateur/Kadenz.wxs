@@ -5,13 +5,17 @@
   Installation pour tout le poste, par défaut dans Program Files\Kadenz (dossier
   choisi dans l'assistant : propriété INSTALLFOLDER), raccourcis du menu Démarrer
   et du bureau au choix, désinstallation depuis les paramètres de Windows.
-  La base de données vit dans %APPDATA%\Kadenz : ni l'installation ni la
-  désinstallation n'y touchent, les données de l'entreprise restent en place.
+  La base de données vit dans %APPDATA%\Kadenz. L'installation et les mises à
+  jour n'y touchent pas ; la désinstallation supprime tout ce dossier (base, clé
+  kadenz.cle, journal des erreurs) pour le compte qui désinstalle (décision de
+  l'utilisateur du 2026-11-12). Une mise à jour désinstalle l'ancienne version
+  avec UPGRADINGPRODUCTCODE renseigné : la suppression est alors sautée.
 
   Variables passées par construire.ps1 : Version, Exe (chemin de kadenz.exe),
   Editeur, Icone.
 -->
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Package Name="Kadenz"
            Manufacturer="$(var.Editeur)"
            Version="$(var.Version)"
@@ -29,6 +33,9 @@
     <Property Id="ARPPRODUCTICON" Value="kadenz.ico" />
     <Property Id="ARPNOMODIFY" Value="1" />
 
+    <!-- Dossier des données du compte qui désinstalle (voir l'en-tête). -->
+    <SetProperty Id="DOSSIERDONNEES" Value="[AppDataFolder]Kadenz" Before="CostInitialize" Sequence="both" />
+
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="INSTALLFOLDER" Name="Kadenz" />
     </StandardDirectory>
@@ -41,6 +48,8 @@
     <Feature Id="Kadenz" Title="Kadenz">
       <Component Directory="INSTALLFOLDER">
         <File Id="kadenz.exe" Source="$(var.Exe)" Name="kadenz.exe" KeyPath="yes" />
+        <!-- Données supprimées à la désinstallation, jamais pendant une mise à jour. -->
+        <util:RemoveFolderEx On="uninstall" Property="DOSSIERDONNEES" Condition="NOT UPGRADINGPRODUCTCODE" />
       </Component>
       <!-- Raccourcis pour tous les comptes du poste ; une valeur de registre
            sert de chemin clé à chaque composant. -->

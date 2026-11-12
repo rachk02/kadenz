@@ -11,8 +11,10 @@
     Burn de l'installateur puis l'installateur lui-même. Sans certificat, rien
     n'est signé. La publication passe par scripts\release.ps1.
 
-    Prérequis : WiX 5 (`dotnet tool install --global wix --version 5.0.1`) et son
-    extension `wix extension add -g WixToolset.BootstrapperApplications.wixext/5.0.1`.
+    Prérequis : WiX 5 (`dotnet tool install --global wix --version 5.0.1`) et ses
+    extensions `wix extension add -g WixToolset.BootstrapperApplications.wixext/5.0.1`
+    et `wix extension add -g WixToolset.Util.wixext/5.0.1` (suppression des données à la
+    désinstallation).
 
 .PARAMETER SansCompilation
     Reprend target\release\kadenz.exe tel quel.
@@ -140,7 +142,7 @@ if ($LASTEXITCODE -ne 0) { throw "échec de la compilation de l'extension de l'a
 Signer $baf
 $communes += @('-d', "Extension=$baf")
 
-Executer wix (@('build', (Join-Path $PSScriptRoot 'Kadenz.wxs'), '-d', "Exe=$exe", '-o', $msi) + $communes)
+Executer wix (@('build', (Join-Path $PSScriptRoot 'Kadenz.wxs'), '-ext', 'WixToolset.Util.wixext', '-d', "Exe=$exe", '-o', $msi) + $communes)
 # Contrôles ICE de Windows Installer. ICE43 et ICE57 sont écartés : ils supposent
 # une installation par compte (raccourcis du menu Démarrer et du bureau dans le
 # profil), alors que le paquet est installé pour tout le poste (ALLUSERS=1), où
