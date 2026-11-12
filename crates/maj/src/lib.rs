@@ -735,4 +735,21 @@ mod tests {
             "aucun tag lisible : {tags:?}"
         );
     }
+
+    /// Release réelle du pont (v0.2.2 ou plus récente) : proposée à un poste en
+    /// 0.2.1 avec la clé de mise à jour embarquée, manifeste téléchargé et vérifié.
+    /// Réseau requis : `cargo test -p kadenz-maj -- --ignored`.
+    #[test]
+    #[ignore]
+    fn release_reelle_du_pont_proposee() {
+        let json = releases_github().expect("réponse de GitHub");
+        let cle = cle_maj().expect("clé de mise à jour embarquée");
+        match choisir(&json, "0.2.1", Some(&cle), lire_actif) {
+            Recherche::Disponible(m) => {
+                assert!(Version::lire(&m.version) >= Version::lire("0.2.2"));
+                assert_eq!(m.installateur_nom, format!("KadenzSetup-{}.exe", m.version));
+            }
+            autre => panic!("mise à jour attendue, obtenu {autre:?}"),
+        }
+    }
 }
