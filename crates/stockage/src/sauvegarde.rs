@@ -274,17 +274,37 @@ fn depuis_hexa(texte: &str) -> Option<Vec<u8>> {
         .collect()
 }
 
-/// Premier nom libre pour une sauvegarde de ce genre, à l'heure actuelle ;
-/// deux sauvegardes dans la même seconde prennent `-2`, `-3`…
+/// Nom d'une nouvelle sauvegarde de ce genre, à l'heure actuelle ; deux
+/// sauvegardes dans la même seconde prennent `-2`, `-3`… Le rang suit le plus
+/// grand déjà présent, jamais un rang libéré par la rotation : l'ordre des
+/// noms reste celui des sauvegardes.
 fn nom_libre(dossier: &Path, genre: Genre) -> PathBuf {
-    let racine = format!("{}{}", genre.prefixe(), Local::now().format(FORMAT_DATE));
-    let mut chemin = dossier.join(format!("{racine}.{EXTENSION}"));
-    let mut rang = 2;
-    while chemin.exists() {
-        chemin = dossier.join(format!("{racine}-{rang}.{EXTENSION}"));
+    let maintenant = Local::now().naive_local();
+    let racine = format!("{}{}", genre.prefixe(), maintenant.format(FORMAT_DATE));
+    let plus_grand = fs::read_dir(dossier)
+        .into_iter()
+        .flatten()
+        .filter_map(|e| e.ok())
+        .filter_map(|e| e.file_name().to_str().and_then(analyser_nom))
+        .filter(|(g, date, _)| {
+            *g == genre
+                && date.format(FORMAT_DATE).to_string()
+                    == maintenant.format(FORMAT_DATE).to_string()
+        })
+        .map(|(_, _, rang)| rang)
+        .max()
+        .unwrap_or(0);
+    let mut rang = plus_grand + 1;
+    loop {
+        let chemin = match rang {
+            1 => dossier.join(format!("{racine}.{EXTENSION}")),
+            _ => dossier.join(format!("{racine}-{rang}.{EXTENSION}")),
+        };
+        if !chemin.exists() {
+            return chemin;
+        }
         rang += 1;
     }
-    chemin
 }
 
 fn ecrire(
@@ -566,6 +586,7 @@ fn ouvrir_courante(chemin_base: &Path, cle: &str) -> Option<Connection> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::comptes;
     use crate::droits::tests::compte;
     use kadenz_domaine::role::Role;
 
@@ -844,6 +865,40 @@ mod tests {
             })
             .count();
         assert_eq!(bases, 2, "chaque base écartée est gardée");
+    }
+
+    #[test]
+    fn sauvegarde_ouverte_sans_fichiers_a_cote() {
+        let dossier = dossier_essai("sans-wal");
+        let (chemin, conn, admin) = base_avec_admin(&dossier);
+        let sauvegarde = sauvegarde_manuelle(&conn, &admin, &reglage(&dossier)).unwrap();
+        let a_cote = |suffixe: &str| avec_suffixe_brut(&sauvegarde, suffixe).exists();
+        let mode = |c: &Connection| -> String {
+            c.pragma_query_value(None, "journal_mode", |r| r.get(0))
+                .unwrap()
+        };
+        assert_eq!(
+            mode(&ouvrir_sauvegarde(&sauvegarde, MOT_DE_PASSE).unwrap()),
+            "delete"
+        );
+
+        // Sauvegarde restée en mode WAL (faite avant ce correctif) : l'ouverture
+        // immuable ne crée rien non plus, et la restauration n'y laisse rien.
+        {
+            let s = Connection::open(&sauvegarde).unwrap();
+            chiffrement::appliquer_cle(&s, MOT_DE_PASSE).unwrap();
+            s.pragma_update(None, "journal_mode", "WAL").unwrap();
+        }
+        assert!(!a_cote("-wal") && !a_cote("-shm"));
+        let avant = fs::read(&sauvegarde).unwrap();
+        let ouverte = ouvrir_sauvegarde(&sauvegarde, MOT_DE_PASSE).unwrap();
+        assert_eq!(comptes::lister(&ouverte).unwrap().len(), 1);
+        drop(ouverte);
+        drop(conn);
+        restaurer(&chemin, &sauvegarde, MOT_DE_PASSE).unwrap();
+        assert!(!a_cote("-wal"), "aucun -wal à côté de la sauvegarde");
+        assert!(!a_cote("-shm"), "aucun -shm à côté de la sauvegarde");
+        assert_eq!(fs::read(&sauvegarde).unwrap(), avant, "sauvegarde intacte");
     }
 
     #[test]

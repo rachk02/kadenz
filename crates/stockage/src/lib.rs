@@ -388,23 +388,62 @@ pub fn sauvegarder(conn: &Connection, destination: &Path, mot_de_passe: &str) ->
         std::time::Duration::ZERO,
         None,
     )?;
+    // La copie reprend l'en-tête de la base, en mode WAL : une sauvegarde
+    // ouverte plus tard en lecture seule laisserait des fichiers -wal et -shm
+    // à côté d'elle. Journal classique pour le fichier de sauvegarde.
+    cible.pragma_update(None, "journal_mode", "DELETE")?;
     Ok(())
 }
 
-/// Ouvre une sauvegarde faite par [`sauvegarder`], avec son mot de passe.
+/// Ouvre une sauvegarde faite par [`sauvegarder`], avec son mot de passe, en
+/// lecture seule et immuable : rien n'est écrit, ni dans le fichier ni à côté
+/// (pas de -wal ni de -shm, même pour une sauvegarde restée en mode WAL).
 pub fn ouvrir_sauvegarde(chemin: &Path, mot_de_passe: &str) -> Resultat<Connection> {
     if !chemin.is_file() {
         return Err(refus("sauvegarde introuvable : {}", &[&chemin.display()]));
     }
-    let conn = Connection::open_with_flags(chemin, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+    let conn = match uri_immuable(chemin) {
+        Some(uri) => Connection::open_with_flags(
+            uri,
+            rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY | rusqlite::OpenFlags::SQLITE_OPEN_URI,
+        )?,
+        None => Connection::open_with_flags(chemin, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)?,
+    };
     chiffrement::appliquer_cle(&conn, mot_de_passe)
         .map_err(|_| Erreur::Validation("mot de passe de la sauvegarde incorrect".into()))?;
     Ok(conn)
 }
 
+/// URI SQLite `file:` du chemin avec `immutable=1` ; `None` si le chemin n'est
+/// pas de l'UTF-8 (ouverture ordinaire alors).
+fn uri_immuable(chemin: &Path) -> Option<String> {
+    let texte = chemin.to_str()?;
+    let mut uri = String::from("file:");
+    if !texte.starts_with(['/', '\\']) {
+        uri.push_str("///");
+    }
+    for c in texte.chars() {
+        match c {
+            '\\' => uri.push('/'),
+            '%' | '?' | '#' | ' ' => uri.push_str(&format!("%{:02X}", c as u32)),
+            autre => uri.push(autre),
+        }
+    }
+    uri.push_str("?immutable=1");
+    Some(uri)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn uri_des_sauvegardes() {
+        assert_eq!(
+            uri_immuable(Path::new(r"C:\Mes documents\100% #1?.kzs")).unwrap(),
+            "file:///C:/Mes%20documents/100%25%20%231%3F.kzs?immutable=1"
+        );
+    }
 
     #[test]
     fn refus_compose() {
