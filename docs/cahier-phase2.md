@@ -14,6 +14,7 @@
 | 0.10 | 2026-11-12 | Décisions 30 à 34 : petite fenêtre d'administration sur le serveur, toujours un serveur (pas de poste seul en phase 2), toutes les opérations hors connexion refusées en attente, conflits tranchés par l'Admin ou un ayant droit, version entière ou champ par champ. |
 | 0.11 | 2026-11-12 | Décisions 35 à 37 (recommandations de kadenz-34, validées) : sauvegardes quotidiennes et à l'arrêt du serveur, dix gardées ; code d'inscription valable 24 heures ; fuseau unique de l'entreprise. |
 | 0.12 | 2026-11-12 | Décision 38 : jalons des fondations F1 à F10 validés (`docs/jalons-phase2.md`), démarrage par F1. |
+| 0.13 | 2026-11-12 | Décision 39 : corrections V1 sur une branche `release/0.2.x` tirée de `v0.2.2`, `main` réservée à la phase 2. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -70,6 +71,7 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 36. **Code d'inscription d'un poste** : à usage unique, valable 24 heures, annulable par l'Admin ; un nouveau code annule le précédent pour le même poste.
 37. **Fuseau** : un seul fuseau par entreprise, celui de Windows sur la machine serveur ; les heures techniques sont gardées en UTC avec décalage et affichées dans ce fuseau sur tous les postes, distants compris ; les dates métier restent celles saisies.
 38. **Jalons des fondations** : découpage F1 à F10 de `docs/jalons-phase2.md` validé ; le code démarre par F1 (identifiants et opérations).
+39. **Branches** : à partir de F1, `main` porte la phase 2 (nouveau schéma de base) et ne sert plus à publier de version V1 ; toute correction V1 se fait sur une branche `release/0.2.x` tirée du tag `v0.2.2`, comme pour la v0.1.1, pour qu'une base V1 ne soit jamais migrée au schéma de la phase 2 par une mise à jour V1.
 
 ## 3. Candidats
 
@@ -219,7 +221,7 @@ Règles retenues (décisions 14 et 15) :
 
 ### Réglées le 2026-11-12
 
-- Décisions 1 à 38 (section 2) ; avertissements d'échéance et revendeurs réglés par les décisions 25 à 27. Les questions 1 à 6 et 13 de la version 0.5 sont réglées : conflits (décisions 17 et 18), données hébergées (13), fusion V1 (19), lecture seule (20), abonnement (21), clients visés (22 et 23), hébergement (16).
+- Décisions 1 à 39 (section 2) ; avertissements d'échéance et revendeurs réglés par les décisions 25 à 27. Les questions 1 à 6 et 13 de la version 0.5 sont réglées : conflits (décisions 17 et 18), données hébergées (13), fusion V1 (19), lecture seule (20), abonnement (21), clients visés (22 et 23), hébergement (16).
 
 ### Ouvertes pour les fondations
 
