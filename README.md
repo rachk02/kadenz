@@ -1,5 +1,16 @@
 # Kadenz
 
+[![tests](https://img.shields.io/github/actions/workflow/status/rachk02/kadenz/ci.yml?branch=main&label=tests&logo=github)](https://github.com/rachk02/kadenz/actions/workflows/ci.yml)
+[![version](https://img.shields.io/github/v/release/rachk02/kadenz?label=version)](https://github.com/rachk02/kadenz/releases/latest)
+[![publiée](https://img.shields.io/github/release-date/rachk02/kadenz?label=publi%C3%A9e)](https://github.com/rachk02/kadenz/releases/latest)
+[![téléchargements](https://img.shields.io/github/downloads/rachk02/kadenz/total?label=t%C3%A9l%C3%A9chargements)](https://github.com/rachk02/kadenz/releases)
+[![dernier commit](https://img.shields.io/github/last-commit/rachk02/kadenz/main?label=dernier%20commit)](https://github.com/rachk02/kadenz/commits/main)
+![plateforme](https://img.shields.io/badge/plateforme-Windows%2010%20%7C%2011%2C%2064%20bits-0078d6)
+![Rust](https://img.shields.io/badge/Rust-%C3%A9dition%202024-b7410e?logo=rust)
+![base](https://img.shields.io/badge/base-SQLite%20chiffr%C3%A9e-003b57?logo=sqlite)
+![langues](https://img.shields.io/badge/langues-7-1f4fd8)
+[![licence](https://img.shields.io/badge/licence-propri%C3%A9taire-555555)](#licence)
+
 Logiciel desktop Windows de gestion commerciale (devis, proforma, bons de commande, bordereaux de livraison, factures, paiements), mono-poste, installé indépendamment chez chaque entreprise cliente.
 
 [![Made with Slint](https://raw.githubusercontent.com/slint-ui/slint/master/logo/MadeWithSlint-logo-whitebg.png)](https://slint.dev)
