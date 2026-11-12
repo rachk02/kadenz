@@ -2,7 +2,16 @@
 
 Format : une section par version, la plus récente en haut. Numérotation [SemVer](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORRECTIF`, tag Git `vMAJEUR.MINEUR.CORRECTIF`.
 
-## [Non publié]
+## [0.2.0] - 2026-11-12
+
+### Ajouté
+- Nouvelle identité « Quatre pièces », version Bleu vif : logo, icône de l'application et de l'exécutable, couleurs, bandeaux de marque avec motif, installateur aux mêmes couleurs.
+
+### Modifié
+- Titres de l'application et des documents PDF en Space Grotesk ; mot du logo en Space Grotesk.
+- La désinstallation supprime les données de Kadenz du compte qui désinstalle (base, clé, journal des erreurs) ; une mise à jour n'y touche jamais.
+
+## [0.1.1] - 2026-11-12
 
 ### Ajouté
 - Jalon J5, écrans : registre et fiche communs aux documents de vente, pour les Devis, les Proformas, les Factures et une nouvelle entrée de menu Avoirs (sans création directe : un avoir naît d'une facture validée) ; textes accordés au type, filtre de statut selon le type (Converti pour les devis et les proformas), validité des devis proposée comme échéance, client d'un avoir verrouillé.
@@ -32,10 +41,21 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 - Jalon J9, écrans : étape « Licence » en tête de l'assistant (identifiant du poste à copier, clé facultative vérifiée avant de continuer, rappelée au récapitulatif) ; onglet « Licence » des Paramètres (identifiant du poste, état, client, date d'émission, modules, remplacement de la clé) ; pages et actions des modules désactivés masquées (menu, ouverture sur les Factures sans tableau de bord, « Créer un bordereau », section Règlements des fiches, lettre de relance des Paramètres, types du bas des documents, liens vers un document d'un module désactivé) ; traductions dans les six langues.
 - Jalon J10, export et mises à jour : crate `kadenz-export` (classeurs xlsx, montants, quantités et dates en vrais nombres et dates Excel, en-têtes et totaux en gras, filtre automatique) et `excel.rs` (registres tels qu'affichés, document sur une feuille complète, refus des modules absents de la licence) ; crate `kadenz-maj` (dernière release GitHub comparée à la version, sans autre donnée envoyée que la version ; téléchargement de l'installateur vérifié par son empreinte SHA-256 avant lancement) ; `release.ps1` publie l'empreinte de l'installateur.
 - Jalon J10, écrans : bouton « Exporter en Excel » sur chaque registre (documents de chaque type, tiers, produits, règlements, suivi fournisseurs, relances), qui reprend les lignes affichées avec leur filtre et leur tri, et dans les actions de la fiche d'un document ; enregistrement par la boîte de Windows puis ouverture du fichier ; invite de mise à jour après la connexion d'un compte qui gère les paramètres (version, nouveautés, Installer ou Plus tard, avancement du téléchargement, Kadenz fermé au lancement de l'installateur) ; traductions dans les six langues.
+- Base de données chiffrée (SQLite3 Multiple Ciphers, ChaCha20-Poly1305), clé protégée par Windows (DPAPI) dans `kadenz.cle` à côté de la base ; une base en clair d'une version précédente est chiffrée au premier lancement, après vérification de la copie chiffrée ; sauvegardes chiffrées par un mot de passe, pour être restaurées sur un autre poste.
+- Paramètres en rubriques (Mon compte, Navigation et affichage, Entreprise, Documents, Paiements, Textes imprimés et exports, Impression, Utilisateurs, Licence, Mises à jour, À propos), filtrées selon les droits et la licence ; déconnexion en bas des rubriques.
+- Navigation au choix de chaque compte : bandeau en haut (par défaut) ou barre latérale repliable (Ctrl+B, panneau flottant) ; animations désactivables ; jeu d'icônes propre à Kadenz.
+- Bouton « Rechercher une mise à jour » dans les Paramètres.
+- Fenêtre de confirmation commune (déconnexion, documents, règlements, fiches, logos, mise en page par défaut, matrice des droits, désactivation d'un compte, textes par défaut) et alertes brèves après les enregistrements.
+- Une seule fenêtre de Kadenz par base : un second lancement ramène la fenêtre déjà ouverte.
+- Installateur : assistant au thème de Kadenz, éditeur Mcarre, langue puis dossier avec Suivant et Précédent, progression détaillée, page de fin avec la case « Lancer Kadenz » ; paquet MSI joint à chaque release avec son empreinte SHA-256 ; signature du code préparée (`-Certificat`).
 
 ### Modifié
 - Registre des documents : sans le module Paiements, la colonne et le filtre de l'état de paiement sont masqués, comme la mention « Paiement » en tête de fiche (décision de l'utilisateur du 2026-11-11) ; le mode de paiement et l'échéance restent affichés ; le tri par colonne suit les colonnes affichées, de droite à gauche compris.
 - PDF : la bande verticale de couleur à gauche des pages est retirée (factures et autres documents, lettre de relance, registres), marges gauche et droite égales ; la couleur principale reste sur le titre et l'en-tête du tableau.
+- À propos et barre latérale sans détails techniques ; erreur de base de données résumée à l'écran, détail enregistré dans `erreurs.log` ; écran « Démarrage impossible » sans chemin de fichier.
+- Montant en lettres : orthographe traditionnelle par défaut dans l'assistant.
+- Installateur : emplacement des données jamais mentionné.
+- Droits par rôle lisibles en fenêtre étroite.
 
 ### Corrigé
 - Écrans : plus de liseré de couleur sur un seul côté (tuiles du tableau de bord, entrée active du menu latéral) ; toutes les bordures sont égales sur les quatre côtés.
@@ -46,6 +66,9 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 - PDF d'un devis ou d'une proforma : la date de fin de validité s'imprime sous « Validité » et non plus « Échéance », comme à l'écran.
 - État de paiement « Payé » quand le montant dû est nul ou déjà atteint (facture couverte par ses avoirs), conformément à la section 8.
 - Refus du réglage de la numérotation (préfixe vide ou invalide, préfixe partagé par deux types, nombre de chiffres du rang) traduits dans les six langues : le domaine les livre en texte fixe et valeurs (MessageCompose).
+- Tableau de bord en arabe : courbe de tendance retournée comme ses points.
+- Base créée par une version de développement : tables, colonnes, index, déclencheurs et vues manquants ajoutés à l'ouverture.
+- Désinstallation : titres justes quand aucune langue n'a été choisie dans l'assistant.
 
 ## [0.1.0] - 2026-11-09
 
