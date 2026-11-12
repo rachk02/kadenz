@@ -2909,3 +2909,12 @@ msgstr "Restore this backup? The new installation is replaced by the data in the
 
 msgid "Kadenz est déjà installé : restaurez depuis Paramètres, Sauvegardes"
 msgstr "Kadenz is already installed: restore from Settings, Backups"
+
+msgid "Une version plus récente a été trouvée, mais sa signature n'est pas valide : elle n'est pas proposée."
+msgstr "A newer version was found, but its signature is not valid: it is not offered."
+
+msgid "Kadenz {} est une nouvelle génération : elle s'installe séparément."
+msgstr "Kadenz {} is a new generation: it is installed separately."
+
+msgid "clé de signature de la licence inconnue : {}"
+msgstr "unknown licence signing key: {}"

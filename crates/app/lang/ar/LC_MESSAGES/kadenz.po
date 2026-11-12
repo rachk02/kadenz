@@ -2909,3 +2909,12 @@ msgstr "استعادة هذه النسخة الاحتياطية؟ يُستبدل
 
 msgid "Kadenz est déjà installé : restaurez depuis Paramètres, Sauvegardes"
 msgstr "Kadenz مثبّت بالفعل: استعد من الإعدادات، النسخ الاحتياطية"
+
+msgid "Une version plus récente a été trouvée, mais sa signature n'est pas valide : elle n'est pas proposée."
+msgstr "عُثر على إصدار أحدث، لكن توقيعه غير صالح: لن يُعرض."
+
+msgid "Kadenz {} est une nouvelle génération : elle s'installe séparément."
+msgstr "Kadenz {} جيل جديد: يُثبَّت بشكل منفصل."
+
+msgid "clé de signature de la licence inconnue : {}"
+msgstr "مفتاح توقيع الترخيص غير معروف: {}"

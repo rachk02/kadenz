@@ -2909,3 +2909,12 @@ msgstr "¿Restaurar esta copia de seguridad? La nueva instalación se reemplaza 
 
 msgid "Kadenz est déjà installé : restaurez depuis Paramètres, Sauvegardes"
 msgstr "Kadenz ya está instalado: restaure desde Configuración, Copias de seguridad"
+
+msgid "Une version plus récente a été trouvée, mais sa signature n'est pas valide : elle n'est pas proposée."
+msgstr "Se encontró una versión más reciente, pero su firma no es válida: no se ofrece."
+
+msgid "Kadenz {} est une nouvelle génération : elle s'installe séparément."
+msgstr "Kadenz {} es una nueva generación: se instala por separado."
+
+msgid "clé de signature de la licence inconnue : {}"
+msgstr "clave de firma de la licencia desconocida: {}"

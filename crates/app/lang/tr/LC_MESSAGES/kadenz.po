@@ -2909,3 +2909,12 @@ msgstr "Bu yedek geri yüklensin mi? Yeni kurulum, yedekteki verilerle değişti
 
 msgid "Kadenz est déjà installé : restaurez depuis Paramètres, Sauvegardes"
 msgstr "Kadenz zaten kurulu: Ayarlar, Yedekler bölümünden geri yükleyin"
+
+msgid "Une version plus récente a été trouvée, mais sa signature n'est pas valide : elle n'est pas proposée."
+msgstr "Daha yeni bir sürüm bulundu, ancak imzası geçerli değil: önerilmiyor."
+
+msgid "Kadenz {} est une nouvelle génération : elle s'installe séparément."
+msgstr "Kadenz {} yeni bir nesildir: ayrı olarak kurulur."
+
+msgid "clé de signature de la licence inconnue : {}"
+msgstr "bilinmeyen lisans imza anahtarı: {}"

@@ -2909,3 +2909,12 @@ msgstr "このバックアップを復元しますか？新しいインストー
 
 msgid "Kadenz est déjà installé : restaurez depuis Paramètres, Sauvegardes"
 msgstr "Kadenz はすでにインストールされています。設定の「バックアップ」から復元してください"
+
+msgid "Une version plus récente a été trouvée, mais sa signature n'est pas valide : elle n'est pas proposée."
+msgstr "新しいバージョンが見つかりましたが、署名が無効なため提示されません。"
+
+msgid "Kadenz {} est une nouvelle génération : elle s'installe séparément."
+msgstr "Kadenz {} は新しい世代です。別途インストールします。"
+
+msgid "clé de signature de la licence inconnue : {}"
+msgstr "不明なライセンス署名キー：{}"

@@ -2909,3 +2909,12 @@ msgstr "要恢复此备份吗？新安装将被备份中的数据替换。"
 
 msgid "Kadenz est déjà installé : restaurez depuis Paramètres, Sauvegardes"
 msgstr "Kadenz 已安装：请在“设置”中的“备份”里恢复"
+
+msgid "Une version plus récente a été trouvée, mais sa signature n'est pas valide : elle n'est pas proposée."
+msgstr "找到了更新的版本，但其签名无效：不会提供该版本。"
+
+msgid "Kadenz {} est une nouvelle génération : elle s'installe séparément."
+msgstr "Kadenz {} 是新一代版本：需单独安装。"
+
+msgid "clé de signature de la licence inconnue : {}"
+msgstr "未知的许可证签名密钥：{}"
