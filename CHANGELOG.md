@@ -2,6 +2,17 @@
 
 Format : une section par version, la plus récente en haut. Numérotation [SemVer](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORRECTIF`, tag Git `vMAJEUR.MINEUR.CORRECTIF`.
 
+## [0.2.1] - 2026-11-12
+
+### Ajouté
+- Sauvegardes de la base : rubrique « Sauvegardes » des Paramètres (droit « Sauvegarder / exporter la base ») avec dossier (par défaut Documents\Kadenz\Sauvegardes), mot de passe choisi une fois et protégé par Windows, sauvegarde manuelle, liste et restauration ; sauvegarde automatique chiffrée à chaque fermeture, les dix dernières gardées ; dossier des sauvegardes jamais dans le dossier des données.
+- Restauration : la base en place est sauvegardée puis mise de côté, jamais effacée (ni sa clé), puis retour à l'écran de connexion ; possible aussi depuis la première étape de l'assistant d'une installation neuve.
+- Écran « Démarrage impossible » : message selon la cause (clé introuvable, clé d'un autre poste ou compte Windows, clé endommagée, base indéchiffrable, base d'une version plus récente) et boutons « Restaurer une sauvegarde » et « Ouvrir le dossier des données ».
+- Désinstallation : la page de maintenance de l'installateur avertit que les données de Kadenz de ce compte Windows seront supprimées et invite à faire d'abord une sauvegarde.
+
+### Modifié
+- Identité Quatre pièces aux couleurs Indigo et Nuit de l'ancienne identité : logo, icônes, boutons, bandeaux de marque en Nuit avec motif plein et trois temps (blanc, blanc, Ambre), installateur aux mêmes couleurs.
+
 ## [0.2.0] - 2026-11-12
 
 ### Ajouté
