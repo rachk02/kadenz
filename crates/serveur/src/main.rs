@@ -74,6 +74,9 @@ fn main() -> ExitCode {
 
 fn console(config: Config) -> Result<(), String> {
     let serveur = Serveur::demarrer(config)?;
+    if let Some(avertissement) = serveur.avertissement() {
+        eprintln!("{avertissement}");
+    }
     println!(
         "Serveur Kadenz à l'écoute sur {}\nEmpreinte du certificat : {}\nArrêt : Ctrl+C",
         serveur.adresse(),
@@ -169,6 +172,9 @@ mod service {
                         serveur.empreinte()
                     ),
                 );
+                if let Some(avertissement) = serveur.avertissement() {
+                    noter(&config, avertissement);
+                }
                 let acceptes = ServiceControlAccept::STOP | ServiceControlAccept::SHUTDOWN;
                 let _ = statut.set_service_status(etat(ServiceState::Running, acceptes, 0));
                 let _ = attente.recv();

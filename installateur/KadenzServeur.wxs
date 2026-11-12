@@ -6,7 +6,11 @@
   - kadenz-serveur.exe dans Program Files\Kadenz Serveur ;
   - service Windows KadenzServeur (démarrage automatique, compte SYSTEM,
     redémarré après une panne), lancé à la fin de l'installation ;
-  - règle du pare-feu de Windows pour le port 47380 en TCP.
+  - règles du pare-feu de Windows pour le port 47380 : TCP pour les sessions,
+    UDP pour la découverte, limitée au sous-réseau local (jalon F4) ;
+  - KadenzAdmin.exe, fenêtre d'administration du serveur (jalon F4), avec son
+    raccourci « Kadenz - Administration du serveur » dans le menu Démarrer ;
+    l'élévation est demandée par le manifeste embarqué dans l'exécutable.
 
   Le dossier des données (%ProgramData%\Kadenz\Serveur : base, clé, certificat)
   n'est ni créé ni effacé par le paquet. Le service le crée à son premier
@@ -15,7 +19,7 @@
   droits de ProgramData. La désinstallation laisse les données en place.
 
   Variables passées par construire-serveur.ps1 : Version, Exe (chemin de
-  kadenz-serveur.exe), Editeur, Icone.
+  kadenz-serveur.exe), Admin (chemin de KadenzAdmin.exe), Editeur, Icone.
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
@@ -81,6 +85,17 @@
              (port déjà pris, par exemple) est noté dans kadenz-serveur.log
              sans annuler l'installation. -->
         <ServiceControl Id="DemarrageKadenzServeur" Name="KadenzServeur" Start="install" Wait="no" />
+      </Component>
+      <Component Directory="INSTALLFOLDER">
+        <File Id="KadenzAdmin.exe" Source="$(var.Admin)" Name="KadenzAdmin.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="RaccourciKadenzAdmin" Directory="ProgramMenuFolder">
+        <Shortcut Id="RaccourciKadenzAdmin"
+                  Name="Kadenz - Administration du serveur"
+                  Description="État du service, codes d'inscription et postes du serveur Kadenz"
+                  Target="[INSTALLFOLDER]KadenzAdmin.exe"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RegistryValue Root="HKMU" Key="Software\Kadenz Serveur" Name="RaccourciAdmin" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </Feature>
   </Package>

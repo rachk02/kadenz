@@ -13,8 +13,8 @@
 use std::fmt;
 use std::io;
 use std::net::{SocketAddr, TcpStream, ToSocketAddrs, UdpSocket};
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use kadenz_protocole::inscription::{DECOUVERTE, PORT_PAR_DEFAUT, ServeurTrouve};
@@ -163,6 +163,8 @@ struct Epinglage {
     empreinte: String,
     fournisseur: Arc<CryptoProvider>,
     ecart: Arc<AtomicBool>,
+    /// Empreinte du certificat présenté, gardée même s'il est refusé.
+    vue: Arc<Mutex<Option<String>>>,
 }
 
 impl ServerCertVerifier for Epinglage {
@@ -174,7 +176,12 @@ impl ServerCertVerifier for Epinglage {
         _ocsp: &[u8],
         _maintenant: UnixTime,
     ) -> Result<ServerCertVerified, rustls::Error> {
-        if empreinte(certificat) == self.empreinte {
+        let presentee = empreinte(certificat);
+        let egale = presentee == self.empreinte;
+        if let Ok(mut vue) = self.vue.lock() {
+            *vue = Some(presentee);
+        }
+        if egale {
             Ok(ServerCertVerified::assertion())
         } else {
             self.ecart.store(true, Ordering::SeqCst);
@@ -224,6 +231,70 @@ impl ServerCertVerifier for Epinglage {
 pub struct Bienvenue {
     pub entreprise: String,
     pub decalage_minutes: i32,
+}
+
+/// Connexion TCP au serveur, avec délais.
+fn tcp_vers(adresse: &str, delai: Duration) -> Result<TcpStream, ErreurClient> {
+    let injoignable = |e: io::Error| ErreurClient::Injoignable(e.to_string());
+    let adresses: Vec<_> = adresse.to_socket_addrs().map_err(injoignable)?.collect();
+    let mut derniere = ErreurClient::Injoignable("adresse sans résultat".into());
+    let mut tcp = None;
+    for a in adresses {
+        match TcpStream::connect_timeout(&a, delai) {
+            Ok(s) => {
+                tcp = Some(s);
+                break;
+            }
+            Err(e) => derniere = injoignable(e),
+        }
+    }
+    let tcp = tcp.ok_or(derniere)?;
+    tcp.set_read_timeout(Some(delai)).map_err(injoignable)?;
+    tcp.set_write_timeout(Some(delai)).map_err(injoignable)?;
+    tcp.set_nodelay(true).map_err(injoignable)?;
+    Ok(tcp)
+}
+
+/// Empreinte du certificat que présente le serveur à cette adresse, pour la
+/// faire confirmer par l'Admin quand le code d'inscription est tapé sans elle
+/// (écrans, section 2). Le certificat est refusé dès sa réception : la
+/// poignée de main s'arrête là, aucun certificat du poste ni aucune trame
+/// n'est envoyé, et rien n'est tenu pour sûr.
+pub fn empreinte_presentee(adresse: &str, delai: Duration) -> Result<String, ErreurClient> {
+    let mut tcp = tcp_vers(adresse, delai)?;
+    let fournisseur = fournisseur();
+    let vue: Arc<Mutex<Option<String>>> = Arc::default();
+    let verification = Arc::new(Epinglage {
+        // Aucune empreinte n'est vide : le certificat est toujours refusé.
+        empreinte: String::new(),
+        fournisseur: fournisseur.clone(),
+        ecart: Arc::new(AtomicBool::new(false)),
+        vue: vue.clone(),
+    });
+    let config = ClientConfig::builder_with_provider(fournisseur)
+        .with_protocol_versions(&[&rustls::version::TLS13])
+        .map_err(|e| ErreurClient::Protocole(e.to_string()))?
+        .dangerous()
+        .with_custom_certificate_verifier(verification)
+        .with_no_client_auth();
+    let nom = ServerName::try_from(NOM_TLS).map_err(|e| ErreurClient::Protocole(e.to_string()))?;
+    let mut connexion = ClientConnection::new(Arc::new(config), nom)
+        .map_err(|e| ErreurClient::Protocole(e.to_string()))?;
+    let mut erreur = None;
+    while connexion.is_handshaking() {
+        if let Err(e) = connexion.complete_io(&mut tcp) {
+            erreur = Some(e);
+            break;
+        }
+    }
+    let _ = tcp.shutdown(std::net::Shutdown::Both);
+    let presentee = vue.lock().ok().and_then(|mut v| v.take());
+    presentee.ok_or_else(|| {
+        ErreurClient::Injoignable(erreur.map_or_else(
+            || "aucun certificat présenté".to_string(),
+            |e| e.to_string(),
+        ))
+    })
 }
 
 /// Réponse du serveur à une inscription réussie.
@@ -374,30 +445,14 @@ impl Client {
         identite: &Identite,
         delai: Duration,
     ) -> Result<Client, ErreurClient> {
-        let injoignable = |e: io::Error| ErreurClient::Injoignable(e.to_string());
-        let adresses: Vec<_> = adresse.to_socket_addrs().map_err(injoignable)?.collect();
-        let mut derniere = ErreurClient::Injoignable("adresse sans résultat".into());
-        let mut tcp = None;
-        for a in adresses {
-            match TcpStream::connect_timeout(&a, delai) {
-                Ok(s) => {
-                    tcp = Some(s);
-                    break;
-                }
-                Err(e) => derniere = injoignable(e),
-            }
-        }
-        let tcp = tcp.ok_or(derniere)?;
-        tcp.set_read_timeout(Some(delai)).map_err(injoignable)?;
-        tcp.set_write_timeout(Some(delai)).map_err(injoignable)?;
-        tcp.set_nodelay(true).map_err(injoignable)?;
-
+        let tcp = tcp_vers(adresse, delai)?;
         let fournisseur = fournisseur();
         let ecart = Arc::new(AtomicBool::new(false));
         let verification = Arc::new(Epinglage {
             empreinte: empreinte_serveur.to_lowercase(),
             fournisseur: fournisseur.clone(),
             ecart: ecart.clone(),
+            vue: Arc::default(),
         });
         let config = ClientConfig::builder_with_provider(fournisseur)
             .with_protocol_versions(&[&rustls::version::TLS13])

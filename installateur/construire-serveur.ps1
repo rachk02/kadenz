@@ -3,9 +3,9 @@
     Construit le paquet du serveur Kadenz : target\installateur\KadenzServeur-<version>.msi.
 
 .DESCRIPTION
-    1. compile kadenz-serveur.exe en mode release (sauf -SansCompilation) ;
+    1. compile kadenz-serveur.exe et KadenzAdmin.exe en mode release (sauf -SansCompilation) ;
     2. construit le paquet MSI (KadenzServeur.wxs) et le soumet aux contrôles ICE.
-    Avec -Certificat, signe kadenz-serveur.exe puis le paquet (signtool, SHA-256,
+    Avec -Certificat, signe les deux exécutables puis le paquet (signtool, SHA-256,
     horodatage). Sans certificat, rien n'est signé. Aucune publication : les
     releases de la phase 2 se décident à part.
 
@@ -15,7 +15,7 @@
     (règle du pare-feu).
 
 .PARAMETER SansCompilation
-    Reprend target\release\kadenz-serveur.exe tel quel.
+    Reprend target\release\kadenz-serveur.exe et KadenzAdmin.exe tels quels.
 
 .PARAMETER Editeur
     Éditeur affiché par Windows (programmes installés, propriétés du fichier).
@@ -68,30 +68,39 @@ $version = $Matches[1]
 if (-not $SansCompilation) {
     $cargo = Join-Path $env:USERPROFILE '.cargo\bin\cargo.exe'
     if (-not (Test-Path $cargo)) { $cargo = 'cargo' }
-    Executer $cargo @('build', '--release', '-p', 'kadenz-serveur')
+    Executer $cargo @('build', '--release', '-p', 'kadenz-serveur', '-p', 'kadenz-admin')
 }
-$compile = Join-Path $racine 'target\release\kadenz-serveur.exe'
-if (-not (Test-Path $compile)) { throw "kadenz-serveur.exe introuvable : $compile" }
 # Garde-fou repris de construire.ps1 : un exécutable plus ancien que le dernier
 # commit du code Rust n'est pas celui du code livré.
 $dernierCommit = [DateTime]::Parse((git -C $racine log -1 --format=%cI -- crates Cargo.toml Cargo.lock))
-if ((Get-Item $compile).LastWriteTime -lt $dernierCommit) {
-    throw "kadenz-serveur.exe ($((Get-Item $compile).LastWriteTime)) est plus ancien que le dernier commit ($dernierCommit) : relancer sans -SansCompilation"
+foreach ($nom in @('kadenz-serveur.exe', 'KadenzAdmin.exe')) {
+    $chemin = Join-Path $racine "target\release\$nom"
+    if (-not (Test-Path $chemin)) { throw "$nom introuvable : $chemin" }
+    if ((Get-Item $chemin).LastWriteTime -lt $dernierCommit) {
+        throw "$nom ($((Get-Item $chemin).LastWriteTime)) est plus ancien que le dernier commit ($dernierCommit) : relancer sans -SansCompilation"
+    }
 }
 
 $sortie = Join-Path $racine 'target\installateur'
 New-Item -ItemType Directory -Force $sortie | Out-Null
 $exe = Join-Path $sortie 'kadenz-serveur.exe'
-Copy-Item $compile $exe -Force
+Copy-Item (Join-Path $racine 'target\release\kadenz-serveur.exe') $exe -Force
 Signer $exe
+$admin = Join-Path $sortie 'KadenzAdmin.exe'
+Copy-Item (Join-Path $racine 'target\release\KadenzAdmin.exe') $admin -Force
+Signer $admin
 $icone = Join-Path $racine 'crates\app\kadenz.ico'
 $msi = Join-Path $sortie "KadenzServeur-$version.msi"
 
 Executer wix @('build', (Join-Path $PSScriptRoot 'KadenzServeur.wxs'),
     '-ext', 'WixToolset.Util.wixext', '-ext', 'WixToolset.Firewall.wixext',
     '-arch', 'x64', '-d', "Version=$version", '-d', "Editeur=$Editeur", '-d', "Icone=$icone",
-    '-d', "Exe=$exe", '-o', $msi)
-Executer wix @('msi', 'validate', $msi)
+    '-d', "Exe=$exe", '-d', "Admin=$admin", '-o', $msi)
+# Contrôles ICE de Windows Installer. ICE43 et ICE57 sont écartés, comme pour
+# le paquet de l'application : ils supposent une installation par compte
+# (raccourci du menu Démarrer dans le profil), alors que le paquet est installé
+# pour toute la machine, où ce dossier est celui de tous les comptes.
+Executer wix @('msi', 'validate', '-sice', 'ICE43', '-sice', 'ICE57', $msi)
 Signer $msi
 if ($signtool) {
     Write-Host "Paquet signé : $msi"

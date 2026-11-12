@@ -778,3 +778,37 @@ fn inscription_bornee_par_le_delai_d_ouverture() {
         debut.elapsed()
     );
 }
+
+#[test]
+fn empreinte_presentee_sans_confiance() {
+    let serveur = demarrer("empreinte-presentee", Duration::from_secs(5), 8);
+    installer(&serveur);
+    let adresse = serveur.adresse().to_string();
+    assert_eq!(
+        kadenz_client::empreinte_presentee(&adresse, DELAI_CLIENT).unwrap(),
+        serveur.empreinte()
+    );
+    // L'empreinte confirmée sert ensuite à l'inscription.
+    let cree = code(&serveur, "Accueil", 0);
+    let identite = Identite::nouvelle("poste").unwrap();
+    assert!(inscrire(&serveur, &identite, &cree.secret).is_ok());
+    assert!(connecter(&serveur, &identite).is_ok());
+}
+
+#[test]
+fn demarrage_sans_decouverte_si_le_port_udp_est_pris() {
+    // Le port UDP est pris avant le démarrage (décision 44).
+    let pris = std::net::UdpSocket::bind(("127.0.0.1", 0)).unwrap();
+    let mut config = Config::nouvelle(dossier("udp-pris"));
+    config.adresse = pris.local_addr().unwrap();
+    config.controle_droits = false;
+    config.cles_portail = vec![cle_portail().verifying_key()];
+    let serveur = Serveur::demarrer(config).unwrap();
+    let avertissement = serveur.avertissement().unwrap();
+    assert!(avertissement.contains("découverte"), "{avertissement}");
+    assert!(avertissement.contains("impossible"), "{avertissement}");
+    // Les sessions marchent quand même.
+    installer(&serveur);
+    let identite = poste_inscrit(&serveur);
+    assert!(connecter(&serveur, &identite).is_ok());
+}

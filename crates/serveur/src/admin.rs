@@ -178,14 +178,20 @@ pub fn installer_avec(
 /// Fichier de trace du service, dans son dossier des données.
 pub const NOM_TRACE: &str = "kadenz-serveur.log";
 
-/// Dernière erreur de démarrage du service, si la dernière ligne de sa trace
-/// en est une.
+/// Dernière erreur du service : échec du dernier démarrage, ou problème non
+/// bloquant noté depuis (découverte impossible, décision 44). Un démarrage
+/// réussi sans problème efface les erreurs précédentes.
 pub fn derniere_erreur(dossier: &Path) -> Option<String> {
     let trace = std::fs::read_to_string(dossier.join(NOM_TRACE)).ok()?;
-    let derniere = trace.lines().rev().find(|l| !l.trim().is_empty())?;
-    derniere
-        .contains("impossible")
-        .then(|| derniere.to_string())
+    for ligne in trace.lines().rev().filter(|l| !l.trim().is_empty()) {
+        if ligne.contains("impossible") {
+            return Some(ligne.to_string());
+        }
+        if ligne.contains("] démarrage sur ") {
+            return None;
+        }
+    }
+    None
 }
 
 #[cfg(test)]
@@ -207,6 +213,17 @@ mod tests {
         )
         .unwrap();
         assert_eq!(derniere_erreur(&dossier), None);
+        // Découverte impossible, notée après le démarrage, puis arrêt.
+        let udp = "[2026-11-12 10:01:00] découverte sur 0.0.0.0:47380 impossible : port pris";
+        std::fs::write(
+            dossier.join(NOM_TRACE),
+            format!(
+                "{erreur}\n[2026-11-12 10:01:00] démarrage sur 0.0.0.0:47380\n{udp}\n\
+                 [2026-11-12 11:00:00] arrêt\n"
+            ),
+        )
+        .unwrap();
+        assert_eq!(derniere_erreur(&dossier).as_deref(), Some(udp));
         std::fs::remove_dir_all(&dossier).unwrap();
         // Le service n'est pas installé sur la machine des essais, ou il l'est :
         // la lecture de son état ne doit pas échouer.

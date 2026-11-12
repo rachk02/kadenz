@@ -397,6 +397,7 @@ pub struct Serveur {
     arret: Arc<AtomicBool>,
     ecoute: Option<JoinHandle<()>>,
     decouverte: Option<JoinHandle<()>>,
+    avertissement: Option<String>,
 }
 
 impl Serveur {
@@ -411,11 +412,20 @@ impl Serveur {
         let ecoute = TcpListener::bind(config.adresse)
             .map_err(|e| format!("écoute sur {} impossible : {e}", config.adresse))?;
         let adresse = ecoute.local_addr().map_err(|e| e.to_string())?;
+        // Un port UDP déjà pris n'empêche pas le démarrage (décision 44) : les
+        // postes saisissent alors l'adresse, ou collent le code complet.
+        let mut avertissement = None;
         let udp = if config.decouverte {
-            Some(
-                UdpSocket::bind(adresse)
-                    .map_err(|e| format!("découverte sur {adresse} impossible : {e}"))?,
-            )
+            match UdpSocket::bind(adresse) {
+                Ok(socket) => Some(socket),
+                Err(e) => {
+                    avertissement = Some(format!(
+                        "découverte sur {adresse} impossible : {e} ; \
+                         les postes doivent saisir l'adresse du serveur"
+                    ));
+                    None
+                }
+            }
         } else {
             None
         };
@@ -448,7 +458,14 @@ impl Serveur {
             arret,
             ecoute: Some(fil),
             decouverte,
+            avertissement,
         })
+    }
+
+    /// Problème non bloquant du démarrage (découverte impossible), à noter
+    /// dans la trace du service.
+    pub fn avertissement(&self) -> Option<&str> {
+        self.avertissement.as_deref()
     }
 
     /// Adresse d'écoute effective (port choisi par le système si 0).
