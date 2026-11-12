@@ -2930,3 +2930,12 @@ msgstr "حساب غير معروف على الخادم"
 
 msgid "opération illisible"
 msgstr "عملية غير مقروءة"
+
+msgid "ce n'est pas une licence d'abonnement d'entreprise"
+msgstr "هذا ليس ترخيص اشتراك لمؤسسة"
+
+msgid "licence d'abonnement émise pour une autre entreprise ({})"
+msgstr "ترخيص اشتراك صادر لمؤسسة أخرى ({})"
+
+msgid "abonnement échu : Kadenz est en lecture seule"
+msgstr "انتهى الاشتراك: Kadenz في وضع القراءة فقط"

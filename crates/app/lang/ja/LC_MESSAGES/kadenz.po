@@ -2930,3 +2930,12 @@ msgstr "サーバーに存在しないアカウントです"
 
 msgid "opération illisible"
 msgstr "読み取れない操作です"
+
+msgid "ce n'est pas une licence d'abonnement d'entreprise"
+msgstr "企業向けサブスクリプションのライセンスではありません"
+
+msgid "licence d'abonnement émise pour une autre entreprise ({})"
+msgstr "別の企業向けに発行されたサブスクリプションのライセンスです（{}）"
+
+msgid "abonnement échu : Kadenz est en lecture seule"
+msgstr "サブスクリプションの期限が切れました：Kadenz は閲覧専用です"

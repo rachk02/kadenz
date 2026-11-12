@@ -2930,3 +2930,12 @@ msgstr "sunucuda bilinmeyen hesap"
 
 msgid "opération illisible"
 msgstr "okunamayan işlem"
+
+msgid "ce n'est pas une licence d'abonnement d'entreprise"
+msgstr "bu bir şirket abonelik lisansı değil"
+
+msgid "licence d'abonnement émise pour une autre entreprise ({})"
+msgstr "başka bir şirket için düzenlenmiş abonelik lisansı ({})"
+
+msgid "abonnement échu : Kadenz est en lecture seule"
+msgstr "abonelik süresi doldu: Kadenz salt okunur modda"

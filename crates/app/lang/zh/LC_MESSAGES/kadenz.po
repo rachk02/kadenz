@@ -2930,3 +2930,12 @@ msgstr "服务器上不存在该账户"
 
 msgid "opération illisible"
 msgstr "无法读取的操作"
+
+msgid "ce n'est pas une licence d'abonnement d'entreprise"
+msgstr "这不是企业订阅许可证"
+
+msgid "licence d'abonnement émise pour une autre entreprise ({})"
+msgstr "为其他企业签发的订阅许可证（{}）"
+
+msgid "abonnement échu : Kadenz est en lecture seule"
+msgstr "订阅已到期：Kadenz 处于只读模式"

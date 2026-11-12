@@ -2930,3 +2930,12 @@ msgstr "cuenta desconocida en el servidor"
 
 msgid "opération illisible"
 msgstr "operación ilegible"
+
+msgid "ce n'est pas une licence d'abonnement d'entreprise"
+msgstr "no es una licencia de suscripción de empresa"
+
+msgid "licence d'abonnement émise pour une autre entreprise ({})"
+msgstr "licencia de suscripción emitida para otra empresa ({})"
+
+msgid "abonnement échu : Kadenz est en lecture seule"
+msgstr "suscripción vencida: Kadenz está en modo de solo lectura"
