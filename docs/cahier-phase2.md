@@ -16,6 +16,7 @@
 | 0.12 | 2026-11-12 | Décision 38 : jalons des fondations F1 à F10 validés (`docs/jalons-phase2.md`), démarrage par F1. |
 | 0.13 | 2026-11-12 | Décision 39 : corrections V1 sur une branche `release/0.2.x` tirée de `v0.2.2`, `main` réservée à la phase 2. |
 | 0.14 | 2026-11-12 | Décision 40 : lecture seule aussi sans licence ou avec une licence refusée. |
+| 0.15 | 2026-11-12 | Décisions 41 à 43 (F4) : un poste inscrit sans licence valide, postes en trop gardés, découverte sans le nom de l'entreprise. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -74,6 +75,9 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 38. **Jalons des fondations** : découpage F1 à F10 de `docs/jalons-phase2.md` validé ; le code démarre par F1 (identifiants et opérations).
 39. **Branches** : à partir de F1, `main` porte la phase 2 (nouveau schéma de base) et ne sert plus à publier de version V1 ; toute correction V1 se fait sur une branche `release/0.2.x` tirée du tag `v0.2.2`, comme pour la v0.1.1, pour qu'une base V1 ne soit jamais migrée au schéma de la phase 2 par une mise à jour V1.
 40. **Sans licence ou licence refusée** : un serveur de la phase 2 sans licence d'abonnement, ou avec une licence refusée (signature, autre entreprise, clé inconnue), est en lecture seule, comme à l'échéance (consultation, impression et export permis, aucune saisie). L'assistant d'un serveur neuf demande la licence avant tout travail.
+41. **Inscription sans licence** : sans licence valide ou en lecture seule, un seul poste peut s'inscrire, le temps d'installer la licence depuis ce poste.
+42. **Licence qui réduit les postes** : une licence qui permet moins de postes qu'il n'y en a d'inscrits ne retire aucun poste ; les nouvelles inscriptions sont refusées tant que l'Admin n'a pas retiré de poste ou pris une licence plus large.
+43. **Découverte sur le réseau local** : la réponse du serveur donne le nom de la machine seul ; le nom de l'entreprise s'affiche après la saisie du code d'inscription.
 
 ## 3. Candidats
 
@@ -223,7 +227,7 @@ Règles retenues (décisions 14 et 15) :
 
 ### Réglées le 2026-11-12
 
-- Décisions 1 à 40 (section 2) ; avertissements d'échéance et revendeurs réglés par les décisions 25 à 27. Les questions 1 à 6 et 13 de la version 0.5 sont réglées : conflits (décisions 17 et 18), données hébergées (13), fusion V1 (19), lecture seule (20), abonnement (21), clients visés (22 et 23), hébergement (16).
+- Décisions 1 à 43 (section 2) ; avertissements d'échéance et revendeurs réglés par les décisions 25 à 27. Les questions 1 à 6 et 13 de la version 0.5 sont réglées : conflits (décisions 17 et 18), données hébergées (13), fusion V1 (19), lecture seule (20), abonnement (21), clients visés (22 et 23), hébergement (16).
 
 ### Ouvertes pour les fondations
 
