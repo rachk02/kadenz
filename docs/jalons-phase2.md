@@ -4,8 +4,9 @@
 |---|---|---|
 | 0.1 | 2026-11-12 | Proposition de kadenz-8e, à relire par kadenz-34 puis à valider par l'utilisateur : découpage des fondations (étape 1 du cahier de la phase 2, section 5) en jalons vérifiables, d'après `docs/spec-synchronisation.md` 0.3 et `docs/spec-ecrans-multiposte.md` 0.3. |
 | 0.2 | 2026-11-12 | Relecture de kadenz-34 : licence d'entreprise avancée en F3, parce que l'inscription des postes (F4) en a besoin pour limiter le nombre de postes ; ancien F8 coupé en deux, licence sur le serveur et les postes (F3, sans VPS) et portail web (F9, avec VPS) ; mises à jour de la phase 2 (serveur puis postes, version du protocole) ajoutées au dernier jalon, F10 ; découpage en crates et place du socle commun (4.3) ; relais dépendant de F5. |
+| 0.3 | 2026-11-12 | Découpage F1 à F10 validé par l'utilisateur, démarrage du code par F1 (décision 38 du cahier de la phase 2). |
 
-Statut : **proposé**. Rien ne démarre avant l'accord de l'utilisateur sur ce découpage. Chaque jalon se termine par une vérification visible (tests, essai à l'écran sur des bases d'essai, jamais sur les données réelles), un commit poussé sur `main` et une ligne au journal, comme les jalons J1 à J10 de la V1. Aucune version de la phase 2 n'est publiée avant le jalon F10, et jamais avec le drapeau Latest (décision 14).
+Statut : **validé** le 2026-11-12 (décision 38) ; le code démarre par F1. Chaque jalon se termine par une vérification visible (tests, essai à l'écran sur des bases d'essai, jamais sur les données réelles), un commit poussé sur `main` et une ligne au journal, comme les jalons J1 à J10 de la V1. Aucune version de la phase 2 n'est publiée avant le jalon F10, et jamais avec le drapeau Latest (décision 14).
 
 Rôles : **kadenz-34** pour le serveur, le stockage, le protocole, la licence et l'installateur ; **kadenz-8e** pour les écrans du poste et de la fenêtre d'administration, et les traductions. Une seule session compile à la fois, comme aujourd'hui.
 

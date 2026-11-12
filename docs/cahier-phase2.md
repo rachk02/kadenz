@@ -13,6 +13,7 @@
 | 0.9 | 2026-11-12 | Sections 4.3 et 4.4 reprises pour le serveur de confiance (décision 28) ; le protocole de synchronisation, la numérotation et les clés sont spécifiés à part, dans `docs/spec-synchronisation.md` (premier jet de kadenz-34, à l'étude). |
 | 0.10 | 2026-11-12 | Décisions 30 à 34 : petite fenêtre d'administration sur le serveur, toujours un serveur (pas de poste seul en phase 2), toutes les opérations hors connexion refusées en attente, conflits tranchés par l'Admin ou un ayant droit, version entière ou champ par champ. |
 | 0.11 | 2026-11-12 | Décisions 35 à 37 (recommandations de kadenz-34, validées) : sauvegardes quotidiennes et à l'arrêt du serveur, dix gardées ; code d'inscription valable 24 heures ; fuseau unique de l'entreprise. |
+| 0.12 | 2026-11-12 | Décision 38 : jalons des fondations F1 à F10 validés (`docs/jalons-phase2.md`), démarrage par F1. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -68,6 +69,7 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 35. **Sauvegardes du serveur** : une sauvegarde automatique par jour, à une heure réglable, plus une à l'arrêt du service ; les dix dernières gardées, comme en V1 ; dossier par défaut sur la machine serveur, modifiable dans la fenêtre d'administration ; avertissement permanent, dans cette fenêtre et sur les postes Admin, tant que le dossier est sur le même disque que la base (copie hors de la machine conseillée, seul recours en cas de vol ou de panne).
 36. **Code d'inscription d'un poste** : à usage unique, valable 24 heures, annulable par l'Admin ; un nouveau code annule le précédent pour le même poste.
 37. **Fuseau** : un seul fuseau par entreprise, celui de Windows sur la machine serveur ; les heures techniques sont gardées en UTC avec décalage et affichées dans ce fuseau sur tous les postes, distants compris ; les dates métier restent celles saisies.
+38. **Jalons des fondations** : découpage F1 à F10 de `docs/jalons-phase2.md` validé ; le code démarre par F1 (identifiants et opérations).
 
 ## 3. Candidats
 
@@ -183,7 +185,7 @@ Règles retenues (décisions 14 et 15) :
 ## 5. Ordre (validé, décision 8)
 
 0. **Pont V1** (4.0, décision 12) : avant toute release de la phase 2.
-1. **Fondations** : socle commun (4.3), serveur chez le client et relais d'accès à distance (3.1), sécurité (4.4), reprise des bases V1 (4.2), abonnement (4.1), signature du code (4.5). Ces chantiers décident de l'architecture ; les faire après les fonctions obligerait à refaire celles-ci.
+1. **Fondations**, découpées en jalons F1 à F10 (`docs/jalons-phase2.md`, décision 38) : socle commun (4.3), serveur chez le client et relais d'accès à distance (3.1), sécurité (4.4), reprise des bases V1 (4.2), abonnement (4.1), signature du code (4.5). Ces chantiers décident de l'architecture ; les faire après les fonctions obligerait à refaire celles-ci.
 2. **Fonctions métier sur le nouveau socle** : stock (3.3), puis export SYSCOHADA (3.2) comme première brique de la comptabilité.
 3. **Chantiers indépendants**, intercalables selon la demande des clients : email (3.4), signature électronique (3.6), multi-devise (3.5, à faire avant l'export SYSCOHADA s'il doit en tenir compte).
 4. **Site web** (3.7) : site de présentation possible dès maintenant ; espace client et abonnement après 4.1 et 3.1.
@@ -217,7 +219,7 @@ Règles retenues (décisions 14 et 15) :
 
 ### Réglées le 2026-11-12
 
-- Décisions 1 à 37 (section 2) ; avertissements d'échéance et revendeurs réglés par les décisions 25 à 27. Les questions 1 à 6 et 13 de la version 0.5 sont réglées : conflits (décisions 17 et 18), données hébergées (13), fusion V1 (19), lecture seule (20), abonnement (21), clients visés (22 et 23), hébergement (16).
+- Décisions 1 à 38 (section 2) ; avertissements d'échéance et revendeurs réglés par les décisions 25 à 27. Les questions 1 à 6 et 13 de la version 0.5 sont réglées : conflits (décisions 17 et 18), données hébergées (13), fusion V1 (19), lecture seule (20), abonnement (21), clients visés (22 et 23), hébergement (16).
 
 ### Ouvertes pour les fondations
 
