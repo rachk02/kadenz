@@ -2,6 +2,16 @@
 
 Format : une section par version, la plus récente en haut. Numérotation [SemVer](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORRECTIF`, tag Git `vMAJEUR.MINEUR.CORRECTIF`.
 
+## [Non publié]
+
+### Ajouté
+- Pont V1 : une mise à jour n'est proposée que si sa release porte le manifeste `kadenz-maj.json`, signé par la clé de mise à jour embarquée ; le manifeste donne la génération, la version minimale et l'empreinte de l'installateur, vérifiée au téléchargement. Une signature non valide ou une nouvelle génération est signalée dans Paramètres, jamais proposée.
+- Licences : identifiant de la clé de signature dans chaque licence émise et clé suivante embarquée, pour changer de clé sans couper les postes ; une licence signée par une clé inconnue a son propre message.
+- Outil éditeur : commande `manifeste`, qui écrit et signe le manifeste de mise à jour après avoir contrôlé les clés embarquées.
+
+### Modifié
+- Publication : `release.ps1` demande la clé privée de mise à jour (`-CleMaj`), joint le manifeste et sa signature à la release en plus des empreintes `.sha256`, et passe le drapeau Latest explicitement (releases V1 seulement).
+
 ## [0.2.1] - 2026-11-12
 
 ### Ajouté
