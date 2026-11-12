@@ -9,7 +9,7 @@ Statut : **« Quatre pièces », version Bleu**, validée par l'utilisateur le 2
 - **Idée** : quatre formes simples (carré, quart de disque, triangle, disque) s'emboîtent sur une grille de deux par deux, comme les modules que la licence assemble ; le disque marque le temps fort de la cadence.
 - **Une seule couleur** : symbole Bleu vif sur fond clair, symbole tout blanc sur le Bleu vif. Le mot « kadenz » est en Nuit sur fond clair, en blanc sur le Bleu vif.
 - **Versions** : logo horizontal (principal), logo empilé, symbole seul, mot seul, icône (symbole sur tuile).
-- **Mot** : Inter SemiBold, interlettrage resserré de 1 %, vectorisé (aucune police n'est nécessaire pour afficher le logo).
+- **Mot** : Space Grotesk 600 (choix de l'utilisateur du 2026-11-12), interlettrage resserré de 1 %, hampes à la hauteur de l'ancien mot en Inter ; vectorisé (aucune police n'est nécessaire pour afficher le logo).
 
 ## Dans l'application
 
@@ -47,7 +47,6 @@ Statut : **« Quatre pièces », version Bleu**, validée par l'utilisateur le 2
 | `planches/01-primary-logo.html` à `09-brand-mockups.html` | Neuf planches de l'identité : logo principal, symbole, ton, couleurs, motif, typographie, signalétique, papeterie, mises en situation |
 | `planches/images/`, `planches/kadenz-identite.pdf` | Les neuf planches en PNG (2400 x 1520) et en PDF (une planche par page) |
 | `planches/generer_planches.py` | Regénère planches, PNG et PDF : `python docs/marque/planches/generer_planches.py .` (Chrome requis) |
-| `planches/planche-kit.png`, `presentation-01.png` à `-04.png` | Planche de contrôle du kit et présentation en situation |
 | `generer.py` | Regénère tous les SVG : `python docs/marque/generer.py .` (fontTools requis) |
 
 Les PNG, le `.ico` et les icônes web ont été rendus avec les scripts du skill logo-design (`render_png.py`, `export_variants.py`, rendu par Chrome), sans Pillow.
@@ -88,9 +87,9 @@ La pièce du module est pleine, les trois autres sont au trait : Ventes (carré 
 
 ## Typographie
 
-- **Inter** (400, 500, 600, 700) : texte, interface, montants en chiffres tabulaires, mot du logo. SIL Open Font License 1.1.
+- **Inter** (400, 500, 600, 700) : texte, interface, montants en chiffres tabulaires. SIL Open Font License 1.1.
 - **Space Grotesk** (Bold 700) : titres de l'application et des documents PDF (`crates/pdf`, choix de l'utilisateur du 2026-11-12), choisie par l'utilisateur le 2026-11-12 après comparaison avec Manrope, IBM Plex Sans, Kobe et Platform. SIL Open Font License 1.1, sans nom réservé ; instance statique réduite au latin, chiffres tabulaires conservés.
-- Point ouvert : le mot du logo utilise Inter sans retouche ; un dessin de lettres propre à Kadenz reste à l'étude.
+- Point ouvert : le mot du logo utilise Space Grotesk sans retouche ; un dessin de lettres propre à Kadenz reste à l'étude.
 
 ## À ne pas faire
 

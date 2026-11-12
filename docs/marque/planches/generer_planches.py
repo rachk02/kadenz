@@ -108,7 +108,7 @@ def p01():
 <div class="case bord" style="flex-direction:column;align-items:flex-start;justify-content:center;padding:26px;gap:14px">
 <div><p class="t3">Zone de protection</p><p class="petit">La moitié du côté d'une case du symbole, tout autour du logo. Elle suit la taille du logo.</p></div>
 <div><p class="t3">Tailles minimales</p><p class="petit">Horizontal : 120 px ou 30 mm de large. Empilé : 64 px ou 18 mm. Symbole : 16 px ou 6 mm.</p></div>
-<div><p class="t3">Mot</p><p class="petit">« kadenz » en Inter SemiBold, vectorisé, en Nuit sur fond clair.</p></div>
+<div><p class="t3">Mot</p><p class="petit">« kadenz » en Space Grotesk 600, vectorisé, en Nuit sur fond clair.</p></div>
 </div></div>"""
     return planche(1, "Primary logo", "Quatre pièces et le mot « kadenz », en une seule couleur : Bleu vif", c)
 
@@ -251,8 +251,8 @@ def p06():
         ("Surtitre · Space Grotesk 700 · 12, capitales", f"font-family:Space Grotesk;font-weight:700;font-size:12px;letter-spacing:.08em;color:{BLEU}", "PAIEMENTS")))
     c = f"""<div style="display:grid;grid-template-columns:330px 1fr;gap:24px;flex:1">
 <div style="display:flex;flex-direction:column;gap:14px">
-{famille("Space Grotesk", "Titres", "Bold 700", "Space Grotesk")}
-{famille("Inter", "Texte, interface, chiffres, mot du logo", "Regular 400 · Medium 500 · SemiBold 600 · Bold 700", "Inter")}
+{famille("Space Grotesk", "Titres, mot du logo", "SemiBold 600 (mot) · Bold 700 (titres)", "Space Grotesk")}
+{famille("Inter", "Texte, interface, chiffres", "Regular 400 · Medium 500 · SemiBold 600 · Bold 700", "Inter")}
 </div>
 <div style="display:flex;flex-direction:column;gap:12px">
 <div class="bord" style="border-radius:4px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center">

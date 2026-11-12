@@ -1,6 +1,7 @@
 """Marque Kadenz, « Quatre pièces », version Bleu (validée le 2026-11-11).
 
-Autonome : géométrie, mots vectorisés (fontTools, Inter SemiBold du dépôt) et tous les SVG.
+Autonome : géométrie, mots vectorisés (fontTools, Space Grotesk 600 tirée de la police variable
+de docs/marque/planches/polices) et tous les SVG.
 Usage : python generer.py <racine du dépôt>
 Sorties : les SVG de docs/marque, à côté de ce fichier. Les PNG, le .ico et les icônes web
 sont rendus à part (voir README.md).
@@ -12,10 +13,13 @@ from pathlib import Path
 
 from fontTools.pens.svgPathPen import SVGPathPen
 from fontTools.pens.transformPen import TransformPen
+from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont
+from fontTools.varLib import instancer
 
 ICI = Path(__file__).resolve().parent
-POLICE = Path(sys.argv[1]) / "crates/app/ui/polices/Inter-SemiBold.ttf"
+POLICE = Path(sys.argv[1]) / "docs/marque/planches/polices/SpaceGrotesk.ttf"   # variable, OFL 1.1
+GRAISSE = 600   # mot du logo : Space Grotesk 600 (choix de l'utilisateur du 2026-11-12)
 
 BLANC = "#FFFFFF"
 VERSIONS = {
@@ -88,13 +92,25 @@ def symbole(p, pieces_c, disque_c):
 
 
 # --- mot -------------------------------------------------------------------------
-HAUTEUR_X = 0.42 * 224          # hauteur d'x du mot dans le logo horizontal (canevas de 256)
-X_INTER, ASC_INTER = 1118, 1490  # Inter SemiBold : hauteur d'x et ascendante (unités de la police)
+# Hauteur des hampes (k, d) du mot dans le logo horizontal, canevas de 256 : celle de l'ancien mot
+# en Inter SemiBold (hauteur d'x 0,42 x 224, hampes 1490/1118 de la hauteur d'x), pour garder le
+# rapport du mot au symbole. Space Grotesk a des hampes plus hautes : à hampes égales, son x est
+# un peu plus petit.
+HAUTEUR_HAMPE = 0.42 * 224 * 1490 / 1118
+X_MOT, ASC_MOT = None, None   # hauteur d'x et des hampes de la police, lues dans les glyphes
+
+
+def hauteur(gs, cmap, ch):
+    b = BoundsPen(gs)
+    gs[cmap[ord(ch)]].draw(b)
+    return b.bounds[3]
 
 
 def mot(texte="kadenz", interlettre=-0.01):
-    t = TTFont(POLICE)
+    global X_MOT, ASC_MOT
+    t = instancer.instantiateVariableFont(TTFont(POLICE), {"wght": GRAISSE})
     gs, cmap = t.getGlyphSet(), t.getBestCmap()
+    X_MOT, ASC_MOT = hauteur(gs, cmap, "x"), hauteur(gs, cmap, "d")
     pen = SVGPathPen(gs)
     x, upm = 0.0, t["head"].unitsPerEm
     for ch in texte:
@@ -112,8 +128,8 @@ def trace_mot(x, base, e, couleur):
 
 
 def horizontal(corps_symbole, couleur_mot):
-    e = HAUTEUR_X / X_INTER
-    x_mot, base = 256 + 24, 128 + HAUTEUR_X / 2
+    e = HAUTEUR_HAMPE / ASC_MOT
+    x_mot, base = 256 + 24, 128 + X_MOT * e / 2
     w = x_mot + L_MOT * e + 16
     return svg(corps_symbole + trace_mot(x_mot, base, e, couleur_mot), w, 256)
 
@@ -123,15 +139,15 @@ def empile(corps_symbole, couleur_mot):
     e = 1.15 * 224 / L_MOT
     w = max(256, L_MOT * e + 32)
     xs = (w - 256) / 2
-    haut_mot = 240 + 40 + ASC_INTER * e        # bas du symbole + écart + ascendante
+    haut_mot = 240 + 40 + ASC_MOT * e        # bas du symbole + écart + ascendante
     h = haut_mot + 16
     return svg(f'<g transform="translate({f(xs)} 0)">{corps_symbole}</g>' + trace_mot((w - L_MOT * e) / 2, haut_mot, e, couleur_mot), w, h)
 
 
 def mot_seul(couleur):
-    e = HAUTEUR_X / X_INTER
-    h = ASC_INTER * e + 32
-    return svg(trace_mot(16, 16 + ASC_INTER * e, e, couleur), L_MOT * e + 32, h)
+    e = HAUTEUR_HAMPE / ASC_MOT
+    h = ASC_MOT * e + 32
+    return svg(trace_mot(16, 16 + ASC_MOT * e, e, couleur), L_MOT * e + 32, h)
 
 
 def tuile(corps, fond, rx=16, echelle=0.62):
