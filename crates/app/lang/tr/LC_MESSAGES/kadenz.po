@@ -3176,3 +3176,87 @@ msgstr "{} kayıtlı, abonelik {} izin veriyor"
 
 msgid "le nom du poste est obligatoire"
 msgstr "iş istasyonu adı zorunludur"
+
+msgid "Serveur"
+msgstr "Sunucu"
+
+msgid "Ce poste rejoint le serveur de l'entreprise avec un code d'inscription, créé par l'Admin dans la fenêtre du serveur ou depuis un poste. La connexion est ensuite épinglée : un autre certificat la bloque."
+msgstr "Bu iş istasyonu, Admin tarafından sunucu penceresinde veya bir iş istasyonundan oluşturulan bir kayıt koduyla şirket sunucusuna katılır. Bağlantı ardından sabitlenir: farklı bir sertifika bağlantıyı engeller."
+
+msgid "Serveur de ce poste"
+msgstr "Bu iş istasyonunun sunucusu"
+
+msgid "Empreinte du serveur"
+msgstr "Sunucu parmak izi"
+
+msgid "Tester la connexion"
+msgstr "Bağlantıyı test et"
+
+msgid "Inscription de ce poste"
+msgstr "Bu iş istasyonunun kaydı"
+
+msgid "Collez le code complet, ou tapez le code court (XXXX-XXXX-XXXX) et indiquez l'adresse du serveur."
+msgstr "Tam kodu yapıştırın veya kısa kodu (XXXX-XXXX-XXXX) yazıp sunucu adresini belirtin."
+
+msgid "Code d'inscription"
+msgstr "Kayıt kodu"
+
+msgid "Adresse du serveur (code court seulement)"
+msgstr "Sunucu adresi (yalnızca kısa kod)"
+
+msgid "Rechercher sur le réseau"
+msgstr "Ağda ara"
+
+msgid "Aucun serveur Kadenz trouvé sur le réseau local. Saisissez son adresse, ou collez le code complet."
+msgstr "Yerel ağda Kadenz sunucusu bulunamadı. Adresini girin veya tam kodu yapıştırın."
+
+msgid "Choisir"
+msgstr "Seç"
+
+msgid "Inscrire ce poste"
+msgstr "Bu iş istasyonunu kaydet"
+
+msgid "Le serveur présente cette empreinte. Comparez-la à celle de la fenêtre du serveur : si elles diffèrent, n'allez pas plus loin."
+msgstr "Sunucu bu parmak izini sunuyor. Sunucu penceresindekiyle karşılaştırın: farklıysa devam etmeyin."
+
+msgid "Les empreintes sont identiques : inscrire"
+msgstr "Parmak izleri aynı: kaydet"
+
+msgid "Connexion au serveur en cours..."
+msgstr "Sunucuya bağlanılıyor..."
+
+msgid "Le serveur ne présente pas le certificat attendu : la connexion est bloquée. Vérifiez qu'il s'agit bien du serveur de l'entreprise ; s'il a été réinstallé, demandez un nouveau code à l'Admin."
+msgstr "Sunucu beklenen sertifikayı sunmuyor: bağlantı engellendi. Bunun şirketin sunucusu olduğunu doğrulayın; yeniden kurulduysa Admin'den yeni bir kod isteyin."
+
+msgid "ce poste n'est pas inscrit sur le serveur"
+msgstr "bu iş istasyonu sunucuda kayıtlı değil"
+
+msgid "aucune adresse"
+msgstr "adres yok"
+
+msgid "Code d'inscription illisible : collez le code complet, ou tapez les 12 caractères du code court."
+msgstr "Kayıt kodu okunamıyor: tam kodu yapıştırın veya kısa kodun 12 karakterini yazın."
+
+msgid "Avec le code court, indiquez l'adresse du serveur ou choisissez-le dans la recherche."
+msgstr "Kısa kodla, sunucu adresini belirtin veya aramadan seçin."
+
+msgid "Connexion établie avec le serveur."
+msgstr "Sunucuyla bağlantı kuruldu."
+
+msgid "serveur injoignable : {}"
+msgstr "sunucuya ulaşılamıyor: {}"
+
+msgid "le serveur utilise une autre version du protocole ({}) : mettez à jour le serveur ou ce poste"
+msgstr "sunucu farklı bir protokol sürümü kullanıyor ({}): sunucuyu veya bu iş istasyonunu güncelleyin"
+
+msgid "identifiant ou mot de passe incorrect (nouvel essai dans {} s)"
+msgstr "kullanıcı adı veya parola hatalı ({} sn sonra yeniden deneyin)"
+
+msgid "requête refusée par le serveur : {}"
+msgstr "istek sunucu tarafından reddedildi: {}"
+
+msgid "réponse du serveur inattendue : {}"
+msgstr "beklenmeyen sunucu yanıtı: {}"
+
+msgid "Poste inscrit sous le nom « {} »."
+msgstr "İş istasyonu “{}” adıyla kaydedildi."

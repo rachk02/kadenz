@@ -3176,3 +3176,87 @@ msgstr "{} enrolled out of {} allowed by the subscription"
 
 msgid "le nom du poste est obligatoire"
 msgstr "the workstation name is required"
+
+msgid "Serveur"
+msgstr "Server"
+
+msgid "Ce poste rejoint le serveur de l'entreprise avec un code d'inscription, créé par l'Admin dans la fenêtre du serveur ou depuis un poste. La connexion est ensuite épinglée : un autre certificat la bloque."
+msgstr "This workstation joins the company server with an enrolment code, created by the Admin in the server window or from a workstation. The connection is then pinned: a different certificate blocks it."
+
+msgid "Serveur de ce poste"
+msgstr "Server of this workstation"
+
+msgid "Empreinte du serveur"
+msgstr "Server fingerprint"
+
+msgid "Tester la connexion"
+msgstr "Test the connection"
+
+msgid "Inscription de ce poste"
+msgstr "Enrolment of this workstation"
+
+msgid "Collez le code complet, ou tapez le code court (XXXX-XXXX-XXXX) et indiquez l'adresse du serveur."
+msgstr "Paste the full code, or type the short code (XXXX-XXXX-XXXX) and give the server address."
+
+msgid "Code d'inscription"
+msgstr "Enrolment code"
+
+msgid "Adresse du serveur (code court seulement)"
+msgstr "Server address (short code only)"
+
+msgid "Rechercher sur le réseau"
+msgstr "Search the network"
+
+msgid "Aucun serveur Kadenz trouvé sur le réseau local. Saisissez son adresse, ou collez le code complet."
+msgstr "No Kadenz server found on the local network. Enter its address, or paste the full code."
+
+msgid "Choisir"
+msgstr "Choose"
+
+msgid "Inscrire ce poste"
+msgstr "Enrol this workstation"
+
+msgid "Le serveur présente cette empreinte. Comparez-la à celle de la fenêtre du serveur : si elles diffèrent, n'allez pas plus loin."
+msgstr "The server presents this fingerprint. Compare it with the one in the server window: if they differ, do not go any further."
+
+msgid "Les empreintes sont identiques : inscrire"
+msgstr "The fingerprints match: enrol"
+
+msgid "Connexion au serveur en cours..."
+msgstr "Connecting to the server..."
+
+msgid "Le serveur ne présente pas le certificat attendu : la connexion est bloquée. Vérifiez qu'il s'agit bien du serveur de l'entreprise ; s'il a été réinstallé, demandez un nouveau code à l'Admin."
+msgstr "The server does not present the expected certificate: the connection is blocked. Check that it is the company server; if it was reinstalled, ask the Admin for a new code."
+
+msgid "ce poste n'est pas inscrit sur le serveur"
+msgstr "this workstation is not enrolled on the server"
+
+msgid "aucune adresse"
+msgstr "no address"
+
+msgid "Code d'inscription illisible : collez le code complet, ou tapez les 12 caractères du code court."
+msgstr "Unreadable enrolment code: paste the full code, or type the 12 characters of the short code."
+
+msgid "Avec le code court, indiquez l'adresse du serveur ou choisissez-le dans la recherche."
+msgstr "With the short code, give the server address or choose it from the search."
+
+msgid "Connexion établie avec le serveur."
+msgstr "Connection to the server established."
+
+msgid "serveur injoignable : {}"
+msgstr "server unreachable: {}"
+
+msgid "le serveur utilise une autre version du protocole ({}) : mettez à jour le serveur ou ce poste"
+msgstr "the server uses another protocol version ({}): update the server or this workstation"
+
+msgid "identifiant ou mot de passe incorrect (nouvel essai dans {} s)"
+msgstr "incorrect username or password (try again in {} s)"
+
+msgid "requête refusée par le serveur : {}"
+msgstr "request rejected by the server: {}"
+
+msgid "réponse du serveur inattendue : {}"
+msgstr "unexpected server response: {}"
+
+msgid "Poste inscrit sous le nom « {} »."
+msgstr "Workstation enrolled as “{}”."

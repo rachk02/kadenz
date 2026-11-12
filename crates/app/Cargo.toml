@@ -15,6 +15,7 @@ kadenz-licence.workspace = true
 kadenz-maj.workspace = true
 kadenz-export.workspace = true
 kadenz-protocole.workspace = true
+kadenz-client.workspace = true
 hayro.workspace = true
 slint.workspace = true
 chrono.workspace = true

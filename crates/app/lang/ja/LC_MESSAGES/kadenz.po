@@ -3176,3 +3176,87 @@ msgstr "{} 台登録済み（サブスクリプションで許可されている
 
 msgid "le nom du poste est obligatoire"
 msgstr "端末名は必須です"
+
+msgid "Serveur"
+msgstr "サーバー"
+
+msgid "Ce poste rejoint le serveur de l'entreprise avec un code d'inscription, créé par l'Admin dans la fenêtre du serveur ou depuis un poste. La connexion est ensuite épinglée : un autre certificat la bloque."
+msgstr "この端末は、Admin がサーバーのウィンドウまたは端末から作成した登録コードで企業のサーバーに参加します。その後、接続は固定され、別の証明書では接続できません。"
+
+msgid "Serveur de ce poste"
+msgstr "この端末のサーバー"
+
+msgid "Empreinte du serveur"
+msgstr "サーバーのフィンガープリント"
+
+msgid "Tester la connexion"
+msgstr "接続をテスト"
+
+msgid "Inscription de ce poste"
+msgstr "この端末の登録"
+
+msgid "Collez le code complet, ou tapez le code court (XXXX-XXXX-XXXX) et indiquez l'adresse du serveur."
+msgstr "完全なコードを貼り付けるか、短いコード（XXXX-XXXX-XXXX）を入力してサーバーのアドレスを指定してください。"
+
+msgid "Code d'inscription"
+msgstr "登録コード"
+
+msgid "Adresse du serveur (code court seulement)"
+msgstr "サーバーのアドレス（短いコードのみ）"
+
+msgid "Rechercher sur le réseau"
+msgstr "ネットワークを検索"
+
+msgid "Aucun serveur Kadenz trouvé sur le réseau local. Saisissez son adresse, ou collez le code complet."
+msgstr "ローカルネットワークに Kadenz サーバーが見つかりません。アドレスを入力するか、完全なコードを貼り付けてください。"
+
+msgid "Choisir"
+msgstr "選択"
+
+msgid "Inscrire ce poste"
+msgstr "この端末を登録"
+
+msgid "Le serveur présente cette empreinte. Comparez-la à celle de la fenêtre du serveur : si elles diffèrent, n'allez pas plus loin."
+msgstr "サーバーはこのフィンガープリントを提示しています。サーバーのウィンドウのものと比較し、異なる場合は先に進まないでください。"
+
+msgid "Les empreintes sont identiques : inscrire"
+msgstr "フィンガープリントは一致：登録する"
+
+msgid "Connexion au serveur en cours..."
+msgstr "サーバーに接続しています..."
+
+msgid "Le serveur ne présente pas le certificat attendu : la connexion est bloquée. Vérifiez qu'il s'agit bien du serveur de l'entreprise ; s'il a été réinstallé, demandez un nouveau code à l'Admin."
+msgstr "サーバーが想定どおりの証明書を提示していないため、接続はブロックされました。企業のサーバーであることを確認してください。再インストールされた場合は、Admin に新しいコードを依頼してください。"
+
+msgid "ce poste n'est pas inscrit sur le serveur"
+msgstr "この端末はサーバーに登録されていません"
+
+msgid "aucune adresse"
+msgstr "アドレスがありません"
+
+msgid "Code d'inscription illisible : collez le code complet, ou tapez les 12 caractères du code court."
+msgstr "登録コードを読み取れません：完全なコードを貼り付けるか、短いコードの 12 文字を入力してください。"
+
+msgid "Avec le code court, indiquez l'adresse du serveur ou choisissez-le dans la recherche."
+msgstr "短いコードの場合は、サーバーのアドレスを指定するか、検索結果から選択してください。"
+
+msgid "Connexion établie avec le serveur."
+msgstr "サーバーに接続しました。"
+
+msgid "serveur injoignable : {}"
+msgstr "サーバーに接続できません：{}"
+
+msgid "le serveur utilise une autre version du protocole ({}) : mettez à jour le serveur ou ce poste"
+msgstr "サーバーは別のプロトコルのバージョン（{}）を使用しています：サーバーまたはこの端末を更新してください"
+
+msgid "identifiant ou mot de passe incorrect (nouvel essai dans {} s)"
+msgstr "ユーザー名またはパスワードが正しくありません（{} 秒後に再試行）"
+
+msgid "requête refusée par le serveur : {}"
+msgstr "サーバーが要求を拒否しました：{}"
+
+msgid "réponse du serveur inattendue : {}"
+msgstr "サーバーから予期しない応答がありました：{}"
+
+msgid "Poste inscrit sous le nom « {} »."
+msgstr "端末を「{}」として登録しました。"

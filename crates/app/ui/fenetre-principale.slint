@@ -14,12 +14,13 @@ import { PageTableauDeBord, PilotageApi } from "pilotage.slint";
 import { ImpressionApi } from "impression.slint";
 import { LicenceApi } from "licence.slint";
 import { AbonnementApi, BandeauAbonnement } from "abonnement.slint";
+import { ServeurApi } from "serveur.slint";
 import { InviteMiseAJour, MiseAJourApi } from "maj.slint";
 import { BandeauHaut, BoutonIcone, ContenuBarre, Infobulle, InfobulleFenetre, Menu, Page, PanneauFlottant } from "navigation.slint";
 import { PageReglages, ReglagesApi, Rubrique } from "reglages.slint";
 import { EcranDemarrageImpossible, SauvegardesApi } from "sauvegardes.slint";
 
-export { AbonnementApi, Affichage, DonneesAssistant, Droits, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, TiersApi, UtilisateursApi }
+export { AbonnementApi, ServeurApi, Affichage, DonneesAssistant, Droits, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, presentation, assistant, connexion, application }

@@ -3038,6 +3038,7 @@ version = "0.2.2"
 dependencies = [
  "chrono",
  "hayro",
+ "kadenz-client",
  "kadenz-domaine",
  "kadenz-export",
  "kadenz-import",

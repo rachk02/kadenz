@@ -16,6 +16,7 @@ mod pdf;
 mod pilotage;
 mod referentiels;
 mod sauvegardes;
+mod serveur;
 mod traduction;
 mod utilisateurs;
 
@@ -229,6 +230,9 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
             Rubrique::Licence
         });
         rubriques.push(Rubrique::MisesAJour);
+        // Phase 2 : inscription de ce poste sur le serveur de l'entreprise.
+        rubriques.push(Rubrique::Serveur);
+        serveur::afficher(fenetre, &etat.conn);
     }
     rubriques.push(Rubrique::APropos);
     let r = fenetre.global::<ReglagesApi>();
@@ -421,6 +425,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     impression::brancher(fenetre, &etat);
     licence::brancher(fenetre, &etat);
     sauvegardes::brancher(fenetre, &etat);
+    serveur::brancher(fenetre, &etat);
     maj::brancher(fenetre);
 
     let (f, e) = (fenetre.as_weak(), etat.clone());

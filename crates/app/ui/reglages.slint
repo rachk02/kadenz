@@ -8,6 +8,7 @@ import { PageUtilisateurs } from "utilisateurs.slint";
 import { PageImpression } from "impression.slint";
 import { PageLicence } from "licence.slint";
 import { PageAbonnement } from "abonnement.slint";
+import { PageServeur } from "serveur.slint";
 import { PageSauvegardes } from "sauvegardes.slint";
 import { Infobulle } from "navigation.slint";
 
@@ -23,6 +24,7 @@ export enum Rubrique {
     sauvegardes,
     licence,
     abonnement,
+    serveur,
     mises-a-jour,
     a-propos,
 }
@@ -56,6 +58,7 @@ public pure function libelle(r: Rubrique) -> string {
     if (r == Rubrique.sauvegardes) { return @tr("Sauvegardes"); }
     if (r == Rubrique.licence) { return @tr("Licence"); }
     if (r == Rubrique.abonnement) { return @tr("Abonnement"); }
+    if (r == Rubrique.serveur) { return @tr("Serveur"); }
     if (r == Rubrique.mises-a-jour) { return @tr("Mises à jour"); }
     return @tr("À propos");
 }
@@ -72,6 +75,7 @@ public pure function icone(r: Rubrique) -> image {
     if (r == Rubrique.sauvegardes) { return @image-url("icones/menu/sauvegardes.svg"); }
     if (r == Rubrique.licence) { return @image-url("icones/menu/licence.svg"); }
     if (r == Rubrique.abonnement) { return @image-url("icones/menu/licence.svg"); }
+    if (r == Rubrique.serveur) { return @image-url("icones/menu/parametres.svg"); }
     if (r == Rubrique.mises-a-jour) { return @image-url("icones/menu/mises-a-jour.svg"); }
     return @image-url("icones/menu/a-propos.svg");
 }
@@ -797,6 +801,8 @@ export component PageReglages inherits Rectangle {
         if ReglagesApi.rubrique == Rubrique.licence: PageLicence { }
 
         if ReglagesApi.rubrique == Rubrique.abonnement: PageAbonnement { }
+
+        if ReglagesApi.rubrique == Rubrique.serveur: PageServeur { }
 
         if ReglagesApi.rubrique == Rubrique.mises-a-jour: PageMisesAJour {
             version-logiciel: root.version-logiciel;

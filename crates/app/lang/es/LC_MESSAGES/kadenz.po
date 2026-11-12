@@ -3176,3 +3176,87 @@ msgstr "{} inscritos de {} permitidos por la suscripción"
 
 msgid "le nom du poste est obligatoire"
 msgstr "el nombre del puesto es obligatorio"
+
+msgid "Serveur"
+msgstr "Servidor"
+
+msgid "Ce poste rejoint le serveur de l'entreprise avec un code d'inscription, créé par l'Admin dans la fenêtre du serveur ou depuis un poste. La connexion est ensuite épinglée : un autre certificat la bloque."
+msgstr "Este puesto se une al servidor de la empresa con un código de inscripción, creado por el Admin en la ventana del servidor o desde un puesto. Después, la conexión queda fijada: otro certificado la bloquea."
+
+msgid "Serveur de ce poste"
+msgstr "Servidor de este puesto"
+
+msgid "Empreinte du serveur"
+msgstr "Huella del servidor"
+
+msgid "Tester la connexion"
+msgstr "Probar la conexión"
+
+msgid "Inscription de ce poste"
+msgstr "Inscripción de este puesto"
+
+msgid "Collez le code complet, ou tapez le code court (XXXX-XXXX-XXXX) et indiquez l'adresse du serveur."
+msgstr "Pegue el código completo, o escriba el código corto (XXXX-XXXX-XXXX) e indique la dirección del servidor."
+
+msgid "Code d'inscription"
+msgstr "Código de inscripción"
+
+msgid "Adresse du serveur (code court seulement)"
+msgstr "Dirección del servidor (solo código corto)"
+
+msgid "Rechercher sur le réseau"
+msgstr "Buscar en la red"
+
+msgid "Aucun serveur Kadenz trouvé sur le réseau local. Saisissez son adresse, ou collez le code complet."
+msgstr "No se encontró ningún servidor Kadenz en la red local. Escriba su dirección o pegue el código completo."
+
+msgid "Choisir"
+msgstr "Elegir"
+
+msgid "Inscrire ce poste"
+msgstr "Inscribir este puesto"
+
+msgid "Le serveur présente cette empreinte. Comparez-la à celle de la fenêtre du serveur : si elles diffèrent, n'allez pas plus loin."
+msgstr "El servidor presenta esta huella. Compárela con la de la ventana del servidor: si son distintas, no continúe."
+
+msgid "Les empreintes sont identiques : inscrire"
+msgstr "Las huellas son idénticas: inscribir"
+
+msgid "Connexion au serveur en cours..."
+msgstr "Conectando con el servidor..."
+
+msgid "Le serveur ne présente pas le certificat attendu : la connexion est bloquée. Vérifiez qu'il s'agit bien du serveur de l'entreprise ; s'il a été réinstallé, demandez un nouveau code à l'Admin."
+msgstr "El servidor no presenta el certificado esperado: la conexión está bloqueada. Compruebe que se trata del servidor de la empresa; si se ha reinstalado, pida un nuevo código al Admin."
+
+msgid "ce poste n'est pas inscrit sur le serveur"
+msgstr "este puesto no está inscrito en el servidor"
+
+msgid "aucune adresse"
+msgstr "ninguna dirección"
+
+msgid "Code d'inscription illisible : collez le code complet, ou tapez les 12 caractères du code court."
+msgstr "Código de inscripción ilegible: pegue el código completo o escriba los 12 caracteres del código corto."
+
+msgid "Avec le code court, indiquez l'adresse du serveur ou choisissez-le dans la recherche."
+msgstr "Con el código corto, indique la dirección del servidor o elíjalo en la búsqueda."
+
+msgid "Connexion établie avec le serveur."
+msgstr "Conexión establecida con el servidor."
+
+msgid "serveur injoignable : {}"
+msgstr "servidor inaccesible: {}"
+
+msgid "le serveur utilise une autre version du protocole ({}) : mettez à jour le serveur ou ce poste"
+msgstr "el servidor usa otra versión del protocolo ({}): actualice el servidor o este puesto"
+
+msgid "identifiant ou mot de passe incorrect (nouvel essai dans {} s)"
+msgstr "identificador o contraseña incorrectos (nuevo intento dentro de {} s)"
+
+msgid "requête refusée par le serveur : {}"
+msgstr "solicitud rechazada por el servidor: {}"
+
+msgid "réponse du serveur inattendue : {}"
+msgstr "respuesta inesperada del servidor: {}"
+
+msgid "Poste inscrit sous le nom « {} »."
+msgstr "Puesto inscrito con el nombre «{}»."

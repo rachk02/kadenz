@@ -3176,3 +3176,87 @@ msgstr "已注册 {} 个，订阅允许 {} 个"
 
 msgid "le nom du poste est obligatoire"
 msgstr "工作站名称为必填项"
+
+msgid "Serveur"
+msgstr "服务器"
+
+msgid "Ce poste rejoint le serveur de l'entreprise avec un code d'inscription, créé par l'Admin dans la fenêtre du serveur ou depuis un poste. La connexion est ensuite épinglée : un autre certificat la bloque."
+msgstr "此工作站使用管理员在服务器窗口或工作站上创建的注册码加入企业服务器。之后连接将被固定：不同的证书会阻止连接。"
+
+msgid "Serveur de ce poste"
+msgstr "本工作站的服务器"
+
+msgid "Empreinte du serveur"
+msgstr "服务器指纹"
+
+msgid "Tester la connexion"
+msgstr "测试连接"
+
+msgid "Inscription de ce poste"
+msgstr "注册本工作站"
+
+msgid "Collez le code complet, ou tapez le code court (XXXX-XXXX-XXXX) et indiquez l'adresse du serveur."
+msgstr "粘贴完整代码，或输入短代码（XXXX-XXXX-XXXX）并填写服务器地址。"
+
+msgid "Code d'inscription"
+msgstr "注册码"
+
+msgid "Adresse du serveur (code court seulement)"
+msgstr "服务器地址（仅限短代码）"
+
+msgid "Rechercher sur le réseau"
+msgstr "在网络中搜索"
+
+msgid "Aucun serveur Kadenz trouvé sur le réseau local. Saisissez son adresse, ou collez le code complet."
+msgstr "在本地网络中未找到 Kadenz 服务器。请输入其地址，或粘贴完整代码。"
+
+msgid "Choisir"
+msgstr "选择"
+
+msgid "Inscrire ce poste"
+msgstr "注册本工作站"
+
+msgid "Le serveur présente cette empreinte. Comparez-la à celle de la fenêtre du serveur : si elles diffèrent, n'allez pas plus loin."
+msgstr "服务器提供了此指纹。请与服务器窗口中的指纹比较：如果不同，请不要继续。"
+
+msgid "Les empreintes sont identiques : inscrire"
+msgstr "指纹一致：注册"
+
+msgid "Connexion au serveur en cours..."
+msgstr "正在连接服务器..."
+
+msgid "Le serveur ne présente pas le certificat attendu : la connexion est bloquée. Vérifiez qu'il s'agit bien du serveur de l'entreprise ; s'il a été réinstallé, demandez un nouveau code à l'Admin."
+msgstr "服务器未提供预期的证书：连接已被阻止。请确认这是企业的服务器；如果服务器已重新安装，请向管理员索取新代码。"
+
+msgid "ce poste n'est pas inscrit sur le serveur"
+msgstr "本工作站未在服务器上注册"
+
+msgid "aucune adresse"
+msgstr "没有地址"
+
+msgid "Code d'inscription illisible : collez le code complet, ou tapez les 12 caractères du code court."
+msgstr "无法读取注册码：请粘贴完整代码，或输入短代码的 12 个字符。"
+
+msgid "Avec le code court, indiquez l'adresse du serveur ou choisissez-le dans la recherche."
+msgstr "使用短代码时，请填写服务器地址或从搜索结果中选择。"
+
+msgid "Connexion établie avec le serveur."
+msgstr "已与服务器建立连接。"
+
+msgid "serveur injoignable : {}"
+msgstr "无法连接服务器：{}"
+
+msgid "le serveur utilise une autre version du protocole ({}) : mettez à jour le serveur ou ce poste"
+msgstr "服务器使用其他协议版本（{}）：请更新服务器或本工作站"
+
+msgid "identifiant ou mot de passe incorrect (nouvel essai dans {} s)"
+msgstr "用户名或密码错误（请在 {} 秒后重试）"
+
+msgid "requête refusée par le serveur : {}"
+msgstr "服务器拒绝了请求：{}"
+
+msgid "réponse du serveur inattendue : {}"
+msgstr "服务器响应异常：{}"
+
+msgid "Poste inscrit sous le nom « {} »."
+msgstr "工作站已注册为“{}”。"

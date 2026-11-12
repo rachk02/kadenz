@@ -3176,3 +3176,87 @@ msgstr "{} مسجلة من أصل {} يسمح بها الاشتراك"
 
 msgid "le nom du poste est obligatoire"
 msgstr "اسم المحطة إلزامي"
+
+msgid "Serveur"
+msgstr "الخادم"
+
+msgid "Ce poste rejoint le serveur de l'entreprise avec un code d'inscription, créé par l'Admin dans la fenêtre du serveur ou depuis un poste. La connexion est ensuite épinglée : un autre certificat la bloque."
+msgstr "تنضم هذه المحطة إلى خادم المؤسسة برمز تسجيل ينشئه المسؤول في نافذة الخادم أو من محطة. ثم يُثبَّت الاتصال: أي شهادة مختلفة تمنعه."
+
+msgid "Serveur de ce poste"
+msgstr "خادم هذه المحطة"
+
+msgid "Empreinte du serveur"
+msgstr "بصمة الخادم"
+
+msgid "Tester la connexion"
+msgstr "اختبار الاتصال"
+
+msgid "Inscription de ce poste"
+msgstr "تسجيل هذه المحطة"
+
+msgid "Collez le code complet, ou tapez le code court (XXXX-XXXX-XXXX) et indiquez l'adresse du serveur."
+msgstr "الصق الرمز الكامل، أو اكتب الرمز القصير (XXXX-XXXX-XXXX) وحدّد عنوان الخادم."
+
+msgid "Code d'inscription"
+msgstr "رمز التسجيل"
+
+msgid "Adresse du serveur (code court seulement)"
+msgstr "عنوان الخادم (للرمز القصير فقط)"
+
+msgid "Rechercher sur le réseau"
+msgstr "البحث في الشبكة"
+
+msgid "Aucun serveur Kadenz trouvé sur le réseau local. Saisissez son adresse, ou collez le code complet."
+msgstr "لم يُعثر على أي خادم Kadenz في الشبكة المحلية. أدخل عنوانه، أو الصق الرمز الكامل."
+
+msgid "Choisir"
+msgstr "اختيار"
+
+msgid "Inscrire ce poste"
+msgstr "تسجيل هذه المحطة"
+
+msgid "Le serveur présente cette empreinte. Comparez-la à celle de la fenêtre du serveur : si elles diffèrent, n'allez pas plus loin."
+msgstr "يقدّم الخادم هذه البصمة. قارنها بالبصمة في نافذة الخادم: إذا اختلفتا، فلا تتابع."
+
+msgid "Les empreintes sont identiques : inscrire"
+msgstr "البصمتان متطابقتان: تسجيل"
+
+msgid "Connexion au serveur en cours..."
+msgstr "جارٍ الاتصال بالخادم..."
+
+msgid "Le serveur ne présente pas le certificat attendu : la connexion est bloquée. Vérifiez qu'il s'agit bien du serveur de l'entreprise ; s'il a été réinstallé, demandez un nouveau code à l'Admin."
+msgstr "لا يقدّم الخادم الشهادة المتوقعة: تم حظر الاتصال. تحقق من أنه خادم المؤسسة؛ وإذا أُعيد تثبيته، فاطلب رمزًا جديدًا من المسؤول."
+
+msgid "ce poste n'est pas inscrit sur le serveur"
+msgstr "هذه المحطة غير مسجلة على الخادم"
+
+msgid "aucune adresse"
+msgstr "لا يوجد عنوان"
+
+msgid "Code d'inscription illisible : collez le code complet, ou tapez les 12 caractères du code court."
+msgstr "رمز التسجيل غير مقروء: الصق الرمز الكامل، أو اكتب أحرف الرمز القصير الاثني عشر."
+
+msgid "Avec le code court, indiquez l'adresse du serveur ou choisissez-le dans la recherche."
+msgstr "مع الرمز القصير، حدّد عنوان الخادم أو اختره من نتائج البحث."
+
+msgid "Connexion établie avec le serveur."
+msgstr "تم الاتصال بالخادم."
+
+msgid "serveur injoignable : {}"
+msgstr "تعذّر الوصول إلى الخادم: {}"
+
+msgid "le serveur utilise une autre version du protocole ({}) : mettez à jour le serveur ou ce poste"
+msgstr "يستخدم الخادم إصدارًا آخر من البروتوكول ({}): حدّث الخادم أو هذه المحطة"
+
+msgid "identifiant ou mot de passe incorrect (nouvel essai dans {} s)"
+msgstr "اسم المستخدم أو كلمة المرور غير صحيحة (أعد المحاولة بعد {} ث)"
+
+msgid "requête refusée par le serveur : {}"
+msgstr "رفض الخادم الطلب: {}"
+
+msgid "réponse du serveur inattendue : {}"
+msgstr "استجابة غير متوقعة من الخادم: {}"
+
+msgid "Poste inscrit sous le nom « {} »."
+msgstr "تم تسجيل المحطة باسم «{}»."

@@ -1,0 +1,281 @@
+// Serveur de l'entreprise (phase 2, jalon F4 ; écrans, section 2) : rubrique
+// « Serveur » des Paramètres. Un poste non relié s'inscrit avec un code créé par
+// l'Admin : le code complet porte l'adresse et l'empreinte du serveur, que le
+// poste vérifie seul ; le code court demande l'adresse (recherche sur le réseau
+// local ou saisie), puis la comparaison de l'empreinte à celle de la fenêtre du
+// serveur. Un poste relié montre son serveur et peut tester la connexion.
+// Les appels au réseau tournent hors du fil de l'interface : les résultats
+// arrivent par les propriétés (occupe, retour, trouves...).
+import { ScrollView, TextEdit } from "std-widgets.slint";
+import { Bouton, Champ, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+
+export struct ServeurTrouveUi {
+    machine: string,
+    adresse: string,
+}
+
+export global ServeurApi {
+    in property <bool> relie;
+    in property <string> adresse;
+    in property <string> entreprise;
+    in property <string> nom-poste;
+    in property <string> empreinte;
+    // Appel au serveur en cours : boutons inactifs.
+    in property <bool> occupe;
+    in property <[ServeurTrouveUi]> trouves;
+    in property <bool> recherche-faite;
+    // Recours du code court : empreinte présentée par le serveur, à confirmer.
+    in property <string> empreinte-a-confirmer;
+    in property <Retour> retour;
+
+    callback rechercher();
+    callback inscrire(code: string, adresse: string);
+    callback confirmer();
+    callback abandonner();
+    callback tester();
+}
+
+component Ligne inherits GridLayout {
+    in property <string> libelle;
+    in property <string> valeur;
+    spacing: 16px;
+
+    Text {
+        row: 0;
+        col: Theme.rtl ? 1 : 0;
+        width: 160px;
+        horizontal-alignment: Theme.debut;
+        text: root.libelle;
+        color: Theme.texte-secondaire;
+    }
+
+    Text {
+        row: 0;
+        col: Theme.rtl ? 0 : 1;
+        horizontal-alignment: Theme.debut;
+        text: root.valeur;
+        color: Theme.texte;
+        wrap: word-wrap;
+    }
+}
+
+export component PageServeur inherits ScrollView {
+    property <string> code;
+    property <string> adresse;
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 12px;
+        alignment: start;
+
+        Titre {
+            text: @tr("Serveur");
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Ce poste rejoint le serveur de l'entreprise avec un code d'inscription, créé par l'Admin dans la fenêtre du serveur ou depuis un poste. La connexion est ensuite épinglée : un autre certificat la bloque.");
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        if ServeurApi.relie: VerticalLayout {
+            spacing: 12px;
+
+            Section {
+                text: @tr("Serveur de ce poste");
+            }
+
+            Ligne {
+                libelle: @tr("Adresse");
+                valeur: ServeurApi.adresse;
+            }
+
+            Ligne {
+                libelle: @tr("Nom du poste");
+                valeur: ServeurApi.nom-poste;
+            }
+
+            Ligne {
+                libelle: @tr("Identifiant de l'entreprise");
+                valeur: ServeurApi.entreprise;
+            }
+
+            Ligne {
+                libelle: @tr("Empreinte du serveur");
+                valeur: ServeurApi.empreinte;
+            }
+
+            HorizontalLayout {
+                alignment: Theme.rangee-debut;
+
+                Bouton {
+                    text: @tr("Tester la connexion");
+                    enabled: !ServeurApi.occupe;
+                    clicked => {
+                        ServeurApi.tester();
+                    }
+                }
+            }
+        }
+
+        if !ServeurApi.relie: VerticalLayout {
+            spacing: 12px;
+
+            Section {
+                text: @tr("Inscription de ce poste");
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Collez le code complet, ou tapez le code court (XXXX-XXXX-XXXX) et indiquez l'adresse du serveur.");
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+
+            VerticalLayout {
+                spacing: 4px;
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("Code d'inscription");
+                    font-size: 12px;
+                    color: Theme.texte-secondaire;
+                }
+
+                TextEdit {
+                    text <=> root.code;
+                    font-family: "Consolas";
+                    font-size: 12px;
+                    wrap: char-wrap;
+                    height: 72px;
+                    enabled: ServeurApi.empreinte-a-confirmer == "";
+                }
+            }
+
+            HorizontalLayout {
+                spacing: 8px;
+
+                Champ {
+                    horizontal-stretch: 1;
+                    libelle: @tr("Adresse du serveur (code court seulement)");
+                    valeur <=> root.adresse;
+                }
+
+                VerticalLayout {
+                    alignment: end;
+
+                    Bouton {
+                        text: @tr("Rechercher sur le réseau");
+                        enabled: !ServeurApi.occupe;
+                        clicked => {
+                            ServeurApi.rechercher();
+                        }
+                    }
+                }
+            }
+
+            if ServeurApi.recherche-faite && ServeurApi.trouves.length == 0: Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Aucun serveur Kadenz trouvé sur le réseau local. Saisissez son adresse, ou collez le code complet.");
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+
+            for trouve in ServeurApi.trouves: HorizontalLayout {
+                spacing: 12px;
+
+                Text {
+                    horizontal-stretch: 1;
+                    vertical-alignment: center;
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("{} ({})", trouve.machine, trouve.adresse);
+                    color: Theme.texte;
+                    wrap: word-wrap;
+                }
+
+                Bouton {
+                    text: @tr("Choisir");
+                    clicked => {
+                        root.adresse = trouve.adresse;
+                    }
+                }
+            }
+
+            if ServeurApi.empreinte-a-confirmer == "": HorizontalLayout {
+                alignment: Theme.rangee-debut;
+
+                Bouton {
+                    text: @tr("Inscrire ce poste");
+                    primary: true;
+                    enabled: !ServeurApi.occupe;
+                    clicked => {
+                        ServeurApi.inscrire(root.code, root.adresse);
+                    }
+                }
+            }
+
+            // Recours du code court : comparaison de l'empreinte, jamais une
+            // acceptation silencieuse.
+            if ServeurApi.empreinte-a-confirmer != "": Rectangle {
+                border-width: 1px;
+                border-color: Theme.bordure;
+                border-radius: 4px;
+                background: Theme.fond-lateral;
+
+                VerticalLayout {
+                    padding: 14px;
+                    spacing: 8px;
+
+                    Text {
+                        horizontal-alignment: Theme.debut;
+                        text: @tr("Le serveur présente cette empreinte. Comparez-la à celle de la fenêtre du serveur : si elles diffèrent, n'allez pas plus loin.");
+                        color: Theme.texte;
+                        font-weight: 600;
+                        wrap: word-wrap;
+                    }
+
+                    Text {
+                        horizontal-alignment: Theme.debut;
+                        text: ServeurApi.empreinte-a-confirmer;
+                        font-family: "Consolas";
+                        color: Theme.texte;
+                        wrap: char-wrap;
+                    }
+
+                    HorizontalLayout {
+                        spacing: 8px;
+                        alignment: Theme.rangee-debut;
+
+                        Bouton {
+                            text: @tr("Les empreintes sont identiques : inscrire");
+                            primary: true;
+                            enabled: !ServeurApi.occupe;
+                            clicked => {
+                                ServeurApi.confirmer();
+                            }
+                        }
+
+                        Bouton {
+                            text: @tr("Annuler");
+                            enabled: !ServeurApi.occupe;
+                            clicked => {
+                                ServeurApi.abandonner();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if ServeurApi.occupe: Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Connexion au serveur en cours...");
+            color: Theme.texte-secondaire;
+        }
+
+        MessageRetour {
+            retour: ServeurApi.retour;
+        }
+    }
+}
