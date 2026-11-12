@@ -37,6 +37,31 @@ pub fn est_inscrit(conn: &Connection, empreinte: &str) -> Resultat<bool> {
         .is_some())
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PosteInscrit {
+    pub empreinte: String,
+    pub nom: String,
+    pub inscrit_le: String,
+}
+
+/// Postes inscrits et non retirés, par nom.
+pub fn liste(conn: &Connection) -> Resultat<Vec<PosteInscrit>> {
+    let mut requete = conn.prepare(
+        "SELECT empreinte, nom, inscrit_le FROM poste_inscrit
+         WHERE retire_le IS NULL ORDER BY nom, inscrit_le",
+    )?;
+    let postes = requete
+        .query_map([], |r| {
+            Ok(PosteInscrit {
+                empreinte: r.get(0)?,
+                nom: r.get(1)?,
+                inscrit_le: r.get(2)?,
+            })
+        })?
+        .collect::<Result<_, _>>()?;
+    Ok(postes)
+}
+
 /// Nombre de postes inscrits et non retirés (limite de la licence, F3).
 pub fn nombre_inscrits(conn: &Connection) -> Resultat<u32> {
     Ok(conn.query_row(
@@ -57,6 +82,7 @@ mod tests {
         inscrire(&conn, "ab", "Poste comptable").unwrap();
         assert!(est_inscrit(&conn, "ab").unwrap());
         assert_eq!(nombre_inscrits(&conn).unwrap(), 1);
+        assert_eq!(liste(&conn).unwrap()[0].nom, "Poste comptable");
         retirer(&conn, "ab").unwrap();
         assert!(!est_inscrit(&conn, "ab").unwrap());
         assert_eq!(nombre_inscrits(&conn).unwrap(), 0);

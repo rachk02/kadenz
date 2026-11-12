@@ -12,11 +12,12 @@
 
 use std::fmt;
 use std::io;
-use std::net::{TcpStream, ToSocketAddrs};
+use std::net::{SocketAddr, TcpStream, ToSocketAddrs, UdpSocket};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
+use kadenz_protocole::inscription::{DECOUVERTE, PORT_PAR_DEFAUT, ServeurTrouve};
 use kadenz_protocole::messages::{self, ErreurTrame, Reponse, Requete};
 use kadenz_protocole::{Abonnement, Changement, Issue, Operation, VERSION};
 use rustls::client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier};
@@ -225,6 +226,57 @@ pub struct Bienvenue {
     pub decalage_minutes: i32,
 }
 
+/// Réponse du serveur à une inscription réussie.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Inscrit {
+    pub entreprise: String,
+    /// Nom du poste, choisi par l'Admin à la création du code.
+    pub nom: String,
+}
+
+/// Cherche les serveurs Kadenz du réseau local, par diffusion UDP sur le
+/// port par défaut. La réponse ne donne aucune confiance : elle sert
+/// seulement à trouver une adresse.
+pub fn decouvrir(delai: Duration) -> Vec<(SocketAddr, ServeurTrouve)> {
+    decouvrir_vers(
+        SocketAddr::from(([255, 255, 255, 255], PORT_PAR_DEFAUT)),
+        delai,
+    )
+}
+
+/// Comme [`decouvrir`], vers une adresse donnée (essais).
+pub fn decouvrir_vers(cible: SocketAddr, delai: Duration) -> Vec<(SocketAddr, ServeurTrouve)> {
+    let mut trouves: Vec<(SocketAddr, ServeurTrouve)> = Vec::new();
+    let Ok(socket) = UdpSocket::bind(("0.0.0.0", 0)) else {
+        return trouves;
+    };
+    if socket.set_broadcast(true).is_err() || socket.send_to(DECOUVERTE, cible).is_err() {
+        return trouves;
+    }
+    let fin = Instant::now() + delai;
+    let mut tampon = [0u8; 512];
+    while let Some(reste) = fin
+        .checked_duration_since(Instant::now())
+        .filter(|d| !d.is_zero())
+    {
+        if socket.set_read_timeout(Some(reste)).is_err() {
+            break;
+        }
+        match socket.recv_from(&mut tampon) {
+            Ok((n, source)) => {
+                if let Ok(serveur) = serde_json::from_slice::<ServeurTrouve>(&tampon[..n]) {
+                    let adresse = SocketAddr::new(source.ip(), serveur.port);
+                    if !trouves.iter().any(|(a, _)| *a == adresse) {
+                        trouves.push((adresse, serveur));
+                    }
+                }
+            }
+            Err(_) => break,
+        }
+    }
+    trouves
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CompteConnecte {
     pub compte: String,
@@ -258,6 +310,58 @@ impl Client {
         delai: Duration,
         version: u32,
     ) -> Result<(Client, Bienvenue), ErreurClient> {
+        let mut client = Client::ouvrir(adresse, empreinte_serveur, identite, delai)?;
+        match client.echanger(&Requete::Bonjour { version })? {
+            Reponse::Bienvenue {
+                entreprise,
+                decalage_minutes,
+                ..
+            } => Ok((
+                client,
+                Bienvenue {
+                    entreprise,
+                    decalage_minutes,
+                },
+            )),
+            Reponse::VersionRefusee { version } => {
+                Err(ErreurClient::VersionDifferente { serveur: version })
+            }
+            Reponse::PosteNonInscrit => Err(ErreurClient::PosteNonInscrit),
+            autre => Err(inattendue(&autre)),
+        }
+    }
+
+    /// Inscrit ce poste avec un code (jalon F4) : `identite` est le
+    /// certificat créé pour lui, que le serveur retient ; le poste se
+    /// reconnecte ensuite avec [`Client::connecter`]. `empreinte_serveur`
+    /// vient du code complet, ou de l'empreinte confirmée par l'Admin.
+    pub fn inscrire(
+        adresse: &str,
+        empreinte_serveur: &str,
+        identite: &Identite,
+        secret: &str,
+        delai: Duration,
+    ) -> Result<Inscrit, ErreurClient> {
+        let mut client = Client::ouvrir(adresse, empreinte_serveur, identite, delai)?;
+        match client.echanger(&Requete::Inscription {
+            version: VERSION,
+            secret: secret.into(),
+        })? {
+            Reponse::Inscrit { entreprise, nom } => Ok(Inscrit { entreprise, nom }),
+            Reponse::VersionRefusee { version } => {
+                Err(ErreurClient::VersionDifferente { serveur: version })
+            }
+            autre => Err(inattendue(&autre)),
+        }
+    }
+
+    /// Connexion TCP et TLS épinglé, sans message.
+    fn ouvrir(
+        adresse: &str,
+        empreinte_serveur: &str,
+        identite: &Identite,
+        delai: Duration,
+    ) -> Result<Client, ErreurClient> {
         let injoignable = |e: io::Error| ErreurClient::Injoignable(e.to_string());
         let adresses: Vec<_> = adresse.to_socket_addrs().map_err(injoignable)?.collect();
         let mut derniere = ErreurClient::Injoignable("adresse sans résultat".into());
@@ -294,28 +398,10 @@ impl Client {
             ServerName::try_from(NOM_TLS).map_err(|e| ErreurClient::Protocole(e.to_string()))?;
         let connexion = ClientConnection::new(Arc::new(config), nom)
             .map_err(|e| ErreurClient::Protocole(e.to_string()))?;
-        let mut client = Client {
+        Ok(Client {
             flux: StreamOwned::new(connexion, tcp),
             ecart,
-        };
-        match client.echanger(&Requete::Bonjour { version })? {
-            Reponse::Bienvenue {
-                entreprise,
-                decalage_minutes,
-                ..
-            } => Ok((
-                client,
-                Bienvenue {
-                    entreprise,
-                    decalage_minutes,
-                },
-            )),
-            Reponse::VersionRefusee { version } => {
-                Err(ErreurClient::VersionDifferente { serveur: version })
-            }
-            Reponse::PosteNonInscrit => Err(ErreurClient::PosteNonInscrit),
-            autre => Err(inattendue(&autre)),
-        }
+        })
     }
 
     /// Connecte un compte de l'entreprise.

@@ -13,6 +13,7 @@
 use serde::{Deserialize, Serialize};
 
 pub mod abonnement;
+pub mod inscription;
 pub mod messages;
 
 pub use abonnement::Abonnement;

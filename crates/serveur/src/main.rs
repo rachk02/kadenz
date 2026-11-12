@@ -94,7 +94,7 @@ fn noter(config: &Config, texte: &str) {
     if let Ok(mut f) = std::fs::OpenOptions::new()
         .create(true)
         .append(true)
-        .open(config.dossier.join("kadenz-serveur.log"))
+        .open(config.dossier.join(kadenz_serveur::admin::NOM_TRACE))
     {
         let _ = f.write_all(ligne.as_bytes());
     }
@@ -106,7 +106,7 @@ mod service {
     use std::sync::{OnceLock, mpsc};
     use std::time::Duration;
 
-    use kadenz_serveur::{Config, Serveur};
+    use kadenz_serveur::{Config, NOM_SERVICE, Serveur};
     use windows_service::service::{
         ServiceControl, ServiceControlAccept, ServiceExitCode, ServiceState, ServiceStatus,
         ServiceType,
@@ -115,8 +115,6 @@ mod service {
     use windows_service::{define_windows_service, service_dispatcher};
 
     use super::noter;
-
-    pub const NOM_SERVICE: &str = "KadenzServeur";
 
     static CONFIG: OnceLock<Config> = OnceLock::new();
 

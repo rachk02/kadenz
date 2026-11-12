@@ -10,3 +10,4 @@ kadenz-protocole.workspace = true
 rustls.workspace = true
 rcgen.workspace = true
 sha2.workspace = true
+serde_json.workspace = true

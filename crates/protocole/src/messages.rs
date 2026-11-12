@@ -38,6 +38,12 @@ pub enum Requete {
         depuis: u64,
         limite: u32,
     },
+    /// Inscription d'un poste avec un code (F4) : seule requête reçue d'un
+    /// poste pas encore inscrit, à la place de `Bonjour`.
+    Inscription {
+        version: u32,
+        secret: String,
+    },
     /// État de l'abonnement de l'entreprise.
     Abonnement,
     /// Nouvelle licence d'abonnement, au droit « Gérer les paramètres ».
@@ -78,6 +84,11 @@ pub enum Reponse {
         changements: Vec<Changement>,
         /// Rang du dernier changement de la base au moment de la réponse.
         dernier: u64,
+    },
+    /// Poste inscrit : il se reconnecte avec le même certificat.
+    Inscrit {
+        entreprise: String,
+        nom: String,
     },
     Abonnement {
         abonnement: Box<Abonnement>,
@@ -139,10 +150,19 @@ pub fn ecrire<T: Serialize>(flux: &mut impl Write, message: &T) -> io::Result<()
 
 /// Lit un message ; la longueur est contrôlée avant d'allouer.
 pub fn lire<T: DeserializeOwned>(flux: &mut impl Read) -> Result<T, ErreurTrame> {
+    lire_borne(flux, TAILLE_MAX)
+}
+
+/// Comme [`lire`], avec une taille maximale plus petite (poste pas encore
+/// inscrit).
+pub fn lire_borne<T: DeserializeOwned>(
+    flux: &mut impl Read,
+    taille_max: usize,
+) -> Result<T, ErreurTrame> {
     let mut entete = [0u8; 4];
     flux.read_exact(&mut entete)?;
     let longueur = u32::from_be_bytes(entete) as usize;
-    if longueur > TAILLE_MAX {
+    if longueur > taille_max.min(TAILLE_MAX) {
         return Err(ErreurTrame::TropGrand(longueur));
     }
     let mut corps = vec![0u8; longueur];

@@ -1,4 +1,4 @@
-//! Essais de bout en bout des jalons F2 et F3 : un serveur réel sur
+//! Essais de bout en bout des jalons F2 à F4 : un serveur réel sur
 //! 127.0.0.1, des postes qui s'y connectent avec `kadenz-client`.
 
 use std::io::{Read, Write};
@@ -7,19 +7,20 @@ use std::path::PathBuf;
 use std::thread;
 use std::time::{Duration, Instant};
 
-use kadenz_client::{Client, ErreurClient, Identite};
+use kadenz_client::{Client, ErreurClient, Identite, Inscrit};
 use kadenz_domaine::role::Role;
 use kadenz_licence::SigningKey;
 use kadenz_licence::entreprise::{self as lic, LicenceEntreprise};
 use kadenz_protocole::abonnement::Statut;
+use kadenz_protocole::inscription::{CodeComplet, presenter_secret};
 use kadenz_protocole::messages::{self, Reponse, TAILLE_MAX};
 use kadenz_protocole::{Action, Etat, Issue, Operation, Tiers, VERSION};
-use kadenz_serveur::{Config, Serveur};
+use kadenz_serveur::{Config, Serveur, admin};
 use kadenz_stockage::comptes::NouvelUtilisateur;
 use kadenz_stockage::entreprise::Entreprise;
 use kadenz_stockage::installation::{self, InstallationInitiale};
 use kadenz_stockage::parametres::Parametres;
-use kadenz_stockage::{abonnement, comptes, postes, synchro};
+use kadenz_stockage::{abonnement, comptes, inscription, postes, synchro};
 
 const DELAI_CLIENT: Duration = Duration::from_secs(5);
 const MOT_DE_PASSE: &str = "motdepasse1";
@@ -54,8 +55,12 @@ fn licence(entreprise: &str, echeance: i64, emise_le: i64) -> String {
     .unwrap()
 }
 
+fn chemin(nom: &str) -> PathBuf {
+    std::env::temp_dir().join(format!("kadenz-serveur-essai-{nom}-{}", std::process::id()))
+}
+
 fn dossier(nom: &str) -> PathBuf {
-    let d = std::env::temp_dir().join(format!("kadenz-serveur-essai-{nom}-{}", std::process::id()));
+    let d = chemin(nom);
     let _ = std::fs::remove_dir_all(&d);
     d
 }
@@ -506,4 +511,210 @@ fn abonnement_et_lecture_seule() {
         lecteur.renouveler(&licence(&entreprise, 365, 0)),
         Err(ErreurClient::Refus { .. })
     ));
+}
+
+/// Code d'inscription créé sur le serveur, il y a `heures` heures.
+fn code(serveur: &Serveur, nom: &str, heures: i64) -> inscription::CodeCree {
+    let nom = nom.to_string();
+    serveur
+        .base(move |c| {
+            let quand = chrono::Utc::now() - chrono::Duration::hours(heures);
+            inscription::creer_code(c, &nom, quand).unwrap()
+        })
+        .unwrap()
+}
+
+fn inscrire(serveur: &Serveur, identite: &Identite, secret: &str) -> Result<Inscrit, ErreurClient> {
+    Client::inscrire(
+        &serveur.adresse().to_string(),
+        serveur.empreinte(),
+        identite,
+        secret,
+        DELAI_CLIENT,
+    )
+}
+
+fn modele(resultat: Result<Inscrit, ErreurClient>) -> String {
+    match resultat {
+        Err(ErreurClient::Refus { modele, .. }) => modele,
+        autre => panic!("refus attendu : {autre:?}"),
+    }
+}
+
+#[test]
+fn inscription_par_code() {
+    let serveur = demarrer("code-complet", Duration::from_secs(5), 8);
+    let (entreprise, _) = installer(&serveur);
+    let cree = code(&serveur, "Comptabilité", 0);
+
+    // Code complet donné par la fenêtre du serveur.
+    let complet = {
+        let dossier = chemin("code-complet");
+        let cree = cree.clone();
+        serveur
+            .base(move |c| admin::code_complet(c, &dossier, &cree).unwrap())
+            .unwrap()
+    };
+    let complet = CodeComplet::decoder(&complet).unwrap();
+    assert_eq!(complet.entreprise, entreprise);
+    assert_eq!(complet.empreinte, serveur.empreinte());
+    assert_eq!(complet.secret, cree.secret);
+    let port = format!(":{}", serveur.adresse().port());
+    assert!(!complet.adresses.is_empty());
+    assert!(complet.adresses.iter().all(|a| a.ends_with(&port)));
+
+    // Inscription avec le secret tapé en minuscules, puis connexion.
+    let identite = Identite::nouvelle("poste").unwrap();
+    let tape = presenter_secret(&cree.secret).to_lowercase();
+    assert_eq!(
+        inscrire(&serveur, &identite, &tape).unwrap(),
+        Inscrit {
+            entreprise: entreprise.clone(),
+            nom: "Comptabilité".into()
+        }
+    );
+    assert!(connecter(&serveur, &identite).is_ok());
+    let liste = serveur.base(|c| postes::liste(c).unwrap()).unwrap();
+    assert_eq!(liste.len(), 1);
+    assert_eq!(liste[0].nom, "Comptabilité");
+    assert_eq!(liste[0].empreinte, identite.empreinte());
+
+    // Un code ne sert qu'une fois.
+    let autre = Identite::nouvelle("poste").unwrap();
+    assert_eq!(
+        modele(inscrire(&serveur, &autre, &cree.secret)),
+        "code d'inscription inconnu ou déjà utilisé"
+    );
+    assert!(matches!(
+        connecter(&serveur, &autre),
+        Err(ErreurClient::PosteNonInscrit)
+    ));
+}
+
+#[test]
+fn codes_expire_annule_ou_mauvais_serveur() {
+    let serveur = demarrer("codes", Duration::from_secs(5), 8);
+    installer(&serveur);
+    let identite = Identite::nouvelle("poste").unwrap();
+
+    let expire = code(&serveur, "A", 25);
+    assert_eq!(
+        modele(inscrire(&serveur, &identite, &expire.secret)),
+        "code d'inscription expiré"
+    );
+
+    let annule = code(&serveur, "B", 0);
+    let id = annule.id;
+    serveur
+        .base(move |c| inscription::annuler_code(c, id, chrono::Utc::now()).unwrap())
+        .unwrap();
+    assert_eq!(
+        modele(inscrire(&serveur, &identite, &annule.secret)),
+        "code d'inscription annulé"
+    );
+
+    // Empreinte du serveur différente : rien n'est envoyé, le code reste bon.
+    let bon = code(&serveur, "C", 0);
+    let faux = "00".repeat(32);
+    assert!(matches!(
+        Client::inscrire(
+            &serveur.adresse().to_string(),
+            &faux,
+            &identite,
+            &bon.secret,
+            DELAI_CLIENT
+        ),
+        Err(ErreurClient::CertificatDifferent)
+    ));
+    assert!(inscrire(&serveur, &identite, &bon.secret).is_ok());
+
+    // Un poste déjà inscrit ne s'inscrit pas une seconde fois.
+    let encore = code(&serveur, "D", 0);
+    assert!(matches!(
+        inscrire(&serveur, &identite, &encore.secret),
+        Err(ErreurClient::Rejet(_))
+    ));
+}
+
+#[test]
+fn un_seul_poste_sans_licence() {
+    // Serveur neuf, sans licence (décision 41) : un seul poste.
+    let serveur = demarrer("sans-licence", Duration::from_secs(5), 8);
+    let a = code(&serveur, "A", 0);
+    let b = code(&serveur, "B", 0);
+    assert!(inscrire(&serveur, &Identite::nouvelle("poste").unwrap(), &a.secret).is_ok());
+    assert_eq!(
+        modele(inscrire(
+            &serveur,
+            &Identite::nouvelle("poste").unwrap(),
+            &b.secret
+        )),
+        "nombre de postes atteint : {} postes permis par l'abonnement"
+    );
+}
+
+#[test]
+fn attente_apres_des_echecs_d_inscription() {
+    let serveur = demarrer("echecs-inscription", Duration::from_secs(5), 8);
+    let identite = Identite::nouvelle("poste").unwrap();
+    for _ in 0..5 {
+        assert_eq!(
+            modele(inscrire(&serveur, &identite, "AAAA-BBBB-CCCC")),
+            "code d'inscription inconnu ou déjà utilisé"
+        );
+    }
+    // Même un bon code attend.
+    let bon = code(&serveur, "A", 0);
+    assert_eq!(
+        modele(inscrire(&serveur, &identite, &bon.secret)),
+        "trop d'essais d'inscription : nouvel essai dans {} s"
+    );
+}
+
+#[test]
+fn decouverte_du_serveur() {
+    let serveur = demarrer("decouverte", Duration::from_secs(5), 8);
+    let trouves = kadenz_client::decouvrir_vers(serveur.adresse(), Duration::from_secs(1));
+    assert_eq!(trouves.len(), 1);
+    assert_eq!(trouves[0].0, serveur.adresse());
+    assert_eq!(trouves[0].1.port, serveur.adresse().port());
+}
+
+#[test]
+fn installation_avec_licence_tout_ou_rien() {
+    let serveur = demarrer("installation-licence", Duration::from_secs(5), 8);
+    let cles = vec![cle_portail().verifying_key()];
+    let init = || InstallationInitiale {
+        entreprise: Entreprise {
+            nom: "Entreprise Essai".into(),
+            ..Default::default()
+        },
+        admin: NouvelUtilisateur {
+            nom_complet: "Administrateur".into(),
+            identifiant: "admin".into(),
+            mot_de_passe: MOT_DE_PASSE.into(),
+            role: Role::Admin,
+        },
+        parametres: Parametres::default(),
+    };
+    serveur
+        .base(move |c| {
+            // Licence d'une autre entreprise : rien n'est installé.
+            let autre = licence("autre-entreprise", 365, 0);
+            assert!(admin::installer_avec(c, &init(), &autre, &cles).is_err());
+            assert_eq!(
+                comptes::etat_installation(c).unwrap(),
+                comptes::EtatInstallation::AssistantRequis
+            );
+            let entreprise = synchro::identifiant_entreprise(c).unwrap();
+            let bonne = licence(&entreprise, 365, 0);
+            admin::installer_avec(c, &init(), &bonne, &cles).unwrap();
+            assert_eq!(
+                comptes::etat_installation(c).unwrap(),
+                comptes::EtatInstallation::ConnexionRequise
+            );
+            let etat = abonnement::appliquer_avec(c, abonnement::horloge(), &cles).unwrap();
+            assert_eq!(etat.statut, Statut::Actif);
+        })
+        .unwrap();
 }

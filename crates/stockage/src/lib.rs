@@ -8,11 +8,13 @@ pub mod documents;
 pub mod droits;
 pub mod entreprise;
 pub mod impression;
+pub mod inscription;
 pub mod installation;
 pub mod licence;
 pub mod mise_en_page;
 pub mod parametres;
 pub mod pilotage;
+pub mod poste_relie;
 pub mod postes;
 pub mod produits;
 pub mod reglements;
@@ -73,6 +75,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0006_affichage.sql"),
     include_str!("migrations/0007_synchro.sql"),
     include_str!("migrations/0008_postes.sql"),
+    include_str!("migrations/0009_inscription.sql"),
 ];
 
 #[derive(Debug)]
@@ -248,6 +251,8 @@ pub fn ouvrir_serveur(chemin: &Path) -> Resultat<Connection> {
     let mut conn = Connection::open(chemin)?;
     chiffrement::appliquer_cle(&conn, &cle)?;
     conn.pragma_update(None, "journal_mode", "WAL")?;
+    // La fenêtre d'administration ouvre la même base que le service (F4).
+    conn.busy_timeout(std::time::Duration::from_secs(5))?;
     preparer(&mut conn)?;
     licence::preparer(&conn, true)?;
     Ok(conn)

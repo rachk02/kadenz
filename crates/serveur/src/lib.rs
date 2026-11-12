@@ -8,12 +8,13 @@
 //! messages, délai de lecture par connexion, nombre de connexions
 //! simultanées, attente croissante après des échecs de connexion.
 
+pub mod admin;
 pub mod droits;
 
 use std::collections::HashMap;
 use std::fs;
 use std::io::{self, Read, Write};
-use std::net::{Shutdown, SocketAddr, TcpListener, TcpStream};
+use std::net::{Shutdown, SocketAddr, TcpListener, TcpStream, UdpSocket};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -22,12 +23,14 @@ use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
 use kadenz_client::{Identite, NOM_TLS, empreinte, fournisseur};
+use kadenz_domaine::message::MessageCompose;
 use kadenz_licence::VerifyingKey;
 use kadenz_protocole::abonnement::Refus;
+use kadenz_protocole::inscription::{DECOUVERTE, ServeurTrouve};
 use kadenz_protocole::messages::{self, CHANGEMENTS_MAX, ErreurTrame, Reponse, Requete};
 use kadenz_protocole::{Entite, VERSION};
 use kadenz_stockage::chiffrement::{self, Portee};
-use kadenz_stockage::{Erreur, abonnement, comptes, postes, synchro};
+use kadenz_stockage::{Erreur, abonnement, comptes, inscription, postes, synchro};
 use rusqlite::Connection;
 use rustls::client::danger::HandshakeSignatureValid;
 use rustls::crypto::{CryptoProvider, verify_tls12_signature, verify_tls13_signature};
@@ -38,9 +41,10 @@ use rustls::{
     StreamOwned,
 };
 
-/// Port par défaut, dans une plage non attribuée du registre de l'IANA
-/// (47101 à 47556).
-pub const PORT_PAR_DEFAUT: u16 = 47380;
+pub use kadenz_protocole::inscription::PORT_PAR_DEFAUT;
+
+/// Nom du service Windows.
+pub const NOM_SERVICE: &str = "KadenzServeur";
 
 /// Base de référence, dans le dossier des données ; sa clé est à côté
 /// (`kadenz-serveur.cle`), protégée par Windows au niveau de la machine.
@@ -56,6 +60,13 @@ const ECHECS_LIBRES: u32 = 3;
 const ATTENTE_BASE: u64 = 5;
 /// Attente maximale après des échecs de connexion.
 const ATTENTE_MAX: u64 = 900;
+/// Échecs d'inscription permis par adresse avant la première attente.
+const ECHECS_LIBRES_INSCRIPTION: u32 = 5;
+/// Échecs d'inscription par heure, toutes adresses confondues : par le relais
+/// (F8), tous les postes distants ont la même adresse vue du serveur.
+const ECHECS_INSCRIPTION_PAR_HEURE: usize = 20;
+/// Taille maximale de la trame d'un poste pas encore inscrit.
+const TAILLE_INSCRIPTION: usize = 4096;
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -75,6 +86,9 @@ pub struct Config {
     /// Clés du portail qui signent les licences d'abonnement : celles
     /// embarquées, sauf pour les essais.
     pub cles_portail: Vec<VerifyingKey>,
+    /// Réponse aux requêtes de découverte du réseau local, en UDP sur le même
+    /// port que les sessions.
+    pub decouverte: bool,
 }
 
 impl Config {
@@ -87,6 +101,7 @@ impl Config {
             delai_ouverture: Duration::from_secs(10),
             controle_droits: true,
             cles_portail: kadenz_licence::entreprise::cles_portail(),
+            decouverte: true,
         }
     }
 }
@@ -272,11 +287,11 @@ impl Base {
 #[derive(Default)]
 struct Essais(HashMap<String, (u32, Instant)>);
 
-fn duree_attente(echecs: u32) -> u64 {
-    if echecs < ECHECS_LIBRES {
+fn duree_attente(echecs: u32, libres: u32) -> u64 {
+    if echecs < libres {
         0
     } else {
-        (ATTENTE_BASE << (echecs - ECHECS_LIBRES).min(10)).min(ATTENTE_MAX)
+        (ATTENTE_BASE << (echecs - libres).min(10)).min(ATTENTE_MAX)
     }
 }
 
@@ -295,10 +310,14 @@ impl Essais {
     }
 
     fn echec(&mut self, cles: &[String], maintenant: Instant) -> u64 {
+        self.echec_avec(cles, maintenant, ECHECS_LIBRES)
+    }
+
+    fn echec_avec(&mut self, cles: &[String], maintenant: Instant, libres: u32) -> u64 {
         for cle in cles {
             let entree = self.0.entry(cle.clone()).or_insert((0, maintenant));
             entree.0 += 1;
-            entree.1 = maintenant + Duration::from_secs(duree_attente(entree.0));
+            entree.1 = maintenant + Duration::from_secs(duree_attente(entree.0, libres));
         }
         self.attente(cles, maintenant)
     }
@@ -310,6 +329,47 @@ impl Essais {
     }
 }
 
+/// Échecs d'inscription : par adresse, et toutes adresses confondues sur la
+/// dernière heure.
+#[derive(Default)]
+struct Inscriptions {
+    par_adresse: Essais,
+    globaux: std::collections::VecDeque<Instant>,
+}
+
+impl Inscriptions {
+    fn attente(&mut self, cles: &[String], maintenant: Instant) -> u64 {
+        let heure = Duration::from_secs(3600);
+        while self
+            .globaux
+            .front()
+            .is_some_and(|&t| maintenant.duration_since(t) >= heure)
+        {
+            self.globaux.pop_front();
+        }
+        let globale = match self.globaux.front() {
+            Some(&t) if self.globaux.len() >= ECHECS_INSCRIPTION_PAR_HEURE => (t + heure)
+                .saturating_duration_since(maintenant)
+                .as_secs()
+                .max(1),
+            _ => 0,
+        };
+        globale.max(self.par_adresse.attente(cles, maintenant))
+    }
+
+    /// L'essai compte comme un échec dès maintenant, effacé s'il réussit.
+    fn reserver(&mut self, cles: &[String], maintenant: Instant) {
+        self.globaux.push_back(maintenant);
+        self.par_adresse
+            .echec_avec(cles, maintenant, ECHECS_LIBRES_INSCRIPTION);
+    }
+
+    fn reussite(&mut self, cles: &[String]) {
+        self.globaux.pop_back();
+        self.par_adresse.reussite(cles);
+    }
+}
+
 struct Contexte {
     base: Base,
     tls: Arc<ServerConfig>,
@@ -317,6 +377,7 @@ struct Contexte {
     ouverture: Duration,
     entreprise: String,
     essais: Mutex<Essais>,
+    inscriptions: Mutex<Inscriptions>,
     cles: Arc<[VerifyingKey]>,
 }
 
@@ -335,6 +396,7 @@ pub struct Serveur {
     base: Base,
     arret: Arc<AtomicBool>,
     ecoute: Option<JoinHandle<()>>,
+    decouverte: Option<JoinHandle<()>>,
 }
 
 impl Serveur {
@@ -346,10 +408,11 @@ impl Serveur {
         let conn = kadenz_stockage::ouvrir_serveur(&config.dossier.join(NOM_BASE))
             .map_err(|e| format!("base du serveur : {e}"))?;
         let entreprise = synchro::identifiant_entreprise(&conn).map_err(|e| e.to_string())?;
-        let base = Base::lancer(conn);
         let ecoute = TcpListener::bind(config.adresse)
             .map_err(|e| format!("écoute sur {} impossible : {e}", config.adresse))?;
         let adresse = ecoute.local_addr().map_err(|e| e.to_string())?;
+        admin::noter_port(&conn, adresse.port())?;
+        let base = Base::lancer(conn);
         let contexte = Arc::new(Contexte {
             base: base.clone(),
             tls,
@@ -357,6 +420,7 @@ impl Serveur {
             ouverture: config.delai_ouverture,
             entreprise,
             essais: Mutex::new(Essais::default()),
+            inscriptions: Mutex::new(Inscriptions::default()),
             cles: config.cles_portail.clone().into(),
         });
         let arret = Arc::new(AtomicBool::new(false));
@@ -365,12 +429,23 @@ impl Serveur {
             let max = config.connexions_max;
             thread::spawn(move || ecouter(ecoute, contexte, arret, max))
         };
+        let decouverte = if config.decouverte {
+            let socket = UdpSocket::bind(adresse)
+                .map_err(|e| format!("découverte sur {adresse} impossible : {e}"))?;
+            let arret = arret.clone();
+            Some(thread::spawn(move || {
+                repondre_decouverte(socket, adresse.port(), arret)
+            }))
+        } else {
+            None
+        };
         Ok(Serveur {
             adresse,
             empreinte: identite.empreinte(),
             base,
             arret,
             ecoute: Some(fil),
+            decouverte,
         })
     }
 
@@ -410,12 +485,34 @@ impl Serveur {
         }
         let _ = TcpStream::connect_timeout(&reveil, Duration::from_secs(1));
         let _ = fil.join();
+        if let Some(fil) = self.decouverte.take() {
+            let _ = fil.join();
+        }
     }
 }
 
 impl Drop for Serveur {
     fn drop(&mut self) {
         self.fermer();
+    }
+}
+
+/// Répond aux requêtes de découverte du réseau local avec le nom de la
+/// machine et le port des sessions ; rien de secret, aucune confiance donnée.
+fn repondre_decouverte(socket: UdpSocket, port: u16, arret: Arc<AtomicBool>) {
+    let _ = socket.set_read_timeout(Some(Duration::from_millis(300)));
+    let reponse = serde_json::to_vec(&ServeurTrouve {
+        machine: std::env::var("COMPUTERNAME").unwrap_or_default(),
+        port,
+    })
+    .unwrap_or_default();
+    let mut tampon = [0u8; 64];
+    while !arret.load(Ordering::SeqCst) {
+        if let Ok((n, source)) = socket.recv_from(&mut tampon)
+            && &tampon[..n] == DECOUVERTE
+        {
+            let _ = socket.send_to(&reponse, source);
+        }
     }
 }
 
@@ -537,6 +634,10 @@ fn session(contexte: &Contexte, tcp: TcpStream) {
     if tcp.set_nodelay(true).is_err() {
         return;
     }
+    let ip = tcp
+        .peer_addr()
+        .map(|a| a.ip().to_string())
+        .unwrap_or_default();
     let Ok(connexion) = ServerConnection::new(contexte.tls.clone()) else {
         return;
     };
@@ -564,10 +665,7 @@ fn session(contexte: &Contexte, tcp: TcpStream) {
     let p = poste.clone();
     match contexte.base.executer(move |c| postes::est_inscrit(c, &p)) {
         Ok(Ok(true)) => {}
-        Ok(Ok(false)) => {
-            let _ = repondre(&mut flux, &Reponse::PosteNonInscrit);
-            return fermer(&mut flux);
-        }
+        Ok(Ok(false)) => return inscription(contexte, &mut flux, &poste, &ip),
         _ => return fermer(&mut flux),
     }
     let Some(premiere) = lire(&mut flux) else {
@@ -602,6 +700,78 @@ fn session(contexte: &Contexte, tcp: TcpStream) {
     }
 }
 
+/// Poste pas encore inscrit : une seule trame, courte, est lue ; seule une
+/// demande d'inscription par code est servie, puis la connexion est fermée.
+fn inscription(contexte: &Contexte, flux: &mut Flux, poste: &str, ip: &str) {
+    let reponse = match messages::lire_borne::<Requete>(flux, TAILLE_INSCRIPTION) {
+        Ok(Requete::Inscription { version, .. }) if version != VERSION => {
+            Reponse::VersionRefusee { version: VERSION }
+        }
+        Ok(Requete::Inscription { secret, .. }) => inscrire(contexte, poste, ip, secret),
+        Ok(_) | Err(ErreurTrame::TropGrand(_)) | Err(ErreurTrame::Illisible(_)) => {
+            Reponse::PosteNonInscrit
+        }
+        Err(ErreurTrame::Io(_)) => return,
+    };
+    let _ = repondre(flux, &reponse);
+    fermer(flux);
+}
+
+fn refus(m: MessageCompose) -> Reponse {
+    Reponse::Refus {
+        refus: Refus {
+            modele: m.modele.into(),
+            valeurs: m.valeurs,
+        },
+    }
+}
+
+fn inscrire(contexte: &Contexte, poste: &str, ip: &str, secret: String) -> Reponse {
+    let cles = [format!("ip:{ip}")];
+    let verrou = || {
+        contexte
+            .inscriptions
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+    };
+    {
+        let mut inscriptions = verrou();
+        let maintenant = Instant::now();
+        let attente = inscriptions.attente(&cles, maintenant);
+        if attente > 0 {
+            return refus(MessageCompose::new(
+                "trop d'essais d'inscription : nouvel essai dans {} s",
+                &[&attente],
+            ));
+        }
+        inscriptions.reserver(&cles, maintenant);
+    }
+    let poste = poste.to_string();
+    let cles_portail = contexte.cles.clone();
+    let resultat = contexte.base.executer(move |c| {
+        let a = abonnement::appliquer_avec(c, abonnement::horloge(), &cles_portail)?;
+        inscription::consommer(
+            c,
+            &secret,
+            &poste,
+            abonnement::postes_permis(&a),
+            chrono::Utc::now(),
+        )
+    });
+    match resultat {
+        Ok(Ok(Ok(nom))) => {
+            verrou().reussite(&cles);
+            Reponse::Inscrit {
+                entreprise: contexte.entreprise.clone(),
+                nom,
+            }
+        }
+        Ok(Ok(Err(m))) => refus(m),
+        Ok(Err(e)) => rejet(&e.to_string()),
+        Err(e) => rejet(&e),
+    }
+}
+
 fn rejet(motif: &str) -> Reponse {
     Reponse::Rejet {
         motif: motif.into(),
@@ -616,6 +786,7 @@ fn traiter(
 ) -> Reponse {
     match requete {
         Requete::Bonjour { .. } => rejet("Bonjour déjà reçu"),
+        Requete::Inscription { .. } => rejet("poste déjà inscrit"),
         Requete::Connexion {
             identifiant,
             mot_de_passe,
@@ -774,11 +945,11 @@ mod tests {
 
     #[test]
     fn attente_croissante_apres_des_echecs() {
-        assert_eq!(duree_attente(1), 0);
-        assert_eq!(duree_attente(2), 0);
-        assert_eq!(duree_attente(3), 5);
-        assert_eq!(duree_attente(4), 10);
-        assert_eq!(duree_attente(30), ATTENTE_MAX);
+        assert_eq!(duree_attente(1, ECHECS_LIBRES), 0);
+        assert_eq!(duree_attente(2, ECHECS_LIBRES), 0);
+        assert_eq!(duree_attente(3, ECHECS_LIBRES), 5);
+        assert_eq!(duree_attente(4, ECHECS_LIBRES), 10);
+        assert_eq!(duree_attente(30, ECHECS_LIBRES), ATTENTE_MAX);
         let mut essais = Essais::default();
         let t = Instant::now();
         let poste_a = ["poste:a".to_string()];

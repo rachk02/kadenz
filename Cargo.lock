@@ -3061,6 +3061,7 @@ dependencies = [
  "kadenz-protocole",
  "rcgen",
  "rustls",
+ "serde_json",
  "sha2",
 ]
 
@@ -3137,6 +3138,7 @@ dependencies = [
 name = "kadenz-protocole"
 version = "0.2.2"
 dependencies = [
+ "base64 0.22.1",
  "serde",
  "serde_json",
 ]
@@ -3153,6 +3155,7 @@ dependencies = [
  "kadenz-stockage",
  "rusqlite",
  "rustls",
+ "serde_json",
  "windows-service",
  "windows-sys 0.61.2",
 ]
@@ -3170,6 +3173,7 @@ dependencies = [
  "kadenz-protocole",
  "rusqlite",
  "serde_json",
+ "sha2",
  "uuid",
  "windows-sys 0.61.2",
 ]

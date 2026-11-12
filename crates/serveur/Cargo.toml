@@ -13,10 +13,10 @@ kadenz-licence.workspace = true
 rusqlite.workspace = true
 rustls.workspace = true
 chrono.workspace = true
+serde_json.workspace = true
+kadenz-domaine.workspace = true
 
 [target.'cfg(windows)'.dependencies]
 windows-service.workspace = true
 windows-sys = { workspace = true, features = ["Win32_Foundation", "Win32_Security", "Win32_Security_Authorization"] }
 
-[dev-dependencies]
-kadenz-domaine.workspace = true

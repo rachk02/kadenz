@@ -241,6 +241,21 @@ pub fn appliquer_avec(
     Ok(abonnement)
 }
 
+/// Postes permis sans abonnement actif (sans licence, licence refusée ou
+/// échue) : un seul, celui de l'Admin qui installera la licence depuis un
+/// poste (décisions 30 et 41).
+pub const POSTES_SANS_ABONNEMENT_ACTIF: u32 = 1;
+
+/// Nombre de postes que l'abonnement permet d'inscrire. Une licence qui
+/// descend sous le nombre de postes déjà inscrits ne retire aucun poste : elle
+/// bloque les nouvelles inscriptions (décision 42).
+pub fn postes_permis(abonnement: &Abonnement) -> u32 {
+    match (abonnement.statut, &abonnement.licence) {
+        (Statut::Actif, Some(licence)) => licence.postes,
+        _ => POSTES_SANS_ABONNEMENT_ACTIF,
+    }
+}
+
 /// Refuse une saisie ou une validation pendant la lecture seule.
 pub(crate) fn exiger_ecriture(conn: &Connection) -> Resultat<()> {
     let etat: Option<(bool, Option<String>)> = conn

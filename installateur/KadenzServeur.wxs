@@ -50,6 +50,13 @@
                                 Protocol="tcp"
                                 Scope="any"
                                 Profile="all" />
+          <fw:FirewallException Id="PareFeuKadenzDecouverte"
+                                Name="Kadenz Serveur - découverte"
+                                Description="Recherche du serveur Kadenz par les postes du réseau local (UDP)"
+                                Port="47380"
+                                Protocol="udp"
+                                Scope="localSubnet"
+                                Profile="all" />
         </File>
         <ServiceInstall Id="KadenzServeur"
                         Name="KadenzServeur"
