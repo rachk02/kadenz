@@ -23,7 +23,7 @@ pub struct InstallationInitiale {
 
 /// Exécute l'installation et renvoie le compte administrateur créé.
 pub fn installer(conn: &mut Connection, init: &InstallationInitiale) -> Resultat<Utilisateur> {
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     if comptes::admins_actifs(&tx)? > 0 {
         return Err(Erreur::DejaInstalle);
     }

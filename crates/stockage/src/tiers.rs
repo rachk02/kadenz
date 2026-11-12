@@ -285,7 +285,7 @@ pub fn importer(
     fiches: &[FicheTiers],
 ) -> Resultat<BilanImport> {
     exiger(conn, acteur, Droit::AjouterReferentiel)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     let mut noms: std::collections::HashSet<String> = lister(
         &tx,
         &FiltreTiers {

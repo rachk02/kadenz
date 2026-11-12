@@ -16,6 +16,7 @@ pub mod produits;
 pub mod reglements;
 pub mod relances;
 pub mod sauvegarde;
+pub mod synchro;
 pub mod tiers;
 
 use std::fmt;
@@ -68,6 +69,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0004_lien_documents.sql"),
     include_str!("migrations/0005_bordereau.sql"),
     include_str!("migrations/0006_affichage.sql"),
+    include_str!("migrations/0007_synchro.sql"),
 ];
 
 #[derive(Debug)]
@@ -228,7 +230,8 @@ pub fn ouvrir_en_memoire() -> Resultat<Connection> {
 fn preparer(conn: &mut Connection) -> Resultat<()> {
     conn.pragma_update(None, "foreign_keys", "ON")?;
     migrer(conn)?;
-    completer_schema(conn)
+    completer_schema(conn)?;
+    synchro::preparer(conn)
 }
 
 /// Complète une base créée pendant le développement, avant que les premières

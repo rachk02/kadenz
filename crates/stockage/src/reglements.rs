@@ -260,7 +260,7 @@ pub fn ajouter(
     saisie: &SaisieReglement,
 ) -> Resultat<i64> {
     crate::licence::exiger(conn, kadenz_domaine::module::Module::Paiements)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     exiger(&tx, acteur, Droit::SaisirReglement)?;
     let d = lire_existant(&tx, document_id)?;
     if !d.type_document.recoit_des_reglements() {
@@ -329,7 +329,7 @@ pub fn ajouter(
 /// Supprime un règlement saisi par erreur ; la valeur supprimée reste au journal.
 pub fn supprimer(conn: &mut Connection, acteur: &Utilisateur, reglement_id: i64) -> Resultat<()> {
     crate::licence::exiger(conn, kadenz_domaine::module::Module::Paiements)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     exiger(&tx, acteur, Droit::SaisirReglement)?;
     let r = tx
         .query_row(

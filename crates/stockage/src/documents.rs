@@ -814,7 +814,7 @@ pub fn creer_brouillon(
     saisie: &Saisie,
 ) -> Resultat<i64> {
     crate::licence::exiger_type(conn, type_document)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     exiger(&tx, acteur, Droit::brouillon(type_document))?;
     if type_document == TypeDocument::Avoir {
         return Err(invalide(
@@ -867,7 +867,7 @@ pub fn convertir_en_facture(
     source_id: i64,
 ) -> Resultat<i64> {
     crate::licence::exiger_document(conn, source_id)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     exiger(&tx, acteur, Droit::brouillon(TypeDocument::Facture))?;
     let src = lire_existant(&tx, source_id)?;
     if !src.type_document.convertible_en_facture() {
@@ -910,7 +910,7 @@ pub fn dupliquer(
     annuler_original: bool,
 ) -> Resultat<i64> {
     crate::licence::exiger_document(conn, id)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     let d = lire_existant(&tx, id)?;
     exiger(&tx, acteur, Droit::brouillon(d.type_document))?;
     if d.type_document == TypeDocument::Avoir {
@@ -982,7 +982,7 @@ pub fn dupliquer(
 /// identifiant : lignes, client et taux repris de la facture (décision du
 /// 2026-11-09) ; un avoir partiel retire des lignes ou baisse quantités et prix.
 pub fn creer_avoir(conn: &mut Connection, acteur: &Utilisateur, facture_id: i64) -> Resultat<i64> {
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     exiger(&tx, acteur, Droit::brouillon(TypeDocument::Avoir))?;
     let f = lire_existant(&tx, facture_id)?;
     if f.type_document != TypeDocument::Facture {
@@ -1166,7 +1166,7 @@ pub fn creer_bordereau(
     facture_id: i64,
 ) -> Resultat<i64> {
     crate::licence::exiger(conn, kadenz_domaine::module::Module::Livraisons)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     exiger(&tx, acteur, Droit::brouillon(TypeDocument::Livraison))?;
     let f = lire_existant(&tx, facture_id)?;
     if f.type_document != TypeDocument::Facture {
@@ -1226,7 +1226,7 @@ fn droit_confirmation_livraison() -> Droit {
 /// ses quantités commandées. Le statut ne change plus ensuite.
 pub fn confirmer_livraison(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat<()> {
     crate::licence::exiger_document(conn, id)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     let d = lire_existant(&tx, id)?;
     exiger(&tx, acteur, droit_confirmation_livraison())?;
     if d.type_document != TypeDocument::Livraison {
@@ -1289,7 +1289,7 @@ pub fn modifier_brouillon(
     saisie: &Saisie,
 ) -> Resultat<()> {
     crate::licence::exiger_document(conn, id)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     let d = lire_existant(&tx, id)?;
     exiger(&tx, acteur, Droit::brouillon(d.type_document))?;
     exiger_brouillon(&d)?;
@@ -1327,7 +1327,7 @@ fn en_json(d: &Document) -> Value {
 /// Le contenu supprimé reste dans le journal d'audit.
 pub fn supprimer_brouillon(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat<()> {
     crate::licence::exiger_document(conn, id)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     let d = lire_existant(&tx, id)?;
     exiger(&tx, acteur, Droit::brouillon(d.type_document))?;
     if !d.statut.suppression_physique_autorisee() {
@@ -1356,7 +1356,7 @@ pub fn supprimer_brouillon(conn: &mut Connection, acteur: &Utilisateur, id: i64)
 /// transaction. Renvoie le numéro attribué.
 pub fn valider(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat<String> {
     crate::licence::exiger_document(conn, id)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     let d = lire_existant(&tx, id)?;
     exiger(&tx, acteur, Droit::ValiderDocument)?;
     verifier_transition(d.type_document, d.statut, Statut::Valide).map_err(transition_refusee)?;
@@ -1496,7 +1496,7 @@ pub fn valider(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
 /// Passage en Envoyé, avec la date d'envoi.
 pub fn marquer_envoye(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat<()> {
     crate::licence::exiger_document(conn, id)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     let d = lire_existant(&tx, id)?;
     exiger(&tx, acteur, Droit::ValiderDocument)?;
     verifier_transition(d.type_document, d.statut, Statut::Envoye).map_err(transition_refusee)?;
@@ -1519,7 +1519,7 @@ pub fn marquer_envoye(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> R
 /// Annulation logique : le numéro éventuel est conservé (section 7.2).
 pub fn annuler(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat<()> {
     crate::licence::exiger_document(conn, id)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     let d = lire_existant(&tx, id)?;
     let droit = if d.statut == Statut::Brouillon {
         Droit::brouillon(d.type_document)
@@ -1577,7 +1577,7 @@ pub fn modifier_administratif(
     observations: &str,
 ) -> Resultat<()> {
     crate::licence::exiger_document(conn, id)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     let d = lire_existant(&tx, id)?;
     exiger(&tx, acteur, Droit::brouillon(d.type_document))?;
     if matches!(d.statut, Statut::Brouillon | Statut::Annule) {
@@ -1624,7 +1624,7 @@ pub fn modifier_livraison(
     champs: &ChampsLivraison,
 ) -> Resultat<()> {
     crate::licence::exiger_document(conn, id)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     let d = lire_existant(&tx, id)?;
     exiger(&tx, acteur, Droit::brouillon(d.type_document))?;
     if d.type_document != TypeDocument::Livraison {
@@ -1702,7 +1702,7 @@ pub fn enregistrer_reception(
     recues: &[Quantite],
 ) -> Resultat<()> {
     crate::licence::exiger_document(conn, id)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     let d = lire_existant(&tx, id)?;
     exiger(&tx, acteur, droit_reception())?;
     if d.type_document != TypeDocument::BonCommande {

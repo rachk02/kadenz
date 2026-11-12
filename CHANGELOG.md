@@ -2,6 +2,11 @@
 
 Format : une section par version, la plus récente en haut. Numérotation [SemVer](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORRECTIF`, tag Git `vMAJEUR.MINEUR.CORRECTIF`.
 
+## [Non publié] - phase 2
+
+### Ajouté
+- Jalon F1 des fondations : identifiant global (UUID version 7) sur les comptes, tiers, produits, documents et règlements, et identifiant de l'entreprise, posés aussi sur les bases V1 migrées ; crate `kadenz-protocole` (opérations, résultats, changements) ; application des opérations des postes par les règles habituelles du stockage, une opération renvoyée recevant le même résultat sans être appliquée deux fois (une validation rend toujours le même numéro) ; conflits entre postes, opérations en attente pour un compte ou un droit hors connexion, suite numérotée des changements tenue par la base (migration 0007). Rien n'est encore visible à l'écran.
+
 ## [0.2.2] - 2026-11-12
 
 ### Ajouté

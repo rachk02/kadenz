@@ -254,7 +254,7 @@ pub fn importer(
     fiches: &[FicheProduit],
 ) -> Resultat<BilanImport> {
     exiger(conn, acteur, Droit::AjouterReferentiel)?;
-    let tx = conn.transaction()?;
+    let tx = conn.savepoint()?;
     let mut bilan = BilanImport::default();
     for (rang, fiche) in fiches.iter().enumerate() {
         let f = fiche

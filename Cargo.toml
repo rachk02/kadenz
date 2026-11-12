@@ -9,6 +9,7 @@ members = [
     "crates/editeur",
     "crates/export",
     "crates/maj",
+    "crates/protocole",
     "crates/app",
 ]
 # Copies de crates tiers modifiées : hors des vérifications de l'espace de travail.
@@ -32,6 +33,7 @@ kadenz-pdf = { path = "crates/pdf" }
 kadenz-licence = { path = "crates/licence" }
 kadenz-export = { path = "crates/export" }
 kadenz-maj = { path = "crates/maj" }
+kadenz-protocole = { path = "crates/protocole" }
 rusqlite = { version = "0.41.1", features = ["bundled", "backup"] }
 slint = { version = "1.18.1", features = ["raw-window-handle-06"] }
 slint-build = "1.18.1"
@@ -59,6 +61,10 @@ windows-sys = "0.61.2"
 rust_xlsxwriter = { version = "0.102.0", features = ["chrono"] }
 # Mises à jour (J10) : requête HTTPS vers les releases GitHub, TLS du système
 # (schannel) et ses certificats racines.
+# Phase 2 (F1) : format des échanges entre postes et serveur, identifiants
+# globaux (UUID version 7).
+serde = { version = "1.0.229", features = ["derive"] }
+uuid = { version = "1.29.2", features = ["v7"] }
 ureq = { version = "3.5.1", default-features = false, features = ["native-tls-no-default"] }
 
 # Argon2 non optimisé met plusieurs secondes par hachage : on optimise les
