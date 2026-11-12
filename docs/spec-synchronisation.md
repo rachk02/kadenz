@@ -1,0 +1,83 @@
+# Kadenz phase 2 - Protocole de synchronisation, numérotation et clés
+
+| Version | Date | Changement |
+|---|---|---|
+| 0.1 | 2026-11-12 | Premier jet de kadenz-34 pour les sections 4.3 et 4.4 du cahier de la phase 2 (`docs/cahier-phase2.md`), d'après les décisions 5, 9, 16 à 21 et 28. Rien n'est validé ni codé. |
+
+Statut : **à l'étude**. Ce document fixe la frontière entre les postes et le serveur de l'entreprise, ainsi que les clés. Les écrans (activation de l'accès à distance, état de la connexion, conflits à trancher, opérations en attente) sont dans `docs/spec-ecrans-multiposte.md` (kadenz-8e). Chaque règle est marquée **décidé** (une décision de l'utilisateur la fonde, citée) ou **proposé** (choix de kadenz-34, à valider). Les questions ouvertes sont en section 9.
+
+## 1. Cadre décidé
+
+- Un serveur Kadenz par entreprise, sur une machine de l'entreprise, sous Windows (service Windows) ; une seule base par serveur (décisions 11, 16, 19).
+- Le serveur est de confiance : il lit les données, chiffrées au repos sur son disque, impose les droits, l'heure, la validation et la numérotation, et fait des sauvegardes lisibles par l'entreprise (décision 28).
+- Les postes du bureau joignent le serveur en réseau local. Les postes hors du bureau passent, si l'entreprise l'active, par un relais sur le VPS de l'éditeur, qui ne conserve rien et ne lit rien (décisions 16 et 28).
+- Un poste travaille quand le serveur est injoignable, puis resynchronise (décision 5). Hors connexion, un document reste en brouillon : la validation, qui donne le numéro, se fait quand le serveur répond (décision 9).
+- Conflit sur une fiche : signalé, une personne compare et choisit, rien n'est écarté en silence (décision 17). Opérations faites hors connexion par un compte désactivé ou aux droits réduits entre-temps : mises en attente, l'Admin les accepte ou les rejette (décision 18).
+- De 5 à 20 postes par entreprise (décision 23).
+
+## 2. Architecture (proposé)
+
+- **Serveur** : il détient la base de référence de l'entreprise. Il réutilise le crate `kadenz-stockage` de la V1, qui contient déjà les règles métier (droits, transitions, contrôles de validation, `prochain_rang`, audit). Aucune règle n'est réécrite côté serveur ; c'est le même code, appelé par le serveur au lieu de l'écran.
+- **Poste** : il garde une copie locale de la base, au format de la V1 (SQLite chiffrée, clé du poste protégée par Windows), et une file des opérations faites hors connexion. L'écran lit toujours la copie locale. En ligne, une opération est envoyée au serveur, et la copie locale n'est mise à jour qu'avec la réponse du serveur. Hors connexion, l'opération est appliquée à la copie locale à titre provisoire et rangée dans la file.
+- **Pas de logique métier propre au protocole** : le protocole transporte des opérations et des changements ; il ne décide de rien. Ce qui est permis ou refusé l'est par `kadenz-stockage`, sur le serveur.
+
+## 3. Identifiants (proposé)
+
+- La V1 numérote ses lignes par des entiers locaux (`INTEGER PRIMARY KEY AUTOINCREMENT` pour `tiers`, `produit`, `document`, `reglement` dans `crates/stockage/src/migrations/0001_initial.sql`). Deux postes hors connexion qui créent chacun un client produiraient le même identifiant.
+- Chaque ligne synchronisée reçoit donc un identifiant global `uid`, UUID version 7 (RFC 9562), créé par le poste qui crée la ligne. Les références entre lignes (tiers d'un document, document source, produit d'une ligne) voyagent par `uid`. L'entier local reste la clé interne de chaque base, pour ne pas réécrire le stockage.
+- **Identifiant d'entreprise** : UUID tiré à l'installation du serveur, jamais changé ensuite. Il sert au relais pour séparer les entreprises, aux postes pour reconnaître leur serveur, et à la licence d'abonnement (4.1, décision 21).
+- **Identifiant de poste** : celui de la V1 (empreinte du MachineGuid, section 15 du cahier V1), complété par la clé publique du poste reçue à l'inscription (section 7).
+
+## 4. Opérations (proposé)
+
+Une opération est une action d'un compte, celle que l'écran demande aujourd'hui au stockage : créer ou modifier un brouillon, valider, annuler, saisir un règlement, modifier une fiche, changer un paramètre, etc.
+
+- **Contenu** : identifiant d'opération (UUID version 7, créé par le poste), identifiant d'entreprise, poste, compte, nature de l'opération, `uid` de la cible, version de la cible connue du poste (section 6), données de l'opération, et indicateur « faite hors connexion ».
+- **Idempotence** : le serveur garde, pour chaque identifiant d'opération reçu, le résultat qu'il a rendu (acceptée avec son résultat, refusée avec son message, mise en attente, en conflit). Une opération renvoyée, après une coupure, une absence de réponse ou un redémarrage du poste, reçoit le même résultat, sans être appliquée deux fois.
+- **Application** : le serveur applique chaque opération dans une transaction, par la fonction correspondante de `kadenz-stockage`, avec l'état présent du compte et de ses droits. Une opération refusée par une règle métier est rendue au poste avec le message du stockage, traduit par l'écran comme en V1.
+- **Ordre** : le poste envoie sa file dans l'ordre où les opérations ont été faites, et attend la réponse de chacune avant la suivante, pour que les opérations liées (un client créé, puis un brouillon pour ce client) arrivent dans l'ordre.
+- **Horodatage** : les dates techniques (création, validation, audit) sont mises par le serveur, avec le fuseau (section 6.2 du cahier de la phase 2). L'heure du poste est seulement gardée comme indication, pour une opération faite hors connexion. Les dates métier (date d'une facture, d'un règlement) restent celles saisies.
+
+## 5. Validation et numérotation
+
+- **Décidé (décision 9)** : la validation, et donc le numéro, ne se fait qu'avec le serveur. Hors connexion, le bouton Valider reste visible mais inactif, avec une explication (`docs/spec-ecrans-multiposte.md`, section 4).
+- **Documents à valider au retour (forme des écrans, section 4)** : une validation demandée hors connexion n'est pas une opération de la file. Le poste note seulement le brouillon dans une liste locale ; au retour du serveur, l'application propose de les valider, et chaque validation confirmée part alors comme une opération en ligne ordinaire. Le protocole n'a donc rien de plus à porter, et personne ne reçoit un numéro sans l'avoir vu.
+- **Proposé** : la validation est une opération comme les autres. Le serveur l'applique avec la fonction `valider` de `kadenz-stockage` (`crates/stockage/src/documents.rs`), qui appelle `prochain_rang` dans la même transaction. Le compteur ne bouge donc que si la validation réussit : un refus annule la transaction, et le rang n'est pas consommé, comme en V1. Les numéros restent continus et sans doublon par type, année et mois.
+- **Reprise après une coupure (proposé)** : si le poste ne reçoit pas la réponse (coupure, délai dépassé, poste arrêté), il renvoie la même opération, avec le même identifiant. Le serveur reconnaît l'identifiant et rend le numéro déjà attribué, sans en prendre un autre. Un numéro n'est jamais attribué deux fois, ni perdu par une nouvelle tentative.
+- **Brouillon modifié par un autre poste avant la validation** : la validation porte la version du brouillon connue du poste ; si le serveur en a une plus récente, la validation est refusée et le poste reçoit la version du serveur (section 6). On ne valide jamais un contenu que la personne n'a pas vu.
+
+## 6. Versions, changements et conflits
+
+- **Version par ligne (proposé)** : chaque ligne synchronisée a un numéro de version, augmenté par le serveur à chaque changement accepté.
+- **Changements vers les postes (proposé)** : le serveur tient une suite numérotée de tous les changements acceptés. Un poste demande les changements depuis le dernier numéro qu'il a reçu, puis reste à l'écoute des suivants tant qu'il est connecté. À la reconnexion, il envoie d'abord sa file, puis reçoit ce qui lui manque. Un compte désactivé, des droits changés ou un paramètre modifié arrivent par le même chemin.
+- **Conflit sur une fiche (décision 17 ; forme proposée)** : une modification arrive avec une version plus ancienne que celle du serveur, et la même fiche a changé sur le serveur depuis. Le serveur n'applique pas la modification. Il garde les deux versions (celle du serveur et celle du poste, avec le compte et le poste de chacune) dans une liste de conflits, et le signale. L'Admin, ou la personne qui synchronise, compare les deux versions et choisit l'une ou l'autre ; son choix devient une nouvelle opération, tracée dans le journal d'audit. Tant qu'il n'est pas tranché, la version du serveur reste en vigueur partout.
+- **Brouillons** : même règle que pour les fiches, un brouillon modifié sur deux postes pendant une coupure devient un conflit à trancher.
+- **Documents validés** : leur contenu est figé (règle de la V1) ; seuls changent leur statut et leurs règlements. Une transition devenue impossible entre-temps (par exemple annuler une facture qu'un autre poste a déjà réglée) est refusée par les règles de la V1, avec le message habituel. Ce n'est pas un conflit à trancher.
+- **Opérations en attente (décision 18 ; forme proposée)** : une opération faite hors connexion, refusée à l'application parce que le compte est désactivé ou n'a plus le droit voulu, n'est ni appliquée ni rejetée : elle est rangée dans la liste des opérations en attente, avec son compte, son poste et l'heure du poste. L'Admin l'accepte, et elle est alors appliquée sous sa responsabilité, tracée à son nom et à celui du compte d'origine, ou il la rejette. Une opération faite en ligne et refusée pour un droit l'est tout de suite, comme en V1.
+- **« Après le changement »** : la décision 18 vise les opérations faites après la désactivation ou la réduction des droits. Le serveur ne peut pas le savoir de façon sûre : seule l'heure du poste le dirait, et elle n'est pas fiable. Proposé : toute opération faite hors connexion et refusée pour un compte ou un droit va en attente, qu'elle soit antérieure ou postérieure au changement ; l'Admin voit l'heure du poste comme indication. Rien n'est ainsi rejeté sans décision d'une personne.
+
+## 7. Connexion, inscription des postes et accès à distance
+
+- **Chiffrement (proposé)** : tous les échanges entre un poste et le serveur passent par TLS 1.3, y compris en réseau local. Le serveur a son propre certificat, créé à son installation, sans autorité de certification. Chaque poste garde l'empreinte de ce certificat (épinglage) et refuse tout autre serveur.
+- **Découverte (écrans, section 2)** : le poste peut chercher les serveurs Kadenz du réseau local ou recevoir une adresse saisie. La découverte ne donne aucune confiance : elle ne sert qu'à trouver une adresse.
+- **Inscription d'un poste (proposé)** : l'Admin crée sur le serveur un code d'inscription à usage unique, valable peu de temps (durée à fixer). Le code contient l'identifiant d'entreprise et l'empreinte du certificat du serveur : le poste vérifie lui-même cette empreinte, sans comparaison à l'oeil. L'affichage de l'empreinte à confirmer (écrans, section 2) reste le recours si le code est tapé sans elle. Le poste crée sa paire de clés (Ed25519, partie privée protégée par Windows), se présente avec le code, et le serveur enregistre sa clé publique. Le nombre de postes inscrits est limité par la licence (décision 21). L'Admin peut retirer un poste ; ce poste ne se connecte plus.
+- **Accès à distance par le relais (décisions 16 et 28 ; forme proposée)** : le serveur de l'entreprise ouvre lui-même une connexion sortante vers le relais, sans port à ouvrir dans l'entreprise. Un poste distant se connecte au relais, qui ne fait que transmettre les octets entre le poste et le serveur de son entreprise. La session TLS est établie de bout en bout entre le poste et le serveur, à travers le relais, avec le même épinglage qu'en réseau local. Le relais ne voit donc que des données chiffrées, l'identifiant d'entreprise, et les adresses et volumes des échanges. Il vérifie seulement que le poste a été inscrit pour cette entreprise, pour ne pas servir de passage à n'importe qui. Le fonctionnement et l'exploitation du relais sont décrits par kadenz-8e.
+- **Comptes (proposé)** : la connexion d'un compte se vérifie sur le serveur, avec les empreintes Argon2 de la V1 (`crates/stockage/src/comptes.rs`, `Argon2::default()` du crate `argon2` 0.6.0). Pour travailler hors connexion, le poste garde une copie de ces empreintes dans sa copie locale chiffrée ; une connexion hors ligne se vérifie avec elle. Un compte désactivé pendant une coupure peut donc encore se connecter sur un poste coupé ; ses opérations tombent alors sous la décision 18.
+
+## 8. Clés et sauvegardes (section 4.4)
+
+- **Base du serveur (proposé)** : chiffrée comme la base de la V1 (SQLite3 Multiple Ciphers, ChaCha20-Poly1305), avec une clé tirée de l'aléa du système. Cette clé est protégée par la protection de données de Windows au niveau de la machine (et non d'un compte utilisateur, comme `kadenz.cle` en V1), pour que le service la lise sans session ouverte. Conséquence : quiconque obtient un accès administrateur à la machine serveur peut lire la base. C'est le risque accepté par la décision 28.
+- **Copie locale d'un poste (décidé en V1, repris)** : chiffrée par la clé du poste, protégée par Windows pour le compte de la personne (`crates/stockage/src/chiffrement.rs`, `CryptProtectData`). Elle n'est qu'une copie de travail, sauf pour les opérations de la file pas encore envoyées.
+- **Sauvegardes du serveur (proposé)** : planifiées, chiffrées par mot de passe, au format `.kzs` de la V1 (section 10.3 du cahier V1), avec rotation, et restaurables par l'Admin de l'entreprise sur la même machine ou sur une nouvelle. La restauration sur une nouvelle machine ne demande que le fichier et son mot de passe : c'est le moyen de reprise en cas de panne ou de vol de la machine serveur. Dossier, fréquence et nombre de copies gardées sont des réglages ; leurs valeurs par défaut restent à fixer avec l'utilisateur.
+- **Échanges** : certificat du serveur et clés des postes (section 7). Le relais n'a aucune clé qui permette de lire les échanges.
+- **Éditeur** : il ne détient aucune clé des données d'une entreprise (décision 10). Ses seules clés sont celles des licences (clé actuelle hors ligne, clé du portail en ligne, décision 29) et celle des mises à jour (pont V1). Une entreprise qui perd à la fois sa machine serveur et toutes ses sauvegardes perd ses données ; l'éditeur ne peut rien récupérer. C'est à dire au client.
+- **Abandonné avec la décision 28** : clé de données de l'entreprise enveloppée par compte et par poste, clé de récupération sur papier, opérations signées par compte pour un serveur qui ne lit rien. Le journal d'audit de la V1 (en ajout seul, `audit_log`), tenu par le serveur, suffit à l'attribution des opérations.
+
+## 9. Questions ouvertes
+
+1. **Identifiant global (section 3)** : UUID version 7 ajouté à côté de l'entier local, comme proposé, ou remplacement de l'entier ? Question technique, sans effet visible pour l'utilisateur ; kadenz-34 recommande l'ajout, qui laisse le stockage de la V1 intact.
+2. **Opérations en attente (section 6)** : toutes les opérations hors connexion refusées pour un compte ou un droit vont en attente, y compris celles faites avant le changement, faute d'heure fiable. À confirmer par l'utilisateur, la décision 18 ne visant que celles d'après.
+3. **Sauvegardes du serveur** : dossier par défaut, fréquence, nombre de copies gardées, et copie hors de la machine (disque externe, autre machine) conseillée ou exigée ?
+4. **Durée du code d'inscription d'un poste** (section 7).
+5. **Fuseau de l'entreprise** : un seul fuseau par entreprise, réglé sur le serveur, pour l'affichage des heures techniques, ou le fuseau de chaque poste ?
+6. **Releases et pont V1 (point technique, sans décision à prendre tout de suite)** : un poste qui a le pont lit les 30 dernières releases (`releases?per_page=30`, `crates/maj/src/lib.rs`). Si plus de 30 releases de la phase 2 sortent après la dernière release V1, un poste V1 ne voit plus que des releases de la phase 2 : il se croit à jour, ou annonce seulement une nouvelle génération, et ne voit plus une éventuelle mise à jour V1. Parades possibles : lire plusieurs pages, ou limiter le nombre de releases de la phase 2 publiées dans le même dépôt. À régler avec la politique des releases de la phase 2.
