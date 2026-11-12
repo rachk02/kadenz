@@ -3035,3 +3035,18 @@ msgstr "订阅涵盖企业及其工作站。服务器根据自己的日期判断
 
 msgid "La nouvelle licence s'enregistre sur le serveur ; ce poste reçoit le nouvel état à la connexion suivante."
 msgstr "新许可证在服务器上登记；本工作站在下次连接时接收新状态。"
+
+msgid "code d'inscription inconnu ou déjà utilisé"
+msgstr "注册码未知或已被使用"
+
+msgid "code d'inscription expiré"
+msgstr "注册码已过期"
+
+msgid "code d'inscription annulé"
+msgstr "注册码已被取消"
+
+msgid "nombre de postes atteint : {} postes permis par l'abonnement"
+msgstr "已达到工作站数量上限：订阅允许 {} 个工作站"
+
+msgid "trop d'essais d'inscription : nouvel essai dans {} s"
+msgstr "注册尝试次数过多：请在 {} 秒后重试"

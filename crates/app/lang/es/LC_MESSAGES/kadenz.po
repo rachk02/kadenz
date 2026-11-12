@@ -3035,3 +3035,18 @@ msgstr "La suscripción cubre la empresa y sus puestos. El servidor controla el 
 
 msgid "La nouvelle licence s'enregistre sur le serveur ; ce poste reçoit le nouvel état à la connexion suivante."
 msgstr "La nueva licencia se registra en el servidor; este puesto recibe el nuevo estado en la siguiente conexión."
+
+msgid "code d'inscription inconnu ou déjà utilisé"
+msgstr "código de inscripción desconocido o ya utilizado"
+
+msgid "code d'inscription expiré"
+msgstr "código de inscripción caducado"
+
+msgid "code d'inscription annulé"
+msgstr "código de inscripción anulado"
+
+msgid "nombre de postes atteint : {} postes permis par l'abonnement"
+msgstr "número de puestos alcanzado: {} puestos permitidos por la suscripción"
+
+msgid "trop d'essais d'inscription : nouvel essai dans {} s"
+msgstr "demasiados intentos de inscripción: nuevo intento dentro de {} s"

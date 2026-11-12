@@ -3035,3 +3035,18 @@ msgstr "The subscription covers the company and its workstations. The server che
 
 msgid "La nouvelle licence s'enregistre sur le serveur ; ce poste reçoit le nouvel état à la connexion suivante."
 msgstr "The new licence is registered on the server; this workstation receives the new status at the next connection."
+
+msgid "code d'inscription inconnu ou déjà utilisé"
+msgstr "enrolment code unknown or already used"
+
+msgid "code d'inscription expiré"
+msgstr "enrolment code expired"
+
+msgid "code d'inscription annulé"
+msgstr "enrolment code cancelled"
+
+msgid "nombre de postes atteint : {} postes permis par l'abonnement"
+msgstr "workstation limit reached: {} workstations allowed by the subscription"
+
+msgid "trop d'essais d'inscription : nouvel essai dans {} s"
+msgstr "too many enrolment attempts: try again in {} s"

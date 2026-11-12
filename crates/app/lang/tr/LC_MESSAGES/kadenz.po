@@ -3035,3 +3035,18 @@ msgstr "Abonelik şirketi ve iş istasyonlarını kapsar. Sunucu bitiş tarihini
 
 msgid "La nouvelle licence s'enregistre sur le serveur ; ce poste reçoit le nouvel état à la connexion suivante."
 msgstr "Yeni lisans sunucuya kaydedilir; bu iş istasyonu yeni durumu bir sonraki bağlantıda alır."
+
+msgid "code d'inscription inconnu ou déjà utilisé"
+msgstr "kayıt kodu bilinmiyor veya zaten kullanılmış"
+
+msgid "code d'inscription expiré"
+msgstr "kayıt kodunun süresi dolmuş"
+
+msgid "code d'inscription annulé"
+msgstr "kayıt kodu iptal edilmiş"
+
+msgid "nombre de postes atteint : {} postes permis par l'abonnement"
+msgstr "iş istasyonu sınırına ulaşıldı: abonelik {} iş istasyonuna izin veriyor"
+
+msgid "trop d'essais d'inscription : nouvel essai dans {} s"
+msgstr "çok fazla kayıt denemesi: {} sn sonra yeniden deneyin"

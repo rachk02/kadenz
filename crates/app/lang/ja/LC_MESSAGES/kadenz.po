@@ -3035,3 +3035,18 @@ msgstr "サブスクリプションは企業とその端末を対象とします
 
 msgid "La nouvelle licence s'enregistre sur le serveur ; ce poste reçoit le nouvel état à la connexion suivante."
 msgstr "新しいライセンスはサーバーに登録され、この端末は次回の接続時に新しい状態を受信します。"
+
+msgid "code d'inscription inconnu ou déjà utilisé"
+msgstr "登録コードが不明か、すでに使用されています"
+
+msgid "code d'inscription expiré"
+msgstr "登録コードの有効期限が切れています"
+
+msgid "code d'inscription annulé"
+msgstr "登録コードは取り消されています"
+
+msgid "nombre de postes atteint : {} postes permis par l'abonnement"
+msgstr "端末数の上限に達しました：サブスクリプションで許可されている端末は {} 台です"
+
+msgid "trop d'essais d'inscription : nouvel essai dans {} s"
+msgstr "登録の試行回数が多すぎます：{} 秒後に再試行してください"

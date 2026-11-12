@@ -3035,3 +3035,18 @@ msgstr "يغطي الاشتراك المؤسسة ومحطات عملها. يحك
 
 msgid "La nouvelle licence s'enregistre sur le serveur ; ce poste reçoit le nouvel état à la connexion suivante."
 msgstr "يُسجَّل الترخيص الجديد على الخادم؛ وتتلقى هذه المحطة الحالة الجديدة عند الاتصال التالي."
+
+msgid "code d'inscription inconnu ou déjà utilisé"
+msgstr "رمز التسجيل غير معروف أو مستخدم من قبل"
+
+msgid "code d'inscription expiré"
+msgstr "انتهت صلاحية رمز التسجيل"
+
+msgid "code d'inscription annulé"
+msgstr "رمز التسجيل ملغى"
+
+msgid "nombre de postes atteint : {} postes permis par l'abonnement"
+msgstr "تم بلوغ عدد المحطات: يسمح الاشتراك بـ {} محطات"
+
+msgid "trop d'essais d'inscription : nouvel essai dans {} s"
+msgstr "محاولات تسجيل كثيرة جدًا: أعد المحاولة بعد {} ث"
