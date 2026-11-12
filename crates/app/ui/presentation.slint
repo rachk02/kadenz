@@ -1,7 +1,7 @@
 // Pages de présentation (cahier, section 4.1) : affichées au premier lancement,
 // avant l'assistant, et depuis « À propos ». Elles ne décrivent que des fonctions
 // livrées.
-import { Bouton, Rangee, Theme } from "composants.slint";
+import { Bouton, MotifMarque, Rangee, Theme } from "composants.slint";
 
 export component EcranPresentation inherits Rectangle {
     in property <string> version-logiciel;
@@ -45,11 +45,13 @@ export component EcranPresentation inherits Rectangle {
             background: Theme.accent;
             clip: true;
 
-            Image {
+            MotifMarque {
+                x: 0;
+                y: 0;
                 width: parent.width;
                 height: parent.height;
-                source: @image-url("icones/motif-quatre-pieces.svg");
-                image-fit: cover;
+                haut: 100px;
+                bas: 200px;
             }
 
             VerticalLayout {

@@ -4,7 +4,7 @@
 // de l'assistant reste à ajouter.
 
 import { CheckBox } from "std-widgets.slint";
-import { Bouton, Champ, MessageErreur, Rangee, Section, Theme, Titre } from "composants.slint";
+import { Bouton, Champ, MessageErreur, MotifMarque, Rangee, Section, Theme, Titre } from "composants.slint";
 import { IdentifiantPoste, LicenceApi, SaisieCle, VerificationUi } from "licence.slint";
 
 export struct DonneesAssistant {
@@ -107,11 +107,13 @@ export component EcranAssistant inherits Rectangle {
             background: Theme.accent;
             clip: true;
 
-            Image {
-                source: @image-url("icones/motif-quatre-pieces.svg");
+            MotifMarque {
+                x: 0;
+                y: 0;
                 width: parent.width;
                 height: parent.height;
-                image-fit: cover;
+                pas: 40px;
+                haut: 240px;
             }
 
             VerticalLayout {

@@ -1,4 +1,4 @@
-import { Bouton, Champ, MessageErreur, Rangee, Theme, Titre } from "composants.slint";
+import { Bouton, Champ, MessageErreur, MotifMarque, Rangee, Theme, Titre } from "composants.slint";
 
 // Écran de connexion : panneau de marque Kadenz à gauche (logo, motif Quatre pièces),
 // formulaire à droite sous le nom de l'entreprise qui utilise l'installation.
@@ -29,11 +29,13 @@ export component EcranConnexion inherits Rectangle {
             background: Theme.accent;
             clip: true;
 
-            Image {
+            MotifMarque {
+                x: 0;
+                y: 0;
                 width: parent.width;
                 height: parent.height;
-                source: @image-url("icones/motif-quatre-pieces.svg");
-                image-fit: cover;
+                haut: 100px;
+                bas: 280px;
             }
 
             VerticalLayout {

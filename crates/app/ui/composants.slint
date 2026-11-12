@@ -257,6 +257,54 @@ export component Titre inherits Text {
 
 // Symbole de la marque (docs/marque) : quatre pièces (carré, quart de disque, triangle,
 // disque) en blanc sur une tuile Bleu vif, dans la petite coupe aux jeux élargis.
+// Motif Quatre pièces des bandeaux de marque (docs/marque, règle 2 : jamais derrière un texte).
+// Le motif garde un pas fixe (pièces entières) ; les zones calmes du haut (logo, étapes) et du
+// bas (textes) sont arrondies à des rangées entières, pour qu'aucune pièce ne soit rognée.
+// motif-quatre-pieces.svg : 6 colonnes et 20 rangées ; 20 est un multiple du cycle de 4 rangées,
+// les deux images empilées se raccordent sans couture.
+export component MotifMarque inherits Rectangle {
+    in property <length> pas: 80px;
+    in property <length> haut: 0px;
+    in property <length> bas: 0px;
+    property <length> fin-haut: ceil(root.haut / root.pas) * root.pas;
+    property <length> debut-bas: max(root.fin-haut, floor((root.height - root.bas) / root.pas) * root.pas);
+    clip: true;
+
+    Image {
+        x: 0;
+        y: 0;
+        width: 6 * root.pas;
+        height: 20 * root.pas;
+        source: @image-url("icones/motif-quatre-pieces.svg");
+        image-fit: fill;
+    }
+
+    Image {
+        x: 0;
+        y: 20 * root.pas;
+        width: 6 * root.pas;
+        height: 20 * root.pas;
+        source: @image-url("icones/motif-quatre-pieces.svg");
+        image-fit: fill;
+    }
+
+    Rectangle {
+        x: 0;
+        y: 0;
+        width: root.width;
+        height: root.fin-haut;
+        background: Theme.accent;
+    }
+
+    Rectangle {
+        x: 0;
+        y: root.debut-bas;
+        width: root.width;
+        height: max(0px, root.height - root.debut-bas);
+        background: Theme.accent;
+    }
+}
+
 export component Symbole inherits Image {
     source: @image-url("icones/kadenz-icone.svg");
     image-rendering: smooth;
