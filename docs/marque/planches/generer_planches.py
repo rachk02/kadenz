@@ -1,4 +1,4 @@
-"""Planches de l'identité Kadenz, « Quatre pièces », version Bleu.
+"""Planches de l'identité Kadenz, « Quatre pièces », Indigo et Nuit (couleurs de l'ancienne identité, reprises le 2026-11-12).
 
 Neuf planches HTML de 1200 x 760 (logo principal, symbole, ton, couleurs, motif, typographie,
 signalétique, papeterie, mises en situation), la page index.html qui les réunit, une image PNG
@@ -21,8 +21,9 @@ spec = importlib.util.spec_from_file_location("generer_marque", MARQUE / "genere
 gm = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gm)   # lit sys.argv[1] (racine du dépôt) pour la police
 
-BLEU, NUIT, PALE, ENCRE, ARDOISE, TRAIT, BRUME = "#1f4fd8", "#1a1033", "#e8eefc", "#1f2933", "#52606d", "#d9dce3", "#f4f5f9"
-CLAIR = "#d6e0fa"   # texte secondaire sur Bleu vif (5,0:1)
+BLEU, NUIT, PALE, ENCRE, ARDOISE, TRAIT, BRUME = "#2d3a8c", "#1a2259", "#e8eaf6", "#1f2933", "#52606d", "#d9dce3", "#f4f5f9"
+CLAIR = "#c5cae0"   # texte secondaire sur Nuit (9,1:1)
+AMBRE = "#e3a23b"   # troisième temps, touche sur fond sombre
 
 TETE = """<!doctype html>
 <html lang="fr">
@@ -103,14 +104,14 @@ def p01():
     c = f"""<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:300px 270px;gap:20px">
 <div class="case" style="grid-column:span 2;background:{BRUME}">{img("kadenz-logo-horizontal.svg", 112)}<span class="leg">Version horizontale, usage par défaut</span></div>
 <div class="case bord">{img("kadenz-logo-empile.svg", 170)}<span class="leg">Version empilée, formats carrés</span></div>
-<div class="case" style="background:{BLEU}">{img("kadenz-logo-horizontal-negatif.svg", 64)}<span class="leg c">Négatif sur Bleu vif</span></div>
+<div class="case" style="background:{BLEU}">{img("kadenz-logo-horizontal-negatif.svg", 64)}<span class="leg c">Négatif sur Indigo</span></div>
 <div class="case bord">{img("kadenz-logo-horizontal-mono.svg", 64)}<span class="leg">Une couleur : tampon, impression noire</span></div>
 <div class="case bord" style="flex-direction:column;align-items:flex-start;justify-content:center;padding:26px;gap:14px">
 <div><p class="t3">Zone de protection</p><p class="petit">La moitié du côté d'une case du symbole, tout autour du logo. Elle suit la taille du logo.</p></div>
 <div><p class="t3">Tailles minimales</p><p class="petit">Horizontal : 120 px ou 30 mm de large. Empilé : 64 px ou 18 mm. Symbole : 16 px ou 6 mm.</p></div>
 <div><p class="t3">Mot</p><p class="petit">« kadenz » en Space Grotesk 600, vectorisé, en Nuit sur fond clair.</p></div>
 </div></div>"""
-    return planche(1, "Primary logo", "Quatre pièces et le mot « kadenz », en une seule couleur : Bleu vif", c)
+    return planche(1, "Primary logo", "Quatre pièces et le mot « kadenz », en une seule couleur : Indigo", c)
 
 
 # --- 02 Logomark --------------------------------------------------------------------
@@ -189,9 +190,9 @@ def p03():
 # --- 04 Color system ----------------------------------------------------------------
 def p04():
     grands = [
-        (BLEU, "#fff", "Bleu vif", "#1F4FD8", "RVB 31 79 216", "Couleur de marque, jeton accent", "Blanc dessus : 6,6:1"),
-        (NUIT, "#fff", "Nuit", "#1A1033", "RVB 26 16 51", "Mot du logo, bulles et alertes sombres", "Blanc dessus : 18,0:1"),
-        (PALE, ENCRE, "Bleu pâle", "#E8EEFC", "RVB 232 238 252", "Survol, jeton accent-survol", "Bleu vif dessus : 5,7:1"),
+        (BLEU, "#fff", "Indigo", "#2D3A8C", "RVB 45 58 140", "Logo, boutons, jeton accent", "Blanc dessus : 10,0:1"),
+        (NUIT, "#fff", "Nuit", "#1A2259", "RVB 26 34 89", "Bandeaux de marque, mot du logo", "Blanc dessus : 14,8:1"),
+        (AMBRE, ENCRE, "Ambre", "#E3A23B", "RVB 227 162 59", "Troisième temps, touche sur fond sombre", "Sur la Nuit : 6,7:1"),
     ]
     g = "".join(f'<div style="background:{f};color:{t};border-radius:4px;padding:22px;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;height:210px;box-sizing:border-box{";border:1px solid " + TRAIT if f == PALE else ""}">'
                 f'<span style="font-family:Space Grotesk;font-weight:700;font-size:22px">{n}</span><span style="font-size:14px">{h} · {r}</span>'
@@ -203,12 +204,12 @@ def p04():
                 f'<span style="font-weight:600;font-size:13px">{nom}</span><span class="petit">{h}<br>{u}</span></div>' for h, nom, u in neutres)
     barre = (f'<div style="display:flex;height:34px;border-radius:4px;overflow:hidden;border:1px solid {TRAIT}">'
              f'<div style="flex:60;background:{BRUME}"></div><div style="flex:25;background:{BLEU}"></div><div style="flex:15;background:{NUIT}"></div></div>'
-             f'<div style="display:flex;font-size:12px;color:{ARDOISE}"><span style="flex:60">Blanc et Brume, 60 %</span><span style="flex:25">Bleu vif, 25 %</span><span style="flex:15">Nuit et Encre, 15 %</span></div>')
+             f'<div style="display:flex;font-size:12px;color:{ARDOISE}"><span style="flex:60">Blanc et Brume, 60 %</span><span style="flex:25">Indigo, 25 %</span><span style="flex:15">Nuit et Encre, 15 %</span></div>')
     c = f"""<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">{g}</div>
 <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:14px">{n}</div>
 <div style="display:flex;flex-direction:column;gap:8px"><p class="t3" style="margin:0">Proportions d'usage (indicatives)</p>{barre}
-<p class="petit">Contrastes calculés selon WCAG 2.1, cible 4,5:1 pour le texte. Sur les bandeaux Bleu vif, textes secondaires en #D6E0FA (5,0:1). CMJN approchés et Pantone à faire établir par l'imprimeur.</p></div>"""
-    return planche(4, "Color System", "Une couleur de marque, le Bleu vif, et les neutres déjà en place dans l'application", c)
+<p class="petit">Contrastes calculés selon WCAG 2.1, cible 4,5:1 pour le texte. Sur les bandeaux Nuit, textes secondaires en #C5CAE0 (9,1:1) ; l'Ambre jamais en texte sur blanc. CMJN approchés et Pantone à faire établir par l'imprimeur.</p></div>"""
+    return planche(4, "Color System", "L'Indigo et la Nuit, une touche d'Ambre, et les neutres déjà en place dans l'application", c)
 
 
 # --- 05 Brand pattern ---------------------------------------------------------------
@@ -217,11 +218,11 @@ def p05():
                    f'<span class="petit">{lib}</span></div>'
                    for m, lib in (("ventes", "Ventes"), ("commandes", "Commandes"), ("livraisons", "Livraisons"), ("paiements", "Paiements")))
     regles = "".join(f'<div><p class="t3" style="font-size:14px;margin-bottom:4px">{t}</p><p class="petit">{d}</p></div>' for t, d in (
-        ("Règle 1", "Le motif reste ton sur ton, dans le Bleu vif ou dans les neutres, jamais à plusieurs couleurs."),
+        ("Règle 1", "Le motif reste ton sur ton, dans la Nuit ou dans les neutres, jamais à plusieurs couleurs."),
         ("Règle 2", "Jamais derrière un texte courant ; le logo se pose sur une zone calme."),
         ("Règle 3", "Les pièces gardent leur ordre et leur pas, décalées d'un temps à chaque rangée ; on agrandit, on ne déforme pas.")))
     c = f"""<div style="display:grid;grid-template-columns:592px 1fr;gap:20px;flex:1">
-<div class="case" style="overflow:hidden;background:{BLEU};height:592px">{motif_calme(BLEU, "#2a59df", 592, 592, 46, [(173, 241, 419, 351), (0, 546, 592, 592)])}
+<div class="case" style="overflow:hidden;background:{NUIT};height:592px">{motif_calme(NUIT, "#232c6b", 592, 592, 46, [(173, 241, 419, 351), (0, 546, 592, 592)])}
 <div style="position:relative">{img("kadenz-logo-horizontal-negatif.svg", 54, "display:block")}</div>
 <span class="leg c">Quatre pièces : trame ton sur ton, bandeaux de l'application, couvertures, kakémono</span></div>
 <div style="display:flex;flex-direction:column;gap:16px">
@@ -271,10 +272,10 @@ def p07():
     c = f"""<div style="display:grid;grid-template-columns:1.6fr 1fr 0.8fr;gap:22px;flex:1;background:{BRUME};border-radius:4px;padding:26px">
 <div style="display:flex;flex-direction:column;gap:12px">
 <div style="flex:1;border-radius:4px;background:linear-gradient(#cfd4dc,#b9bfc8);position:relative;display:flex;flex-direction:column;align-items:center;padding-top:30px">
-<div class="case" style="background:{BLEU};width:407px;height:130px;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,42,.18)">{motif_calme(BLEU, "#2a59df", 407, 130, 26, [(83, 24, 323, 106)])}
+<div class="case" style="background:{NUIT};width:407px;height:130px;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,42,.18)">{motif_calme(NUIT, "#232c6b", 407, 130, 26, [(83, 24, 323, 106)])}
 <div style="position:relative">{img("kadenz-logo-horizontal-negatif.svg", 58, "display:block")}</div></div>
 <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:120px;height:150px;background:#8a929e;border-radius:2px 2px 0 0"></div></div>
-<p class="petit">Enseigne caisson sur façade, Bleu vif, lettrage blanc rétroéclairé · dimensions selon la façade</p>
+<p class="petit">Enseigne caisson sur façade, Nuit, lettrage blanc rétroéclairé · dimensions selon la façade</p>
 </div>
 <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
 <div style="display:flex;align-items:flex-start;gap:0;margin-top:10px">
@@ -282,11 +283,11 @@ def p07():
 <div class="case" style="background:{BLEU};width:190px;height:250px;flex-direction:column;gap:18px">{img("kadenz-logo-empile-negatif.svg", 150)}</div></div>
 <p class="petit">Drapeau double face · [dimensions]</p></div>
 <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
-<div style="width:170px;height:440px;border-radius:2px;background:{BLEU};position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;padding:30px 12px 0;box-sizing:border-box;gap:20px;text-align:center">
+<div style="width:170px;height:440px;border-radius:2px;background:{NUIT};position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;padding:30px 12px 0;box-sizing:border-box;gap:20px;text-align:center">
 {img("kadenz-symbole-blanc.svg", 70)}{img("kadenz-mot-negatif.svg", 26)}
 <span style="font-family:Space Grotesk;font-weight:700;font-size:15px;color:#fff;margin-top:14px">Gestion commerciale</span>
 <div style="display:flex;flex-direction:column;align-items:center;gap:6px">{lignes}</div>
-<div style="position:absolute;left:0;bottom:0;width:170px;height:100px">{motif_calme(BLEU, "#2a59df", 170, 100, 25)}</div></div>
+<div style="position:absolute;left:0;bottom:0;width:170px;height:100px">{motif_calme(NUIT, "#232c6b", 170, 100, 25)}</div></div>
 <p class="petit" style="text-align:center">Kakémono enrouleur · 850 x 2000 mm</p></div>
 </div>"""
     return planche(7, "Signage design", "Enseigne caisson, drapeau et kakémono pour salon ou démonstration", c)
@@ -298,13 +299,13 @@ def p08():
     c = f"""<div style="display:grid;grid-template-columns:1fr 1fr;gap:26px;flex:1;background:{BRUME};border-radius:4px;padding:30px">
 <div style="display:flex;flex-direction:column;gap:14px">
 <div style="display:flex;gap:18px">
-<div class="case" style="width:255px;height:165px;background:{BLEU};overflow:hidden;{ombre}">{motif_calme(BLEU, "#2a59df", 255, 165, 26, [(55, 55, 200, 110)])}
+<div class="case" style="width:255px;height:165px;background:{NUIT};overflow:hidden;{ombre}">{motif_calme(NUIT, "#232c6b", 255, 165, 26, [(55, 55, 200, 110)])}
 <div style="position:relative">{img("kadenz-logo-horizontal-negatif.svg", 34, "display:block")}</div></div>
 <div style="width:255px;height:165px;background:#fff;border-radius:4px;padding:18px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;{ombre}">
 {img("kadenz-symbole.svg", 30)}
 <div><p style="font-family:Space Grotesk;font-weight:700;font-size:16px">[Prénom Nom]</p><p class="petit">[Fonction]</p></div>
 <p class="petit" style="line-height:1.45">[Téléphone]<br>[E-mail]<br>[Site]</p></div></div>
-<p class="petit">Carte de visite 85 x 55 mm : recto Bleu vif avec le motif, verso nominatif</p>
+<p class="petit">Carte de visite 85 x 55 mm : recto Nuit avec le motif, verso nominatif</p>
 <div style="width:528px;height:250px;background:#fff;border-radius:4px;padding:22px;box-sizing:border-box;position:relative;{ombre}">
 {img("kadenz-logo-horizontal.svg", 30)}<p class="petit" style="margin-top:6px">[Adresse de retour]</p>
 <div style="position:absolute;right:60px;top:120px;display:flex;flex-direction:column;gap:8px">
@@ -340,7 +341,7 @@ def p09():
 <div style="height:34px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid {TRAIT};font-size:12px">{img("kadenz-icone.svg", 16)}Kadenz
 <span style="flex:1"></span><span style="color:{ARDOISE};letter-spacing:18px">-□x</span></div>
 <div style="display:flex;height:330px">
-<div style="width:190px;background:{BLEU};position:relative;overflow:hidden">{motif_calme(BLEU, "#2a59df", 190, 330, 32, [(0, 0, 190, 214)])}
+<div style="width:190px;background:{NUIT};position:relative;overflow:hidden">{motif_calme(NUIT, "#232c6b", 190, 330, 32, [(0, 0, 190, 214)])}
 <div style="position:relative;padding:22px 20px;display:flex;flex-direction:column;gap:12px"><div style="align-self:flex-start;padding:2px 4px">{img("kadenz-logo-horizontal-negatif.svg", 26)}</div>
 <div style="height:8px"></div><div style="padding:6px;display:flex;flex-direction:column;gap:10px">{etapes}</div></div></div>
 <div style="flex:1;padding:24px 28px;display:flex;flex-direction:column">
@@ -355,7 +356,7 @@ def p09():
 <div style="background:{PALE};padding:4px;border-radius:4px">{img("kadenz-icone.svg", 28, "display:block")}</div><div style="width:28px;height:28px;background:#cfd4dc;border-radius:4px"></div></div>
 </div>
 <div style="display:flex;flex-direction:column;gap:12px">
-<div class="case" style="height:220px;background:{BLEU};overflow:hidden;justify-content:flex-start">{motif_calme(BLEU, "#2a59df", 436, 220, 220 / 6, [(0, 30, 320, 190)])}
+<div class="case" style="height:220px;background:{NUIT};overflow:hidden;justify-content:flex-start">{motif_calme(NUIT, "#232c6b", 436, 220, 220 / 6, [(0, 30, 320, 190)])}
 <div style="position:relative;padding:18px 22px;margin-left:24px;display:flex;flex-direction:column;gap:10px">
 {img("kadenz-logo-horizontal-negatif.svg", 44)}<span style="color:#fff;font-size:14px;line-height:1.4">Gestion commerciale pour<br>Windows. Rust, Slint, SQLite.</span></div></div>
 <p class="petit">Aperçu social du dépôt GitHub, 1280 x 640 px</p>
