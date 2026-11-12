@@ -2897,3 +2897,15 @@ msgstr "النسخة الاحتياطية غير موجودة: {}"
 
 msgid "la base est au schéma {}, cette version de l'application ne connaît que le schéma {}"
 msgstr "قاعدة البيانات على المخطط {}، وهذا الإصدار من التطبيق لا يعرف إلا المخطط {}"
+
+msgid "Données d'une installation précédente"
+msgstr "بيانات تثبيت سابق"
+
+msgid "Vous avez une sauvegarde de Kadenz ? Restaurez-la pour retrouver l'entreprise, les comptes et les documents, sans passer par les étapes suivantes."
+msgstr "هل لديك نسخة احتياطية من Kadenz؟ استعدها لاسترجاع المؤسسة والحسابات والمستندات، دون المرور بالخطوات التالية."
+
+msgid "Restaurer cette sauvegarde ? L'installation neuve est remplacée par les données de la sauvegarde."
+msgstr "استعادة هذه النسخة الاحتياطية؟ يُستبدل التثبيت الجديد ببيانات النسخة الاحتياطية."
+
+msgid "Kadenz est déjà installé : restaurez depuis Paramètres, Sauvegardes"
+msgstr "Kadenz مثبّت بالفعل: استعد من الإعدادات، النسخ الاحتياطية"

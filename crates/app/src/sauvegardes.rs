@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use kadenz_domaine::role::Droit;
+use kadenz_stockage::comptes::{self, EtatInstallation};
 use kadenz_stockage::sauvegarde::{self, Genre, Reglage};
 use kadenz_stockage::{Erreur, droits};
 use slint::{ComponentHandle, SharedString};
@@ -73,6 +74,18 @@ fn afficher(fenetre: &FenetrePrincipale, chemins: &RefCell<Vec<PathBuf>>) {
     api.set_ligne_courante(-1);
 }
 
+/// Installation neuve : aucun compte n'existe encore (assistant de premier
+/// lancement). Le mot de passe de la sauvegarde est alors la seule garde.
+fn installation_neuve(etat: &Etat) -> Result<(), Retour> {
+    match comptes::etat_installation(&etat.conn) {
+        Ok(EtatInstallation::AssistantRequis) if etat.utilisateur.is_none() => Ok(()),
+        Ok(_) => Err(retour_erreur(
+            "Kadenz est déjà installé : restaurez depuis Paramètres, Sauvegardes",
+        )),
+        Err(erreur) => Err(retour_erreur(erreur)),
+    }
+}
+
 /// Le compte connecté peut-il sauvegarder et restaurer ?
 fn autorise(etat: &Etat) -> Result<(), Retour> {
     let Some(acteur) = &etat.utilisateur else {
@@ -103,15 +116,17 @@ fn choisir_fichier(fenetre: &FenetrePrincipale) -> SharedString {
 
 /// Restaure une sauvegarde pendant une session : la connexion est fermée avant
 /// (Windows refuse de renommer une base ouverte), la base rouverte après, puis
-/// chacun se reconnecte. En cas d'échec, la base en place est rouverte.
+/// chacun se reconnecte. En cas d'échec, la base en place est rouverte. `garde`
+/// dit qui peut restaurer : le droit du compte connecté, ou une installation neuve.
 fn restaurer_en_session(
     fenetre: &FenetrePrincipale,
     etat: &EtatPartage,
     sauvegarde_choisie: &Path,
     mot_de_passe: &str,
+    garde: fn(&Etat) -> Result<(), Retour>,
 ) -> Retour {
     let mut e = etat.borrow_mut();
-    if let Err(refus) = autorise(&e) {
+    if let Err(refus) = garde(&e) {
         return refus;
     }
     let chemin = chemin_base();
@@ -138,6 +153,10 @@ fn restaurer_en_session(
         Ok(()) => {
             crate::licence::ouvrir(fenetre, &e.conn, &e.poste);
             crate::fermer_session(fenetre, &mut e);
+            // Sauvegarde sans compte (base jamais installée) : retour à l'assistant.
+            if comptes::etat_installation(&e.conn).ok() == Some(EtatInstallation::AssistantRequis) {
+                fenetre.set_ecran(crate::Ecran::Assistant);
+            }
             retour_ok("sauvegarde restaurée ; reconnectez-vous")
         }
         Err(erreur) => retour_erreur(erreur),
@@ -260,7 +279,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let Some(mot_de_passe) = reglage().mot_de_passe else {
             return retour_erreur("saisissez le mot de passe de la sauvegarde");
         };
-        restaurer_en_session(&f, &e, &chemin, &mot_de_passe)
+        restaurer_en_session(&f, &e, &chemin, &mot_de_passe, autorise)
     });
 
     let f = fenetre.as_weak();
@@ -274,7 +293,21 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let Some(f) = f.upgrade() else {
             return Retour::default();
         };
-        restaurer_en_session(&f, &e, Path::new(chemin.as_str()), &mot_de_passe)
+        restaurer_en_session(&f, &e, Path::new(chemin.as_str()), &mot_de_passe, autorise)
+    });
+
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_restaurer_installation_neuve(move |chemin, mot_de_passe| {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
+        restaurer_en_session(
+            &f,
+            &e,
+            Path::new(chemin.as_str()),
+            &mot_de_passe,
+            installation_neuve,
+        )
     });
 }
 

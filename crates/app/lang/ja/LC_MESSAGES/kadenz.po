@@ -2897,3 +2897,15 @@ msgstr "バックアップが見つかりません：{}"
 
 msgid "la base est au schéma {}, cette version de l'application ne connaît que le schéma {}"
 msgstr "データベースはスキーマ {} です。このバージョンのアプリはスキーマ {} までしか扱えません"
+
+msgid "Données d'une installation précédente"
+msgstr "以前のインストールのデータ"
+
+msgid "Vous avez une sauvegarde de Kadenz ? Restaurez-la pour retrouver l'entreprise, les comptes et les documents, sans passer par les étapes suivantes."
+msgstr "Kadenz のバックアップをお持ちですか？復元すると、次の手順を経ずに会社、アカウント、書類を取り戻せます。"
+
+msgid "Restaurer cette sauvegarde ? L'installation neuve est remplacée par les données de la sauvegarde."
+msgstr "このバックアップを復元しますか？新しいインストールはバックアップのデータで置き換えられます。"
+
+msgid "Kadenz est déjà installé : restaurez depuis Paramètres, Sauvegardes"
+msgstr "Kadenz はすでにインストールされています。設定の「バックアップ」から復元してください"

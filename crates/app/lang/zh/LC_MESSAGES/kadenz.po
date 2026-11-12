@@ -2897,3 +2897,15 @@ msgstr "找不到备份：{}"
 
 msgid "la base est au schéma {}, cette version de l'application ne connaît que le schéma {}"
 msgstr "数据库使用架构 {}，此版本的应用只支持架构 {}"
+
+msgid "Données d'une installation précédente"
+msgstr "以前安装的数据"
+
+msgid "Vous avez une sauvegarde de Kadenz ? Restaurez-la pour retrouver l'entreprise, les comptes et les documents, sans passer par les étapes suivantes."
+msgstr "您有 Kadenz 备份吗？恢复它即可找回企业、账户和单据，无需完成后续步骤。"
+
+msgid "Restaurer cette sauvegarde ? L'installation neuve est remplacée par les données de la sauvegarde."
+msgstr "要恢复此备份吗？新安装将被备份中的数据替换。"
+
+msgid "Kadenz est déjà installé : restaurez depuis Paramètres, Sauvegardes"
+msgstr "Kadenz 已安装：请在“设置”中的“备份”里恢复"

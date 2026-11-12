@@ -30,6 +30,8 @@ export global SauvegardesApi {
     // Fichier pris ailleurs (clé USB, autre poste) : chemin choisi, ou vide.
     callback choisir-fichier() -> string;
     callback restaurer-fichier(chemin: string, mot-de-passe: string) -> Retour;
+    // Installation neuve (assistant, aucun compte encore) : reprendre une sauvegarde.
+    callback restaurer-installation-neuve(chemin: string, mot-de-passe: string) -> Retour;
 }
 
 export component PageSauvegardes inherits ScrollView {
@@ -110,7 +112,8 @@ export component PageSauvegardes inherits ScrollView {
             horizontal-alignment: Theme.debut;
             text: SauvegardesApi.dossier;
             color: Theme.texte;
-            wrap: word-wrap;
+            // Chemin : coupé n'importe où, pas seulement aux espaces.
+            wrap: char-wrap;
         }
 
         HorizontalLayout {
@@ -329,7 +332,8 @@ export component PageSauvegardes inherits ScrollView {
                     horizontal-alignment: Theme.debut;
                     text: root.fichier;
                     color: Theme.texte;
-                    wrap: word-wrap;
+                    // Chemin : coupé n'importe où, pas seulement aux espaces.
+                    wrap: char-wrap;
                 }
 
                 Champ {
@@ -359,13 +363,17 @@ export component PageSauvegardes inherits ScrollView {
     }
 }
 
-// Écran « Démarrage impossible » : message selon la cause, puis restaurer une
-// sauvegarde (fichier et mot de passe) ou ouvrir le dossier des données.
-export component EcranDemarrageImpossible inherits Rectangle {
-    in property <string> message;
+// Restauration d'un fichier de sauvegarde : bouton de choix du fichier, puis mot de
+// passe de la sauvegarde, confirmation et résultat. Sert à l'écran « Démarrage
+// impossible » et à la première étape de l'assistant (installation neuve).
+export component RestaurationFichier inherits VerticalLayout {
+    in property <string> libelle-bouton: @tr("Restaurer une sauvegarde");
+    in property <bool> bouton-principal: true;
+    in property <string> question;
+    // Aligné au début du sens de lecture (assistant) ou centré (démarrage impossible).
+    in property <bool> centre: false;
     callback choisir-fichier() -> string;
     callback restaurer-fichier(chemin: string, mot-de-passe: string) -> Retour;
-    callback ouvrir-dossier-donnees();
 
     property <string> fichier;
     property <string> mot-de-passe;
@@ -381,6 +389,77 @@ export component EcranDemarrageImpossible inherits Rectangle {
             }
         }
     }
+
+    spacing: 12px;
+
+    HorizontalLayout {
+        alignment: root.centre ? LayoutAlignment.center : Theme.rangee-debut;
+        spacing: 8px;
+
+        Bouton {
+            text: root.libelle-bouton;
+            primary: root.bouton-principal;
+            clicked => {
+                let chemin = root.choisir-fichier();
+                if (chemin != "") {
+                    root.fichier = chemin;
+                    root.mot-de-passe = "";
+                    root.retour = { ok: false, message: "" };
+                }
+            }
+        }
+
+        @children
+    }
+
+    if root.fichier != "": HorizontalLayout {
+        alignment: root.centre ? LayoutAlignment.center : Theme.rangee-debut;
+
+        VerticalLayout {
+            width: 360px;
+            spacing: 12px;
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: root.fichier;
+                color: Theme.texte;
+                // Chemin : coupé n'importe où, pas seulement aux espaces.
+                wrap: char-wrap;
+            }
+
+            Champ {
+                libelle: @tr("Mot de passe de la sauvegarde");
+                secret: true;
+                valeur <=> root.mot-de-passe;
+            }
+
+            if root.retour.message != "": MessageRetour {
+                retour: root.retour;
+            }
+
+            HorizontalLayout {
+                alignment: Theme.rangee-debut;
+
+                Bouton {
+                    text: @tr("Restaurer");
+                    enabled: root.mot-de-passe != "";
+                    clicked => {
+                        root.restauration-demandee = true;
+                        Confirmation.demander(root.question, @tr("Restaurer"), true);
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Écran « Démarrage impossible » : message selon la cause, puis restaurer une
+// sauvegarde (fichier et mot de passe) ou ouvrir le dossier des données.
+export component EcranDemarrageImpossible inherits Rectangle {
+    in property <string> message;
+    callback choisir-fichier() -> string;
+    callback restaurer-fichier(chemin: string, mot-de-passe: string) -> Retour;
+    callback ouvrir-dossier-donnees();
 
     background: white;
 
@@ -405,69 +484,20 @@ export component EcranDemarrageImpossible inherits Rectangle {
             }
         }
 
-        HorizontalLayout {
-            alignment: center;
-            spacing: 8px;
-
-            Bouton {
-                text: @tr("Restaurer une sauvegarde");
-                primary: true;
-                clicked => {
-                    let chemin = root.choisir-fichier();
-                    if (chemin != "") {
-                        root.fichier = chemin;
-                        root.mot-de-passe = "";
-                        root.retour = { ok: false, message: "" };
-                    }
-                }
+        RestaurationFichier {
+            centre: true;
+            question: @tr("Restaurer cette sauvegarde ? La base actuelle est mise de côté, jamais effacée.");
+            choisir-fichier => {
+                root.choisir-fichier()
+            }
+            restaurer-fichier(chemin, mot-de-passe) => {
+                root.restaurer-fichier(chemin, mot-de-passe)
             }
 
             Bouton {
                 text: @tr("Ouvrir le dossier des données");
                 clicked => {
                     root.ouvrir-dossier-donnees();
-                }
-            }
-        }
-
-        if root.fichier != "": HorizontalLayout {
-            alignment: center;
-
-            VerticalLayout {
-                width: 360px;
-                spacing: 12px;
-
-                Text {
-                    horizontal-alignment: Theme.debut;
-                    text: root.fichier;
-                    color: Theme.texte;
-                    wrap: word-wrap;
-                }
-
-                Champ {
-                    libelle: @tr("Mot de passe de la sauvegarde");
-                    secret: true;
-                    valeur <=> root.mot-de-passe;
-                }
-
-                if root.retour.message != "": MessageRetour {
-                    retour: root.retour;
-                }
-
-                HorizontalLayout {
-                    alignment: Theme.rangee-debut;
-
-                    Bouton {
-                        text: @tr("Restaurer");
-                        enabled: root.mot-de-passe != "";
-                        clicked => {
-                            root.restauration-demandee = true;
-                            Confirmation.demander(
-                                @tr("Restaurer cette sauvegarde ? La base actuelle est mise de côté, jamais effacée."),
-                                @tr("Restaurer"),
-                                true);
-                        }
-                    }
                 }
             }
         }

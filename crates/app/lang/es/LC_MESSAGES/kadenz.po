@@ -2897,3 +2897,15 @@ msgstr "copia de seguridad no encontrada: {}"
 
 msgid "la base est au schéma {}, cette version de l'application ne connaît que le schéma {}"
 msgstr "la base usa el esquema {}, esta versión de la aplicación solo conoce el esquema {}"
+
+msgid "Données d'une installation précédente"
+msgstr "Datos de una instalación anterior"
+
+msgid "Vous avez une sauvegarde de Kadenz ? Restaurez-la pour retrouver l'entreprise, les comptes et les documents, sans passer par les étapes suivantes."
+msgstr "¿Tiene una copia de seguridad de Kadenz? Restáurela para recuperar la empresa, las cuentas y los documentos, sin pasar por los pasos siguientes."
+
+msgid "Restaurer cette sauvegarde ? L'installation neuve est remplacée par les données de la sauvegarde."
+msgstr "¿Restaurar esta copia de seguridad? La nueva instalación se reemplaza por los datos de la copia."
+
+msgid "Kadenz est déjà installé : restaurez depuis Paramètres, Sauvegardes"
+msgstr "Kadenz ya está instalado: restaure desde Configuración, Copias de seguridad"

@@ -2897,3 +2897,15 @@ msgstr "backup not found: {}"
 
 msgid "la base est au schéma {}, cette version de l'application ne connaît que le schéma {}"
 msgstr "the database uses schema {}, this version of the application only knows schema {}"
+
+msgid "Données d'une installation précédente"
+msgstr "Data from a previous installation"
+
+msgid "Vous avez une sauvegarde de Kadenz ? Restaurez-la pour retrouver l'entreprise, les comptes et les documents, sans passer par les étapes suivantes."
+msgstr "Do you have a Kadenz backup? Restore it to get back the company, the accounts and the documents, without going through the next steps."
+
+msgid "Restaurer cette sauvegarde ? L'installation neuve est remplacée par les données de la sauvegarde."
+msgstr "Restore this backup? The new installation is replaced by the data in the backup."
+
+msgid "Kadenz est déjà installé : restaurez depuis Paramètres, Sauvegardes"
+msgstr "Kadenz is already installed: restore from Settings, Backups"

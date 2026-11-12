@@ -6,6 +6,7 @@
 import { CheckBox } from "std-widgets.slint";
 import { Bouton, Champ, MessageErreur, MotifMarque, Rangee, Section, Theme, Titre } from "composants.slint";
 import { IdentifiantPoste, LicenceApi, SaisieCle, VerificationUi } from "licence.slint";
+import { RestaurationFichier, SauvegardesApi } from "sauvegardes.slint";
 
 export struct DonneesAssistant {
     nom: string,
@@ -192,6 +193,29 @@ export component EcranAssistant inherits Rectangle {
 
                         SaisieCle {
                             cle <=> root.cle-licence;
+                        }
+
+                        // Réinstallation : reprendre une sauvegarde au lieu de tout ressaisir.
+                        Section {
+                            text: @tr("Données d'une installation précédente");
+                        }
+
+                        Text {
+                            horizontal-alignment: Theme.debut;
+                            text: @tr("Vous avez une sauvegarde de Kadenz ? Restaurez-la pour retrouver l'entreprise, les comptes et les documents, sans passer par les étapes suivantes.");
+                            color: Theme.texte-secondaire;
+                            wrap: word-wrap;
+                        }
+
+                        RestaurationFichier {
+                            bouton-principal: false;
+                            question: @tr("Restaurer cette sauvegarde ? L'installation neuve est remplacée par les données de la sauvegarde.");
+                            choisir-fichier => {
+                                SauvegardesApi.choisir-fichier()
+                            }
+                            restaurer-fichier(chemin, mot-de-passe) => {
+                                SauvegardesApi.restaurer-installation-neuve(chemin, mot-de-passe)
+                            }
                         }
                     }
 
