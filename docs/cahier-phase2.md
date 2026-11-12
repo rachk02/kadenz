@@ -4,6 +4,7 @@
 |---|---|---|
 | 0.1 | 2026-11-12 | Premier brouillon : candidats repris de la section 17 du cahier V1 et de la visée annoncée le 2026-11-11 (serveur, site web, suite comparable à Sage), dépendances et questions ouvertes. Rien n'est décidé ni codé. |
 | 0.2 | 2026-11-12 | Premières décisions de l'utilisateur : les sept candidats entrent dans la phase 2, plus les chantiers jugés nécessaires ; serveur installable chez le client et hébergé ; comptabilité comme produit suivant de la suite ; licence par abonnement. Chantiers de fondation ajoutés (proposés, à valider), ordre proposé, questions mises à jour. |
+| 0.3 | 2026-11-12 | Décisions suivantes : travail hors connexion, lecture seule à l'échéance, licences V1 perpétuelles, chantiers et ordre de la 0.2 validés. Relecture de kadenz-34 (stockage, licence, installateur) : étape 0 « pont V1 » proposée, points techniques de la section 6, nouvelles questions dont la numérotation hors connexion. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -22,21 +23,26 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 
 ## 2. Décisions de l'utilisateur (2026-11-12)
 
-1. **Périmètre** : les sept candidats de la section 3 entrent dans la phase 2 (multi-poste et serveur, export SYSCOHADA, stock, email, multi-devise, signature électronique, site web), plus « tout ce que tu vas juger nécessaire pour la suite » : ces ajouts sont en section 4, à valider un par un.
+1. **Périmètre** : les sept candidats de la section 3 entrent dans la phase 2 (multi-poste et serveur, export SYSCOHADA, stock, email, multi-devise, signature électronique, site web), plus « tout ce que tu vas juger nécessaire pour la suite » : ces ajouts sont en section 4.
 2. **Serveur** : les deux formes, installable sur le réseau local de l'entreprise et hébergé sur Internet.
 3. **Suite** : la comptabilité est le produit qui suit la gestion commerciale.
 4. **Licence** : abonnement.
+5. **Hors connexion** : un poste doit pouvoir travailler quand le serveur ou Internet est coupé, puis resynchroniser. La façon de numéroter les documents validés hors connexion reste à trancher (question 8.1).
+6. **Échéance de l'abonnement** : à la fin d'un abonnement non renouvelé, Kadenz passe en lecture seule.
+7. **Licences V1 déjà émises** : elles restent perpétuelles ; l'abonnement concerne le serveur et les nouvelles licences.
+8. **Plan** : les chantiers ajoutés 4.1 à 4.5 et l'ordre de la section 5 sont validés tels quels. L'étape 0 (4.0), proposée ensuite par kadenz-34, reste à valider.
 
 ## 3. Candidats
 
 Chaque candidat décrit ce qu'il recouvrirait, ce qu'il touche dans la V1 et ce qu'il faut savoir avant de le spécifier.
 
-### 3.1 Multi-poste et serveur (retenu : réseau local et hébergé)
+### 3.1 Multi-poste et serveur (retenu : réseau local et hébergé, travail hors connexion)
 
-- Recouvre : plusieurs postes qui travaillent sur les mêmes données en même temps ; comptes communs ; numérotation des documents sans doublon entre postes.
+- Recouvre : plusieurs postes qui travaillent sur les mêmes données en même temps ; comptes communs ; numérotation des documents sans doublon entre postes ; travail hors connexion puis resynchronisation (décision 5).
 - Touche : le stockage entier (aujourd'hui un fichier SQLite local), la clé de chiffrement liée au poste, la sauvegarde, la licence liée au poste, la mise à jour (serveur et postes à la même version du schéma).
-- Conséquence de la décision « les deux » : un seul serveur, livré sous deux formes (installé chez le client, ou exploité par l'éditeur), et non deux produits. La forme hébergée ajoute l'exploitation par l'éditeur (hébergement, sécurité réseau, disponibilité, sauvegardes côté serveur, séparation des données entre entreprises clientes).
-- Reste ouvert : fonctionnement hors connexion des postes (question 5.1), système d'exploitation du serveur installé chez le client, choix de la base de données côté serveur.
+- Conséquence de la décision 2 : un seul serveur, livré sous deux formes (installé chez le client, ou exploité par l'éditeur), et non deux produits. La forme hébergée ajoute l'exploitation par l'éditeur (hébergement, sécurité réseau, disponibilité, sauvegardes côté serveur, séparation des données entre entreprises clientes).
+- Conséquence de la décision 5 : chaque poste garde une copie locale des données dont il a besoin et une file des opérations faites hors connexion ; au retour du réseau, le serveur les applique et signale les conflits (même document modifié de deux côtés). Les règles de conflit restent à spécifier.
+- Reste ouvert : numérotation hors connexion (question 8.1), système d'exploitation du serveur installé chez le client (question 8.4), base de données côté serveur.
 
 ### 3.2 Export comptable SYSCOHADA
 
@@ -49,7 +55,7 @@ Chaque candidat décrit ce qu'il recouvrirait, ce qu'il touche dans la V1 et ce 
 
 - Recouvre, selon la section 17 du cahier V1 : entrées et sorties de stock, valorisation.
 - Touche : le référentiel Produits, la réception des bons de commande (entrée) et la confirmation des bordereaux de livraison (sortie), déjà présentes en V1 ; le tableau de bord.
-- À savoir : méthode de valorisation, gestion de plusieurs dépôts ou non, inventaire et ajustements, stock négatif permis ou refusé, produits qui ne sont pas stockés (services).
+- À savoir : méthode de valorisation, gestion de plusieurs dépôts ou non, inventaire et ajustements, stock négatif permis ou refusé, produits qui ne sont pas stockés (services). Avec le travail hors connexion, deux postes peuvent sortir le même article sans se voir : le stock négatif est alors possible de fait.
 
 ### 3.4 Envoi par email
 
@@ -74,83 +80,107 @@ Chaque candidat décrit ce qu'il recouvrirait, ce qu'il touche dans la V1 et ce 
 - Pour tout site public, la liste de contrôle SEO de l'utilisateur s'applique (plan du site, robots, balises canoniques et langues, titres et descriptions uniques, données structurées tirées du contenu réel, images, performances mobiles, Search Console préparée pour l'utilisateur).
 - À savoir : objet, langues, nom de domaine, hébergement, contenus disponibles (textes, captures, tarifs) ; rien ne sera inventé pour remplir une page.
 
-## 4. Chantiers ajoutés (proposés, à valider)
+## 4. Chantiers ajoutés
 
-Proposés en réponse à la décision 1 ; chacun découle d'une décision de la section 2 et reste à valider par l'utilisateur.
+Les chantiers 4.1 à 4.5 sont validés (décision 8). Le chantier 4.0 est proposé par kadenz-34 et reste à valider.
+
+### 4.0 Pont V1 (proposé, à valider)
+
+Une petite version V1, publiée avant toute version de la phase 2, pour que les postes déjà installés ne soient pas mis en difficulté par celle-ci. Constats vérifiés dans le code le 2026-11-12 :
+
+- **Mises à jour** : `kadenz-maj` interroge `releases/latest` (`crates/maj/src/lib.rs`, `DERNIERE_RELEASE`) et propose toute version plus grande. Une version de la phase 2 publiée en Latest serait proposée à tous les postes V1 sous licence perpétuelle (décision 7). Il faut d'abord livrer une règle de compatibilité : même version majeure, champ « mise à jour possible depuis » dans la release, ou canal distinct.
+- **Clé de licence** : une seule clé publique embarquée, sans identifiant (`crates/licence/src/lib.rs`, `CLE_PUBLIQUE`). Le portail d'abonnement (4.1) mettra une clé de signature en ligne ; les postes installés doivent déjà accepter une liste de clés avec un identifiant, pour permettre une rotation.
+- **Intégrité des mises à jour** : elle repose sur le fichier `.sha256` publié dans la même release ; un compte GitHub compromis suffirait à piéger la mise à jour de tous les postes. Une signature Ed25519 du manifeste de mise à jour, indépendante du certificat de code, ferme ce risque.
 
 ### 4.1 Abonnement et portail de licences
 
-- Pourquoi : la licence par abonnement (décision 4) remplace une clé perpétuelle vérifiée hors ligne par une licence datée qu'il faut renouveler.
-- Recouvre : émission et renouvellement des licences (aujourd'hui l'outil `kadenz-editeur`, manuel) ; suivi des abonnements par entreprise ; comportement à l'échéance ; paiement.
+- Pourquoi : la licence par abonnement (décision 4) remplace, pour les nouvelles licences, une clé perpétuelle vérifiée hors ligne par une licence datée qu'il faut renouveler.
+- Recouvre : émission et renouvellement des licences (aujourd'hui l'outil `kadenz-editeur`, manuel) ; suivi des abonnements par entreprise ; passage en lecture seule à l'échéance (décision 6) ; paiement.
 - Touche : la licence V1 (section 15 du cahier V1 : Ed25519, liaison au poste, modules), l'assistant de premier lancement, le site (3.7).
-- À savoir : questions 5.2 à 5.4.
+- Points techniques (kadenz-34) : une licence datée vérifiée hors connexion dépend de l'horloge du poste, il faut un garde-fou contre le retour en arrière (dernière date vue, conservée) et l'heure du serveur quand il est joignable ; le lien au poste ne convient plus, la licence se lie au serveur en réseau local ou à l'entreprise cliente en hébergé, selon l'unité choisie (question 8.6).
+- Lecture seule : aucune échéance n'empêche de consulter, d'imprimer ni d'exporter les données déjà saisies (les factures émises doivent rester consultables) ; à confirmer (question 8.5).
 
 ### 4.2 Reprise des installations V1
 
-- Pourquoi : une base V1 doit pouvoir être reprise sans perte (section 5) ; avec un serveur, il faut aussi pouvoir verser une base mono-poste dans le serveur.
+- Pourquoi : une base V1 doit pouvoir être reprise sans perte (section 7) ; avec un serveur, il faut aussi pouvoir verser une base mono-poste dans le serveur.
 - Recouvre : migration du schéma, import d'une base V1 (ou d'une sauvegarde `.kzs`) dans le serveur, numérotation continue après la reprise.
+- Point ouvert (kadenz-34) : une base V1 correspond à une entreprise. Fusionner plusieurs installations V1 indépendantes d'une même entreprise fait entrer des numéros en collision (deux factures F2026-05-0001, par exemple) ; à exclure ou à spécifier (question 8.3). Importer un `.kzs` suppose que le serveur lise le format chiffré de la V1.
 
 ### 4.3 Socle commun de la suite
 
 - Pourquoi : la comptabilité vient ensuite (décision 3) ; ce qui est commun aux deux produits doit être séparé avant de bâtir le serveur, pour ne pas le refaire.
 - Recouvre : entreprise, comptes et droits, tiers (clients et fournisseurs), paramètres fiscaux, licence et modules, journal d'audit, partagés par les produits de la suite.
+- Frontière de l'API (kadenz-34) : avec un serveur, les postes n'ouvrent plus la base ; droits, validation, numérotation et audit s'exécutent côté serveur, et le stockage actuel devient le coeur du serveur derrière une API. Cette frontière est à fixer ici, avant tout écran multi-poste.
 
 ### 4.4 Sécurité et exploitation du serveur
 
 - Pourquoi : la forme hébergée (décision 2) met des données d'entreprises clientes sur un serveur exploité par l'éditeur.
 - Recouvre : authentification des postes et des comptes, chiffrement des échanges, séparation des données entre entreprises, sauvegardes côté serveur, journal des accès, mises à jour du serveur.
+- Points techniques (kadenz-34) : une base par entreprise (séparation naturelle, sauvegarde et restauration par client, réutilisation du format `.kzs`) ou une base partagée entre clients, choix structurant ; la clé de chiffrement actuelle, protégée par un compte Windows, ne se transpose ni à un service ni à Linux, et sa gestion dépend de la question 8.2 ; côté serveur, les sauvegardes deviennent planifiées, avec rotation et restauration par l'administrateur, le `.kzs` restant le format d'échange.
 
 ### 4.5 Signature du code
 
-- Pourquoi : déjà spécifiée en V1 (section 16 du cahier V1) mais en attente du certificat ; avec des postes et un serveur qui se mettent à jour, l'installation non signée devient un frein plus fort (antivirus, confiance du client).
-- Reste une décision et un achat de l'utilisateur (question 8 du cahier V1).
+- Pourquoi : déjà spécifiée en V1 (section 16 du cahier V1) mais en attente du certificat ; un service serveur non signé avec une exception de pare-feu est bloqué bien plus souvent qu'une application (kadenz-34), et les mises à jour des postes et du serveur en dépendent.
+- Placée dans les fondations. Reste une décision et un achat de l'utilisateur (question 8 du cahier V1).
 
-## 5. Ordre proposé (à valider)
+## 5. Ordre (validé, décision 8)
 
-1. **Fondations** : socle commun (4.3), serveur sous ses deux formes (3.1), sécurité (4.4), reprise des bases V1 (4.2), abonnement (4.1). Ces chantiers décident de l'architecture ; les faire après les fonctions obligerait à refaire celles-ci.
+0. **Pont V1** (4.0), si l'utilisateur le valide : avant toute release de la phase 2.
+1. **Fondations** : socle commun (4.3), serveur sous ses deux formes (3.1), sécurité (4.4), reprise des bases V1 (4.2), abonnement (4.1), signature du code (4.5). Ces chantiers décident de l'architecture ; les faire après les fonctions obligerait à refaire celles-ci.
 2. **Fonctions métier sur le nouveau socle** : stock (3.3), puis export SYSCOHADA (3.2) comme première brique de la comptabilité.
 3. **Chantiers indépendants**, intercalables selon la demande des clients : email (3.4), signature électronique (3.6), multi-devise (3.5, à faire avant l'export SYSCOHADA s'il doit en tenir compte).
 4. **Site web** (3.7) : site de présentation possible dès maintenant ; espace client et abonnement après 4.1 et 3.1.
 
-## 6. Dépendances entre chantiers
+## 6. Points techniques et dépendances
 
+### 6.1 Dépendances entre chantiers
+
+- 4.0 (pont V1) précède toute release de la phase 2.
 - 3.1 (serveur) conditionne un espace client sur le site (3.7) et change la façon de faire la sauvegarde, la licence et les mises à jour.
-- 4.1 (abonnement) dépend d'un moyen de vérifier ou de renouveler la licence ; sa forme dépend de la réponse 5.1 (hors connexion).
+- 4.1 (abonnement) dépend du garde-fou d'horloge et du lien au serveur ou à l'entreprise (4.1, points techniques).
 - 3.2 (export comptable) est plus simple si 3.5 (multi-devise) n'est pas encore là, et doit être revu quand 3.5 arrive.
 - 3.3 (stock) s'appuie sur les réceptions et livraisons de la V1 ; un stock partagé entre postes dépend du serveur.
 - 3.4 (email) et 3.6 (signature) s'appuient sur les PDF existants et sont indépendants des autres.
 
+### 6.2 Points relevés dans le code (kadenz-34, 2026-11-12)
+
+- **Numérotation** : le numéro d'un document est attribué à la validation, sans trou, par type, année et mois (`prochain_rang`, `crates/stockage/src/lib.rs`). Un poste coupé du serveur ne peut pas l'attribuer seul sans risque de doublon, et réserver des blocs de numéros par poste casse la continuité. C'est l'objet de la question 8.1.
+- **Horodatage** : `maintenant()` (`crates/stockage/src/lib.rs`) écrit l'heure locale sans fuseau. Avec plusieurs postes et un serveur hébergé, peut-être dans un autre fuseau, les horodatages techniques (audit, création, validation) doivent venir du serveur, avec le fuseau ; les dates métier (date de la facture) restent saisies.
+- **Installateur du serveur** (réseau local sous Windows) : service Windows, règle de pare-feu, certificat TLS sur le réseau local (auto-signé, donc confiance ou épinglage par les postes), moyen pour les postes de trouver le serveur. Un serveur sous Linux demande un autre paquet (question 8.4).
+- **Désinstallation** : à l'inverse de la V1, désinstaller le serveur ne doit jamais effacer les données de l'entreprise ; sur un poste client en multi-poste, les données locales ne sont qu'une copie de travail, à condition que les opérations faites hors connexion aient été envoyées au serveur.
+
 ## 7. Contraintes déjà connues
 
-- Ne rien casser pour les installations V1 : une base V1 doit pouvoir être reprise (migration du schéma, jamais de perte).
+- Ne rien casser pour les installations V1 : une base V1 doit pouvoir être reprise (migration du schéma, jamais de perte), et ses licences restent perpétuelles (décision 7).
 - Les documents remis aux clients ne portent pas l'identité Kadenz.
-- Les décisions de la V1 restent valables tant qu'elles ne sont pas revues explicitement (cahier V1, sections 18 et 19). La décision 4 revoit la licence perpétuelle de la section 15 du cahier V1 pour les nouvelles licences ; le sort des licences déjà émises est la question 5.4.
+- Les décisions de la V1 restent valables tant qu'elles ne sont pas revues explicitement (cahier V1, sections 18 et 19). La décision 4 revoit la licence perpétuelle de la section 15 du cahier V1 pour les nouvelles licences seulement.
 
 ## 8. Questions ouvertes pour l'utilisateur
 
 ### Réglées le 2026-11-12
 
-- Périmètre (décision 1), forme du serveur (décision 2), produit suivant de la suite (décision 3), modèle de licence (décision 4).
+- Périmètre, forme du serveur, produit suivant, modèle de licence, hors connexion, échéance, licences V1, plan (décisions 1 à 8).
 
-### Nouvelles, nées de ces décisions
+### Nouvelles
 
-1. **Hors connexion** : un poste doit-il pouvoir travailler quand le serveur ou Internet est coupé (et resynchroniser ensuite), ou le serveur est-il obligatoire pour travailler ?
-2. **Abonnement, échéance** : que se passe-t-il à la fin d'un abonnement non renouvelé : lecture seule, socle seul comme une V1 sans clé, ou blocage ? Délai de grâce ?
-3. **Abonnement, forme** : période (mensuelle, annuelle), unité (par entreprise, par poste, par utilisateur), et moyen de paiement envisagé.
-4. **Licences V1 déjà émises** : restent-elles perpétuelles pour la version mono-poste, ou passent-elles à l'abonnement ?
-5. **Chantiers ajoutés** : la section 4 est-elle validée telle quelle ?
-6. **Ordre** : l'ordre de la section 5 convient-il ?
+1. **Numérotation hors connexion** : le travail hors connexion est retenu (décision 5), mais un poste coupé ne peut pas attribuer seul un numéro de facture sans risque de doublon ni de trou. Trois voies : hors connexion, saisie et brouillons seulement, la validation (qui donne le numéro) attendant le serveur ; numéro provisoire hors connexion, remplacé par le numéro définitif à la resynchronisation (un document remis au client avec un numéro provisoire pose problème) ; séries de numéros propres à chaque poste (préfixe par poste), qui changent le format des numéros.
+2. **Données hébergées** : en forme hébergée, l'éditeur doit-il être incapable de lire les données de ses clients (clé gardée par le client seul), ou peut-il y accéder pour l'assistance ?
+3. **Fusion d'installations V1** : une entreprise qui a plusieurs postes V1 indépendants peut-elle les fusionner dans un même serveur (avec renumérotation ou séries distinctes), ou la reprise se limite-t-elle à une base V1 par entreprise ?
+4. **Système du serveur installé chez le client** : Windows seulement, ou aussi Linux ?
+5. **Lecture seule** : confirmer qu'à l'échéance la consultation, l'impression et l'export des données déjà saisies restent toujours possibles.
+6. **Abonnement, forme** : période (mensuelle, annuelle), unité (par entreprise, par poste, par utilisateur), moyen de paiement envisagé, délai de grâce.
+7. **Pont V1** : l'étape 0 (4.0) est-elle validée ?
 
 ### Toujours ouvertes
 
-7. **Clients visés** : la V1 vise des PME, bureaux d'études et coopératives au Burkina Faso et dans l'UEMOA, en FCFA (cahier V1, sections 1 et 6). La phase 2 garde-t-elle ce cadre ? Combien de postes par entreprise ?
-8. **SYSCOHADA** : quel format de sortie, pour quel logiciel comptable en attendant la comptabilité Kadenz, et quelle source fait foi pour le plan de comptes (comptable, texte de référence) ?
-9. **Stock** : méthode de valorisation, un ou plusieurs dépôts, stock négatif permis ?
-10. **Email** : messagerie de l'entreprise ou service tiers ; relances envoyées automatiquement ou à la main ?
-11. **Multi-devise** : quelles devises, et comment le taux est-il fixé ?
-12. **Signature électronique** : image ou cachet, certificat numérique, ou signature du client à distance ?
-13. **Site web** : objet (présentation de Kadenz, espace client, abonnement), langues, nom de domaine, contenus disponibles ?
-14. **Hébergement** : pour la forme hébergée, où (pays, prestataire) et qui l'exploite ?
+8. **Clients visés** : la V1 vise des PME, bureaux d'études et coopératives au Burkina Faso et dans l'UEMOA, en FCFA (cahier V1, sections 1 et 6). La phase 2 garde-t-elle ce cadre ? Combien de postes par entreprise ?
+9. **SYSCOHADA** : quel format de sortie, pour quel logiciel comptable en attendant la comptabilité Kadenz, et quelle source fait foi pour le plan de comptes (comptable, texte de référence) ?
+10. **Stock** : méthode de valorisation, un ou plusieurs dépôts, stock négatif permis ?
+11. **Email** : messagerie de l'entreprise ou service tiers ; relances envoyées automatiquement ou à la main ?
+12. **Multi-devise** : quelles devises, et comment le taux est-il fixé ?
+13. **Signature électronique** : image ou cachet, certificat numérique, ou signature du client à distance ?
+14. **Site web** : objet (présentation de Kadenz, espace client, abonnement), langues, nom de domaine, contenus disponibles ?
+15. **Hébergement** : pour la forme hébergée, où (pays, prestataire) et qui l'exploite ?
 
 ## 9. Hors de ce document
 
