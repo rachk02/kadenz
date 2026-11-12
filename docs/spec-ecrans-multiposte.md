@@ -4,6 +4,7 @@
 |---|---|---|
 | 0.1 | 2026-11-12 | Premier jet (kadenz-8e) : écrans du poste pour le serveur de l'entreprise, l'accès à distance, l'état de la connexion, les brouillons hors connexion, les conflits, les opérations en attente, l'abonnement et la reprise d'une base V1, tirés des décisions 5 à 29 du cahier de la phase 2. |
 | 0.2 | 2026-11-12 | Décisions 30 à 34 appliquées : fenêtre d'administration du serveur (nouvelle section 1), pas de poste seul, inscription par un code qui porte l'empreinte du certificat (relecture de kadenz-34), toutes les opérations refusées en attente, conflits tranchés par l'Admin ou un ayant droit, version entière ou champ par champ. Questions de la section 10 réglées. |
+| 0.3 | 2026-11-12 | Décisions 35 à 37 : avertissement sur le dossier des sauvegardes du serveur, durée du code d'inscription, heures techniques dans le fuseau de l'entreprise. |
 
 Statut : **à l'étude**. Ce document décrit ce que voit et fait la personne sur un poste ; le protocole, le stockage et les clés sont dans `docs/spec-synchronisation.md` (kadenz-34). Il ne répète pas les décisions, il y renvoie (cahier de la phase 2, section 2, « décision n »). Rien n'est codé. Les points qui demandent un choix de l'utilisateur sont en section 10.
 
@@ -18,12 +19,13 @@ Règles communes, reprises de la V1 : tous les textes en sept langues (français
   - création du premier compte Admin de l'entreprise ;
   - création des codes d'inscription des postes ;
   - restauration d'une sauvegarde (base abîmée ou nouvelle machine).
+  - dossier et heure des sauvegardes quotidiennes (décision 35), avec un avertissement permanent tant que le dossier est sur le même disque que la base ; le même avertissement s'affiche sur les postes connectés avec un compte Admin.
 - Tout le reste se fait depuis un poste connecté avec un compte Admin : comptes, accès à distance (section 9), abonnement (section 7), sauvegardes planifiées.
 - Au premier lancement d'un poste de la phase 2, l'assistant demande le code d'inscription (section 2) au lieu de créer une base locale.
 
 ## 2. Connexion au serveur (Paramètres, rubrique « Serveur »)
 
-- **Inscription** : un poste rejoint l'entreprise avec un code d'inscription à usage unique, créé dans la fenêtre du serveur ou par un Admin depuis un poste. Le code porte l'empreinte du certificat du serveur : le poste vérifie seul qu'il parle au bon serveur, sans comparaison à l'oeil.
+- **Inscription** : un poste rejoint l'entreprise avec un code d'inscription à usage unique, valable 24 heures et annulable (décision 36), créé dans la fenêtre du serveur ou par un Admin depuis un poste. Le code porte l'empreinte du certificat du serveur : le poste vérifie seul qu'il parle au bon serveur, sans comparaison à l'oeil.
 - **Trouver le serveur** : recherche automatique sur le réseau local, avec la liste des serveurs Kadenz trouvés (nom de la machine, nom de l'entreprise), ou saisie de l'adresse à la main. La recherche sert seulement à trouver l'adresse ; elle ne donne aucune confiance.
 - **Recours** : si le code est saisi sans l'empreinte, le poste affiche l'empreinte du certificat reçu, que l'Admin compare à celle de la fenêtre du serveur avant de confirmer. Ensuite, un certificat différent bloque la connexion avec un message clair, jamais une acceptation silencieuse.
 - **Nombre de postes** : limité par l'abonnement (décision 21). Si la limite est atteinte, le message le dit et renvoie vers l'abonnement (section 7).
@@ -41,7 +43,7 @@ Une indication permanente et discrète dans la barre de l'application, avec text
 | Hors connexion | « Hors connexion : n opérations à envoyer » |
 | Serveur refusé | « Serveur non reconnu » (certificat changé), avec un lien vers la rubrique « Serveur » |
 
-Un clic ouvre le détail : dernière synchronisation réussie, opérations en file, conflits à trancher (section 5) et opérations en attente (section 6), s'il y en a.
+Les heures affichées (synchronisation, journal, opérations en attente) sont dans le fuseau de l'entreprise (décision 37). Un clic ouvre le détail : dernière synchronisation réussie, opérations en file, conflits à trancher (section 5) et opérations en attente (section 6), s'il y en a.
 
 ## 4. Travail hors connexion
 
