@@ -2,7 +2,7 @@
 
 Format : une section par version, la plus récente en haut. Numérotation [SemVer](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORRECTIF`, tag Git `vMAJEUR.MINEUR.CORRECTIF`.
 
-## [Non publié]
+## [0.2.2] - 2026-11-12
 
 ### Ajouté
 - Pont V1 : une mise à jour n'est proposée que si sa release porte le manifeste `kadenz-maj.json`, signé par la clé de mise à jour embarquée ; le manifeste donne la génération, la version minimale et l'empreinte de l'installateur, vérifiée au téléchargement. Une signature non valide ou une nouvelle génération est signalée dans Paramètres, jamais proposée.
