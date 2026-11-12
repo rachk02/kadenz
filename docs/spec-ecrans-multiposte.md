@@ -3,28 +3,31 @@
 | Version | Date | Changement |
 |---|---|---|
 | 0.1 | 2026-11-12 | Premier jet (kadenz-8e) : écrans du poste pour le serveur de l'entreprise, l'accès à distance, l'état de la connexion, les brouillons hors connexion, les conflits, les opérations en attente, l'abonnement et la reprise d'une base V1, tirés des décisions 5 à 29 du cahier de la phase 2. |
+| 0.2 | 2026-11-12 | Décisions 30 à 34 appliquées : fenêtre d'administration du serveur (nouvelle section 1), pas de poste seul, inscription par un code qui porte l'empreinte du certificat (relecture de kadenz-34), toutes les opérations refusées en attente, conflits tranchés par l'Admin ou un ayant droit, version entière ou champ par champ. Questions de la section 10 réglées. |
 
 Statut : **à l'étude**. Ce document décrit ce que voit et fait la personne sur un poste ; le protocole, le stockage et les clés sont dans `docs/spec-synchronisation.md` (kadenz-34). Il ne répète pas les décisions, il y renvoie (cahier de la phase 2, section 2, « décision n »). Rien n'est codé. Les points qui demandent un choix de l'utilisateur sont en section 10.
 
 Règles communes, reprises de la V1 : tous les textes en sept langues (français, anglais, espagnol, turc, arabe de droite à gauche, japonais, chinois) ; mêmes composants et mêmes couleurs que l'application actuelle ; angles de 4 px au plus ; aucun liseré de couleur sur un seul côté d'un bloc ; les erreurs s'affichent dans la zone concernée, les succès dans le bandeau de retour.
 
-## 1. Mode du poste
+## 1. Serveur et fenêtre d'administration (décisions 30 et 31)
 
-Au premier lancement d'une version de la phase 2, l'assistant demande comment ce poste travaille :
-
-- **Poste seul** : comme la V1, base locale, aucune connexion. Reste possible pour une entreprise d'un seul poste.
-- **Poste relié au serveur de l'entreprise** : le poste se connecte au serveur installé sur une machine de l'entreprise (décision 16).
-
-Le serveur lui-même s'installe à part, comme service Windows (décision 11) ; son administration est traitée en section 10, question 1.
-
-Un poste seul peut passer plus tard en poste relié (Paramètres, rubrique « Serveur ») ; s'il a des données, c'est la reprise de la section 8.
+- Tout poste de la phase 2 est relié à un serveur ; il n'y a pas de mode « poste seul ». Pour une entreprise d'un seul poste, le serveur s'installe sur la même machine. Un poste seul reste possible avec la V1.
+- Le serveur s'installe comme service Windows (décision 11) et a une petite fenêtre d'administration sur sa machine, limitée au dépannage :
+  - état du service (démarré, arrêté, dernière erreur) ;
+  - empreinte du certificat du serveur ;
+  - création du premier compte Admin de l'entreprise ;
+  - création des codes d'inscription des postes ;
+  - restauration d'une sauvegarde (base abîmée ou nouvelle machine).
+- Tout le reste se fait depuis un poste connecté avec un compte Admin : comptes, accès à distance (section 9), abonnement (section 7), sauvegardes planifiées.
+- Au premier lancement d'un poste de la phase 2, l'assistant demande le code d'inscription (section 2) au lieu de créer une base locale.
 
 ## 2. Connexion au serveur (Paramètres, rubrique « Serveur »)
 
-- **Trouver le serveur** : recherche automatique sur le réseau local, avec la liste des serveurs Kadenz trouvés (nom de la machine, nom de l'entreprise) ; ou saisie de l'adresse à la main.
-- **Confiance** : à la première connexion, le poste affiche l'empreinte du certificat du serveur ; l'Admin la compare à celle affichée sur le serveur et confirme. Ensuite, un certificat différent bloque la connexion avec un message clair, jamais une acceptation silencieuse.
-- **Rattachement** : un poste rejoint l'entreprise avec un code à usage unique créé par l'Admin sur le serveur ; le nombre de postes est limité par l'abonnement (décision 21). Si la limite est atteinte, le message le dit et renvoie vers l'abonnement (section 7).
-- **Comptes** : une fois relié, la connexion se fait avec les comptes communs de l'entreprise, gérés sur le serveur ; la rubrique « Utilisateurs » agit sur ces comptes.
+- **Inscription** : un poste rejoint l'entreprise avec un code d'inscription à usage unique, créé dans la fenêtre du serveur ou par un Admin depuis un poste. Le code porte l'empreinte du certificat du serveur : le poste vérifie seul qu'il parle au bon serveur, sans comparaison à l'oeil.
+- **Trouver le serveur** : recherche automatique sur le réseau local, avec la liste des serveurs Kadenz trouvés (nom de la machine, nom de l'entreprise), ou saisie de l'adresse à la main. La recherche sert seulement à trouver l'adresse ; elle ne donne aucune confiance.
+- **Recours** : si le code est saisi sans l'empreinte, le poste affiche l'empreinte du certificat reçu, que l'Admin compare à celle de la fenêtre du serveur avant de confirmer. Ensuite, un certificat différent bloque la connexion avec un message clair, jamais une acceptation silencieuse.
+- **Nombre de postes** : limité par l'abonnement (décision 21). Si la limite est atteinte, le message le dit et renvoie vers l'abonnement (section 7).
+- **Comptes** : la connexion se fait avec les comptes communs de l'entreprise, gérés sur le serveur ; la rubrique « Utilisateurs » agit sur ces comptes.
 
 ## 3. État de la connexion
 
@@ -49,16 +52,16 @@ Un clic ouvre le détail : dernière synchronisation réussie, opérations en fi
 
 ## 5. Conflits à trancher (décision 17)
 
-- **Qui** : l'Admin, ou la personne qui synchronise si elle a le droit de modifier la fiche concernée (à confirmer, section 10, question 2).
+- **Qui** (décision 33) : l'Admin, ou la personne qui synchronise si elle a le droit de modifier la fiche concernée.
 - **Liste** : fiche concernée (client, fournisseur, produit), les deux postes et comptes, les deux dates.
-- **Comparaison** : les deux versions côte à côte, les champs qui diffèrent mis en évidence (texte et fond, pas un liseré latéral) ; boutons « Garder cette version » sous chacune ; option « Choisir champ par champ » (à confirmer, section 10, question 3).
+- **Comparaison** : les deux versions côte à côte, les champs qui diffèrent mis en évidence (texte et fond, pas un liseré latéral) ; boutons « Garder cette version » sous chacune, et « Choisir champ par champ », qui met un choix sur chaque champ différent (décision 34).
 - Tant qu'un conflit n'est pas tranché, la fiche reste utilisable dans sa version du serveur, avec un signe « Conflit à trancher ».
 - Chaque choix est inscrit au journal d'audit (qui, quand, version gardée).
 
-## 6. Opérations en attente (décision 18)
+## 6. Opérations en attente (décisions 18 et 32)
 
-- Quand un compte a été désactivé ou ses droits réduits pendant une coupure, ses opérations hors connexion postérieures au changement arrivent au serveur sans être appliquées.
-- **Admin seulement** : liste par compte, avec la date, le poste, le type d'opération et le document ou la fiche concernés ; détail de chaque opération.
+- Toute opération faite hors connexion et refusée par le serveur pour un compte ou un droit (compte désactivé, droit retiré) arrive en attente, sans être appliquée, qu'elle soit antérieure ou postérieure au changement.
+- **Admin seulement** : liste par compte, avec l'heure du poste (indicative seulement, l'horloge d'un poste pouvant être fausse), le poste, le type d'opération et le document ou la fiche concernés ; détail de chaque opération.
 - Boutons « Accepter » et « Rejeter », à l'unité ou pour une sélection ; chaque décision va au journal d'audit.
 - Le compte concerné voit, à sa prochaine connexion s'il est encore actif, que ses opérations ont été acceptées ou rejetées.
 
@@ -72,7 +75,7 @@ Un clic ouvre le détail : dernière synchronisation réussie, opérations en fi
 
 ## 8. Reprise d'une base V1 (décision 19)
 
-- Assistant réservé à l'Admin, depuis la rubrique « Serveur » : choisir la base V1 (le poste actuel, ou une sauvegarde `.kzs` avec son mot de passe), voir un résumé (entreprise, nombre de clients, de produits, de documents, dernier numéro par type), confirmer.
+- Assistant réservé à l'Admin, depuis la rubrique « Serveur » d'un poste relié, juste après l'inscription d'un serveur neuf : choisir la base V1 (le poste actuel, ou une sauvegarde `.kzs` avec son mot de passe), voir un résumé (entreprise, nombre de clients, de produits, de documents, dernier numéro par type), confirmer.
 - **Une seule base** par serveur : si le serveur a déjà des données, l'assistant refuse et l'explique ; les autres installations V1 restent consultables à part.
 - La numérotation continue après les numéros repris ; la base V1 d'origine n'est jamais effacée.
 
@@ -83,9 +86,6 @@ Un clic ouvre le détail : dernière synchronisation réussie, opérations en fi
 - **Postes autorisés à distance** : liste, avec ajout par code à usage unique et retrait immédiat (un poste retiré ne peut plus passer par le relais).
 - Texte d'explication court : les échanges passent par le relais de l'éditeur, chiffrés de bout en bout, sans que l'éditeur puisse les lire (décisions 10 et 28) ; si le serveur de l'entreprise est éteint, un poste distant travaille hors connexion.
 
-## 10. Questions ouvertes
+## 10. Questions
 
-1. **Administration du serveur** : le service serveur a-t-il sa propre petite fenêtre d'administration sur sa machine (empreinte du certificat, codes de rattachement, sauvegardes), ou tout se fait-il depuis un poste connecté avec un compte Admin ?
-2. **Qui tranche un conflit** : l'Admin seulement, ou aussi la personne qui synchronise si elle a le droit de modifier la fiche ?
-3. **Granularité** : choix d'une version entière seulement, ou aussi champ par champ ?
-4. **Poste seul** : faut-il garder ce mode dans la phase 2, ou tout poste de la phase 2 est-il relié à un serveur (le serveur pouvant tourner sur la même machine pour une entreprise d'un seul poste) ?
+Réglées le 2026-11-12 : administration du serveur (décision 30), poste seul (31), opérations en attente (32), qui tranche un conflit (33), granularité (34). Aucune question ouverte propre aux écrans ; celles du protocole sont dans `docs/spec-synchronisation.md`, section 9.

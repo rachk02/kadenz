@@ -11,6 +11,7 @@
 | 0.7 | 2026-11-12 | Décisions 25 à 27 : avertissements d'échéance à 30 jours, 7 jours et la veille, à l'Admin puis à tous les comptes dans les derniers jours ; revendeurs avec un compte sur le portail. |
 | 0.8 | 2026-11-12 | Décision 28 : serveur de confiance chez l'entreprise, base chiffrée au repos, à la place du serveur aveugle (décision 13), le relais restant aveugle par un chiffrement de bout en bout. Décision 29 : licences signées par une clé de portail en ligne, avec un émetteur dans chaque licence, aucune clé chez les revendeurs. Sections 4.3 et 4.4 à reprendre par kadenz-34 dans `docs/spec-synchronisation.md`. |
 | 0.9 | 2026-11-12 | Sections 4.3 et 4.4 reprises pour le serveur de confiance (décision 28) ; le protocole de synchronisation, la numérotation et les clés sont spécifiés à part, dans `docs/spec-synchronisation.md` (premier jet de kadenz-34, à l'étude). |
+| 0.10 | 2026-11-12 | Décisions 30 à 34 : petite fenêtre d'administration sur le serveur, toujours un serveur (pas de poste seul en phase 2), toutes les opérations hors connexion refusées en attente, conflits tranchés par l'Admin ou un ayant droit, version entière ou champ par champ. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -58,6 +59,11 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 27. **Revendeurs** : un revendeur a un compte sur le portail ; il enregistre lui-même les paiements de ses clients et renouvelle leurs licences. L'éditeur garde la vue sur tout.
 28. **Serveur de confiance** (remplace la décision 13, à la suite de la décision 16) : le serveur étant chez l'entreprise et non chez l'éditeur, il lit ses données, chiffrées au repos sur son disque ; il impose les droits, l'heure, la validation et la numérotation, aide à trancher les conflits et fait des sauvegardes lisibles par l'entreprise. Le relais du VPS reste aveugle : les échanges entre un poste distant et le serveur sont chiffrés de bout en bout, l'éditeur ne lit rien (décision 10 tenue). Risque accepté : une personne qui vole la machine serveur en marche, ou qui l'administre dans l'entreprise, peut lire les données.
 29. **Clé du portail et revendeurs** : le portail signe toutes les licences d'abonnement avec une seule clé de portail, en ligne sur le VPS ; chaque licence porte, dans ses données signées, son émetteur (l'éditeur ou l'identifiant du revendeur). Les revendeurs n'ont jamais de clé, ils agissent par leur compte sur le portail, qui garde la trace. La clé de portail est la clé suivante embarquée par le pont V1 (`crates/licence/cle-publique-suivante.hex`) ; la clé actuelle reste hors ligne chez l'éditeur pour les licences V1. Si le VPS est compromis, la clé du portail est révoquée et remplacée par une mise à jour (recommandation de kadenz-34, validée).
+30. **Administration du serveur** : une petite fenêtre sur la machine du serveur, limitée à ce qui doit marcher quand aucun poste ne peut se connecter : état du service, empreinte du certificat, premier compte Admin, codes d'inscription des postes, restauration d'une sauvegarde. Tout le reste (comptes, accès à distance, abonnement, sauvegardes planifiées) se fait depuis un poste connecté avec un compte Admin.
+31. **Toujours un serveur** : tout poste de la phase 2 est relié à un serveur, qui peut tourner sur la même machine pour une entreprise d'un seul poste. Pas de mode « poste seul » dans la phase 2 ; la V1 reste disponible pour cet usage, avec ses licences perpétuelles.
+32. **Opérations en attente** (précise la décision 18) : toute opération faite hors connexion et refusée pour un compte ou un droit va en attente, qu'elle soit antérieure ou postérieure au changement ; l'heure du poste n'est affichée qu'à titre indicatif, l'Admin décide.
+33. **Qui tranche un conflit** (précise la décision 17) : l'Admin, ou la personne qui synchronise si elle a le droit de modifier la fiche concernée.
+34. **Granularité d'un conflit** : on garde une version entière en un clic, ou on choisit champ par champ.
 
 ## 3. Candidats
 
@@ -207,7 +213,7 @@ Règles retenues (décisions 14 et 15) :
 
 ### Réglées le 2026-11-12
 
-- Décisions 1 à 29 (section 2) ; avertissements d'échéance et revendeurs réglés par les décisions 25 à 27. Les questions 1 à 6 et 13 de la version 0.5 sont réglées : conflits (décisions 17 et 18), données hébergées (13), fusion V1 (19), lecture seule (20), abonnement (21), clients visés (22 et 23), hébergement (16).
+- Décisions 1 à 34 (section 2) ; avertissements d'échéance et revendeurs réglés par les décisions 25 à 27. Les questions 1 à 6 et 13 de la version 0.5 sont réglées : conflits (décisions 17 et 18), données hébergées (13), fusion V1 (19), lecture seule (20), abonnement (21), clients visés (22 et 23), hébergement (16).
 
 ### Ouvertes pour les fondations
 
