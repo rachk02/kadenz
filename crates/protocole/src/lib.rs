@@ -175,8 +175,9 @@ pub struct Ligne {
     pub observations: String,
 }
 
-/// Résultat d'une opération, gardé par le serveur et rendu tel quel si la même
-/// opération est renvoyée.
+/// Résultat d'une opération. Tous sont définitifs pour l'identifiant de
+/// l'opération (gardés par le serveur et rendus tels quels à chaque renvoi),
+/// sauf `Bloquee`, qui demande de renvoyer la même opération plus tard.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "issue", rename_all = "snake_case")]
 pub enum Issue {
@@ -197,8 +198,9 @@ pub enum Issue {
     /// Validation d'un brouillon qui a changé sur un autre poste depuis : refusée,
     /// le poste reçoit d'abord la version du serveur (section 5).
     Depassee,
-    /// La ligne visée a déjà une opération en attente ou en conflit : celle-ci
-    /// attend la décision prise sur la première.
+    /// Une opération précédente du même poste sur la même ligne est en attente
+    /// ou en conflit : celle-ci n'est pas gardée, le poste la renvoie une fois la
+    /// décision prise, pour garder l'ordre de ses actions.
     Bloquee,
 }
 

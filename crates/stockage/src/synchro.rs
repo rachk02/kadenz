@@ -26,6 +26,19 @@ const TABLES: [&str; 5] = ["utilisateur", "tiers", "produit", "document", "regle
 
 const CLE_ENTREPRISE: &str = "identifiant_entreprise";
 
+/// Modèle du refus pour un droit, avec le droit en valeur (même phrase que
+/// l'affichage de `Erreur::Interdit`).
+pub const MODELE_INTERDIT: &str = "action non autorisée pour votre rôle : « {} »";
+
+/// Textes fixes que le serveur peut rendre dans `Issue::Refusee`, en plus des
+/// messages habituels du stockage : à traduire sur les postes.
+pub const MODELES_ERREUR: [&str; 4] = [
+    MODELE_INTERDIT,
+    "élément inconnu sur le serveur : {}",
+    "compte inconnu sur le serveur",
+    "opération illisible",
+];
+
 /// Nouvel identifiant global (UUID version 7).
 pub fn nouvel_uid() -> String {
     uuid::Uuid::now_v7().to_string()
@@ -145,17 +158,22 @@ fn refus_op(message: &str) -> Erreur {
 
 fn appliquer_dans(conn: &mut Connection, op: &Operation, contenu: &str) -> Resultat<Issue> {
     let (entite, cible) = op.action.cible();
+    // Une opération du même poste sur la même ligne attend une décision : celle-ci
+    // attend aussi, pour garder l'ordre des actions du poste. Rien n'est gardé, le
+    // poste la renverra ; les autres postes ne sont pas bloqués.
     let suspendue = conn
         .query_row(
-            "SELECT 1 FROM operation_suspendue WHERE cible = ?1 AND ouverte = 1",
-            [cible],
+            "SELECT 1 FROM operation_suspendue s JOIN operation o ON o.id = s.operation_id
+             WHERE s.cible = ?1 AND s.ouverte = 1 AND o.poste = ?2",
+            params![cible, op.poste],
             |_| Ok(()),
         )
         .optional()?
         .is_some();
-    let issue = if suspendue {
-        Issue::Bloquee
-    } else if modifiee_ailleurs(conn, op, entite, cible)? {
+    if suspendue {
+        return Ok(Issue::Bloquee);
+    }
+    let issue = if modifiee_ailleurs(conn, op, entite, cible)? {
         match op.action {
             Action::Valider { .. } => Issue::Depassee,
             _ => Issue::EnConflit,
@@ -217,8 +235,16 @@ fn appliquer_dans(conn: &mut Connection, op: &Operation, contenu: &str) -> Resul
 fn issue_du_refus(e: Erreur, hors_connexion: bool) -> Resultat<Issue> {
     Ok(match e {
         Erreur::Interdit(_) if hors_connexion => Issue::EnAttente,
+        // Texte fixe et valeur à part, pour que le poste traduise les deux.
+        Erreur::Interdit(droit) => Issue::Refusee {
+            modele: MODELE_INTERDIT.into(),
+            valeurs: vec![droit.to_string()],
+        },
         Erreur::ValidationComposee { modele, valeurs } => Issue::Refusee { modele, valeurs },
-        Erreur::Sqlite(_) | Erreur::Io(_) | Erreur::Hachage(_) => return Err(e),
+        Erreur::Sqlite(_)
+        | Erreur::Io(_)
+        | Erreur::Hachage(_)
+        | Erreur::VersionSchemaInconnue { .. } => return Err(e),
         autre => Issue::Refusee {
             modele: autre.to_string(),
             valeurs: Vec::new(),
@@ -785,14 +811,19 @@ mod tests {
                 fiche: fiche("Client Alpha modifié"),
             },
         );
-        assert!(matches!(b.appliquer(&op), Issue::Refusee { .. }));
-        // Hors connexion : mise en attente, et la fiche bloquée derrière elle.
+        assert!(matches!(
+            b.appliquer(&op),
+            Issue::Refusee { modele, valeurs } if modele == MODELE_INTERDIT && valeurs.len() == 1
+        ));
+        // Hors connexion : mise en attente.
         op.id = nouvel_uid();
         op.hors_connexion = true;
         assert_eq!(b.appliquer(&op), Issue::EnAttente);
+        // Opération suivante du même poste sur la même fiche : bloquée, sans être
+        // gardée (le renvoi est réévalué).
         let admin = b.admin.clone();
         let suivante = b.op(
-            "p1",
+            "p2",
             &admin,
             b.base(),
             Action::ModifierTiers {
@@ -801,6 +832,26 @@ mod tests {
             },
         );
         assert_eq!(b.appliquer(&suivante), Issue::Bloquee);
+        assert_eq!(b.appliquer(&suivante), Issue::Bloquee);
+        // Un autre poste n'est pas bloqué.
+        let ailleurs = b.op(
+            "p1",
+            &admin,
+            b.base(),
+            Action::ModifierTiers {
+                uid: t.clone(),
+                fiche: fiche("Nom de p1"),
+            },
+        );
+        assert_eq!(b.appliquer(&ailleurs), Issue::Acceptee { numero: None });
+        // Décision prise sur l'opération en attente : le renvoi, même identifiant,
+        // est réévalué ; la fiche ayant changé sur p1 depuis sa base, il est en
+        // conflit, et ce résultat-là est gardé.
+        b.conn
+            .execute("UPDATE operation_suspendue SET ouverte = 0", [])
+            .unwrap();
+        assert_eq!(b.appliquer(&suivante), Issue::EnConflit);
+        assert_eq!(b.appliquer(&suivante), Issue::EnConflit);
         // Une règle métier n'est jamais mise en attente.
         let mut vide = b.op(
             "p1",
