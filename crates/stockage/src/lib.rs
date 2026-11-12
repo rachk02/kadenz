@@ -15,6 +15,7 @@ pub mod pilotage;
 pub mod produits;
 pub mod reglements;
 pub mod relances;
+pub mod sauvegarde;
 pub mod tiers;
 
 use std::fmt;
@@ -96,6 +97,14 @@ pub enum Erreur {
     Hachage(String),
     /// Le compte qui agit n'a pas le droit demandé.
     Interdit(Droit),
+    /// Base chiffrée dont le fichier `kadenz.cle` a disparu.
+    CleIntrouvable,
+    /// `kadenz.cle` protégée pour un autre poste ou un autre compte Windows.
+    CleAutreCompte,
+    /// `kadenz.cle` déprotégée mais son contenu n'est pas une clé.
+    CleEndommagee,
+    /// La clé ne déchiffre pas la base : clé ou fichier de la base endommagé.
+    BaseIndechiffrable,
 }
 
 impl fmt::Display for Erreur {
@@ -116,6 +125,14 @@ impl fmt::Display for Erreur {
             Erreur::Interdit(droit) => {
                 write!(f, "action non autorisée pour votre rôle : « {droit} »")
             }
+            Erreur::CleIntrouvable => f.write_str("clé de la base introuvable"),
+            Erreur::CleAutreCompte => f.write_str(
+                "clé de la base illisible : elle a été créée sur un autre poste ou un autre compte Windows",
+            ),
+            Erreur::CleEndommagee => f.write_str("clé de la base endommagée"),
+            Erreur::BaseIndechiffrable => f.write_str(
+                "la base ne s'ouvre pas avec sa clé : clé ou fichier de la base endommagé",
+            ),
             Erreur::VersionSchemaInconnue { base, application } => write!(
                 f,
                 "la base est au schéma {base}, cette version de l'application ne connaît que le schéma {application}"

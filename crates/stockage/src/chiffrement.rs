@@ -46,11 +46,7 @@ pub fn appliquer_cle(conn: &Connection, cle: &str) -> Resultat<()> {
     conn.pragma_update(None, "cipher", CHIFFRE)?;
     conn.pragma_update(None, "key", cle)?;
     conn.query_row("SELECT count(*) FROM sqlite_master", [], |_| Ok(()))
-        .map_err(|_| {
-            Erreur::Validation(
-                "la base ne s'ouvre pas avec sa clé : clé ou fichier de la base endommagé".into(),
-            )
-        })
+        .map_err(|_| Erreur::BaseIndechiffrable)
 }
 
 /// Clé de la base, lue dans `kadenz.cle`. Absente : créée si `creer`, sinon
@@ -58,32 +54,29 @@ pub fn appliquer_cle(conn: &Connection, cle: &str) -> Resultat<()> {
 pub fn cle(fichier: &Path, creer: bool) -> Resultat<String> {
     match fs::read(fichier) {
         Ok(protegee) => {
-            let octets = dpapi::deproteger(&protegee).ok_or_else(|| {
-                Erreur::Validation(
-                    "clé de la base illisible : elle a été créée sur un autre poste ou un autre compte Windows"
-                        .into(),
-                )
-            })?;
-            String::from_utf8(octets)
-                .map_err(|_| Erreur::Validation("clé de la base endommagée".into()))
+            let octets = dpapi::deproteger(&protegee).ok_or(Erreur::CleAutreCompte)?;
+            String::from_utf8(octets).map_err(|_| Erreur::CleEndommagee)
         }
         Err(e) if e.kind() == std::io::ErrorKind::NotFound && creer => {
-            let mut alea = [0u8; 32];
-            getrandom::fill(&mut alea)
-                .map_err(|e| Erreur::Validation(format!("aléa du système indisponible : {e}")))?;
-            let cle: String = alea.iter().map(|o| format!("{o:02x}")).collect();
-            let protegee = dpapi::proteger(cle.as_bytes()).ok_or_else(|| {
-                Erreur::Validation("protection de la clé par Windows impossible".into())
-            })?;
+            let (cle, protegee) = nouvelle_cle()?;
             fs::write(fichier, protegee)?;
             Ok(cle)
         }
-        // Sans chemin : le message est affiché tel quel (et traduit) à l'écran.
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            Err(Erreur::Validation("clé de la base introuvable".into()))
-        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Err(Erreur::CleIntrouvable),
         Err(e) => Err(e.into()),
     }
+}
+
+/// Nouvelle clé tirée de l'aléa du système : la clé, et sa forme protégée par
+/// Windows à écrire dans `kadenz.cle`.
+pub(crate) fn nouvelle_cle() -> Resultat<(String, Vec<u8>)> {
+    let mut alea = [0u8; 32];
+    getrandom::fill(&mut alea)
+        .map_err(|e| Erreur::Validation(format!("aléa du système indisponible : {e}")))?;
+    let cle: String = alea.iter().map(|o| format!("{o:02x}")).collect();
+    let protegee = dpapi::proteger(cle.as_bytes())
+        .ok_or_else(|| Erreur::Validation("protection de la clé par Windows impossible".into()))?;
+    Ok((cle, protegee))
 }
 
 /// Chiffre une base existante en clair, sans jamais toucher à l'original avant
@@ -151,7 +144,7 @@ pub fn chiffrer_base_en_clair(base: &Path, cle: &str) -> Resultat<()> {
 }
 
 /// Nombre de lignes de chaque table, par ordre de nom.
-fn comptes_par_table(conn: &Connection) -> Resultat<Vec<(String, i64)>> {
+pub(crate) fn comptes_par_table(conn: &Connection) -> Resultat<Vec<(String, i64)>> {
     let tables: Vec<String> = conn
         .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")?
         .query_map([], |r| r.get(0))?
@@ -165,18 +158,18 @@ fn comptes_par_table(conn: &Connection) -> Resultat<Vec<(String, i64)>> {
         .collect()
 }
 
-fn avec_suffixe(base: &Path, suffixe: &str) -> PathBuf {
+pub(crate) fn avec_suffixe(base: &Path, suffixe: &str) -> PathBuf {
     avec_suffixe_brut(base, &format!(".{suffixe}"))
 }
 
-fn avec_suffixe_brut(base: &Path, suffixe: &str) -> PathBuf {
+pub(crate) fn avec_suffixe_brut(base: &Path, suffixe: &str) -> PathBuf {
     let mut nom = base.as_os_str().to_owned();
     nom.push(suffixe);
     PathBuf::from(nom)
 }
 
 #[cfg(windows)]
-mod dpapi {
+pub(crate) mod dpapi {
     use windows_sys::Win32::Foundation::LocalFree;
     use windows_sys::Win32::Security::Cryptography::{
         CRYPT_INTEGER_BLOB, CRYPTPROTECT_UI_FORBIDDEN, CryptProtectData, CryptUnprotectData,
@@ -248,7 +241,7 @@ mod dpapi {
 
 /// Hors de Windows (développement seulement) : clé conservée telle quelle.
 #[cfg(not(windows))]
-mod dpapi {
+pub(crate) mod dpapi {
     pub fn proteger(donnee: &[u8]) -> Option<Vec<u8>> {
         Some(donnee.to_vec())
     }

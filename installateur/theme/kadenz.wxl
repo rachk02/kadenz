@@ -216,6 +216,13 @@
   <String Id="zh_Maintenance" Value="您想执行什么操作？" />
   <String Id="tr_Maintenance" Value="Ne yapmak istiyorsunuz?" />
   <String Id="es_Maintenance" Value="¿Qué desea hacer?" />
+  <String Id="fr_AvertissementDesinstallation" Value="Désinstaller Kadenz supprime toutes ses données sur ce compte Windows : documents, clients et fournisseurs, produits, réglages. Faites d'abord une sauvegarde dans Kadenz. Les sauvegardes déjà faites ne sont pas supprimées." />
+  <String Id="en_AvertissementDesinstallation" Value="Uninstalling Kadenz deletes all its data on this Windows account: documents, customers and suppliers, products, settings. Make a backup in Kadenz first. Existing backups are not deleted." />
+  <String Id="ar_AvertissementDesinstallation" Value="يؤدي إلغاء تثبيت Kadenz إلى حذف جميع بياناته على حساب Windows هذا: المستندات والعملاء والموردون والمنتجات والإعدادات. أنشئ نسخة احتياطية في Kadenz أولًا. لا تُحذف النسخ الاحتياطية الموجودة." />
+  <String Id="ja_AvertissementDesinstallation" Value="Kadenz をアンインストールすると、この Windows アカウント上のすべてのデータ（書類、顧客と仕入先、商品、設定）が削除されます。先に Kadenz でバックアップを作成してください。作成済みのバックアップは削除されません。" />
+  <String Id="zh_AvertissementDesinstallation" Value="卸载 Kadenz 将删除此 Windows 帐户中的所有数据：单据、客户和供应商、产品、设置。请先在 Kadenz 中进行备份。已有的备份不会被删除。" />
+  <String Id="tr_AvertissementDesinstallation" Value="Kadenz'i kaldırmak, bu Windows hesabındaki tüm verilerini siler: belgeler, müşteriler ve tedarikçiler, ürünler, ayarlar. Önce Kadenz'de bir yedek alın. Daha önce alınmış yedekler silinmez." />
+  <String Id="es_AvertissementDesinstallation" Value="Desinstalar Kadenz elimina todos sus datos en esta cuenta de Windows: documentos, clientes y proveedores, productos, ajustes. Haga primero una copia de seguridad en Kadenz. Las copias de seguridad ya hechas no se eliminan." />
   <String Id="fr_Aide" Value="Options de la ligne de commande : /install, /repair, /uninstall, /quiet, /passive, /log fichier." />
   <String Id="en_Aide" Value="Command line options: /install, /repair, /uninstall, /quiet, /passive, /log file." />
   <String Id="ar_Aide" Value="خيارات سطر الأوامر: /install و/repair و/uninstall و/quiet و/passive و/log ملف." />

@@ -231,6 +231,18 @@ TEXTES = {
         "tr": "Ne yapmak istiyorsunuz?",
         "es": "¿Qué desea hacer?",
     },
+    # Page de maintenance, ouverte aussi par « Désinstaller » dans les
+    # paramètres de Windows : la désinstallation efface %APPDATA%\Kadenz
+    # (Kadenz.wxs), jamais le dossier des sauvegardes (refusé dans ce dossier).
+    "AvertissementDesinstallation": {
+        "fr": "Désinstaller Kadenz supprime toutes ses données sur ce compte Windows : documents, clients et fournisseurs, produits, réglages. Faites d'abord une sauvegarde dans Kadenz. Les sauvegardes déjà faites ne sont pas supprimées.",
+        "en": "Uninstalling Kadenz deletes all its data on this Windows account: documents, customers and suppliers, products, settings. Make a backup in Kadenz first. Existing backups are not deleted.",
+        "ar": "يؤدي إلغاء تثبيت Kadenz إلى حذف جميع بياناته على حساب Windows هذا: المستندات والعملاء والموردون والمنتجات والإعدادات. أنشئ نسخة احتياطية في Kadenz أولًا. لا تُحذف النسخ الاحتياطية الموجودة.",
+        "ja": "Kadenz をアンインストールすると、この Windows アカウント上のすべてのデータ（書類、顧客と仕入先、商品、設定）が削除されます。先に Kadenz でバックアップを作成してください。作成済みのバックアップは削除されません。",
+        "zh": "卸载 Kadenz 将删除此 Windows 帐户中的所有数据：单据、客户和供应商、产品、设置。请先在 Kadenz 中进行备份。已有的备份不会被删除。",
+        "tr": "Kadenz'i kaldırmak, bu Windows hesabındaki tüm verilerini siler: belgeler, müşteriler ve tedarikçiler, ürünler, ayarlar. Önce Kadenz'de bir yedek alın. Daha önce alınmış yedekler silinmez.",
+        "es": "Desinstalar Kadenz elimina todos sus datos en esta cuenta de Windows: documentos, clientes y proveedores, productos, ajustes. Haga primero una copia de seguridad en Kadenz. Las copias de seguridad ya hechas no se eliminan.",
+    },
     "Aide": {
         "fr": "Options de la ligne de commande : /install, /repair, /uninstall, /quiet, /passive, /log fichier.",
         "en": "Command line options: /install, /repair, /uninstall, /quiet, /passive, /log file.",
@@ -376,6 +388,7 @@ def theme():
         f'<Page Name="Modify">{COTE}'
         f'<Label X="{X}" Y="24" Width="-20" Height="40" FontId="1" DisablePrefix="yes">Kadenz</Label>'
         f'<Label X="{X}" Y="76" Width="-20" Height="30" FontId="2" DisablePrefix="yes">{textes("Maintenance")}</Label>'
+        f'<Label X="{X}" Y="120" Width="-20" Height="110" FontId="3" DisablePrefix="yes">{textes("AvertissementDesinstallation")}</Label>'
         + bouton("RepairButton", "Reparer", -228, condition='HideWhenDisabled="yes"')
         + bouton("UninstallButton", "Desinstaller", -124)
         + bouton("ModifyCancelButton", "Annuler", -20, action="<CloseWindowAction />")
