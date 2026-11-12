@@ -17,6 +17,7 @@
 | 0.13 | 2026-11-12 | Décision 39 : corrections V1 sur une branche `release/0.2.x` tirée de `v0.2.2`, `main` réservée à la phase 2. |
 | 0.14 | 2026-11-12 | Décision 40 : lecture seule aussi sans licence ou avec une licence refusée. |
 | 0.15 | 2026-11-12 | Décisions 41 à 43 (F4) : un poste inscrit sans licence valide, postes en trop gardés, découverte sans le nom de l'entreprise. |
+| 0.16 | 2026-11-12 | Décision 44 : port 47380 gardé ; découverte coupée si son port UDP est pris, sans empêcher le service de démarrer. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -78,6 +79,7 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 41. **Inscription sans licence** : sans licence valide ou en lecture seule, un seul poste peut s'inscrire, le temps d'installer la licence depuis ce poste.
 42. **Licence qui réduit les postes** : une licence qui permet moins de postes qu'il n'y en a d'inscrits ne retire aucun poste ; les nouvelles inscriptions sont refusées tant que l'Admin n'a pas retiré de poste ou pris une licence plus large.
 43. **Découverte sur le réseau local** : la réponse du serveur donne le nom de la machine seul ; le nom de l'entreprise s'affiche après la saisie du code d'inscription.
+44. **Port du serveur** : le port 47380 est gardé, en TCP pour les sessions et en UDP pour la découverte ; il n'est attribué à aucun service par l'IANA et reste hors de la plage dynamique de Windows, sans qu'aucun port puisse être garanti libre. Si le port UDP est pris, le service démarre sans découverte et l'erreur s'affiche dans la fenêtre du serveur ; les postes le joignent par le code complet ou l'adresse saisie. Le port se change avec l'option `--port` du service.
 
 ## 3. Candidats
 
@@ -227,7 +229,7 @@ Règles retenues (décisions 14 et 15) :
 
 ### Réglées le 2026-11-12
 
-- Décisions 1 à 43 (section 2) ; avertissements d'échéance et revendeurs réglés par les décisions 25 à 27. Les questions 1 à 6 et 13 de la version 0.5 sont réglées : conflits (décisions 17 et 18), données hébergées (13), fusion V1 (19), lecture seule (20), abonnement (21), clients visés (22 et 23), hébergement (16).
+- Décisions 1 à 44 (section 2) ; avertissements d'échéance et revendeurs réglés par les décisions 25 à 27. Les questions 1 à 6 et 13 de la version 0.5 sont réglées : conflits (décisions 17 et 18), données hébergées (13), fusion V1 (19), lecture seule (20), abonnement (21), clients visés (22 et 23), hébergement (16).
 
 ### Ouvertes pour les fondations
 
