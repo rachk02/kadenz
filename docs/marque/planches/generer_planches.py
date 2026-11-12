@@ -31,20 +31,20 @@ TETE = """<!doctype html>
 <title>{titre}</title>
 <style>
 @font-face{{font-family:Inter;src:url(polices/Inter.woff2) format("woff2");font-weight:100 900;font-display:swap}}
-@font-face{{font-family:Manrope;src:url(polices/Manrope.woff2) format("woff2");font-weight:200 800;font-display:swap}}
+@font-face{{font-family:"Space Grotesk";src:url(polices/SpaceGrotesk.ttf) format("truetype");font-weight:300 700;font-display:swap}}
 body{{margin:0}}em,i{{font-style:normal}}
 @page{{size:1200px 760px;margin:0}}
 .planche{{width:1200px;height:760px;box-sizing:border-box;padding:48px 56px;background:#fff;color:{encre};font-family:Inter,sans-serif;display:flex;flex-direction:column;gap:26px;overflow:hidden;break-after:page}}
 .ent{{display:flex;justify-content:space-between;align-items:baseline}}
-.num{{font-family:Manrope,sans-serif;font-weight:800;font-size:15px;color:{bleu};letter-spacing:.08em;margin-right:16px}}
-h1{{display:inline;margin:0;font-family:Manrope,sans-serif;font-weight:800;font-size:32px;letter-spacing:-.01em}}
+.num{{font-family:Space Grotesk,sans-serif;font-weight:700;font-size:15px;color:{bleu};letter-spacing:.08em;margin-right:16px}}
+h1{{display:inline;margin:0;font-family:Space Grotesk,sans-serif;font-weight:700;font-size:32px;letter-spacing:-.01em}}
 .sous{{margin:0;font-size:14px;color:{ardoise};max-width:620px;text-align:right}}
 .case{{border-radius:4px;position:relative;display:flex;align-items:center;justify-content:center;box-sizing:border-box}}
 .bord{{border:1px solid {trait}}}
 .leg{{position:absolute;left:18px;bottom:14px;font-size:12px;color:{ardoise}}}
 .leg.c{{color:{clair}}}
 .petit{{font-size:12px;color:{ardoise};line-height:1.5}}
-.t3{{font-family:Manrope,sans-serif;font-weight:700;font-size:16px;margin:0 0 8px}}
+.t3{{font-family:Space Grotesk,sans-serif;font-weight:700;font-size:16px;margin:0 0 8px}}
 p{{margin:0}}
 </style>
 </head>
@@ -150,7 +150,7 @@ def p02():
 
 # --- 03 Tone & Mood -----------------------------------------------------------------
 def p03():
-    adj = "".join(f'<span style="border:1.5px solid {BLEU};color:{BLEU};border-radius:4px;padding:8px 16px;font-family:Manrope;font-weight:700;font-size:16px">{a}</span>'
+    adj = "".join(f'<span style="border:1.5px solid {BLEU};color:{BLEU};border-radius:4px;padding:8px 16px;font-family:Space Grotesk;font-weight:700;font-size:16px">{a}</span>'
                   for a in ("Rigoureux", "Régulier", "Clair", "Sobre", "Fiable"))
     curseurs = "".join(
         f'<div style="display:grid;grid-template-columns:100px 1fr 100px;align-items:center;gap:14px;font-size:14px;color:{ARDOISE}">'
@@ -161,7 +161,7 @@ def p03():
     c = f"""<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex:1">
 <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:200px 150px 150px;gap:12px">
 <div class="case" style="grid-column:span 2;background:{BLEU};overflow:hidden;justify-content:space-between;padding:0 30px">
-<p style="font-family:Manrope;font-weight:800;font-size:38px;color:#fff;line-height:1.15">Rigueur<br>et régularité</p>
+<p style="font-family:Space Grotesk;font-weight:700;font-size:38px;color:#fff;line-height:1.15">Rigueur<br>et régularité</p>
 <svg viewBox="0 0 256 256" style="height:120px">{sym}</svg></div>
 <div class="case" style="background:{BRUME};flex-direction:column;align-items:flex-start;justify-content:flex-end;padding:18px;gap:6px">
 <div style="width:100%;height:2px;background:{TRAIT}"></div><div style="width:100%;height:2px;background:{TRAIT}"></div><div style="width:64%;height:2px;background:{TRAIT}"></div>
@@ -171,7 +171,7 @@ def p03():
 <span style="font-size:13px;color:{ENCRE};font-weight:600">Le temps fort : le disque</span></div>
 <div class="case" style="background:{NUIT};align-items:flex-end;justify-content:flex-start;padding:18px"><span style="font-size:13px;color:#fff">Calme, concentration, fin de journée</span></div>
 <div class="case bord" style="flex-direction:column;align-items:flex-start;justify-content:center;padding:18px">
-<span style="font-family:Manrope;font-weight:800;font-size:34px;font-variant-numeric:tabular-nums">0123456789</span><span class="petit" style="font-size:13px">Des chiffres alignés</span></div>
+<span style="font-family:Space Grotesk;font-weight:700;font-size:34px;font-variant-numeric:tabular-nums">0123456789</span><span class="petit" style="font-size:13px">Des chiffres alignés</span></div>
 </div>
 <div style="display:flex;flex-direction:column;gap:14px">
 <div style="display:flex;gap:10px;flex-wrap:wrap">{adj}</div>
@@ -194,7 +194,7 @@ def p04():
         (PALE, ENCRE, "Bleu pâle", "#E8EEFC", "RVB 232 238 252", "Survol, jeton accent-survol", "Bleu vif dessus : 5,7:1"),
     ]
     g = "".join(f'<div style="background:{f};color:{t};border-radius:4px;padding:22px;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;height:210px;box-sizing:border-box{";border:1px solid " + TRAIT if f == PALE else ""}">'
-                f'<span style="font-family:Manrope;font-weight:800;font-size:22px">{n}</span><span style="font-size:14px">{h} · {r}</span>'
+                f'<span style="font-family:Space Grotesk;font-weight:700;font-size:22px">{n}</span><span style="font-size:14px">{h} · {r}</span>'
                 f'<span style="font-size:13px;opacity:.9">{u}</span><span style="font-size:13px;opacity:.9">{k}</span></div>'
                 for f, t, n, h, r, u, k in grands)
     neutres = [("#1F2933", "Encre", "texte · 14,8:1"), ("#52606D", "Ardoise", "texte-secondaire · 6,5:1"), ("#D9DCE3", "Trait", "bordure"),
@@ -243,15 +243,15 @@ def p06():
                 f'<span style="font-family:{famille_css};font-weight:700;font-size:22px">{nom}</span><span class="petit">{graisses}</span></div>')
     echelle = "".join(f'<div style="display:grid;grid-template-columns:220px 1fr;align-items:baseline;gap:16px;border-bottom:1px solid {TRAIT};padding-bottom:8px">'
                       f'<span class="petit">{l}</span><span style="{s}">{t}</span></div>' for l, s, t in (
-        ("Titre 1 · Manrope 800 · 36/44", "font-family:Manrope;font-weight:800;font-size:34px", "Gestion commerciale"),
-        ("Titre 2 · Manrope 700 · 24/32", "font-family:Manrope;font-weight:700;font-size:24px", "Devis, proforma, factures"),
-        ("Titre 3 · Manrope 700 · 18/26", "font-family:Manrope;font-weight:700;font-size:18px", "Bons de commande et bordereaux"),
+        ("Titre 1 · Space Grotesk 700 · 36/44", "font-family:Space Grotesk;font-weight:700;font-size:34px", "Gestion commerciale"),
+        ("Titre 2 · Space Grotesk 700 · 24/32", "font-family:Space Grotesk;font-weight:700;font-size:24px", "Devis, proforma, factures"),
+        ("Titre 3 · Space Grotesk 700 · 18/26", "font-family:Space Grotesk;font-weight:700;font-size:18px", "Bons de commande et bordereaux"),
         ("Corps · Inter 400 · 15/24", "font-family:Inter;font-size:15px", "Logiciel Windows de gestion commerciale, installé indépendamment chez chaque entreprise cliente."),
         ("Libellé · Inter 500 · 13/18", "font-family:Inter;font-weight:500;font-size:13px", "Se connecter · Enregistrer · Mon compte"),
-        ("Surtitre · Manrope 800 · 12, capitales", f"font-family:Manrope;font-weight:800;font-size:12px;letter-spacing:.08em;color:{BLEU}", "PAIEMENTS")))
+        ("Surtitre · Space Grotesk 700 · 12, capitales", f"font-family:Space Grotesk;font-weight:700;font-size:12px;letter-spacing:.08em;color:{BLEU}", "PAIEMENTS")))
     c = f"""<div style="display:grid;grid-template-columns:330px 1fr;gap:24px;flex:1">
 <div style="display:flex;flex-direction:column;gap:14px">
-{famille("Manrope", "Titres", "Bold 700 · ExtraBold 800", "Manrope")}
+{famille("Space Grotesk", "Titres", "Bold 700", "Space Grotesk")}
 {famille("Inter", "Texte, interface, chiffres, mot du logo", "Regular 400 · Medium 500 · SemiBold 600 · Bold 700", "Inter")}
 </div>
 <div style="display:flex;flex-direction:column;gap:12px">
@@ -284,7 +284,7 @@ def p07():
 <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
 <div style="width:170px;height:440px;border-radius:2px;background:{BLEU};position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;padding:30px 12px 0;box-sizing:border-box;gap:20px;text-align:center">
 {img("kadenz-symbole-blanc.svg", 70)}{img("kadenz-mot-negatif.svg", 26)}
-<span style="font-family:Manrope;font-weight:800;font-size:15px;color:#fff;margin-top:14px">Gestion commerciale</span>
+<span style="font-family:Space Grotesk;font-weight:700;font-size:15px;color:#fff;margin-top:14px">Gestion commerciale</span>
 <div style="display:flex;flex-direction:column;align-items:center;gap:6px">{lignes}</div>
 <div style="position:absolute;left:0;bottom:0;width:170px;height:100px">{motif_calme(BLEU, "#2a59df", 170, 100, 25)}</div></div>
 <p class="petit" style="text-align:center">Kakémono enrouleur · 850 x 2000 mm</p></div>
@@ -302,7 +302,7 @@ def p08():
 <div style="position:relative">{img("kadenz-logo-horizontal-negatif.svg", 34, "display:block")}</div></div>
 <div style="width:255px;height:165px;background:#fff;border-radius:4px;padding:18px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;{ombre}">
 {img("kadenz-symbole.svg", 30)}
-<div><p style="font-family:Manrope;font-weight:800;font-size:16px">[Prénom Nom]</p><p class="petit">[Fonction]</p></div>
+<div><p style="font-family:Space Grotesk;font-weight:700;font-size:16px">[Prénom Nom]</p><p class="petit">[Fonction]</p></div>
 <p class="petit" style="line-height:1.45">[Téléphone]<br>[E-mail]<br>[Site]</p></div></div>
 <p class="petit">Carte de visite 85 x 55 mm : recto Bleu vif avec le motif, verso nominatif</p>
 <div style="width:528px;height:250px;background:#fff;border-radius:4px;padding:22px;box-sizing:border-box;position:relative;{ombre}">
@@ -344,7 +344,7 @@ def p09():
 <div style="position:relative;padding:22px 20px;display:flex;flex-direction:column;gap:12px"><div style="align-self:flex-start;padding:2px 4px">{img("kadenz-logo-horizontal-negatif.svg", 26)}</div>
 <div style="height:8px"></div><div style="padding:6px;display:flex;flex-direction:column;gap:10px">{etapes}</div></div></div>
 <div style="flex:1;padding:24px 28px;display:flex;flex-direction:column">
-<p style="font-family:Manrope;font-weight:800;font-size:22px;margin-bottom:6px">Première installation</p>
+<p style="font-family:Space Grotesk;font-weight:700;font-size:22px;margin-bottom:6px">Première installation</p>
 <p class="petit" style="font-size:13px;margin-bottom:18px">Étape 1 sur 4 : Entreprise</p>
 {champ("Nom de l'entreprise (obligatoire)")}{champ("Adresse / boîte postale")}
 <div style="flex:1"></div><div style="align-self:flex-end;background:{BLEU};color:#fff;font-weight:600;font-size:14px;padding:9px 22px;border-radius:4px">Suivant</div>

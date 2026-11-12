@@ -1,21 +1,21 @@
 import { LineEdit } from "std-widgets.slint";
 
 // Polices de la marque (docs/marque), SIL Open Font License 1.1 : Inter pour le texte,
-// Manrope pour les titres. Instances statiques réduites au latin, embarquées dans l'exécutable.
+// Space Grotesk (Bold) pour les titres. Instances statiques réduites au latin, embarquées dans
+// l'exécutable. Les titres demandés en 800 prennent le Bold, graisse la plus forte de Space Grotesk.
 import "polices/Inter-Regular.ttf";
 import "polices/Inter-Medium.ttf";
 import "polices/Inter-SemiBold.ttf";
 import "polices/Inter-Bold.ttf";
-import "polices/Manrope-Bold.ttf";
-import "polices/Manrope-ExtraBold.ttf";
+import "polices/SpaceGrotesk-Bold.ttf";
 
 export global Theme {
-    // Interface en chinois : Inter et Manrope n'ont pas les idéogrammes, et la police
+    // Interface en chinois : Inter et Space Grotesk n'ont pas les idéogrammes, et la police
     // de secours choisie par Windows est japonaise, sans les caractères simplifiés.
     // Microsoft YaHei, livrée avec Windows, couvre le chinois simplifié et le latin.
     in property <bool> chinois: false;
     out property <string> police-texte: root.chinois ? "Microsoft YaHei UI" : root.rtl ? "Segoe UI" : "Inter";
-    out property <string> police-titre: root.chinois ? "Microsoft YaHei UI" : root.rtl ? "Segoe UI" : "Manrope";
+    out property <string> police-titre: root.chinois ? "Microsoft YaHei UI" : root.rtl ? "Segoe UI" : "Space Grotesk";
 
     // Sens de lecture, déduit de la traduction : seul ar.po traduit « ltr » par « rtl ».
     // De droite à gauche, les écrans sont mis en miroir : rangées inversées (Rangee),

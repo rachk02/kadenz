@@ -89,7 +89,8 @@ La pièce du module est pleine, les trois autres sont au trait : Ventes (carré 
 ## Typographie
 
 - **Inter** (400, 500, 600, 700) : texte, interface, montants en chiffres tabulaires, mot du logo. SIL Open Font License 1.1.
-- **Manrope** (700, 800) : titres. SIL Open Font License 1.1.
+- **Space Grotesk** (Bold 700) : titres de l'application, choisie par l'utilisateur le 2026-11-12 après comparaison avec Manrope, IBM Plex Sans, Kobe et Platform. SIL Open Font License 1.1, sans nom réservé ; instance statique réduite au latin, chiffres tabulaires conservés.
+- **Manrope** (ExtraBold 800) : reste utilisée pour les titres des documents PDF (`crates/pdf`) tant que ce choix n'est pas revu.
 - Point ouvert : le mot du logo utilise Inter sans retouche ; un dessin de lettres propre à Kadenz reste à l'étude.
 
 ## À ne pas faire
