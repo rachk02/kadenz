@@ -3,16 +3,18 @@
 | Version | Date | Changement |
 |---|---|---|
 | 0.1 | 2026-11-12 | Premier jet de kadenz-34 pour les sections 4.3 et 4.4 du cahier de la phase 2 (`docs/cahier-phase2.md`), d'après les décisions 5, 9, 16 à 21 et 28. Rien n'est validé ni codé. |
+| 0.2 | 2026-11-12 | Décisions 30 à 34 reportées : fenêtre d'administration du serveur, toujours un serveur, toute opération hors connexion refusée en attente, conflit tranché par l'Admin ou un ayant droit, version entière ou champ par champ ; question 2 réglée. |
 
 Statut : **à l'étude**. Ce document fixe la frontière entre les postes et le serveur de l'entreprise, ainsi que les clés. Les écrans (activation de l'accès à distance, état de la connexion, conflits à trancher, opérations en attente) sont dans `docs/spec-ecrans-multiposte.md` (kadenz-8e). Chaque règle est marquée **décidé** (une décision de l'utilisateur la fonde, citée) ou **proposé** (choix de kadenz-34, à valider). Les questions ouvertes sont en section 9.
 
 ## 1. Cadre décidé
 
-- Un serveur Kadenz par entreprise, sur une machine de l'entreprise, sous Windows (service Windows) ; une seule base par serveur (décisions 11, 16, 19).
+- Un serveur Kadenz par entreprise, sur une machine de l'entreprise, sous Windows (service Windows) ; une seule base par serveur (décisions 11, 16, 19). Tout poste de la phase 2 est relié à un serveur, qui peut tourner sur la même machine pour une entreprise d'un seul poste ; pas de mode « poste seul » (décision 31).
+- Le serveur a une petite fenêtre d'administration sur sa machine, pour ce qui doit marcher sans poste : état du service, empreinte du certificat, premier compte Admin, codes d'inscription, restauration d'une sauvegarde ; tout le reste se fait depuis un poste Admin (décision 30).
 - Le serveur est de confiance : il lit les données, chiffrées au repos sur son disque, impose les droits, l'heure, la validation et la numérotation, et fait des sauvegardes lisibles par l'entreprise (décision 28).
 - Les postes du bureau joignent le serveur en réseau local. Les postes hors du bureau passent, si l'entreprise l'active, par un relais sur le VPS de l'éditeur, qui ne conserve rien et ne lit rien (décisions 16 et 28).
 - Un poste travaille quand le serveur est injoignable, puis resynchronise (décision 5). Hors connexion, un document reste en brouillon : la validation, qui donne le numéro, se fait quand le serveur répond (décision 9).
-- Conflit sur une fiche : signalé, une personne compare et choisit, rien n'est écarté en silence (décision 17). Opérations faites hors connexion par un compte désactivé ou aux droits réduits entre-temps : mises en attente, l'Admin les accepte ou les rejette (décision 18).
+- Conflit sur une fiche : signalé, une personne compare et choisit, rien n'est écarté en silence (décision 17) ; cette personne est l'Admin, ou celle qui synchronise si elle a le droit de modifier la fiche (décision 33) ; elle garde une version entière ou choisit champ par champ (décision 34). Opérations faites hors connexion et refusées pour un compte ou un droit : mises en attente, l'Admin les accepte ou les rejette (décisions 18 et 32).
 - De 5 à 20 postes par entreprise (décision 23).
 
 ## 2. Architecture (proposé)
@@ -50,11 +52,11 @@ Une opération est une action d'un compte, celle que l'écran demande aujourd'hu
 
 - **Version par ligne (proposé)** : chaque ligne synchronisée a un numéro de version, augmenté par le serveur à chaque changement accepté.
 - **Changements vers les postes (proposé)** : le serveur tient une suite numérotée de tous les changements acceptés. Un poste demande les changements depuis le dernier numéro qu'il a reçu, puis reste à l'écoute des suivants tant qu'il est connecté. À la reconnexion, il envoie d'abord sa file, puis reçoit ce qui lui manque. Un compte désactivé, des droits changés ou un paramètre modifié arrivent par le même chemin.
-- **Conflit sur une fiche (décision 17 ; forme proposée)** : une modification arrive avec une version plus ancienne que celle du serveur, et la même fiche a changé sur le serveur depuis. Le serveur n'applique pas la modification. Il garde les deux versions (celle du serveur et celle du poste, avec le compte et le poste de chacune) dans une liste de conflits, et le signale. L'Admin, ou la personne qui synchronise, compare les deux versions et choisit l'une ou l'autre ; son choix devient une nouvelle opération, tracée dans le journal d'audit. Tant qu'il n'est pas tranché, la version du serveur reste en vigueur partout.
+- **Conflit sur une fiche (décision 17 ; forme proposée)** : une modification arrive avec une version plus ancienne que celle du serveur, et la même fiche a changé sur le serveur depuis. Le serveur n'applique pas la modification. Il garde les deux versions (celle du serveur et celle du poste, avec le compte et le poste de chacune) dans une liste de conflits, et le signale. L'Admin, ou la personne qui synchronise si elle a le droit de modifier la fiche (décision 33), compare les deux versions et garde l'une entière ou compose le résultat champ par champ (décision 34) ; le résultat devient une nouvelle opération, portant la version du serveur, tracée dans le journal d'audit. Tant qu'il n'est pas tranché, la version du serveur reste en vigueur partout.
 - **Brouillons** : même règle que pour les fiches, un brouillon modifié sur deux postes pendant une coupure devient un conflit à trancher.
 - **Documents validés** : leur contenu est figé (règle de la V1) ; seuls changent leur statut et leurs règlements. Une transition devenue impossible entre-temps (par exemple annuler une facture qu'un autre poste a déjà réglée) est refusée par les règles de la V1, avec le message habituel. Ce n'est pas un conflit à trancher.
 - **Opérations en attente (décision 18 ; forme proposée)** : une opération faite hors connexion, refusée à l'application parce que le compte est désactivé ou n'a plus le droit voulu, n'est ni appliquée ni rejetée : elle est rangée dans la liste des opérations en attente, avec son compte, son poste et l'heure du poste. L'Admin l'accepte, et elle est alors appliquée sous sa responsabilité, tracée à son nom et à celui du compte d'origine, ou il la rejette. Une opération faite en ligne et refusée pour un droit l'est tout de suite, comme en V1.
-- **« Après le changement »** : la décision 18 vise les opérations faites après la désactivation ou la réduction des droits. Le serveur ne peut pas le savoir de façon sûre : seule l'heure du poste le dirait, et elle n'est pas fiable. Proposé : toute opération faite hors connexion et refusée pour un compte ou un droit va en attente, qu'elle soit antérieure ou postérieure au changement ; l'Admin voit l'heure du poste comme indication. Rien n'est ainsi rejeté sans décision d'une personne.
+- **Antérieure ou postérieure au changement (décision 32)** : le serveur ne peut pas savoir de façon sûre si une opération a été faite avant ou après la désactivation ou la réduction des droits, l'heure du poste n'étant pas fiable. Toute opération faite hors connexion et refusée pour un compte ou un droit va donc en attente, dans les deux cas ; l'heure du poste n'est affichée qu'à titre indicatif. Rien n'est rejeté sans décision d'une personne.
 
 ## 7. Connexion, inscription des postes et accès à distance
 
@@ -76,7 +78,7 @@ Une opération est une action d'un compte, celle que l'écran demande aujourd'hu
 ## 9. Questions ouvertes
 
 1. **Identifiant global (section 3)** : UUID version 7 ajouté à côté de l'entier local, comme proposé, ou remplacement de l'entier ? Question technique, sans effet visible pour l'utilisateur ; kadenz-34 recommande l'ajout, qui laisse le stockage de la V1 intact.
-2. **Opérations en attente (section 6)** : toutes les opérations hors connexion refusées pour un compte ou un droit vont en attente, y compris celles faites avant le changement, faute d'heure fiable. À confirmer par l'utilisateur, la décision 18 ne visant que celles d'après.
+2. Réglée par la décision 32 (opérations en attente, section 6).
 3. **Sauvegardes du serveur** : dossier par défaut, fréquence, nombre de copies gardées, et copie hors de la machine (disque externe, autre machine) conseillée ou exigée ?
 4. **Durée du code d'inscription d'un poste** (section 7).
 5. **Fuseau de l'entreprise** : un seul fuseau par entreprise, réglé sur le serveur, pour l'affichage des heures techniques, ou le fuseau de chaque poste ?
