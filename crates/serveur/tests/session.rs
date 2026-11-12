@@ -797,13 +797,33 @@ fn empreinte_presentee_sans_confiance() {
 
 #[test]
 fn demarrage_sans_decouverte_si_le_port_udp_est_pris() {
-    // Le port UDP est pris avant le démarrage (décision 44).
-    let pris = std::net::UdpSocket::bind(("127.0.0.1", 0)).unwrap();
-    let mut config = Config::nouvelle(dossier("udp-pris"));
-    config.adresse = pris.local_addr().unwrap();
-    config.controle_droits = false;
-    config.cles_portail = vec![cle_portail().verifying_key()];
-    let serveur = Serveur::demarrer(config).unwrap();
+    // Le port UDP est pris avant le démarrage (décision 44). Le numéro vient
+    // d'un port TCP libre : Windows réserve des plages au TCP seul (Hyper-V,
+    // WinNAT), où un port UDP libre au hasard ne pourrait pas écouter en TCP.
+    // Un port repris entre-temps par un autre programme fait réessayer.
+    let dossier = dossier("udp-pris");
+    let mut essais = 0;
+    let (serveur, _pris) = loop {
+        essais += 1;
+        assert!(essais <= 10, "aucun port TCP et UDP libre trouvé");
+        let port = std::net::TcpListener::bind(("127.0.0.1", 0))
+            .unwrap()
+            .local_addr()
+            .unwrap()
+            .port();
+        let Ok(pris) = std::net::UdpSocket::bind(("127.0.0.1", port)) else {
+            continue;
+        };
+        let mut config = Config::nouvelle(dossier.clone());
+        config.adresse = pris.local_addr().unwrap();
+        config.controle_droits = false;
+        config.cles_portail = vec![cle_portail().verifying_key()];
+        match Serveur::demarrer(config) {
+            Ok(serveur) => break (serveur, pris),
+            Err(e) if e.contains("écoute") => continue,
+            Err(e) => panic!("{e}"),
+        }
+    };
     let avertissement = serveur.avertissement().unwrap();
     assert!(avertissement.contains("découverte"), "{avertissement}");
     assert!(avertissement.contains("impossible"), "{avertissement}");
