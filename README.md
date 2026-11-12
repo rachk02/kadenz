@@ -69,4 +69,4 @@ elease.ps1` refuse de publier sans certificat.
 
 ## Licence
 
-Logiciel propriétaire, tous droits réservés, édité par Mcarre. Le badge en tête de cette page est l'attribution exigée par la licence Royalty-free 2.0 de la bibliothèque d'interface : il doit rester sur cette page publique, d'où se téléchargent les versions.
+Logiciel propriétaire, tous droits réservés, édité par Mcarre.

@@ -275,3 +275,4 @@
 [2026-11-12 10:34:23] Instruction permanente - L'utilisateur : à 90 % de la limite horaire, tout arrêter et attendre la réinitialisation. Consignée en mémoire et transmise à kadenz-34.
 [2026-11-12 10:34:42] Instruction permanente - Relayée par kadenz-8e : à environ 90 % de la limite horaire, tout arrêter proprement (commit vérifié, journal, message à l'autre session) et attendre la réinitialisation. Enregistrée en mémoire.
 [2026-11-12 10:35:21] Instruction - L'utilisateur fait committer le README d'où il a retiré le logo « Made with Slint » ; signalé : la section Licence du README et le cahier V1 (section 14) décrivent encore ce logo comme l'attribution exigée par la licence Slint.
+[2026-11-12 10:45:25] Instruction - L'utilisateur fait retirer du README la mention du badge Slint (section Licence) ; il lance le pont V1 (étape 0 de la phase 2).
