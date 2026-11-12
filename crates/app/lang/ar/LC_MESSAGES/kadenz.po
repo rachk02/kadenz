@@ -3260,3 +3260,24 @@ msgstr "استجابة غير متوقعة من الخادم: {}"
 
 msgid "Poste inscrit sous le nom « {} »."
 msgstr "تم تسجيل المحطة باسم «{}»."
+
+msgid "nombre de postes atteint : {} poste permis par l'abonnement"
+msgstr "تم بلوغ عدد المحطات: يسمح الاشتراك بـ {} محطة"
+
+msgid "{} inscrit sur {} permis par l'abonnement"
+msgstr "{} مسجلة من أصل {} يسمح بها الاشتراك"
+
+msgid "{} utilisé sur {}"
+msgstr "{} مستخدمة من أصل {}"
+
+msgid "{} inscrit"
+msgstr "{} مسجلة"
+
+msgid "Collez le code complet, ou tapez le code court."
+msgstr "الصق الرمز الكامل، أو اكتب الرمز القصير."
+
+msgid "Choisi"
+msgstr "تم الاختيار"
+
+msgid "Serveur en marche hors du service Windows (console)"
+msgstr "الخادم يعمل خارج خدمة Windows (وحدة التحكم)"

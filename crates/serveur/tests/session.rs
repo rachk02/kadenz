@@ -649,7 +649,7 @@ fn un_seul_poste_sans_licence() {
             &Identite::nouvelle("poste").unwrap(),
             &b.secret
         )),
-        "nombre de postes atteint : {} postes permis par l'abonnement"
+        "nombre de postes atteint : {} poste permis par l'abonnement"
     );
 }
 

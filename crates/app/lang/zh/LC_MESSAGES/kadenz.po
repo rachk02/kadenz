@@ -3260,3 +3260,24 @@ msgstr "服务器响应异常：{}"
 
 msgid "Poste inscrit sous le nom « {} »."
 msgstr "工作站已注册为“{}”。"
+
+msgid "nombre de postes atteint : {} poste permis par l'abonnement"
+msgstr "已达到工作站数量上限：订阅允许 {} 个工作站"
+
+msgid "{} inscrit sur {} permis par l'abonnement"
+msgstr "已注册 {} 个，订阅允许 {} 个"
+
+msgid "{} utilisé sur {}"
+msgstr "已使用 {} 个，共 {} 个"
+
+msgid "{} inscrit"
+msgstr "已注册 {} 个"
+
+msgid "Collez le code complet, ou tapez le code court."
+msgstr "请粘贴完整代码，或输入短代码。"
+
+msgid "Choisi"
+msgstr "已选择"
+
+msgid "Serveur en marche hors du service Windows (console)"
+msgstr "服务器在 Windows 服务之外运行（控制台）"

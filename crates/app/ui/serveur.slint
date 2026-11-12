@@ -194,8 +194,10 @@ export component PageServeur inherits ScrollView {
                     wrap: word-wrap;
                 }
 
+                // Le serveur choisi le montre : bouton inactif, « Choisi ».
                 Bouton {
-                    text: @tr("Choisir");
+                    text: root.adresse == trouve.adresse ? @tr("Choisi") : @tr("Choisir");
+                    enabled: root.adresse != trouve.adresse;
                     clicked => {
                         root.adresse = trouve.adresse;
                     }

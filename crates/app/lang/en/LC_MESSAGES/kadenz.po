@@ -3260,3 +3260,24 @@ msgstr "unexpected server response: {}"
 
 msgid "Poste inscrit sous le nom « {} »."
 msgstr "Workstation enrolled as “{}”."
+
+msgid "nombre de postes atteint : {} poste permis par l'abonnement"
+msgstr "workstation limit reached: {} workstation allowed by the subscription"
+
+msgid "{} inscrit sur {} permis par l'abonnement"
+msgstr "{} enrolled out of {} allowed by the subscription"
+
+msgid "{} utilisé sur {}"
+msgstr "{} used out of {}"
+
+msgid "{} inscrit"
+msgstr "{} enrolled"
+
+msgid "Collez le code complet, ou tapez le code court."
+msgstr "Paste the full code, or type the short code."
+
+msgid "Choisi"
+msgstr "Chosen"
+
+msgid "Serveur en marche hors du service Windows (console)"
+msgstr "Server running outside the Windows service (console)"

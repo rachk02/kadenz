@@ -220,6 +220,13 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             lancer_inscription(&f, complet.adresses, complet.empreinte, complet.secret);
             return;
         }
+        if code.trim().is_empty() {
+            finir(
+                &f,
+                retour_erreur(tr("Collez le code complet, ou tapez le code court.")),
+            );
+            return;
+        }
         let Some(secret) = inscription::normaliser_secret(&code) else {
             finir(
                 &f,

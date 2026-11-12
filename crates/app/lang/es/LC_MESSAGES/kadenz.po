@@ -3260,3 +3260,24 @@ msgstr "respuesta inesperada del servidor: {}"
 
 msgid "Poste inscrit sous le nom « {} »."
 msgstr "Puesto inscrito con el nombre «{}»."
+
+msgid "nombre de postes atteint : {} poste permis par l'abonnement"
+msgstr "número de puestos alcanzado: {} puesto permitido por la suscripción"
+
+msgid "{} inscrit sur {} permis par l'abonnement"
+msgstr "{} inscrito de {} permitidos por la suscripción"
+
+msgid "{} utilisé sur {}"
+msgstr "{} usado de {}"
+
+msgid "{} inscrit"
+msgstr "{} inscrito"
+
+msgid "Collez le code complet, ou tapez le code court."
+msgstr "Pegue el código completo o escriba el código corto."
+
+msgid "Choisi"
+msgstr "Elegido"
+
+msgid "Serveur en marche hors du service Windows (console)"
+msgstr "Servidor en ejecución fuera del servicio de Windows (consola)"

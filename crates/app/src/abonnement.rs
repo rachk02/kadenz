@@ -105,7 +105,12 @@ pub(crate) fn vue(a: &Abonnement, recu_le: &str, gere: bool, poste: NaiveDate) -
         }
         v.lignes.push((
             tr("Postes"),
-            trf("{} utilisés sur {}", &[&a.postes_utilises, &l.postes]),
+            // Accord en français : singulier pour 0 et 1.
+            if a.postes_utilises <= 1 {
+                trf("{} utilisé sur {}", &[&a.postes_utilises, &l.postes])
+            } else {
+                trf("{} utilisés sur {}", &[&a.postes_utilises, &l.postes])
+            },
         ));
         let modules: Vec<String> = l
             .modules
@@ -130,8 +135,14 @@ pub(crate) fn vue(a: &Abonnement, recu_le: &str, gere: bool, poste: NaiveDate) -
         ));
         v.lignes.push((tr("Émise le"), date(&l.emise_le)));
     } else {
-        v.lignes
-            .push((tr("Postes"), trf("{} inscrits", &[&a.postes_utilises])));
+        v.lignes.push((
+            tr("Postes"),
+            if a.postes_utilises <= 1 {
+                trf("{} inscrit", &[&a.postes_utilises])
+            } else {
+                trf("{} inscrits", &[&a.postes_utilises])
+            },
+        ));
     }
     v.lignes.push((tr("Date du serveur"), date(&a.aujourdhui)));
     v.lignes.push((tr("État reçu le"), date_heure(recu_le)));

@@ -3260,3 +3260,24 @@ msgstr "サーバーから予期しない応答がありました：{}"
 
 msgid "Poste inscrit sous le nom « {} »."
 msgstr "端末を「{}」として登録しました。"
+
+msgid "nombre de postes atteint : {} poste permis par l'abonnement"
+msgstr "端末数の上限に達しました：サブスクリプションで許可されている端末は {} 台です"
+
+msgid "{} inscrit sur {} permis par l'abonnement"
+msgstr "{} 台登録済み（サブスクリプションで許可されているのは {} 台）"
+
+msgid "{} utilisé sur {}"
+msgstr "{} 台使用中（全 {} 台）"
+
+msgid "{} inscrit"
+msgstr "{} 台登録済み"
+
+msgid "Collez le code complet, ou tapez le code court."
+msgstr "完全なコードを貼り付けるか、短いコードを入力してください。"
+
+msgid "Choisi"
+msgstr "選択済み"
+
+msgid "Serveur en marche hors du service Windows (console)"
+msgstr "サーバーは Windows サービス外で実行中です（コンソール）"

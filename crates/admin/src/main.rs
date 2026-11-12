@@ -97,8 +97,23 @@ fn empreinte_lisible(empreinte: &str) -> String {
         .join(" ")
 }
 
-fn texte_etat_service(etat: Result<EtatService, String>) -> (String, bool) {
+/// Vrai si un serveur répond sur ce port de la machine (connexion TCP seule,
+/// sans rien envoyer) : le serveur peut tourner hors du service Windows, en
+/// console (essais, dépannage).
+fn serveur_en_marche(port: u16) -> bool {
+    std::net::TcpStream::connect_timeout(
+        &std::net::SocketAddr::from(([127, 0, 0, 1], port)),
+        Duration::from_millis(300),
+    )
+    .is_ok()
+}
+
+fn texte_etat_service(etat: Result<EtatService, String>, port: u16) -> (String, bool) {
     match etat {
+        Ok(EtatService::NonInstalle | EtatService::Arrete) if serveur_en_marche(port) => (
+            tr("Serveur en marche hors du service Windows (console)"),
+            true,
+        ),
         Ok(EtatService::Demarre) => (tr("Démarré"), true),
         Ok(EtatService::Demarrage) => (tr("Démarrage en cours"), false),
         Ok(EtatService::Arret) => (tr("Arrêt en cours"), false),
@@ -109,13 +124,25 @@ fn texte_etat_service(etat: Result<EtatService, String>) -> (String, bool) {
     }
 }
 
-/// Dossier des données du serveur. En développement, `KADENZ_SERVEUR_DOSSIER`
-/// le remplace, pour essayer la fenêtre sur un dossier d'essai ; une version
-/// publiée ne lit jamais cette variable.
+/// Dossier des données du serveur. En développement, l'option `--dossier D`
+/// ou `KADENZ_SERVEUR_DOSSIER` le remplace, pour essayer la fenêtre sur un
+/// dossier d'essai (un processus élevé ne reçoit pas toujours les variables
+/// d'environnement de son parent) ; une version publiée ne lit ni l'une ni
+/// l'autre.
 fn dossier() -> PathBuf {
     #[cfg(debug_assertions)]
-    if let Some(d) = std::env::var_os("KADENZ_SERVEUR_DOSSIER") {
-        return PathBuf::from(d);
+    {
+        let arguments: Vec<String> = std::env::args().collect();
+        if let Some(d) = arguments
+            .iter()
+            .position(|a| a == "--dossier")
+            .and_then(|i| arguments.get(i + 1))
+        {
+            return PathBuf::from(d);
+        }
+        if let Some(d) = std::env::var_os("KADENZ_SERVEUR_DOSSIER") {
+            return PathBuf::from(d);
+        }
     }
     kadenz_serveur::dossier_par_defaut()
 }
@@ -189,7 +216,7 @@ fn installation_depuis_assistant(d: &DonneesAssistant) -> Result<InstallationIni
 /// Recopie l'état du serveur dans le tableau.
 fn actualiser(f: &FenetreAdmin, conn: &Connection, dossier: &Path) {
     let api = f.global::<AdminApi>();
-    let (etat, demarre) = texte_etat_service(admin::etat_service());
+    let (etat, demarre) = texte_etat_service(admin::etat_service(), admin::port(conn));
     api.set_etat_service(etat.into());
     api.set_service_demarre(demarre);
     api.set_derniere_erreur(admin::derniere_erreur(dossier).unwrap_or_default().into());
@@ -206,13 +233,19 @@ fn actualiser(f: &FenetreAdmin, conn: &Connection, dossier: &Path) {
     let permis = abonnement::etat(conn, abonnement::horloge())
         .map(|a| abonnement::postes_permis(&a))
         .unwrap_or(abonnement::POSTES_SANS_ABONNEMENT_ACTIF);
-    api.set_postes_permis(
+    // Accord en français : singulier pour 0 et 1.
+    let texte = if inscrits.len() <= 1 {
+        trf(
+            "{} inscrit sur {} permis par l'abonnement",
+            &[&inscrits.len(), &permis],
+        )
+    } else {
         trf(
             "{} inscrits sur {} permis par l'abonnement",
             &[&inscrits.len(), &permis],
         )
-        .into(),
-    );
+    };
+    api.set_postes_permis(texte.into());
     api.set_postes(ModelRc::new(VecModel::from(
         inscrits
             .into_iter()

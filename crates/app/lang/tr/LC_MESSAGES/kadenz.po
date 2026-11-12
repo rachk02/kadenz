@@ -3260,3 +3260,24 @@ msgstr "beklenmeyen sunucu yanıtı: {}"
 
 msgid "Poste inscrit sous le nom « {} »."
 msgstr "İş istasyonu “{}” adıyla kaydedildi."
+
+msgid "nombre de postes atteint : {} poste permis par l'abonnement"
+msgstr "iş istasyonu sınırına ulaşıldı: abonelik {} iş istasyonuna izin veriyor"
+
+msgid "{} inscrit sur {} permis par l'abonnement"
+msgstr "{} kayıtlı, abonelik {} izin veriyor"
+
+msgid "{} utilisé sur {}"
+msgstr "{} kullanılıyor, toplam {}"
+
+msgid "{} inscrit"
+msgstr "{} kayıtlı"
+
+msgid "Collez le code complet, ou tapez le code court."
+msgstr "Tam kodu yapıştırın veya kısa kodu yazın."
+
+msgid "Choisi"
+msgstr "Seçildi"
+
+msgid "Serveur en marche hors du service Windows (console)"
+msgstr "Sunucu Windows hizmeti dışında çalışıyor (konsol)"

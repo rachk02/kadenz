@@ -165,11 +165,15 @@ export component EcranAssistant inherits Rectangle {
         VerticalLayout {
             alignment: center;
 
-            Rangee {
+            // Colonne de 720 px au plus, plus étroite dans une petite fenêtre (les
+            // textes passent à la ligne). HorizontalLayout et non Rangee : un texte
+            // qui passe à la ligne dans un Flexbox fait boucler la mise en page.
+            HorizontalLayout {
                 alignment: center;
 
                 VerticalLayout {
-                    width: 720px;
+                    max-width: 720px;
+                    horizontal-stretch: 1;
                     spacing: 16px;
                     padding: 24px;
 

@@ -5,7 +5,7 @@
 // l'application), crée et annule les codes d'inscription des postes, et retire un
 // poste. Tout le reste se fait depuis un poste connecté avec un compte Admin.
 // La restauration et les sauvegardes viennent avec le jalon F7.
-import { ScrollView, TextEdit } from "std-widgets.slint";
+import { LineEdit, ScrollView, TextEdit } from "std-widgets.slint";
 import { Alerte, Bouton, Champ, Confirmation, FenetreAlerte, FenetreConfirmation, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "../../app/ui/composants.slint";
 import { DonneesAssistant, EcranAssistant } from "../../app/ui/assistant.slint";
 import { LicenceApi } from "../../app/ui/licence.slint";
@@ -74,10 +74,32 @@ component Ligne inherits GridLayout {
     }
 }
 
-// Texte long en lecture seule (empreinte, code complet), avec un bouton Copier.
+// Texte d'une ligne en lecture seule (empreinte), avec un bouton Copier.
+component LigneACopier inherits HorizontalLayout {
+    in property <string> texte;
+    spacing: 8px;
+
+    champ := LineEdit {
+        horizontal-stretch: 1;
+        text: root.texte;
+        read-only: true;
+        font-size: 13px;
+    }
+
+    Bouton {
+        text: @tr("Copier");
+        clicked => {
+            champ.select-all();
+            champ.copy();
+            Alerte.montrer(@tr("Copié."));
+        }
+    }
+}
+
+// Texte long en lecture seule (code complet), avec un bouton Copier.
 component TexteACopier inherits VerticalLayout {
     in property <string> texte;
-    in property <length> hauteur: 32px;
+    in property <length> hauteur: 72px;
     spacing: 6px;
 
     champ := TextEdit {
@@ -123,236 +145,244 @@ component Tableau inherits ScrollView {
         self.poste-a-retirer = "";
     }
 
-    VerticalLayout {
-        padding: 24px;
-        spacing: 12px;
-        alignment: start;
+    // Colonne de 880 px au plus, au début du sens de lecture : en plein écran,
+    // les champs ne s'étirent pas sur toute la largeur.
+    HorizontalLayout {
+        alignment: Theme.rangee-debut;
 
-        Titre {
-            text: AdminApi.nom-entreprise == "" ? @tr("Serveur Kadenz") : AdminApi.nom-entreprise;
-        }
-
-        Text {
-            horizontal-alignment: Theme.debut;
-            text: @tr("Cette fenêtre sert au dépannage du serveur. Les comptes, l'abonnement et les autres réglages se gèrent depuis un poste connecté avec un compte Admin.");
-            color: Theme.texte-secondaire;
-            wrap: word-wrap;
-        }
-
-        Section {
-            text: @tr("Service");
-        }
-
-        Ligne {
-            libelle: @tr("État");
-            valeur: AdminApi.etat-service;
-            couleur: AdminApi.service-demarre ? Theme.succes : Theme.erreur;
-        }
-
-        if AdminApi.derniere-erreur != "": Ligne {
-            libelle: @tr("Dernière erreur");
-            valeur: AdminApi.derniere-erreur;
-            couleur: Theme.erreur;
-        }
-
-        Ligne {
-            libelle: @tr("Dossier des données");
-            valeur: AdminApi.dossier;
-        }
-
-        Section {
-            text: @tr("Empreinte du certificat");
-        }
-
-        Text {
-            horizontal-alignment: Theme.debut;
-            text: @tr("Un poste qui s'inscrit avec le code complet la vérifie seul. Avec le code court, comparez l'empreinte affichée sur le poste à celle-ci avant de confirmer.");
-            color: Theme.texte-secondaire;
-            wrap: word-wrap;
-        }
-
-        TexteACopier {
-            texte: AdminApi.empreinte;
-        }
-
-        Section {
-            text: @tr("Codes d'inscription");
-        }
-
-        Text {
-            horizontal-alignment: Theme.debut;
-            text: @tr("Un code sert une seule fois, pour un poste, pendant 24 heures. Un nouveau code pour le même nom de poste annule le précédent.");
-            color: Theme.texte-secondaire;
-            wrap: word-wrap;
-        }
-
-        Ligne {
-            libelle: @tr("Postes");
-            valeur: AdminApi.postes-permis;
-        }
-
-        HorizontalLayout {
-            spacing: 8px;
-
-            Champ {
-                horizontal-stretch: 1;
-                libelle: @tr("Nom du poste");
-                valeur <=> root.nom-poste;
-            }
-
-            VerticalLayout {
-                alignment: end;
-
-                Bouton {
-                    text: @tr("Créer un code");
-                    primary: true;
-                    clicked => {
-                        root.retour = AdminApi.creer-code(root.nom-poste);
-                        if (root.retour.ok) {
-                            root.nom-poste = "";
-                        }
-                    }
-                }
-            }
-        }
-
-        MessageRetour {
-            erreurs-seules: true;
-            retour: root.retour;
-        }
-
-        if AdminApi.nouveau-secret != "": Rectangle {
-            border-width: 1px;
-            border-color: Theme.bordure;
-            border-radius: 4px;
-            background: Theme.fond-lateral;
-
-            VerticalLayout {
-                padding: 14px;
-                spacing: 8px;
-
-                Text {
-                    horizontal-alignment: Theme.debut;
-                    text: @tr("Code du poste « {} », valable jusqu'au {}. Notez-le maintenant : il ne sera plus affiché.", AdminApi.nouveau-nom, AdminApi.nouveau-expire);
-                    color: Theme.texte;
-                    font-weight: 600;
-                    wrap: word-wrap;
-                }
-
-                Ligne {
-                    libelle: @tr("Code court");
-                    valeur: AdminApi.nouveau-secret;
-                }
-
-                Text {
-                    horizontal-alignment: Theme.debut;
-                    text: @tr("Code complet, à coller sur le poste : il contient aussi l'adresse et l'empreinte du serveur.");
-                    color: Theme.texte-secondaire;
-                    wrap: word-wrap;
-                }
-
-                TexteACopier {
-                    texte: AdminApi.nouveau-complet;
-                    hauteur: 72px;
-                }
-
-                HorizontalLayout {
-                    alignment: Theme.rangee-debut;
-
-                    Bouton {
-                        text: @tr("Masquer le code");
-                        clicked => {
-                            AdminApi.nouveau-secret = "";
-                            AdminApi.nouveau-complet = "";
-                        }
-                    }
-                }
-            }
-        }
-
-        if AdminApi.codes.length > 0: Text {
-            horizontal-alignment: Theme.debut;
-            text: @tr("Codes en cours");
-            font-weight: 600;
-            color: Theme.texte;
-        }
-
-        for code in AdminApi.codes: HorizontalLayout {
+        VerticalLayout {
+            max-width: 880px;
+            horizontal-stretch: 1;
+            padding: 24px;
             spacing: 12px;
+            alignment: start;
+
+            Titre {
+                text: AdminApi.nom-entreprise == "" ? @tr("Serveur Kadenz") : AdminApi.nom-entreprise;
+            }
 
             Text {
-                horizontal-stretch: 1;
-                vertical-alignment: center;
                 horizontal-alignment: Theme.debut;
-                text: @tr("{} : valable jusqu'au {}", code.nom, code.expire-le);
-                color: Theme.texte;
+                text: @tr("Cette fenêtre sert au dépannage du serveur. Les comptes, l'abonnement et les autres réglages se gèrent depuis un poste connecté avec un compte Admin.");
+                color: Theme.texte-secondaire;
                 wrap: word-wrap;
             }
 
-            Bouton {
-                text: @tr("Annuler le code");
-                danger: true;
-                clicked => {
-                    root.code-a-annuler = code.id;
-                    Confirmation.demander(@tr("Annuler le code du poste « {} » ? Il ne pourra plus servir.", code.nom), @tr("Annuler le code"), true);
-                }
-            }
-        }
-
-        Section {
-            text: @tr("Postes inscrits");
-        }
-
-        if AdminApi.postes.length == 0: Text {
-            horizontal-alignment: Theme.debut;
-            text: @tr("Aucun poste inscrit.");
-            color: Theme.texte-secondaire;
-        }
-
-        for poste in AdminApi.postes: HorizontalLayout {
-            spacing: 12px;
-
-            VerticalLayout {
-                horizontal-stretch: 1;
-                spacing: 2px;
-
-                Text {
-                    horizontal-alignment: Theme.debut;
-                    text: poste.nom;
-                    color: Theme.texte;
-                    font-weight: 600;
-                }
-
-                Text {
-                    horizontal-alignment: Theme.debut;
-                    text: @tr("Inscrit le {}", poste.inscrit-le);
-                    color: Theme.texte-secondaire;
-                    font-size: 12px;
-                }
+            Section {
+                text: @tr("Service");
             }
 
-            VerticalLayout {
-                alignment: center;
+            Ligne {
+                libelle: @tr("État");
+                valeur: AdminApi.etat-service;
+                couleur: AdminApi.service-demarre ? Theme.succes : Theme.erreur;
+            }
 
-                Bouton {
-                    text: @tr("Retirer");
-                    danger: true;
-                    clicked => {
-                        root.poste-a-retirer = poste.empreinte;
-                        Confirmation.demander(@tr("Retirer le poste « {} » ? Il ne pourra plus se connecter ; il faudra un nouveau code pour l'inscrire de nouveau.", poste.nom), @tr("Retirer"), true);
+            if AdminApi.derniere-erreur != "": Ligne {
+                libelle: @tr("Dernière erreur");
+                valeur: AdminApi.derniere-erreur;
+                couleur: Theme.erreur;
+            }
+
+            Ligne {
+                libelle: @tr("Dossier des données");
+                valeur: AdminApi.dossier;
+            }
+
+            Section {
+                text: @tr("Empreinte du certificat");
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Un poste qui s'inscrit avec le code complet la vérifie seul. Avec le code court, comparez l'empreinte affichée sur le poste à celle-ci avant de confirmer.");
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+
+            LigneACopier {
+                texte: AdminApi.empreinte;
+            }
+
+            Section {
+                text: @tr("Codes d'inscription");
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Un code sert une seule fois, pour un poste, pendant 24 heures. Un nouveau code pour le même nom de poste annule le précédent.");
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+
+            Ligne {
+                libelle: @tr("Postes");
+                valeur: AdminApi.postes-permis;
+            }
+
+            HorizontalLayout {
+                spacing: 8px;
+
+                Champ {
+                    horizontal-stretch: 1;
+                    libelle: @tr("Nom du poste");
+                    valeur <=> root.nom-poste;
+                }
+
+                VerticalLayout {
+                    alignment: end;
+
+                    Bouton {
+                        text: @tr("Créer un code");
+                        primary: true;
+                        clicked => {
+                            root.retour = AdminApi.creer-code(root.nom-poste);
+                            if (root.retour.ok) {
+                                root.nom-poste = "";
+                            }
+                        }
                     }
                 }
             }
-        }
 
-        HorizontalLayout {
-            alignment: Theme.rangee-debut;
-            padding-top: 8px;
+            MessageRetour {
+                erreurs-seules: true;
+                retour: root.retour;
+            }
 
-            Bouton {
-                text: @tr("Actualiser");
-                clicked => {
-                    AdminApi.actualiser();
+            if AdminApi.nouveau-secret != "": Rectangle {
+                border-width: 1px;
+                border-color: Theme.bordure;
+                border-radius: 4px;
+                background: Theme.fond-lateral;
+
+                VerticalLayout {
+                    padding: 14px;
+                    spacing: 8px;
+
+                    Text {
+                        horizontal-alignment: Theme.debut;
+                        text: @tr("Code du poste « {} », valable jusqu'au {}. Notez-le maintenant : il ne sera plus affiché.", AdminApi.nouveau-nom, AdminApi.nouveau-expire);
+                        color: Theme.texte;
+                        font-weight: 600;
+                        wrap: word-wrap;
+                    }
+
+                    Ligne {
+                        libelle: @tr("Code court");
+                        valeur: AdminApi.nouveau-secret;
+                    }
+
+                    Text {
+                        horizontal-alignment: Theme.debut;
+                        text: @tr("Code complet, à coller sur le poste : il contient aussi l'adresse et l'empreinte du serveur.");
+                        color: Theme.texte-secondaire;
+                        wrap: word-wrap;
+                    }
+
+                    TexteACopier {
+                        texte: AdminApi.nouveau-complet;
+                        hauteur: 72px;
+                    }
+
+                    HorizontalLayout {
+                        alignment: Theme.rangee-debut;
+
+                        Bouton {
+                            text: @tr("Masquer le code");
+                            clicked => {
+                                AdminApi.nouveau-secret = "";
+                                AdminApi.nouveau-complet = "";
+                            }
+                        }
+                    }
+                }
+            }
+
+            if AdminApi.codes.length > 0: Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Codes en cours");
+                font-weight: 600;
+                color: Theme.texte;
+            }
+
+            for code in AdminApi.codes: HorizontalLayout {
+                spacing: 12px;
+
+                Text {
+                    horizontal-stretch: 1;
+                    vertical-alignment: center;
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("{} : valable jusqu'au {}", code.nom, code.expire-le);
+                    color: Theme.texte;
+                    wrap: word-wrap;
+                }
+
+                Bouton {
+                    text: @tr("Annuler le code");
+                    danger: true;
+                    clicked => {
+                        root.code-a-annuler = code.id;
+                        Confirmation.demander(@tr("Annuler le code du poste « {} » ? Il ne pourra plus servir.", code.nom), @tr("Annuler le code"), true);
+                    }
+                }
+            }
+
+            Section {
+                text: @tr("Postes inscrits");
+            }
+
+            if AdminApi.postes.length == 0: Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Aucun poste inscrit.");
+                color: Theme.texte-secondaire;
+            }
+
+            for poste in AdminApi.postes: HorizontalLayout {
+                spacing: 12px;
+
+                VerticalLayout {
+                    horizontal-stretch: 1;
+                    spacing: 2px;
+
+                    Text {
+                        horizontal-alignment: Theme.debut;
+                        text: poste.nom;
+                        color: Theme.texte;
+                        font-weight: 600;
+                    }
+
+                    Text {
+                        horizontal-alignment: Theme.debut;
+                        text: @tr("Inscrit le {}", poste.inscrit-le);
+                        color: Theme.texte-secondaire;
+                        font-size: 12px;
+                    }
+                }
+
+                VerticalLayout {
+                    alignment: center;
+
+                    Bouton {
+                        text: @tr("Retirer");
+                        danger: true;
+                        clicked => {
+                            root.poste-a-retirer = poste.empreinte;
+                            Confirmation.demander(@tr("Retirer le poste « {} » ? Il ne pourra plus se connecter ; il faudra un nouveau code pour l'inscrire de nouveau.", poste.nom), @tr("Retirer"), true);
+                        }
+                    }
+                }
+            }
+
+            HorizontalLayout {
+                alignment: Theme.rangee-debut;
+                padding-top: 8px;
+
+                Bouton {
+                    text: @tr("Actualiser");
+                    clicked => {
+                        AdminApi.actualiser();
+                    }
                 }
             }
         }
@@ -370,10 +400,10 @@ export component FenetreAdmin inherits Window {
 
     title: @tr("Kadenz - Administration du serveur");
     icon: @image-url("../../app/ui/icones/kadenz-64.png");
-    preferred-width: 920px;
-    preferred-height: 680px;
-    min-width: 640px;
-    min-height: 480px;
+    preferred-width: 1040px;
+    preferred-height: 720px;
+    min-width: 760px;
+    min-height: 560px;
     background: white;
     default-font-family: Theme.police-texte;
 

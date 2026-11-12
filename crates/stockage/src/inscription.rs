@@ -24,6 +24,7 @@ pub const MODELES_ERREUR: &[&str] = &[
     "code d'inscription expiré",
     "code d'inscription annulé",
     "nombre de postes atteint : {} postes permis par l'abonnement",
+    "nombre de postes atteint : {} poste permis par l'abonnement",
     "trop d'essais d'inscription : nouvel essai dans {} s",
 ];
 
@@ -191,10 +192,13 @@ pub fn consommer(
         return Ok(Err(MessageCompose::new("code d'inscription expiré", &[])));
     }
     if !postes::est_inscrit(&tx, empreinte)? && postes::nombre_inscrits(&tx)? >= postes_permis {
-        return Ok(Err(MessageCompose::new(
-            "nombre de postes atteint : {} postes permis par l'abonnement",
-            &[&postes_permis],
-        )));
+        // Singulier pour 0 et 1 poste.
+        let modele = if postes_permis > 1 {
+            "nombre de postes atteint : {} postes permis par l'abonnement"
+        } else {
+            "nombre de postes atteint : {} poste permis par l'abonnement"
+        };
+        return Ok(Err(MessageCompose::new(modele, &[&postes_permis])));
     }
     postes::inscrire(&tx, empreinte, &nom)?;
     tx.execute(
@@ -290,7 +294,7 @@ mod tests {
         assert!(consommer(&conn, &a.secret, "pa", 1, debut).unwrap().is_ok());
         assert_eq!(
             modele(consommer(&conn, &b.secret, "pb", 1, debut)),
-            "nombre de postes atteint : {} postes permis par l'abonnement"
+            "nombre de postes atteint : {} poste permis par l'abonnement"
         );
         // Refusé sans rien écrire : le code reste utilisable.
         assert_eq!(codes_en_cours(&conn, debut).unwrap().len(), 1);
