@@ -3146,6 +3146,7 @@ dependencies = [
  "chrono",
  "kadenz-client",
  "kadenz-domaine",
+ "kadenz-licence",
  "kadenz-protocole",
  "kadenz-stockage",
  "rusqlite",

@@ -22,10 +22,12 @@ use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
 use kadenz_client::{Identite, NOM_TLS, empreinte, fournisseur};
+use kadenz_licence::VerifyingKey;
+use kadenz_protocole::abonnement::Refus;
 use kadenz_protocole::messages::{self, CHANGEMENTS_MAX, ErreurTrame, Reponse, Requete};
 use kadenz_protocole::{Entite, VERSION};
 use kadenz_stockage::chiffrement::{self, Portee};
-use kadenz_stockage::{Erreur, comptes, postes, synchro};
+use kadenz_stockage::{Erreur, abonnement, comptes, postes, synchro};
 use rusqlite::Connection;
 use rustls::client::danger::HandshakeSignatureValid;
 use rustls::crypto::{CryptoProvider, verify_tls12_signature, verify_tls13_signature};
@@ -70,6 +72,9 @@ pub struct Config {
     /// Droits du dossier posés à sa création et vérifiés au démarrage. Coupé
     /// seulement pour les essais, sous un compte sans droits d'administrateur.
     pub controle_droits: bool,
+    /// Clés du portail qui signent les licences d'abonnement : celles
+    /// embarquées, sauf pour les essais.
+    pub cles_portail: Vec<VerifyingKey>,
 }
 
 impl Config {
@@ -81,6 +86,7 @@ impl Config {
             delai_lecture: Duration::from_secs(60),
             delai_ouverture: Duration::from_secs(10),
             controle_droits: true,
+            cles_portail: kadenz_licence::entreprise::cles_portail(),
         }
     }
 }
@@ -311,6 +317,7 @@ struct Contexte {
     ouverture: Duration,
     entreprise: String,
     essais: Mutex<Essais>,
+    cles: Arc<[VerifyingKey]>,
 }
 
 /// Rend sa place à la connexion quand la session se termine.
@@ -350,6 +357,7 @@ impl Serveur {
             ouverture: config.delai_ouverture,
             entreprise,
             essais: Mutex::new(Essais::default()),
+            cles: config.cles_portail.clone().into(),
         });
         let arret = Arc::new(AtomicBool::new(false));
         let fil = {
@@ -622,11 +630,14 @@ fn traiter(
             if operation.compte != uid {
                 return rejet("le compte de l'opération n'est pas celui de la session");
             }
-            match contexte
-                .base
-                .executer(move |c| synchro::appliquer(c, &operation))
-            {
+            let cles = contexte.cles.clone();
+            match contexte.base.executer(move |c| {
+                // L'abonnement est réévalué à chaque opération : le jour change.
+                abonnement::appliquer_avec(c, abonnement::horloge(), &cles)?;
+                synchro::appliquer(c, &operation)
+            }) {
                 Ok(Ok(issue)) => Reponse::Resultat { issue },
+                Ok(Err(Erreur::LectureSeule { echeance })) => Reponse::LectureSeule { echeance },
                 Ok(Err(e)) => rejet(&e.to_string()),
                 Err(e) => rejet(&e),
             }
@@ -650,6 +661,52 @@ fn traiter(
                 Err(e) => rejet(&e),
             }
         }
+        Requete::Abonnement => {
+            if compte.is_none() {
+                return rejet("aucun compte connecté");
+            }
+            let cles = contexte.cles.clone();
+            reponse_abonnement(
+                contexte
+                    .base
+                    .executer(move |c| abonnement::appliquer_avec(c, abonnement::horloge(), &cles)),
+            )
+        }
+        Requete::RenouvelerAbonnement { cle } => {
+            let Some(uid) = compte.clone() else {
+                return rejet("aucun compte connecté");
+            };
+            let cles = contexte.cles.clone();
+            reponse_abonnement(contexte.base.executer(move |c| {
+                let id = synchro::id_de(c, Entite::Utilisateur, &uid)?
+                    .ok_or_else(|| Erreur::Validation("compte inconnu sur le serveur".into()))?;
+                let acteur = comptes::lire(c, id)?
+                    .ok_or_else(|| Erreur::Validation("compte inconnu sur le serveur".into()))?;
+                abonnement::enregistrer_avec(c, &acteur, &cle, abonnement::horloge(), &cles)
+            }))
+        }
+    }
+}
+
+/// État de l'abonnement, ou refus à traduire (licence refusée, droit manquant).
+fn reponse_abonnement(
+    resultat: Result<kadenz_stockage::Resultat<kadenz_protocole::Abonnement>, String>,
+) -> Reponse {
+    match resultat {
+        Ok(Ok(a)) => Reponse::Abonnement {
+            abonnement: Box::new(a),
+        },
+        Ok(Err(Erreur::ValidationComposee { modele, valeurs })) => Reponse::Refus {
+            refus: Refus { modele, valeurs },
+        },
+        Ok(Err(Erreur::Interdit(droit))) => Reponse::Refus {
+            refus: Refus {
+                modele: synchro::MODELE_INTERDIT.into(),
+                valeurs: vec![droit.to_string()],
+            },
+        },
+        Ok(Err(e)) => rejet(&e.to_string()),
+        Err(e) => rejet(&e),
     }
 }
 

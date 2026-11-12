@@ -20,6 +20,16 @@
 //!   embarquée manque ou si la clé privée ne correspond pas à la clé de mise à
 //!   jour embarquée : une release signée autrement couperait les postes de
 //!   toute mise à jour. Affiche la génération (`v1`), lue par `release.ps1`.
+//! - `entreprise <fichier de clé privée du portail> <entreprise> <client>
+//!   <formule> <postes> <modules> <échéance> [<revendeur> <nom du revendeur>]` :
+//!   affiche une licence d'abonnement d'entreprise (phase 2, F3), en attendant
+//!   le portail. `<entreprise>` est l'identifiant de l'entreprise donné par son
+//!   serveur, `<formule>` `mensuelle` ou `annuelle`, `<échéance>` le dernier
+//!   jour couvert (AAAA-MM-JJ) ; début et émission sont la date du jour. Sans
+//!   revendeur, l'émetteur est l'éditeur. Refuse une clé privée qui n'est pas
+//!   celle du portail embarquée (décision 29).
+//! - `verifier-entreprise <licence> <entreprise>` : vérifie une licence
+//!   d'abonnement avec la clé du portail embarquée et affiche son contenu.
 
 use std::path::Path;
 use std::process::ExitCode;
@@ -29,6 +39,8 @@ use sha2::{Digest, Sha256};
 use ed25519_dalek::SigningKey;
 use kadenz_domaine::module::Module;
 use kadenz_licence::{Licence, cle_privee_depuis_hex, emettre, en_hex, poste_local, verifier};
+
+use kadenz_licence::entreprise::{self as lic, LicenceEntreprise};
 
 const FICHIER_PRIVE: &str = "kadenz-cle-privee.hex";
 const FICHIER_PUBLIC: &str = "kadenz-cle-publique.hex";
@@ -89,6 +101,85 @@ fn emettre_cle(fichier: &str, poste: &str, client: &str, liste: &str) -> Result<
     }
     let cle = emettre(&licence, &cle).map_err(|e| e.to_string())?;
     println!("{cle}");
+    Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
+fn emettre_entreprise(
+    fichier: &str,
+    entreprise: &str,
+    client: &str,
+    formule: &str,
+    postes: &str,
+    liste: &str,
+    echeance: &str,
+    revendeur: Option<(&str, &str)>,
+) -> Result<(), String> {
+    let texte = std::fs::read_to_string(fichier).map_err(|e| format!("{fichier} : {e}"))?;
+    let cle = cle_privee_depuis_hex(&texte).ok_or("clé privée illisible")?;
+    if !lic::cles_portail().contains(&cle.verifying_key()) {
+        return Err("cette clé privée n'est pas la clé du portail embarquée \
+             (crates/licence/cle-publique-suivante.hex) : licence refusée par les serveurs"
+            .into());
+    }
+    let aujourdhui = chrono::Local::now().date_naive();
+    let fin = chrono::NaiveDate::parse_from_str(echeance.trim(), "%Y-%m-%d")
+        .map_err(|_| format!("échéance illisible (AAAA-MM-JJ) : {echeance}"))?;
+    if fin < aujourdhui {
+        return Err(format!("échéance déjà passée : {echeance}"));
+    }
+    let licence = LicenceEntreprise {
+        entreprise: entreprise.trim().to_owned(),
+        client: client.trim().to_owned(),
+        formule: lic::Formule::depuis_code(formule.trim())
+            .ok_or_else(|| format!("formule inconnue (mensuelle ou annuelle) : {formule}"))?,
+        postes: postes
+            .trim()
+            .parse()
+            .ok()
+            .filter(|&n: &u32| n >= 1)
+            .ok_or_else(|| format!("nombre de postes invalide : {postes}"))?,
+        modules: modules(liste)?,
+        debut: aujourdhui.format("%Y-%m-%d").to_string(),
+        echeance: fin.format("%Y-%m-%d").to_string(),
+        emetteur: match revendeur {
+            None => lic::Emetteur::Editeur,
+            Some((identifiant, nom)) => lic::Emetteur::Revendeur {
+                identifiant: identifiant.trim().to_owned(),
+                nom: nom.trim().to_owned(),
+            },
+        },
+        emise_le: aujourdhui.format("%Y-%m-%d").to_string(),
+    };
+    if licence.entreprise.is_empty() || licence.client.is_empty() {
+        return Err("identifiant d'entreprise ou nom du client vide".into());
+    }
+    println!(
+        "{}",
+        lic::emettre(&licence, &cle).map_err(|e| e.to_string())?
+    );
+    Ok(())
+}
+
+fn verifier_entreprise(cle: &str, entreprise: &str) -> Result<(), String> {
+    let l = lic::verifier(cle, entreprise, &lic::cles_portail()).map_err(|e| e.to_string())?;
+    let modules: Vec<&str> = l.modules.iter().map(|m| m.code()).collect();
+    let emetteur = match &l.emetteur {
+        lic::Emetteur::Editeur => "éditeur".to_string(),
+        lic::Emetteur::Revendeur { identifiant, nom } => format!("revendeur {nom} ({identifiant})"),
+    };
+    println!(
+        "Licence valide : client « {} », entreprise {}, formule {}, {} postes",
+        l.client,
+        l.entreprise,
+        l.formule.code(),
+        l.postes
+    );
+    println!(
+        "Du {} au {}, émise le {} par l'{emetteur}",
+        l.debut, l.echeance, l.emise_le
+    );
+    println!("Modules : {}", modules.join(", "));
     Ok(())
 }
 
@@ -171,10 +262,47 @@ fn main() -> ExitCode {
         ["manifeste", fichier, installateur, depuis] => {
             ecrire_manifeste(fichier, installateur, depuis)
         }
+        [
+            "entreprise",
+            fichier,
+            entreprise,
+            client,
+            formule,
+            postes,
+            liste,
+            echeance,
+        ] => emettre_entreprise(
+            fichier, entreprise, client, formule, postes, liste, echeance, None,
+        ),
+        [
+            "entreprise",
+            fichier,
+            entreprise,
+            client,
+            formule,
+            postes,
+            liste,
+            echeance,
+            revendeur,
+            nom,
+        ] => emettre_entreprise(
+            fichier,
+            entreprise,
+            client,
+            formule,
+            postes,
+            liste,
+            echeance,
+            Some((revendeur, nom)),
+        ),
+        ["verifier-entreprise", cle, entreprise] => verifier_entreprise(cle, entreprise),
         _ => Err(
             "usage : kadenz-editeur generer <dossier> | poste | verifier <clé> <poste> | \
                   emettre <fichier de clé privée> <poste> <client> <modules> | \
-                  manifeste <fichier de clé privée de mise à jour> <installateur> <depuis>"
+                  manifeste <fichier de clé privée de mise à jour> <installateur> <depuis> | \
+                  entreprise <fichier de clé privée du portail> <entreprise> <client> <formule> \
+                  <postes> <modules> <échéance> [<revendeur> <nom du revendeur>] | \
+                  verifier-entreprise <licence> <entreprise>"
                 .into(),
         ),
     };

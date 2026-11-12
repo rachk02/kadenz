@@ -49,13 +49,14 @@ pub(crate) fn preparer(conn: &Connection, tous: bool) -> Resultat<()> {
         "CREATE TEMP TABLE IF NOT EXISTS module_actif (code TEXT PRIMARY KEY)",
         [],
     )?;
+    crate::abonnement::preparer(conn)?;
     if tous {
         remplir(conn, &Module::TOUS)?;
     }
     Ok(())
 }
 
-fn remplir(conn: &Connection, modules: &[Module]) -> Resultat<()> {
+pub(crate) fn remplir(conn: &Connection, modules: &[Module]) -> Resultat<()> {
     conn.execute("DELETE FROM temp.module_actif", [])?;
     for m in modules {
         conn.execute(
@@ -222,6 +223,8 @@ pub(crate) fn exiger_document(conn: &Connection, id: i64) -> Resultat<()> {
 /// vérifier leurs traductions.
 pub fn modeles_erreur() -> Vec<&'static str> {
     let mut m = kadenz_licence::MODELES_ERREUR.to_vec();
+    m.extend_from_slice(kadenz_licence::entreprise::MODELES_ERREUR);
+    m.push(crate::abonnement::MODELE_LECTURE_SEULE);
     m.push("le module « {} » n'est pas activé par la licence de ce poste");
     m
 }

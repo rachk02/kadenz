@@ -1,5 +1,5 @@
-//! Essais de bout en bout du jalon F2 : un serveur réel sur 127.0.0.1, des
-//! postes qui s'y connectent avec `kadenz-client`.
+//! Essais de bout en bout des jalons F2 et F3 : un serveur réel sur
+//! 127.0.0.1, des postes qui s'y connectent avec `kadenz-client`.
 
 use std::io::{Read, Write};
 use std::net::{SocketAddr, TcpStream};
@@ -9,6 +9,9 @@ use std::time::{Duration, Instant};
 
 use kadenz_client::{Client, ErreurClient, Identite};
 use kadenz_domaine::role::Role;
+use kadenz_licence::SigningKey;
+use kadenz_licence::entreprise::{self as lic, LicenceEntreprise};
+use kadenz_protocole::abonnement::Statut;
 use kadenz_protocole::messages::{self, Reponse, TAILLE_MAX};
 use kadenz_protocole::{Action, Etat, Issue, Operation, Tiers, VERSION};
 use kadenz_serveur::{Config, Serveur};
@@ -16,10 +19,40 @@ use kadenz_stockage::comptes::NouvelUtilisateur;
 use kadenz_stockage::entreprise::Entreprise;
 use kadenz_stockage::installation::{self, InstallationInitiale};
 use kadenz_stockage::parametres::Parametres;
-use kadenz_stockage::{postes, synchro};
+use kadenz_stockage::{abonnement, comptes, postes, synchro};
 
 const DELAI_CLIENT: Duration = Duration::from_secs(5);
 const MOT_DE_PASSE: &str = "motdepasse1";
+
+/// Clé du portail des essais, à la place de la clé embarquée.
+fn cle_portail() -> SigningKey {
+    SigningKey::from_bytes(&[5u8; 32])
+}
+
+/// Licence d'abonnement signée par la clé des essais ; dates en jours depuis
+/// aujourd'hui.
+fn licence(entreprise: &str, echeance: i64, emise_le: i64) -> String {
+    let jour = |n: i64| {
+        (abonnement::horloge() + chrono::Duration::days(n))
+            .format("%Y-%m-%d")
+            .to_string()
+    };
+    lic::emettre(
+        &LicenceEntreprise {
+            entreprise: entreprise.into(),
+            client: "Entreprise Essai".into(),
+            formule: lic::Formule::Annuelle,
+            postes: 5,
+            modules: Vec::new(),
+            debut: jour(emise_le),
+            echeance: jour(echeance),
+            emetteur: lic::Emetteur::Editeur,
+            emise_le: jour(emise_le),
+        },
+        &cle_portail(),
+    )
+    .unwrap()
+}
 
 fn dossier(nom: &str) -> PathBuf {
     let d = std::env::temp_dir().join(format!("kadenz-serveur-essai-{nom}-{}", std::process::id()));
@@ -34,6 +67,7 @@ fn demarrer(nom: &str, delai: Duration, connexions_max: usize) -> Serveur {
     config.connexions_max = connexions_max;
     // Essai sous le compte courant, sans droits d'administrateur.
     config.controle_droits = false;
+    config.cles_portail = vec![cle_portail().verifying_key()];
     Serveur::demarrer(config).unwrap()
 }
 
@@ -63,7 +97,17 @@ fn installer(serveur: &Serveur) -> (String, String) {
             let uid = synchro::uid_de(c, kadenz_protocole::Entite::Utilisateur, admin.id)
                 .unwrap()
                 .unwrap();
-            (synchro::identifiant_entreprise(c).unwrap(), uid)
+            let entreprise = synchro::identifiant_entreprise(c).unwrap();
+            // Abonnement d'un an : sans licence, le serveur est en lecture seule.
+            abonnement::enregistrer_avec(
+                c,
+                &admin,
+                &licence(&entreprise, 365, 0),
+                abonnement::horloge(),
+                &[cle_portail().verifying_key()],
+            )
+            .unwrap();
+            (entreprise, uid)
         })
         .unwrap()
 }
@@ -311,6 +355,7 @@ fn ouverture_de_session_bornee() {
     config.delai_lecture = Duration::from_secs(2);
     config.delai_ouverture = Duration::from_millis(500);
     config.controle_droits = false;
+    config.cles_portail = vec![cle_portail().verifying_key()];
     let serveur = Serveur::demarrer(config).unwrap();
     // Début d'enregistrement TLS, puis un octet toutes les 200 ms, chaque fois
     // sous le délai de lecture : la connexion est coupée au délai d'ouverture.
@@ -378,6 +423,7 @@ fn redemarrage_garde_identite_et_base() {
     );
     config.adresse = SocketAddr::from(([127, 0, 0, 1], 0));
     config.controle_droits = false;
+    config.cles_portail = vec![cle_portail().verifying_key()];
     let serveur = Serveur::demarrer(config).unwrap();
     assert_eq!(serveur.empreinte(), empreinte);
     assert_eq!(
@@ -396,4 +442,68 @@ fn redemarrage_garde_identite_et_base() {
     )
     .unwrap();
     assert_eq!(bienvenue.entreprise, entreprise);
+}
+
+#[test]
+fn abonnement_et_lecture_seule() {
+    let serveur = demarrer("abonnement", DELAI_CLIENT, 8);
+    let (entreprise, admin) = installer(&serveur);
+    serveur
+        .base(|c| {
+            let admin = comptes::connecter(c, "admin", MOT_DE_PASSE).unwrap();
+            comptes::creer(
+                c,
+                &admin,
+                &NouvelUtilisateur {
+                    nom_complet: "Lecteur".into(),
+                    identifiant: "lecteur".into(),
+                    mot_de_passe: MOT_DE_PASSE.into(),
+                    role: Role::Consultation,
+                },
+            )
+            .unwrap();
+        })
+        .unwrap();
+    let poste = poste_inscrit(&serveur);
+    let mut client = connecter(&serveur, &poste).unwrap();
+    client.connexion("admin", MOT_DE_PASSE).unwrap();
+    let a = client.abonnement().unwrap();
+    assert_eq!(a.statut, Statut::Actif);
+    assert_eq!(a.jours_restants, Some(365));
+    assert_eq!(a.postes_utilises, 1);
+
+    // Licence échue hier : lecture seule, la consultation reste possible.
+    let a = client.renouveler(&licence(&entreprise, -1, -40)).unwrap();
+    assert_eq!(a.statut, Statut::Echu);
+    let op = creer_tiers(&entreprise, &poste.empreinte(), &admin, "Kaboré");
+    assert!(matches!(
+        client.envoyer(&op),
+        Err(ErreurClient::LectureSeule { echeance: Some(_) })
+    ));
+    assert!(client.changements(0, 10).is_ok());
+
+    // Licence refusée : message à traduire, celle en place reste.
+    match client.renouveler(&licence("autre", 365, 0)) {
+        Err(ErreurClient::Refus { modele, .. }) => assert_eq!(
+            modele,
+            "licence d'abonnement émise pour une autre entreprise ({})"
+        ),
+        autre => panic!("{autre:?}"),
+    }
+    assert_eq!(client.abonnement().unwrap().statut, Statut::Echu);
+
+    // Renouvellement : l'opération gardée par le poste passe.
+    let a = client.renouveler(&licence(&entreprise, 30, 0)).unwrap();
+    assert_eq!(a.statut, Statut::Actif);
+    assert!(a.avertissement.is_some());
+    assert!(matches!(client.envoyer(&op), Ok(Issue::Acceptee { .. })));
+
+    // Sans le droit « Gérer les paramètres » : refus.
+    let mut lecteur = connecter(&serveur, &poste).unwrap();
+    lecteur.connexion("lecteur", MOT_DE_PASSE).unwrap();
+    assert!(lecteur.abonnement().is_ok());
+    assert!(matches!(
+        lecteur.renouveler(&licence(&entreprise, 365, 0)),
+        Err(ErreurClient::Refus { .. })
+    ));
 }

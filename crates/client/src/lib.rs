@@ -18,7 +18,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use kadenz_protocole::messages::{self, ErreurTrame, Reponse, Requete};
-use kadenz_protocole::{Changement, Issue, Operation, VERSION};
+use kadenz_protocole::{Abonnement, Changement, Issue, Operation, VERSION};
 use rustls::client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier};
 use rustls::crypto::{CryptoProvider, verify_tls12_signature, verify_tls13_signature};
 use rustls::pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer, ServerName, UnixTime};
@@ -97,6 +97,18 @@ pub enum ErreurClient {
     CompteRefuse {
         attente_secondes: u64,
     },
+    /// Demande refusée, message à traduire : licence d'abonnement refusée,
+    /// droit manquant.
+    Refus {
+        modele: String,
+        valeurs: Vec<String>,
+    },
+    /// Opération refusée pendant la lecture seule (abonnement échu ou sans
+    /// licence valide) : elle n'est pas gardée par le serveur, à renvoyer
+    /// après le renouvellement.
+    LectureSeule {
+        echeance: Option<String>,
+    },
     /// Requête refusée par le serveur (ordre, session, erreur du serveur).
     Rejet(String),
     /// Réponse inattendue ou illisible.
@@ -123,6 +135,19 @@ impl fmt::Display for ErreurClient {
                 f,
                 "identifiant ou mot de passe incorrect (nouvel essai dans {attente_secondes} s)"
             ),
+            ErreurClient::Refus { modele, valeurs } => {
+                let mut valeurs = valeurs.iter();
+                let mut reste = modele.as_str();
+                while let Some(position) = reste.find("{}") {
+                    f.write_str(&reste[..position])?;
+                    f.write_str(valeurs.next().map_or("{}", String::as_str))?;
+                    reste = &reste[position + 2..];
+                }
+                f.write_str(reste)
+            }
+            ErreurClient::LectureSeule { .. } => {
+                f.write_str("abonnement échu : Kadenz est en lecture seule")
+            }
             ErreurClient::Rejet(motif) => write!(f, "requête refusée par le serveur : {motif}"),
             ErreurClient::Protocole(e) => write!(f, "réponse du serveur inattendue : {e}"),
         }
@@ -344,6 +369,23 @@ impl Client {
         }
     }
 
+    /// État de l'abonnement de l'entreprise, jugé par le serveur.
+    pub fn abonnement(&mut self) -> Result<Abonnement, ErreurClient> {
+        match self.echanger(&Requete::Abonnement)? {
+            Reponse::Abonnement { abonnement } => Ok(*abonnement),
+            autre => Err(inattendue(&autre)),
+        }
+    }
+
+    /// Installe une nouvelle licence d'abonnement (droit « Gérer les
+    /// paramètres ») ; une licence refusée laisse celle en place.
+    pub fn renouveler(&mut self, cle: &str) -> Result<Abonnement, ErreurClient> {
+        match self.echanger(&Requete::RenouvelerAbonnement { cle: cle.into() })? {
+            Reponse::Abonnement { abonnement } => Ok(*abonnement),
+            autre => Err(inattendue(&autre)),
+        }
+    }
+
     /// Flux TLS de la session, pour envoyer des trames malformées : pour les
     /// tests du serveur.
     #[doc(hidden)]
@@ -363,6 +405,11 @@ impl Client {
         messages::ecrire(&mut self.flux, requete).map_err(&erreur_io)?;
         match messages::lire::<Reponse>(&mut self.flux) {
             Ok(Reponse::Rejet { motif }) => Err(ErreurClient::Rejet(motif)),
+            Ok(Reponse::Refus { refus }) => Err(ErreurClient::Refus {
+                modele: refus.modele,
+                valeurs: refus.valeurs,
+            }),
+            Ok(Reponse::LectureSeule { echeance }) => Err(ErreurClient::LectureSeule { echeance }),
             Ok(Reponse::PosteNonInscrit) => Err(ErreurClient::PosteNonInscrit),
             Ok(r) => Ok(r),
             Err(ErreurTrame::Io(e)) => Err(erreur_io(e)),

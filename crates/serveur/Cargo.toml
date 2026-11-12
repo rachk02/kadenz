@@ -9,6 +9,7 @@ publish.workspace = true
 kadenz-protocole.workspace = true
 kadenz-stockage.workspace = true
 kadenz-client.workspace = true
+kadenz-licence.workspace = true
 rusqlite.workspace = true
 rustls.workspace = true
 chrono.workspace = true

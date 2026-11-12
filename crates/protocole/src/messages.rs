@@ -12,6 +12,7 @@ use std::io::{self, Read, Write};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
+use crate::abonnement::{Abonnement, Refus};
 use crate::{Changement, Issue, Operation};
 
 /// Taille maximale d'un message, en octets.
@@ -36,6 +37,12 @@ pub enum Requete {
     Changements {
         depuis: u64,
         limite: u32,
+    },
+    /// État de l'abonnement de l'entreprise.
+    Abonnement,
+    /// Nouvelle licence d'abonnement, au droit « Gérer les paramètres ».
+    RenouvelerAbonnement {
+        cle: String,
     },
 }
 
@@ -71,6 +78,19 @@ pub enum Reponse {
         changements: Vec<Changement>,
         /// Rang du dernier changement de la base au moment de la réponse.
         dernier: u64,
+    },
+    Abonnement {
+        abonnement: Box<Abonnement>,
+    },
+    /// Opération refusée pendant la lecture seule (abonnement échu ou sans
+    /// licence valide) : elle n'est pas gardée, le poste la renverra après le
+    /// renouvellement.
+    LectureSeule {
+        echeance: Option<String>,
+    },
+    /// Demande refusée, message à traduire (licence refusée, droit manquant).
+    Refus {
+        refus: Refus,
     },
     /// Requête refusée par le protocole (ordre, compte ou poste qui ne
     /// correspond pas à la session, erreur du serveur).

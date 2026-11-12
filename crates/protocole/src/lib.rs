@@ -12,7 +12,10 @@
 
 use serde::{Deserialize, Serialize};
 
+pub mod abonnement;
 pub mod messages;
+
+pub use abonnement::Abonnement;
 
 /// Version du protocole, annoncée à la connexion (F2) : un poste d'une autre
 /// version est refusé.

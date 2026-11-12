@@ -1,5 +1,6 @@
 //! Accès SQLite de Kadenz (cahier des charges, sections 1, 10.3 et 11).
 
+pub mod abonnement;
 pub mod audit;
 pub mod chiffrement;
 pub mod comptes;
@@ -109,6 +110,11 @@ pub enum Erreur {
     CleEndommagee,
     /// La clé ne déchiffre pas la base : clé ou fichier de la base endommagé.
     BaseIndechiffrable,
+    /// Abonnement échu ou sans licence valide : saisie et validation bloquées
+    /// (phase 2, F3) ; `echeance` de la licence en place s'il y en a une.
+    LectureSeule {
+        echeance: Option<String>,
+    },
 }
 
 impl fmt::Display for Erreur {
@@ -134,6 +140,7 @@ impl fmt::Display for Erreur {
                 "clé de la base illisible : elle a été créée sur un autre poste ou un autre compte Windows",
             ),
             Erreur::CleEndommagee => f.write_str("clé de la base endommagée"),
+            Erreur::LectureSeule { .. } => f.write_str(abonnement::MODELE_LECTURE_SEULE),
             Erreur::BaseIndechiffrable => f.write_str(
                 "la base ne s'ouvre pas avec sa clé : clé ou fichier de la base endommagé",
             ),

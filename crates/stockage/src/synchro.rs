@@ -138,6 +138,9 @@ pub fn appliquer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
     if op.entreprise != identifiant_entreprise(conn)? {
         return Err(refus_op("opération destinée à une autre entreprise"));
     }
+    // Lecture seule (abonnement) : après le renvoi d'une opération déjà
+    // acceptée, qui garde son résultat, et avant tout effet.
+    crate::abonnement::exiger_ecriture(conn)?;
 
     conn.execute_batch("SAVEPOINT operation")?;
     let resultat = appliquer_dans(conn, op, &contenu);
@@ -758,6 +761,41 @@ mod tests {
         );
         assert_eq!(b.compteur(), 1);
         assert_eq!(b.statut(&d), "valide");
+    }
+
+    #[test]
+    fn lecture_seule_rend_le_resultat_garde() {
+        let mut b = banc();
+        let (_, d) = client_et_brouillon(&mut b, "p1");
+        let admin = b.admin.clone();
+        let base = b.base();
+        let valider = b.op("p1", &admin, base, Action::Valider { uid: d.clone() });
+        let acceptee = b.appliquer(&valider);
+        // L'abonnement échoit avant que le poste ait reçu la réponse.
+        b.conn
+            .execute(
+                "INSERT INTO temp.abonnement_etat (id, lecture_seule, echeance)
+                 VALUES (1, 1, '2026-12-31')",
+                [],
+            )
+            .unwrap();
+        // La validation renvoyée garde son numéro ; une nouvelle opération est refusée.
+        assert_eq!(b.appliquer(&valider), acceptee);
+        let base = b.base();
+        let autre = b.op(
+            "p1",
+            &admin,
+            base,
+            Action::CreerTiers {
+                uid: nouvel_uid(),
+                fiche: fiche("Nouveau"),
+            },
+        );
+        assert!(matches!(
+            appliquer(&mut b.conn, &autre),
+            Err(Erreur::LectureSeule { .. })
+        ));
+        assert_eq!(b.compteur(), 1);
     }
 
     #[test]
