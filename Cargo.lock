@@ -2966,7 +2966,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "hayro",
@@ -2986,11 +2986,11 @@ dependencies = [
 
 [[package]]
 name = "kadenz-domaine"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "kadenz-editeur"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "ed25519-dalek",
@@ -3001,7 +3001,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-export"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "calamine",
  "chrono",
@@ -3010,7 +3010,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-import"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "calamine",
  "csv",
@@ -3020,7 +3020,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-licence"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "ed25519-dalek",
@@ -3032,7 +3032,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-maj"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kadenz-domaine",
  "serde_json",
@@ -3043,7 +3043,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-pdf"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kadenz-domaine",
  "krilla",
@@ -3052,7 +3052,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-stockage"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "argon2",
  "chrono",

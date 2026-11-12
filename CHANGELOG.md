@@ -2,7 +2,7 @@
 
 Format : une section par version, la plus récente en haut. Numérotation [SemVer](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORRECTIF`, tag Git `vMAJEUR.MINEUR.CORRECTIF`.
 
-## [Non publié]
+## [0.1.1] - 2026-11-12
 
 ### Ajouté
 - Jalon J5, écrans : registre et fiche communs aux documents de vente, pour les Devis, les Proformas, les Factures et une nouvelle entrée de menu Avoirs (sans création directe : un avoir naît d'une facture validée) ; textes accordés au type, filtre de statut selon le type (Converti pour les devis et les proformas), validité des devis proposée comme échéance, client d'un avoir verrouillé.
