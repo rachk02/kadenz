@@ -825,9 +825,6 @@ msgstr "PDF guardado: {}"
 msgid "Phrase avant le montant en lettres (vide : aucune phrase)"
 msgstr "Frase antes del importe en letras (vacío: ninguna frase)"
 
-msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
-msgstr "Fuentes: Inter y Manrope, bajo licencia SIL Open Font License 1.1."
-
 msgid "Pourcentages séparés par des points-virgules, par exemple « 0 ; 18 » ou « 0 ; 2,5 ; 5 »."
 msgstr "Porcentajes separados por punto y coma, por ejemplo «0 ; 18» o «0 ; 2,5 ; 5»."
 
@@ -2747,3 +2744,156 @@ msgstr "¿Sustituir el título, la frase y el firmante de este tipo por los text
 
 msgid "Remplacer la lettre de relance par le texte par défaut ? Rien n'est enregistré avant « Enregistrer »."
 msgstr "¿Sustituir la carta de recordatorio por el texto predeterminado? No se guarda nada hasta pulsar «Guardar»."
+
+msgid "Restaurer cette sauvegarde ? La base actuelle est d'abord sauvegardée, puis remplacée ; chacun devra se reconnecter."
+msgstr "¿Restaurar esta copia de seguridad? La base actual se guarda primero y luego se reemplaza; todos tendrán que volver a iniciar sesión."
+
+msgid "Restaurer"
+msgstr "Restaurar"
+
+msgid "Sauvegardes"
+msgstr "Copias de seguridad"
+
+msgid "Kadenz enregistre une sauvegarde chiffrée à chaque fermeture et garde les dix dernières. Les sauvegardes faites à la main sont gardées à part. Rien n'est envoyé sur Internet : copiez le dossier sur une clé USB ou un autre disque."
+msgstr "Kadenz guarda una copia de seguridad cifrada cada vez que se cierra y conserva las diez últimas. Las copias hechas a mano se conservan aparte. Nada se envía por Internet: copie la carpeta en una memoria USB o en otro disco."
+
+msgid "Dossier des sauvegardes"
+msgstr "Carpeta de copias de seguridad"
+
+msgid "Changer de dossier"
+msgstr "Cambiar de carpeta"
+
+msgid "Ouvrir le dossier"
+msgstr "Abrir la carpeta"
+
+msgid "Mot de passe des sauvegardes"
+msgstr "Contraseña de las copias de seguridad"
+
+msgid "Le mot de passe est enregistré sur ce poste. Notez-le en lieu sûr : sans lui, une sauvegarde ne s'ouvre pas sur un autre poste."
+msgstr "La contraseña está guardada en este equipo. Anótela en un lugar seguro: sin ella, una copia de seguridad no se abre en otro equipo."
+
+msgid "Choisissez le mot de passe qui chiffre les sauvegardes. Il est gardé sur ce poste pour la sauvegarde automatique ; notez-le en lieu sûr : sans lui, une sauvegarde ne s'ouvre pas sur un autre poste."
+msgstr "Elija la contraseña que cifra las copias de seguridad. Se guarda en este equipo para la copia automática; anótela en un lugar seguro: sin ella, una copia de seguridad no se abre en otro equipo."
+
+msgid "Changer le mot de passe"
+msgstr "Cambiar la contraseña"
+
+msgid "Les sauvegardes déjà faites gardent leur ancien mot de passe."
+msgstr "Las copias de seguridad ya hechas conservan su contraseña anterior."
+
+msgid "Sauvegardes enregistrées"
+msgstr "Copias de seguridad guardadas"
+
+msgid "Sauvegarder maintenant"
+msgstr "Hacer una copia ahora"
+
+msgid "Aucune sauvegarde dans ce dossier."
+msgstr "No hay ninguna copia de seguridad en esta carpeta."
+
+msgid "Taille"
+msgstr "Tamaño"
+
+msgid "Restaurer la sauvegarde choisie"
+msgstr "Restaurar la copia seleccionada"
+
+msgid "Restaurer un autre fichier"
+msgstr "Restaurar otro archivo"
+
+msgid "Une sauvegarde venue d'une clé USB ou d'un autre poste s'ouvre avec le mot de passe qui l'a chiffrée."
+msgstr "Una copia de seguridad procedente de una memoria USB o de otro equipo se abre con la contraseña que la cifró."
+
+msgid "Choisir un fichier"
+msgstr "Elegir un archivo"
+
+msgid "Mot de passe de la sauvegarde"
+msgstr "Contraseña de la copia de seguridad"
+
+msgid "Restaurer une sauvegarde"
+msgstr "Restaurar una copia de seguridad"
+
+msgid "Ouvrir le dossier des données"
+msgstr "Abrir la carpeta de datos"
+
+msgid "Restaurer cette sauvegarde ? La base actuelle est mise de côté, jamais effacée."
+msgstr "¿Restaurar esta copia de seguridad? La base actual se aparta, nunca se borra."
+
+msgid "Automatique"
+msgstr "Automática"
+
+msgid "Manuelle"
+msgstr "Manual"
+
+msgid "Avant restauration"
+msgstr "Antes de restaurar"
+
+msgid "{} Ko"
+msgstr "{} KB"
+
+msgid "Choisir une sauvegarde"
+msgstr "Elegir una copia de seguridad"
+
+msgid "Sauvegardes Kadenz"
+msgstr "Copias de seguridad de Kadenz"
+
+msgid "sauvegarde restaurée ; reconnectez-vous"
+msgstr "copia de seguridad restaurada; vuelva a iniciar sesión"
+
+msgid "dossier des sauvegardes enregistré"
+msgstr "carpeta de copias de seguridad guardada"
+
+msgid "mot de passe des sauvegardes enregistré"
+msgstr "contraseña de las copias de seguridad guardada"
+
+msgid "sauvegarde enregistrée"
+msgstr "copia de seguridad guardada"
+
+msgid "choisissez une sauvegarde dans la liste"
+msgstr "elija una copia de seguridad de la lista"
+
+msgid "saisissez le mot de passe de la sauvegarde"
+msgstr "introduzca la contraseña de la copia de seguridad"
+
+msgid "sauvegarde restaurée"
+msgstr "copia de seguridad restaurada"
+
+msgid "La clé de la base (fichier kadenz.cle) est introuvable. Remettez ce fichier dans le dossier des données, ou restaurez une sauvegarde."
+msgstr "No se encuentra la clave de la base (archivo kadenz.cle). Vuelva a colocar este archivo en la carpeta de datos o restaure una copia de seguridad."
+
+msgid "La clé de la base a été créée sur un autre poste ou un autre compte Windows. Ouvrez Kadenz avec le compte Windows d'origine, ou restaurez une sauvegarde."
+msgstr "La clave de la base se creó en otro equipo o en otra cuenta de Windows. Abra Kadenz con la cuenta de Windows original o restaure una copia de seguridad."
+
+msgid "La clé de la base (fichier kadenz.cle) est endommagée. Restaurez une sauvegarde."
+msgstr "La clave de la base (archivo kadenz.cle) está dañada. Restaure una copia de seguridad."
+
+msgid "La base ne s'ouvre pas avec sa clé : la clé ou le fichier de la base est endommagé. Restaurez une sauvegarde."
+msgstr "La base no se abre con su clave: la clave o el archivo de la base está dañado. Restaure una copia de seguridad."
+
+msgid "La base a été enregistrée par une version plus récente de Kadenz. Installez la dernière version de Kadenz, ou restaurez une sauvegarde."
+msgstr "La base fue guardada por una versión más reciente de Kadenz. Instale la última versión de Kadenz o restaure una copia de seguridad."
+
+msgid "le dossier des sauvegardes doit être un chemin complet"
+msgstr "la carpeta de copias de seguridad debe ser una ruta completa"
+
+msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données de Kadenz, effacé à la désinstallation"
+msgstr "la carpeta de copias de seguridad no puede estar dentro de la carpeta de datos de Kadenz, que se borra al desinstalar"
+
+msgid "le dossier des sauvegardes contient des caractères non pris en charge"
+msgstr "la carpeta de copias de seguridad contiene caracteres no admitidos"
+
+msgid "protection du mot de passe par Windows impossible"
+msgstr "Windows no pudo proteger la contraseña"
+
+msgid "aucun mot de passe de sauvegarde n'est choisi"
+msgstr "no se ha elegido ninguna contraseña para las copias de seguridad"
+
+msgid "la base restaurée ne contient pas les mêmes données que la sauvegarde"
+msgstr "la base restaurada no contiene los mismos datos que la copia de seguridad"
+
+msgid "sauvegarde endommagée : {}"
+msgstr "copia de seguridad dañada: {}"
+
+msgid "sauvegarde introuvable : {}"
+msgstr "copia de seguridad no encontrada: {}"
+
+msgid "la base est au schéma {}, cette version de l'application ne connaît que le schéma {}"
+msgstr "la base usa el esquema {}, esta versión de la aplicación solo conoce el esquema {}"

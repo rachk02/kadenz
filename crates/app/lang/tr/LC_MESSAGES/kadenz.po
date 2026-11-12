@@ -825,9 +825,6 @@ msgstr "PDF kaydedildi: {}"
 msgid "Phrase avant le montant en lettres (vide : aucune phrase)"
 msgstr "Yazıyla tutardan önceki cümle (boş: cümle yok)"
 
-msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
-msgstr "Yazı tipleri: Inter ve Manrope, SIL Open Font License 1.1 lisansıyla."
-
 msgid "Pourcentages séparés par des points-virgules, par exemple « 0 ; 18 » ou « 0 ; 2,5 ; 5 »."
 msgstr "Noktalı virgülle ayrılmış yüzdeler, örneğin \"0 ; 18\" veya \"0 ; 2,5 ; 5\"."
 
@@ -2747,3 +2744,156 @@ msgstr "Bu türün başlığı, cümlesi ve imzacısı varsayılan metinlerle de
 
 msgid "Remplacer la lettre de relance par le texte par défaut ? Rien n'est enregistré avant « Enregistrer »."
 msgstr "Hatırlatma mektubu varsayılan metinle değiştirilsin mi? \"Kaydet\" düğmesine basılana kadar hiçbir şey kaydedilmez."
+
+msgid "Restaurer cette sauvegarde ? La base actuelle est d'abord sauvegardée, puis remplacée ; chacun devra se reconnecter."
+msgstr "Bu yedek geri yüklensin mi? Mevcut veritabanı önce yedeklenir, sonra değiştirilir; herkesin yeniden oturum açması gerekir."
+
+msgid "Restaurer"
+msgstr "Geri yükle"
+
+msgid "Sauvegardes"
+msgstr "Yedekler"
+
+msgid "Kadenz enregistre une sauvegarde chiffrée à chaque fermeture et garde les dix dernières. Les sauvegardes faites à la main sont gardées à part. Rien n'est envoyé sur Internet : copiez le dossier sur une clé USB ou un autre disque."
+msgstr "Kadenz her kapanışta şifreli bir yedek kaydeder ve son onunu saklar. Elle alınan yedekler ayrıca saklanır. İnternet üzerinden hiçbir şey gönderilmez: klasörü bir USB belleğe veya başka bir diske kopyalayın."
+
+msgid "Dossier des sauvegardes"
+msgstr "Yedek klasörü"
+
+msgid "Changer de dossier"
+msgstr "Klasörü değiştir"
+
+msgid "Ouvrir le dossier"
+msgstr "Klasörü aç"
+
+msgid "Mot de passe des sauvegardes"
+msgstr "Yedek parolası"
+
+msgid "Le mot de passe est enregistré sur ce poste. Notez-le en lieu sûr : sans lui, une sauvegarde ne s'ouvre pas sur un autre poste."
+msgstr "Parola bu bilgisayarda kayıtlı. Güvenli bir yere not edin: o olmadan bir yedek başka bir bilgisayarda açılamaz."
+
+msgid "Choisissez le mot de passe qui chiffre les sauvegardes. Il est gardé sur ce poste pour la sauvegarde automatique ; notez-le en lieu sûr : sans lui, une sauvegarde ne s'ouvre pas sur un autre poste."
+msgstr "Yedekleri şifreleyen parolayı seçin. Otomatik yedekleme için bu bilgisayarda saklanır; güvenli bir yere not edin: o olmadan bir yedek başka bir bilgisayarda açılamaz."
+
+msgid "Changer le mot de passe"
+msgstr "Parolayı değiştir"
+
+msgid "Les sauvegardes déjà faites gardent leur ancien mot de passe."
+msgstr "Daha önce alınan yedekler eski parolalarını korur."
+
+msgid "Sauvegardes enregistrées"
+msgstr "Kayıtlı yedekler"
+
+msgid "Sauvegarder maintenant"
+msgstr "Şimdi yedekle"
+
+msgid "Aucune sauvegarde dans ce dossier."
+msgstr "Bu klasörde yedek yok."
+
+msgid "Taille"
+msgstr "Boyut"
+
+msgid "Restaurer la sauvegarde choisie"
+msgstr "Seçilen yedeği geri yükle"
+
+msgid "Restaurer un autre fichier"
+msgstr "Başka bir dosyayı geri yükle"
+
+msgid "Une sauvegarde venue d'une clé USB ou d'un autre poste s'ouvre avec le mot de passe qui l'a chiffrée."
+msgstr "Bir USB bellekten veya başka bir bilgisayardan gelen yedek, onu şifreleyen parolayla açılır."
+
+msgid "Choisir un fichier"
+msgstr "Dosya seç"
+
+msgid "Mot de passe de la sauvegarde"
+msgstr "Yedeğin parolası"
+
+msgid "Restaurer une sauvegarde"
+msgstr "Bir yedeği geri yükle"
+
+msgid "Ouvrir le dossier des données"
+msgstr "Veri klasörünü aç"
+
+msgid "Restaurer cette sauvegarde ? La base actuelle est mise de côté, jamais effacée."
+msgstr "Bu yedek geri yüklensin mi? Mevcut veritabanı bir kenara alınır, asla silinmez."
+
+msgid "Automatique"
+msgstr "Otomatik"
+
+msgid "Manuelle"
+msgstr "Elle"
+
+msgid "Avant restauration"
+msgstr "Geri yükleme öncesi"
+
+msgid "{} Ko"
+msgstr "{} KB"
+
+msgid "Choisir une sauvegarde"
+msgstr "Bir yedek seç"
+
+msgid "Sauvegardes Kadenz"
+msgstr "Kadenz yedekleri"
+
+msgid "sauvegarde restaurée ; reconnectez-vous"
+msgstr "yedek geri yüklendi; yeniden oturum açın"
+
+msgid "dossier des sauvegardes enregistré"
+msgstr "yedek klasörü kaydedildi"
+
+msgid "mot de passe des sauvegardes enregistré"
+msgstr "yedek parolası kaydedildi"
+
+msgid "sauvegarde enregistrée"
+msgstr "yedek kaydedildi"
+
+msgid "choisissez une sauvegarde dans la liste"
+msgstr "listeden bir yedek seçin"
+
+msgid "saisissez le mot de passe de la sauvegarde"
+msgstr "yedeğin parolasını girin"
+
+msgid "sauvegarde restaurée"
+msgstr "yedek geri yüklendi"
+
+msgid "La clé de la base (fichier kadenz.cle) est introuvable. Remettez ce fichier dans le dossier des données, ou restaurez une sauvegarde."
+msgstr "Veritabanı anahtarı (kadenz.cle dosyası) bulunamıyor. Bu dosyayı veri klasörüne geri koyun veya bir yedeği geri yükleyin."
+
+msgid "La clé de la base a été créée sur un autre poste ou un autre compte Windows. Ouvrez Kadenz avec le compte Windows d'origine, ou restaurez une sauvegarde."
+msgstr "Veritabanı anahtarı başka bir bilgisayarda veya başka bir Windows hesabında oluşturuldu. Kadenz'i asıl Windows hesabıyla açın veya bir yedeği geri yükleyin."
+
+msgid "La clé de la base (fichier kadenz.cle) est endommagée. Restaurez une sauvegarde."
+msgstr "Veritabanı anahtarı (kadenz.cle dosyası) hasarlı. Bir yedeği geri yükleyin."
+
+msgid "La base ne s'ouvre pas avec sa clé : la clé ou le fichier de la base est endommagé. Restaurez une sauvegarde."
+msgstr "Veritabanı kendi anahtarıyla açılmıyor: anahtar veya veritabanı dosyası hasarlı. Bir yedeği geri yükleyin."
+
+msgid "La base a été enregistrée par une version plus récente de Kadenz. Installez la dernière version de Kadenz, ou restaurez une sauvegarde."
+msgstr "Veritabanı Kadenz'in daha yeni bir sürümüyle kaydedildi. Kadenz'in son sürümünü kurun veya bir yedeği geri yükleyin."
+
+msgid "le dossier des sauvegardes doit être un chemin complet"
+msgstr "yedek klasörü tam bir yol olmalıdır"
+
+msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données de Kadenz, effacé à la désinstallation"
+msgstr "yedek klasörü, kaldırma sırasında silinen Kadenz veri klasörünün içinde olamaz"
+
+msgid "le dossier des sauvegardes contient des caractères non pris en charge"
+msgstr "yedek klasörü desteklenmeyen karakterler içeriyor"
+
+msgid "protection du mot de passe par Windows impossible"
+msgstr "parola Windows tarafından korunamadı"
+
+msgid "aucun mot de passe de sauvegarde n'est choisi"
+msgstr "yedek parolası seçilmedi"
+
+msgid "la base restaurée ne contient pas les mêmes données que la sauvegarde"
+msgstr "geri yüklenen veritabanı yedekle aynı verileri içermiyor"
+
+msgid "sauvegarde endommagée : {}"
+msgstr "hasarlı yedek: {}"
+
+msgid "sauvegarde introuvable : {}"
+msgstr "yedek bulunamadı: {}"
+
+msgid "la base est au schéma {}, cette version de l'application ne connaît que le schéma {}"
+msgstr "veritabanı {} şemasında, uygulamanın bu sürümü yalnızca {} şemasını biliyor"

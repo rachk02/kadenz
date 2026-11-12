@@ -825,9 +825,6 @@ msgstr "تم حفظ ملف PDF: {}"
 msgid "Phrase avant le montant en lettres (vide : aucune phrase)"
 msgstr "العبارة قبل المبلغ بالحروف (فارغ: بلا عبارة)"
 
-msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
-msgstr "الخطوط: Inter وManrope، بترخيص SIL Open Font License 1.1."
-
 msgid "Pourcentages séparés par des points-virgules, par exemple « 0 ; 18 » ou « 0 ; 2,5 ; 5 »."
 msgstr "نسب مئوية مفصولة بفواصل منقوطة، مثل «0 ; 18» أو «0 ; 2,5 ; 5»."
 
@@ -2747,3 +2744,156 @@ msgstr "استبدال العنوان والعبارة والموقّع لهذا
 
 msgid "Remplacer la lettre de relance par le texte par défaut ? Rien n'est enregistré avant « Enregistrer »."
 msgstr "استبدال رسالة التذكير بالنص الافتراضي؟ لا يُحفظ شيء قبل الضغط على «حفظ»."
+
+msgid "Restaurer cette sauvegarde ? La base actuelle est d'abord sauvegardée, puis remplacée ; chacun devra se reconnecter."
+msgstr "استعادة هذه النسخة الاحتياطية؟ تُنسخ قاعدة البيانات الحالية احتياطيًا أولًا ثم تُستبدل؛ وسيتعيّن على الجميع تسجيل الدخول من جديد."
+
+msgid "Restaurer"
+msgstr "استعادة"
+
+msgid "Sauvegardes"
+msgstr "النسخ الاحتياطية"
+
+msgid "Kadenz enregistre une sauvegarde chiffrée à chaque fermeture et garde les dix dernières. Les sauvegardes faites à la main sont gardées à part. Rien n'est envoyé sur Internet : copiez le dossier sur une clé USB ou un autre disque."
+msgstr "يحفظ Kadenz نسخة احتياطية مشفّرة عند كل إغلاق ويحتفظ بآخر عشر نسخ. وتُحفظ النسخ المأخوذة يدويًا على حدة. لا يُرسل أي شيء عبر الإنترنت: انسخ المجلد إلى ذاكرة USB أو إلى قرص آخر."
+
+msgid "Dossier des sauvegardes"
+msgstr "مجلد النسخ الاحتياطية"
+
+msgid "Changer de dossier"
+msgstr "تغيير المجلد"
+
+msgid "Ouvrir le dossier"
+msgstr "فتح المجلد"
+
+msgid "Mot de passe des sauvegardes"
+msgstr "كلمة مرور النسخ الاحتياطية"
+
+msgid "Le mot de passe est enregistré sur ce poste. Notez-le en lieu sûr : sans lui, une sauvegarde ne s'ouvre pas sur un autre poste."
+msgstr "كلمة المرور محفوظة على هذا الجهاز. دوّنها في مكان آمن: بدونها لا تُفتح النسخة الاحتياطية على جهاز آخر."
+
+msgid "Choisissez le mot de passe qui chiffre les sauvegardes. Il est gardé sur ce poste pour la sauvegarde automatique ; notez-le en lieu sûr : sans lui, une sauvegarde ne s'ouvre pas sur un autre poste."
+msgstr "اختر كلمة المرور التي تشفّر النسخ الاحتياطية. تُحفظ على هذا الجهاز للنسخ الاحتياطي التلقائي؛ دوّنها في مكان آمن: بدونها لا تُفتح النسخة الاحتياطية على جهاز آخر."
+
+msgid "Changer le mot de passe"
+msgstr "تغيير كلمة المرور"
+
+msgid "Les sauvegardes déjà faites gardent leur ancien mot de passe."
+msgstr "تحتفظ النسخ الاحتياطية المأخوذة سابقًا بكلمة مرورها القديمة."
+
+msgid "Sauvegardes enregistrées"
+msgstr "النسخ الاحتياطية المحفوظة"
+
+msgid "Sauvegarder maintenant"
+msgstr "النسخ الاحتياطي الآن"
+
+msgid "Aucune sauvegarde dans ce dossier."
+msgstr "لا توجد نسخة احتياطية في هذا المجلد."
+
+msgid "Taille"
+msgstr "الحجم"
+
+msgid "Restaurer la sauvegarde choisie"
+msgstr "استعادة النسخة المحددة"
+
+msgid "Restaurer un autre fichier"
+msgstr "استعادة ملف آخر"
+
+msgid "Une sauvegarde venue d'une clé USB ou d'un autre poste s'ouvre avec le mot de passe qui l'a chiffrée."
+msgstr "تُفتح النسخة الاحتياطية الآتية من ذاكرة USB أو من جهاز آخر بكلمة المرور التي شفّرتها."
+
+msgid "Choisir un fichier"
+msgstr "اختيار ملف"
+
+msgid "Mot de passe de la sauvegarde"
+msgstr "كلمة مرور النسخة الاحتياطية"
+
+msgid "Restaurer une sauvegarde"
+msgstr "استعادة نسخة احتياطية"
+
+msgid "Ouvrir le dossier des données"
+msgstr "فتح مجلد البيانات"
+
+msgid "Restaurer cette sauvegarde ? La base actuelle est mise de côté, jamais effacée."
+msgstr "استعادة هذه النسخة الاحتياطية؟ تُنحّى قاعدة البيانات الحالية جانبًا ولا تُحذف أبدًا."
+
+msgid "Automatique"
+msgstr "تلقائية"
+
+msgid "Manuelle"
+msgstr "يدوية"
+
+msgid "Avant restauration"
+msgstr "قبل الاستعادة"
+
+msgid "{} Ko"
+msgstr "{} ك.ب"
+
+msgid "Choisir une sauvegarde"
+msgstr "اختيار نسخة احتياطية"
+
+msgid "Sauvegardes Kadenz"
+msgstr "نسخ Kadenz الاحتياطية"
+
+msgid "sauvegarde restaurée ; reconnectez-vous"
+msgstr "تمت استعادة النسخة الاحتياطية؛ سجّل الدخول من جديد"
+
+msgid "dossier des sauvegardes enregistré"
+msgstr "تم حفظ مجلد النسخ الاحتياطية"
+
+msgid "mot de passe des sauvegardes enregistré"
+msgstr "تم حفظ كلمة مرور النسخ الاحتياطية"
+
+msgid "sauvegarde enregistrée"
+msgstr "تم حفظ النسخة الاحتياطية"
+
+msgid "choisissez une sauvegarde dans la liste"
+msgstr "اختر نسخة احتياطية من القائمة"
+
+msgid "saisissez le mot de passe de la sauvegarde"
+msgstr "أدخل كلمة مرور النسخة الاحتياطية"
+
+msgid "sauvegarde restaurée"
+msgstr "تمت استعادة النسخة الاحتياطية"
+
+msgid "La clé de la base (fichier kadenz.cle) est introuvable. Remettez ce fichier dans le dossier des données, ou restaurez une sauvegarde."
+msgstr "مفتاح قاعدة البيانات (الملف kadenz.cle) غير موجود. أعد هذا الملف إلى مجلد البيانات، أو استعد نسخة احتياطية."
+
+msgid "La clé de la base a été créée sur un autre poste ou un autre compte Windows. Ouvrez Kadenz avec le compte Windows d'origine, ou restaurez une sauvegarde."
+msgstr "أُنشئ مفتاح قاعدة البيانات على جهاز آخر أو في حساب Windows آخر. افتح Kadenz بحساب Windows الأصلي، أو استعد نسخة احتياطية."
+
+msgid "La clé de la base (fichier kadenz.cle) est endommagée. Restaurez une sauvegarde."
+msgstr "مفتاح قاعدة البيانات (الملف kadenz.cle) تالف. استعد نسخة احتياطية."
+
+msgid "La base ne s'ouvre pas avec sa clé : la clé ou le fichier de la base est endommagé. Restaurez une sauvegarde."
+msgstr "لا تُفتح قاعدة البيانات بمفتاحها: المفتاح أو ملف قاعدة البيانات تالف. استعد نسخة احتياطية."
+
+msgid "La base a été enregistrée par une version plus récente de Kadenz. Installez la dernière version de Kadenz, ou restaurez une sauvegarde."
+msgstr "حُفظت قاعدة البيانات بإصدار أحدث من Kadenz. ثبّت أحدث إصدار من Kadenz، أو استعد نسخة احتياطية."
+
+msgid "le dossier des sauvegardes doit être un chemin complet"
+msgstr "يجب أن يكون مجلد النسخ الاحتياطية مسارًا كاملًا"
+
+msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données de Kadenz, effacé à la désinstallation"
+msgstr "لا يمكن أن يكون مجلد النسخ الاحتياطية داخل مجلد بيانات Kadenz، الذي يُحذف عند إلغاء التثبيت"
+
+msgid "le dossier des sauvegardes contient des caractères non pris en charge"
+msgstr "يحتوي مجلد النسخ الاحتياطية على أحرف غير مدعومة"
+
+msgid "protection du mot de passe par Windows impossible"
+msgstr "تعذّر على Windows حماية كلمة المرور"
+
+msgid "aucun mot de passe de sauvegarde n'est choisi"
+msgstr "لم تُختر أي كلمة مرور للنسخ الاحتياطية"
+
+msgid "la base restaurée ne contient pas les mêmes données que la sauvegarde"
+msgstr "لا تحتوي قاعدة البيانات المستعادة على البيانات نفسها الموجودة في النسخة الاحتياطية"
+
+msgid "sauvegarde endommagée : {}"
+msgstr "نسخة احتياطية تالفة: {}"
+
+msgid "sauvegarde introuvable : {}"
+msgstr "النسخة الاحتياطية غير موجودة: {}"
+
+msgid "la base est au schéma {}, cette version de l'application ne connaît que le schéma {}"
+msgstr "قاعدة البيانات على المخطط {}، وهذا الإصدار من التطبيق لا يعرف إلا المخطط {}"

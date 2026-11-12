@@ -14,6 +14,7 @@ mod paiements;
 mod pdf;
 mod pilotage;
 mod referentiels;
+mod sauvegardes;
 mod traduction;
 mod utilisateurs;
 
@@ -215,6 +216,9 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     if possede(Droit::GererUtilisateurs) {
         rubriques.push(Rubrique::Utilisateurs);
     }
+    if possede(Droit::SauvegarderBase) {
+        rubriques.push(Rubrique::Sauvegardes);
+    }
     if gere {
         rubriques.extend([Rubrique::Licence, Rubrique::MisesAJour]);
     }
@@ -318,6 +322,27 @@ fn installation_depuis_assistant(d: &DonneesAssistant) -> Result<InstallationIni
     })
 }
 
+/// Fin de session (déconnexion, ou restauration d'une sauvegarde) : état de la
+/// session vidé, langue de démarrage, retour à l'écran de connexion.
+fn fermer_session(f: &FenetrePrincipale, etat: &mut Etat) {
+    etat.utilisateur = None;
+    etat.tiers = Vue::default();
+    etat.produits = Vue::default();
+    etat.comptes = Vue::default();
+    etat.factures = factures::Registre::default();
+    etat.facture = None;
+    etat.type_document = TypeDocument::Facture;
+    etat.document_a_ouvrir = None;
+    appliquer_langue(f, traduction::choisir_demarrage());
+    f.set_page(Page::TableauDeBord);
+    appliquer_droits(f, etat);
+    f.set_utilisateur_nom(SharedString::new());
+    f.set_utilisateur_identifiant(SharedString::new());
+    f.set_utilisateur_role(SharedString::new());
+    afficher_session(f, etat);
+    f.set_ecran(Ecran::Connexion);
+}
+
 fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     let defaut = Parametres::default();
     fenetre.set_defaut_taux_tva(saisie::liste_pourcentages_en_texte(&defaut.taux_tva).into());
@@ -373,23 +398,8 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
     fenetre.on_deconnecter(move || {
-        let mut etat = e.borrow_mut();
-        etat.utilisateur = None;
-        etat.tiers = Vue::default();
-        etat.produits = Vue::default();
-        etat.comptes = Vue::default();
-        etat.factures = factures::Registre::default();
-        etat.facture = None;
-        let langue = traduction::choisir_demarrage();
         if let Some(f) = f.upgrade() {
-            appliquer_langue(&f, langue);
-            f.set_page(Page::TableauDeBord);
-            appliquer_droits(&f, &etat);
-            f.set_utilisateur_nom(SharedString::new());
-            f.set_utilisateur_identifiant(SharedString::new());
-            f.set_utilisateur_role(SharedString::new());
-            afficher_session(&f, &etat);
-            f.set_ecran(Ecran::Connexion);
+            fermer_session(&f, &mut e.borrow_mut());
         }
     });
 
@@ -402,6 +412,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     pilotage::brancher(fenetre, &etat);
     impression::brancher(fenetre, &etat);
     licence::brancher(fenetre, &etat);
+    sauvegardes::brancher(fenetre, &etat);
     maj::brancher(fenetre);
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
@@ -491,43 +502,47 @@ fn main() -> Result<(), slint::PlatformError> {
     fenetre.set_version_logiciel(env!("CARGO_PKG_VERSION").into());
     let chemin = chemin_base();
 
-    let demarrage = kadenz_stockage::ouvrir(&chemin).and_then(|conn| {
-        let ecran = comptes::etat_installation(&conn)?;
-        Ok((conn, ecran))
-    });
-
-    match demarrage {
-        Ok((conn, ecran)) => {
+    // Session ouverte, gardée pour la sauvegarde automatique à la fermeture.
+    let session: Rc<RefCell<Option<EtatPartage>>> = Rc::default();
+    let demarrer = {
+        let session = session.clone();
+        move |fenetre: &FenetrePrincipale, conn: Connexion| -> Result<(), kadenz_stockage::Erreur> {
+            let ecran = comptes::etat_installation(&conn)?;
             let etat = Rc::new(RefCell::new(Etat::nouveau(conn)));
             {
                 // Licence d'abord : le menu de la session en dépend.
                 let e = etat.borrow();
-                licence::ouvrir(&fenetre, &e.conn, &e.poste);
+                licence::ouvrir(fenetre, &e.conn, &e.poste);
             }
-            afficher_session(&fenetre, &etat.borrow());
+            afficher_session(fenetre, &etat.borrow());
             fenetre.set_ecran(match ecran {
                 // Premier lancement : présentation, puis assistant.
                 EtatInstallation::AssistantRequis => Ecran::Presentation,
                 EtatInstallation::ConnexionRequise => Ecran::Connexion,
             });
-            brancher(&fenetre, etat);
+            brancher(fenetre, etat.clone());
+            *session.borrow_mut() = Some(etat);
+            Ok(())
         }
-        Err(erreur) => {
-            // L'emplacement des données ne s'affiche pas : il va dans erreurs.log.
-            consigner_erreur(&format!(
-                "Ouverture de la base {} impossible : {erreur}",
-                chemin.display()
-            ));
-            fenetre.set_message_demarrage(
-                traduction::trf(
-                    "La base de données n'a pas pu être ouverte : {}",
-                    &[&referentiels::texte_erreur_ref(&erreur)],
-                )
-                .into(),
-            );
-            fenetre.set_ecran(Ecran::DemarrageImpossible);
-        }
+    };
+
+    let demarrage = kadenz_stockage::ouvrir(&chemin).and_then(|conn| demarrer(&fenetre, conn));
+    if let Err(erreur) = demarrage {
+        // L'emplacement des données ne s'affiche pas : il va dans erreurs.log.
+        consigner_erreur(&format!(
+            "Ouverture de la base {} impossible : {erreur}",
+            chemin.display()
+        ));
+        fenetre.set_message_demarrage(sauvegardes::message_demarrage(&erreur).into());
+        fenetre.set_ecran(Ecran::DemarrageImpossible);
+        sauvegardes::brancher_demarrage(&fenetre, demarrer);
     }
 
-    fenetre.run()
+    let resultat = fenetre.run();
+    // Fenêtre fermée : sauvegarde automatique de la base ouverte.
+    if let Some(etat) = session.borrow().as_ref() {
+        sauvegardes::sauvegarder_a_la_fermeture(&etat.borrow());
+    }
+    resultat
 }
+

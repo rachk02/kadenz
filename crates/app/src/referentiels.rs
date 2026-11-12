@@ -81,6 +81,11 @@ pub(crate) fn texte_erreur_ref(erreur: &Erreur) -> String {
                 .collect();
             trf(modele, &arguments)
         }
+        // Display composé par format! : recomposé ici pour être traduit.
+        Erreur::VersionSchemaInconnue { base, application } => trf(
+            "la base est au schéma {}, cette version de l'application ne connaît que le schéma {}",
+            &[base, application],
+        ),
         autre => tr(&autre.to_string()),
     }
 }

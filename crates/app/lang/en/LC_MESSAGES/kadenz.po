@@ -825,9 +825,6 @@ msgstr "PDF saved: {}"
 msgid "Phrase avant le montant en lettres (vide : aucune phrase)"
 msgstr "Sentence before the amount in words (empty: no sentence)"
 
-msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
-msgstr "Fonts: Inter and Manrope, under the SIL Open Font License 1.1."
-
 msgid "Pourcentages séparés par des points-virgules, par exemple « 0 ; 18 » ou « 0 ; 2,5 ; 5 »."
 msgstr "Percentages separated by semicolons, for example \"0 ; 18\" or \"0 ; 2,5 ; 5\"."
 
@@ -2747,3 +2744,156 @@ msgstr "Replace the title, sentence and signatory of this type with the default 
 
 msgid "Remplacer la lettre de relance par le texte par défaut ? Rien n'est enregistré avant « Enregistrer »."
 msgstr "Replace the reminder letter with the default text? Nothing is saved until you click \"Save\"."
+
+msgid "Restaurer cette sauvegarde ? La base actuelle est d'abord sauvegardée, puis remplacée ; chacun devra se reconnecter."
+msgstr "Restore this backup? The current database is backed up first, then replaced; everyone will have to sign in again."
+
+msgid "Restaurer"
+msgstr "Restore"
+
+msgid "Sauvegardes"
+msgstr "Backups"
+
+msgid "Kadenz enregistre une sauvegarde chiffrée à chaque fermeture et garde les dix dernières. Les sauvegardes faites à la main sont gardées à part. Rien n'est envoyé sur Internet : copiez le dossier sur une clé USB ou un autre disque."
+msgstr "Kadenz saves an encrypted backup each time it closes and keeps the last ten. Backups made by hand are kept separately. Nothing is sent over the Internet: copy the folder to a USB drive or another disk."
+
+msgid "Dossier des sauvegardes"
+msgstr "Backup folder"
+
+msgid "Changer de dossier"
+msgstr "Change folder"
+
+msgid "Ouvrir le dossier"
+msgstr "Open folder"
+
+msgid "Mot de passe des sauvegardes"
+msgstr "Backup password"
+
+msgid "Le mot de passe est enregistré sur ce poste. Notez-le en lieu sûr : sans lui, une sauvegarde ne s'ouvre pas sur un autre poste."
+msgstr "The password is saved on this computer. Write it down somewhere safe: without it, a backup cannot be opened on another computer."
+
+msgid "Choisissez le mot de passe qui chiffre les sauvegardes. Il est gardé sur ce poste pour la sauvegarde automatique ; notez-le en lieu sûr : sans lui, une sauvegarde ne s'ouvre pas sur un autre poste."
+msgstr "Choose the password that encrypts the backups. It is kept on this computer for the automatic backup; write it down somewhere safe: without it, a backup cannot be opened on another computer."
+
+msgid "Changer le mot de passe"
+msgstr "Change password"
+
+msgid "Les sauvegardes déjà faites gardent leur ancien mot de passe."
+msgstr "Backups already made keep their old password."
+
+msgid "Sauvegardes enregistrées"
+msgstr "Saved backups"
+
+msgid "Sauvegarder maintenant"
+msgstr "Back up now"
+
+msgid "Aucune sauvegarde dans ce dossier."
+msgstr "No backup in this folder."
+
+msgid "Taille"
+msgstr "Size"
+
+msgid "Restaurer la sauvegarde choisie"
+msgstr "Restore the selected backup"
+
+msgid "Restaurer un autre fichier"
+msgstr "Restore another file"
+
+msgid "Une sauvegarde venue d'une clé USB ou d'un autre poste s'ouvre avec le mot de passe qui l'a chiffrée."
+msgstr "A backup from a USB drive or another computer opens with the password that encrypted it."
+
+msgid "Choisir un fichier"
+msgstr "Choose a file"
+
+msgid "Mot de passe de la sauvegarde"
+msgstr "Backup password"
+
+msgid "Restaurer une sauvegarde"
+msgstr "Restore a backup"
+
+msgid "Ouvrir le dossier des données"
+msgstr "Open the data folder"
+
+msgid "Restaurer cette sauvegarde ? La base actuelle est mise de côté, jamais effacée."
+msgstr "Restore this backup? The current database is set aside, never deleted."
+
+msgid "Automatique"
+msgstr "Automatic"
+
+msgid "Manuelle"
+msgstr "Manual"
+
+msgid "Avant restauration"
+msgstr "Before restore"
+
+msgid "{} Ko"
+msgstr "{} KB"
+
+msgid "Choisir une sauvegarde"
+msgstr "Choose a backup"
+
+msgid "Sauvegardes Kadenz"
+msgstr "Kadenz backups"
+
+msgid "sauvegarde restaurée ; reconnectez-vous"
+msgstr "backup restored; please sign in again"
+
+msgid "dossier des sauvegardes enregistré"
+msgstr "backup folder saved"
+
+msgid "mot de passe des sauvegardes enregistré"
+msgstr "backup password saved"
+
+msgid "sauvegarde enregistrée"
+msgstr "backup saved"
+
+msgid "choisissez une sauvegarde dans la liste"
+msgstr "choose a backup in the list"
+
+msgid "saisissez le mot de passe de la sauvegarde"
+msgstr "enter the backup password"
+
+msgid "sauvegarde restaurée"
+msgstr "backup restored"
+
+msgid "La clé de la base (fichier kadenz.cle) est introuvable. Remettez ce fichier dans le dossier des données, ou restaurez une sauvegarde."
+msgstr "The database key (kadenz.cle file) cannot be found. Put this file back in the data folder, or restore a backup."
+
+msgid "La clé de la base a été créée sur un autre poste ou un autre compte Windows. Ouvrez Kadenz avec le compte Windows d'origine, ou restaurez une sauvegarde."
+msgstr "The database key was created on another computer or another Windows account. Open Kadenz with the original Windows account, or restore a backup."
+
+msgid "La clé de la base (fichier kadenz.cle) est endommagée. Restaurez une sauvegarde."
+msgstr "The database key (kadenz.cle file) is damaged. Restore a backup."
+
+msgid "La base ne s'ouvre pas avec sa clé : la clé ou le fichier de la base est endommagé. Restaurez une sauvegarde."
+msgstr "The database does not open with its key: the key or the database file is damaged. Restore a backup."
+
+msgid "La base a été enregistrée par une version plus récente de Kadenz. Installez la dernière version de Kadenz, ou restaurez une sauvegarde."
+msgstr "The database was saved by a newer version of Kadenz. Install the latest version of Kadenz, or restore a backup."
+
+msgid "le dossier des sauvegardes doit être un chemin complet"
+msgstr "the backup folder must be a full path"
+
+msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données de Kadenz, effacé à la désinstallation"
+msgstr "the backup folder cannot be inside the Kadenz data folder, which is deleted on uninstall"
+
+msgid "le dossier des sauvegardes contient des caractères non pris en charge"
+msgstr "the backup folder contains unsupported characters"
+
+msgid "protection du mot de passe par Windows impossible"
+msgstr "Windows could not protect the password"
+
+msgid "aucun mot de passe de sauvegarde n'est choisi"
+msgstr "no backup password has been chosen"
+
+msgid "la base restaurée ne contient pas les mêmes données que la sauvegarde"
+msgstr "the restored database does not contain the same data as the backup"
+
+msgid "sauvegarde endommagée : {}"
+msgstr "damaged backup: {}"
+
+msgid "sauvegarde introuvable : {}"
+msgstr "backup not found: {}"
+
+msgid "la base est au schéma {}, cette version de l'application ne connaît que le schéma {}"
+msgstr "the database uses schema {}, this version of the application only knows schema {}"

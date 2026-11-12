@@ -1,0 +1,475 @@
+// Sauvegardes de la base (cahier des charges, section 10.3) : rubrique des Paramètres,
+// réservée au droit « Sauvegarder / exporter la base », et écran « Démarrage
+// impossible » qui propose de restaurer une sauvegarde.
+//
+// Les sauvegardes sont chiffrées par un mot de passe choisi une fois par l'Admin et
+// gardé sur ce poste (protégé par Windows) pour la sauvegarde automatique à la
+// fermeture. Restaurer remplace la base : la base en place est d'abord sauvegardée.
+
+import { ScrollView, StandardTableView } from "std-widgets.slint";
+import { Alerte, Bouton, Champ, Confirmation, MessageErreur, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+
+export global SauvegardesApi {
+    // Dossier des sauvegardes (par défaut Documents\Kadenz\Sauvegardes).
+    in property <string> dossier;
+    // Mot de passe des sauvegardes déjà choisi sur ce poste.
+    in property <bool> mot-de-passe-defini;
+    // Sauvegardes du dossier, la plus récente d'abord : date, type, taille.
+    in property <[[StandardListViewItem]]> lignes;
+    in-out property <int> ligne-courante: -1;
+
+    callback ouvrir();
+    callback choisir-dossier() -> Retour;
+    callback ouvrir-dossier();
+    callback definir-mot-de-passe(mot-de-passe: string, confirmation: string) -> Retour;
+    callback sauvegarder() -> Retour;
+    // Restaure la sauvegarde choisie dans la liste, avec le mot de passe du poste ;
+    // en cas d'échec, l'écran propose de saisir le mot de passe (chemin de la ligne).
+    callback restaurer(ligne: int) -> Retour;
+    callback chemin(ligne: int) -> string;
+    // Fichier pris ailleurs (clé USB, autre poste) : chemin choisi, ou vide.
+    callback choisir-fichier() -> string;
+    callback restaurer-fichier(chemin: string, mot-de-passe: string) -> Retour;
+}
+
+export component PageSauvegardes inherits ScrollView {
+    in property <bool> etroit;
+
+    property <Retour> retour;
+    // Section où s'affiche une erreur : 1 dossier, 2 mot de passe, 3 liste, 4 autre fichier.
+    property <int> zone: 0;
+    property <bool> changer-mot-de-passe: false;
+    property <string> mot-de-passe;
+    property <string> confirmation;
+    property <string> fichier;
+    property <string> mot-de-passe-fichier;
+
+    // Restauration demandée, en attente de la fenêtre de confirmation : 1 depuis la
+    // liste, 2 depuis un autre fichier.
+    property <int> restauration-demandee: 0;
+    property <int> reponses: Confirmation.reponses;
+    changed reponses => {
+        if (self.restauration-demandee != 0) {
+            let origine = self.restauration-demandee;
+            self.restauration-demandee = 0;
+            if (Confirmation.accepte) {
+                if (origine == 1) {
+                    root.retour = SauvegardesApi.restaurer(SauvegardesApi.ligne-courante);
+                    root.zone = 4;
+                    if (!root.retour.ok) {
+                        root.fichier = SauvegardesApi.chemin(SauvegardesApi.ligne-courante);
+                        root.mot-de-passe-fichier = "";
+                    }
+                } else {
+                    root.retour = SauvegardesApi.restaurer-fichier(root.fichier, root.mot-de-passe-fichier);
+                    root.zone = 4;
+                    if (root.retour.ok) {
+                        root.fichier = "";
+                        root.mot-de-passe-fichier = "";
+                    }
+                }
+                Alerte.retour(root.retour);
+            }
+        }
+    }
+
+    function demander-restauration(origine: int) {
+        root.restauration-demandee = origine;
+        Confirmation.demander(
+            @tr("Restaurer cette sauvegarde ? La base actuelle est d'abord sauvegardée, puis remplacée ; chacun devra se reconnecter."),
+            @tr("Restaurer"),
+            true);
+    }
+
+    init => {
+        SauvegardesApi.ouvrir();
+    }
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 12px;
+        alignment: start;
+
+        Titre {
+            text: @tr("Sauvegardes");
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Kadenz enregistre une sauvegarde chiffrée à chaque fermeture et garde les dix dernières. Les sauvegardes faites à la main sont gardées à part. Rien n'est envoyé sur Internet : copiez le dossier sur une clé USB ou un autre disque.");
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        // Dossier.
+        Section {
+            text: @tr("Dossier des sauvegardes");
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: SauvegardesApi.dossier;
+            color: Theme.texte;
+            wrap: word-wrap;
+        }
+
+        HorizontalLayout {
+            alignment: Theme.rangee-debut;
+            spacing: 8px;
+
+            Bouton {
+                text: @tr("Changer de dossier");
+                clicked => {
+                    root.retour = SauvegardesApi.choisir-dossier();
+                    root.zone = 1;
+                    Alerte.retour(root.retour);
+                }
+            }
+
+            Bouton {
+                text: @tr("Ouvrir le dossier");
+                clicked => {
+                    SauvegardesApi.ouvrir-dossier();
+                }
+            }
+        }
+
+        if root.zone == 1: MessageRetour {
+            retour: root.retour;
+            erreurs-seules: true;
+        }
+
+        // Mot de passe.
+        Section {
+            text: @tr("Mot de passe des sauvegardes");
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: SauvegardesApi.mot-de-passe-defini
+                ? @tr("Le mot de passe est enregistré sur ce poste. Notez-le en lieu sûr : sans lui, une sauvegarde ne s'ouvre pas sur un autre poste.")
+                : @tr("Choisissez le mot de passe qui chiffre les sauvegardes. Il est gardé sur ce poste pour la sauvegarde automatique ; notez-le en lieu sûr : sans lui, une sauvegarde ne s'ouvre pas sur un autre poste.");
+            color: SauvegardesApi.mot-de-passe-defini ? Theme.texte-secondaire : Theme.texte;
+            wrap: word-wrap;
+        }
+
+        if SauvegardesApi.mot-de-passe-defini && !root.changer-mot-de-passe: HorizontalLayout {
+            alignment: Theme.rangee-debut;
+
+            Bouton {
+                text: @tr("Changer le mot de passe");
+                clicked => {
+                    root.changer-mot-de-passe = true;
+                }
+            }
+        }
+
+        if !SauvegardesApi.mot-de-passe-defini || root.changer-mot-de-passe: HorizontalLayout {
+            alignment: Theme.rangee-debut;
+
+            VerticalLayout {
+                width: 360px;
+                spacing: 12px;
+
+                if root.changer-mot-de-passe: Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("Les sauvegardes déjà faites gardent leur ancien mot de passe.");
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+
+                Champ {
+                    libelle: @tr("Mot de passe (8 caractères au moins)");
+                    secret: true;
+                    valeur <=> root.mot-de-passe;
+                }
+
+                Champ {
+                    libelle: @tr("Confirmation du mot de passe");
+                    secret: true;
+                    valeur <=> root.confirmation;
+                }
+
+                HorizontalLayout {
+                    alignment: Theme.rangee-debut;
+                    spacing: 8px;
+
+                    Bouton {
+                        text: @tr("Enregistrer");
+                        primary: true;
+                        clicked => {
+                            root.retour = SauvegardesApi.definir-mot-de-passe(root.mot-de-passe, root.confirmation);
+                            root.zone = 2;
+                            Alerte.retour(root.retour);
+                            if (root.retour.ok) {
+                                root.mot-de-passe = "";
+                                root.confirmation = "";
+                                root.changer-mot-de-passe = false;
+                            }
+                        }
+                    }
+
+                    if root.changer-mot-de-passe: Bouton {
+                        text: @tr("Annuler");
+                        clicked => {
+                            root.mot-de-passe = "";
+                            root.confirmation = "";
+                            root.changer-mot-de-passe = false;
+                        }
+                    }
+                }
+            }
+        }
+
+        if root.zone == 2: MessageRetour {
+            retour: root.retour;
+            erreurs-seules: true;
+        }
+
+        // Liste.
+        Section {
+            text: @tr("Sauvegardes enregistrées");
+        }
+
+        HorizontalLayout {
+            alignment: Theme.rangee-debut;
+
+            Bouton {
+                text: @tr("Sauvegarder maintenant");
+                primary: true;
+                enabled: SauvegardesApi.mot-de-passe-defini;
+                clicked => {
+                    root.retour = SauvegardesApi.sauvegarder();
+                    root.zone = 3;
+                    Alerte.retour(root.retour);
+                }
+            }
+        }
+
+        if root.zone == 3: MessageRetour {
+            retour: root.retour;
+            erreurs-seules: true;
+        }
+
+        if SauvegardesApi.lignes.length == 0: Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Aucune sauvegarde dans ce dossier.");
+            color: Theme.texte-secondaire;
+        }
+
+        if SauvegardesApi.lignes.length > 0: StandardTableView {
+            height: 240px;
+            // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
+            columns: Theme.rtl ? [
+                { title: @tr("Taille"), min-width: 90px, horizontal-stretch: 1 },
+                { title: @tr("Type"), min-width: 110px, horizontal-stretch: 1 },
+                { title: @tr("Date"), min-width: 160px, horizontal-stretch: 2 },
+            ] : [
+                { title: @tr("Date"), min-width: 160px, horizontal-stretch: 2 },
+                { title: @tr("Type"), min-width: 110px, horizontal-stretch: 1 },
+                { title: @tr("Taille"), min-width: 90px, horizontal-stretch: 1 },
+            ];
+            rows: SauvegardesApi.lignes;
+            current-row <=> SauvegardesApi.ligne-courante;
+        }
+
+        if SauvegardesApi.lignes.length > 0: HorizontalLayout {
+            alignment: Theme.rangee-debut;
+
+            Bouton {
+                text: @tr("Restaurer la sauvegarde choisie");
+                enabled: SauvegardesApi.ligne-courante >= 0;
+                clicked => {
+                    // Sans mot de passe enregistré sur ce poste : saisie d'abord.
+                    if (SauvegardesApi.mot-de-passe-defini) {
+                        root.demander-restauration(1);
+                    } else {
+                        root.fichier = SauvegardesApi.chemin(SauvegardesApi.ligne-courante);
+                        root.mot-de-passe-fichier = "";
+                    }
+                }
+            }
+        }
+
+        // Autre fichier.
+        Section {
+            text: @tr("Restaurer un autre fichier");
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Une sauvegarde venue d'une clé USB ou d'un autre poste s'ouvre avec le mot de passe qui l'a chiffrée.");
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        HorizontalLayout {
+            alignment: Theme.rangee-debut;
+
+            Bouton {
+                text: @tr("Choisir un fichier");
+                clicked => {
+                    let chemin = SauvegardesApi.choisir-fichier();
+                    if (chemin != "") {
+                        root.fichier = chemin;
+                        root.mot-de-passe-fichier = "";
+                    }
+                }
+            }
+        }
+
+        if root.fichier != "": HorizontalLayout {
+            alignment: Theme.rangee-debut;
+
+            VerticalLayout {
+                width: 360px;
+                spacing: 12px;
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: root.fichier;
+                    color: Theme.texte;
+                    wrap: word-wrap;
+                }
+
+                Champ {
+                    libelle: @tr("Mot de passe de la sauvegarde");
+                    secret: true;
+                    valeur <=> root.mot-de-passe-fichier;
+                }
+
+                if root.zone == 4: MessageRetour {
+                    retour: root.retour;
+                    erreurs-seules: true;
+                }
+
+                HorizontalLayout {
+                    alignment: Theme.rangee-debut;
+
+                    Bouton {
+                        text: @tr("Restaurer");
+                        enabled: root.mot-de-passe-fichier != "";
+                        clicked => {
+                            root.demander-restauration(2);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Écran « Démarrage impossible » : message selon la cause, puis restaurer une
+// sauvegarde (fichier et mot de passe) ou ouvrir le dossier des données.
+export component EcranDemarrageImpossible inherits Rectangle {
+    in property <string> message;
+    callback choisir-fichier() -> string;
+    callback restaurer-fichier(chemin: string, mot-de-passe: string) -> Retour;
+    callback ouvrir-dossier-donnees();
+
+    property <string> fichier;
+    property <string> mot-de-passe;
+    property <Retour> retour;
+
+    property <bool> restauration-demandee: false;
+    property <int> reponses: Confirmation.reponses;
+    changed reponses => {
+        if (self.restauration-demandee) {
+            self.restauration-demandee = false;
+            if (Confirmation.accepte) {
+                root.retour = root.restaurer-fichier(root.fichier, root.mot-de-passe);
+            }
+        }
+    }
+
+    background: white;
+
+    VerticalLayout {
+        alignment: center;
+        padding: 24px;
+        spacing: 16px;
+
+        Titre {
+            text: @tr("Démarrage impossible");
+            horizontal-alignment: center;
+        }
+
+        HorizontalLayout {
+            alignment: center;
+
+            MessageErreur {
+                width: min(560px, root.width - 48px);
+                text: root.message;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+            }
+        }
+
+        HorizontalLayout {
+            alignment: center;
+            spacing: 8px;
+
+            Bouton {
+                text: @tr("Restaurer une sauvegarde");
+                primary: true;
+                clicked => {
+                    let chemin = root.choisir-fichier();
+                    if (chemin != "") {
+                        root.fichier = chemin;
+                        root.mot-de-passe = "";
+                        root.retour = { ok: false, message: "" };
+                    }
+                }
+            }
+
+            Bouton {
+                text: @tr("Ouvrir le dossier des données");
+                clicked => {
+                    root.ouvrir-dossier-donnees();
+                }
+            }
+        }
+
+        if root.fichier != "": HorizontalLayout {
+            alignment: center;
+
+            VerticalLayout {
+                width: 360px;
+                spacing: 12px;
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: root.fichier;
+                    color: Theme.texte;
+                    wrap: word-wrap;
+                }
+
+                Champ {
+                    libelle: @tr("Mot de passe de la sauvegarde");
+                    secret: true;
+                    valeur <=> root.mot-de-passe;
+                }
+
+                if root.retour.message != "": MessageRetour {
+                    retour: root.retour;
+                }
+
+                HorizontalLayout {
+                    alignment: Theme.rangee-debut;
+
+                    Bouton {
+                        text: @tr("Restaurer");
+                        enabled: root.mot-de-passe != "";
+                        clicked => {
+                            root.restauration-demandee = true;
+                            Confirmation.demander(
+                                @tr("Restaurer cette sauvegarde ? La base actuelle est mise de côté, jamais effacée."),
+                                @tr("Restaurer"),
+                                true);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

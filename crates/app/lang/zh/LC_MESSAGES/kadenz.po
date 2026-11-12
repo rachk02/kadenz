@@ -825,9 +825,6 @@ msgstr "PDF 已保存：{}"
 msgid "Phrase avant le montant en lettres (vide : aucune phrase)"
 msgstr "大写金额前的语句（留空：无语句）"
 
-msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
-msgstr "字体：Inter 和 Manrope，采用 SIL Open Font License 1.1 许可证。"
-
 msgid "Pourcentages séparés par des points-virgules, par exemple « 0 ; 18 » ou « 0 ; 2,5 ; 5 »."
 msgstr "用分号分隔的百分比，例如“0 ; 18”或“0 ; 2,5 ; 5”。"
 
@@ -2747,3 +2744,156 @@ msgstr "要将此类型的标题、语句和签署人替换为默认文本吗？
 
 msgid "Remplacer la lettre de relance par le texte par défaut ? Rien n'est enregistré avant « Enregistrer »."
 msgstr "要将催款函替换为默认文本吗？点击“保存”之前不会保存任何内容。"
+
+msgid "Restaurer cette sauvegarde ? La base actuelle est d'abord sauvegardée, puis remplacée ; chacun devra se reconnecter."
+msgstr "要恢复此备份吗？当前数据库会先被备份，然后被替换；所有人都需要重新登录。"
+
+msgid "Restaurer"
+msgstr "恢复"
+
+msgid "Sauvegardes"
+msgstr "备份"
+
+msgid "Kadenz enregistre une sauvegarde chiffrée à chaque fermeture et garde les dix dernières. Les sauvegardes faites à la main sont gardées à part. Rien n'est envoyé sur Internet : copiez le dossier sur une clé USB ou un autre disque."
+msgstr "Kadenz 每次关闭时都会保存一份加密备份，并保留最近十份。手动创建的备份另行保留。不会通过互联网发送任何内容：请将该文件夹复制到 U 盘或其他磁盘。"
+
+msgid "Dossier des sauvegardes"
+msgstr "备份文件夹"
+
+msgid "Changer de dossier"
+msgstr "更改文件夹"
+
+msgid "Ouvrir le dossier"
+msgstr "打开文件夹"
+
+msgid "Mot de passe des sauvegardes"
+msgstr "备份密码"
+
+msgid "Le mot de passe est enregistré sur ce poste. Notez-le en lieu sûr : sans lui, une sauvegarde ne s'ouvre pas sur un autre poste."
+msgstr "密码已保存在本机。请把它记在安全的地方：没有它，备份无法在其他电脑上打开。"
+
+msgid "Choisissez le mot de passe qui chiffre les sauvegardes. Il est gardé sur ce poste pour la sauvegarde automatique ; notez-le en lieu sûr : sans lui, une sauvegarde ne s'ouvre pas sur un autre poste."
+msgstr "请选择用于加密备份的密码。它会保存在本机，供自动备份使用；请把它记在安全的地方：没有它，备份无法在其他电脑上打开。"
+
+msgid "Changer le mot de passe"
+msgstr "更改密码"
+
+msgid "Les sauvegardes déjà faites gardent leur ancien mot de passe."
+msgstr "已有的备份仍使用原来的密码。"
+
+msgid "Sauvegardes enregistrées"
+msgstr "已保存的备份"
+
+msgid "Sauvegarder maintenant"
+msgstr "立即备份"
+
+msgid "Aucune sauvegarde dans ce dossier."
+msgstr "此文件夹中没有备份。"
+
+msgid "Taille"
+msgstr "大小"
+
+msgid "Restaurer la sauvegarde choisie"
+msgstr "恢复所选备份"
+
+msgid "Restaurer un autre fichier"
+msgstr "恢复其他文件"
+
+msgid "Une sauvegarde venue d'une clé USB ou d'un autre poste s'ouvre avec le mot de passe qui l'a chiffrée."
+msgstr "来自 U 盘或其他电脑的备份，需使用加密它的密码打开。"
+
+msgid "Choisir un fichier"
+msgstr "选择文件"
+
+msgid "Mot de passe de la sauvegarde"
+msgstr "备份的密码"
+
+msgid "Restaurer une sauvegarde"
+msgstr "恢复备份"
+
+msgid "Ouvrir le dossier des données"
+msgstr "打开数据文件夹"
+
+msgid "Restaurer cette sauvegarde ? La base actuelle est mise de côté, jamais effacée."
+msgstr "要恢复此备份吗？当前数据库会被另行保留，绝不会被删除。"
+
+msgid "Automatique"
+msgstr "自动"
+
+msgid "Manuelle"
+msgstr "手动"
+
+msgid "Avant restauration"
+msgstr "恢复前"
+
+msgid "{} Ko"
+msgstr "{} KB"
+
+msgid "Choisir une sauvegarde"
+msgstr "选择备份"
+
+msgid "Sauvegardes Kadenz"
+msgstr "Kadenz 备份"
+
+msgid "sauvegarde restaurée ; reconnectez-vous"
+msgstr "备份已恢复；请重新登录"
+
+msgid "dossier des sauvegardes enregistré"
+msgstr "备份文件夹已保存"
+
+msgid "mot de passe des sauvegardes enregistré"
+msgstr "备份密码已保存"
+
+msgid "sauvegarde enregistrée"
+msgstr "备份已保存"
+
+msgid "choisissez une sauvegarde dans la liste"
+msgstr "请在列表中选择一个备份"
+
+msgid "saisissez le mot de passe de la sauvegarde"
+msgstr "请输入备份的密码"
+
+msgid "sauvegarde restaurée"
+msgstr "备份已恢复"
+
+msgid "La clé de la base (fichier kadenz.cle) est introuvable. Remettez ce fichier dans le dossier des données, ou restaurez une sauvegarde."
+msgstr "找不到数据库密钥（kadenz.cle 文件）。请将该文件放回数据文件夹，或恢复一份备份。"
+
+msgid "La clé de la base a été créée sur un autre poste ou un autre compte Windows. Ouvrez Kadenz avec le compte Windows d'origine, ou restaurez une sauvegarde."
+msgstr "数据库密钥是在另一台电脑或另一个 Windows 账户上创建的。请使用原来的 Windows 账户打开 Kadenz，或恢复一份备份。"
+
+msgid "La clé de la base (fichier kadenz.cle) est endommagée. Restaurez une sauvegarde."
+msgstr "数据库密钥（kadenz.cle 文件）已损坏。请恢复一份备份。"
+
+msgid "La base ne s'ouvre pas avec sa clé : la clé ou le fichier de la base est endommagé. Restaurez une sauvegarde."
+msgstr "数据库无法用其密钥打开：密钥或数据库文件已损坏。请恢复一份备份。"
+
+msgid "La base a été enregistrée par une version plus récente de Kadenz. Installez la dernière version de Kadenz, ou restaurez une sauvegarde."
+msgstr "数据库由更新版本的 Kadenz 保存。请安装最新版本的 Kadenz，或恢复一份备份。"
+
+msgid "le dossier des sauvegardes doit être un chemin complet"
+msgstr "备份文件夹必须是完整路径"
+
+msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données de Kadenz, effacé à la désinstallation"
+msgstr "备份文件夹不能位于 Kadenz 数据文件夹内，该文件夹会在卸载时被删除"
+
+msgid "le dossier des sauvegardes contient des caractères non pris en charge"
+msgstr "备份文件夹包含不支持的字符"
+
+msgid "protection du mot de passe par Windows impossible"
+msgstr "Windows 无法保护该密码"
+
+msgid "aucun mot de passe de sauvegarde n'est choisi"
+msgstr "尚未选择备份密码"
+
+msgid "la base restaurée ne contient pas les mêmes données que la sauvegarde"
+msgstr "恢复后的数据库与备份中的数据不一致"
+
+msgid "sauvegarde endommagée : {}"
+msgstr "备份已损坏：{}"
+
+msgid "sauvegarde introuvable : {}"
+msgstr "找不到备份：{}"
+
+msgid "la base est au schéma {}, cette version de l'application ne connaît que le schéma {}"
+msgstr "数据库使用架构 {}，此版本的应用只支持架构 {}"

@@ -1,6 +1,6 @@
 // Fenêtre principale : écrans de démarrage, puis application avec sa navigation
 // (bandeau ou barre latérale, navigation.slint) et ses pages.
-import { Affichage, Confirmation, Droits, FenetreAlerte, FenetreConfirmation, MessageErreur, Modules, Rangee, Theme, Titre } from "composants.slint";
+import { Affichage, Confirmation, Droits, FenetreAlerte, FenetreConfirmation, Modules, Rangee, Retour, Theme } from "composants.slint";
 import { EcranAssistant, DonneesAssistant } from "assistant.slint";
 import { EcranConnexion } from "connexion.slint";
 import { EcranPresentation } from "presentation.slint";
@@ -16,8 +16,9 @@ import { LicenceApi } from "licence.slint";
 import { InviteMiseAJour, MiseAJourApi } from "maj.slint";
 import { BandeauHaut, BoutonIcone, ContenuBarre, Infobulle, InfobulleFenetre, Menu, Page, PanneauFlottant } from "navigation.slint";
 import { PageReglages, ReglagesApi, Rubrique } from "reglages.slint";
+import { EcranDemarrageImpossible, SauvegardesApi } from "sauvegardes.slint";
 
-export { Affichage, DonneesAssistant, Droits, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, TiersApi, UtilisateursApi }
+export { Affichage, DonneesAssistant, Droits, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, presentation, assistant, connexion, application }
@@ -44,6 +45,11 @@ export component FenetrePrincipale inherits Window {
     callback deconnecter();
     callback changer-mot-de-passe(string, string, string) -> string;
     callback changer-langue(int) -> string;
+
+    // Démarrage impossible : restaurer une sauvegarde ou ouvrir le dossier des données.
+    callback choisir-sauvegarde-demarrage() -> string;
+    callback restaurer-au-demarrage(string, string) -> Retour;
+    callback ouvrir-dossier-donnees();
 
     // Page affichée ; le menu (global Menu) est construit par l'application à chaque connexion.
     in-out property <Page> page: Page.tableau-de-bord;
@@ -76,19 +82,16 @@ export component FenetrePrincipale inherits Window {
     min-height: 640px;
     background: white;
 
-    if root.ecran == Ecran.demarrage-impossible: VerticalLayout {
-        alignment: center;
-        padding: 24px;
-        spacing: 12px;
-
-        Titre {
-            text: @tr("Démarrage impossible");
-            horizontal-alignment: center;
+    if root.ecran == Ecran.demarrage-impossible: EcranDemarrageImpossible {
+        message: root.message-demarrage;
+        choisir-fichier => {
+            root.choisir-sauvegarde-demarrage()
         }
-
-        MessageErreur {
-            text: root.message-demarrage;
-            horizontal-alignment: center;
+        restaurer-fichier(chemin, mot-de-passe) => {
+            root.restaurer-au-demarrage(chemin, mot-de-passe)
+        }
+        ouvrir-dossier-donnees => {
+            root.ouvrir-dossier-donnees();
         }
     }
 

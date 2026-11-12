@@ -825,9 +825,6 @@ msgstr "PDF を保存しました：{}"
 msgid "Phrase avant le montant en lettres (vide : aucune phrase)"
 msgstr "金額（文字表記）の前の文（空欄：文なし）"
 
-msgid "Polices : Inter et Manrope, sous licence SIL Open Font License 1.1."
-msgstr "フォント：Inter と Manrope（SIL Open Font License 1.1）。"
-
 msgid "Pourcentages séparés par des points-virgules, par exemple « 0 ; 18 » ou « 0 ; 2,5 ; 5 »."
 msgstr "セミコロンで区切ったパーセント。例：「0 ; 18」または「0 ; 2,5 ; 5」。"
 
@@ -2747,3 +2744,156 @@ msgstr "この種類のタイトル、文、署名者を既定のテキストに
 
 msgid "Remplacer la lettre de relance par le texte par défaut ? Rien n'est enregistré avant « Enregistrer »."
 msgstr "督促状を既定のテキストに置き換えますか？「保存」を押すまで何も保存されません。"
+
+msgid "Restaurer cette sauvegarde ? La base actuelle est d'abord sauvegardée, puis remplacée ; chacun devra se reconnecter."
+msgstr "このバックアップを復元しますか？現在のデータベースはまずバックアップされ、その後置き換えられます。全員が再度サインインする必要があります。"
+
+msgid "Restaurer"
+msgstr "復元"
+
+msgid "Sauvegardes"
+msgstr "バックアップ"
+
+msgid "Kadenz enregistre une sauvegarde chiffrée à chaque fermeture et garde les dix dernières. Les sauvegardes faites à la main sont gardées à part. Rien n'est envoyé sur Internet : copiez le dossier sur une clé USB ou un autre disque."
+msgstr "Kadenz は終了するたびに暗号化したバックアップを保存し、最新の 10 件を保持します。手動で作成したバックアップは別に保持されます。インターネットには何も送信されません。フォルダーを USB メモリーや別のディスクにコピーしてください。"
+
+msgid "Dossier des sauvegardes"
+msgstr "バックアップフォルダー"
+
+msgid "Changer de dossier"
+msgstr "フォルダーを変更"
+
+msgid "Ouvrir le dossier"
+msgstr "フォルダーを開く"
+
+msgid "Mot de passe des sauvegardes"
+msgstr "バックアップのパスワード"
+
+msgid "Le mot de passe est enregistré sur ce poste. Notez-le en lieu sûr : sans lui, une sauvegarde ne s'ouvre pas sur un autre poste."
+msgstr "パスワードはこのパソコンに保存されています。安全な場所に書き留めてください。パスワードがないと、別のパソコンではバックアップを開けません。"
+
+msgid "Choisissez le mot de passe qui chiffre les sauvegardes. Il est gardé sur ce poste pour la sauvegarde automatique ; notez-le en lieu sûr : sans lui, une sauvegarde ne s'ouvre pas sur un autre poste."
+msgstr "バックアップを暗号化するパスワードを選んでください。自動バックアップのためにこのパソコンに保存されます。安全な場所に書き留めてください。パスワードがないと、別のパソコンではバックアップを開けません。"
+
+msgid "Changer le mot de passe"
+msgstr "パスワードを変更"
+
+msgid "Les sauvegardes déjà faites gardent leur ancien mot de passe."
+msgstr "作成済みのバックアップは以前のパスワードのままです。"
+
+msgid "Sauvegardes enregistrées"
+msgstr "保存済みのバックアップ"
+
+msgid "Sauvegarder maintenant"
+msgstr "今すぐバックアップ"
+
+msgid "Aucune sauvegarde dans ce dossier."
+msgstr "このフォルダーにバックアップはありません。"
+
+msgid "Taille"
+msgstr "サイズ"
+
+msgid "Restaurer la sauvegarde choisie"
+msgstr "選択したバックアップを復元"
+
+msgid "Restaurer un autre fichier"
+msgstr "別のファイルを復元"
+
+msgid "Une sauvegarde venue d'une clé USB ou d'un autre poste s'ouvre avec le mot de passe qui l'a chiffrée."
+msgstr "USB メモリーや別のパソコンから持ってきたバックアップは、暗号化に使ったパスワードで開きます。"
+
+msgid "Choisir un fichier"
+msgstr "ファイルを選択"
+
+msgid "Mot de passe de la sauvegarde"
+msgstr "バックアップのパスワード"
+
+msgid "Restaurer une sauvegarde"
+msgstr "バックアップを復元"
+
+msgid "Ouvrir le dossier des données"
+msgstr "データフォルダーを開く"
+
+msgid "Restaurer cette sauvegarde ? La base actuelle est mise de côté, jamais effacée."
+msgstr "このバックアップを復元しますか？現在のデータベースは別に保管され、削除されることはありません。"
+
+msgid "Automatique"
+msgstr "自動"
+
+msgid "Manuelle"
+msgstr "手動"
+
+msgid "Avant restauration"
+msgstr "復元前"
+
+msgid "{} Ko"
+msgstr "{} KB"
+
+msgid "Choisir une sauvegarde"
+msgstr "バックアップを選択"
+
+msgid "Sauvegardes Kadenz"
+msgstr "Kadenz のバックアップ"
+
+msgid "sauvegarde restaurée ; reconnectez-vous"
+msgstr "バックアップを復元しました。もう一度サインインしてください"
+
+msgid "dossier des sauvegardes enregistré"
+msgstr "バックアップフォルダーを保存しました"
+
+msgid "mot de passe des sauvegardes enregistré"
+msgstr "バックアップのパスワードを保存しました"
+
+msgid "sauvegarde enregistrée"
+msgstr "バックアップを保存しました"
+
+msgid "choisissez une sauvegarde dans la liste"
+msgstr "一覧からバックアップを選んでください"
+
+msgid "saisissez le mot de passe de la sauvegarde"
+msgstr "バックアップのパスワードを入力してください"
+
+msgid "sauvegarde restaurée"
+msgstr "バックアップを復元しました"
+
+msgid "La clé de la base (fichier kadenz.cle) est introuvable. Remettez ce fichier dans le dossier des données, ou restaurez une sauvegarde."
+msgstr "データベースの鍵（kadenz.cle ファイル）が見つかりません。このファイルをデータフォルダーに戻すか、バックアップを復元してください。"
+
+msgid "La clé de la base a été créée sur un autre poste ou un autre compte Windows. Ouvrez Kadenz avec le compte Windows d'origine, ou restaurez une sauvegarde."
+msgstr "データベースの鍵は別のパソコンまたは別の Windows アカウントで作成されました。元の Windows アカウントで Kadenz を開くか、バックアップを復元してください。"
+
+msgid "La clé de la base (fichier kadenz.cle) est endommagée. Restaurez une sauvegarde."
+msgstr "データベースの鍵（kadenz.cle ファイル）が破損しています。バックアップを復元してください。"
+
+msgid "La base ne s'ouvre pas avec sa clé : la clé ou le fichier de la base est endommagé. Restaurez une sauvegarde."
+msgstr "データベースが鍵で開けません。鍵またはデータベースファイルが破損しています。バックアップを復元してください。"
+
+msgid "La base a été enregistrée par une version plus récente de Kadenz. Installez la dernière version de Kadenz, ou restaurez une sauvegarde."
+msgstr "データベースは新しいバージョンの Kadenz で保存されています。最新バージョンの Kadenz をインストールするか、バックアップを復元してください。"
+
+msgid "le dossier des sauvegardes doit être un chemin complet"
+msgstr "バックアップフォルダーは完全なパスで指定してください"
+
+msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données de Kadenz, effacé à la désinstallation"
+msgstr "バックアップフォルダーは、アンインストール時に削除される Kadenz のデータフォルダー内には置けません"
+
+msgid "le dossier des sauvegardes contient des caractères non pris en charge"
+msgstr "バックアップフォルダーに使用できない文字が含まれています"
+
+msgid "protection du mot de passe par Windows impossible"
+msgstr "Windows でパスワードを保護できませんでした"
+
+msgid "aucun mot de passe de sauvegarde n'est choisi"
+msgstr "バックアップのパスワードが選ばれていません"
+
+msgid "la base restaurée ne contient pas les mêmes données que la sauvegarde"
+msgstr "復元したデータベースの内容がバックアップと一致しません"
+
+msgid "sauvegarde endommagée : {}"
+msgstr "バックアップが破損しています：{}"
+
+msgid "sauvegarde introuvable : {}"
+msgstr "バックアップが見つかりません：{}"
+
+msgid "la base est au schéma {}, cette version de l'application ne connaît que le schéma {}"
+msgstr "データベースはスキーマ {} です。このバージョンのアプリはスキーマ {} までしか扱えません"
