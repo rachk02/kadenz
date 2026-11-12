@@ -3050,3 +3050,129 @@ msgstr "iş istasyonu sınırına ulaşıldı: abonelik {} iş istasyonuna izin 
 
 msgid "trop d'essais d'inscription : nouvel essai dans {} s"
 msgstr "çok fazla kayıt denemesi: {} sn sonra yeniden deneyin"
+
+msgid "La licence d'abonnement est liée à l'entreprise. Transmettez l'identifiant ci-dessous pour la recevoir, puis collez-la ici. Sans licence, le serveur reste en lecture seule et un seul poste peut s'inscrire, pour installer la licence plus tard depuis ce poste."
+msgstr "Abonelik lisansı şirkete bağlıdır. Lisansı almak için aşağıdaki kimliği iletin, ardından buraya yapıştırın. Lisans olmadan sunucu salt okunur kalır ve lisansı daha sonra o iş istasyonundan kurmak için yalnızca bir iş istasyonu kaydolabilir."
+
+msgid "Identifiant de l'entreprise"
+msgstr "Şirket kimliği"
+
+msgid "Licence : aucune pour l'instant, serveur en lecture seule"
+msgstr "Lisans: şimdilik yok, sunucu salt okunur"
+
+msgid "Copié."
+msgstr "Kopyalandı."
+
+msgid "Serveur Kadenz"
+msgstr "Kadenz sunucusu"
+
+msgid "Cette fenêtre sert au dépannage du serveur. Les comptes, l'abonnement et les autres réglages se gèrent depuis un poste connecté avec un compte Admin."
+msgstr "Bu pencere sunucu sorunlarını gidermek içindir. Hesaplar, abonelik ve diğer ayarlar bir Admin hesabıyla bağlı bir iş istasyonundan yönetilir."
+
+msgid "Service"
+msgstr "Hizmet"
+
+msgid "Dernière erreur"
+msgstr "Son hata"
+
+msgid "Dossier des données"
+msgstr "Veri klasörü"
+
+msgid "Empreinte du certificat"
+msgstr "Sertifika parmak izi"
+
+msgid "Un poste qui s'inscrit avec le code complet la vérifie seul. Avec le code court, comparez l'empreinte affichée sur le poste à celle-ci avant de confirmer."
+msgstr "Tam kodla kaydolan bir iş istasyonu bunu kendisi doğrular. Kısa kodla, onaylamadan önce iş istasyonunda gösterilen parmak izini bununla karşılaştırın."
+
+msgid "Codes d'inscription"
+msgstr "Kayıt kodları"
+
+msgid "Un code sert une seule fois, pour un poste, pendant 24 heures. Un nouveau code pour le même nom de poste annule le précédent."
+msgstr "Bir kod 24 saat içinde, bir iş istasyonu için yalnızca bir kez kullanılır. Aynı iş istasyonu adı için yeni bir kod öncekini iptal eder."
+
+msgid "Nom du poste"
+msgstr "İş istasyonu adı"
+
+msgid "Créer un code"
+msgstr "Kod oluştur"
+
+msgid "Code du poste « {} », valable jusqu'au {}. Notez-le maintenant : il ne sera plus affiché."
+msgstr "“{}” iş istasyonunun kodu, {} tarihine kadar geçerli. Şimdi not edin: bir daha gösterilmeyecek."
+
+msgid "Code court"
+msgstr "Kısa kod"
+
+msgid "Code complet, à coller sur le poste : il contient aussi l'adresse et l'empreinte du serveur."
+msgstr "İş istasyonuna yapıştırılacak tam kod: sunucunun adresini ve parmak izini de içerir."
+
+msgid "Masquer le code"
+msgstr "Kodu gizle"
+
+msgid "Codes en cours"
+msgstr "Geçerli kodlar"
+
+msgid "{} : valable jusqu'au {}"
+msgstr "{}: {} tarihine kadar geçerli"
+
+msgid "Annuler le code"
+msgstr "Kodu iptal et"
+
+msgid "Annuler le code du poste « {} » ? Il ne pourra plus servir."
+msgstr "“{}” iş istasyonunun kodu iptal edilsin mi? Artık kullanılamayacak."
+
+msgid "Postes inscrits"
+msgstr "Kayıtlı iş istasyonları"
+
+msgid "Aucun poste inscrit."
+msgstr "Kayıtlı iş istasyonu yok."
+
+msgid "Inscrit le {}"
+msgstr "Kayıt tarihi: {}"
+
+msgid "Retirer le poste « {} » ? Il ne pourra plus se connecter ; il faudra un nouveau code pour l'inscrire de nouveau."
+msgstr "“{}” iş istasyonu kaldırılsın mı? Artık bağlanamayacak; yeniden kaydetmek için yeni bir kod gerekecek."
+
+msgid "Actualiser"
+msgstr "Yenile"
+
+msgid "Kadenz - Administration du serveur"
+msgstr "Kadenz - Sunucu yönetimi"
+
+msgid "Démarré"
+msgstr "Çalışıyor"
+
+msgid "Démarrage en cours"
+msgstr "Başlatılıyor"
+
+msgid "Arrêt en cours"
+msgstr "Durduruluyor"
+
+msgid "Arrêté"
+msgstr "Durduruldu"
+
+msgid "Service non installé"
+msgstr "Hizmet kurulu değil"
+
+msgid "État inconnu"
+msgstr "Bilinmeyen durum"
+
+msgid "Code annulé."
+msgstr "Kod iptal edildi."
+
+msgid "Poste retiré."
+msgstr "İş istasyonu kaldırıldı."
+
+msgid "La base du serveur ne s'ouvre pas : {}. Cette fenêtre doit être lancée en administrateur, sur la machine du serveur."
+msgstr "Sunucu veritabanı açılamıyor: {}. Bu pencere sunucu makinesinde yönetici olarak çalıştırılmalıdır."
+
+msgid "{}, {} postes, jusqu'au {}"
+msgstr "{}, {} iş istasyonu, {} tarihine kadar"
+
+msgid "Aucune base du serveur dans {} : démarrez le service KadenzServeur une première fois, puis rouvrez cette fenêtre."
+msgstr "{} içinde sunucu veritabanı yok: KadenzServeur hizmetini bir kez başlatın, ardından bu pencereyi yeniden açın."
+
+msgid "{} inscrits sur {} permis par l'abonnement"
+msgstr "{} kayıtlı, abonelik {} izin veriyor"
+
+msgid "le nom du poste est obligatoire"
+msgstr "iş istasyonu adı zorunludur"

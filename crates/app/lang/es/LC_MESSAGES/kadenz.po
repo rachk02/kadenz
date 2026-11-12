@@ -3050,3 +3050,129 @@ msgstr "número de puestos alcanzado: {} puestos permitidos por la suscripción"
 
 msgid "trop d'essais d'inscription : nouvel essai dans {} s"
 msgstr "demasiados intentos de inscripción: nuevo intento dentro de {} s"
+
+msgid "La licence d'abonnement est liée à l'entreprise. Transmettez l'identifiant ci-dessous pour la recevoir, puis collez-la ici. Sans licence, le serveur reste en lecture seule et un seul poste peut s'inscrire, pour installer la licence plus tard depuis ce poste."
+msgstr "La licencia de suscripción está vinculada a la empresa. Envíe el identificador siguiente para recibirla y péguela aquí. Sin licencia, el servidor permanece en solo lectura y solo un puesto puede inscribirse, para instalar la licencia más tarde desde ese puesto."
+
+msgid "Identifiant de l'entreprise"
+msgstr "Identificador de la empresa"
+
+msgid "Licence : aucune pour l'instant, serveur en lecture seule"
+msgstr "Licencia: ninguna por ahora, servidor en solo lectura"
+
+msgid "Copié."
+msgstr "Copiado."
+
+msgid "Serveur Kadenz"
+msgstr "Servidor Kadenz"
+
+msgid "Cette fenêtre sert au dépannage du serveur. Les comptes, l'abonnement et les autres réglages se gèrent depuis un poste connecté avec un compte Admin."
+msgstr "Esta ventana sirve para solucionar problemas del servidor. Las cuentas, la suscripción y los demás ajustes se gestionan desde un puesto conectado con una cuenta Admin."
+
+msgid "Service"
+msgstr "Servicio"
+
+msgid "Dernière erreur"
+msgstr "Último error"
+
+msgid "Dossier des données"
+msgstr "Carpeta de datos"
+
+msgid "Empreinte du certificat"
+msgstr "Huella del certificado"
+
+msgid "Un poste qui s'inscrit avec le code complet la vérifie seul. Avec le code court, comparez l'empreinte affichée sur le poste à celle-ci avant de confirmer."
+msgstr "Un puesto que se inscribe con el código completo la verifica por sí mismo. Con el código corto, compare la huella mostrada en el puesto con esta antes de confirmar."
+
+msgid "Codes d'inscription"
+msgstr "Códigos de inscripción"
+
+msgid "Un code sert une seule fois, pour un poste, pendant 24 heures. Un nouveau code pour le même nom de poste annule le précédent."
+msgstr "Un código sirve una sola vez, para un puesto, durante 24 horas. Un nuevo código para el mismo nombre de puesto anula el anterior."
+
+msgid "Nom du poste"
+msgstr "Nombre del puesto"
+
+msgid "Créer un code"
+msgstr "Crear un código"
+
+msgid "Code du poste « {} », valable jusqu'au {}. Notez-le maintenant : il ne sera plus affiché."
+msgstr "Código del puesto «{}», válido hasta el {}. Anótelo ahora: no se volverá a mostrar."
+
+msgid "Code court"
+msgstr "Código corto"
+
+msgid "Code complet, à coller sur le poste : il contient aussi l'adresse et l'empreinte du serveur."
+msgstr "Código completo, para pegar en el puesto: también contiene la dirección y la huella del servidor."
+
+msgid "Masquer le code"
+msgstr "Ocultar el código"
+
+msgid "Codes en cours"
+msgstr "Códigos en curso"
+
+msgid "{} : valable jusqu'au {}"
+msgstr "{}: válido hasta el {}"
+
+msgid "Annuler le code"
+msgstr "Anular el código"
+
+msgid "Annuler le code du poste « {} » ? Il ne pourra plus servir."
+msgstr "¿Anular el código del puesto «{}»? Ya no podrá usarse."
+
+msgid "Postes inscrits"
+msgstr "Puestos inscritos"
+
+msgid "Aucun poste inscrit."
+msgstr "Ningún puesto inscrito."
+
+msgid "Inscrit le {}"
+msgstr "Inscrito el {}"
+
+msgid "Retirer le poste « {} » ? Il ne pourra plus se connecter ; il faudra un nouveau code pour l'inscrire de nouveau."
+msgstr "¿Retirar el puesto «{}»? Ya no podrá conectarse; hará falta un nuevo código para inscribirlo de nuevo."
+
+msgid "Actualiser"
+msgstr "Actualizar"
+
+msgid "Kadenz - Administration du serveur"
+msgstr "Kadenz - Administración del servidor"
+
+msgid "Démarré"
+msgstr "En ejecución"
+
+msgid "Démarrage en cours"
+msgstr "Iniciándose"
+
+msgid "Arrêt en cours"
+msgstr "Deteniéndose"
+
+msgid "Arrêté"
+msgstr "Detenido"
+
+msgid "Service non installé"
+msgstr "Servicio no instalado"
+
+msgid "État inconnu"
+msgstr "Estado desconocido"
+
+msgid "Code annulé."
+msgstr "Código anulado."
+
+msgid "Poste retiré."
+msgstr "Puesto retirado."
+
+msgid "La base du serveur ne s'ouvre pas : {}. Cette fenêtre doit être lancée en administrateur, sur la machine du serveur."
+msgstr "La base del servidor no se abre: {}. Esta ventana debe ejecutarse como administrador, en el equipo del servidor."
+
+msgid "{}, {} postes, jusqu'au {}"
+msgstr "{}, {} puestos, hasta el {}"
+
+msgid "Aucune base du serveur dans {} : démarrez le service KadenzServeur une première fois, puis rouvrez cette fenêtre."
+msgstr "No hay base del servidor en {}: inicie el servicio KadenzServeur una primera vez y vuelva a abrir esta ventana."
+
+msgid "{} inscrits sur {} permis par l'abonnement"
+msgstr "{} inscritos de {} permitidos por la suscripción"
+
+msgid "le nom du poste est obligatoire"
+msgstr "el nombre del puesto es obligatorio"

@@ -13,6 +13,7 @@ members = [
     "crates/client",
     "crates/serveur",
     "crates/app",
+    "crates/admin",
 ]
 # Copies de crates tiers modifiées : hors des vérifications de l'espace de travail.
 exclude = ["vendor"]
@@ -37,6 +38,7 @@ kadenz-export = { path = "crates/export" }
 kadenz-maj = { path = "crates/maj" }
 kadenz-protocole = { path = "crates/protocole" }
 kadenz-client = { path = "crates/client" }
+kadenz-serveur = { path = "crates/serveur" }
 rusqlite = { version = "0.41.1", features = ["bundled", "backup"] }
 slint = { version = "1.18.1", features = ["raw-window-handle-06"] }
 slint-build = "1.18.1"

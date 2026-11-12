@@ -1,0 +1,29 @@
+[package]
+name = "kadenz-admin"
+description = "Fenêtre d'administration du serveur Kadenz (phase 2) : état du service, empreinte, premier compte Admin, codes d'inscription des postes."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+build = "build.rs"
+
+[[bin]]
+name = "KadenzAdmin"
+path = "src/main.rs"
+# Le manifeste exige les droits d'administrateur : un exécutable de test ne
+# se lancerait pas. Les textes de la fenêtre sont vérifiés par les tests de
+# l'application (traduction.rs), qui parcourent aussi crates/admin.
+test = false
+
+[dependencies]
+kadenz-domaine.workspace = true
+kadenz-stockage.workspace = true
+kadenz-licence.workspace = true
+kadenz-serveur.workspace = true
+kadenz-protocole.workspace = true
+slint.workspace = true
+chrono.workspace = true
+rusqlite.workspace = true
+
+[build-dependencies]
+slint-build.workspace = true
+winresource.workspace = true

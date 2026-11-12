@@ -3050,3 +3050,129 @@ msgstr "workstation limit reached: {} workstations allowed by the subscription"
 
 msgid "trop d'essais d'inscription : nouvel essai dans {} s"
 msgstr "too many enrolment attempts: try again in {} s"
+
+msgid "La licence d'abonnement est liée à l'entreprise. Transmettez l'identifiant ci-dessous pour la recevoir, puis collez-la ici. Sans licence, le serveur reste en lecture seule et un seul poste peut s'inscrire, pour installer la licence plus tard depuis ce poste."
+msgstr "The subscription licence is tied to the company. Send the identifier below to receive it, then paste it here. Without a licence, the server stays read-only and a single workstation can enrol, to install the licence later from that workstation."
+
+msgid "Identifiant de l'entreprise"
+msgstr "Company identifier"
+
+msgid "Licence : aucune pour l'instant, serveur en lecture seule"
+msgstr "Licence: none for now, server read-only"
+
+msgid "Copié."
+msgstr "Copied."
+
+msgid "Serveur Kadenz"
+msgstr "Kadenz server"
+
+msgid "Cette fenêtre sert au dépannage du serveur. Les comptes, l'abonnement et les autres réglages se gèrent depuis un poste connecté avec un compte Admin."
+msgstr "This window is for troubleshooting the server. Accounts, the subscription and other settings are managed from a workstation signed in with an Admin account."
+
+msgid "Service"
+msgstr "Service"
+
+msgid "Dernière erreur"
+msgstr "Last error"
+
+msgid "Dossier des données"
+msgstr "Data folder"
+
+msgid "Empreinte du certificat"
+msgstr "Certificate fingerprint"
+
+msgid "Un poste qui s'inscrit avec le code complet la vérifie seul. Avec le code court, comparez l'empreinte affichée sur le poste à celle-ci avant de confirmer."
+msgstr "A workstation enrolling with the full code checks it by itself. With the short code, compare the fingerprint shown on the workstation with this one before confirming."
+
+msgid "Codes d'inscription"
+msgstr "Enrolment codes"
+
+msgid "Un code sert une seule fois, pour un poste, pendant 24 heures. Un nouveau code pour le même nom de poste annule le précédent."
+msgstr "A code can be used once, for one workstation, within 24 hours. A new code for the same workstation name cancels the previous one."
+
+msgid "Nom du poste"
+msgstr "Workstation name"
+
+msgid "Créer un code"
+msgstr "Create a code"
+
+msgid "Code du poste « {} », valable jusqu'au {}. Notez-le maintenant : il ne sera plus affiché."
+msgstr "Code for workstation “{}”, valid until {}. Write it down now: it will not be shown again."
+
+msgid "Code court"
+msgstr "Short code"
+
+msgid "Code complet, à coller sur le poste : il contient aussi l'adresse et l'empreinte du serveur."
+msgstr "Full code, to paste on the workstation: it also contains the server address and fingerprint."
+
+msgid "Masquer le code"
+msgstr "Hide the code"
+
+msgid "Codes en cours"
+msgstr "Open codes"
+
+msgid "{} : valable jusqu'au {}"
+msgstr "{}: valid until {}"
+
+msgid "Annuler le code"
+msgstr "Cancel the code"
+
+msgid "Annuler le code du poste « {} » ? Il ne pourra plus servir."
+msgstr "Cancel the code for workstation “{}”? It can no longer be used."
+
+msgid "Postes inscrits"
+msgstr "Enrolled workstations"
+
+msgid "Aucun poste inscrit."
+msgstr "No workstation enrolled."
+
+msgid "Inscrit le {}"
+msgstr "Enrolled on {}"
+
+msgid "Retirer le poste « {} » ? Il ne pourra plus se connecter ; il faudra un nouveau code pour l'inscrire de nouveau."
+msgstr "Remove workstation “{}”? It will no longer be able to connect; a new code will be needed to enrol it again."
+
+msgid "Actualiser"
+msgstr "Refresh"
+
+msgid "Kadenz - Administration du serveur"
+msgstr "Kadenz - Server administration"
+
+msgid "Démarré"
+msgstr "Running"
+
+msgid "Démarrage en cours"
+msgstr "Starting"
+
+msgid "Arrêt en cours"
+msgstr "Stopping"
+
+msgid "Arrêté"
+msgstr "Stopped"
+
+msgid "Service non installé"
+msgstr "Service not installed"
+
+msgid "État inconnu"
+msgstr "Unknown state"
+
+msgid "Code annulé."
+msgstr "Code cancelled."
+
+msgid "Poste retiré."
+msgstr "Workstation removed."
+
+msgid "La base du serveur ne s'ouvre pas : {}. Cette fenêtre doit être lancée en administrateur, sur la machine du serveur."
+msgstr "The server database cannot be opened: {}. This window must be run as administrator, on the server machine."
+
+msgid "{}, {} postes, jusqu'au {}"
+msgstr "{}, {} workstations, until {}"
+
+msgid "Aucune base du serveur dans {} : démarrez le service KadenzServeur une première fois, puis rouvrez cette fenêtre."
+msgstr "No server database in {}: start the KadenzServeur service once, then reopen this window."
+
+msgid "{} inscrits sur {} permis par l'abonnement"
+msgstr "{} enrolled out of {} allowed by the subscription"
+
+msgid "le nom du poste est obligatoire"
+msgstr "the workstation name is required"

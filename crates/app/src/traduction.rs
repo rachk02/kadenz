@@ -240,7 +240,9 @@ mod tests {
     /// a une traduction non vide dans les six langues, avec autant de `{}`.
     #[test]
     fn chaque_texte_a_ses_six_traductions() {
-        let racine = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        // Textes de l'application et de la fenêtre du serveur (crates/admin), qui
+        // partagent les mêmes fichiers .po ; le test tourne dans les deux crates.
+        let racine = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
         let mut textes = Vec::new();
         let mut lire = |dossier: &str, extension: &str, debuts: &[&str]| {
             let fichiers = std::fs::read_dir(racine.join(dossier)).expect("dossier des sources");
@@ -256,12 +258,11 @@ mod tests {
                 }
             }
         };
-        lire("ui", ".slint", &["@tr("]);
-        lire(
-            "src",
-            ".rs",
-            &[" tr(", "(tr(", "[tr(", " trf(", "(trf(", "[trf("],
-        );
+        let debuts_rust = [" tr(", "(tr(", "[tr(", " trf(", "(trf(", "[trf("];
+        for crate_ in ["app", "admin"] {
+            lire(&format!("{crate_}/ui"), ".slint", &["@tr("]);
+            lire(&format!("{crate_}/src"), ".rs", &debuts_rust);
+        }
         assert!(textes.len() > 300, "{} textes seulement", textes.len());
 
         let mut manques = Vec::new();

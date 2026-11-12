@@ -2,6 +2,12 @@
 // L'étape de licence est en tête (jalon J9) : clé facultative. L'import des produits et des
 // tiers se fait depuis les écrans Tiers et Produits ; l'étape d'import facultative
 // de l'assistant reste à ajouter.
+// Mode serveur (phase 2, jalon F4) : le même assistant installe l'entreprise dans la
+// fenêtre d'administration du serveur. La licence d'abonnement y est liée à
+// l'entreprise ; sans elle, le serveur reste en lecture seule avec un seul poste
+// permis, pour l'installer plus tard depuis ce poste (décisions 40 et 41).
+// LicenceApi.poste porte alors l'identifiant de l'entreprise, et la restauration
+// attend le jalon F7.
 
 import { CheckBox } from "std-widgets.slint";
 import { Bouton, Champ, MessageErreur, MotifMarque, Rangee, Section, Theme, Titre } from "composants.slint";
@@ -40,6 +46,9 @@ export component EcranAssistant inherits Rectangle {
     in property <string> defaut-taux-remise;
     in property <string> defaut-taux-retenue;
     in property <string> defaut-modes-paiement;
+
+    // Fenêtre d'administration du serveur (voir l'en-tête).
+    in property <bool> serveur: false;
 
     // Renvoie un message d'erreur, ou une chaîne vide si l'installation a réussi.
     callback terminer(DonneesAssistant) -> string;
@@ -179,13 +188,15 @@ export component EcranAssistant inherits Rectangle {
 
                         Text {
                             horizontal-alignment: Theme.debut;
-                            text: @tr("La licence est liée à ce poste. Transmettez l'identifiant ci-dessous pour recevoir la clé, puis collez-la ici. Sans clé, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La clé peut aussi être saisie plus tard, dans les Paramètres.");
+                            text: root.serveur
+                                ? @tr("La licence d'abonnement est liée à l'entreprise. Transmettez l'identifiant ci-dessous pour la recevoir, puis collez-la ici. Sans licence, le serveur reste en lecture seule et un seul poste peut s'inscrire, pour installer la licence plus tard depuis ce poste.")
+                                : @tr("La licence est liée à ce poste. Transmettez l'identifiant ci-dessous pour recevoir la clé, puis collez-la ici. Sans clé, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La clé peut aussi être saisie plus tard, dans les Paramètres.");
                             color: Theme.texte-secondaire;
                             wrap: word-wrap;
                         }
 
                         Section {
-                            text: @tr("Identifiant du poste");
+                            text: root.serveur ? @tr("Identifiant de l'entreprise") : @tr("Identifiant du poste");
                         }
 
                         IdentifiantPoste { }
@@ -195,18 +206,19 @@ export component EcranAssistant inherits Rectangle {
                         }
 
                         // Réinstallation : reprendre une sauvegarde au lieu de tout ressaisir.
-                        Section {
+                        // Sur le serveur, la restauration vient avec le jalon F7.
+                        if !root.serveur: Section {
                             text: @tr("Données d'une installation précédente");
                         }
 
-                        Text {
+                        if !root.serveur: Text {
                             horizontal-alignment: Theme.debut;
                             text: @tr("Vous avez une sauvegarde de Kadenz ? Restaurez-la pour retrouver l'entreprise, les comptes et les documents, sans passer par les étapes suivantes.");
                             color: Theme.texte-secondaire;
                             wrap: word-wrap;
                         }
 
-                        RestaurationFichier {
+                        if !root.serveur: RestaurationFichier {
                             bouton-principal: false;
                             question: @tr("Restaurer cette sauvegarde ? L'installation neuve est remplacée par les données de la sauvegarde.");
                             choisir-fichier => {
@@ -374,7 +386,9 @@ export component EcranAssistant inherits Rectangle {
 
                         Text {
                             horizontal-alignment: Theme.debut;
-                            text: root.resume-licence == "" ? @tr("Licence : aucune clé, socle seul") : @tr("Licence : {}", root.resume-licence);
+                            text: root.resume-licence != "" ? @tr("Licence : {}", root.resume-licence)
+                                : root.serveur ? @tr("Licence : aucune pour l'instant, serveur en lecture seule")
+                                : @tr("Licence : aucune clé, socle seul");
                             color: Theme.texte;
                             wrap: word-wrap;
                         }

@@ -3050,3 +3050,129 @@ msgstr "تم بلوغ عدد المحطات: يسمح الاشتراك بـ {} �
 
 msgid "trop d'essais d'inscription : nouvel essai dans {} s"
 msgstr "محاولات تسجيل كثيرة جدًا: أعد المحاولة بعد {} ث"
+
+msgid "La licence d'abonnement est liée à l'entreprise. Transmettez l'identifiant ci-dessous pour la recevoir, puis collez-la ici. Sans licence, le serveur reste en lecture seule et un seul poste peut s'inscrire, pour installer la licence plus tard depuis ce poste."
+msgstr "ترخيص الاشتراك مرتبط بالمؤسسة. أرسل المعرّف أدناه لتتلقاه، ثم الصقه هنا. بدون ترخيص، يبقى الخادم في وضع القراءة فقط ولا يمكن تسجيل سوى محطة واحدة، لتثبيت الترخيص لاحقًا منها."
+
+msgid "Identifiant de l'entreprise"
+msgstr "معرّف المؤسسة"
+
+msgid "Licence : aucune pour l'instant, serveur en lecture seule"
+msgstr "الترخيص: لا يوجد حاليًا، الخادم في وضع القراءة فقط"
+
+msgid "Copié."
+msgstr "تم النسخ."
+
+msgid "Serveur Kadenz"
+msgstr "خادم Kadenz"
+
+msgid "Cette fenêtre sert au dépannage du serveur. Les comptes, l'abonnement et les autres réglages se gèrent depuis un poste connecté avec un compte Admin."
+msgstr "تُستخدم هذه النافذة لاستكشاف أعطال الخادم. تُدار الحسابات والاشتراك والإعدادات الأخرى من محطة متصلة بحساب Admin."
+
+msgid "Service"
+msgstr "الخدمة"
+
+msgid "Dernière erreur"
+msgstr "آخر خطأ"
+
+msgid "Dossier des données"
+msgstr "مجلد البيانات"
+
+msgid "Empreinte du certificat"
+msgstr "بصمة الشهادة"
+
+msgid "Un poste qui s'inscrit avec le code complet la vérifie seul. Avec le code court, comparez l'empreinte affichée sur le poste à celle-ci avant de confirmer."
+msgstr "المحطة التي تسجّل بالرمز الكامل تتحقق منها بنفسها. مع الرمز القصير، قارن البصمة المعروضة على المحطة بهذه قبل التأكيد."
+
+msgid "Codes d'inscription"
+msgstr "رموز التسجيل"
+
+msgid "Un code sert une seule fois, pour un poste, pendant 24 heures. Un nouveau code pour le même nom de poste annule le précédent."
+msgstr "يُستخدم الرمز مرة واحدة فقط، لمحطة واحدة، خلال 24 ساعة. الرمز الجديد لاسم المحطة نفسه يلغي الرمز السابق."
+
+msgid "Nom du poste"
+msgstr "اسم المحطة"
+
+msgid "Créer un code"
+msgstr "إنشاء رمز"
+
+msgid "Code du poste « {} », valable jusqu'au {}. Notez-le maintenant : il ne sera plus affiché."
+msgstr "رمز المحطة «{}»، صالح حتى {}. دوّنه الآن: لن يُعرض مرة أخرى."
+
+msgid "Code court"
+msgstr "الرمز القصير"
+
+msgid "Code complet, à coller sur le poste : il contient aussi l'adresse et l'empreinte du serveur."
+msgstr "الرمز الكامل، للصقه على المحطة: يتضمن أيضًا عنوان الخادم وبصمته."
+
+msgid "Masquer le code"
+msgstr "إخفاء الرمز"
+
+msgid "Codes en cours"
+msgstr "الرموز السارية"
+
+msgid "{} : valable jusqu'au {}"
+msgstr "{}: صالح حتى {}"
+
+msgid "Annuler le code"
+msgstr "إلغاء الرمز"
+
+msgid "Annuler le code du poste « {} » ? Il ne pourra plus servir."
+msgstr "إلغاء رمز المحطة «{}»؟ لن يعود صالحًا للاستخدام."
+
+msgid "Postes inscrits"
+msgstr "المحطات المسجلة"
+
+msgid "Aucun poste inscrit."
+msgstr "لا توجد محطة مسجلة."
+
+msgid "Inscrit le {}"
+msgstr "سُجّل في {}"
+
+msgid "Retirer le poste « {} » ? Il ne pourra plus se connecter ; il faudra un nouveau code pour l'inscrire de nouveau."
+msgstr "إزالة المحطة «{}»؟ لن تتمكن من الاتصال بعد الآن؛ وسيلزم رمز جديد لتسجيلها مرة أخرى."
+
+msgid "Actualiser"
+msgstr "تحديث"
+
+msgid "Kadenz - Administration du serveur"
+msgstr "Kadenz - إدارة الخادم"
+
+msgid "Démarré"
+msgstr "قيد التشغيل"
+
+msgid "Démarrage en cours"
+msgstr "جارٍ التشغيل"
+
+msgid "Arrêt en cours"
+msgstr "جارٍ الإيقاف"
+
+msgid "Arrêté"
+msgstr "متوقف"
+
+msgid "Service non installé"
+msgstr "الخدمة غير مثبتة"
+
+msgid "État inconnu"
+msgstr "حالة غير معروفة"
+
+msgid "Code annulé."
+msgstr "تم إلغاء الرمز."
+
+msgid "Poste retiré."
+msgstr "تمت إزالة المحطة."
+
+msgid "La base du serveur ne s'ouvre pas : {}. Cette fenêtre doit être lancée en administrateur, sur la machine du serveur."
+msgstr "تعذّر فتح قاعدة بيانات الخادم: {}. يجب تشغيل هذه النافذة بصلاحيات المسؤول، على جهاز الخادم."
+
+msgid "{}, {} postes, jusqu'au {}"
+msgstr "{}، {} محطات، حتى {}"
+
+msgid "Aucune base du serveur dans {} : démarrez le service KadenzServeur une première fois, puis rouvrez cette fenêtre."
+msgstr "لا توجد قاعدة بيانات للخادم في {}: شغّل خدمة KadenzServeur مرة أولى، ثم أعد فتح هذه النافذة."
+
+msgid "{} inscrits sur {} permis par l'abonnement"
+msgstr "{} مسجلة من أصل {} يسمح بها الاشتراك"
+
+msgid "le nom du poste est obligatoire"
+msgstr "اسم المحطة إلزامي"

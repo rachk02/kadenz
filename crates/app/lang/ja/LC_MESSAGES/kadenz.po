@@ -3050,3 +3050,129 @@ msgstr "端末数の上限に達しました：サブスクリプションで許
 
 msgid "trop d'essais d'inscription : nouvel essai dans {} s"
 msgstr "登録の試行回数が多すぎます：{} 秒後に再試行してください"
+
+msgid "La licence d'abonnement est liée à l'entreprise. Transmettez l'identifiant ci-dessous pour la recevoir, puis collez-la ici. Sans licence, le serveur reste en lecture seule et un seul poste peut s'inscrire, pour installer la licence plus tard depuis ce poste."
+msgstr "サブスクリプションのライセンスは企業に紐づきます。下の識別子を送ってライセンスを受け取り、ここに貼り付けてください。ライセンスがない場合、サーバーは閲覧専用のままで、後でその端末からライセンスを導入するために登録できる端末は 1 台だけです。"
+
+msgid "Identifiant de l'entreprise"
+msgstr "企業の識別子"
+
+msgid "Licence : aucune pour l'instant, serveur en lecture seule"
+msgstr "ライセンス：現在なし、サーバーは閲覧専用"
+
+msgid "Copié."
+msgstr "コピーしました。"
+
+msgid "Serveur Kadenz"
+msgstr "Kadenz サーバー"
+
+msgid "Cette fenêtre sert au dépannage du serveur. Les comptes, l'abonnement et les autres réglages se gèrent depuis un poste connecté avec un compte Admin."
+msgstr "このウィンドウはサーバーのトラブル対応用です。アカウント、サブスクリプション、その他の設定は Admin アカウントで接続した端末から管理します。"
+
+msgid "Service"
+msgstr "サービス"
+
+msgid "Dernière erreur"
+msgstr "最後のエラー"
+
+msgid "Dossier des données"
+msgstr "データフォルダー"
+
+msgid "Empreinte du certificat"
+msgstr "証明書のフィンガープリント"
+
+msgid "Un poste qui s'inscrit avec le code complet la vérifie seul. Avec le code court, comparez l'empreinte affichée sur le poste à celle-ci avant de confirmer."
+msgstr "完全なコードで登録する端末は自動で確認します。短いコードの場合は、確定する前に端末に表示されたフィンガープリントとこれを比較してください。"
+
+msgid "Codes d'inscription"
+msgstr "登録コード"
+
+msgid "Un code sert une seule fois, pour un poste, pendant 24 heures. Un nouveau code pour le même nom de poste annule le précédent."
+msgstr "コードは 24 時間以内に 1 台の端末で 1 回だけ使えます。同じ端末名で新しいコードを作ると、前のコードは取り消されます。"
+
+msgid "Nom du poste"
+msgstr "端末名"
+
+msgid "Créer un code"
+msgstr "コードを作成"
+
+msgid "Code du poste « {} », valable jusqu'au {}. Notez-le maintenant : il ne sera plus affiché."
+msgstr "端末「{}」のコード、{} まで有効です。今すぐ控えてください：再表示されません。"
+
+msgid "Code court"
+msgstr "短いコード"
+
+msgid "Code complet, à coller sur le poste : il contient aussi l'adresse et l'empreinte du serveur."
+msgstr "端末に貼り付ける完全なコード：サーバーのアドレスとフィンガープリントも含まれます。"
+
+msgid "Masquer le code"
+msgstr "コードを隠す"
+
+msgid "Codes en cours"
+msgstr "有効なコード"
+
+msgid "{} : valable jusqu'au {}"
+msgstr "{}：{} まで有効"
+
+msgid "Annuler le code"
+msgstr "コードを取り消す"
+
+msgid "Annuler le code du poste « {} » ? Il ne pourra plus servir."
+msgstr "端末「{}」のコードを取り消しますか？以後は使えなくなります。"
+
+msgid "Postes inscrits"
+msgstr "登録済みの端末"
+
+msgid "Aucun poste inscrit."
+msgstr "登録済みの端末はありません。"
+
+msgid "Inscrit le {}"
+msgstr "{} に登録"
+
+msgid "Retirer le poste « {} » ? Il ne pourra plus se connecter ; il faudra un nouveau code pour l'inscrire de nouveau."
+msgstr "端末「{}」を削除しますか？接続できなくなり、再登録には新しいコードが必要です。"
+
+msgid "Actualiser"
+msgstr "更新"
+
+msgid "Kadenz - Administration du serveur"
+msgstr "Kadenz - サーバー管理"
+
+msgid "Démarré"
+msgstr "実行中"
+
+msgid "Démarrage en cours"
+msgstr "起動中"
+
+msgid "Arrêt en cours"
+msgstr "停止中"
+
+msgid "Arrêté"
+msgstr "停止"
+
+msgid "Service non installé"
+msgstr "サービスが未インストールです"
+
+msgid "État inconnu"
+msgstr "不明な状態"
+
+msgid "Code annulé."
+msgstr "コードを取り消しました。"
+
+msgid "Poste retiré."
+msgstr "端末を削除しました。"
+
+msgid "La base du serveur ne s'ouvre pas : {}. Cette fenêtre doit être lancée en administrateur, sur la machine du serveur."
+msgstr "サーバーのデータベースを開けません：{}。このウィンドウはサーバーのマシンで管理者として実行する必要があります。"
+
+msgid "{}, {} postes, jusqu'au {}"
+msgstr "{}、端末 {} 台、{} まで"
+
+msgid "Aucune base du serveur dans {} : démarrez le service KadenzServeur une première fois, puis rouvrez cette fenêtre."
+msgstr "{} にサーバーのデータベースがありません：KadenzServeur サービスを一度起動してから、このウィンドウを開き直してください。"
+
+msgid "{} inscrits sur {} permis par l'abonnement"
+msgstr "{} 台登録済み（サブスクリプションで許可されているのは {} 台）"
+
+msgid "le nom du poste est obligatoire"
+msgstr "端末名は必須です"

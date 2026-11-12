@@ -3050,3 +3050,129 @@ msgstr "已达到工作站数量上限：订阅允许 {} 个工作站"
 
 msgid "trop d'essais d'inscription : nouvel essai dans {} s"
 msgstr "注册尝试次数过多：请在 {} 秒后重试"
+
+msgid "La licence d'abonnement est liée à l'entreprise. Transmettez l'identifiant ci-dessous pour la recevoir, puis collez-la ici. Sans licence, le serveur reste en lecture seule et un seul poste peut s'inscrire, pour installer la licence plus tard depuis ce poste."
+msgstr "订阅许可证与企业绑定。请发送下面的标识以获取许可证，然后粘贴到此处。没有许可证时，服务器保持只读，只能注册一个工作站，以便稍后从该工作站安装许可证。"
+
+msgid "Identifiant de l'entreprise"
+msgstr "企业标识"
+
+msgid "Licence : aucune pour l'instant, serveur en lecture seule"
+msgstr "许可证：暂无，服务器只读"
+
+msgid "Copié."
+msgstr "已复制。"
+
+msgid "Serveur Kadenz"
+msgstr "Kadenz 服务器"
+
+msgid "Cette fenêtre sert au dépannage du serveur. Les comptes, l'abonnement et les autres réglages se gèrent depuis un poste connecté avec un compte Admin."
+msgstr "此窗口用于服务器故障排除。账户、订阅和其他设置在以 Admin 账户登录的工作站上管理。"
+
+msgid "Service"
+msgstr "服务"
+
+msgid "Dernière erreur"
+msgstr "最近的错误"
+
+msgid "Dossier des données"
+msgstr "数据文件夹"
+
+msgid "Empreinte du certificat"
+msgstr "证书指纹"
+
+msgid "Un poste qui s'inscrit avec le code complet la vérifie seul. Avec le code court, comparez l'empreinte affichée sur le poste à celle-ci avant de confirmer."
+msgstr "使用完整代码注册的工作站会自行验证。使用短代码时，请在确认前将工作站上显示的指纹与此处的指纹进行比较。"
+
+msgid "Codes d'inscription"
+msgstr "注册码"
+
+msgid "Un code sert une seule fois, pour un poste, pendant 24 heures. Un nouveau code pour le même nom de poste annule le précédent."
+msgstr "一个代码只能在 24 小时内为一个工作站使用一次。为同一工作站名称创建新代码会取消之前的代码。"
+
+msgid "Nom du poste"
+msgstr "工作站名称"
+
+msgid "Créer un code"
+msgstr "创建代码"
+
+msgid "Code du poste « {} », valable jusqu'au {}. Notez-le maintenant : il ne sera plus affiché."
+msgstr "工作站“{}”的代码，有效期至 {}。请立即记下：它不会再次显示。"
+
+msgid "Code court"
+msgstr "短代码"
+
+msgid "Code complet, à coller sur le poste : il contient aussi l'adresse et l'empreinte du serveur."
+msgstr "完整代码，粘贴到工作站：其中还包含服务器的地址和指纹。"
+
+msgid "Masquer le code"
+msgstr "隐藏代码"
+
+msgid "Codes en cours"
+msgstr "有效代码"
+
+msgid "{} : valable jusqu'au {}"
+msgstr "{}：有效期至 {}"
+
+msgid "Annuler le code"
+msgstr "取消代码"
+
+msgid "Annuler le code du poste « {} » ? Il ne pourra plus servir."
+msgstr "取消工作站“{}”的代码？之后将无法再使用。"
+
+msgid "Postes inscrits"
+msgstr "已注册的工作站"
+
+msgid "Aucun poste inscrit."
+msgstr "没有已注册的工作站。"
+
+msgid "Inscrit le {}"
+msgstr "注册于 {}"
+
+msgid "Retirer le poste « {} » ? Il ne pourra plus se connecter ; il faudra un nouveau code pour l'inscrire de nouveau."
+msgstr "移除工作站“{}”？它将无法再连接；需要新代码才能重新注册。"
+
+msgid "Actualiser"
+msgstr "刷新"
+
+msgid "Kadenz - Administration du serveur"
+msgstr "Kadenz - 服务器管理"
+
+msgid "Démarré"
+msgstr "运行中"
+
+msgid "Démarrage en cours"
+msgstr "正在启动"
+
+msgid "Arrêt en cours"
+msgstr "正在停止"
+
+msgid "Arrêté"
+msgstr "已停止"
+
+msgid "Service non installé"
+msgstr "服务未安装"
+
+msgid "État inconnu"
+msgstr "未知状态"
+
+msgid "Code annulé."
+msgstr "代码已取消。"
+
+msgid "Poste retiré."
+msgstr "工作站已移除。"
+
+msgid "La base du serveur ne s'ouvre pas : {}. Cette fenêtre doit être lancée en administrateur, sur la machine du serveur."
+msgstr "无法打开服务器数据库：{}。此窗口必须在服务器计算机上以管理员身份运行。"
+
+msgid "{}, {} postes, jusqu'au {}"
+msgstr "{}，{} 个工作站，至 {}"
+
+msgid "Aucune base du serveur dans {} : démarrez le service KadenzServeur une première fois, puis rouvrez cette fenêtre."
+msgstr "{} 中没有服务器数据库：请先启动一次 KadenzServeur 服务，然后重新打开此窗口。"
+
+msgid "{} inscrits sur {} permis par l'abonnement"
+msgstr "已注册 {} 个，订阅允许 {} 个"
+
+msgid "le nom du poste est obligatoire"
+msgstr "工作站名称为必填项"

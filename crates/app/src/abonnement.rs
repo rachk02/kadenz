@@ -405,6 +405,8 @@ mod tests {
     fn textes_traduits() {
         let mut textes = vec![SUITE_LECTURE_SEULE];
         textes.extend_from_slice(kadenz_licence::entreprise::MODELES_ERREUR);
+        textes.extend_from_slice(kadenz_stockage::inscription::MODELES_ERREUR);
+        textes.push("le nom du poste est obligatoire");
         let manquants = crate::traduction::sans_traduction(&textes);
         assert!(manquants.is_empty(), "sans traduction : {manquants:?}");
     }

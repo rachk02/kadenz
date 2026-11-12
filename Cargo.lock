@@ -3055,6 +3055,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "kadenz-admin"
+version = "0.2.2"
+dependencies = [
+ "chrono",
+ "kadenz-domaine",
+ "kadenz-licence",
+ "kadenz-protocole",
+ "kadenz-serveur",
+ "kadenz-stockage",
+ "rusqlite",
+ "slint",
+ "slint-build",
+ "winresource",
+]
+
+[[package]]
 name = "kadenz-client"
 version = "0.2.2"
 dependencies = [
