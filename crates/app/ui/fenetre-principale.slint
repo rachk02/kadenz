@@ -13,12 +13,13 @@ import { PageReglements, PageRelances, PageSuiviFournisseurs, PaiementsApi, Tota
 import { PageTableauDeBord, PilotageApi } from "pilotage.slint";
 import { ImpressionApi } from "impression.slint";
 import { LicenceApi } from "licence.slint";
+import { AbonnementApi, BandeauAbonnement } from "abonnement.slint";
 import { InviteMiseAJour, MiseAJourApi } from "maj.slint";
 import { BandeauHaut, BoutonIcone, ContenuBarre, Infobulle, InfobulleFenetre, Menu, Page, PanneauFlottant } from "navigation.slint";
 import { PageReglages, ReglagesApi, Rubrique } from "reglages.slint";
 import { EcranDemarrageImpossible, SauvegardesApi } from "sauvegardes.slint";
 
-export { Affichage, DonneesAssistant, Droits, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, TiersApi, UtilisateursApi }
+export { AbonnementApi, Affichage, DonneesAssistant, Droits, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, presentation, assistant, connexion, application }
@@ -152,6 +153,21 @@ export component FenetrePrincipale inherits Window {
                 page: root.page;
                 choisi(p) => {
                     root.choisir(p);
+                }
+            }
+
+            // Abonnement (F3) : avertissement avant l'échéance, ou lecture seule. Hors de
+            // la Rangee : un texte qui passe à la ligne dans un Flexbox boucle.
+            if AbonnementApi.bandeau != "": VerticalLayout {
+                padding-left: 16px;
+                padding-right: 16px;
+                padding-top: 10px;
+
+                BandeauAbonnement {
+                    ouvrir => {
+                        root.choisir(Page.parametres);
+                        ReglagesApi.rubrique = Rubrique.abonnement;
+                    }
                 }
             }
 

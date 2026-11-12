@@ -1,6 +1,7 @@
 // En version optimisée, pas de console Windows derrière la fenêtre.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod abonnement;
 mod administration;
 mod excel;
 mod factures;
@@ -219,8 +220,15 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     if possede(Droit::SauvegarderBase) {
         rubriques.push(Rubrique::Sauvegardes);
     }
+    // Poste relié (phase 2) : la rubrique « Abonnement » remplace « Licence ».
+    let relie = abonnement::afficher(fenetre, &etat.conn, etat.utilisateur.is_some(), gere);
     if gere {
-        rubriques.extend([Rubrique::Licence, Rubrique::MisesAJour]);
+        rubriques.push(if relie {
+            Rubrique::Abonnement
+        } else {
+            Rubrique::Licence
+        });
+        rubriques.push(Rubrique::MisesAJour);
     }
     rubriques.push(Rubrique::APropos);
     let r = fenetre.global::<ReglagesApi>();

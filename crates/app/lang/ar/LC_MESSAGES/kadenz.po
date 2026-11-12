@@ -2939,3 +2939,99 @@ msgstr "ترخيص اشتراك صادر لمؤسسة أخرى ({})"
 
 msgid "abonnement échu : Kadenz est en lecture seule"
 msgstr "انتهى الاشتراك: Kadenz في وضع القراءة فقط"
+
+msgid "Abonnement"
+msgstr "الاشتراك"
+
+msgid "Échu : lecture seule"
+msgstr "منتهٍ: قراءة فقط"
+
+msgid "Aucun abonnement : lecture seule"
+msgstr "لا يوجد اشتراك: قراءة فقط"
+
+msgid "Licence refusée : lecture seule"
+msgstr "الترخيص مرفوض: قراءة فقط"
+
+msgid "Raison"
+msgstr "السبب"
+
+msgid "Formule"
+msgstr "الصيغة"
+
+msgid "Mensuelle"
+msgstr "شهرية"
+
+msgid "Annuelle"
+msgstr "سنوية"
+
+msgid "Période"
+msgstr "الفترة"
+
+msgid "du {} au {}"
+msgstr "من {} إلى {}"
+
+msgid "Jours restants"
+msgstr "الأيام المتبقية"
+
+msgid "Postes"
+msgstr "محطات العمل"
+
+msgid "{} utilisés sur {}"
+msgstr "{} مستخدمة من أصل {}"
+
+msgid "{} inscrits"
+msgstr "{} مسجلة"
+
+msgid "socle seul"
+msgstr "الأساس فقط"
+
+msgid "Émetteur"
+msgstr "الجهة المصدرة"
+
+msgid "Revendeur : {}"
+msgstr "الموزع: {}"
+
+msgid "Date du serveur"
+msgstr "تاريخ الخادم"
+
+msgid "État reçu le"
+msgstr "تاريخ استلام الحالة"
+
+msgid "Abonnement échu le {} : Kadenz est en lecture seule."
+msgstr "انتهى الاشتراك في {}: Kadenz في وضع القراءة فقط."
+
+msgid "Aucun abonnement enregistré sur le serveur : Kadenz est en lecture seule."
+msgstr "لا يوجد اشتراك مسجل على الخادم: Kadenz في وضع القراءة فقط."
+
+msgid "Licence d'abonnement refusée par le serveur : Kadenz est en lecture seule."
+msgstr "رفض الخادم ترخيص الاشتراك: Kadenz في وضع القراءة فقط."
+
+msgid "Consultation, recherche, impression et exports restent possibles."
+msgstr "يظل الاطلاع والبحث والطباعة والتصدير متاحًا."
+
+msgid "L'abonnement prend fin aujourd'hui, le {} : Kadenz passera en lecture seule dès demain."
+msgstr "ينتهي الاشتراك اليوم، {}: سينتقل Kadenz إلى وضع القراءة فقط ابتداءً من الغد."
+
+msgid "L'abonnement prend fin demain, le {} : Kadenz passera ensuite en lecture seule."
+msgstr "ينتهي الاشتراك غدًا، {}: سينتقل Kadenz بعدها إلى وضع القراءة فقط."
+
+msgid "L'abonnement prend fin le {} (dans {} jours) : Kadenz passera ensuite en lecture seule."
+msgstr "ينتهي الاشتراك في {} (بعد {} يومًا): سينتقل Kadenz بعدها إلى وضع القراءة فقط."
+
+msgid "Pour renouveler : Paramètres, rubrique « Abonnement »."
+msgstr "للتجديد: الإعدادات، قسم «الاشتراك»."
+
+msgid "Adressez-vous à l'administrateur pour renouveler l'abonnement."
+msgstr "تواصل مع المسؤول لتجديد الاشتراك."
+
+msgid "Voir l'abonnement"
+msgstr "عرض الاشتراك"
+
+msgid "Renouvellement"
+msgstr "التجديد"
+
+msgid "L'abonnement couvre l'entreprise et ses postes. Le serveur juge de l'échéance avec sa propre date ; ce poste affiche le dernier état reçu. Après l'échéance, Kadenz passe en lecture seule : consultation, recherche, impression et exports restent possibles, la saisie et la validation sont bloquées."
+msgstr "يغطي الاشتراك المؤسسة ومحطات عملها. يحكم الخادم على تاريخ الانتهاء بتاريخه الخاص؛ وتعرض هذه المحطة آخر حالة مستلمة. بعد تاريخ الانتهاء، ينتقل Kadenz إلى وضع القراءة فقط: يظل الاطلاع والبحث والطباعة والتصدير متاحًا، ويُمنع الإدخال والاعتماد."
+
+msgid "La nouvelle licence s'enregistre sur le serveur ; ce poste reçoit le nouvel état à la connexion suivante."
+msgstr "يُسجَّل الترخيص الجديد على الخادم؛ وتتلقى هذه المحطة الحالة الجديدة عند الاتصال التالي."

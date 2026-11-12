@@ -2939,3 +2939,99 @@ msgstr "为其他企业签发的订阅许可证（{}）"
 
 msgid "abonnement échu : Kadenz est en lecture seule"
 msgstr "订阅已到期：Kadenz 处于只读模式"
+
+msgid "Abonnement"
+msgstr "订阅"
+
+msgid "Échu : lecture seule"
+msgstr "已到期：只读"
+
+msgid "Aucun abonnement : lecture seule"
+msgstr "无订阅：只读"
+
+msgid "Licence refusée : lecture seule"
+msgstr "许可证被拒绝：只读"
+
+msgid "Raison"
+msgstr "原因"
+
+msgid "Formule"
+msgstr "方案"
+
+msgid "Mensuelle"
+msgstr "按月"
+
+msgid "Annuelle"
+msgstr "按年"
+
+msgid "Période"
+msgstr "期间"
+
+msgid "du {} au {}"
+msgstr "{}至{}"
+
+msgid "Jours restants"
+msgstr "剩余天数"
+
+msgid "Postes"
+msgstr "工作站"
+
+msgid "{} utilisés sur {}"
+msgstr "已使用 {} 个，共 {} 个"
+
+msgid "{} inscrits"
+msgstr "已注册 {} 个"
+
+msgid "socle seul"
+msgstr "仅基础功能"
+
+msgid "Émetteur"
+msgstr "签发方"
+
+msgid "Revendeur : {}"
+msgstr "经销商：{}"
+
+msgid "Date du serveur"
+msgstr "服务器日期"
+
+msgid "État reçu le"
+msgstr "状态接收时间"
+
+msgid "Abonnement échu le {} : Kadenz est en lecture seule."
+msgstr "订阅已于 {} 到期：Kadenz 处于只读模式。"
+
+msgid "Aucun abonnement enregistré sur le serveur : Kadenz est en lecture seule."
+msgstr "服务器上没有登记订阅：Kadenz 处于只读模式。"
+
+msgid "Licence d'abonnement refusée par le serveur : Kadenz est en lecture seule."
+msgstr "服务器拒绝了订阅许可证：Kadenz 处于只读模式。"
+
+msgid "Consultation, recherche, impression et exports restent possibles."
+msgstr "查看、搜索、打印和导出仍然可用。"
+
+msgid "L'abonnement prend fin aujourd'hui, le {} : Kadenz passera en lecture seule dès demain."
+msgstr "订阅今天（{}）到期：Kadenz 将从明天起变为只读。"
+
+msgid "L'abonnement prend fin demain, le {} : Kadenz passera ensuite en lecture seule."
+msgstr "订阅明天（{}）到期：之后 Kadenz 将变为只读。"
+
+msgid "L'abonnement prend fin le {} (dans {} jours) : Kadenz passera ensuite en lecture seule."
+msgstr "订阅将于 {} 到期（还剩 {} 天）：之后 Kadenz 将变为只读。"
+
+msgid "Pour renouveler : Paramètres, rubrique « Abonnement »."
+msgstr "续订：设置中的“订阅”栏目。"
+
+msgid "Adressez-vous à l'administrateur pour renouveler l'abonnement."
+msgstr "请联系管理员续订。"
+
+msgid "Voir l'abonnement"
+msgstr "查看订阅"
+
+msgid "Renouvellement"
+msgstr "续订"
+
+msgid "L'abonnement couvre l'entreprise et ses postes. Le serveur juge de l'échéance avec sa propre date ; ce poste affiche le dernier état reçu. Après l'échéance, Kadenz passe en lecture seule : consultation, recherche, impression et exports restent possibles, la saisie et la validation sont bloquées."
+msgstr "订阅涵盖企业及其工作站。服务器根据自己的日期判断到期；本工作站显示最后收到的状态。到期后，Kadenz 变为只读：查看、搜索、打印和导出仍然可用，录入和确认将被禁止。"
+
+msgid "La nouvelle licence s'enregistre sur le serveur ; ce poste reçoit le nouvel état à la connexion suivante."
+msgstr "新许可证在服务器上登记；本工作站在下次连接时接收新状态。"

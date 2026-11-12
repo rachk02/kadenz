@@ -1,0 +1,153 @@
+// Abonnement de l'entreprise sur un poste relié (phase 2, jalon F3 ; écrans,
+// section 7) : rubrique « Abonnement » des Paramètres, qui remplace « Licence »,
+// et bandeau en haut des pages, avant l'échéance (avertissement) ou pendant la
+// lecture seule (permanent). Le serveur juge de l'état ; le poste montre le
+// dernier état reçu. Textes construits et traduits par l'application.
+import { ScrollView } from "std-widgets.slint";
+import { Bouton, Section, Theme, Titre } from "composants.slint";
+
+export struct LigneAbonnementUi {
+    libelle: string,
+    valeur: string,
+}
+
+export global AbonnementApi {
+    // Vrai sur un poste relié qui a reçu l'état de l'abonnement.
+    in property <bool> disponible;
+    in property <bool> lecture-seule;
+    in property <[LigneAbonnementUi]> lignes;
+    // Bandeau : vide, pas de bandeau pour ce compte.
+    in property <string> bandeau;
+    // Vrai : lecture seule (rouge) ; faux : avertissement avant l'échéance.
+    in property <bool> bandeau-grave;
+    in property <string> bandeau-aide;
+    // Le compte gère les paramètres : le bandeau ouvre la rubrique.
+    in property <bool> peut-ouvrir;
+}
+
+// Bandeau en haut des pages, à bordure égale sur ses quatre côtés.
+export component BandeauAbonnement inherits Rectangle {
+    callback ouvrir();
+    background: AbonnementApi.bandeau-grave ? #fef3f2 : #fff8eb;
+    border-width: 1px;
+    border-color: AbonnementApi.bandeau-grave ? Theme.erreur : Theme.ambre;
+    border-radius: 4px;
+
+    // HorizontalLayout et non Rangee : un texte qui passe à la ligne dans une
+    // Rangee (Flexbox) crée une boucle de mise en page. Le bouton suit le sens
+    // de lecture : en fin de ligne, à gauche de droite à gauche.
+    HorizontalLayout {
+        padding-left: 14px;
+        padding-right: 14px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        spacing: 12px;
+
+        if AbonnementApi.peut-ouvrir && Theme.rtl: VerticalLayout {
+            alignment: center;
+
+            Bouton {
+                text: @tr("Voir l'abonnement");
+                clicked => {
+                    root.ouvrir();
+                }
+            }
+        }
+
+        VerticalLayout {
+            horizontal-stretch: 1;
+            alignment: center;
+            spacing: 2px;
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: AbonnementApi.bandeau;
+                color: AbonnementApi.bandeau-grave ? Theme.erreur : Theme.texte;
+                font-weight: 600;
+                wrap: word-wrap;
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: AbonnementApi.bandeau-aide;
+                color: Theme.texte-secondaire;
+                font-size: 12px;
+                wrap: word-wrap;
+            }
+        }
+
+        if AbonnementApi.peut-ouvrir && !Theme.rtl: VerticalLayout {
+            alignment: center;
+
+            Bouton {
+                text: @tr("Voir l'abonnement");
+                clicked => {
+                    root.ouvrir();
+                }
+            }
+        }
+    }
+}
+
+component LigneAbonnement inherits GridLayout {
+    in property <string> libelle;
+    in property <string> valeur;
+    spacing: 16px;
+
+    Text {
+        row: 0;
+        col: Theme.rtl ? 1 : 0;
+        width: 160px;
+        horizontal-alignment: Theme.debut;
+        text: root.libelle;
+        color: Theme.texte-secondaire;
+    }
+
+    Text {
+        row: 0;
+        col: Theme.rtl ? 0 : 1;
+        horizontal-alignment: Theme.debut;
+        text: root.valeur;
+        color: Theme.texte;
+        wrap: word-wrap;
+    }
+}
+
+export component PageAbonnement inherits ScrollView {
+    VerticalLayout {
+        padding: 24px;
+        spacing: 12px;
+        alignment: start;
+
+        Titre {
+            text: @tr("Abonnement");
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("L'abonnement couvre l'entreprise et ses postes. Le serveur juge de l'échéance avec sa propre date ; ce poste affiche le dernier état reçu. Après l'échéance, Kadenz passe en lecture seule : consultation, recherche, impression et exports restent possibles, la saisie et la validation sont bloquées.");
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        Section {
+            text: @tr("État");
+        }
+
+        for ligne in AbonnementApi.lignes: LigneAbonnement {
+            libelle: ligne.libelle;
+            valeur: ligne.valeur;
+        }
+
+        Section {
+            text: @tr("Renouvellement");
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("La nouvelle licence s'enregistre sur le serveur ; ce poste reçoit le nouvel état à la connexion suivante.");
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+    }
+}

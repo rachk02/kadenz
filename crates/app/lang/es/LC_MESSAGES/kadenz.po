@@ -2939,3 +2939,99 @@ msgstr "licencia de suscripción emitida para otra empresa ({})"
 
 msgid "abonnement échu : Kadenz est en lecture seule"
 msgstr "suscripción vencida: Kadenz está en modo de solo lectura"
+
+msgid "Abonnement"
+msgstr "Suscripción"
+
+msgid "Échu : lecture seule"
+msgstr "Vencida: solo lectura"
+
+msgid "Aucun abonnement : lecture seule"
+msgstr "Sin suscripción: solo lectura"
+
+msgid "Licence refusée : lecture seule"
+msgstr "Licencia rechazada: solo lectura"
+
+msgid "Raison"
+msgstr "Motivo"
+
+msgid "Formule"
+msgstr "Fórmula"
+
+msgid "Mensuelle"
+msgstr "Mensual"
+
+msgid "Annuelle"
+msgstr "Anual"
+
+msgid "Période"
+msgstr "Periodo"
+
+msgid "du {} au {}"
+msgstr "del {} al {}"
+
+msgid "Jours restants"
+msgstr "Días restantes"
+
+msgid "Postes"
+msgstr "Puestos"
+
+msgid "{} utilisés sur {}"
+msgstr "{} usados de {}"
+
+msgid "{} inscrits"
+msgstr "{} inscritos"
+
+msgid "socle seul"
+msgstr "solo la base"
+
+msgid "Émetteur"
+msgstr "Emisor"
+
+msgid "Revendeur : {}"
+msgstr "Revendedor: {}"
+
+msgid "Date du serveur"
+msgstr "Fecha del servidor"
+
+msgid "État reçu le"
+msgstr "Estado recibido el"
+
+msgid "Abonnement échu le {} : Kadenz est en lecture seule."
+msgstr "Suscripción vencida el {}: Kadenz está en modo de solo lectura."
+
+msgid "Aucun abonnement enregistré sur le serveur : Kadenz est en lecture seule."
+msgstr "Ninguna suscripción registrada en el servidor: Kadenz está en modo de solo lectura."
+
+msgid "Licence d'abonnement refusée par le serveur : Kadenz est en lecture seule."
+msgstr "Licencia de suscripción rechazada por el servidor: Kadenz está en modo de solo lectura."
+
+msgid "Consultation, recherche, impression et exports restent possibles."
+msgstr "La consulta, la búsqueda, la impresión y las exportaciones siguen disponibles."
+
+msgid "L'abonnement prend fin aujourd'hui, le {} : Kadenz passera en lecture seule dès demain."
+msgstr "La suscripción termina hoy, {}: Kadenz pasará a solo lectura mañana."
+
+msgid "L'abonnement prend fin demain, le {} : Kadenz passera ensuite en lecture seule."
+msgstr "La suscripción termina mañana, {}: después Kadenz pasará a solo lectura."
+
+msgid "L'abonnement prend fin le {} (dans {} jours) : Kadenz passera ensuite en lecture seule."
+msgstr "La suscripción termina el {} (dentro de {} días): después Kadenz pasará a solo lectura."
+
+msgid "Pour renouveler : Paramètres, rubrique « Abonnement »."
+msgstr "Para renovar: Parámetros, sección «Suscripción»."
+
+msgid "Adressez-vous à l'administrateur pour renouveler l'abonnement."
+msgstr "Póngase en contacto con el administrador para renovar la suscripción."
+
+msgid "Voir l'abonnement"
+msgstr "Ver la suscripción"
+
+msgid "Renouvellement"
+msgstr "Renovación"
+
+msgid "L'abonnement couvre l'entreprise et ses postes. Le serveur juge de l'échéance avec sa propre date ; ce poste affiche le dernier état reçu. Après l'échéance, Kadenz passe en lecture seule : consultation, recherche, impression et exports restent possibles, la saisie et la validation sont bloquées."
+msgstr "La suscripción cubre la empresa y sus puestos. El servidor controla el vencimiento con su propia fecha; este puesto muestra el último estado recibido. Tras el vencimiento, Kadenz pasa a solo lectura: la consulta, la búsqueda, la impresión y las exportaciones siguen disponibles, la introducción de datos y la validación quedan bloqueadas."
+
+msgid "La nouvelle licence s'enregistre sur le serveur ; ce poste reçoit le nouvel état à la connexion suivante."
+msgstr "La nueva licencia se registra en el servidor; este puesto recibe el nuevo estado en la siguiente conexión."

@@ -2939,3 +2939,99 @@ msgstr "subscription licence issued for another company ({})"
 
 msgid "abonnement échu : Kadenz est en lecture seule"
 msgstr "subscription expired: Kadenz is read-only"
+
+msgid "Abonnement"
+msgstr "Subscription"
+
+msgid "Échu : lecture seule"
+msgstr "Expired: read-only"
+
+msgid "Aucun abonnement : lecture seule"
+msgstr "No subscription: read-only"
+
+msgid "Licence refusée : lecture seule"
+msgstr "Licence rejected: read-only"
+
+msgid "Raison"
+msgstr "Reason"
+
+msgid "Formule"
+msgstr "Plan"
+
+msgid "Mensuelle"
+msgstr "Monthly"
+
+msgid "Annuelle"
+msgstr "Annual"
+
+msgid "Période"
+msgstr "Period"
+
+msgid "du {} au {}"
+msgstr "from {} to {}"
+
+msgid "Jours restants"
+msgstr "Days remaining"
+
+msgid "Postes"
+msgstr "Workstations"
+
+msgid "{} utilisés sur {}"
+msgstr "{} used out of {}"
+
+msgid "{} inscrits"
+msgstr "{} enrolled"
+
+msgid "socle seul"
+msgstr "core only"
+
+msgid "Émetteur"
+msgstr "Issuer"
+
+msgid "Revendeur : {}"
+msgstr "Reseller: {}"
+
+msgid "Date du serveur"
+msgstr "Server date"
+
+msgid "État reçu le"
+msgstr "Status received on"
+
+msgid "Abonnement échu le {} : Kadenz est en lecture seule."
+msgstr "Subscription expired on {}: Kadenz is read-only."
+
+msgid "Aucun abonnement enregistré sur le serveur : Kadenz est en lecture seule."
+msgstr "No subscription registered on the server: Kadenz is read-only."
+
+msgid "Licence d'abonnement refusée par le serveur : Kadenz est en lecture seule."
+msgstr "Subscription licence rejected by the server: Kadenz is read-only."
+
+msgid "Consultation, recherche, impression et exports restent possibles."
+msgstr "Viewing, searching, printing and exports remain available."
+
+msgid "L'abonnement prend fin aujourd'hui, le {} : Kadenz passera en lecture seule dès demain."
+msgstr "The subscription ends today, {}: Kadenz will become read-only tomorrow."
+
+msgid "L'abonnement prend fin demain, le {} : Kadenz passera ensuite en lecture seule."
+msgstr "The subscription ends tomorrow, {}: Kadenz will then become read-only."
+
+msgid "L'abonnement prend fin le {} (dans {} jours) : Kadenz passera ensuite en lecture seule."
+msgstr "The subscription ends on {} (in {} days): Kadenz will then become read-only."
+
+msgid "Pour renouveler : Paramètres, rubrique « Abonnement »."
+msgstr "To renew: Settings, “Subscription” section."
+
+msgid "Adressez-vous à l'administrateur pour renouveler l'abonnement."
+msgstr "Contact the administrator to renew the subscription."
+
+msgid "Voir l'abonnement"
+msgstr "View subscription"
+
+msgid "Renouvellement"
+msgstr "Renewal"
+
+msgid "L'abonnement couvre l'entreprise et ses postes. Le serveur juge de l'échéance avec sa propre date ; ce poste affiche le dernier état reçu. Après l'échéance, Kadenz passe en lecture seule : consultation, recherche, impression et exports restent possibles, la saisie et la validation sont bloquées."
+msgstr "The subscription covers the company and its workstations. The server checks the due date against its own date; this workstation shows the last status received. After the due date, Kadenz becomes read-only: viewing, searching, printing and exports remain available, while data entry and validation are blocked."
+
+msgid "La nouvelle licence s'enregistre sur le serveur ; ce poste reçoit le nouvel état à la connexion suivante."
+msgstr "The new licence is registered on the server; this workstation receives the new status at the next connection."

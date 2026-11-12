@@ -2939,3 +2939,99 @@ msgstr "başka bir şirket için düzenlenmiş abonelik lisansı ({})"
 
 msgid "abonnement échu : Kadenz est en lecture seule"
 msgstr "abonelik süresi doldu: Kadenz salt okunur modda"
+
+msgid "Abonnement"
+msgstr "Abonelik"
+
+msgid "Échu : lecture seule"
+msgstr "Süresi doldu: salt okunur"
+
+msgid "Aucun abonnement : lecture seule"
+msgstr "Abonelik yok: salt okunur"
+
+msgid "Licence refusée : lecture seule"
+msgstr "Lisans reddedildi: salt okunur"
+
+msgid "Raison"
+msgstr "Neden"
+
+msgid "Formule"
+msgstr "Plan"
+
+msgid "Mensuelle"
+msgstr "Aylık"
+
+msgid "Annuelle"
+msgstr "Yıllık"
+
+msgid "Période"
+msgstr "Dönem"
+
+msgid "du {} au {}"
+msgstr "{} - {}"
+
+msgid "Jours restants"
+msgstr "Kalan gün"
+
+msgid "Postes"
+msgstr "İş istasyonları"
+
+msgid "{} utilisés sur {}"
+msgstr "{} kullanılıyor, toplam {}"
+
+msgid "{} inscrits"
+msgstr "{} kayıtlı"
+
+msgid "socle seul"
+msgstr "yalnızca temel"
+
+msgid "Émetteur"
+msgstr "Düzenleyen"
+
+msgid "Revendeur : {}"
+msgstr "Bayi: {}"
+
+msgid "Date du serveur"
+msgstr "Sunucu tarihi"
+
+msgid "État reçu le"
+msgstr "Durumun alındığı tarih"
+
+msgid "Abonnement échu le {} : Kadenz est en lecture seule."
+msgstr "Abonelik {} tarihinde sona erdi: Kadenz salt okunur modda."
+
+msgid "Aucun abonnement enregistré sur le serveur : Kadenz est en lecture seule."
+msgstr "Sunucuda kayıtlı abonelik yok: Kadenz salt okunur modda."
+
+msgid "Licence d'abonnement refusée par le serveur : Kadenz est en lecture seule."
+msgstr "Abonelik lisansı sunucu tarafından reddedildi: Kadenz salt okunur modda."
+
+msgid "Consultation, recherche, impression et exports restent possibles."
+msgstr "Görüntüleme, arama, yazdırma ve dışa aktarma kullanılabilir durumda kalır."
+
+msgid "L'abonnement prend fin aujourd'hui, le {} : Kadenz passera en lecture seule dès demain."
+msgstr "Abonelik bugün, {} tarihinde sona eriyor: Kadenz yarından itibaren salt okunur olacak."
+
+msgid "L'abonnement prend fin demain, le {} : Kadenz passera ensuite en lecture seule."
+msgstr "Abonelik yarın, {} tarihinde sona eriyor: ardından Kadenz salt okunur olacak."
+
+msgid "L'abonnement prend fin le {} (dans {} jours) : Kadenz passera ensuite en lecture seule."
+msgstr "Abonelik {} tarihinde ({} gün sonra) sona eriyor: ardından Kadenz salt okunur olacak."
+
+msgid "Pour renouveler : Paramètres, rubrique « Abonnement »."
+msgstr "Yenilemek için: Ayarlar, “Abonelik” bölümü."
+
+msgid "Adressez-vous à l'administrateur pour renouveler l'abonnement."
+msgstr "Aboneliği yenilemek için yöneticiye başvurun."
+
+msgid "Voir l'abonnement"
+msgstr "Aboneliği görüntüle"
+
+msgid "Renouvellement"
+msgstr "Yenileme"
+
+msgid "L'abonnement couvre l'entreprise et ses postes. Le serveur juge de l'échéance avec sa propre date ; ce poste affiche le dernier état reçu. Après l'échéance, Kadenz passe en lecture seule : consultation, recherche, impression et exports restent possibles, la saisie et la validation sont bloquées."
+msgstr "Abonelik şirketi ve iş istasyonlarını kapsar. Sunucu bitiş tarihini kendi tarihine göre değerlendirir; bu iş istasyonu alınan son durumu gösterir. Bitiş tarihinden sonra Kadenz salt okunur olur: görüntüleme, arama, yazdırma ve dışa aktarma kullanılabilir kalır, veri girişi ve onaylama engellenir."
+
+msgid "La nouvelle licence s'enregistre sur le serveur ; ce poste reçoit le nouvel état à la connexion suivante."
+msgstr "Yeni lisans sunucuya kaydedilir; bu iş istasyonu yeni durumu bir sonraki bağlantıda alır."

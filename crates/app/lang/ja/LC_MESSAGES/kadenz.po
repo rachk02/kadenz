@@ -2939,3 +2939,99 @@ msgstr "別の企業向けに発行されたサブスクリプションのライ
 
 msgid "abonnement échu : Kadenz est en lecture seule"
 msgstr "サブスクリプションの期限が切れました：Kadenz は閲覧専用です"
+
+msgid "Abonnement"
+msgstr "サブスクリプション"
+
+msgid "Échu : lecture seule"
+msgstr "期限切れ：閲覧専用"
+
+msgid "Aucun abonnement : lecture seule"
+msgstr "サブスクリプションなし：閲覧専用"
+
+msgid "Licence refusée : lecture seule"
+msgstr "ライセンス拒否：閲覧専用"
+
+msgid "Raison"
+msgstr "理由"
+
+msgid "Formule"
+msgstr "プラン"
+
+msgid "Mensuelle"
+msgstr "月額"
+
+msgid "Annuelle"
+msgstr "年額"
+
+msgid "Période"
+msgstr "期間"
+
+msgid "du {} au {}"
+msgstr "{}から{}まで"
+
+msgid "Jours restants"
+msgstr "残り日数"
+
+msgid "Postes"
+msgstr "端末"
+
+msgid "{} utilisés sur {}"
+msgstr "{} 台使用中（全 {} 台）"
+
+msgid "{} inscrits"
+msgstr "{} 台登録済み"
+
+msgid "socle seul"
+msgstr "基本機能のみ"
+
+msgid "Émetteur"
+msgstr "発行元"
+
+msgid "Revendeur : {}"
+msgstr "販売代理店：{}"
+
+msgid "Date du serveur"
+msgstr "サーバーの日付"
+
+msgid "État reçu le"
+msgstr "状態の受信日時"
+
+msgid "Abonnement échu le {} : Kadenz est en lecture seule."
+msgstr "サブスクリプションは {} に期限切れになりました：Kadenz は閲覧専用です。"
+
+msgid "Aucun abonnement enregistré sur le serveur : Kadenz est en lecture seule."
+msgstr "サーバーにサブスクリプションが登録されていません：Kadenz は閲覧専用です。"
+
+msgid "Licence d'abonnement refusée par le serveur : Kadenz est en lecture seule."
+msgstr "サブスクリプションのライセンスがサーバーに拒否されました：Kadenz は閲覧専用です。"
+
+msgid "Consultation, recherche, impression et exports restent possibles."
+msgstr "閲覧、検索、印刷、エクスポートは引き続き利用できます。"
+
+msgid "L'abonnement prend fin aujourd'hui, le {} : Kadenz passera en lecture seule dès demain."
+msgstr "サブスクリプションは本日 {} に終了します：明日から Kadenz は閲覧専用になります。"
+
+msgid "L'abonnement prend fin demain, le {} : Kadenz passera ensuite en lecture seule."
+msgstr "サブスクリプションは明日 {} に終了します：その後 Kadenz は閲覧専用になります。"
+
+msgid "L'abonnement prend fin le {} (dans {} jours) : Kadenz passera ensuite en lecture seule."
+msgstr "サブスクリプションは {} に終了します（あと {} 日）：その後 Kadenz は閲覧専用になります。"
+
+msgid "Pour renouveler : Paramètres, rubrique « Abonnement »."
+msgstr "更新するには：設定の「サブスクリプション」へ。"
+
+msgid "Adressez-vous à l'administrateur pour renouveler l'abonnement."
+msgstr "サブスクリプションの更新は管理者にお問い合わせください。"
+
+msgid "Voir l'abonnement"
+msgstr "サブスクリプションを表示"
+
+msgid "Renouvellement"
+msgstr "更新"
+
+msgid "L'abonnement couvre l'entreprise et ses postes. Le serveur juge de l'échéance avec sa propre date ; ce poste affiche le dernier état reçu. Après l'échéance, Kadenz passe en lecture seule : consultation, recherche, impression et exports restent possibles, la saisie et la validation sont bloquées."
+msgstr "サブスクリプションは企業とその端末を対象とします。期限はサーバーが自身の日付で判定し、この端末は最後に受信した状態を表示します。期限を過ぎると Kadenz は閲覧専用になります。閲覧、検索、印刷、エクスポートは引き続き利用でき、入力と確定はできなくなります。"
+
+msgid "La nouvelle licence s'enregistre sur le serveur ; ce poste reçoit le nouvel état à la connexion suivante."
+msgstr "新しいライセンスはサーバーに登録され、この端末は次回の接続時に新しい状態を受信します。"
