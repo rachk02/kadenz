@@ -470,8 +470,11 @@ pub fn restaurer(chemin_base: &Path, sauvegarde: &Path, mot_de_passe: &str) -> R
     drop(source);
 
     // Avec une clé illisible, la base courante ne peut pas s'ouvrir.
+    // Une base sans compte (installation neuve, assistant pas encore fait)
+    // n'a rien à protéger : pas de sauvegarde préalable, elle est seulement
+    // mise de côté comme les autres.
     let courante = match nouvelle_cle {
-        None => ouvrir_courante(chemin_base, &cle),
+        None => ouvrir_courante(chemin_base, &cle).filter(a_des_comptes),
         Some(_) => None,
     };
     if let Some(courante) = courante {
@@ -581,6 +584,15 @@ fn ouvrir_courante(chemin_base: &Path, cle: &str) -> Option<Connection> {
     let conn = Connection::open_with_flags(chemin_base, OpenFlags::SQLITE_OPEN_READ_WRITE).ok()?;
     chiffrement::appliquer_cle(&conn, cle).ok()?;
     Some(conn)
+}
+
+/// Vrai si la base compte au moins un utilisateur ; dans le doute (table
+/// absente, lecture impossible), vrai : la sauvegarde préalable a lieu.
+fn a_des_comptes(conn: &Connection) -> bool {
+    conn.query_row("SELECT EXISTS (SELECT 1 FROM utilisateur)", [], |r| {
+        r.get::<_, bool>(0)
+    })
+    .unwrap_or(true)
 }
 
 #[cfg(test)]
@@ -899,6 +911,34 @@ mod tests {
         assert!(!a_cote("-wal"), "aucun -wal à côté de la sauvegarde");
         assert!(!a_cote("-shm"), "aucun -shm à côté de la sauvegarde");
         assert_eq!(fs::read(&sauvegarde).unwrap(), avant, "sauvegarde intacte");
+    }
+
+    #[test]
+    fn base_neuve_sans_sauvegarde_prealable() {
+        let dossier = dossier_essai("neuve-assistant");
+        let (_, conn, admin) = base_avec_admin(&dossier);
+        marquer(&conn, "à restaurer");
+        let reglage = reglage(&dossier);
+        let sauvegarde = sauvegarde_manuelle(&conn, &admin, &reglage).unwrap();
+        drop(conn);
+
+        // Réinstallation à neuf : base ouverte, aucun compte encore.
+        let neuve = dossier.join("neuve").join("kadenz.sqlite");
+        drop(crate::ouvrir(&neuve).unwrap());
+        fs::write(
+            chemin_reglage(&neuve),
+            json!({ "dossier": reglage.dossier.to_str().unwrap() }).to_string(),
+        )
+        .unwrap();
+        restaurer(&neuve, &sauvegarde, MOT_DE_PASSE).unwrap();
+        assert_eq!(marque(&crate::ouvrir(&neuve).unwrap()), "à restaurer");
+        assert!(
+            liste_sauvegardes(&reglage.dossier)
+                .unwrap()
+                .iter()
+                .all(|s| s.genre != Genre::AvantRestauration),
+            "rien à protéger dans une base sans compte"
+        );
     }
 
     #[test]
