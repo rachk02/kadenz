@@ -43,6 +43,7 @@
 | 2.37 | 2026-11-12 | La désinstallation supprime les données de Kadenz du compte qui désinstalle (base, clé, journal des erreurs) ; l'installation et les mises à jour n'y touchent jamais. Pas de sauvegarde imposée au premier lancement (décisions de l'utilisateur ; section 16) |
 | 2.38 | 2026-11-12 | Releases : v0.1.0 retirée (release et tag) ; v0.1.1 (identité K découpé, branche `release/0.1.1`) et v0.2.0 (identité Quatre pièces) publiées, non signées ; chaque release ne porte que `KadenzSetup-X.Y.Z.exe`, `Kadenz-X.Y.Z.msi` et leurs empreintes, sans `kadenz.exe` seul (décisions de l'utilisateur ; section 16) |
 | 2.39 | 2026-11-12 | Sauvegardes : dossier par défaut `Documents\Kadenz\Sauvegardes`, mot de passe choisi une fois et protégé par DPAPI, rubrique « Sauvegardes » des Paramètres, restauration qui met la base courante de côté, écran « Démarrage impossible » avec message par cause et boutons de restauration et d'ouverture du dossier des données (décisions de l'utilisateur ; section 10.3) |
+| 2.40 | 2026-11-12 | Release v0.2.1 publiée (Latest, non signée) : sauvegardes, restauration, écran « Démarrage impossible », avertissement de désinstallation, identité Quatre pièces en Indigo et Nuit ; seulement `KadenzSetup-0.2.1.exe`, `Kadenz-0.2.1.msi` et leurs empreintes ; v0.1.1 et v0.2.0 gardées (décision de l'utilisateur ; section 16) |
 
 Statut des capacités : chaque bloc est marqué **spécifié** (décidé, à implémenter), **à l'étude** (choix technique ou métier non tranché) ou **en production** (livré). À ce jour, rien n'est en production.
 
