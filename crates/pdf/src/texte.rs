@@ -132,7 +132,9 @@ impl Polices {
             texte: charger(include_bytes!("../../app/ui/polices/Inter-Regular.ttf")),
             texte_moyen: charger(include_bytes!("../../app/ui/polices/Inter-Medium.ttf")),
             texte_gras: charger(include_bytes!("../../app/ui/polices/Inter-SemiBold.ttf")),
-            titre: charger(include_bytes!("../../app/ui/polices/Manrope-ExtraBold.ttf")),
+            // Space Grotesk Bold, comme les titres de l'application (choix de
+            // l'utilisateur du 2026-11-12, docs/marque).
+            titre: charger(include_bytes!("../../app/ui/polices/SpaceGrotesk-Bold.ttf")),
         }
     }
 }
@@ -163,5 +165,33 @@ mod tests {
 
         assert_eq!(t.couper("un\ndeux", 10.0, 500.0), ["un", "deux"]);
         assert_eq!(t.couper("", 10.0, 500.0), [""]);
+    }
+
+    #[test]
+    fn titres_en_space_grotesk() {
+        let t = &Polices::embarquees().titre;
+        for c in "ÀÂÄÇÉÈÊËÎÏÔÖÙÛÜŸŒÆàâäçéèêëîïôöùûüÿœæ°€%0123456789'’«»\u{00A0}".chars()
+        {
+            assert!(
+                t.couvre(c),
+                "caractère absent des titres : {c:?} (U+{:04X})",
+                c as u32
+            );
+        }
+        // Absents de Space Grotesk, l'espace fine insécable (U+202F, acceptée à
+        // la saisie) et le trait d'union insécable (U+2011) sont tracés par le
+        // façonnage avec un glyphe voisin (espace, tiret U+2010), comme le fait
+        // HarfBuzz : jamais de glyphe vide (0), et le texte d'origine reste
+        // attaché au glyphe pour le copier-coller.
+        for (texte, position, octets) in [
+            ("485\u{202F}000 CFA", 3, 3..6),
+            ("Bon\u{2011}cadeau", 3, 3..6),
+        ] {
+            assert!(!t.couvre(texte[octets.clone()].chars().next().unwrap()));
+            let (glyphes, chasse) = t.faconner(texte);
+            assert!(glyphes.iter().all(|g| g.glyph_id.to_u32() != 0), "{texte}");
+            assert!(glyphes[position].x_advance > 0.0 && chasse > 0.0);
+            assert_eq!(glyphes[position].text_range, octets);
+        }
     }
 }
