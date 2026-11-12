@@ -35,8 +35,10 @@ LANGUES = [
 
 # Couleurs de la marque (docs/marque ; crates/app/ui/composants.slint, global
 # Theme) : Nuit pour les titres, Bleu vif pour l'accent et le bandeau latéral.
-NUIT = "#1a1033"
-ACCENT = "#1f4fd8"
+# Indigo et Nuit de la marque (docs/marque, depuis le 2026-11-12), Ambre du troisième temps.
+NUIT = "#1a2259"
+ACCENT = "#2d3a8c"
+AMBRE = "#e3a23b"
 TEXTE_SECONDAIRE = "#52606d"
 
 TEXTES = {
@@ -463,7 +465,8 @@ def images():
     icone.resize((64, 64), Image.LANCZOS).save(ICI / "logo.png")
 
     # Bandeau latéral, comme les bandeaux de marque de l'application
-    # (docs/marque) : aplat Bleu vif, logo en négatif empilé. Symbole et mot
+    # (docs/marque) : aplat Nuit et motif Quatre pièces serré, logo en négatif
+    # empilé, trois temps (blanc, blanc, Ambre) en bas. Symbole et mot
     # sont découpés dans le logo horizontal négatif rendu par le kit de marque
     # (symbole de x 21 à 324, mot de x 390 à 1165, sur 1200 x 400).
     negatif = Image.open(RACINE / "docs" / "marque" / "png" / "kadenz-logo-horizontal-negatif-1200.png").convert("RGBA")
@@ -473,13 +476,22 @@ def images():
     mot = mot.crop(mot.getchannel("A").getbbox())
 
     largeur, hauteur = 180, 460
-    cote = Image.new("RGBA", (largeur, hauteur), ACCENT)
+    cote = Image.new("RGBA", (largeur, hauteur), NUIT)
+    # Motif rendu par le kit de marque (6 x 20 pièces sur 480 x 1600) : pièces de 30 px.
+    motif = Image.open(RACINE / "docs" / "marque" / "png" / "motif-quatre-pieces-480x1600.png").convert("RGBA")
+    motif = motif.resize((180, 600), Image.LANCZOS)
+    cote.alpha_composite(motif.crop((0, 0, largeur, hauteur)))
     cote_symbole = 76
     symbole = symbole.resize((cote_symbole, cote_symbole), Image.LANCZOS)
     cote.alpha_composite(symbole, ((largeur - cote_symbole) // 2, 64))
     largeur_mot = 124
     mot = mot.resize((largeur_mot, round(mot.height * largeur_mot / mot.width)), Image.LANCZOS)
     cote.alpha_composite(mot, ((largeur - largeur_mot) // 2, 64 + cote_symbole + 26))
+    # Trois temps : traits de 42 x 3, décalés de 8, le dernier en Ambre.
+    gauche, bas = 24, hauteur - 48
+    for rang, couleur in enumerate(("#ffffff", "#ffffff", AMBRE)):
+        trait = Image.new("RGBA", (42, 3), couleur)
+        cote.alpha_composite(trait, (gauche + 8 * rang, bas + 8 * rang))
     cote.convert("RGB").save(ICI / "logoside.png")
 
 
