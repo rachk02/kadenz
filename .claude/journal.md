@@ -292,3 +292,4 @@
 [2026-11-12 13:55:06] Suivi - Spécification de synchronisation en 0.2 : décisions 30 à 34 de l'utilisateur (relayées par kadenz-8e) reportées, question 2 réglée.
 [2026-11-12 13:56:19] Instruction - L'utilisateur valide les recommandations de kadenz-34 : sauvegardes du serveur chaque jour et à l'arrêt, dix gardées, avertissement si même disque ; code d'inscription 24 heures ; fuseau unique de l'entreprise. Cahier de la phase 2 en 0.11, écrans en 0.3.
 [2026-11-12 13:56:57] Suivi - Spécification de synchronisation en 0.3 : décisions 35 à 37 de l'utilisateur (relayées par kadenz-8e) reportées ; questions techniques tranchées : UUID v7 à côté de l'entier local, et règle de publication (au plus 25 releases de la phase 2 après la dernière V1 tant que le pont ne lit qu'une page).
+[2026-11-12 13:59:29] Suivi - L'utilisateur choisit « jalons puis code ». Proposition docs/jalons-phase2.md (F1 à F9), envoyée en relecture à kadenz-34 avant présentation à l'utilisateur.
