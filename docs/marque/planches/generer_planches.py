@@ -21,6 +21,11 @@ spec = importlib.util.spec_from_file_location("generer_marque", MARQUE / "genere
 gm = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gm)   # lit sys.argv[1] (racine du dépôt) pour la police
 
+spec_sc = importlib.util.spec_from_file_location("scenes_signaletique", ICI / "scenes_signaletique.py")
+sc = importlib.util.module_from_spec(spec_sc)
+spec_sc.loader.exec_module(sc)
+sc.gm = gm
+
 BLEU, NUIT, PALE, ENCRE, ARDOISE, TRAIT, BRUME = "#2d3a8c", "#1a2259", "#e8eaf6", "#1f2933", "#52606d", "#d9dce3", "#f4f5f9"
 CLAIR = "#c5cae0"   # texte secondaire sur Nuit (9,1:1)
 AMBRE = "#e3a23b"   # troisième temps, touche sur fond sombre
@@ -274,30 +279,18 @@ def p06():
 
 # --- 07 Signage ---------------------------------------------------------------------
 def p07():
-    lignes = "".join(f'<span style="font-size:12.5px;color:#fff">{t}</span>' for t in
-                     ("Devis et proforma", "Bons de commande", "Bordereaux de livraison", "Factures et paiements"))
-    c = f"""<div style="display:grid;grid-template-columns:1.6fr 1fr 0.8fr;gap:22px;flex:1;background:{BRUME};border-radius:4px;padding:26px">
-<div style="display:flex;flex-direction:column;gap:12px">
-<div style="flex:1;border-radius:4px;background:linear-gradient(#cfd4dc,#b9bfc8);position:relative;display:flex;flex-direction:column;align-items:center;padding-top:30px">
-<div class="case" style="background:{NUIT};width:407px;height:130px;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,42,.18)">{motif_calme(NUIT, "#232c6b", 407, 130, 26, [(83, 24, 323, 106)])}
-<div style="position:relative">{img("kadenz-logo-horizontal-negatif.svg", 58, "display:block")}</div></div>
-<div style="position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:120px;height:150px;background:#8a929e;border-radius:2px 2px 0 0"></div></div>
-<p class="petit">Enseigne caisson sur façade, Nuit, lettrage blanc rétroéclairé · dimensions selon la façade</p>
-</div>
-<div style="display:flex;flex-direction:column;gap:12px;align-items:center">
-<div style="display:flex;align-items:flex-start;gap:0;margin-top:10px">
-<div style="width:8px;height:330px;background:#8a929e;border-radius:2px"></div>
-<div class="case" style="background:{BLEU};width:190px;height:250px;flex-direction:column;gap:18px">{img("kadenz-logo-empile-negatif.svg", 150)}</div></div>
-<p class="petit">Drapeau double face · [dimensions]</p></div>
-<div style="display:flex;flex-direction:column;gap:12px;align-items:center">
-<div style="width:170px;height:440px;border-radius:2px;background:{NUIT};position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;padding:30px 12px 0;box-sizing:border-box;gap:20px;text-align:center">
-{img("kadenz-symbole-blanc.svg", 70)}{img("kadenz-mot-negatif.svg", 26)}
-<span style="font-family:Space Grotesk;font-weight:700;font-size:15px;color:#fff;margin-top:14px">Gestion commerciale</span>
-<div style="display:flex;flex-direction:column;align-items:center;gap:6px">{lignes}</div>
-<div style="position:absolute;left:0;bottom:0;width:170px;height:100px">{motif_calme(NUIT, "#232c6b", 170, 100, 25)}</div></div>
-<p class="petit" style="text-align:center">Kakémono enrouleur · 850 x 2000 mm</p></div>
-</div>"""
-    return planche(7, "Signage design", "Enseigne caisson, drapeau et kakémono pour salon ou démonstration", c)
+    """Huit supports retenus le 2026-11-13 (scènes de scenes_signaletique.py), silhouette de 1,75 m pour l'échelle."""
+    supports = (
+        (sc.facade, "Façade : caisson Nuit, motif Fondu"), (sc.drapeau, "Drapeau sur potence, 600 x 600 mm"),
+        (sc.lettres, "Lettres boîtier, mur d'accueil"), (sc.plaque, "Plaque d'entrée, 300 x 200 mm"),
+        (sc.vitrophanie, "Vitrophanie : bande dépolie, Fondu"), (sc.totem, "Totem extérieur, 2,2 m, Tournant"),
+        (sc.kakemono, "Kakémono 850 x 2000 mm, Fondu"), (sc.stand, "Stand de salon, 3 x 2,5 m"))
+    cases = "".join(
+        f'<div style="display:flex;flex-direction:column;gap:7px">'
+        f'<svg viewBox="0 20 400 420" width="250" height="262" style="display:block;border-radius:4px;border:1px solid {TRAIT}">'
+        + "".join(fn()) + f'</svg><p class="petit">{leg}</p></div>' for fn, leg in supports)
+    c = f"""<div style="display:grid;grid-template-columns:repeat(4,250px);justify-content:space-between;row-gap:12px">{cases}</div>"""
+    return planche(7, "Signage design", "Façade, rue, accueil, porte, salon : dimensions indicatives, à confirmer avec le fabricant", c)
 
 
 # --- 08 Stationery ------------------------------------------------------------------

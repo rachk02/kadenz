@@ -48,6 +48,7 @@ Statut : **« Quatre pièces »**, validée par l'utilisateur le 2026-11-11 et i
 | `planches/01-primary-logo.html` à `09-brand-mockups.html` | Neuf planches de l'identité : logo principal, symbole, ton, couleurs, motif, typographie, signalétique, papeterie, mises en situation |
 | `planches/images/`, `planches/kadenz-identite.pdf` | Les neuf planches en PNG (2400 x 1520) et en PDF (une planche par page) |
 | `planches/generer_planches.py` | Regénère planches, PNG et PDF : `python docs/marque/planches/generer_planches.py .` (Chrome requis) |
+| `planches/scenes_signaletique.py` | Scènes de signalétique de la planche 07, utilisées par `generer_planches.py` |
 | `generer.py` | Regénère tous les SVG : `python docs/marque/generer.py .` (fontTools requis) |
 
 Les PNG, le `.ico` et les icônes web ont été rendus avec les scripts du skill logo-design (`render_png.py`, `export_variants.py`, rendu par Chrome), sans Pillow.
@@ -95,6 +96,21 @@ Trois motifs, tous tirés des quatre pièces et toujours ton sur ton (pièces `#
 | Fondu | Le motif Quatre pièces dont les pièces rapetissent vers la droite (ou vers le bas) jusqu'à disparaître ; la zone calme naît du motif | Bandeaux avec logo ou titre, connexion, présentation |
 
 Règles : le motif reste ton sur ton, jamais à plusieurs couleurs ; jamais derrière un texte courant, le logo se pose sur une zone calme ; chaque motif garde sa construction (ordre, pas, rotations), on agrandit, on ne déforme pas. Dans l'application, seul Quatre pièces est branché aujourd'hui (composant `MotifMarque`).
+
+## Signalétique
+
+Huit supports retenus par l'utilisateur le 2026-11-13 parmi neuf propositions (`propositions-2026-11-13-signaletique/` ; les postes de démonstration par module n'ont pas été retenus). Planche 07, avec une silhouette de 1,75 m pour l'échelle. Les dimensions sont indicatives, à confirmer avec le fabricant.
+
+| Support | Composition | Dimensions indicatives |
+|---|---|---|
+| Façade, enseigne caisson | Caisson Nuit au motif Fondu, logo blanc rétroéclairé sur la zone calme ; symbole sur la porte vitrée | Selon la façade |
+| Drapeau sur potence | Double face, perpendiculaire au mur : symbole blanc sur Indigo, chant Nuit | Environ 600 x 600 mm |
+| Lettres boîtier d'accueil | Logo couleur en lettres découpées sur le mur, sans caisson, éclairage indirect | Selon le mur |
+| Plaque d'entrée | Plaque Nuit : logo négatif, trois temps (blanc, blanc, Ambre), « Gestion commerciale » | 300 x 200 mm, entretoises inox |
+| Vitrophanie de porte | Bande dépolie entre 1,1 et 1,6 m (repère de sécurité des portes vitrées), motif Fondu blanc ton sur ton, logo couleur sur la zone calme | Hauteur de la bande : 0,5 m |
+| Totem extérieur | Nuit : motif Tournant en tête, logo empilé blanc, trois temps | Environ 2,2 m de haut, socle lesté |
+| Kakémono | Nuit : motif Fondu en tête, logo empilé, quatre familles de documents, pied Ambre | 850 x 2000 mm, enrouleur |
+| Stand de salon | Mur d'image Tournant, logo sur la zone calme ; comptoir Nuit au symbole blanc | Environ 3 x 2,5 m |
 
 ## Modules (proposition)
 
