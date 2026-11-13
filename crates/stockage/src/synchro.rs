@@ -752,6 +752,32 @@ fn fiche_produit(f: &proto::Produit) -> Resultat<FicheProduit> {
     })
 }
 
+/// Fiche de tiers d'un écran traduite pour une action (`CreerTiers`,
+/// `ModifierTiers`, `ImporterTiers`). Réciproque de la lecture du serveur.
+pub fn tiers_pour_serveur(f: &FicheTiers) -> proto::Tiers {
+    proto::Tiers {
+        nom: f.nom.clone(),
+        adresse: f.adresse.clone(),
+        telephone: f.telephone.clone(),
+        localisation: f.localisation.clone(),
+        ifu: f.ifu.clone(),
+        rccm: f.rccm.clone(),
+        regime_imposition: f.regime_imposition.clone(),
+        type_tiers: f.type_tiers.code().to_string(),
+    }
+}
+
+/// Fiche de produit d'un écran traduite pour une action (`CreerProduit`,
+/// `ModifierProduit`, `ImporterProduits`). Réciproque de la lecture du serveur.
+pub fn produit_pour_serveur(f: &FicheProduit) -> proto::Produit {
+    proto::Produit {
+        designation: f.designation.clone(),
+        reference: f.reference.clone(),
+        prix: f.prix,
+        sens: f.sens.code().to_string(),
+    }
+}
+
 const FORMAT_DATE: &str = "%Y-%m-%d";
 
 fn date(texte: &str) -> Resultat<NaiveDate> {
@@ -798,6 +824,52 @@ fn saisie_locale(conn: &Connection, s: &proto::Saisie) -> Resultat<Saisie> {
             date_livraison: s.date_livraison.clone(),
             date_reception: s.date_reception.clone(),
         },
+    })
+}
+
+/// Saisie d'un écran (identifiants propres à cette base) traduite pour une
+/// action `CreerBrouillon` ou `ModifierBrouillon` : tiers et produits désignés
+/// par leur identifiant global. Réciproque de la lecture faite par le serveur.
+pub fn saisie_pour_serveur(conn: &Connection, s: &Saisie) -> Resultat<proto::Saisie> {
+    let global = |entite: Entite, id: i64| -> Resultat<String> {
+        uid_de(conn, entite, id)?.ok_or_else(|| {
+            Erreur::Validation(format!(
+                "élément sans identifiant global : {} {id}",
+                entite.code()
+            ))
+        })
+    };
+    let tiers = s.tiers_id.map(|id| global(Entite::Tiers, id)).transpose()?;
+    let mut lignes = Vec::with_capacity(s.lignes.len());
+    for l in &s.lignes {
+        lignes.push(proto::Ligne {
+            produit: l
+                .produit_id
+                .map(|id| global(Entite::Produit, id))
+                .transpose()?,
+            reference: l.reference.clone(),
+            designation: l.designation.clone(),
+            prix: l.prix,
+            quantite: l.quantite,
+            quantite_livree: l.quantite_livree,
+            observations: l.observations.clone(),
+        });
+    }
+    Ok(proto::Saisie {
+        date: s.date.format(FORMAT_DATE).to_string(),
+        tiers,
+        libelle: s.libelle.clone(),
+        remise: s.taux.remise,
+        tva: s.taux.tva,
+        retenue: s.taux.retenue,
+        mode_paiement: s.mode_paiement.clone(),
+        observations: s.observations.clone(),
+        date_echeance: s.date_echeance.map(|d| d.format(FORMAT_DATE).to_string()),
+        lignes,
+        visa_client: s.livraison.visa_client.clone(),
+        visa_fournisseur: s.livraison.visa_fournisseur.clone(),
+        date_livraison: s.livraison.date_livraison.clone(),
+        date_reception: s.livraison.date_reception.clone(),
     })
 }
 
@@ -1532,6 +1604,60 @@ mod essais_actions {
             }],
             ..proto::Saisie::default()
         }
+    }
+
+    #[test]
+    fn fiches_traduites_aller_retour() {
+        for type_tiers in TypeTiers::TOUS {
+            let f = FicheTiers {
+                nom: "Client".into(),
+                adresse: "Adresse".into(),
+                telephone: "Téléphone".into(),
+                localisation: "Localisation".into(),
+                ifu: "IFU".into(),
+                rccm: "RCCM".into(),
+                regime_imposition: "Régime".into(),
+                type_tiers,
+            };
+            assert_eq!(fiche_tiers(&tiers_pour_serveur(&f)).unwrap(), f);
+        }
+        for sens in Sens::TOUS {
+            let f = FicheProduit {
+                designation: "Ciment".into(),
+                reference: "C1".into(),
+                prix: 5000,
+                sens,
+            };
+            assert_eq!(fiche_produit(&produit_pour_serveur(&f)).unwrap(), f);
+        }
+    }
+
+    #[test]
+    fn saisie_traduite_aller_retour() {
+        let b = Banc::nouveau();
+        let mut s = saisie(&b.t1, Some(&b.p1));
+        s.remise = 500;
+        s.tva = 1800;
+        s.retenue = 200;
+        s.mode_paiement = "virement".into();
+        s.observations = "Livrer le matin".into();
+        s.date_echeance = Some(aujourdhui());
+        s.visa_client = "Client".into();
+        s.date_livraison = "le 14".into();
+        s.lignes.push(proto::Ligne {
+            designation: "Ligne libre".into(),
+            prix: 1000,
+            quantite: 1_000,
+            quantite_livree: 500,
+            observations: "partielle".into(),
+            ..proto::Ligne::default()
+        });
+        // Sur le poste, les identifiants propres diffèrent de ceux du serveur.
+        let locale = saisie_locale(&b.poste, &s).unwrap();
+        assert_eq!(saisie_pour_serveur(&b.poste, &locale).unwrap(), s);
+        let mut orpheline = locale.clone();
+        orpheline.tiers_id = Some(999_999);
+        assert!(saisie_pour_serveur(&b.poste, &orpheline).is_err());
     }
 
     #[test]
