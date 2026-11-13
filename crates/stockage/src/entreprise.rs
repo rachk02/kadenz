@@ -41,6 +41,19 @@ pub enum Logo {
 }
 
 impl Logo {
+    pub fn code(self) -> &'static str {
+        match self {
+            Logo::Principal => "principal",
+            Logo::Secondaire => "secondaire",
+        }
+    }
+
+    pub fn depuis_code(code: &str) -> Option<Logo> {
+        [Logo::Principal, Logo::Secondaire]
+            .into_iter()
+            .find(|l| l.code() == code)
+    }
+
     fn colonne(self) -> &'static str {
         match self {
             Logo::Principal => "logo",
@@ -76,7 +89,8 @@ impl FormatImage {
 }
 
 impl Entreprise {
-    fn en_json(&self) -> Value {
+    /// Fiche en JSON, telle qu'envoyée par un poste relié.
+    pub fn en_json(&self) -> Value {
         json!({
             "nom": self.nom,
             "adresse": self.adresse,
@@ -92,6 +106,31 @@ impl Entreprise {
             "responsable_facturation": self.responsable_facturation,
             "responsable_comptabilite": self.responsable_comptabilite,
         })
+    }
+
+    /// Fiche décrite par [`Entreprise::en_json`] ; un champ absent est vide.
+    pub fn depuis_json(v: &Value) -> Entreprise {
+        let t = |cle: &str| {
+            v.get(cle)
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_string()
+        };
+        Entreprise {
+            nom: t("nom"),
+            adresse: t("adresse"),
+            telephone: t("telephone"),
+            email: t("email"),
+            site_web: t("site_web"),
+            localisation: t("localisation"),
+            regime_imposition: t("regime_imposition"),
+            rccm: t("rccm"),
+            ifu: t("ifu"),
+            banque1: t("banque1"),
+            banque2: t("banque2"),
+            responsable_facturation: t("responsable_facturation"),
+            responsable_comptabilite: t("responsable_comptabilite"),
+        }
     }
 
     /// Supprime les espaces superflus de chaque champ.

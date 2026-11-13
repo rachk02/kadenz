@@ -29,8 +29,8 @@ use serde_json::Value;
 use crate::{Erreur, Resultat};
 
 /// Clés de `parametre_systeme` partagées par tous les postes. La même liste est
-/// dans la migration 0010 (déclencheurs du suivi).
-pub const CLES_PARTAGEES: [&str; 13] = [
+/// dans la migration 0011 (déclencheurs du suivi).
+pub const CLES_PARTAGEES: [&str; 19] = [
     "taux.tva",
     "taux.remise",
     "taux.retenue",
@@ -44,6 +44,12 @@ pub const CLES_PARTAGEES: [&str; 13] = [
     "droits.matrice",
     "relance.textes",
     "impression.mise_en_page",
+    "impression.bas.devis",
+    "impression.bas.proforma",
+    "impression.bas.bon_commande",
+    "impression.bas.livraison",
+    "impression.bas.facture",
+    "impression.bas.avoir",
 ];
 
 /// Clés propres à chaque base, jamais transmises ni écrasées : identité de
@@ -693,7 +699,7 @@ pub fn en_attente(conn: &Connection) -> Resultat<u64> {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use crate::comptes::Utilisateur;
     use crate::documents::{self, ChampsLivraison, LigneSaisie, Saisie};
@@ -751,14 +757,15 @@ mod tests {
     #[test]
     fn chaque_cle_est_classee() {
         // Les déclencheurs de la migration portent la même liste.
-        let migration = include_str!("migrations/0010_replique.sql");
+        let migration = include_str!("migrations/0011_parametres_bas.sql");
         for cle in CLES_PARTAGEES {
-            assert_eq!(migration.matches(&format!("'{cle}'")).count(), 4, "{cle}");
+            assert_eq!(migration.matches(&format!("'{cle}'")).count(), 3, "{cle}");
             assert!(!CLES_LOCALES.contains(&cle), "{cle}");
         }
         // Toute clé écrite par une base remplie est classée.
         let mut conn = ouvrir_en_memoire().unwrap();
-        remplir(&mut conn);
+        let r = remplir(&mut conn);
+        regler(&conn, &r.admin);
         crate::abonnement::garder(
             &conn,
             &kadenz_protocole::Abonnement {
@@ -830,18 +837,32 @@ mod tests {
         }
     }
 
-    struct Remplie {
-        admin: Utilisateur,
-        t1: i64,
-        p1: i64,
-        p2: i64,
-        facture: i64,
-        brouillon: i64,
+    /// Tous les réglages partagés écrits au moins une fois.
+    fn regler(conn: &Connection, admin: &Utilisateur) {
+        let m = crate::mise_en_page::lire(conn).unwrap();
+        crate::mise_en_page::enregistrer(conn, admin, &m).unwrap();
+        for t in TypeDocument::TOUS {
+            let b = crate::mise_en_page::lire_bas(conn, t).unwrap();
+            crate::mise_en_page::enregistrer_bas(conn, admin, t, &b).unwrap();
+        }
+        let matrice = crate::droits::lire_matrice(conn).unwrap();
+        crate::droits::enregistrer_matrice(conn, admin, &matrice).unwrap();
+        let textes = crate::relances::lire_textes(conn).unwrap();
+        crate::relances::enregistrer_textes(conn, admin, &textes).unwrap();
+    }
+
+    pub(crate) struct Remplie {
+        pub admin: Utilisateur,
+        pub t1: i64,
+        pub p1: i64,
+        pub p2: i64,
+        pub facture: i64,
+        pub brouillon: i64,
     }
 
     /// Base de serveur avec de tout : comptes, entreprise et logo, paramètres,
     /// tiers, produits, devis converti en facture validée, règlement, brouillon.
-    fn remplir(conn: &mut Connection) -> Remplie {
+    pub(crate) fn remplir(conn: &mut Connection) -> Remplie {
         let admin = compte(conn, "admin", Role::Admin);
         compte(conn, "vendeur", Role::Commercial);
         entreprise::enregistrer(
@@ -900,7 +921,7 @@ mod tests {
 
     /// Contenu comparable d'une base : chaque ligne répliquée par son `uid`,
     /// références en `uid`, colonnes locales exclues.
-    fn vidage(conn: &Connection) -> BTreeMap<(Entite, String), Etat> {
+    pub(crate) fn vidage(conn: &Connection) -> BTreeMap<(Entite, String), Etat> {
         completer_uids(conn).unwrap();
         let mut sortie = BTreeMap::new();
         for t in &TABLES {
@@ -924,7 +945,7 @@ mod tests {
     }
 
     /// Rejoue sur le poste les changements du serveur, par pages de `limite`.
-    fn synchroniser(serveur: &Connection, poste: &mut Connection, limite: u32) {
+    pub(crate) fn synchroniser(serveur: &Connection, poste: &mut Connection, limite: u32) {
         loop {
             let page = changements_depuis(serveur, dernier_recu(poste).unwrap(), limite).unwrap();
             if page.is_empty() {

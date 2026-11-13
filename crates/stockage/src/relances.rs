@@ -60,7 +60,8 @@ impl Default for TextesRelance {
     }
 }
 
-fn en_json(t: &TextesRelance) -> Value {
+/// Textes en JSON, tels que gardés en base et envoyés par un poste relié.
+pub fn en_json(t: &TextesRelance) -> Value {
     json!({
         "titre": t.titre.trim(),
         "objet": t.objet.trim(),
@@ -79,30 +80,31 @@ pub fn lire_textes(conn: &Connection) -> Resultat<TextesRelance> {
             |r| r.get(0),
         )
         .optional()?;
-    let Some(v) = texte.and_then(|t| serde_json::from_str::<Value>(&t).ok()) else {
-        return Ok(TextesRelance::default());
-    };
+    Ok(texte
+        .and_then(|t| serde_json::from_str::<Value>(&t).ok())
+        .map(|v| depuis_json(&v))
+        .unwrap_or_default())
+}
+
+/// Textes décrits par [`en_json`] ; ceux par défaut s'il en manque un.
+pub fn depuis_json(v: &Value) -> TextesRelance {
     let champ = |nom: &str| v.get(nom).and_then(Value::as_str).map(String::from);
-    Ok(
-        match (
-            champ("titre"),
-            champ("objet"),
-            champ("avant"),
-            champ("apres"),
-            champ("signataire"),
-        ) {
-            (Some(titre), Some(objet), Some(avant), Some(apres), Some(signataire)) => {
-                TextesRelance {
-                    titre,
-                    objet,
-                    avant,
-                    apres,
-                    signataire,
-                }
-            }
-            _ => TextesRelance::default(),
+    match (
+        champ("titre"),
+        champ("objet"),
+        champ("avant"),
+        champ("apres"),
+        champ("signataire"),
+    ) {
+        (Some(titre), Some(objet), Some(avant), Some(apres), Some(signataire)) => TextesRelance {
+            titre,
+            objet,
+            avant,
+            apres,
+            signataire,
         },
-    )
+        _ => TextesRelance::default(),
+    }
 }
 
 /// Réservé au droit « Gérer la fiche entreprise et les paramètres ».

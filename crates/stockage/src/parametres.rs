@@ -319,28 +319,64 @@ fn liste_textes(valeur: Option<Value>) -> Option<Vec<String>> {
 }
 
 pub fn lire(conn: &Connection) -> Resultat<Parametres> {
+    lire_avec(|cle| lire_valeur(conn, cle))
+}
+
+/// Paramètres décrits par la valeur de chaque clé : `lire` dans la base, ou
+/// [`depuis_json`] pour ceux reçus d'un poste.
+fn lire_avec(valeur: impl Fn(&str) -> Resultat<Option<Value>>) -> Resultat<Parametres> {
     let defaut = Parametres::default();
     Ok(Parametres {
-        taux_tva: liste_entiers(lire_valeur(conn, CLE_TAUX_TVA)?).unwrap_or(defaut.taux_tva),
-        taux_remise: liste_entiers(lire_valeur(conn, CLE_TAUX_REMISE)?)
-            .unwrap_or(defaut.taux_remise),
-        taux_retenue: liste_entiers(lire_valeur(conn, CLE_TAUX_RETENUE)?)
-            .unwrap_or(defaut.taux_retenue),
-        modes_paiement: liste_textes(lire_valeur(conn, CLE_MODES_PAIEMENT)?)
-            .unwrap_or(defaut.modes_paiement),
-        orthographe: lire_valeur(conn, CLE_ORTHOGRAPHE)?
+        taux_tva: liste_entiers(valeur(CLE_TAUX_TVA)?).unwrap_or(defaut.taux_tva),
+        taux_remise: liste_entiers(valeur(CLE_TAUX_REMISE)?).unwrap_or(defaut.taux_remise),
+        taux_retenue: liste_entiers(valeur(CLE_TAUX_RETENUE)?).unwrap_or(defaut.taux_retenue),
+        modes_paiement: liste_textes(valeur(CLE_MODES_PAIEMENT)?).unwrap_or(defaut.modes_paiement),
+        orthographe: valeur(CLE_ORTHOGRAPHE)?
             .and_then(|v| v.as_str().and_then(Orthographe::depuis_code))
             .unwrap_or(defaut.orthographe),
-        validite_devis_jours: jours(lire_valeur(conn, CLE_VALIDITE_DEVIS)?),
-        delai_paiement_jours: jours(lire_valeur(conn, CLE_DELAI_PAIEMENT)?),
-        numerotation: numerotation_depuis_json(lire_valeur(conn, CLE_NUMEROTATION)?)
+        validite_devis_jours: jours(valeur(CLE_VALIDITE_DEVIS)?),
+        delai_paiement_jours: jours(valeur(CLE_DELAI_PAIEMENT)?),
+        numerotation: numerotation_depuis_json(valeur(CLE_NUMEROTATION)?)
             .unwrap_or(defaut.numerotation),
-        textes_documents: textes_depuis_json(lire_valeur(conn, CLE_TEXTES_DOCUMENTS)?),
-        couleur_documents: lire_valeur(conn, CLE_COULEUR_DOCUMENTS)?
+        textes_documents: textes_depuis_json(valeur(CLE_TEXTES_DOCUMENTS)?),
+        couleur_documents: valeur(CLE_COULEUR_DOCUMENTS)?
             .and_then(|v| v.as_str().and_then(couleur_depuis_texte))
             .unwrap_or(defaut.couleur_documents),
-        dossiers_export: dossiers_depuis_json(lire_valeur(conn, CLE_DOSSIERS_EXPORT)?),
+        dossiers_export: dossiers_depuis_json(valeur(CLE_DOSSIERS_EXPORT)?),
     })
+}
+
+/// Paramètres partagés en JSON, par clé, pour l'action d'un poste relié : les
+/// dossiers d'export, propres à chaque machine, n'y sont pas.
+pub fn en_json(p: &Parametres) -> Value {
+    json!({
+        CLE_TAUX_TVA: p.taux_tva,
+        CLE_TAUX_REMISE: p.taux_remise,
+        CLE_TAUX_RETENUE: p.taux_retenue,
+        CLE_MODES_PAIEMENT: p.modes_paiement,
+        CLE_ORTHOGRAPHE: p.orthographe.code(),
+        CLE_VALIDITE_DEVIS: p.validite_devis_jours,
+        CLE_DELAI_PAIEMENT: p.delai_paiement_jours,
+        CLE_NUMEROTATION: numerotation_en_json(&p.numerotation),
+        CLE_TEXTES_DOCUMENTS: textes_en_json(&p.textes_documents),
+        CLE_COULEUR_DOCUMENTS: couleur_en_texte(p.couleur_documents),
+    })
+}
+
+/// Paramètres reçus d'un poste ([`en_json`]) ; dossiers d'export vides.
+pub fn depuis_json(v: &Value) -> Parametres {
+    lire_avec(|cle| Ok(v.get(cle).cloned())).unwrap_or_default()
+}
+
+/// Dossiers d'export de cette machine seulement (poste relié : le reste des
+/// paramètres part au serveur).
+pub fn enregistrer_dossiers(
+    conn: &Connection,
+    acteur: &Utilisateur,
+    dossiers: &[String; 6],
+) -> Resultat<()> {
+    exiger(conn, acteur, Droit::GererParametres)?;
+    ecrire_valeur(conn, CLE_DOSSIERS_EXPORT, &dossiers_en_json(dossiers))
 }
 
 /// Réservé au droit « Gérer la fiche entreprise et les paramètres ».

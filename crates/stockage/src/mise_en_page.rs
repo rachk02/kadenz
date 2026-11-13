@@ -94,7 +94,7 @@ fn zone_depuis_json(v: &Value) -> Zone {
 }
 
 /// Réglages analysés en JSON (paramètre et instantané d'impression).
-pub(crate) fn en_json(m: &MiseEnPageAnalysee) -> Value {
+pub fn en_json(m: &MiseEnPageAnalysee) -> Value {
     json!({
         "gabarit": m.gabarit.code(),
         "marges": {
@@ -110,7 +110,7 @@ pub(crate) fn en_json(m: &MiseEnPageAnalysee) -> Value {
 }
 
 /// Réglages depuis leur JSON ; ce qui manque reprend la valeur par défaut.
-pub(crate) fn depuis_json(v: &Value) -> MiseEnPageAnalysee {
+pub fn depuis_json(v: &Value) -> MiseEnPageAnalysee {
     let defaut = defaut_analyse();
     let marge = |cle: &str, d: u8| {
         v.get("marges")
@@ -146,7 +146,7 @@ pub(crate) fn depuis_json(v: &Value) -> MiseEnPageAnalysee {
 }
 
 /// Bas d'un document en JSON (paramètre et instantané d'impression).
-pub(crate) fn bas_en_json(b: &BasDeDocument) -> Value {
+pub fn bas_en_json(b: &BasDeDocument) -> Value {
     json!({
         "totaux": b.totaux.iter().map(|l| l.code()).collect::<Vec<_>>(),
         "masquer_zero": b.masquer_zero,
@@ -161,7 +161,7 @@ pub(crate) fn bas_en_json(b: &BasDeDocument) -> Value {
 
 /// Bas d'un document depuis son JSON ; ce qui manque reprend le réglage
 /// d'origine du type.
-pub(crate) fn bas_depuis_json(v: &Value, t: TypeDocument) -> BasDeDocument {
+pub fn bas_depuis_json(v: &Value, t: TypeDocument) -> BasDeDocument {
     let d = BasDeDocument::par_defaut(t);
     let b = |cle: &str, defaut: bool| v.get(cle).and_then(Value::as_bool).unwrap_or(defaut);
     let mut bas = BasDeDocument {
@@ -256,14 +256,18 @@ pub fn lire_analysee(conn: &Connection) -> Resultat<MiseEnPageAnalysee> {
 
 /// Réglages du moment pour l'éditeur, zones en markup.
 pub fn lire(conn: &Connection) -> Resultat<MiseEnPage> {
-    let m = lire_analysee(conn)?;
-    Ok(MiseEnPage {
+    Ok(pour_editeur(&lire_analysee(conn)?))
+}
+
+/// Réglages analysés remis en markup, pour l'éditeur ou pour `enregistrer`.
+pub fn pour_editeur(m: &MiseEnPageAnalysee) -> MiseEnPage {
+    MiseEnPage {
         gabarit: m.gabarit,
         marges: m.marges,
         entete: m.entete.en_markup(),
         pied: m.pied.en_markup(),
         style_pied: m.style_pied,
-    })
+    }
 }
 
 /// Enregistre les réglages après analyse du markup ; refus traduisible sinon.

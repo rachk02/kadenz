@@ -6,9 +6,10 @@
 //! (`uid`, UUID version 7), jamais par les identifiants entiers propres à
 //! chaque base. Le serveur applique les opérations avec `kadenz-stockage`.
 //!
-//! Catalogue de F1 : création et modification d'un tiers, création et
-//! modification d'un brouillon, validation. Les autres actions de la V1
-//! s'ajoutent avec le poste relié (F5).
+//! Catalogue : toutes les écritures de la V1 sur des données partagées (F5),
+//! chacune appliquée par le serveur avec la fonction habituelle du stockage.
+//! Les écritures propres à chaque machine (licence V1, sauvegardes, dossiers
+//! d'export, chemin des PDF, lien au serveur) ne voyagent pas.
 
 use serde::{Deserialize, Serialize};
 
@@ -105,6 +106,7 @@ impl Entite {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "nature", rename_all = "snake_case")]
 pub enum Action {
+    // Tiers.
     CreerTiers {
         uid: String,
         fiche: Tiers,
@@ -113,6 +115,41 @@ pub enum Action {
         uid: String,
         fiche: Tiers,
     },
+    RetirerTiers {
+        uid: String,
+    },
+    DefinirActifTiers {
+        uid: String,
+        actif: bool,
+    },
+    /// `uids` donne l'identifiant de chaque fiche, dans le même ordre.
+    ImporterTiers {
+        fiches: Vec<Tiers>,
+        uids: Vec<String>,
+    },
+
+    // Produits.
+    CreerProduit {
+        uid: String,
+        fiche: Produit,
+    },
+    ModifierProduit {
+        uid: String,
+        fiche: Produit,
+    },
+    RetirerProduit {
+        uid: String,
+    },
+    DefinirActifProduit {
+        uid: String,
+        actif: bool,
+    },
+    ImporterProduits {
+        fiches: Vec<Produit>,
+        uids: Vec<String>,
+    },
+
+    // Documents. `nouveau` est l'identifiant du document créé.
     CreerBrouillon {
         uid: String,
         /// Code du type de document de la V1 (`facture`, `devis`, etc.).
@@ -123,32 +160,290 @@ pub enum Action {
         uid: String,
         saisie: Saisie,
     },
+    ModifierLivraison {
+        uid: String,
+        visa_client: String,
+        visa_fournisseur: String,
+        date_livraison: String,
+        date_reception: String,
+    },
+    ModifierAdministratif {
+        uid: String,
+        mode_paiement: String,
+        observations: String,
+    },
     Valider {
         uid: String,
     },
+    Annuler {
+        uid: String,
+    },
+    SupprimerBrouillon {
+        uid: String,
+    },
+    Dupliquer {
+        uid: String,
+        nouveau: String,
+        annuler_original: bool,
+    },
+    CreerAvoir {
+        uid: String,
+        nouveau: String,
+    },
+    ConvertirEnFacture {
+        uid: String,
+        nouveau: String,
+    },
+    CreerBordereau {
+        uid: String,
+        nouveau: String,
+    },
+    ConfirmerLivraison {
+        uid: String,
+    },
+    /// Quantités reçues d'un bon de commande, une par ligne dans l'ordre.
+    EnregistrerReception {
+        uid: String,
+        recues: Vec<i64>,
+    },
+    MarquerEnvoye {
+        uid: String,
+    },
+
+    // Règlements.
+    AjouterReglement {
+        uid: String,
+        /// `uid` du document réglé.
+        document: String,
+        /// `AAAA-MM-JJ`.
+        date: String,
+        montant: i64,
+        mode_paiement: String,
+        reference: String,
+    },
+    SupprimerReglement {
+        uid: String,
+    },
+
+    // Comptes.
+    CreerCompte {
+        uid: String,
+        nom_complet: String,
+        identifiant: String,
+        mot_de_passe: String,
+        /// Code du rôle de la V1.
+        role: String,
+    },
+    DefinirActifCompte {
+        uid: String,
+        actif: bool,
+    },
+    ChangerRole {
+        uid: String,
+        role: String,
+    },
+    /// Écritures personnelles : toujours sur le compte de la session, d'où
+    /// l'absence de compte cible ; seules permises en lecture seule.
+    ChangerMotDePasse {
+        ancien: String,
+        nouveau: String,
+    },
+    ReinitialiserMotDePasse {
+        uid: String,
+        nouveau: String,
+    },
+    ChangerLangue {
+        /// Code de la langue.
+        langue: String,
+    },
+    ChangerAffichage {
+        /// Code de la navigation (`bandeau`, `barre`).
+        navigation: String,
+        animations: bool,
+    },
+
+    // Réglages partagés. `contenu` est la forme JSON gardée par le stockage
+    // pour ce réglage ; le serveur la relit et applique les contrôles habituels.
+    EnregistrerParametres {
+        contenu: serde_json::Value,
+    },
+    EnregistrerEntreprise {
+        contenu: serde_json::Value,
+    },
+    DefinirLogo {
+        /// `principal` ou `secondaire`.
+        logo: String,
+        /// Image en base64 ; `None` retire le logo.
+        octets: Option<String>,
+    },
+    EnregistrerMatrice {
+        contenu: serde_json::Value,
+    },
+    EnregistrerTextesRelance {
+        contenu: serde_json::Value,
+    },
+    EnregistrerMiseEnPage {
+        contenu: serde_json::Value,
+    },
+    EnregistrerBas {
+        type_document: String,
+        contenu: serde_json::Value,
+    },
 }
+
+/// Ce qu'une ligne changée ailleurs depuis la base de l'opération fait de
+/// celle-ci (section 6).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SiChangee {
+    /// Appliquée quand même : création, ou transition jugée par les règles
+    /// de la V1 sur l'état présent.
+    Appliquer,
+    /// Gardée comme conflit, qu'une personne tranche (décision 17).
+    Conflit,
+    /// Refusée : le poste reçoit d'abord la version du serveur, la personne
+    /// refait son geste.
+    Depassee,
+}
+
+/// Texte mis à la place d'un mot de passe dans une opération gardée.
+pub const MASQUE: &str = "(masqué)";
 
 impl Action {
     pub fn famille(&self) -> Famille {
+        use Action::*;
         match self {
-            Action::CreerTiers { .. } | Action::ModifierTiers { .. } => Famille::Socle,
-            Action::CreerBrouillon { .. }
-            | Action::ModifierBrouillon { .. }
-            | Action::Valider { .. } => Famille::GestionCommerciale,
+            CreerBrouillon { .. }
+            | ModifierBrouillon { .. }
+            | ModifierLivraison { .. }
+            | ModifierAdministratif { .. }
+            | Valider { .. }
+            | Annuler { .. }
+            | SupprimerBrouillon { .. }
+            | Dupliquer { .. }
+            | CreerAvoir { .. }
+            | ConvertirEnFacture { .. }
+            | CreerBordereau { .. }
+            | ConfirmerLivraison { .. }
+            | EnregistrerReception { .. }
+            | MarquerEnvoye { .. }
+            | AjouterReglement { .. }
+            | SupprimerReglement { .. } => Famille::GestionCommerciale,
+            _ => Famille::Socle,
         }
     }
 
-    /// Entité et `uid` de la ligne visée.
-    pub fn cible(&self) -> (Entite, &str) {
+    /// Entité et `uid` de la ligne visée, pour reconnaître un conflit et
+    /// garder l'ordre des actions d'un poste. `None` pour un import et pour
+    /// une écriture personnelle (le compte de la session).
+    pub fn cible(&self) -> Option<(Entite, &str)> {
+        use Action::*;
+        Some(match self {
+            CreerTiers { uid, .. }
+            | ModifierTiers { uid, .. }
+            | RetirerTiers { uid }
+            | DefinirActifTiers { uid, .. } => (Entite::Tiers, uid),
+            CreerProduit { uid, .. }
+            | ModifierProduit { uid, .. }
+            | RetirerProduit { uid }
+            | DefinirActifProduit { uid, .. } => (Entite::Produit, uid),
+            CreerBrouillon { uid, .. }
+            | ModifierBrouillon { uid, .. }
+            | ModifierLivraison { uid, .. }
+            | ModifierAdministratif { uid, .. }
+            | Valider { uid }
+            | Annuler { uid }
+            | SupprimerBrouillon { uid }
+            | Dupliquer { uid, .. }
+            | CreerAvoir { uid, .. }
+            | ConvertirEnFacture { uid, .. }
+            | CreerBordereau { uid, .. }
+            | ConfirmerLivraison { uid }
+            | EnregistrerReception { uid, .. }
+            | MarquerEnvoye { uid } => (Entite::Document, uid),
+            AjouterReglement { uid, .. } | SupprimerReglement { uid } => (Entite::Reglement, uid),
+            CreerCompte { uid, .. }
+            | DefinirActifCompte { uid, .. }
+            | ChangerRole { uid, .. }
+            | ReinitialiserMotDePasse { uid, .. } => (Entite::Utilisateur, uid),
+            EnregistrerEntreprise { .. } | DefinirLogo { .. } => (Entite::Entreprise, "entreprise"),
+            EnregistrerParametres { .. }
+            | EnregistrerMatrice { .. }
+            | EnregistrerTextesRelance { .. }
+            | EnregistrerMiseEnPage { .. }
+            | EnregistrerBas { .. } => (Entite::Parametres, "parametres"),
+            ImporterTiers { .. }
+            | ImporterProduits { .. }
+            | ChangerMotDePasse { .. }
+            | ChangerLangue { .. }
+            | ChangerAffichage { .. } => return None,
+        })
+    }
+
+    /// Écriture du compte de la session sur lui-même : seule permise en
+    /// lecture seule (abonnement échu).
+    pub fn personnelle(&self) -> bool {
+        matches!(
+            self,
+            Action::ChangerMotDePasse { .. }
+                | Action::ChangerLangue { .. }
+                | Action::ChangerAffichage { .. }
+        )
+    }
+
+    /// Effet d'un changement de la ligne visée, fait ailleurs depuis la base.
+    pub fn si_changee(&self) -> SiChangee {
+        use Action::*;
         match self {
-            Action::CreerTiers { uid, .. } | Action::ModifierTiers { uid, .. } => {
-                (Entite::Tiers, uid)
-            }
-            Action::CreerBrouillon { uid, .. }
-            | Action::ModifierBrouillon { uid, .. }
-            | Action::Valider { uid } => (Entite::Document, uid),
+            // Contenu d'une fiche ou d'un brouillon : décision 17.
+            ModifierTiers { .. }
+            | ModifierProduit { .. }
+            | ModifierBrouillon { .. }
+            | ModifierLivraison { .. }
+            | ModifierAdministratif { .. } => SiChangee::Conflit,
+            // Valider ou supprimer un brouillon que l'on n'a pas vu changer ;
+            // réglages enregistrés en bloc par-dessus ceux d'un autre poste.
+            Valider { .. }
+            | SupprimerBrouillon { .. }
+            | EnregistrerParametres { .. }
+            | EnregistrerEntreprise { .. }
+            | DefinirLogo { .. }
+            | EnregistrerMatrice { .. }
+            | EnregistrerTextesRelance { .. }
+            | EnregistrerMiseEnPage { .. }
+            | EnregistrerBas { .. } => SiChangee::Depassee,
+            _ => SiChangee::Appliquer,
         }
     }
+
+    /// Copie à garder dans l'historique du serveur : sans mot de passe, et sans
+    /// le contenu d'un logo (seulement sa taille).
+    pub fn masquee(&self) -> Action {
+        let mut a = self.clone();
+        match &mut a {
+            Action::CreerCompte { mot_de_passe, .. } => *mot_de_passe = MASQUE.into(),
+            Action::ChangerMotDePasse { ancien, nouveau } => {
+                *ancien = MASQUE.into();
+                *nouveau = MASQUE.into();
+            }
+            Action::ReinitialiserMotDePasse { nouveau, .. } => *nouveau = MASQUE.into(),
+            Action::DefinirLogo {
+                octets: Some(octets),
+                ..
+            } => *octets = format!("({} caractères en base64)", octets.len()),
+            _ => {}
+        }
+        a
+    }
+}
+
+/// Fiche d'un produit.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct Produit {
+    pub designation: String,
+    pub reference: String,
+    pub prix: i64,
+    /// Code du sens de la V1 (`vente`, `achat`).
+    pub sens: String,
 }
 
 /// Fiche d'un tiers.
@@ -204,8 +499,13 @@ pub struct Ligne {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "issue", rename_all = "snake_case")]
 pub enum Issue {
-    /// Appliquée ; `numero` est le numéro attribué par une validation.
-    Acceptee { numero: Option<String> },
+    /// Appliquée ; `numero` est le numéro attribué par une validation,
+    /// `bilan` le détail d'un retrait ou d'un import.
+    Acceptee {
+        numero: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        bilan: Option<Bilan>,
+    },
     /// Refusée par une règle de la V1 : texte fixe à traduire et valeurs de ses
     /// `{}`, comme les messages du stockage.
     Refusee {
@@ -225,6 +525,31 @@ pub enum Issue {
     /// ou en conflit : celle-ci n'est pas gardée, le poste la renvoie une fois la
     /// décision prise, pour garder l'ordre de ses actions.
     Bloquee,
+}
+
+impl Issue {
+    /// Appliquée, sans numéro ni bilan.
+    pub fn acceptee() -> Issue {
+        Issue::Acceptee {
+            numero: None,
+            bilan: None,
+        }
+    }
+}
+
+/// Détail d'une opération acceptée.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "bilan", rename_all = "snake_case")]
+pub enum Bilan {
+    /// Fiche retirée : supprimée, ou seulement désactivée parce qu'un
+    /// document la cite.
+    Retrait { supprimee: bool },
+    /// Import : fiches ajoutées, et rang (à partir de 0) et raison de chaque
+    /// fiche ignorée.
+    Import {
+        ajoutees: u32,
+        ignorees: Vec<(u32, String)>,
+    },
 }
 
 /// Une ligne qui a changé, telle qu'elle est maintenant sur le serveur. Pour
@@ -289,7 +614,7 @@ mod tests {
         assert!(json.contains("\"nature\":\"creer_brouillon\""));
         assert_eq!(serde_json::from_str::<Operation>(&json).unwrap(), op);
         assert_eq!(op.action.famille(), Famille::GestionCommerciale);
-        assert_eq!(op.action.cible(), (Entite::Document, "d"));
+        assert_eq!(op.action.cible(), Some((Entite::Document, "d")));
     }
 
     #[test]
@@ -308,5 +633,62 @@ mod tests {
             assert_eq!(Entite::depuis_code(e.code()), Some(e));
         }
         assert_eq!(Entite::depuis_code("autre"), None);
+    }
+
+    #[test]
+    fn secrets_masques_et_ecritures_personnelles() {
+        let a = Action::ChangerMotDePasse {
+            ancien: "a1".into(),
+            nouveau: "n1".into(),
+        };
+        assert!(a.personnelle());
+        assert_eq!(a.cible(), None);
+        let texte = serde_json::to_string(&a.masquee()).unwrap();
+        assert!(!texte.contains("a1") && !texte.contains("n1"), "{texte}");
+        let c = Action::CreerCompte {
+            uid: "u".into(),
+            nom_complet: "N".into(),
+            identifiant: "i".into(),
+            mot_de_passe: "secret".into(),
+            role: "admin".into(),
+        };
+        assert!(!c.personnelle());
+        assert!(
+            !serde_json::to_string(&c.masquee())
+                .unwrap()
+                .contains("secret")
+        );
+        let r = Action::ReinitialiserMotDePasse {
+            uid: "u".into(),
+            nouveau: "secret".into(),
+        };
+        assert!(!r.personnelle());
+        assert!(
+            !serde_json::to_string(&r.masquee())
+                .unwrap()
+                .contains("secret")
+        );
+        let l = Action::DefinirLogo {
+            logo: "principal".into(),
+            octets: Some("QUJD".into()),
+        };
+        assert!(
+            !serde_json::to_string(&l.masquee())
+                .unwrap()
+                .contains("QUJD")
+        );
+        assert_eq!(l.si_changee(), SiChangee::Depassee);
+        let i = Issue::Acceptee {
+            numero: None,
+            bilan: Some(Bilan::Retrait { supprimee: false }),
+        };
+        let json = serde_json::to_string(&i).unwrap();
+        assert_eq!(serde_json::from_str::<Issue>(&json).unwrap(), i);
+        // Un résultat sans bilan garde sa forme d'avant.
+        assert!(
+            !serde_json::to_string(&Issue::acceptee())
+                .unwrap()
+                .contains("bilan")
+        );
     }
 }

@@ -22,9 +22,15 @@ pub fn lire_matrice(conn: &Connection) -> Resultat<MatriceDroits> {
             |r| r.get(0),
         )
         .optional()?;
-    let Some(valeur) = texte.and_then(|t| serde_json::from_str::<Value>(&t).ok()) else {
-        return Ok(MatriceDroits::default());
-    };
+    Ok(texte
+        .and_then(|t| serde_json::from_str::<Value>(&t).ok())
+        .map(|v| matrice_depuis_json(&v))
+        .unwrap_or_default())
+}
+
+/// Matrice décrite en JSON (rôle vers la liste de ses droits), telle que
+/// gardée en base et envoyée par un poste relié.
+pub fn matrice_depuis_json(valeur: &Value) -> MatriceDroits {
     let mut matrice = MatriceDroits::vide();
     if let Some(objet) = valeur.as_object() {
         for (code_role, droits) in objet {
@@ -38,15 +44,10 @@ pub fn lire_matrice(conn: &Connection) -> Resultat<MatriceDroits> {
             }
         }
     }
-    Ok(matrice)
+    matrice
 }
 
-pub fn enregistrer_matrice(
-    conn: &Connection,
-    acteur: &Utilisateur,
-    matrice: &MatriceDroits,
-) -> Resultat<()> {
-    exiger(conn, acteur, Droit::GererUtilisateurs)?;
+pub fn matrice_en_json(matrice: &MatriceDroits) -> Value {
     let mut objet = Map::new();
     for role in Role::TOUS {
         let droits: Vec<&str> = matrice
@@ -56,7 +57,16 @@ pub fn enregistrer_matrice(
             .collect();
         objet.insert(role.code().to_string(), json!(droits));
     }
-    let valeur = Value::Object(objet);
+    Value::Object(objet)
+}
+
+pub fn enregistrer_matrice(
+    conn: &Connection,
+    acteur: &Utilisateur,
+    matrice: &MatriceDroits,
+) -> Resultat<()> {
+    exiger(conn, acteur, Droit::GererUtilisateurs)?;
+    let valeur = matrice_en_json(matrice);
     conn.execute(
         "INSERT INTO parametre_systeme (cle, valeur) VALUES (?1, ?2)
          ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur",

@@ -78,6 +78,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0008_postes.sql"),
     include_str!("migrations/0009_inscription.sql"),
     include_str!("migrations/0010_replique.sql"),
+    include_str!("migrations/0011_parametres_bas.sql"),
 ];
 
 #[derive(Debug)]

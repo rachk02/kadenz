@@ -10,16 +10,27 @@
 //!
 //! Le serveur applique les opérations une à une, sur une seule connexion.
 
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use chrono::NaiveDate;
 use kadenz_domaine::calcul::Taux;
 use kadenz_domaine::document::TypeDocument;
-use kadenz_domaine::referentiel::{FicheTiers, TypeTiers};
-use kadenz_protocole::{self as proto, Action, Changement, Entite, Etat, Issue, Operation};
+use kadenz_domaine::langue::Langue;
+use kadenz_domaine::referentiel::{FicheProduit, FicheTiers, Sens, TypeTiers};
+use kadenz_domaine::role::Role;
+use kadenz_protocole::{
+    self as proto, Action, Bilan, Changement, Entite, Etat, Issue, Operation, SiChangee,
+};
 use rusqlite::{Connection, OptionalExtension, params};
 
-use crate::comptes::{self, Utilisateur};
+use crate::comptes::{self, Navigation, NouvelUtilisateur, Utilisateur};
 use crate::documents::{self, ChampsLivraison, LigneSaisie, Saisie};
-use crate::{Erreur, Resultat, maintenant, replique, tiers};
+use crate::entreprise::{self, Entreprise, Logo};
+use crate::reglements::{self, SaisieReglement};
+use crate::{
+    BilanImport, Erreur, Resultat, Retrait, droits, maintenant, mise_en_page, parametres, produits,
+    relances, replique, tiers,
+};
 
 /// Tables dont les lignes portent un identifiant global.
 const TABLES: [&str; 6] = [
@@ -145,7 +156,13 @@ pub fn dernier_changement(conn: &Connection) -> Resultat<u64> {
 /// (base, fichier) n'est pas un résultat : rien n'est écrit, et le poste
 /// renverra l'opération.
 pub fn appliquer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
-    let contenu = serde_json::to_string(op).map_err(|e| Erreur::Validation(e.to_string()))?;
+    // Copie gardée : sans mot de passe ni contenu de logo. Le renvoi d'une
+    // opération est reconnu sur cette copie.
+    let gardee = Operation {
+        action: op.action.masquee(),
+        ..op.clone()
+    };
+    let contenu = serde_json::to_string(&gardee).map_err(|e| Erreur::Validation(e.to_string()))?;
     let deja: Option<(String, String)> = conn
         .query_row(
             "SELECT contenu, issue FROM operation WHERE id = ?1",
@@ -165,8 +182,11 @@ pub fn appliquer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
         return Err(refus_op("opération destinée à une autre entreprise"));
     }
     // Lecture seule (abonnement) : après le renvoi d'une opération déjà
-    // acceptée, qui garde son résultat, et avant tout effet.
-    crate::abonnement::exiger_ecriture(conn)?;
+    // acceptée, qui garde son résultat, et avant tout effet. Seules passent
+    // les écritures du compte sur lui-même (mot de passe, langue, affichage).
+    if !op.action.personnelle() {
+        crate::abonnement::exiger_ecriture(conn)?;
+    }
 
     conn.execute_batch("SAVEPOINT operation")?;
     let resultat = appliquer_dans(conn, op, &contenu);
@@ -182,31 +202,34 @@ pub fn appliquer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
     }
 }
 
-/// Erreur de protocole : jamais enregistrée comme résultat.
-fn refus_op(message: &str) -> Erreur {
-    Erreur::Validation(message.into())
-}
-
 fn appliquer_dans(conn: &mut Connection, op: &Operation, contenu: &str) -> Resultat<Issue> {
-    let (entite, cible) = op.action.cible();
+    let cible = op.action.cible();
+    let cle_cible = cible.map(|(_, uid)| uid).unwrap_or_default();
     // Une opération du même poste sur la même ligne attend une décision : celle-ci
     // attend aussi, pour garder l'ordre des actions du poste. Rien n'est gardé, le
     // poste la renverra ; les autres postes ne sont pas bloqués.
-    let suspendue = conn
-        .query_row(
-            "SELECT 1 FROM operation_suspendue s JOIN operation o ON o.id = s.operation_id
-             WHERE s.cible = ?1 AND s.ouverte = 1 AND o.poste = ?2",
-            params![cible, op.poste],
-            |_| Ok(()),
-        )
-        .optional()?
-        .is_some();
+    let suspendue = cible.is_some()
+        && conn
+            .query_row(
+                "SELECT 1 FROM operation_suspendue s JOIN operation o ON o.id = s.operation_id
+                 WHERE s.cible = ?1 AND s.ouverte = 1 AND o.poste = ?2",
+                params![cle_cible, op.poste],
+                |_| Ok(()),
+            )
+            .optional()?
+            .is_some();
     if suspendue {
         return Ok(Issue::Bloquee);
     }
-    let issue = if modifiee_ailleurs(conn, op, entite, cible)? {
-        match op.action {
-            Action::Valider { .. } => Issue::Depassee,
+    let changee = match (cible, op.action.si_changee()) {
+        (Some((entite, uid)), SiChangee::Conflit | SiChangee::Depassee) => {
+            modifiee_ailleurs(conn, op, entite, uid)?
+        }
+        _ => false,
+    };
+    let issue = if changee {
+        match op.action.si_changee() {
+            SiChangee::Depassee => Issue::Depassee,
             _ => Issue::EnConflit,
         }
     } else {
@@ -255,10 +278,15 @@ fn appliquer_dans(conn: &mut Connection, op: &Operation, contenu: &str) -> Resul
     if let Some(motif) = motif {
         conn.execute(
             "INSERT INTO operation_suspendue (operation_id, motif, cible) VALUES (?1, ?2, ?3)",
-            params![op.id, motif, cible],
+            params![op.id, motif, cle_cible],
         )?;
     }
     Ok(issue)
+}
+
+/// Erreur de protocole : jamais enregistrée comme résultat.
+fn refus_op(message: &str) -> Erreur {
+    Erreur::Validation(message.into())
 }
 
 /// Refus d'une règle de la V1 : rendu au poste, ou mis en attente pour un
@@ -283,21 +311,15 @@ fn issue_du_refus(e: Erreur, hors_connexion: bool) -> Resultat<Issue> {
     })
 }
 
-/// Conflit : la ligne a changé depuis la base de l'opération, et pas seulement
-/// par ce poste (deux modifications successives d'un même poste hors connexion
-/// ne sont pas en conflit entre elles). Une création n'a pas de conflit.
+/// La ligne visée a changé depuis la base de l'opération, et pas seulement par
+/// ce poste (deux modifications successives d'un même poste hors connexion ne
+/// sont pas en conflit entre elles).
 fn modifiee_ailleurs(
     conn: &Connection,
     op: &Operation,
     entite: Entite,
     cible: &str,
 ) -> Resultat<bool> {
-    if matches!(
-        op.action,
-        Action::CreerTiers { .. } | Action::CreerBrouillon { .. }
-    ) {
-        return Ok(false);
-    }
     let Some(id) = id_de(conn, entite, cible)? else {
         return Ok(false);
     };
@@ -333,22 +355,82 @@ fn acteur(conn: &Connection, uid: &str) -> Resultat<Utilisateur> {
 
 /// Pose l'identifiant choisi par le poste sur une ligne qui vient d'être créée.
 fn poser_uid(conn: &Connection, entite: Entite, id: i64, uid: &str) -> Resultat<()> {
+    let table = replique::nom_table(entite).ok_or_else(illisible)?;
     if id_de(conn, entite, uid)?.is_some() {
         return Err(Erreur::Validation(
             "identifiant déjà attribué à une autre ligne".into(),
         ));
     }
     conn.execute(
-        &format!("UPDATE {} SET uid = ?1 WHERE id = ?2", entite.code()),
+        &format!("UPDATE {table} SET uid = ?1 WHERE id = ?2"),
         params![uid, id],
     )?;
     Ok(())
 }
 
+/// Pose l'identifiant de chaque fiche importée : les lignes créées après
+/// `avant`, dans l'ordre, sont les fiches qui n'ont pas été ignorées.
+fn poser_uids_import(
+    conn: &Connection,
+    entite: Entite,
+    avant: i64,
+    uids: &[String],
+    bilan: &BilanImport,
+) -> Resultat<Issue> {
+    let table = replique::nom_table(entite).ok_or_else(illisible)?;
+    let creees: Vec<i64> = conn
+        .prepare(&format!("SELECT id FROM {table} WHERE id > ?1 ORDER BY id"))?
+        .query_map([avant], |r| r.get(0))?
+        .collect::<Result<_, _>>()?;
+    let ignorees: Vec<usize> = bilan.ignorees.iter().map(|(rang, _)| *rang).collect();
+    let retenus = uids
+        .iter()
+        .enumerate()
+        .filter(|(rang, _)| !ignorees.contains(rang))
+        .map(|(_, uid)| uid);
+    if creees.len() != bilan.ajoutees {
+        return Err(illisible());
+    }
+    for (id, uid) in creees.into_iter().zip(retenus) {
+        poser_uid(conn, entite, id, uid)?;
+    }
+    Ok(Issue::Acceptee {
+        numero: None,
+        bilan: Some(Bilan::Import {
+            ajoutees: bilan.ajoutees as u32,
+            ignorees: bilan
+                .ignorees
+                .iter()
+                .map(|(rang, raison)| (*rang as u32, raison.clone()))
+                .collect(),
+        }),
+    })
+}
+
+fn dernier_id(conn: &Connection, entite: Entite) -> Resultat<i64> {
+    let table = replique::nom_table(entite).ok_or_else(illisible)?;
+    Ok(conn.query_row(
+        &format!("SELECT coalesce(max(id), 0) FROM {table}"),
+        [],
+        |r| r.get(0),
+    )?)
+}
+
+fn retrait(r: Retrait) -> Issue {
+    Issue::Acceptee {
+        numero: None,
+        bilan: Some(Bilan::Retrait {
+            supprimee: r == Retrait::Supprimee,
+        }),
+    }
+}
+
 fn executer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
     let qui = acteur(conn, &op.compte)?;
-    let acceptee = Issue::Acceptee { numero: None };
+    let acceptee = Issue::acceptee();
+    let doc = |conn: &Connection, uid: &str| exiger_id(conn, Entite::Document, uid);
     match &op.action {
+        // Tiers.
         Action::CreerTiers { uid, fiche } => {
             let t = tiers::creer(conn, &qui, &fiche_tiers(fiche)?)?;
             poser_uid(conn, Entite::Tiers, t.id, uid)?;
@@ -359,30 +441,287 @@ fn executer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
             tiers::modifier(conn, &qui, id, &fiche_tiers(fiche)?)?;
             Ok(acceptee)
         }
+        Action::RetirerTiers { uid } => {
+            let id = exiger_id(conn, Entite::Tiers, uid)?;
+            Ok(retrait(tiers::retirer(conn, &qui, id)?))
+        }
+        Action::DefinirActifTiers { uid, actif } => {
+            let id = exiger_id(conn, Entite::Tiers, uid)?;
+            tiers::definir_actif(conn, &qui, id, *actif)?;
+            Ok(acceptee)
+        }
+        Action::ImporterTiers { fiches, uids } => {
+            if fiches.len() != uids.len() {
+                return Err(illisible());
+            }
+            let fiches = fiches
+                .iter()
+                .map(fiche_tiers)
+                .collect::<Resultat<Vec<_>>>()?;
+            let avant = dernier_id(conn, Entite::Tiers)?;
+            let bilan = tiers::importer(conn, &qui, &fiches)?;
+            poser_uids_import(conn, Entite::Tiers, avant, uids, &bilan)
+        }
+
+        // Produits.
+        Action::CreerProduit { uid, fiche } => {
+            let p = produits::creer(conn, &qui, &fiche_produit(fiche)?)?;
+            poser_uid(conn, Entite::Produit, p.id, uid)?;
+            Ok(acceptee)
+        }
+        Action::ModifierProduit { uid, fiche } => {
+            let id = exiger_id(conn, Entite::Produit, uid)?;
+            produits::modifier(conn, &qui, id, &fiche_produit(fiche)?)?;
+            Ok(acceptee)
+        }
+        Action::RetirerProduit { uid } => {
+            let id = exiger_id(conn, Entite::Produit, uid)?;
+            Ok(retrait(produits::retirer(conn, &qui, id)?))
+        }
+        Action::DefinirActifProduit { uid, actif } => {
+            let id = exiger_id(conn, Entite::Produit, uid)?;
+            produits::definir_actif(conn, &qui, id, *actif)?;
+            Ok(acceptee)
+        }
+        Action::ImporterProduits { fiches, uids } => {
+            if fiches.len() != uids.len() {
+                return Err(illisible());
+            }
+            let fiches = fiches
+                .iter()
+                .map(fiche_produit)
+                .collect::<Resultat<Vec<_>>>()?;
+            let avant = dernier_id(conn, Entite::Produit)?;
+            let bilan = produits::importer(conn, &qui, &fiches)?;
+            poser_uids_import(conn, Entite::Produit, avant, uids, &bilan)
+        }
+
+        // Documents.
         Action::CreerBrouillon {
             uid,
             type_document,
             saisie,
         } => {
-            let type_document = TypeDocument::depuis_code(type_document)
-                .ok_or_else(|| Erreur::Validation("opération illisible".into()))?;
+            let type_document = TypeDocument::depuis_code(type_document).ok_or_else(illisible)?;
             let s = saisie_locale(conn, saisie)?;
             let id = documents::creer_brouillon(conn, &qui, type_document, &s)?;
             poser_uid(conn, Entite::Document, id, uid)?;
             Ok(acceptee)
         }
         Action::ModifierBrouillon { uid, saisie } => {
-            let id = exiger_id(conn, Entite::Document, uid)?;
+            let id = doc(conn, uid)?;
             let s = saisie_locale(conn, saisie)?;
             documents::modifier_brouillon(conn, &qui, id, &s)?;
             Ok(acceptee)
         }
+        Action::ModifierLivraison {
+            uid,
+            visa_client,
+            visa_fournisseur,
+            date_livraison,
+            date_reception,
+        } => {
+            let id = doc(conn, uid)?;
+            let champs = ChampsLivraison {
+                visa_client: visa_client.clone(),
+                visa_fournisseur: visa_fournisseur.clone(),
+                date_livraison: date_livraison.clone(),
+                date_reception: date_reception.clone(),
+            };
+            documents::modifier_livraison(conn, &qui, id, &champs)?;
+            Ok(acceptee)
+        }
+        Action::ModifierAdministratif {
+            uid,
+            mode_paiement,
+            observations,
+        } => {
+            let id = doc(conn, uid)?;
+            documents::modifier_administratif(conn, &qui, id, mode_paiement, observations)?;
+            Ok(acceptee)
+        }
         Action::Valider { uid } => {
-            let id = exiger_id(conn, Entite::Document, uid)?;
+            let id = doc(conn, uid)?;
             let numero = documents::valider(conn, &qui, id)?;
             Ok(Issue::Acceptee {
                 numero: Some(numero),
+                bilan: None,
             })
+        }
+        Action::Annuler { uid } => {
+            let id = doc(conn, uid)?;
+            documents::annuler(conn, &qui, id)?;
+            Ok(acceptee)
+        }
+        Action::SupprimerBrouillon { uid } => {
+            let id = doc(conn, uid)?;
+            documents::supprimer_brouillon(conn, &qui, id)?;
+            Ok(acceptee)
+        }
+        Action::Dupliquer {
+            uid,
+            nouveau,
+            annuler_original,
+        } => {
+            let id = doc(conn, uid)?;
+            let copie = documents::dupliquer(conn, &qui, id, *annuler_original)?;
+            poser_uid(conn, Entite::Document, copie, nouveau)?;
+            Ok(acceptee)
+        }
+        Action::CreerAvoir { uid, nouveau } => {
+            let id = doc(conn, uid)?;
+            let avoir = documents::creer_avoir(conn, &qui, id)?;
+            poser_uid(conn, Entite::Document, avoir, nouveau)?;
+            Ok(acceptee)
+        }
+        Action::ConvertirEnFacture { uid, nouveau } => {
+            let id = doc(conn, uid)?;
+            let facture = documents::convertir_en_facture(conn, &qui, id)?;
+            poser_uid(conn, Entite::Document, facture, nouveau)?;
+            Ok(acceptee)
+        }
+        Action::CreerBordereau { uid, nouveau } => {
+            let id = doc(conn, uid)?;
+            let bordereau = documents::creer_bordereau(conn, &qui, id)?;
+            poser_uid(conn, Entite::Document, bordereau, nouveau)?;
+            Ok(acceptee)
+        }
+        Action::ConfirmerLivraison { uid } => {
+            let id = doc(conn, uid)?;
+            documents::confirmer_livraison(conn, &qui, id)?;
+            Ok(acceptee)
+        }
+        Action::EnregistrerReception { uid, recues } => {
+            let id = doc(conn, uid)?;
+            documents::enregistrer_reception(conn, &qui, id, recues)?;
+            Ok(acceptee)
+        }
+        Action::MarquerEnvoye { uid } => {
+            let id = doc(conn, uid)?;
+            documents::marquer_envoye(conn, &qui, id)?;
+            Ok(acceptee)
+        }
+
+        // Règlements.
+        Action::AjouterReglement {
+            uid,
+            document,
+            date: jour,
+            montant,
+            mode_paiement,
+            reference,
+        } => {
+            let id = doc(conn, document)?;
+            let saisie = SaisieReglement {
+                date: date(jour)?,
+                montant: *montant,
+                mode_paiement: mode_paiement.clone(),
+                reference: reference.clone(),
+            };
+            let reglement = reglements::ajouter(conn, &qui, id, &saisie)?;
+            poser_uid(conn, Entite::Reglement, reglement, uid)?;
+            Ok(acceptee)
+        }
+        Action::SupprimerReglement { uid } => {
+            let id = exiger_id(conn, Entite::Reglement, uid)?;
+            reglements::supprimer(conn, &qui, id)?;
+            Ok(acceptee)
+        }
+
+        // Comptes.
+        Action::CreerCompte {
+            uid,
+            nom_complet,
+            identifiant,
+            mot_de_passe,
+            role,
+        } => {
+            let nouveau = NouvelUtilisateur {
+                nom_complet: nom_complet.clone(),
+                identifiant: identifiant.clone(),
+                mot_de_passe: mot_de_passe.clone(),
+                role: Role::depuis_code(role).ok_or_else(illisible)?,
+            };
+            let u = comptes::creer(conn, &qui, &nouveau)?;
+            poser_uid(conn, Entite::Utilisateur, u.id, uid)?;
+            Ok(acceptee)
+        }
+        Action::DefinirActifCompte { uid, actif } => {
+            let id = exiger_id(conn, Entite::Utilisateur, uid)?;
+            comptes::definir_actif(conn, &qui, id, *actif)?;
+            Ok(acceptee)
+        }
+        Action::ChangerRole { uid, role } => {
+            let id = exiger_id(conn, Entite::Utilisateur, uid)?;
+            let role = Role::depuis_code(role).ok_or_else(illisible)?;
+            comptes::changer_role(conn, &qui, id, role)?;
+            Ok(acceptee)
+        }
+        Action::ChangerMotDePasse { ancien, nouveau } => {
+            comptes::changer_mot_de_passe(conn, qui.id, ancien, nouveau)?;
+            Ok(acceptee)
+        }
+        Action::ReinitialiserMotDePasse { uid, nouveau } => {
+            let id = exiger_id(conn, Entite::Utilisateur, uid)?;
+            comptes::reinitialiser_mot_de_passe(conn, &qui, id, nouveau)?;
+            Ok(acceptee)
+        }
+        Action::ChangerLangue { langue } => {
+            let langue = Langue::depuis_code(langue).ok_or_else(illisible)?;
+            comptes::changer_langue(conn, &qui, langue)?;
+            Ok(acceptee)
+        }
+        Action::ChangerAffichage {
+            navigation,
+            animations,
+        } => {
+            let navigation = Navigation::depuis_code(navigation).ok_or_else(illisible)?;
+            comptes::changer_affichage(conn, &qui, navigation, *animations)?;
+            Ok(acceptee)
+        }
+
+        // Réglages partagés.
+        Action::EnregistrerParametres { contenu } => {
+            // Les dossiers d'export sont ceux du serveur, jamais ceux du poste.
+            let mut p = parametres::depuis_json(contenu);
+            p.dossiers_export = parametres::lire(conn)?.dossiers_export;
+            parametres::enregistrer(conn, &qui, &p)?;
+            Ok(acceptee)
+        }
+        Action::EnregistrerEntreprise { contenu } => {
+            entreprise::enregistrer(conn, &qui, &Entreprise::depuis_json(contenu))?;
+            Ok(acceptee)
+        }
+        Action::DefinirLogo { logo, octets } => {
+            let logo = Logo::depuis_code(logo).ok_or_else(illisible)?;
+            let octets = match octets {
+                Some(texte) => Some(BASE64.decode(texte).map_err(|_| illisible())?),
+                None => None,
+            };
+            entreprise::definir_logo(conn, &qui, logo, octets.as_deref())?;
+            Ok(acceptee)
+        }
+        Action::EnregistrerMatrice { contenu } => {
+            droits::enregistrer_matrice(conn, &qui, &droits::matrice_depuis_json(contenu))?;
+            Ok(acceptee)
+        }
+        Action::EnregistrerTextesRelance { contenu } => {
+            relances::enregistrer_textes(conn, &qui, &relances::depuis_json(contenu))?;
+            Ok(acceptee)
+        }
+        Action::EnregistrerMiseEnPage { contenu } => {
+            let m = mise_en_page::pour_editeur(&mise_en_page::depuis_json(contenu));
+            mise_en_page::enregistrer(conn, &qui, &m)?;
+            Ok(acceptee)
+        }
+        Action::EnregistrerBas {
+            type_document,
+            contenu,
+        } => {
+            let t = TypeDocument::depuis_code(type_document).ok_or_else(illisible)?;
+            let bas = mise_en_page::bas_depuis_json(contenu, t);
+            mise_en_page::enregistrer_bas(conn, &qui, t, &bas)?;
+            Ok(acceptee)
         }
     }
 }
@@ -401,6 +740,15 @@ fn fiche_tiers(f: &proto::Tiers) -> Resultat<FicheTiers> {
         rccm: f.rccm.clone(),
         regime_imposition: f.regime_imposition.clone(),
         type_tiers: TypeTiers::depuis_code(&f.type_tiers).ok_or_else(illisible)?,
+    })
+}
+
+fn fiche_produit(f: &proto::Produit) -> Resultat<FicheProduit> {
+    Ok(FicheProduit {
+        designation: f.designation.clone(),
+        reference: f.reference.clone(),
+        prix: f.prix,
+        sens: Sens::depuis_code(&f.sens).ok_or_else(illisible)?,
     })
 }
 
@@ -622,7 +970,7 @@ mod tests {
                 fiche: fiche("Client Alpha"),
             },
         );
-        assert_eq!(b.appliquer(&creer_t), Issue::Acceptee { numero: None });
+        assert_eq!(b.appliquer(&creer_t), Issue::acceptee());
         let creer_d = b.op(
             p,
             &admin,
@@ -633,7 +981,7 @@ mod tests {
                 saisie: saisie(&t),
             },
         );
-        assert_eq!(b.appliquer(&creer_d), Issue::Acceptee { numero: None });
+        assert_eq!(b.appliquer(&creer_d), Issue::acceptee());
         (t, d)
     }
 
@@ -669,8 +1017,8 @@ mod tests {
                 fiche: fiche("Client Alpha"),
             },
         );
-        assert_eq!(b.appliquer(&op), Issue::Acceptee { numero: None });
-        assert_eq!(b.appliquer(&op), Issue::Acceptee { numero: None });
+        assert_eq!(b.appliquer(&op), Issue::acceptee());
+        assert_eq!(b.appliquer(&op), Issue::acceptee());
         let nombre: i64 = b
             .conn
             .query_row(
@@ -700,6 +1048,7 @@ mod tests {
         let valider = b.op("p1", &admin, base, Action::Valider { uid: d.clone() });
         let Issue::Acceptee {
             numero: Some(numero),
+            ..
         } = b.appliquer(&valider)
         else {
             panic!("numéro attendu");
@@ -708,7 +1057,8 @@ mod tests {
         assert_eq!(
             b.appliquer(&valider),
             Issue::Acceptee {
-                numero: Some(numero.clone())
+                numero: Some(numero.clone()),
+                bilan: None,
             }
         );
         assert_eq!(b.compteur(), 1);
@@ -782,7 +1132,10 @@ mod tests {
         b.conn.execute_batch("DROP TRIGGER temp.panne").unwrap();
         assert!(matches!(
             b.appliquer(&valider),
-            Issue::Acceptee { numero: Some(_) }
+            Issue::Acceptee {
+                numero: Some(_),
+                ..
+            }
         ));
         assert_eq!(b.compteur(), 1);
     }
@@ -835,7 +1188,7 @@ mod tests {
                 fiche: fiche("Nom de p1"),
             },
         );
-        assert_eq!(b.appliquer(&ailleurs), Issue::Acceptee { numero: None });
+        assert_eq!(b.appliquer(&ailleurs), Issue::acceptee());
         // Décision prise sur l'opération en attente : le renvoi, même identifiant,
         // est réévalué ; la fiche ayant changé sur p1 depuis sa base, il est en
         // conflit, et ce résultat-là est gardé.
@@ -886,7 +1239,7 @@ mod tests {
                     fiche: fiche(nom),
                 },
             );
-            assert_eq!(b.appliquer(&op), Issue::Acceptee { numero: None });
+            assert_eq!(b.appliquer(&op), Issue::acceptee());
         }
         // Un autre poste resté sur l'ancienne base : conflit, rien d'appliqué.
         let op = b.op(
@@ -920,7 +1273,7 @@ mod tests {
                 },
             },
         );
-        assert_eq!(b.appliquer(&modif), Issue::Acceptee { numero: None });
+        assert_eq!(b.appliquer(&modif), Issue::acceptee());
         let valider = b.op("p1", &admin, base_p1, Action::Valider { uid: d.clone() });
         assert_eq!(b.appliquer(&valider), Issue::Depassee);
         assert_eq!(b.compteur(), 0);
@@ -1002,15 +1355,13 @@ mod tests {
             type_document: "facture".into(),
             saisie: s,
         });
-        assert_eq!(
-            appliquer(&mut conn, &creer).unwrap(),
-            Issue::Acceptee { numero: None }
-        );
+        assert_eq!(appliquer(&mut conn, &creer).unwrap(), Issue::acceptee());
         let base = dernier_changement(&conn).unwrap();
         let mut valider = op(Action::Valider { uid: d });
         valider.base = base;
         let Issue::Acceptee {
             numero: Some(numero),
+            ..
         } = appliquer(&mut conn, &valider).unwrap()
         else {
             panic!("numéro attendu");
@@ -1065,5 +1416,514 @@ mod tests {
                 .unwrap()
                 .is_empty()
         );
+    }
+}
+
+/// Essais du jalon F5b : chaque action d'un poste appliquée par le serveur,
+/// puis rejouée sur la copie d'un poste.
+#[cfg(test)]
+mod essais_actions {
+    use super::*;
+    use crate::replique::tests::{remplir, synchroniser};
+    use crate::{ouvrir_en_memoire, replique};
+
+    const PNG: &[u8] = &[0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0];
+
+    struct Banc {
+        serveur: Connection,
+        poste: Connection,
+        admin: String,
+        t1: String,
+        p1: String,
+    }
+
+    impl Banc {
+        fn nouveau() -> Banc {
+            let mut serveur = ouvrir_en_memoire().unwrap();
+            let r = remplir(&mut serveur);
+            let mut poste = ouvrir_en_memoire().unwrap();
+            synchroniser(&serveur, &mut poste, 500);
+            let uid = |e, id| uid_de(&serveur, e, id).unwrap().unwrap();
+            Banc {
+                admin: uid(Entite::Utilisateur, r.admin.id),
+                t1: uid(Entite::Tiers, r.t1),
+                p1: uid(Entite::Produit, r.p1),
+                serveur,
+                poste,
+            }
+        }
+
+        fn op(&self, compte: &str, action: Action) -> Operation {
+            Operation {
+                id: nouvel_uid(),
+                entreprise: identifiant_entreprise(&self.serveur).unwrap(),
+                poste: "poste-1".into(),
+                compte: compte.into(),
+                hors_connexion: false,
+                base: dernier_changement(&self.serveur).unwrap(),
+                action,
+            }
+        }
+
+        fn faire(&mut self, action: Action) -> Issue {
+            let op = self.op(&self.admin.clone(), action);
+            appliquer(&mut self.serveur, &op).unwrap()
+        }
+
+        /// Action qui doit être acceptée.
+        fn ok(&mut self, action: Action) -> Issue {
+            let issue = self.faire(action.clone());
+            assert!(
+                matches!(issue, Issue::Acceptee { .. }),
+                "{action:?} : {issue:?}"
+            );
+            issue
+        }
+
+        fn statut(&self, uid: &str) -> String {
+            let id = id_de(&self.serveur, Entite::Document, uid)
+                .unwrap()
+                .unwrap();
+            documents::lire(&self.serveur, id)
+                .unwrap()
+                .unwrap()
+                .statut
+                .code()
+                .to_string()
+        }
+    }
+
+    fn aujourdhui() -> String {
+        chrono::Local::now()
+            .date_naive()
+            .format(FORMAT_DATE)
+            .to_string()
+    }
+
+    fn tiers_proto(nom: &str, type_tiers: &str) -> proto::Tiers {
+        proto::Tiers {
+            nom: nom.into(),
+            type_tiers: type_tiers.into(),
+            ..proto::Tiers::default()
+        }
+    }
+
+    fn produit_proto(reference: &str) -> proto::Produit {
+        proto::Produit {
+            designation: format!("Produit {reference}"),
+            reference: reference.into(),
+            prix: 2500,
+            sens: "vente".into(),
+        }
+    }
+
+    fn saisie(tiers: &str, produit: Option<&str>) -> proto::Saisie {
+        proto::Saisie {
+            date: aujourdhui(),
+            tiers: Some(tiers.into()),
+            libelle: "Essai F5b".into(),
+            lignes: vec![proto::Ligne {
+                produit: produit.map(String::from),
+                reference: "A".into(),
+                designation: "Article".into(),
+                prix: 2500,
+                quantite: 2_000,
+                ..proto::Ligne::default()
+            }],
+            ..proto::Saisie::default()
+        }
+    }
+
+    #[test]
+    fn chaque_action_appliquee_puis_repliquee() {
+        let mut b = Banc::nouveau();
+        let t1 = b.t1.clone();
+        let p1 = b.p1.clone();
+
+        // Tiers.
+        let t = nouvel_uid();
+        b.ok(Action::CreerTiers {
+            uid: t.clone(),
+            fiche: tiers_proto("Client Delta", "client"),
+        });
+        b.ok(Action::ModifierTiers {
+            uid: t.clone(),
+            fiche: tiers_proto("Client Delta SA", "client"),
+        });
+        b.ok(Action::DefinirActifTiers {
+            uid: t.clone(),
+            actif: false,
+        });
+        b.ok(Action::DefinirActifTiers {
+            uid: t.clone(),
+            actif: true,
+        });
+        let importes = [nouvel_uid(), nouvel_uid()];
+        let issue = b.ok(Action::ImporterTiers {
+            fiches: vec![
+                tiers_proto("Client Epsilon", "client"),
+                tiers_proto("Client Alpha", "client"),
+            ],
+            uids: importes.to_vec(),
+        });
+        assert!(matches!(
+            issue,
+            Issue::Acceptee { bilan: Some(Bilan::Import { ajoutees: 1, ref ignorees }), .. }
+                if ignorees.len() == 1 && ignorees[0].0 == 1
+        ));
+        assert!(
+            id_de(&b.serveur, Entite::Tiers, &importes[0])
+                .unwrap()
+                .is_some()
+        );
+        assert!(
+            id_de(&b.serveur, Entite::Tiers, &importes[1])
+                .unwrap()
+                .is_none()
+        );
+        let issue = b.ok(Action::RetirerTiers { uid: t.clone() });
+        assert!(matches!(
+            issue,
+            Issue::Acceptee {
+                bilan: Some(Bilan::Retrait { supprimee: true }),
+                ..
+            }
+        ));
+
+        // Produits.
+        let p = nouvel_uid();
+        b.ok(Action::CreerProduit {
+            uid: p.clone(),
+            fiche: produit_proto("Z1"),
+        });
+        b.ok(Action::ModifierProduit {
+            uid: p.clone(),
+            fiche: produit_proto("Z2"),
+        });
+        b.ok(Action::DefinirActifProduit {
+            uid: p.clone(),
+            actif: false,
+        });
+        let pi = nouvel_uid();
+        b.ok(Action::ImporterProduits {
+            fiches: vec![produit_proto("Z3")],
+            uids: vec![pi.clone()],
+        });
+        assert!(id_de(&b.serveur, Entite::Produit, &pi).unwrap().is_some());
+        b.ok(Action::RetirerProduit { uid: p.clone() });
+        // Produit cité par un document : seulement désactivé.
+        let issue = b.ok(Action::RetirerProduit { uid: p1.clone() });
+        assert!(matches!(
+            issue,
+            Issue::Acceptee {
+                bilan: Some(Bilan::Retrait { supprimee: false }),
+                ..
+            }
+        ));
+        b.ok(Action::DefinirActifProduit {
+            uid: p1.clone(),
+            actif: true,
+        });
+
+        // Devis validé, envoyé, converti ; facture réglée, livrée, avoir.
+        let d = nouvel_uid();
+        b.ok(Action::CreerBrouillon {
+            uid: d.clone(),
+            type_document: "devis".into(),
+            saisie: saisie(&t1, Some(&p1)),
+        });
+        let mut s = saisie(&t1, Some(&p1));
+        s.libelle = "Essai F5b modifié".into();
+        b.ok(Action::ModifierBrouillon {
+            uid: d.clone(),
+            saisie: s,
+        });
+        let issue = b.ok(Action::Valider { uid: d.clone() });
+        assert!(matches!(
+            issue,
+            Issue::Acceptee {
+                numero: Some(_),
+                ..
+            }
+        ));
+        b.ok(Action::MarquerEnvoye { uid: d.clone() });
+        b.ok(Action::ModifierAdministratif {
+            uid: d.clone(),
+            mode_paiement: "Virement".into(),
+            observations: "Relu".into(),
+        });
+        let f = nouvel_uid();
+        b.ok(Action::ConvertirEnFacture {
+            uid: d.clone(),
+            nouveau: f.clone(),
+        });
+        b.ok(Action::Valider { uid: f.clone() });
+        let r = nouvel_uid();
+        b.ok(Action::AjouterReglement {
+            uid: r.clone(),
+            document: f.clone(),
+            date: aujourdhui(),
+            montant: 1000,
+            mode_paiement: "Espèces".into(),
+            reference: String::new(),
+        });
+        b.ok(Action::SupprimerReglement { uid: r.clone() });
+        b.ok(Action::AjouterReglement {
+            uid: nouvel_uid(),
+            document: f.clone(),
+            date: aujourdhui(),
+            montant: 500,
+            mode_paiement: "Espèces".into(),
+            reference: "R2".into(),
+        });
+        let l = nouvel_uid();
+        b.ok(Action::CreerBordereau {
+            uid: f.clone(),
+            nouveau: l.clone(),
+        });
+        b.ok(Action::Valider { uid: l.clone() });
+        b.ok(Action::ModifierLivraison {
+            uid: l.clone(),
+            visa_client: "Visa".into(),
+            visa_fournisseur: String::new(),
+            date_livraison: String::new(),
+            date_reception: aujourdhui(),
+        });
+        b.ok(Action::ConfirmerLivraison { uid: l.clone() });
+        let a = nouvel_uid();
+        b.ok(Action::CreerAvoir {
+            uid: f.clone(),
+            nouveau: a.clone(),
+        });
+        let d2 = nouvel_uid();
+        b.ok(Action::Dupliquer {
+            uid: d.clone(),
+            nouveau: d2.clone(),
+            annuler_original: false,
+        });
+        b.ok(Action::SupprimerBrouillon { uid: d2.clone() });
+        assert!(id_de(&b.serveur, Entite::Document, &d2).unwrap().is_none());
+        let d3 = nouvel_uid();
+        b.ok(Action::CreerBrouillon {
+            uid: d3.clone(),
+            type_document: "devis".into(),
+            saisie: saisie(&t1, None),
+        });
+        b.ok(Action::Valider { uid: d3.clone() });
+        b.ok(Action::Annuler { uid: d3.clone() });
+        assert_eq!(b.statut(&d3), "annule");
+
+        // Bon de commande envoyé puis reçu.
+        let fournisseur = nouvel_uid();
+        b.ok(Action::CreerTiers {
+            uid: fournisseur.clone(),
+            fiche: tiers_proto("Fournisseur Un", "fournisseur"),
+        });
+        let bc = nouvel_uid();
+        b.ok(Action::CreerBrouillon {
+            uid: bc.clone(),
+            type_document: "bon_commande".into(),
+            saisie: saisie(&fournisseur, None),
+        });
+        b.ok(Action::Valider { uid: bc.clone() });
+        b.ok(Action::MarquerEnvoye { uid: bc.clone() });
+        b.ok(Action::EnregistrerReception {
+            uid: bc.clone(),
+            recues: vec![2_000],
+        });
+
+        // Comptes.
+        let c = nouvel_uid();
+        b.ok(Action::CreerCompte {
+            uid: c.clone(),
+            nom_complet: "Compte Deux".into(),
+            identifiant: "deux".into(),
+            mot_de_passe: "secret-creation-1".into(),
+            role: "commercial".into(),
+        });
+        b.ok(Action::ChangerRole {
+            uid: c.clone(),
+            role: "comptable".into(),
+        });
+        b.ok(Action::DefinirActifCompte {
+            uid: c.clone(),
+            actif: false,
+        });
+        b.ok(Action::DefinirActifCompte {
+            uid: c.clone(),
+            actif: true,
+        });
+        b.ok(Action::ReinitialiserMotDePasse {
+            uid: c.clone(),
+            nouveau: "secret-reinit-2".into(),
+        });
+        b.ok(Action::ChangerMotDePasse {
+            ancien: "motdepasse1".into(),
+            nouveau: "secret-change-3".into(),
+        });
+        b.ok(Action::ChangerLangue {
+            langue: "en".into(),
+        });
+        b.ok(Action::ChangerAffichage {
+            navigation: "barre".into(),
+            animations: false,
+        });
+
+        // Réglages partagés.
+        let mut prm = parametres::lire(&b.serveur).unwrap();
+        prm.modes_paiement.push("Chèque".into());
+        prm.dossiers_export[0] = "C:\\poste\\devis".into();
+        b.ok(Action::EnregistrerParametres {
+            contenu: parametres::en_json(&prm),
+        });
+        let lu = parametres::lire(&b.serveur).unwrap();
+        assert!(lu.modes_paiement.contains(&"Chèque".to_string()));
+        assert_eq!(lu.dossiers_export[0], "", "dossiers du poste jamais écrits");
+        let mut e = entreprise::lire(&b.serveur).unwrap().unwrap();
+        e.telephone = "70 00 00 00".into();
+        b.ok(Action::EnregistrerEntreprise {
+            contenu: e.en_json(),
+        });
+        b.ok(Action::DefinirLogo {
+            logo: "secondaire".into(),
+            octets: Some(BASE64.encode(PNG)),
+        });
+        let matrice = droits::lire_matrice(&b.serveur).unwrap();
+        b.ok(Action::EnregistrerMatrice {
+            contenu: droits::matrice_en_json(&matrice),
+        });
+        let mut textes = relances::lire_textes(&b.serveur).unwrap();
+        textes.objet = "Relance de paiement".into();
+        b.ok(Action::EnregistrerTextesRelance {
+            contenu: relances::en_json(&textes),
+        });
+        let m = mise_en_page::lire_analysee(&b.serveur).unwrap();
+        b.ok(Action::EnregistrerMiseEnPage {
+            contenu: mise_en_page::en_json(&m),
+        });
+        let bas = mise_en_page::lire_bas(&b.serveur, TypeDocument::Facture).unwrap();
+        b.ok(Action::EnregistrerBas {
+            type_document: "facture".into(),
+            contenu: mise_en_page::bas_en_json(&bas),
+        });
+
+        // Aucun mot de passe ni logo dans l'historique des opérations.
+        let gardes: Vec<String> = b
+            .serveur
+            .prepare("SELECT contenu FROM operation")
+            .unwrap()
+            .query_map([], |r| r.get(0))
+            .unwrap()
+            .collect::<Result<_, _>>()
+            .unwrap();
+        assert!(gardes.len() >= 40);
+        for contenu in &gardes {
+            assert!(!contenu.contains("secret-"), "{contenu}");
+            assert!(!contenu.contains("motdepasse1"), "{contenu}");
+            assert!(!contenu.contains(&BASE64.encode(PNG)), "{contenu}");
+        }
+
+        // La copie du poste suit tout.
+        synchroniser(&b.serveur, &mut b.poste, 7);
+        assert_eq!(replique::en_attente(&b.poste).unwrap(), 0);
+    }
+
+    #[test]
+    fn renvoi_reconnu_sans_mot_de_passe_garde() {
+        let mut b = Banc::nouveau();
+        let op = b.op(
+            &b.admin.clone(),
+            Action::ChangerMotDePasse {
+                ancien: "motdepasse1".into(),
+                nouveau: "secret-nouveau".into(),
+            },
+        );
+        assert_eq!(appliquer(&mut b.serveur, &op).unwrap(), Issue::acceptee());
+        // Réponse perdue : le même envoi rend le même résultat, sans rien refaire.
+        assert_eq!(appliquer(&mut b.serveur, &op).unwrap(), Issue::acceptee());
+        let id = id_de(&b.serveur, Entite::Utilisateur, &b.admin)
+            .unwrap()
+            .unwrap();
+        let admin = comptes::lire(&b.serveur, id).unwrap().unwrap();
+        assert!(comptes::connecter(&b.serveur, &admin.identifiant, "secret-nouveau").is_ok());
+    }
+
+    #[test]
+    fn lecture_seule_laisse_passer_les_reglages_personnels() {
+        let mut b = Banc::nouveau();
+        b.serveur
+            .execute(
+                "INSERT INTO temp.abonnement_etat (id, lecture_seule, echeance)
+                 VALUES (1, 1, '2026-11-01')",
+                [],
+            )
+            .unwrap();
+        let personnelles = [
+            Action::ChangerLangue {
+                langue: "en".into(),
+            },
+            Action::ChangerAffichage {
+                navigation: "barre".into(),
+                animations: true,
+            },
+            Action::ChangerMotDePasse {
+                ancien: "motdepasse1".into(),
+                nouveau: "secret-lecture-seule".into(),
+            },
+        ];
+        for action in personnelles {
+            b.ok(action);
+        }
+        let admin = b.admin.clone();
+        let t1 = b.t1.clone();
+        for action in [
+            Action::ReinitialiserMotDePasse {
+                uid: admin.clone(),
+                nouveau: "secret-refuse".into(),
+            },
+            Action::ModifierTiers {
+                uid: t1,
+                fiche: tiers_proto("Refusé", "client"),
+            },
+            Action::EnregistrerTextesRelance {
+                contenu: relances::en_json(&relances::lire_textes(&b.serveur).unwrap()),
+            },
+        ] {
+            let op = b.op(&admin, action);
+            assert!(matches!(
+                appliquer(&mut b.serveur, &op),
+                Err(Erreur::LectureSeule { .. })
+            ));
+        }
+    }
+
+    #[test]
+    fn reglages_changes_ailleurs_depasses() {
+        let mut b = Banc::nouveau();
+        let base = dernier_changement(&b.serveur).unwrap();
+        // Un autre poste change les paramètres après la base de celui-ci.
+        let mut autre = b.op(
+            &b.admin.clone(),
+            Action::EnregistrerTextesRelance {
+                contenu: relances::en_json(&relances::lire_textes(&b.serveur).unwrap()),
+            },
+        );
+        autre.poste = "poste-2".into();
+        assert_eq!(
+            appliquer(&mut b.serveur, &autre).unwrap(),
+            Issue::acceptee()
+        );
+        let mut op = b.op(
+            &b.admin.clone(),
+            Action::EnregistrerParametres {
+                contenu: parametres::en_json(&parametres::lire(&b.serveur).unwrap()),
+            },
+        );
+        op.base = base;
+        assert_eq!(appliquer(&mut b.serveur, &op).unwrap(), Issue::Depassee);
+        // Rien n'est suspendu : une nouvelle tentative à jour passe.
+        b.ok(Action::EnregistrerParametres {
+            contenu: parametres::en_json(&parametres::lire(&b.serveur).unwrap()),
+        });
     }
 }
