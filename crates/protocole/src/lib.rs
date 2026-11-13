@@ -305,6 +305,18 @@ pub enum SiChangee {
     Depassee,
 }
 
+/// Ce qu'un poste peut faire d'une action quand le serveur est injoignable
+/// (décision 50).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EnCoupure {
+    /// Appliquée à titre provisoire dans la copie et mise en file d'envoi.
+    Permise,
+    /// La validation, qui donne le numéro, attend le serveur (décision 9).
+    Validation,
+    /// Inactive jusqu'au retour du serveur : comptes et réglages.
+    Refusee,
+}
+
 /// Texte mis à la place d'un mot de passe dans une opération gardée.
 pub const MASQUE: &str = "(masqué)";
 
@@ -431,6 +443,57 @@ impl Action {
             | EnregistrerMiseEnPage { .. }
             | EnregistrerBas { .. } => SiChangee::Depassee,
             _ => SiChangee::Appliquer,
+        }
+    }
+
+    /// Possible ou non quand le serveur est injoignable (décision 50). Aucune
+    /// action permise ne porte de secret masqué dans la copie gardée par le
+    /// serveur : une opération en attente acceptée plus tard rejoue son
+    /// contenu exact.
+    pub fn en_coupure(&self) -> EnCoupure {
+        use Action::*;
+        // Pas de cas par défaut : une action nouvelle doit être classée.
+        match self {
+            CreerTiers { .. }
+            | ModifierTiers { .. }
+            | RetirerTiers { .. }
+            | DefinirActifTiers { .. }
+            | ImporterTiers { .. }
+            | CreerProduit { .. }
+            | ModifierProduit { .. }
+            | RetirerProduit { .. }
+            | DefinirActifProduit { .. }
+            | ImporterProduits { .. }
+            | CreerBrouillon { .. }
+            | ModifierBrouillon { .. }
+            | ModifierLivraison { .. }
+            | ModifierAdministratif { .. }
+            | Annuler { .. }
+            | SupprimerBrouillon { .. }
+            | Dupliquer { .. }
+            | CreerAvoir { .. }
+            | ConvertirEnFacture { .. }
+            | CreerBordereau { .. }
+            | ConfirmerLivraison { .. }
+            | EnregistrerReception { .. }
+            | MarquerEnvoye { .. }
+            | AjouterReglement { .. }
+            | SupprimerReglement { .. }
+            | ChangerLangue { .. }
+            | ChangerAffichage { .. } => EnCoupure::Permise,
+            Valider { .. } => EnCoupure::Validation,
+            CreerCompte { .. }
+            | DefinirActifCompte { .. }
+            | ChangerRole { .. }
+            | ChangerMotDePasse { .. }
+            | ReinitialiserMotDePasse { .. }
+            | EnregistrerParametres { .. }
+            | EnregistrerEntreprise { .. }
+            | DefinirLogo { .. }
+            | EnregistrerMatrice { .. }
+            | EnregistrerTextesRelance { .. }
+            | EnregistrerMiseEnPage { .. }
+            | EnregistrerBas { .. } => EnCoupure::Refusee,
         }
     }
 
@@ -652,6 +715,68 @@ mod tests {
             assert_eq!(Entite::depuis_code(e.code()), Some(e));
         }
         assert_eq!(Entite::depuis_code("autre"), None);
+    }
+
+    #[test]
+    fn ecritures_en_coupure() {
+        let masquees = [
+            Action::CreerCompte {
+                uid: "u".into(),
+                nom_complet: "N".into(),
+                identifiant: "i".into(),
+                mot_de_passe: "secret".into(),
+                role: "admin".into(),
+            },
+            Action::ChangerMotDePasse {
+                ancien: "a".into(),
+                nouveau: "n".into(),
+            },
+            Action::ReinitialiserMotDePasse {
+                uid: "u".into(),
+                nouveau: "n".into(),
+            },
+            Action::DefinirLogo {
+                logo: "principal".into(),
+                octets: Some("QUJD".into()),
+            },
+        ];
+        // Une action dont la copie gardée diffère ne doit jamais attendre.
+        for a in &masquees {
+            assert_ne!(a.masquee(), *a);
+            assert_eq!(a.en_coupure(), EnCoupure::Refusee, "{a:?}");
+        }
+        assert_eq!(
+            Action::Valider { uid: "d".into() }.en_coupure(),
+            EnCoupure::Validation
+        );
+        let permises = [
+            Action::CreerTiers {
+                uid: "t".into(),
+                fiche: Tiers::default(),
+            },
+            Action::AjouterReglement {
+                uid: "r".into(),
+                document: "d".into(),
+                date: "2026-11-13".into(),
+                montant: 1,
+                mode_paiement: String::new(),
+                reference: String::new(),
+            },
+            Action::ChangerLangue {
+                langue: "fr".into(),
+            },
+        ];
+        for a in &permises {
+            assert_eq!(a.en_coupure(), EnCoupure::Permise, "{a:?}");
+            assert_eq!(a.masquee(), *a);
+        }
+        assert_eq!(
+            Action::EnregistrerParametres {
+                contenu: serde_json::Value::Null
+            }
+            .en_coupure(),
+            EnCoupure::Refusee
+        );
     }
 
     #[test]
