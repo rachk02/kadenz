@@ -27,7 +27,9 @@ use kadenz_domaine::message::MessageCompose;
 use kadenz_licence::VerifyingKey;
 use kadenz_protocole::abonnement::Refus;
 use kadenz_protocole::inscription::{DECOUVERTE, ServeurTrouve};
-use kadenz_protocole::messages::{self, CHANGEMENTS_MAX, ErreurTrame, Reponse, Requete};
+use kadenz_protocole::messages::{
+    self, CHANGEMENTS_MAX, ErreurTrame, LIGNES_MAX, Reponse, Requete,
+};
 use kadenz_protocole::{Entite, VERSION};
 use kadenz_stockage::chiffrement::{self, Portee};
 use kadenz_stockage::{Erreur, abonnement, comptes, inscription, postes, synchro};
@@ -874,6 +876,35 @@ fn traiter(
                     .ok_or_else(|| Erreur::Validation("compte inconnu sur le serveur".into()))?;
                 abonnement::enregistrer_avec(c, &acteur, &cle, abonnement::horloge(), &cles)
             }))
+        }
+        Requete::Suspendues => {
+            let Some(uid) = compte.clone() else {
+                return rejet("aucun compte connecté");
+            };
+            match contexte.base.executer(move |c| {
+                let id = synchro::id_de(c, Entite::Utilisateur, &uid)?
+                    .ok_or_else(|| Erreur::Validation("compte inconnu sur le serveur".into()))?;
+                let acteur = comptes::lire(c, id)?
+                    .ok_or_else(|| Erreur::Validation("compte inconnu sur le serveur".into()))?;
+                synchro::suspendues(c, &acteur)
+            }) {
+                Ok(Ok(suspendues)) => Reponse::Suspendues { suspendues },
+                Ok(Err(e)) => rejet(&e.to_string()),
+                Err(e) => rejet(&e),
+            }
+        }
+        Requete::Lignes { lignes } => {
+            if compte.is_none() {
+                return rejet("aucun compte connecté");
+            }
+            if lignes.len() > LIGNES_MAX {
+                return rejet("trop de lignes demandées");
+            }
+            match contexte.base.executer(move |c| synchro::lignes(c, &lignes)) {
+                Ok(Ok(lignes)) => Reponse::Lignes { lignes },
+                Ok(Err(e)) => rejet(&e.to_string()),
+                Err(e) => rejet(&e),
+            }
         }
     }
 }

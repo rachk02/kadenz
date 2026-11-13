@@ -289,6 +289,7 @@ fn ecriture_sans_reponse_confirmee_a_la_connexion() {
         poste: b.identite.empreinte(),
         compte: b.admin.clone(),
         hors_connexion: false,
+        heure_poste: None,
         base: 0,
         action: Action::CreerTiers {
             uid: t.clone(),

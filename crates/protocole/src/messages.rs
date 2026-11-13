@@ -13,13 +13,16 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 use crate::abonnement::{Abonnement, Refus};
-use crate::{Changement, Issue, Operation};
+use crate::{Changement, Entite, Issue, Operation, Suspendue};
 
 /// Taille maximale d'un message, en octets.
 pub const TAILLE_MAX: usize = 8 * 1024 * 1024;
 
 /// Nombre maximal de changements par demande.
 pub const CHANGEMENTS_MAX: u32 = 500;
+
+/// Nombre maximal de lignes par demande d'état présent.
+pub const LIGNES_MAX: usize = 500;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "requete", rename_all = "snake_case")]
@@ -49,6 +52,14 @@ pub enum Requete {
     /// Nouvelle licence d'abonnement, au droit « Gérer les paramètres ».
     RenouvelerAbonnement {
         cle: String,
+    },
+    /// Opérations suspendues que le compte connecté peut trancher ou
+    /// décider (F6).
+    Suspendues,
+    /// État présent de lignes désignées, pour défaire dans la copie une
+    /// écriture provisoire (F6) ; au plus [`LIGNES_MAX`].
+    Lignes {
+        lignes: Vec<(Entite, String)>,
     },
 }
 
@@ -98,6 +109,15 @@ pub enum Reponse {
     /// renouvellement.
     LectureSeule {
         echeance: Option<String>,
+    },
+    Suspendues {
+        suspendues: Vec<Suspendue>,
+    },
+    /// État présent de chaque ligne demandée, `Supprime` pour une ligne
+    /// inconnue du serveur ; `seq` est le rang du dernier changement de la
+    /// ligne (0 si aucun) et ne déplace pas le dernier rang reçu du poste.
+    Lignes {
+        lignes: Vec<Changement>,
     },
     /// Demande refusée, message à traduire (licence refusée, droit manquant).
     Refus {

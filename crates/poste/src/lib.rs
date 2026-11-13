@@ -726,6 +726,7 @@ impl Fil {
             poste: self.identite.empreinte(),
             compte: uid,
             hors_connexion: false,
+            heure_poste: None,
             base: replique::dernier_recu(&self.copie).map_err(base)?,
             action,
         };

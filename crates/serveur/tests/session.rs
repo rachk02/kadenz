@@ -143,6 +143,7 @@ fn creer_tiers(entreprise: &str, poste: &str, compte: &str, nom: &str) -> Operat
         poste: poste.into(),
         compte: compte.into(),
         hors_connexion: false,
+        heure_poste: None,
         base: 0,
         action: Action::CreerTiers {
             uid: synchro::nouvel_uid(),
@@ -831,4 +832,79 @@ fn demarrage_sans_decouverte_si_le_port_udp_est_pris() {
     installer(&serveur);
     let identite = poste_inscrit(&serveur);
     assert!(connecter(&serveur, &identite).is_ok());
+}
+
+/// F6a : conflit fait sur la machine du serveur, listé puis tranché par la
+/// session ; état présent des lignes.
+#[test]
+fn conflit_liste_et_tranche_par_la_session() {
+    let serveur = demarrer("conflit", DELAI_CLIENT, 8);
+    let (entreprise, admin) = installer(&serveur);
+    let poste = poste_inscrit(&serveur);
+    let mut client = connecter(&serveur, &poste).unwrap();
+    assert!(matches!(client.suspendues(), Err(ErreurClient::Rejet(_))));
+    client.connexion("admin", MOT_DE_PASSE).unwrap();
+    assert!(client.suspendues().unwrap().is_empty());
+
+    let creer = creer_tiers(&entreprise, &poste.empreinte(), &admin, "Kaboré");
+    let Action::CreerTiers { uid: t, .. } = creer.action.clone() else {
+        unreachable!()
+    };
+    assert!(matches!(
+        client.envoyer(&creer).unwrap(),
+        Issue::Acceptee { .. }
+    ));
+    let (_, base) = client.changements(0, 100).unwrap();
+    // Modifiée sur la machine du serveur après la base du poste.
+    let t2 = t.clone();
+    serveur
+        .base(move |c| {
+            let id = synchro::id_de(c, Entite::Tiers, &t2).unwrap().unwrap();
+            let acteur = comptes::lire(c, 1).unwrap().unwrap();
+            let mut f = kadenz_stockage::tiers::lire(c, id).unwrap().unwrap().fiche;
+            f.nom = "Kaboré (serveur)".into();
+            kadenz_stockage::tiers::modifier(c, &acteur, id, &f).unwrap();
+        })
+        .unwrap();
+    let mut modifier = creer_tiers(&entreprise, &poste.empreinte(), &admin, "");
+    modifier.base = base;
+    modifier.action = Action::ModifierTiers {
+        uid: t.clone(),
+        fiche: Tiers {
+            nom: "Kaboré (poste)".into(),
+            type_tiers: "client".into(),
+            ..Tiers::default()
+        },
+    };
+    assert_eq!(client.envoyer(&modifier).unwrap(), Issue::EnConflit);
+    let liste = client.suspendues().unwrap();
+    assert_eq!(liste.len(), 1);
+    assert_eq!(liste[0].cible, Some((Entite::Tiers, t.clone())));
+
+    let mut trancher = creer_tiers(&entreprise, &poste.empreinte(), &admin, "");
+    trancher.action = Action::TrancherConflit {
+        operation: modifier.id.clone(),
+        resultat: Some(Box::new(modifier.action.clone())),
+    };
+    assert!(matches!(
+        client.envoyer(&trancher).unwrap(),
+        Issue::Acceptee { .. }
+    ));
+    assert!(matches!(
+        client.envoyer(&modifier).unwrap(),
+        Issue::Acceptee { .. }
+    ));
+    assert!(client.suspendues().unwrap().is_empty());
+
+    let inconnu = synchro::nouvel_uid();
+    let lignes = client
+        .lignes(vec![(Entite::Tiers, t.clone()), (Entite::Tiers, inconnu)])
+        .unwrap();
+    assert!(matches!(
+        &lignes[0].etat,
+        Etat::Ligne { valeurs, .. } if valeurs["nom"] == "Kaboré (poste)"
+    ));
+    assert_eq!(lignes[1].etat, Etat::Supprime);
+    let trop = vec![(Entite::Tiers, t); messages::LIGNES_MAX + 1];
+    assert!(matches!(client.lignes(trop), Err(ErreurClient::Rejet(_))));
 }

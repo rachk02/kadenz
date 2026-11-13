@@ -158,7 +158,7 @@ pub(crate) fn ecrire(etat: &Etat, action: Action) -> Option<Result<Issue, String
         return Some(Err(texte_erreur(&ErreurPoste::HorsConnexion)));
     };
     Some(match r.synchro.ecrire(action) {
-        Ok(issue @ Issue::Acceptee { .. }) => Ok(issue),
+        Ok(issue @ (Issue::Acceptee { .. } | Issue::EnFile)) => Ok(issue),
         Ok(Issue::Refusee { modele, valeurs }) => {
             Err(texte_erreur(&ErreurPoste::Refus { modele, valeurs }))
         }

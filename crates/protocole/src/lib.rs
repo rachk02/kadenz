@@ -21,7 +21,7 @@ pub use abonnement::Abonnement;
 
 /// Version du protocole, annoncée à la connexion (F2) : un poste d'une autre
 /// version est refusé.
-pub const VERSION: u32 = 2;
+pub const VERSION: u32 = 3;
 
 /// Action d'un compte, faite sur un poste et appliquée par le serveur.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -40,6 +40,11 @@ pub struct Operation {
     /// sert à reconnaître un conflit (section 6).
     pub base: u64,
     pub action: Action,
+    /// Heure du poste au moment de l'action, pour une opération faite hors
+    /// connexion : indication seulement, l'horloge d'un poste pouvant être
+    /// fausse (décision 32).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub heure_poste: Option<String>,
 }
 
 /// Famille d'une action : le socle commun de la suite (entreprise, comptes,
@@ -289,6 +294,22 @@ pub enum Action {
         type_document: String,
         contenu: serde_json::Value,
     },
+
+    // Opérations suspendues (F6).
+    /// Tranche le conflit de l'opération `operation` (décisions 17, 33, 34) :
+    /// `None` garde la version du serveur ; `Some` applique l'action donnée,
+    /// l'action d'origine pour garder la version du poste, ou une action du
+    /// même genre composée champ par champ.
+    TrancherConflit {
+        operation: String,
+        resultat: Option<Box<Action>>,
+    },
+    /// Accepte ou rejette l'opération en attente `operation` (décisions 18
+    /// et 32), Admin seulement.
+    DeciderAttente {
+        operation: String,
+        accepter: bool,
+    },
 }
 
 /// Ce qu'une ligne changée ailleurs depuis la base de l'opération fait de
@@ -315,6 +336,30 @@ pub enum EnCoupure {
     Validation,
     /// Inactive jusqu'au retour du serveur : comptes et réglages.
     Refusee,
+}
+
+/// Raison pour laquelle une opération est suspendue sur le serveur.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Motif {
+    /// Conflit à trancher (décision 17).
+    Conflit,
+    /// Refusée hors connexion pour un compte ou un droit, en attente de
+    /// l'Admin (décisions 18 et 32).
+    Attente,
+}
+
+/// Opération suspendue, telle que le serveur la montre aux personnes qui
+/// peuvent la trancher ou la décider.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Suspendue {
+    /// Copie gardée par le serveur (sans secret).
+    pub operation: Operation,
+    pub motif: Motif,
+    /// Ligne visée, quand l'action en vise une.
+    pub cible: Option<(Entite, String)>,
+    /// Heure de réception par le serveur.
+    pub recue: String,
 }
 
 /// Texte mis à la place d'un mot de passe dans une opération gardée.
@@ -387,7 +432,9 @@ impl Action {
             | ImporterProduits { .. }
             | ChangerMotDePasse { .. }
             | ChangerLangue { .. }
-            | ChangerAffichage { .. } => return None,
+            | ChangerAffichage { .. }
+            | TrancherConflit { .. }
+            | DeciderAttente { .. } => return None,
         })
     }
 
@@ -493,7 +540,9 @@ impl Action {
             | EnregistrerMatrice { .. }
             | EnregistrerTextesRelance { .. }
             | EnregistrerMiseEnPage { .. }
-            | EnregistrerBas { .. } => EnCoupure::Refusee,
+            | EnregistrerBas { .. }
+            | TrancherConflit { .. }
+            | DeciderAttente { .. } => EnCoupure::Refusee,
         }
     }
 
@@ -512,6 +561,10 @@ impl Action {
                 octets: Some(octets),
                 ..
             } => *octets = format!("({} caractères en base64)", octets.len()),
+            Action::TrancherConflit {
+                resultat: Some(resultat),
+                ..
+            } => **resultat = resultat.masquee(),
             _ => {}
         }
         a
@@ -607,6 +660,10 @@ pub enum Issue {
     /// ou en conflit : celle-ci n'est pas gardée, le poste la renvoie une fois la
     /// décision prise, pour garder l'ordre de ses actions.
     Bloquee,
+    /// Écriture faite hors connexion, appliquée à titre provisoire dans la
+    /// copie du poste et mise en file d'envoi (F6). Jamais rendue par le
+    /// serveur.
+    EnFile,
 }
 
 impl Issue {
@@ -675,6 +732,7 @@ mod tests {
             poste: "p".into(),
             compte: "c".into(),
             hors_connexion: true,
+            heure_poste: None,
             base: 42,
             action: Action::CreerBrouillon {
                 uid: "d".into(),

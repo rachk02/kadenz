@@ -19,7 +19,7 @@ use std::time::{Duration, Instant};
 
 use kadenz_protocole::inscription::{DECOUVERTE, PORT_PAR_DEFAUT, ServeurTrouve};
 use kadenz_protocole::messages::{self, ErreurTrame, Reponse, Requete};
-use kadenz_protocole::{Abonnement, Changement, Issue, Operation, VERSION};
+use kadenz_protocole::{Abonnement, Changement, Entite, Issue, Operation, Suspendue, VERSION};
 use rustls::client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier};
 use rustls::crypto::{CryptoProvider, verify_tls12_signature, verify_tls13_signature};
 use rustls::pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer, ServerName, UnixTime};
@@ -518,6 +518,27 @@ impl Client {
                 changements,
                 dernier,
             } => Ok((changements, dernier)),
+            autre => Err(inattendue(&autre)),
+        }
+    }
+
+    /// Opérations suspendues que le compte connecté peut trancher ou décider
+    /// (F6).
+    pub fn suspendues(&mut self) -> Result<Vec<Suspendue>, ErreurClient> {
+        match self.echanger(&Requete::Suspendues)? {
+            Reponse::Suspendues { suspendues } => Ok(suspendues),
+            autre => Err(inattendue(&autre)),
+        }
+    }
+
+    /// État présent des lignes désignées (F6), au plus
+    /// [`kadenz_protocole::messages::LIGNES_MAX`] par appel.
+    pub fn lignes(
+        &mut self,
+        lignes: Vec<(Entite, String)>,
+    ) -> Result<Vec<Changement>, ErreurClient> {
+        match self.echanger(&Requete::Lignes { lignes })? {
+            Reponse::Lignes { lignes } => Ok(lignes),
             autre => Err(inattendue(&autre)),
         }
     }

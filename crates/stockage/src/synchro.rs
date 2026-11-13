@@ -17,9 +17,11 @@ use kadenz_domaine::calcul::Taux;
 use kadenz_domaine::document::TypeDocument;
 use kadenz_domaine::langue::Langue;
 use kadenz_domaine::referentiel::{FicheProduit, FicheTiers, Sens, TypeTiers};
+use kadenz_domaine::role::Droit;
 use kadenz_domaine::role::Role;
 use kadenz_protocole::{
-    self as proto, Action, Bilan, Changement, Entite, Etat, Issue, Operation, SiChangee,
+    self as proto, Action, Bilan, Changement, EnCoupure, Entite, Etat, Issue, Motif, Operation,
+    SiChangee, Suspendue,
 };
 use rusqlite::{Connection, OptionalExtension, params};
 
@@ -61,6 +63,22 @@ pub const MODELES_ERREUR: [&str; 4] = [
     "élément inconnu sur le serveur : {}",
     "compte inconnu sur le serveur",
     "opération illisible",
+];
+
+/// Résultat rendu à l'opération d'origine quand son conflit est tranché en
+/// faveur de la version du serveur (F6).
+pub const MODELE_CONFLIT_SERVEUR: &str = "conflit tranché : la version du serveur est gardée";
+
+/// Résultat rendu à une opération en attente rejetée par l'Admin (F6).
+pub const MODELE_REJETEE: &str = "opération rejetée par l'Admin";
+
+/// Textes des décisions sur les opérations suspendues (F6) : à traduire sur
+/// les postes, comme [`MODELES_ERREUR`].
+pub const MODELES_DECISION: [&str; 4] = [
+    MODELE_CONFLIT_SERVEUR,
+    MODELE_REJETEE,
+    "opération suspendue introuvable ou déjà décidée",
+    "le résultat ne correspond pas à l'opération en conflit",
 ];
 
 /// Nouvel identifiant global (UUID version 7).
@@ -180,6 +198,12 @@ pub fn appliquer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
     }
     if op.entreprise != identifiant_entreprise(conn)? {
         return Err(refus_op("opération destinée à une autre entreprise"));
+    }
+    // Seules les écritures permises hors connexion peuvent en venir (décision
+    // 50) : la copie gardée d'une opération en attente, rejouée si l'Admin
+    // l'accepte, ne contient alors aucun secret masqué.
+    if op.hors_connexion && op.action.en_coupure() != EnCoupure::Permise {
+        return Err(refus_op("écriture impossible hors connexion"));
     }
     // Lecture seule (abonnement) : après le renvoi d'une opération déjà
     // acceptée, qui garde son résultat, et avant tout effet. Seules passent
@@ -723,7 +747,320 @@ fn executer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
             mise_en_page::enregistrer_bas(conn, &qui, t, &bas)?;
             Ok(acceptee)
         }
+
+        // Opérations suspendues (F6).
+        Action::TrancherConflit {
+            operation,
+            resultat,
+        } => trancher(conn, op, &qui, operation, resultat.as_deref()),
+        Action::DeciderAttente {
+            operation,
+            accepter,
+        } => decider(conn, op, &qui, operation, *accepter),
     }
+}
+
+/// Opération suspendue encore ouverte, avec le motif voulu : sa copie gardée.
+fn suspendue_ouverte(conn: &Connection, id: &str, motif: &str) -> Resultat<Operation> {
+    let contenu: Option<String> = conn
+        .query_row(
+            "SELECT o.contenu FROM operation_suspendue s JOIN operation o ON o.id = s.operation_id
+             WHERE s.operation_id = ?1 AND s.motif = ?2 AND s.ouverte = 1",
+            params![id, motif],
+            |r| r.get(0),
+        )
+        .optional()?;
+    let contenu = contenu.ok_or_else(|| {
+        Erreur::Validation("opération suspendue introuvable ou déjà décidée".into())
+    })?;
+    serde_json::from_str(&contenu).map_err(|_| illisible())
+}
+
+/// Ferme une opération suspendue et réécrit le résultat gardé pour elle : son
+/// renvoi par le poste d'origine rend alors la décision.
+fn clore(conn: &Connection, id: &str, issue: &Issue) -> Resultat<()> {
+    let issue = serde_json::to_string(issue).map_err(|e| Erreur::Validation(e.to_string()))?;
+    conn.execute(
+        "UPDATE operation_suspendue SET ouverte = 0 WHERE operation_id = ?1",
+        [id],
+    )?;
+    conn.execute(
+        "UPDATE operation SET issue = ?1 WHERE id = ?2",
+        params![issue, id],
+    )?;
+    Ok(())
+}
+
+/// Droit de modifier la ligne visée par une action en conflit.
+fn droit_de_modifier(conn: &Connection, action: &Action) -> Resultat<Droit> {
+    Ok(match action.cible() {
+        Some((Entite::Document, uid)) => {
+            let id = exiger_id(conn, Entite::Document, uid)?;
+            let d = documents::lire(conn, id)?.ok_or_else(|| inconnu(Entite::Document, uid))?;
+            Droit::brouillon(d.type_document)
+        }
+        _ => Droit::ModifierReferentiel,
+    })
+}
+
+/// Peut trancher le conflit de l'opération `origine` : l'Admin, ou le compte
+/// qui l'a faite s'il a le droit de modifier la ligne (décision 33).
+fn exiger_tranche(conn: &Connection, qui: &Utilisateur, origine: &Operation) -> Resultat<()> {
+    if qui.role == Role::Admin {
+        return Ok(());
+    }
+    let droit = droit_de_modifier(conn, &origine.action)?;
+    if uid_de(conn, Entite::Utilisateur, qui.id)?.as_deref() != Some(origine.compte.as_str()) {
+        return Err(Erreur::Interdit(droit));
+    }
+    droits::exiger(conn, qui, droit)
+}
+
+/// Inscrit une décision au journal d'audit, sur la ligne visée quand il y en
+/// a une, avec le compte d'origine et le compte qui décide.
+fn journaliser_decision(
+    conn: &Connection,
+    qui: &Utilisateur,
+    origine: &Operation,
+    action: &str,
+    detail: serde_json::Value,
+) -> Resultat<()> {
+    let (entite, id) = match origine.action.cible() {
+        Some((e, uid)) => (e.code(), id_de(conn, e, uid)?.unwrap_or(0)),
+        None => ("operation", 0),
+    };
+    let mut nouvelle = serde_json::json!({
+        "operation": origine.id,
+        "compte_origine": origine.compte,
+        "poste_origine": origine.poste,
+    });
+    if let (Some(n), serde_json::Value::Object(d)) = (nouvelle.as_object_mut(), detail) {
+        n.extend(d);
+    }
+    crate::audit::journaliser(
+        conn,
+        crate::audit::Entree {
+            entite,
+            entite_id: id,
+            action,
+            ancienne_valeur: serde_json::to_value(&origine.action).ok(),
+            nouvelle_valeur: Some(nouvelle),
+            utilisateur_id: Some(qui.id),
+        },
+    )
+}
+
+/// Tranche un conflit (décisions 17, 33 et 34) dans le point de sauvegarde de
+/// l'opération qui décide : un refus de l'action composée laisse le conflit
+/// ouvert.
+fn trancher(
+    conn: &mut Connection,
+    op: &Operation,
+    qui: &Utilisateur,
+    operation: &str,
+    resultat: Option<&Action>,
+) -> Resultat<Issue> {
+    let origine = suspendue_ouverte(conn, operation, "conflit")?;
+    exiger_tranche(conn, qui, &origine)?;
+    let (issue, issue_origine, garde) = match resultat {
+        None => (
+            Issue::acceptee(),
+            Issue::Refusee {
+                modele: MODELE_CONFLIT_SERVEUR.into(),
+                valeurs: Vec::new(),
+            },
+            "serveur",
+        ),
+        Some(action) => {
+            if std::mem::discriminant(action) != std::mem::discriminant(&origine.action)
+                || action.cible() != origine.action.cible()
+            {
+                return Err(Erreur::Validation(
+                    "le résultat ne correspond pas à l'opération en conflit".into(),
+                ));
+            }
+            let composee = Operation {
+                action: action.clone(),
+                ..op.clone()
+            };
+            let issue = executer(conn, &composee)?;
+            let garde = if action.masquee() == origine.action {
+                "poste"
+            } else {
+                "composee"
+            };
+            (issue.clone(), issue, garde)
+        }
+    };
+    journaliser_decision(
+        conn,
+        qui,
+        &origine,
+        "conflit_tranche",
+        serde_json::json!({ "version_gardee": garde }),
+    )?;
+    clore(conn, &origine.id, &issue_origine)?;
+    Ok(issue)
+}
+
+/// Accepte ou rejette une opération en attente (décisions 18 et 32), Admin
+/// seulement. Acceptée, elle est appliquée au nom de l'Admin, sur l'état
+/// présent ; une ligne changée ailleurs depuis sa base la fait passer en
+/// conflit (ou dépassée), comme à sa réception. Le résultat rendu est celui
+/// de l'opération d'origine ; elle est close dans tous les cas, sauf quand
+/// elle passe en conflit, où la décision rend « acceptée » et l'opération
+/// d'origine reste suspendue comme conflit à trancher.
+fn decider(
+    conn: &mut Connection,
+    op: &Operation,
+    qui: &Utilisateur,
+    operation: &str,
+    accepter: bool,
+) -> Resultat<Issue> {
+    let origine = suspendue_ouverte(conn, operation, "attente")?;
+    if qui.role != Role::Admin {
+        return Err(Erreur::Interdit(Droit::GererUtilisateurs));
+    }
+    if !accepter {
+        let issue = Issue::Refusee {
+            modele: MODELE_REJETEE.into(),
+            valeurs: Vec::new(),
+        };
+        journaliser_decision(
+            conn,
+            qui,
+            &origine,
+            "attente_rejetee",
+            serde_json::json!({}),
+        )?;
+        clore(conn, &origine.id, &issue)?;
+        return Ok(issue);
+    }
+    let changee = match (origine.action.cible(), origine.action.si_changee()) {
+        (Some((entite, uid)), SiChangee::Conflit | SiChangee::Depassee) => {
+            modifiee_ailleurs(conn, &origine, entite, uid)?
+        }
+        _ => false,
+    };
+    let issue = if changee && origine.action.si_changee() == SiChangee::Conflit {
+        // Reste suspendue, à trancher comme conflit.
+        conn.execute(
+            "UPDATE operation_suspendue SET motif = 'conflit' WHERE operation_id = ?1",
+            [&origine.id],
+        )?;
+        let issue = Issue::EnConflit;
+        let texte = serde_json::to_string(&issue).map_err(|e| Erreur::Validation(e.to_string()))?;
+        conn.execute(
+            "UPDATE operation SET issue = ?1 WHERE id = ?2",
+            params![texte, origine.id],
+        )?;
+        journaliser_decision(
+            conn,
+            qui,
+            &origine,
+            "attente_acceptee",
+            serde_json::json!({ "resultat": "conflit" }),
+        )?;
+        // La décision elle-même est faite : elle n'est pas suspendue.
+        return Ok(Issue::acceptee());
+    } else if changee {
+        Issue::Depassee
+    } else {
+        let au_nom_de_l_admin = Operation {
+            compte: op.compte.clone(),
+            ..origine.clone()
+        };
+        conn.execute_batch("SAVEPOINT acceptation")?;
+        match executer(conn, &au_nom_de_l_admin) {
+            Ok(issue) => {
+                conn.execute_batch("RELEASE acceptation")?;
+                issue
+            }
+            Err(e) => {
+                conn.execute_batch("ROLLBACK TO acceptation; RELEASE acceptation")?;
+                issue_du_refus(e, false)?
+            }
+        }
+    };
+    journaliser_decision(
+        conn,
+        qui,
+        &origine,
+        "attente_acceptee",
+        serde_json::json!({ "resultat": serde_json::to_value(&issue).ok() }),
+    )?;
+    clore(conn, &origine.id, &issue)?;
+    Ok(issue)
+}
+
+/// Opérations suspendues que `qui` peut trancher ou décider : toutes pour
+/// l'Admin ; pour un autre compte, ses propres conflits sur une ligne qu'il a
+/// le droit de modifier (décision 33). Les plus anciennes d'abord.
+pub fn suspendues(conn: &Connection, qui: &Utilisateur) -> Resultat<Vec<Suspendue>> {
+    let lignes: Vec<(String, String, String)> = conn
+        .prepare(
+            "SELECT o.contenu, s.motif, o.recue FROM operation_suspendue s
+             JOIN operation o ON o.id = s.operation_id
+             WHERE s.ouverte = 1 ORDER BY o.recue, o.rowid",
+        )?
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?
+        .collect::<Result<_, _>>()?;
+    let mut sortie = Vec::new();
+    for (contenu, motif, recue) in lignes {
+        let operation: Operation = serde_json::from_str(&contenu).map_err(|_| illisible())?;
+        let motif = if motif == "conflit" {
+            Motif::Conflit
+        } else {
+            Motif::Attente
+        };
+        let visible = qui.role == Role::Admin
+            || (motif == Motif::Conflit && exiger_tranche(conn, qui, &operation).is_ok());
+        if visible {
+            sortie.push(Suspendue {
+                cible: operation
+                    .action
+                    .cible()
+                    .map(|(e, uid)| (e, uid.to_string())),
+                operation,
+                motif,
+                recue,
+            });
+        }
+    }
+    Ok(sortie)
+}
+
+/// État présent des lignes demandées, pour défaire une écriture provisoire
+/// dans la copie d'un poste (F6) : `Supprime` pour une ligne inconnue ; `seq`
+/// est le rang du dernier changement de la ligne, 0 si aucun.
+pub fn lignes(conn: &Connection, demandees: &[(Entite, String)]) -> Resultat<Vec<Changement>> {
+    let mut sortie = Vec::with_capacity(demandees.len());
+    for (entite, uid) in demandees {
+        let id = id_de(conn, *entite, uid)?;
+        let etat = match id {
+            Some(id) => replique::etat(conn, *entite, id)?.unwrap_or(Etat::Supprime),
+            None => Etat::Supprime,
+        };
+        let seq: i64 = match id {
+            Some(id) => conn.query_row(
+                "SELECT coalesce(max(seq), 0) FROM changement WHERE entite = ?1 AND entite_id = ?2",
+                params![entite.code(), id],
+                |r| r.get(0),
+            )?,
+            None => conn.query_row(
+                "SELECT coalesce(max(seq), 0) FROM changement WHERE entite = ?1 AND uid = ?2",
+                params![entite.code(), uid],
+                |r| r.get(0),
+            )?,
+        };
+        sortie.push(Changement {
+            seq: seq as u64,
+            entite: *entite,
+            uid: uid.clone(),
+            etat,
+        });
+    }
+    Ok(sortie)
 }
 
 fn illisible() -> Erreur {
@@ -972,6 +1309,7 @@ mod tests {
                 poste: poste.into(),
                 compte: compte.into(),
                 hors_connexion: false,
+                heure_poste: None,
                 base,
                 action,
             }
@@ -1212,6 +1550,325 @@ mod tests {
         assert_eq!(b.compteur(), 1);
     }
 
+    /// Compte de la base par son identifiant global.
+    fn qui(b: &Banc, uid: &str) -> Utilisateur {
+        let id = id_de(&b.conn, Entite::Utilisateur, uid).unwrap().unwrap();
+        comptes::lire(&b.conn, id).unwrap().unwrap()
+    }
+
+    fn nom_du_tiers(b: &Banc, uid: &str) -> String {
+        let id = id_de(&b.conn, Entite::Tiers, uid).unwrap().unwrap();
+        tiers::lire(&b.conn, id).unwrap().unwrap().fiche.nom
+    }
+
+    /// Modification de `t` par `poste` sur une base dépassée par un autre
+    /// poste : en conflit.
+    fn conflit(b: &mut Banc, t: &str, poste: &str, compte: &str, nom: &str) -> Operation {
+        let base = b.base();
+        let admin = b.admin.clone();
+        let avant = b.op(
+            "p1",
+            &admin,
+            b.base(),
+            Action::ModifierTiers {
+                uid: t.into(),
+                fiche: fiche(&format!("Serveur {nom}")),
+            },
+        );
+        assert_eq!(b.appliquer(&avant), Issue::acceptee());
+        let op = b.op(
+            poste,
+            compte,
+            base,
+            Action::ModifierTiers {
+                uid: t.into(),
+                fiche: fiche(nom),
+            },
+        );
+        assert_eq!(b.appliquer(&op), Issue::EnConflit);
+        op
+    }
+
+    #[test]
+    fn conflit_tranche() {
+        let mut b = banc();
+        let (t, _) = client_et_brouillon(&mut b, "p1");
+        let admin = b.admin.clone();
+        let vente = b.vente.clone();
+        let compta = compte(&b.conn, "compta", Role::Comptable);
+        completer_uids(&b.conn).unwrap();
+        let compta = uid_de(&b.conn, Entite::Utilisateur, compta.id)
+            .unwrap()
+            .unwrap();
+        let origine = conflit(&mut b, &t, "p2", &compta, "Version du poste");
+
+        // Visible de l'Admin et de son auteur, qui a le droit de modifier.
+        for compte in [&admin, &compta] {
+            let liste = suspendues(&b.conn, &qui(&b, compte)).unwrap();
+            assert_eq!(liste.len(), 1, "{compte}");
+            assert_eq!(liste[0].motif, Motif::Conflit);
+            assert_eq!(liste[0].cible, Some((Entite::Tiers, t.clone())));
+            assert_eq!(liste[0].operation.id, origine.id);
+        }
+        assert!(suspendues(&b.conn, &qui(&b, &vente)).unwrap().is_empty());
+
+        // Ni un autre compte sans droit, ni un résultat d'un autre genre.
+        let par_vente = b.op(
+            "p3",
+            &vente,
+            b.base(),
+            Action::TrancherConflit {
+                operation: origine.id.clone(),
+                resultat: None,
+            },
+        );
+        assert!(matches!(
+            b.appliquer(&par_vente),
+            Issue::Refusee { modele, .. } if modele == MODELE_INTERDIT
+        ));
+        let autre_genre = b.op(
+            "p1",
+            &admin,
+            b.base(),
+            Action::TrancherConflit {
+                operation: origine.id.clone(),
+                resultat: Some(Box::new(Action::RetirerTiers { uid: t.clone() })),
+            },
+        );
+        assert!(matches!(
+            b.appliquer(&autre_genre),
+            Issue::Refusee { modele, .. } if modele == MODELES_DECISION[3]
+        ));
+
+        // Version du serveur gardée par l'auteur : le renvoi de l'opération
+        // d'origine rend la décision, et la ligne n'est plus bloquée.
+        let garder = b.op(
+            "p2",
+            &compta,
+            b.base(),
+            Action::TrancherConflit {
+                operation: origine.id.clone(),
+                resultat: None,
+            },
+        );
+        assert_eq!(b.appliquer(&garder), Issue::acceptee());
+        assert!(matches!(
+            b.appliquer(&origine),
+            Issue::Refusee { modele, .. } if modele == MODELE_CONFLIT_SERVEUR
+        ));
+        assert_eq!(nom_du_tiers(&b, &t), "Serveur Version du poste");
+        assert!(suspendues(&b.conn, &qui(&b, &admin)).unwrap().is_empty());
+        // Déjà tranché : refusé, sans rien changer.
+        let encore = b.op(
+            "p1",
+            &admin,
+            b.base(),
+            Action::TrancherConflit {
+                operation: origine.id.clone(),
+                resultat: None,
+            },
+        );
+        assert!(matches!(
+            b.appliquer(&encore),
+            Issue::Refusee { modele, .. } if modele == MODELES_DECISION[2]
+        ));
+
+        // Version du poste gardée par l'Admin.
+        let origine = conflit(&mut b, &t, "p2", &compta, "Gardée du poste");
+        let garder = b.op(
+            "p1",
+            &admin,
+            b.base(),
+            Action::TrancherConflit {
+                operation: origine.id.clone(),
+                resultat: Some(Box::new(origine.action.clone())),
+            },
+        );
+        assert_eq!(b.appliquer(&garder), Issue::acceptee());
+        assert_eq!(b.appliquer(&origine), Issue::acceptee());
+        assert_eq!(nom_du_tiers(&b, &t), "Gardée du poste");
+
+        // Champ par champ : une fiche composée.
+        let origine = conflit(&mut b, &t, "p2", &compta, "Poste");
+        let mut composee = fiche("Composée");
+        composee.telephone = "70 00 00 00".into();
+        let garder = b.op(
+            "p1",
+            &admin,
+            b.base(),
+            Action::TrancherConflit {
+                operation: origine.id.clone(),
+                resultat: Some(Box::new(Action::ModifierTiers {
+                    uid: t.clone(),
+                    fiche: composee,
+                })),
+            },
+        );
+        assert_eq!(b.appliquer(&garder), Issue::acceptee());
+        assert_eq!(nom_du_tiers(&b, &t), "Composée");
+        assert_eq!(
+            crate::audit::compter(&b.conn, "conflit_tranche").unwrap(),
+            3
+        );
+    }
+
+    #[test]
+    fn attente_decidee_par_l_admin() {
+        let mut b = banc();
+        let (t, _) = client_et_brouillon(&mut b, "p1");
+        let admin = b.admin.clone();
+        let vente = b.vente.clone();
+        let hors_ligne = |b: &Banc, nom: &str| {
+            let mut op = b.op(
+                "p2",
+                &vente,
+                b.base(),
+                Action::ModifierTiers {
+                    uid: t.clone(),
+                    fiche: fiche(nom),
+                },
+            );
+            op.hors_connexion = true;
+            op.heure_poste = Some("2026-11-13T08:00:00+00:00".into());
+            op
+        };
+        let origine = hors_ligne(&b, "Saisi hors ligne");
+        assert_eq!(b.appliquer(&origine), Issue::EnAttente);
+        let liste = suspendues(&b.conn, &qui(&b, &admin)).unwrap();
+        assert_eq!(liste.len(), 1);
+        assert_eq!(liste[0].motif, Motif::Attente);
+        assert_eq!(
+            liste[0].operation.heure_poste.as_deref(),
+            Some("2026-11-13T08:00:00+00:00")
+        );
+        // Une attente n'est montrée qu'à l'Admin, et décidée que par lui.
+        assert!(suspendues(&b.conn, &qui(&b, &vente)).unwrap().is_empty());
+        let decision = |b: &Banc, compte: &str, accepter: bool| {
+            b.op(
+                "p1",
+                compte,
+                b.base(),
+                Action::DeciderAttente {
+                    operation: origine.id.clone(),
+                    accepter,
+                },
+            )
+        };
+        let par_vente = decision(&b, &vente, true);
+        assert!(matches!(
+            b.appliquer(&par_vente),
+            Issue::Refusee { modele, .. } if modele == MODELE_INTERDIT
+        ));
+        // Acceptée : appliquée au nom de l'Admin, et le renvoi le dit.
+        let accepter = decision(&b, &admin, true);
+        assert_eq!(b.appliquer(&accepter), Issue::acceptee());
+        assert_eq!(nom_du_tiers(&b, &t), "Saisi hors ligne");
+        assert_eq!(b.appliquer(&origine), Issue::acceptee());
+        assert_eq!(
+            crate::audit::compter(&b.conn, "attente_acceptee").unwrap(),
+            1
+        );
+
+        // Rejetée.
+        let origine = hors_ligne(&b, "Rejeté");
+        assert_eq!(b.appliquer(&origine), Issue::EnAttente);
+        let rejeter = b.op(
+            "p1",
+            &admin,
+            b.base(),
+            Action::DeciderAttente {
+                operation: origine.id.clone(),
+                accepter: false,
+            },
+        );
+        assert!(matches!(
+            b.appliquer(&rejeter),
+            Issue::Refusee { modele, .. } if modele == MODELE_REJETEE
+        ));
+        assert!(matches!(
+            b.appliquer(&origine),
+            Issue::Refusee { modele, .. } if modele == MODELE_REJETEE
+        ));
+        assert_eq!(nom_du_tiers(&b, &t), "Saisi hors ligne");
+
+        // Acceptée après un changement de la fiche ailleurs : en conflit.
+        let origine = hors_ligne(&b, "Tardif");
+        assert_eq!(b.appliquer(&origine), Issue::EnAttente);
+        let ailleurs = b.op(
+            "p1",
+            &admin,
+            b.base(),
+            Action::ModifierTiers {
+                uid: t.clone(),
+                fiche: fiche("Changé ailleurs"),
+            },
+        );
+        assert_eq!(b.appliquer(&ailleurs), Issue::acceptee());
+        let accepter = b.op(
+            "p1",
+            &admin,
+            b.base(),
+            Action::DeciderAttente {
+                operation: origine.id.clone(),
+                accepter: true,
+            },
+        );
+        assert_eq!(b.appliquer(&accepter), Issue::acceptee());
+        assert_eq!(b.appliquer(&origine), Issue::EnConflit);
+        let liste = suspendues(&b.conn, &qui(&b, &admin)).unwrap();
+        assert_eq!(liste.len(), 1);
+        assert_eq!(liste[0].motif, Motif::Conflit);
+        assert_eq!(nom_du_tiers(&b, &t), "Changé ailleurs");
+    }
+
+    #[test]
+    fn hors_connexion_limite_et_lignes() {
+        let mut b = banc();
+        let (t, _) = client_et_brouillon(&mut b, "p1");
+        let admin = b.admin.clone();
+        // Une écriture refusée hors connexion n'est ni appliquée ni gardée.
+        let mut compte = b.op(
+            "p2",
+            &admin,
+            b.base(),
+            Action::CreerCompte {
+                uid: nouvel_uid(),
+                nom_complet: "Nouveau".into(),
+                identifiant: "nouveau".into(),
+                mot_de_passe: "motdepasse1".into(),
+                role: "commercial".into(),
+            },
+        );
+        compte.hors_connexion = true;
+        assert!(appliquer(&mut b.conn, &compte).is_err());
+        let gardees: i64 = b
+            .conn
+            .query_row(
+                "SELECT count(*) FROM operation WHERE id = ?1",
+                [&compte.id],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(gardees, 0);
+
+        // État présent : la fiche telle qu'elle est, une ligne inconnue supprimée.
+        let inconnu = nouvel_uid();
+        let rendues = lignes(
+            &b.conn,
+            &[(Entite::Tiers, t.clone()), (Entite::Tiers, inconnu.clone())],
+        )
+        .unwrap();
+        assert_eq!(rendues.len(), 2);
+        assert!(matches!(
+            &rendues[0].etat,
+            Etat::Ligne { valeurs, .. } if valeurs["nom"] == "Client Alpha"
+        ));
+        assert!(rendues[0].seq > 0);
+        assert_eq!(rendues[1].uid, inconnu);
+        assert_eq!(rendues[1].etat, Etat::Supprime);
+        assert_eq!(rendues[1].seq, 0);
+    }
+
     #[test]
     fn refus_et_attente() {
         let mut b = banc();
@@ -1417,6 +2074,7 @@ mod tests {
             poste: "p1".into(),
             compte: admin.clone(),
             hors_connexion: false,
+            heure_poste: None,
             base: 0,
             action,
         };
@@ -1532,6 +2190,7 @@ mod essais_actions {
                 poste: "poste-1".into(),
                 compte: compte.into(),
                 hors_connexion: false,
+                heure_poste: None,
                 base: dernier_changement(&self.serveur).unwrap(),
                 action,
             }
