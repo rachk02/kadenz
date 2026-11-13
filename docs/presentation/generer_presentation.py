@@ -408,7 +408,7 @@ PAGES.append(f"""
   </div>
   <h3 style="margin-top:5mm">Familles de modules (proposition)</h3>
   <div class="modules">{modules}</div>
-  <p class="legende">La charte complète (neuf planches, fichiers SVG et PNG, zone de protection, tailles minimales) existe à part, en neuf planches (kadenz-identite.pdf).</p>
+  <p class="legende">Charte complète en neuf planches (kadenz-identite.pdf) : motifs Quatre pièces, Tournant et Fondu, signalétique, papeterie, tampons par degré, mises en situation.</p>
   {pied(7)}
 </section>""")
 

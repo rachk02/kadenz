@@ -50,6 +50,7 @@ Statut : **« Quatre pièces »**, validée par l'utilisateur le 2026-11-11 et i
 | `planches/generer_planches.py` | Regénère planches, PNG et PDF : `python docs/marque/planches/generer_planches.py .` (Chrome requis) |
 | `planches/scenes_signaletique.py` | Scènes de signalétique de la planche 07, utilisées par `generer_planches.py` |
 | `planches/scenes_papeterie.py` | Scènes de papeterie de la planche 08, utilisées par `generer_planches.py` |
+| `planches/scenes_mises_en_situation.py` | Mises en situation de la planche 09, utilisées par `generer_planches.py` |
 | `planches/apercu-papeterie.html`, `images/apercu-papeterie.png` | Aperçu complet de la papeterie en grand format : `python docs/marque/planches/generer_apercu_papeterie.py .` |
 | `generer.py` | Regénère tous les SVG : `python docs/marque/generer.py .` (fontTools requis) |
 
@@ -128,6 +129,21 @@ Papeterie de l'éditeur seulement : les documents produits par le logiciel garde
 | Signatures de courriel | Trois variantes : A bandeau Fondu avec le logo, B bloc Nuit au Fondu avec le texte en blanc, C fine bande Tournant | Largeur 300 à 340 px |
 | Tampons par degré | Une forme par degré, une seule couleur d'encre (système 1, retenu le 2026-11-13) : 1 entreprise, cachet rond, un seul ; 2 direction, rectangle Fondu au nom de la direction, un par direction ; 3 responsable, rectangle nominatif avec cadre Tournant et ligne de signature, un par responsable ; 4 service, dateur « Reçu le … par … », un par service | 40 mm de diamètre ; 50 x 20 mm ; 55 x 23 mm ; 47 x 14 mm environ |
 | Carnet et autocollants | Carnet Nuit (Tournant, bande avec le logo, élastique) ; autocollants du symbole et de l'icône | A5, 50 mm |
+
+## Mises en situation
+
+Huit mises en situation retenues par l'utilisateur le 2026-11-13 parmi neuf propositions (`propositions-2026-11-13-mises-en-situation/` ; la page d'accueil du futur site n'a pas été retenue). Planche 09. Les libellés viennent des écrans et de l'installateur réels ; ce sont des maquettes, l'application et l'installateur n'ont pas été modifiés pour autant.
+
+| Support | Composition |
+|---|---|
+| Écran de connexion | Panneau Nuit au motif Fondu, logo négatif, trois temps, « Gestion commerciale » ; formulaire sur fond clair |
+| Assistant de premier lancement | Panneau Nuit, Fondu en pied ; les cinq étapes réelles (Licence, Entreprise, Administrateur, Taux et paiements, Récapitulatif), point Ambre sur l'étape en cours |
+| Installateur | Panneau Nuit, motif Tournant en tête, logo empilé négatif, trois temps ; textes de l'installateur |
+| Écran À propos | Bandeau Nuit au motif Fondu, logo négatif ; « Gestion commerciale », version, trois temps, « Logiciel propriétaire, tous droits réservés. », « Revoir la présentation » |
+| Aperçu social du dépôt GitHub | 1280 x 640 px : Nuit, motif Tournant à gauche, logo négatif et description du dépôt |
+| Bureau Windows | Fond d'écran Nuit au motif Tournant, icône Kadenz sur le bureau et dans la barre des tâches |
+| Onglet et écran d'accueil | Favicon dans l'onglet du navigateur ; téléphone au fond Tournant, icône sur l'écran d'accueil |
+| Profil de réseau social | Bannière Nuit au motif Tournant, avatar : symbole blanc sur Indigo |
 
 ## Modules (proposition)
 

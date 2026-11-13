@@ -31,6 +31,12 @@ sp = importlib.util.module_from_spec(spec_sp)
 spec_sp.loader.exec_module(sp)
 sp.gm, sp.sc = gm, sc
 
+spec_sm = importlib.util.spec_from_file_location("scenes_mises_en_situation", ICI / "scenes_mises_en_situation.py")
+sm = importlib.util.module_from_spec(spec_sm)
+spec_sm.loader.exec_module(sm)
+sm.gm, sm.sc, sm.sp = gm, sc, sp
+sm.prepare()
+
 BLEU, NUIT, PALE, ENCRE, ARDOISE, TRAIT, BRUME = "#2d3a8c", "#1a2259", "#e8eaf6", "#1f2933", "#52606d", "#d9dce3", "#f4f5f9"
 CLAIR = "#c5cae0"   # texte secondaire sur Nuit (9,1:1)
 AMBRE = "#e3a23b"   # troisième temps, touche sur fond sombre
@@ -154,7 +160,7 @@ def p02():
 <p class="petit" style="margin-top:10px">L'icône emploie la petite coupe : jeux de 26 au lieu de 16, sans débord, pour que les pièces restent séparées à 16 px.</p></div>
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">{fonds}</div>
 <div class="bord" style="border-radius:4px;padding:20px 22px"><p class="t3">Ce que dit le symbole</p>
-<p class="petit" style="font-size:13px">Quatre formes simples s'emboîtent sur une grille de deux par deux, comme les modules que la licence assemble : ventes, commandes, livraisons, paiements. Le disque marque le temps fort de la cadence. Sans tuile, le symbole s'emploie seul en Bleu vif, en blanc ou en noir, jamais déformé ni pivoté.</p></div>
+<p class="petit" style="font-size:13px">Quatre formes simples s'emboîtent sur une grille de deux par deux, comme les modules que la licence assemble : ventes, commandes, livraisons, paiements. Le disque marque le temps fort de la cadence. Sans tuile, le symbole s'emploie seul en Indigo, en blanc ou en noir, jamais déformé ni pivoté.</p></div>
 </div></div>"""
     return planche(2, "Logomark", "Carré, quart de disque, triangle, disque", c)
 
@@ -320,46 +326,17 @@ def p08():
 
 # --- 09 Brand mockups ---------------------------------------------------------------
 def p09():
-    etapes = "".join(f'<div style="display:flex;align-items:center;gap:8px"><div style="width:6px;height:6px;background:{"#fff" if i == 0 else "transparent"}"></div>'
-                     f'<span style="font-size:13px;color:{"#fff" if i == 0 else CLAIR};font-weight:{600 if i == 0 else 400}">{t}</span></div>'
-                     for i, t in enumerate(("Entreprise", "Administrateur", "Taux et paiements", "Récapitulatif")))
-    champ = lambda l: (f'<p style="font-size:13px;font-weight:500;margin-bottom:6px">{l}</p>'
-                       f'<div style="height:34px;border:1px solid {TRAIT};border-radius:4px;margin-bottom:16px"></div>')
-    c = f"""<div style="display:grid;grid-template-columns:1.45fr 1fr;gap:20px;flex:1">
-<div style="background:{BRUME};border-radius:4px;padding:26px 30px 0;display:flex;flex-direction:column;gap:10px;position:relative">
-<div style="background:#fff;border-radius:4px;box-shadow:0 10px 30px rgba(15,23,42,.14);overflow:hidden">
-<div style="height:34px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid {TRAIT};font-size:12px">{img("kadenz-icone.svg", 16)}Kadenz
-<span style="flex:1"></span><span style="color:{ARDOISE};letter-spacing:18px">-□x</span></div>
-<div style="display:flex;height:330px">
-<div style="width:190px;background:{NUIT};position:relative;overflow:hidden">{motif_calme(NUIT, "#232c6b", 190, 330, 32, [(0, 0, 190, 214)])}
-<div style="position:relative;padding:22px 20px;display:flex;flex-direction:column;gap:12px"><div style="align-self:flex-start;padding:2px 4px">{img("kadenz-logo-horizontal-negatif.svg", 26)}</div>
-<div style="height:8px"></div><div style="padding:6px;display:flex;flex-direction:column;gap:10px">{etapes}</div></div></div>
-<div style="flex:1;padding:24px 28px;display:flex;flex-direction:column">
-<p style="font-family:Space Grotesk;font-weight:700;font-size:22px;margin-bottom:6px">Première installation</p>
-<p class="petit" style="font-size:13px;margin-bottom:18px">Étape 1 sur 4 : Entreprise</p>
-{champ("Nom de l'entreprise (obligatoire)")}{champ("Adresse / boîte postale")}
-<div style="flex:1"></div><div style="align-self:flex-end;background:{BLEU};color:#fff;font-weight:600;font-size:14px;padding:9px 22px;border-radius:4px">Suivant</div>
-</div></div></div>
-<p class="petit">Assistant de premier lancement, libellés réels de l'application</p>
-<div style="margin-top:auto;height:44px;border-top:1px solid {TRAIT};display:flex;align-items:center;justify-content:center;gap:12px">
-<div style="width:28px;height:28px;background:#cfd4dc;border-radius:4px"></div><div style="width:28px;height:28px;background:#cfd4dc;border-radius:4px"></div>
-<div style="background:{PALE};padding:4px;border-radius:4px">{img("kadenz-icone.svg", 28, "display:block")}</div><div style="width:28px;height:28px;background:#cfd4dc;border-radius:4px"></div></div>
-</div>
-<div style="display:flex;flex-direction:column;gap:12px">
-<div class="case" style="height:220px;background:{NUIT};overflow:hidden;justify-content:flex-start">{motif_calme(NUIT, "#232c6b", 436, 220, 220 / 6, [(0, 30, 320, 190)])}
-<div style="position:relative;padding:18px 22px;margin-left:24px;display:flex;flex-direction:column;gap:10px">
-{img("kadenz-logo-horizontal-negatif.svg", 44)}<span style="color:#fff;font-size:14px;line-height:1.4">Gestion commerciale pour<br>Windows. Rust, Slint, SQLite.</span></div></div>
-<p class="petit">Aperçu social du dépôt GitHub, 1280 x 640 px</p>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1">
-<div class="case" style="background:#1f2933;flex-direction:row;gap:26px">
-<div style="display:flex;flex-direction:column;align-items:center;gap:6px">{img("kadenz-icone.svg", 56)}<span style="color:#fff;font-size:12px">Kadenz</span></div>
-<div style="display:flex;flex-direction:column;align-items:center;gap:6px">{img("kadenz-icone.svg", 56)}<span style="color:#fff;font-size:12px">kadenz.exe</span></div>
-<span class="leg" style="color:#c9ced6">Bureau : raccourci et exécutable</span></div>
-<div class="case bord" style="flex-direction:column;align-items:flex-start;justify-content:flex-start;padding:20px;gap:12px">
-{img("kadenz-logo-horizontal.svg", 30)}<p class="petit" style="font-size:13px">Logiciel propriétaire, tous droits réservés.</p>
-<p class="petit">[Version]</p><span class="leg">Écran À propos</span></div>
-</div></div></div>"""
-    return planche(9, "Brand Mockups", "La marque là où elle apparaît vraiment : poste Windows, assistant d'installation, dépôt GitHub", c)
+    """Huit mises en situation retenues le 2026-11-13 (scènes de scenes_mises_en_situation.py)."""
+    vues = ((sm.connexion, "Écran de connexion, panneau au Fondu"), (sm.assistant, "Assistant de premier lancement, cinq étapes"),
+            (sm.installateur, "Installateur, bandeau Tournant"), (sm.a_propos, "Écran À propos"),
+            (sm.github, "Aperçu social du dépôt GitHub"), (sm.bureau, "Bureau Windows, fond d'écran Tournant"),
+            (sm.navigateur_mobile, "Onglet et écran d'accueil"), (sm.reseaux, "Profil de réseau social"))
+    cases = "".join(
+        f'<div style="display:flex;flex-direction:column;gap:6px">'
+        f'<svg viewBox="0 0 520 390" width="262" height="196.5" style="display:block;border-radius:4px;background:{BRUME}">'
+        + "".join(fn(f"p9m{k}")) + f'</svg><p class="petit">{leg}</p></div>' for k, (fn, leg) in enumerate(vues))
+    c = f"""<div style="display:grid;grid-template-columns:repeat(4,262px);justify-content:space-between;row-gap:22px;align-content:center;flex:1">{cases}</div>"""
+    return planche(9, "Brand Mockups", "La marque là où elle apparaît : application, installateur, poste Windows, dépôt GitHub, web", c)
 
 
 PLANCHES = [("01-primary-logo", "Kadenz, logo principal", p01), ("02-logomark", "Kadenz, symbole", p02),
