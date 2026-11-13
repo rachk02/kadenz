@@ -143,9 +143,14 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
         Some(u) => droits::possede(&etat.conn, u, droit).unwrap_or(false),
         None => false,
     };
+    // Lecture seule (décision 40) : plus d'ajout ni de modification des
+    // référentiels. Gérer les paramètres et les utilisateurs reste vrai : ces
+    // droits ouvrent aussi des pages, dont « Abonnement », seule sortie de la
+    // lecture seule ; leurs boutons d'enregistrement suivent `Ecriture`.
+    let ecrire = abonnement::blocage(&etat.conn).is_none();
     let d = fenetre.global::<Droits>();
-    d.set_ajouter_referentiel(possede(Droit::AjouterReferentiel));
-    d.set_modifier_referentiel(possede(Droit::ModifierReferentiel));
+    d.set_ajouter_referentiel(ecrire && possede(Droit::AjouterReferentiel));
+    d.set_modifier_referentiel(ecrire && possede(Droit::ModifierReferentiel));
     d.set_gerer_parametres(possede(Droit::GererParametres));
     d.set_gerer_utilisateurs(possede(Droit::GererUtilisateurs));
 
@@ -218,11 +223,14 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     if possede(Droit::GererUtilisateurs) {
         rubriques.push(Rubrique::Utilisateurs);
     }
-    if possede(Droit::SauvegarderBase) {
-        rubriques.push(Rubrique::Sauvegardes);
-    }
     // Poste relié (phase 2) : la rubrique « Abonnement » remplace « Licence ».
     let relie = abonnement::afficher(fenetre, &etat.conn, etat.utilisateur.is_some(), gere);
+    // Décision 47 : un poste inscrit sur un serveur ne fait pas de sauvegarde,
+    // les données sont sauvegardées sur le serveur.
+    let inscrit = relie || serveur::inscrit(&etat.conn);
+    if possede(Droit::SauvegarderBase) && !inscrit {
+        rubriques.push(Rubrique::Sauvegardes);
+    }
     if gere {
         rubriques.push(if relie {
             Rubrique::Abonnement

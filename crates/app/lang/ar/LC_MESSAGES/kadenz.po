@@ -3281,3 +3281,9 @@ msgstr "تم الاختيار"
 
 msgid "Serveur en marche hors du service Windows (console)"
 msgstr "الخادم يعمل خارج خدمة Windows (وحدة التحكم)"
+
+msgid "Kadenz est en lecture seule : aucune saisie n'est possible avant le renouvellement de l'abonnement."
+msgstr "Kadenz في وضع القراءة فقط: لا يمكن إدخال أي بيانات قبل تجديد الاشتراك."
+
+msgid "la copie du serveur existe déjà sur ce poste"
+msgstr "نسخة الخادم موجودة بالفعل على هذه المحطة"

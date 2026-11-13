@@ -3281,3 +3281,9 @@ msgstr "已选择"
 
 msgid "Serveur en marche hors du service Windows (console)"
 msgstr "服务器在 Windows 服务之外运行（控制台）"
+
+msgid "Kadenz est en lecture seule : aucune saisie n'est possible avant le renouvellement de l'abonnement."
+msgstr "Kadenz 处于只读状态：续订订阅之前无法进行任何录入。"
+
+msgid "la copie du serveur existe déjà sur ce poste"
+msgstr "此工作站上已存在服务器副本"

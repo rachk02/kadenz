@@ -14,7 +14,7 @@ use slint::{ComponentHandle, ModelRc, VecModel};
 
 use crate::factures::date_en_texte;
 use crate::traduction::{tr, trf};
-use crate::{AbonnementApi, FenetrePrincipale, LigneAbonnementUi};
+use crate::{AbonnementApi, Ecriture, FenetrePrincipale, LigneAbonnementUi};
 
 /// Ce que montrent la rubrique et le bandeau, textes déjà traduits.
 #[derive(Debug, Default, PartialEq)]
@@ -46,6 +46,20 @@ fn date_heure(texte: &str) -> String {
 
 const SUITE_LECTURE_SEULE: &str =
     "Consultation, recherche, impression et exports restent possibles.";
+
+/// Raison du blocage des écritures (décisions 40 et 46), ou `None` si la
+/// saisie est permise. Un poste V1, qui n'a jamais reçu d'abonnement, n'est
+/// jamais bloqué. Le serveur injoignable s'y ajoutera avec le synchroniseur.
+fn raison_blocage(a: Option<&Abonnement>) -> Option<String> {
+    a.filter(|a| a.lecture_seule())
+        .map(|_| tr("Kadenz est en lecture seule : aucune saisie n'est possible avant le renouvellement de l'abonnement."))
+}
+
+/// Raison du blocage des écritures sur ce poste, ou `None` si la saisie est
+/// permise : seul point de décision pour les écrans.
+pub(crate) fn blocage(conn: &kadenz_stockage::Connexion) -> Option<String> {
+    raison_blocage(source(conn).as_ref().map(|(a, _)| a))
+}
 
 /// Jours restants à afficher. L'état gardé vieillit hors connexion : ses jours
 /// restants sont ceux du jour de réception. Pour l'affichage seulement, ils
@@ -232,6 +246,8 @@ pub(crate) fn afficher(
         .unwrap_or_default();
     api.set_disponible(recu.is_some());
     api.set_lecture_seule(v.lecture_seule);
+    f.global::<Ecriture>()
+        .set_permise(raison_blocage(recu.as_ref().map(|(a, _)| a)).is_none());
     api.set_lignes(ModelRc::new(VecModel::from(
         v.lignes
             .into_iter()
@@ -410,6 +426,22 @@ mod tests {
             Some("licence d'abonnement émise pour une autre entreprise (X)")
         );
         assert!(v.bandeau.contains("refusée"));
+    }
+
+    #[test]
+    fn saisie_bloquee_en_lecture_seule_seulement() {
+        // Poste V1 : aucun abonnement reçu, jamais bloqué.
+        assert_eq!(raison_blocage(None), None);
+        // Abonnement actif, même la veille de l'échéance : saisie permise.
+        assert_eq!(raison_blocage(Some(&actif(1))), None);
+        // Échu, absent ou refusé : bloqué, avec la raison.
+        for statut in [Statut::Echu, Statut::Absent, Statut::Invalide] {
+            let mut a = actif(0);
+            a.statut = statut;
+            assert!(a.lecture_seule(), "{statut:?}");
+            let raison = raison_blocage(Some(&a)).unwrap();
+            assert!(raison.contains("lecture seule"), "{raison}");
+        }
     }
 
     #[test]

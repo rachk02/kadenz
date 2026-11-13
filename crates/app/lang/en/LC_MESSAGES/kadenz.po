@@ -3281,3 +3281,9 @@ msgstr "Chosen"
 
 msgid "Serveur en marche hors du service Windows (console)"
 msgstr "Server running outside the Windows service (console)"
+
+msgid "Kadenz est en lecture seule : aucune saisie n'est possible avant le renouvellement de l'abonnement."
+msgstr "Kadenz is read-only: no data entry is possible until the subscription is renewed."
+
+msgid "la copie du serveur existe déjà sur ce poste"
+msgstr "the server copy already exists on this workstation"

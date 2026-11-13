@@ -2,7 +2,7 @@
 // page en contenu libre avec variables de l'entreprise, aperçu en direct sur une
 // facture d'exemple, feuille de calibrage. Au droit « Gérer les paramètres ».
 import { CheckBox, ComboBox, ScrollView, TextEdit } from "std-widgets.slint";
-import { Alerte, Bouton, Confirmation, Champ, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Confirmation, Champ, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct MiseEnPageUi {
     gabarit: int,
@@ -593,6 +593,7 @@ export component PageImpression inherits Rectangle {
                     Bouton {
                         text: @tr("Enregistrer");
                         primary: true;
+                        enabled: Ecriture.permise;
                         clicked => {
                             root.bas[root.rang-type] = root.bas-saisi();
                             root.retour = ImpressionApi.enregistrer(root.saisie(), root.bas);

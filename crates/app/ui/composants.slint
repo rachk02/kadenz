@@ -221,6 +221,14 @@ export component FenetreAlerte inherits Rectangle {
     }
 }
 
+// Saisie permise sur ce poste (décisions 40 et 46) : faux quand le serveur est
+// en lecture seule. Les boutons qui enregistrent quelque chose sont alors
+// inactifs ; consultation, impression, exports et navigation restent ouverts.
+// Un poste V1, sans serveur, est toujours permis.
+export global Ecriture {
+    in property <bool> permise: true;
+}
+
 // Droits du compte connecté, recalculés à chaque connexion depuis la matrice.
 export global Droits {
     in property <bool> ajouter-referentiel;

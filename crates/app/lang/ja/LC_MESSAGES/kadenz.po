@@ -3281,3 +3281,9 @@ msgstr "選択済み"
 
 msgid "Serveur en marche hors du service Windows (console)"
 msgstr "サーバーは Windows サービス外で実行中です（コンソール）"
+
+msgid "Kadenz est en lecture seule : aucune saisie n'est possible avant le renouvellement de l'abonnement."
+msgstr "Kadenz は読み取り専用です。サブスクリプションが更新されるまで入力はできません。"
+
+msgid "la copie du serveur existe déjà sur ce poste"
+msgstr "この端末にはサーバーのコピーがすでにあります"

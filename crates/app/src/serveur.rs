@@ -86,6 +86,11 @@ fn adresse_complete(saisie: &str) -> String {
     }
 }
 
+/// Vrai si ce poste est inscrit sur un serveur.
+pub(crate) fn inscrit(conn: &kadenz_stockage::Connexion) -> bool {
+    matches!(poste_relie::lire(conn), Ok(Some(_)))
+}
+
 /// Recopie le serveur de ce poste dans la rubrique.
 pub(crate) fn afficher(f: &FenetrePrincipale, conn: &kadenz_stockage::Connexion) {
     let api = f.global::<ServeurApi>();
@@ -180,6 +185,8 @@ fn inscription_reussie(
     f.global::<ServeurApi>()
         .set_empreinte_a_confirmer("".into());
     afficher(f, &etat.conn);
+    // Rubriques : un poste inscrit n'a plus de « Sauvegardes » (décision 47).
+    crate::appliquer_droits(f, &etat);
     finir(f, retour);
 }
 

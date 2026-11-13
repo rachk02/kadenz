@@ -3281,3 +3281,9 @@ msgstr "Seçildi"
 
 msgid "Serveur en marche hors du service Windows (console)"
 msgstr "Sunucu Windows hizmeti dışında çalışıyor (konsol)"
+
+msgid "Kadenz est en lecture seule : aucune saisie n'est possible avant le renouvellement de l'abonnement."
+msgstr "Kadenz salt okunur durumda: abonelik yenilenene kadar hiçbir veri girişi yapılamaz."
+
+msgid "la copie du serveur existe déjà sur ce poste"
+msgstr "sunucu kopyası bu iş istasyonunda zaten var"
