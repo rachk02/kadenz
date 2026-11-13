@@ -3045,6 +3045,7 @@ dependencies = [
  "kadenz-licence",
  "kadenz-maj",
  "kadenz-pdf",
+ "kadenz-poste",
  "kadenz-protocole",
  "kadenz-stockage",
  "rfd",

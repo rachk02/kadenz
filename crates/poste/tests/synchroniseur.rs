@@ -4,6 +4,7 @@
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver};
+use std::sync::{Arc, Barrier};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -13,7 +14,7 @@ use kadenz_domaine::role::Role;
 use kadenz_licence::SigningKey;
 use kadenz_licence::entreprise::{self as lic, LicenceEntreprise};
 use kadenz_poste::{ErreurPoste, EtatConnexion, Evenement, Synchroniseur};
-use kadenz_protocole::{Action, Entite, Issue, Operation, Tiers};
+use kadenz_protocole::{Action, Entite, Issue, Ligne, Operation, Saisie, Tiers};
 use kadenz_serveur::{Config, Serveur};
 use kadenz_stockage::comptes::{self, NouvelUtilisateur};
 use kadenz_stockage::entreprise::Entreprise;
@@ -371,4 +372,141 @@ fn compte_connecte_au_retour_du_serveur() {
     });
     poste_relie::appliquer_modules(&conn).unwrap();
     s.arreter();
+}
+
+/// Second poste inscrit sur le serveur du banc, avec sa propre copie.
+fn second_poste(b: &Banc, nom: &str) -> PathBuf {
+    let identite = Identite::nouvelle("poste2").unwrap();
+    let empreinte = identite.empreinte();
+    b.serveur
+        .base(move |c| postes::inscrire(c, &empreinte, "Second poste").unwrap())
+        .unwrap();
+    poste_relie::creer_copie(
+        &dossier(&format!("{nom}-poste2")),
+        &PosteRelie {
+            adresse: b.serveur.adresse().to_string(),
+            empreinte_serveur: b.serveur.empreinte().to_string(),
+            entreprise: b.entreprise.clone(),
+            nom: "Second poste".into(),
+            certificat: identite.certificat.clone(),
+            cle: identite.cle.clone(),
+        },
+    )
+    .unwrap()
+}
+
+fn saisie(tiers: &str) -> Saisie {
+    Saisie {
+        date: chrono::Local::now()
+            .date_naive()
+            .format("%Y-%m-%d")
+            .to_string(),
+        tiers: Some(tiers.into()),
+        libelle: "Essai F5e".into(),
+        lignes: vec![Ligne {
+            designation: "Ciment".into(),
+            prix: 5000,
+            quantite: 2_000,
+            ..Ligne::default()
+        }],
+        ..Saisie::default()
+    }
+}
+
+/// Numéro d'un document dans une copie, s'il y est validé.
+fn numero(copie: &Path, uid: &str) -> Option<String> {
+    let conn = poste_relie::ouvrir_copie(copie).unwrap();
+    let id = synchro::id_de(&conn, Entite::Document, uid).unwrap()?;
+    conn.query_row("SELECT numero FROM document WHERE id = ?1", [id], |r| {
+        r.get(0)
+    })
+    .unwrap()
+}
+
+/// Jalon F5e : deux postes sur le même serveur. Une fiche créée sur l'un
+/// paraît sur l'autre ; deux validations simultanées reçoivent deux numéros
+/// consécutifs de la même série.
+#[test]
+fn deux_postes_numeros_consecutifs() {
+    let b = banc("deux", true);
+    let copie2 = second_poste(&b, "deux");
+    let (s1, _e1) = demarrer(&b.copie);
+    let (s2, _e2) = demarrer(&copie2);
+    attendre("connexion du premier poste", || {
+        s1.etat() == EtatConnexion::Connecte
+    });
+    attendre("connexion du second poste", || {
+        s2.etat() == EtatConnexion::Connecte
+    });
+    s1.connecter("admin", MOT_DE_PASSE).unwrap();
+    s2.connecter("admin", MOT_DE_PASSE).unwrap();
+
+    // Client créé sur le premier poste, reçu par le second à la relève.
+    let t = synchro::nouvel_uid();
+    let issue = s1
+        .ecrire(Action::CreerTiers {
+            uid: t.clone(),
+            fiche: fiche("Client Partagé"),
+        })
+        .unwrap();
+    assert_eq!(issue, Issue::acceptee());
+    attendre("client sur le second poste", || {
+        present(&copie2, Entite::Tiers, &t)
+    });
+    let conn2 = poste_relie::ouvrir_copie(&copie2).unwrap();
+    let id = synchro::id_de(&conn2, Entite::Tiers, &t).unwrap().unwrap();
+    assert_eq!(
+        tiers::lire(&conn2, id).unwrap().unwrap().fiche.nom,
+        "Client Partagé"
+    );
+    drop(conn2);
+
+    // Un brouillon de facture sur chaque poste.
+    let (d1, d2) = (synchro::nouvel_uid(), synchro::nouvel_uid());
+    for (s, d) in [(&s1, &d1), (&s2, &d2)] {
+        let issue = s
+            .ecrire(Action::CreerBrouillon {
+                uid: d.clone(),
+                type_document: "facture".into(),
+                saisie: saisie(&t),
+            })
+            .unwrap();
+        assert_eq!(issue, Issue::acceptee());
+    }
+
+    // Les deux validations partent en même temps.
+    let depart = Arc::new(Barrier::new(2));
+    let valider = |s: Synchroniseur, d: String| {
+        let depart = depart.clone();
+        thread::spawn(move || {
+            depart.wait();
+            let issue = s.ecrire(Action::Valider { uid: d });
+            (s, issue)
+        })
+    };
+    let f1 = valider(s1, d1.clone());
+    let f2 = valider(s2, d2.clone());
+    let (s1, i1) = f1.join().unwrap();
+    let (s2, i2) = f2.join().unwrap();
+    let numero_de = |i: Result<Issue, ErreurPoste>| match i {
+        Ok(Issue::Acceptee {
+            numero: Some(n), ..
+        }) => n,
+        autre => panic!("numéro attendu : {autre:?}"),
+    };
+    let (n1, n2) = (numero_de(i1), numero_de(i2));
+    assert_ne!(n1, n2);
+    assert_eq!(n1[..n1.len() - 4], n2[..n2.len() - 4], "même série");
+    let rang = |n: &str| n[n.len() - 4..].parse::<u32>().unwrap();
+    assert_eq!(rang(&n1).abs_diff(rang(&n2)), 1, "{n1} et {n2} consécutifs");
+
+    // Chaque poste reçoit le numéro attribué sur l'autre.
+    attendre("numéro du second sur le premier", || {
+        numero(&b.copie, &d2).as_deref() == Some(n2.as_str())
+    });
+    attendre("numéro du premier sur le second", || {
+        numero(&copie2, &d1).as_deref() == Some(n1.as_str())
+    });
+    s1.arreter();
+    s2.arreter();
 }
