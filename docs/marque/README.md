@@ -49,6 +49,7 @@ Statut : **« Quatre pièces »**, validée par l'utilisateur le 2026-11-11 et i
 | `planches/images/`, `planches/kadenz-identite.pdf` | Les neuf planches en PNG (2400 x 1520) et en PDF (une planche par page) |
 | `planches/generer_planches.py` | Regénère planches, PNG et PDF : `python docs/marque/planches/generer_planches.py .` (Chrome requis) |
 | `planches/scenes_signaletique.py` | Scènes de signalétique de la planche 07, utilisées par `generer_planches.py` |
+| `planches/scenes_papeterie.py` | Scènes de papeterie de la planche 08, utilisées par `generer_planches.py` |
 | `generer.py` | Regénère tous les SVG : `python docs/marque/generer.py .` (fontTools requis) |
 
 Les PNG, le `.ico` et les icônes web ont été rendus avec les scripts du skill logo-design (`render_png.py`, `export_variants.py`, rendu par Chrome), sans Pillow.
@@ -111,6 +112,21 @@ Huit supports retenus par l'utilisateur le 2026-11-13 parmi neuf propositions (`
 | Totem extérieur | Nuit : motif Tournant en tête, logo empilé blanc, trois temps | Environ 2,2 m de haut, socle lesté |
 | Kakémono | Nuit : motif Fondu en tête, logo empilé, quatre familles de documents, pied Ambre | 850 x 2000 mm, enrouleur |
 | Stand de salon | Mur d'image Tournant, logo sur la zone calme ; comptoir Nuit au symbole blanc | Environ 3 x 2,5 m |
+
+## Papeterie
+
+Papeterie de l'éditeur seulement : les documents produits par le logiciel gardent l'identité du client. Retenue par l'utilisateur le 2026-11-13 après deux tours de propositions (`propositions-2026-11-13-papeterie/`). Planche 08 ; les coordonnées restent à remplir.
+
+| Pièce | Composition | Format |
+|---|---|---|
+| Carte de visite | Recto Nuit : motif Tournant à gauche, logo blanc sur la partie calme. Verso blanc : symbole, nom, fonction, trois temps, coordonnées ; Fondu très clair à droite, qui s'efface avant le texte | 85 x 55 mm |
+| Papier à en-tête | Bandeau Fondu très clair qui s'efface vers le logo, coordonnées en pied, aucune barre latérale | A4 |
+| Enveloppe | Dehors : Fondu clair sous l'adresse de retour, zone du destinataire libre. Dedans : tout l'intérieur imprimé Nuit au motif Tournant | DL 220 x 110 mm |
+| Chemise à rabats | Dehors comme le carnet (Tournant sur les trois quarts, bande Nuit avec le logo, élastique) ; dedans Tournant, rabat Indigo ; sans les trois temps | A4 |
+| Badge et tour de cou | Haut Nuit au Fondu qui descend vers le logo, nom sur blanc, trois temps ; tour de cou Indigo | 90 x 120 mm |
+| Signatures de courriel | Trois variantes : A bandeau Fondu avec le logo, B bloc Nuit au Fondu avec le texte en blanc, C fine bande Tournant | Largeur 300 à 340 px |
+| Tampons | Trois variantes, une seule couleur d'encre : A cachet rond, B rectangle Fondu, C cadre Tournant autour du logo empilé | 40 mm de diamètre, 50 x 22 mm, 30 x 30 mm environ |
+| Carnet et autocollants | Carnet Nuit (Tournant, bande avec le logo, élastique) ; autocollants du symbole et de l'icône | A5, 50 mm |
 
 ## Modules (proposition)
 

@@ -26,6 +26,11 @@ sc = importlib.util.module_from_spec(spec_sc)
 spec_sc.loader.exec_module(sc)
 sc.gm = gm
 
+spec_sp = importlib.util.spec_from_file_location("scenes_papeterie", ICI / "scenes_papeterie.py")
+sp = importlib.util.module_from_spec(spec_sp)
+spec_sp.loader.exec_module(sp)
+sp.gm, sp.sc = gm, sc
+
 BLEU, NUIT, PALE, ENCRE, ARDOISE, TRAIT, BRUME = "#2d3a8c", "#1a2259", "#e8eaf6", "#1f2933", "#52606d", "#d9dce3", "#f4f5f9"
 CLAIR = "#c5cae0"   # texte secondaire sur Nuit (9,1:1)
 AMBRE = "#e3a23b"   # troisième temps, touche sur fond sombre
@@ -295,36 +300,21 @@ def p07():
 
 # --- 08 Stationery ------------------------------------------------------------------
 def p08():
-    ombre = "box-shadow:0 8px 24px rgba(15,23,42,.12)"
-    c = f"""<div style="display:grid;grid-template-columns:1fr 1fr;gap:26px;flex:1;background:{BRUME};border-radius:4px;padding:30px">
-<div style="display:flex;flex-direction:column;gap:14px">
-<div style="display:flex;gap:18px">
-<div class="case" style="width:255px;height:165px;background:{NUIT};overflow:hidden;{ombre}">{motif_calme(NUIT, "#232c6b", 255, 165, 26, [(55, 55, 200, 110)])}
-<div style="position:relative">{img("kadenz-logo-horizontal-negatif.svg", 34, "display:block")}</div></div>
-<div style="width:255px;height:165px;background:#fff;border-radius:4px;padding:18px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;{ombre}">
-{img("kadenz-symbole.svg", 30)}
-<div><p style="font-family:Space Grotesk;font-weight:700;font-size:16px">[Prénom Nom]</p><p class="petit">[Fonction]</p></div>
-<p class="petit" style="line-height:1.45">[Téléphone]<br>[E-mail]<br>[Site]</p></div></div>
-<p class="petit">Carte de visite 85 x 55 mm : recto Nuit avec le motif, verso nominatif</p>
-<div style="width:528px;height:250px;background:#fff;border-radius:4px;padding:22px;box-sizing:border-box;position:relative;{ombre}">
-{img("kadenz-logo-horizontal.svg", 30)}<p class="petit" style="margin-top:6px">[Adresse de retour]</p>
-<div style="position:absolute;right:60px;top:120px;display:flex;flex-direction:column;gap:8px">
-<div style="width:180px;height:4px;background:{TRAIT}"></div><div style="width:220px;height:4px;background:{TRAIT}"></div><div style="width:140px;height:4px;background:{TRAIT}"></div></div></div>
-<p class="petit">Enveloppe DL 220 x 110 mm</p>
-</div>
-<div style="display:flex;flex-direction:column;gap:14px">
-<div style="background:#fff;border-radius:4px;padding:22px 24px;{ombre}">
-<p class="petit" style="margin-bottom:12px">Signature des courriels</p>
-<div style="display:flex;gap:16px;align-items:center">{img("kadenz-icone.svg", 52)}
-<div><p style="font-weight:600;font-size:14px">[Prénom Nom]</p><p class="petit">[Fonction] · Kadenz</p><p class="petit">[Téléphone] · [Site]</p></div></div></div>
-<div style="background:#fff;border-radius:4px;padding:22px 24px;display:flex;gap:18px;align-items:center;{ombre}">
-<div class="case" style="width:120px;height:160px;background:{BLEU};flex-direction:column;gap:10px">{img("kadenz-symbole-blanc.svg", 52)}
-<span style="color:#fff;font-size:11px;font-weight:600">[Prénom Nom]</span></div>
-<p class="petit">Badge de salon ou de démonstration, 90 x 120 mm.</p></div>
-<div style="background:#fff;border-radius:4px;padding:20px 24px;{ombre}">
-<p class="t3" style="font-size:14px">Documents des clients</p>
-<p class="petit">Les devis, factures et bons produits par le logiciel portent l'identité de l'entreprise cliente, jamais celle de Kadenz.</p></div>
-</div></div>"""
+    """Papeterie retenue le 2026-11-13 (scènes de scenes_papeterie.py)."""
+    def scene(fn, cle, vb, w, h):
+        return (f'<svg viewBox="{vb}" width="{w}" height="{h}" style="display:block;border-radius:4px;background:{BRUME}">'
+                + "".join(fn(cle)) + "</svg>")
+    haut = ((sp.carte, "Carte de visite 85 x 55 mm"), (sp.papier, "Papier à en-tête A4"),
+            (sp.enveloppe, "Enveloppe DL, intérieur imprimé"), (sp.chemise, "Chemise à rabats A4"),
+            (sp.badge, "Badge 90 x 120 mm"))
+    cases = "".join(f'<div style="display:flex;flex-direction:column;gap:6px">{scene(fn, f"p8h{k}", "0 0 400 500", 205, 256)}'
+                    f'<p class="petit">{leg}</p></div>' for k, (fn, leg) in enumerate(haut))
+    bas = ((sp.carnet, "Carnet A5 et autocollants", "0 0 400 500", 1), (sp.signatures, "Signatures de courriel, trois variantes", "0 0 680 428", 2),
+           (sp.tampons, "Tampons, trois variantes, une seule couleur d'encre", "0 0 680 428", 2))
+    cases += "".join(f'<div style="display:flex;flex-direction:column;gap:6px;grid-column:span {n}">'
+                     f'{scene(fn, f"p8b{k}", vb, 205 if n == 1 else 426, 256)}<p class="petit">{leg}</p></div>'
+                     for k, (fn, leg, vb, n) in enumerate(bas))
+    c = f"""<div style="display:grid;grid-template-columns:repeat(5,205px);justify-content:space-between;row-gap:12px">{cases}</div>"""
     return planche(8, "Stationery design", "Papeterie de l'éditeur. Les documents produits par le logiciel gardent l'identité du client.", c)
 
 
