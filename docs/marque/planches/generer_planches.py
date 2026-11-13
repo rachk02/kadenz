@@ -200,7 +200,7 @@ def p03():
 <div class="bord" style="border-radius:4px;padding:18px"><p class="t3" style="color:#b42318">À éviter</p>
 <p class="petit" style="font-size:13px;line-height:1.6">Le jargon informatique là où un mot du métier existe.<br><br>Les points d'exclamation, les superlatifs, les emoji.<br><br>Les messages vagues : dire ce qui s'est passé et quoi faire.</p></div>
 </div></div></div>"""
-    return planche(3, "Tone &amp; Mood", "Propositions à valider : un outil de travail sûr, régulier, sans fioriture", c)
+    return planche(3, "Tone &amp; Mood", "Un outil de travail sûr, régulier, sans fioriture", c)
 
 
 # --- 04 Color system ----------------------------------------------------------------

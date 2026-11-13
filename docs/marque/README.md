@@ -66,6 +66,15 @@ Autour du logo, laisser libre au moins **la moitié du côté d'une case** du sy
 | Logo empilé | 64 px de large | 18 mm de large |
 | Symbole | 16 px, avec la petite coupe en dessous de 33 px | 6 mm |
 
+## Ton
+
+Validé par l'utilisateur le 2026-11-13 (planche 03) : un outil de travail sûr, régulier, sans fioriture.
+
+- **Cinq mots** : rigoureux, régulier, clair, sobre, fiable.
+- **Position** : plutôt moderne que classique, plutôt sérieux que ludique, plutôt discret qu'expressif, un peu plus accessible que technique.
+- **Notre voix** : des verbes d'action, le vocabulaire du métier, des phrases courtes, comme les libellés de l'application (« Se connecter », « Enregistrer », « Mot de passe modifié. »).
+- **À éviter** : le jargon informatique là où un mot du métier existe ; les points d'exclamation, les superlatifs, les emoji ; les messages vagues : dire ce qui s'est passé et quoi faire.
+
 ## Couleurs
 
 | Nom | HEX | RVB | CMJN (approché) | Contraste sur blanc | Rôle | Jeton Slint |
