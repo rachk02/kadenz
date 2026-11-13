@@ -137,7 +137,7 @@ component CadreLogo inherits VerticalLayout {
 
         Bouton {
             text: root.present ? @tr("Remplacer") : @tr("Choisir une image");
-            enabled: Ecriture.permise;
+            enabled: Ecriture.reglages;
             clicked => {
                 root.choisir();
             }
@@ -145,7 +145,7 @@ component CadreLogo inherits VerticalLayout {
 
         if root.present: Bouton {
             text: @tr("Retirer");
-            enabled: Ecriture.permise;
+            enabled: Ecriture.reglages;
             clicked => {
                 root.retirer();
             }
@@ -326,7 +326,7 @@ export component PageEntreprise inherits ScrollView {
                         Bouton {
                             text: @tr("Enregistrer");
                             primary: true;
-                            enabled: Ecriture.permise;
+                            enabled: Ecriture.reglages;
                             clicked => {
                                 root.retour = EntrepriseApi.enregistrer(root.saisie());
                                 Alerte.retour(root.retour);
@@ -879,7 +879,7 @@ export component PageParametres inherits ScrollView {
                     Bouton {
                         text: @tr("Enregistrer");
                         primary: true;
-                        enabled: Ecriture.permise;
+                        enabled: Ecriture.reglages;
                         clicked => {
                             root.memoriser-textes();
                             root.retour = ParametresApi.enregistrer({

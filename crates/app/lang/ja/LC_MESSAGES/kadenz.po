@@ -3383,3 +3383,9 @@ msgstr "会社に参加"
 
 msgid "Ce poste travaille sur le serveur de l'entreprise. Demandez un code d'inscription à l'Admin : il le crée dans la fenêtre du serveur, ou depuis un poste déjà inscrit."
 msgstr "この端末は会社のサーバーで動作します。管理者に登録コードを依頼してください。管理者はサーバーのウィンドウ、または登録済みの端末からコードを作成します。"
+
+msgid "La validation attend le serveur : le numéro est attribué par le serveur."
+msgstr "確定はサーバーを待っています。番号はサーバーが付与します。"
+
+msgid "Comptes et réglages attendent le serveur : ils se modifient quand le poste est connecté."
+msgstr "アカウントと設定はサーバーを待っています。端末が接続されているときに変更できます。"

@@ -156,7 +156,13 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     // droits ouvrent aussi des pages, dont « Abonnement », seule sortie de la
     // lecture seule ; leurs boutons d'enregistrement suivent `Ecriture`.
     let ecrire = relie::blocage(etat).is_none();
-    fenetre.global::<Ecriture>().set_permise(ecrire);
+    let ecriture = fenetre.global::<Ecriture>();
+    ecriture.set_permise(ecrire);
+    ecriture.set_validation(
+        relie::blocage_selon(etat, kadenz_protocole::EnCoupure::Validation).is_none(),
+    );
+    ecriture
+        .set_reglages(relie::blocage_selon(etat, kadenz_protocole::EnCoupure::Refusee).is_none());
     let d = fenetre.global::<Droits>();
     d.set_ajouter_referentiel(ecrire && possede(Droit::AjouterReferentiel));
     d.set_modifier_referentiel(ecrire && possede(Droit::ModifierReferentiel));

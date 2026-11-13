@@ -1441,9 +1441,12 @@ component Fiche inherits ScrollView {
                 }
             }
 
+            // Serveur injoignable : visible mais inactif, la raison est dans
+            // la note de la fiche (décision 9).
             if Ecriture.permise && root.fiche.peut-valider: Bouton {
                 text: @tr("Valider");
                 primary: true;
+                enabled: Ecriture.validation;
                 clicked => {
                     root.retour = { };
                     root.confirmation = 1;

@@ -3383,3 +3383,9 @@ msgstr "Unirse a la empresa"
 
 msgid "Ce poste travaille sur le serveur de l'entreprise. Demandez un code d'inscription à l'Admin : il le crée dans la fenêtre du serveur, ou depuis un poste déjà inscrit."
 msgstr "Este puesto trabaja en el servidor de la empresa. Pida un código de inscripción al administrador: lo crea en la ventana del servidor o desde un puesto ya inscrito."
+
+msgid "La validation attend le serveur : le numéro est attribué par le serveur."
+msgstr "La validación espera al servidor: el número lo asigna el servidor."
+
+msgid "Comptes et réglages attendent le serveur : ils se modifient quand le poste est connecté."
+msgstr "Las cuentas y la configuración esperan al servidor: se modifican cuando el puesto está conectado."

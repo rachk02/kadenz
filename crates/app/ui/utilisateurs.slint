@@ -169,7 +169,7 @@ component OngletComptes inherits ScrollView {
 
                 Bouton {
                     text: @tr("Changer le rôle");
-                    enabled: Ecriture.permise && role.current-index != root.compte.role;
+                    enabled: Ecriture.reglages && role.current-index != root.compte.role;
                     clicked => {
                         root.retour = UtilisateursApi.changer-role(role.current-index);
                         Alerte.retour(root.retour);
@@ -179,7 +179,7 @@ component OngletComptes inherits ScrollView {
 
                 Bouton {
                     text: root.compte.actif ? @tr("Désactiver") : @tr("Réactiver");
-                    enabled: Ecriture.permise;
+                    enabled: Ecriture.reglages;
                     clicked => {
                         // Seule la désactivation demande confirmation : elle coupe l'accès du compte.
                         if (root.compte.actif) {
@@ -221,7 +221,7 @@ component OngletComptes inherits ScrollView {
                 Bouton {
                     text: root.compte.existe ? @tr("Réinitialiser le mot de passe") : @tr("Créer le compte");
                     primary: true;
-                    enabled: Ecriture.permise;
+                    enabled: Ecriture.reglages;
                     clicked => {
                         if (root.compte.existe) {
                             root.retour = UtilisateursApi.reinitialiser(mot-de-passe.valeur, confirmation.valeur);
@@ -355,7 +355,7 @@ component OngletDroits inherits ScrollView {
             Bouton {
                 text: @tr("Enregistrer les droits");
                 primary: true;
-                enabled: Ecriture.permise;
+                enabled: Ecriture.reglages;
                 clicked => {
                     root.retour = UtilisateursApi.enregistrer-matrice();
                     Alerte.retour(root.retour);

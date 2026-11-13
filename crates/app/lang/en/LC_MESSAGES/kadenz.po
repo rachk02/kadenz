@@ -3383,3 +3383,9 @@ msgstr "Join the company"
 
 msgid "Ce poste travaille sur le serveur de l'entreprise. Demandez un code d'inscription à l'Admin : il le crée dans la fenêtre du serveur, ou depuis un poste déjà inscrit."
 msgstr "This workstation works on the company server. Ask the Admin for an enrolment code: they create it in the server window, or from a workstation that is already enrolled."
+
+msgid "La validation attend le serveur : le numéro est attribué par le serveur."
+msgstr "Validation waits for the server: the number is assigned by the server."
+
+msgid "Comptes et réglages attendent le serveur : ils se modifient quand le poste est connecté."
+msgstr "Accounts and settings wait for the server: they can be changed when the workstation is connected."

@@ -8,7 +8,7 @@ use std::cell::RefCell;
 use std::path::PathBuf;
 
 use kadenz_poste::{ErreurPoste, EtatConnexion, Evenement, Synchroniseur};
-use kadenz_protocole::{Action, Entite, Issue};
+use kadenz_protocole::{Action, EnCoupure, Entite, Issue};
 use slint::{ComponentHandle, SharedString};
 
 use crate::referentiels::{retour_erreur, retour_ok};
@@ -334,7 +334,11 @@ fn connexion_ouverte(etat: &EtatPartage) -> bool {
 
 /// Raison du blocage des écritures due à la connexion, ou `None` si le
 /// serveur peut les recevoir (décision 46). Sans synchroniseur, rien ne part.
-fn raison_connexion(connexion: Option<&EtatConnexion>) -> Option<String> {
+fn raison_connexion(
+    connexion: Option<&EtatConnexion>,
+    niveau: EnCoupure,
+    file: bool,
+) -> Option<String> {
     match connexion {
         Some(
             EtatConnexion::Connecte
@@ -344,25 +348,46 @@ fn raison_connexion(connexion: Option<&EtatConnexion>) -> Option<String> {
         Some(e) if e.definitif() => Some(tr(
             "Connexion au serveur impossible : aucune saisie n'est possible. Voir Paramètres, rubrique « Serveur ».",
         )),
+        // Serveur injoignable avec la file d'envoi (décision 50) : saisie
+        // provisoire, validation et comptes ou réglages en attente du serveur.
+        _ if file => match niveau {
+            EnCoupure::Permise => None,
+            EnCoupure::Validation => Some(tr(
+                "La validation attend le serveur : le numéro est attribué par le serveur.",
+            )),
+            EnCoupure::Refusee => Some(tr(
+                "Comptes et réglages attendent le serveur : ils se modifient quand le poste est connecté.",
+            )),
+        },
         _ => Some(tr(
             "Serveur injoignable : la saisie reprendra au retour du serveur. Consultation, impression et exports restent possibles.",
         )),
     }
 }
 
+/// File d'envoi de kadenz-poste (F6b) : tant qu'elle n'est pas livrée, le
+/// serveur injoignable bloque toute saisie, comme en F5 (décision 46).
+const FILE_D_ENVOI: bool = false;
+
 /// Raison du blocage des écritures sur ce poste, ou `None` si la saisie est
 /// permise : seul point de décision pour les écrans. Poste V1 : seule la
 /// lecture seule de l'abonnement compte, et elle n'arrive jamais.
 pub(crate) fn blocage(etat: &Etat) -> Option<String> {
+    blocage_selon(etat, EnCoupure::Permise)
+}
+
+/// Raison du blocage d'une sorte d'écriture (décision 50) : saisie, validation,
+/// ou comptes et réglages ; `None` si elle est permise.
+pub(crate) fn blocage_selon(etat: &Etat, niveau: EnCoupure) -> Option<String> {
     if crate::serveur::inscrit(&etat.conn) {
-        // Connexion locale (décision 48) : rien ne part tant que le compte n'est
-        // pas connecté sur le serveur.
+        // Compte connecté en local (décisions 48 et 51) : il travaille comme
+        // hors connexion tant qu'il n'est pas connecté sur le serveur.
         let connexion = etat
             .relie
             .as_ref()
             .filter(|r| r.compte_serveur || etat.utilisateur.is_none())
             .map(|r| &r.connexion);
-        if let Some(raison) = raison_connexion(connexion) {
+        if let Some(raison) = raison_connexion(connexion, niveau, FILE_D_ENVOI) {
             return Some(raison);
         }
     }
@@ -506,33 +531,59 @@ mod tests {
 
     #[test]
     fn ecritures_selon_la_connexion() {
-        assert_eq!(raison_connexion(Some(&EtatConnexion::Connecte)), None);
-        assert_eq!(
-            raison_connexion(Some(&EtatConnexion::Synchronisation)),
-            None
-        );
-        // La lecture seule est jugée par l'abonnement, pas par la connexion.
-        assert_eq!(
-            raison_connexion(Some(&EtatConnexion::LectureSeule { echeance: None })),
-            None
-        );
-        for coupe in [
+        let niveaux = [
+            EnCoupure::Permise,
+            EnCoupure::Validation,
+            EnCoupure::Refusee,
+        ];
+        for niveau in niveaux {
+            for file in [false, true] {
+                let r = |e: &EtatConnexion| raison_connexion(Some(e), niveau, file);
+                assert_eq!(r(&EtatConnexion::Connecte), None);
+                assert_eq!(r(&EtatConnexion::Synchronisation), None);
+                // La lecture seule est jugée par l'abonnement, pas par la connexion.
+                assert_eq!(r(&EtatConnexion::LectureSeule { echeance: None }), None);
+                // Serveur non reconnu : rien ne part, même avec la file.
+                assert!(
+                    r(&EtatConnexion::PosteRetire)
+                        .unwrap()
+                        .contains("impossible")
+                );
+            }
+        }
+        let coupes = [
             EtatConnexion::Connexion,
             EtatConnexion::Reconnexion { essai: 2 },
             EtatConnexion::Injoignable,
-        ] {
+        ];
+        for coupe in &coupes {
+            // Sans file d'envoi (F5) : toute saisie attend le serveur.
+            for niveau in niveaux {
+                assert!(
+                    raison_connexion(Some(coupe), niveau, false)
+                        .unwrap()
+                        .contains("injoignable")
+                );
+            }
+            // Avec la file (décision 50) : saisie provisoire, validation et
+            // comptes ou réglages en attente.
+            assert_eq!(
+                raison_connexion(Some(coupe), EnCoupure::Permise, true),
+                None
+            );
             assert!(
-                raison_connexion(Some(&coupe))
+                raison_connexion(Some(coupe), EnCoupure::Validation, true)
                     .unwrap()
-                    .contains("injoignable")
+                    .contains("numéro")
+            );
+            assert!(
+                raison_connexion(Some(coupe), EnCoupure::Refusee, true)
+                    .unwrap()
+                    .contains("réglages")
             );
         }
-        assert!(
-            raison_connexion(Some(&EtatConnexion::PosteRetire))
-                .unwrap()
-                .contains("impossible")
-        );
-        // Sans synchroniseur : rien ne part.
-        assert!(raison_connexion(None).is_some());
+        // Sans synchroniseur : comme une coupure.
+        assert!(raison_connexion(None, EnCoupure::Permise, false).is_some());
+        assert_eq!(raison_connexion(None, EnCoupure::Permise, true), None);
     }
 }

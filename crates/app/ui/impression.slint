@@ -593,7 +593,7 @@ export component PageImpression inherits Rectangle {
                     Bouton {
                         text: @tr("Enregistrer");
                         primary: true;
-                        enabled: Ecriture.permise;
+                        enabled: Ecriture.reglages;
                         clicked => {
                             root.bas[root.rang-type] = root.bas-saisi();
                             root.retour = ImpressionApi.enregistrer(root.saisie(), root.bas);

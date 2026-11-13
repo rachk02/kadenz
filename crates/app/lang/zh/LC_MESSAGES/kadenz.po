@@ -3383,3 +3383,9 @@ msgstr "加入公司"
 
 msgid "Ce poste travaille sur le serveur de l'entreprise. Demandez un code d'inscription à l'Admin : il le crée dans la fenêtre du serveur, ou depuis un poste déjà inscrit."
 msgstr "此工作站在公司服务器上工作。请向管理员索取注册码：管理员可在服务器窗口或已注册的工作站上创建。"
+
+msgid "La validation attend le serveur : le numéro est attribué par le serveur."
+msgstr "验证需等待服务器：编号由服务器分配。"
+
+msgid "Comptes et réglages attendent le serveur : ils se modifient quand le poste est connecté."
+msgstr "账户和设置需等待服务器：工作站连接后才能修改。"

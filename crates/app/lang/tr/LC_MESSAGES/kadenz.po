@@ -3383,3 +3383,9 @@ msgstr "Şirkete katıl"
 
 msgid "Ce poste travaille sur le serveur de l'entreprise. Demandez un code d'inscription à l'Admin : il le crée dans la fenêtre du serveur, ou depuis un poste déjà inscrit."
 msgstr "Bu iş istasyonu şirket sunucusunda çalışır. Yöneticiden bir kayıt kodu isteyin: kodu sunucu penceresinde veya zaten kayıtlı bir iş istasyonundan oluşturur."
+
+msgid "La validation attend le serveur : le numéro est attribué par le serveur."
+msgstr "Onay sunucuyu bekliyor: numarayı sunucu verir."
+
+msgid "Comptes et réglages attendent le serveur : ils se modifient quand le poste est connecté."
+msgstr "Hesaplar ve ayarlar sunucuyu bekliyor: iş istasyonu bağlıyken değiştirilebilir."

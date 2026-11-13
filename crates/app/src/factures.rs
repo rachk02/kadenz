@@ -1044,7 +1044,9 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
             .into(),
         reglement_mode_index,
         en_preparation,
-        note: match crate::relie::blocage(etat) {
+        note: match crate::relie::blocage(etat)
+            .or_else(|| crate::relie::blocage_selon(etat, kadenz_protocole::EnCoupure::Validation))
+        {
             Some(raison) if brouillon => raison,
             _ => note_fiche(t, statut, modifiable, admin_modifiable),
         }
