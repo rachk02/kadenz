@@ -76,11 +76,12 @@ export component EcranConnexion inherits Rectangle {
     property <string> mot-de-passe;
     property <string> erreur;
 
+    // Le mot de passe n'est pas effacé après une connexion réussie : l'écran est
+    // recréé à chaque affichage. Sur un poste relié, il peut rester affiché le
+    // temps que le compte arrive dans la copie (compte attendu), et vider le
+    // champ masqué sous son curseur fait paniquer Slint 1.18 (text.rs:1521).
     function valider() {
         root.erreur = root.connecter(root.identifiant, root.mot-de-passe);
-        if (root.erreur == "") {
-            root.mot-de-passe = "";
-        }
     }
 
     background: white;

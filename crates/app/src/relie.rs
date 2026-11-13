@@ -6,6 +6,7 @@
 
 use std::cell::RefCell;
 use std::path::PathBuf;
+use std::time::{Duration, Instant};
 
 use kadenz_poste::{ErreurPoste, EtatConnexion, Evenement, Synchroniseur};
 use kadenz_protocole::{Action, EnCoupure, Entite, Issue};
@@ -41,6 +42,51 @@ pub(crate) struct Relie {
     pub(crate) compte_attendu: Option<String>,
     /// Opérations suspendues sur le serveur, telles que la rubrique les montre.
     pub(crate) suspendues: crate::suspendues::Suivi,
+    /// Garde contre le double clic : dernière écriture appliquée.
+    pub(crate) derniere: RefCell<Option<Derniere>>,
+    /// Écriture écartée comme doublon, et celle qu'elle répète : une création
+    /// écartée retrouve ainsi la ligne créée par la première.
+    pub(crate) substitut: RefCell<Option<(Action, Action)>>,
+}
+
+/// Dernière écriture appliquée, pour reconnaître sa répétition immédiate.
+pub(crate) struct Derniere {
+    empreinte: serde_json::Value,
+    action: Action,
+    issue: Issue,
+    fin: Instant,
+}
+
+/// Délai, compté depuis la fin d'une écriture, pendant lequel la même écriture
+/// est un doublon. L'écran attend la réponse de chaque écriture : un second clic
+/// sur « Enregistrer » attend son tour et part juste après la première (essai
+/// F6d : une modification envoyée deux fois, à 6 ms d'écart).
+const DOUBLE_CLIC: Duration = Duration::from_millis(500);
+
+/// Contenu comparable d'une action : l'identifiant d'une ligne créée, nouveau
+/// à chaque clic, n'y compte pas.
+fn empreinte(action: &Action) -> serde_json::Value {
+    fn effacer(v: &mut serde_json::Value, uid: &str) {
+        match v {
+            serde_json::Value::String(s) if s == uid => s.clear(),
+            serde_json::Value::Array(a) => a.iter_mut().for_each(|x| effacer(x, uid)),
+            serde_json::Value::Object(o) => o.values_mut().for_each(|x| effacer(x, uid)),
+            _ => {}
+        }
+    }
+    let mut v = serde_json::to_value(action).unwrap_or_default();
+    if let Some((_, uid)) = action.creee() {
+        effacer(&mut v, uid);
+    }
+    v
+}
+
+/// Écriture qui répète la précédente juste après elle : son résultat, sans la
+/// renvoyer.
+fn doublon(derniere: Option<&Derniere>, empreinte: &serde_json::Value) -> Option<(Action, Issue)> {
+    derniere
+        .filter(|d| d.fin.elapsed() < DOUBLE_CLIC && d.empreinte == *empreinte)
+        .map(|d| (d.action.clone(), d.issue.clone()))
 }
 
 /// Démarre le synchroniseur sur la copie ; ses événements reviennent dans le
@@ -64,6 +110,8 @@ pub(crate) fn demarrer(f: &FenetrePrincipale, etat: &EtatPartage, copie: PathBuf
                 compte_serveur: false,
                 compte_attendu: None,
                 suspendues: Default::default(),
+                derniere: RefCell::new(None),
+                substitut: RefCell::new(None),
             })
         }
         Err(e) => {
@@ -166,7 +214,12 @@ pub(crate) fn ecrire(etat: &Etat, action: Action) -> Option<Result<Issue, String
     let Some(r) = etat.relie.as_ref() else {
         return Some(Err(texte_erreur(&ErreurPoste::HorsConnexion)));
     };
-    Some(match r.synchro.ecrire(action) {
+    let empreinte = empreinte(&action);
+    if let Some((origine, issue)) = doublon(r.derniere.borrow().as_ref(), &empreinte) {
+        *r.substitut.borrow_mut() = Some((action, origine));
+        return Some(Ok(issue));
+    }
+    let resultat = match r.synchro.ecrire(action.clone()) {
         Ok(issue @ (Issue::Acceptee { .. } | Issue::EnFile)) => Ok(issue),
         Ok(Issue::Refusee { modele, valeurs }) => {
             Err(texte_erreur(&ErreurPoste::Refus { modele, valeurs }))
@@ -178,7 +231,14 @@ pub(crate) fn ecrire(etat: &Etat, action: Action) -> Option<Result<Issue, String
             "La fiche a changé sur un autre poste : rouvrez-la pour voir la version du serveur.",
         )),
         Err(e) => Err(texte_erreur(&e)),
-    })
+    };
+    *r.derniere.borrow_mut() = resultat.as_ref().ok().map(|issue| Derniere {
+        empreinte,
+        action,
+        issue: issue.clone(),
+        fin: Instant::now(),
+    });
+    Some(resultat)
 }
 
 /// Écriture visant une ligne existante : l'action reçoit l'uid de la ligne.
@@ -327,6 +387,14 @@ pub(crate) fn uid(etat: &Etat, entite: Entite, id: i64) -> Result<String, String
 
 /// Identifiant local de la ligne créée par une action, une fois la copie à jour.
 pub(crate) fn id_cree(etat: &Etat, action: &Action) -> Option<i64> {
+    // Création écartée comme doublon : la ligne de la première.
+    let substitut = etat
+        .relie
+        .as_ref()
+        .and_then(|r| r.substitut.borrow().clone())
+        .filter(|(doublon, _)| doublon == action)
+        .map(|(_, origine)| origine);
+    let action = substitut.as_ref().unwrap_or(action);
     let (entite, uid) = action.creee()?;
     kadenz_stockage::synchro::id_de(&etat.conn, entite, uid)
         .ok()
@@ -700,6 +768,50 @@ mod tests {
         ] {
             assert_eq!(indicateur(&final_, 0, None).1, 2);
         }
+    }
+
+    #[test]
+    fn double_clic_ecarte() {
+        let fiche = kadenz_protocole::Tiers {
+            nom: "JB".into(),
+            ..Default::default()
+        };
+        let creer = |uid: &str| Action::CreerTiers {
+            uid: uid.into(),
+            fiche: fiche.clone(),
+        };
+        // Deux clics sur « Ajouter » : même fiche, identifiants différents.
+        assert_eq!(empreinte(&creer("a")), empreinte(&creer("b")));
+        let derniere = Derniere {
+            empreinte: empreinte(&creer("a")),
+            action: creer("a"),
+            issue: Issue::EnFile,
+            fin: Instant::now(),
+        };
+        assert_eq!(
+            doublon(Some(&derniere), &empreinte(&creer("b"))),
+            Some((creer("a"), Issue::EnFile))
+        );
+        // Une autre fiche, ou plus tard : une vraie écriture.
+        let autre = Action::CreerTiers {
+            uid: "c".into(),
+            fiche: kadenz_protocole::Tiers {
+                nom: "KB".into(),
+                ..Default::default()
+            },
+        };
+        assert_eq!(doublon(Some(&derniere), &empreinte(&autre)), None);
+        let ancienne = Derniere {
+            fin: Instant::now() - DOUBLE_CLIC,
+            ..derniere
+        };
+        assert_eq!(doublon(Some(&ancienne), &empreinte(&creer("b"))), None);
+        assert_eq!(doublon(None, &empreinte(&creer("b"))), None);
+        // Validations en série (« Tout valider ») : documents différents.
+        assert_ne!(
+            empreinte(&Action::Valider { uid: "d1".into() }),
+            empreinte(&Action::Valider { uid: "d2".into() })
+        );
     }
 
     #[test]
