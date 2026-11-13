@@ -3338,3 +3338,21 @@ msgstr "Operación rechazada por el servidor: {}"
 
 msgid "Opération mise en attente par le serveur : l'Admin décidera."
 msgstr "Operación puesta en espera por el servidor: el administrador decidirá."
+
+msgid "serveur injoignable"
+msgstr "servidor inaccesible"
+
+msgid "connexion au serveur impossible"
+msgstr "no se puede conectar con el servidor"
+
+msgid "Le serveur n'a pas répondu à temps : l'opération sera confirmée à la reconnexion"
+msgstr "El servidor no respondió a tiempo: la operación se confirmará al reconectar"
+
+msgid "Erreur technique : {}"
+msgstr "Error técnico: {}"
+
+msgid "Connexion acceptée par le serveur. Les données de l'entreprise arrivent : la session s'ouvrira dès que votre compte sera reçu."
+msgstr "Inicio de sesión aceptado por el servidor. Los datos de la empresa están llegando: la sesión se abrirá en cuanto se reciba su cuenta."
+
+msgid "Votre mot de passe a changé ou votre compte a été désactivé sur le serveur : reconnectez-vous."
+msgstr "Su contraseña ha cambiado o su cuenta se ha desactivado en el servidor: vuelva a iniciar sesión."

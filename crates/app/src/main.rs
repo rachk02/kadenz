@@ -95,7 +95,7 @@ pub(crate) fn consigner_erreur(detail: &str) {
 /// Le message est d'abord traduit dans la langue choisie (traduction::tr) ; une
 /// erreur du stockage passe par referentiels::texte_erreur (jamais de requête SQL
 /// à l'écran).
-fn phrase(message: impl std::fmt::Display + 'static) -> SharedString {
+pub(crate) fn phrase(message: impl std::fmt::Display + 'static) -> SharedString {
     let texte = match (&message as &dyn std::any::Any).downcast_ref::<kadenz_stockage::Erreur>() {
         Some(erreur) => referentiels::texte_erreur_ref(erreur),
         None => traduction::tr(&message.to_string()),
@@ -287,6 +287,14 @@ fn appliquer_langue(fenetre: &FenetrePrincipale, code: &str) {
     fenetre.global::<Theme>().set_chinois(code == "zh");
 }
 
+/// Ouvre la session d'un compte reconnu : écrans du compte, puis invite de
+/// mise à jour pour qui gère les paramètres.
+pub(crate) fn ouvrir_session(f: &FenetrePrincipale, etat: &mut Etat, utilisateur: Utilisateur) {
+    etat.utilisateur = Some(utilisateur);
+    afficher_session(f, etat);
+    maj::verifier_apres_connexion(f, gere_parametres(etat));
+}
+
 /// Compte, droits ou entreprise changés sur un autre poste (poste relié) :
 /// la session relit son compte dans la copie, puis ses droits et son menu.
 pub(crate) fn relire_session(f: &FenetrePrincipale, etat: &EtatPartage) {
@@ -429,6 +437,12 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
     fenetre.on_connecter(move |identifiant, mot_de_passe| {
+        // Poste relié : connexion par le serveur (ou locale, décision 48).
+        if let Some(f) = f.upgrade()
+            && let Some(message) = relie::connecter(&f, &e, &identifiant, &mot_de_passe)
+        {
+            return message;
+        }
         let mut etat = e.borrow_mut();
         match comptes::connecter(&etat.conn, &identifiant, &mot_de_passe) {
             Ok(utilisateur) => {
@@ -446,7 +460,9 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     let (f, e) = (fenetre.as_weak(), etat.clone());
     fenetre.on_deconnecter(move || {
         if let Some(f) = f.upgrade() {
-            fermer_session(&f, &mut e.borrow_mut());
+            let mut etat = e.borrow_mut();
+            relie::deconnecter(&mut etat);
+            fermer_session(&f, &mut etat);
         }
     });
 

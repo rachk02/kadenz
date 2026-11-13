@@ -7,9 +7,9 @@
 use std::cell::RefCell;
 use std::path::PathBuf;
 
-use kadenz_poste::{EtatConnexion, Evenement, Synchroniseur};
+use kadenz_poste::{ErreurPoste, EtatConnexion, Evenement, Synchroniseur};
 use kadenz_protocole::{Entite, Issue};
-use slint::ComponentHandle;
+use slint::{ComponentHandle, SharedString};
 
 use crate::traduction::{tr, trf};
 use crate::{Alerte, ConnexionApi, Etat, EtatPartage, FenetrePrincipale};
@@ -27,6 +27,12 @@ pub(crate) struct Relie {
     pub(crate) confirmation: bool,
     /// Rattrapage en cours : rang reçu, dernier rang du serveur.
     pub(crate) avancement: Option<(u64, u64)>,
+    /// Le compte de la session est connecté sur le serveur : sans cela (connexion
+    /// locale de la décision 48, ou compte refusé), rien ne s'écrit.
+    pub(crate) compte_serveur: bool,
+    /// Compte accepté par le serveur mais pas encore reçu dans une copie neuve :
+    /// la session s'ouvre dès qu'il arrive.
+    pub(crate) compte_attendu: Option<String>,
 }
 
 /// Démarre le synchroniseur sur la copie ; ses événements reviennent dans le
@@ -46,6 +52,8 @@ pub(crate) fn demarrer(f: &FenetrePrincipale, etat: &EtatPartage, copie: PathBuf
                 connexion,
                 confirmation: false,
                 avancement: None,
+                compte_serveur: false,
+                compte_attendu: None,
             })
         }
         Err(e) => {
@@ -64,6 +72,105 @@ pub(crate) fn appliquer_modules(f: &FenetrePrincipale, conn: &kadenz_stockage::C
         crate::consigner_erreur(&format!("Modules de l'abonnement non appliqués : {e}"));
     }
     crate::licence::afficher_modules(f, conn);
+}
+
+/// Texte traduit d'une erreur du synchroniseur.
+pub(crate) fn texte_erreur(e: &ErreurPoste) -> String {
+    match e {
+        ErreurPoste::HorsConnexion => tr("serveur injoignable"),
+        ErreurPoste::Injoignable => tr("connexion au serveur impossible"),
+        ErreurPoste::LectureSeule { .. } => tr("abonnement échu : Kadenz est en lecture seule"),
+        ErreurPoste::Delai => {
+            tr("Le serveur n'a pas répondu à temps : l'opération sera confirmée à la reconnexion")
+        }
+        ErreurPoste::CompteRefuse { attente_secondes } => trf(
+            "identifiant ou mot de passe incorrect (nouvel essai dans {} s)",
+            &[attente_secondes],
+        ),
+        ErreurPoste::Refus { modele, valeurs } => trf(
+            modele,
+            &valeurs
+                .iter()
+                .map(|v| v as &dyn std::fmt::Display)
+                .collect::<Vec<_>>(),
+        ),
+        ErreurPoste::Base(message) => trf("Erreur technique : {}", &[message]),
+    }
+}
+
+/// Connexion d'un compte sur un poste relié : par le serveur, ou en local avec
+/// les empreintes de la copie quand le serveur est injoignable (décision 48).
+/// `None` si le poste n'est pas relié ; sinon le message de l'écran de
+/// connexion, vide si la session s'est ouverte.
+pub(crate) fn connecter(
+    f: &FenetrePrincipale,
+    etat: &EtatPartage,
+    identifiant: &str,
+    mot_de_passe: &str,
+) -> Option<SharedString> {
+    let resultat = etat
+        .borrow()
+        .relie
+        .as_ref()?
+        .synchro
+        .connecter(identifiant, mot_de_passe);
+    Some(match resultat {
+        Ok(compte) => {
+            if let Some(r) = etat.borrow_mut().relie.as_mut() {
+                r.compte_serveur = true;
+                r.compte_attendu = Some(compte.compte.clone());
+            }
+            if ouvrir_session_attendue(f, etat) {
+                SharedString::new()
+            } else {
+                // Copie neuve : le compte arrive avec la première synchronisation.
+                tr("Connexion acceptée par le serveur. Les données de l'entreprise arrivent : la session s'ouvrira dès que votre compte sera reçu.").into()
+            }
+        }
+        Err(ErreurPoste::HorsConnexion | ErreurPoste::Injoignable) => {
+            // Décision 48 : consultation sur la copie ; le synchroniseur garde
+            // le compte et le connecte au retour du serveur.
+            let local =
+                kadenz_stockage::comptes::connecter(&etat.borrow().conn, identifiant, mot_de_passe);
+            match local {
+                Ok(utilisateur) => {
+                    crate::ouvrir_session(f, &mut etat.borrow_mut(), utilisateur);
+                    SharedString::new()
+                }
+                Err(e) => crate::phrase(e),
+            }
+        }
+        Err(e) => crate::phrase(texte_erreur(&e)),
+    })
+}
+
+/// Ouvre la session du compte accepté par le serveur s'il est dans la copie.
+fn ouvrir_session_attendue(f: &FenetrePrincipale, etat: &EtatPartage) -> bool {
+    let mut e = etat.borrow_mut();
+    let Some(uid) = e.relie.as_ref().and_then(|r| r.compte_attendu.clone()) else {
+        return false;
+    };
+    let compte = kadenz_stockage::synchro::id_de(&e.conn, Entite::Utilisateur, &uid)
+        .ok()
+        .flatten()
+        .and_then(|id| kadenz_stockage::comptes::lire(&e.conn, id).ok().flatten());
+    let Some(utilisateur) = compte else {
+        return false;
+    };
+    if let Some(r) = e.relie.as_mut() {
+        r.compte_attendu = None;
+    }
+    crate::ouvrir_session(f, &mut e, utilisateur);
+    true
+}
+
+/// Déconnexion du compte : le serveur ferme sa session.
+pub(crate) fn deconnecter(etat: &mut Etat) {
+    if let Some(r) = etat.relie.as_mut() {
+        r.synchro.deconnecter();
+        r.compte_serveur = false;
+        r.compte_attendu = None;
+    }
 }
 
 /// Arrêt du synchroniseur à la fermeture de la fenêtre.
@@ -125,6 +232,18 @@ fn texte_confirmation(issue: &Issue) -> String {
     }
 }
 
+/// Le serveur répond (connecté, même en rattrapage ou en lecture seule).
+fn connexion_ouverte(etat: &EtatPartage) -> bool {
+    matches!(
+        etat.borrow().relie.as_ref().map(|r| &r.connexion),
+        Some(
+            EtatConnexion::Connecte
+                | EtatConnexion::Synchronisation
+                | EtatConnexion::LectureSeule { .. }
+        )
+    )
+}
+
 /// Raison du blocage des écritures due à la connexion, ou `None` si le
 /// serveur peut les recevoir (décision 46). Sans synchroniseur, rien ne part.
 fn raison_connexion(connexion: Option<&EtatConnexion>) -> Option<String> {
@@ -147,10 +266,17 @@ fn raison_connexion(connexion: Option<&EtatConnexion>) -> Option<String> {
 /// permise : seul point de décision pour les écrans. Poste V1 : seule la
 /// lecture seule de l'abonnement compte, et elle n'arrive jamais.
 pub(crate) fn blocage(etat: &Etat) -> Option<String> {
-    if crate::serveur::inscrit(&etat.conn)
-        && let Some(raison) = raison_connexion(etat.relie.as_ref().map(|r| &r.connexion))
-    {
-        return Some(raison);
+    if crate::serveur::inscrit(&etat.conn) {
+        // Connexion locale (décision 48) : rien ne part tant que le compte n'est
+        // pas connecté sur le serveur.
+        let connexion = etat
+            .relie
+            .as_ref()
+            .filter(|r| r.compte_serveur || etat.utilisateur.is_none())
+            .map(|r| &r.connexion);
+        if let Some(raison) = raison_connexion(connexion) {
+            return Some(raison);
+        }
     }
     crate::abonnement::blocage(&etat.conn)
 }
@@ -187,6 +313,9 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
                     r.connexion = connexion;
                 }
             }
+            if connexion_ouverte(&etat) {
+                ouvrir_session_attendue(f, &etat);
+            }
             // Écritures permises ou non : droits, menu et fiche ouverte suivent.
             let e = etat.borrow();
             afficher(f, &e);
@@ -222,8 +351,9 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
                 }
             }
             // Comptes, matrice des droits, entreprise ou réglages : la session
-            // relit le compte, les droits et le nom de l'entreprise.
-            if droits {
+            // relit le compte, les droits et le nom de l'entreprise ; ou s'ouvre,
+            // si son compte vient d'arriver dans une copie neuve.
+            if droits && !ouvrir_session_attendue(f, &etat) {
                 crate::relire_session(f, &etat);
             }
         }
@@ -240,8 +370,24 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
             f.global::<Alerte>()
                 .invoke_montrer(texte_confirmation(&issue).into());
         }
-        #[allow(unreachable_patterns)]
-        _ => {}
+        Evenement::Compte(resultat) => {
+            let refuse = matches!(resultat, Err(ErreurPoste::CompteRefuse { .. }));
+            if let Some(r) = etat.borrow_mut().relie.as_mut() {
+                r.compte_serveur = resultat.is_ok();
+            }
+            let session = etat.borrow().utilisateur.is_some();
+            if refuse && session {
+                // Mot de passe changé ailleurs ou compte désactivé : retour à
+                // l'écran de connexion.
+                crate::fermer_session(f, &mut etat.borrow_mut());
+                f.global::<Alerte>().invoke_montrer(
+                    tr("Votre mot de passe a changé ou votre compte a été désactivé sur le serveur : reconnectez-vous.").into(),
+                );
+            } else {
+                let e = etat.borrow();
+                crate::appliquer_droits(f, &e);
+            }
+        }
     }
 }
 

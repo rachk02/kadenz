@@ -3338,3 +3338,21 @@ msgstr "İşlem sunucu tarafından reddedildi: {}"
 
 msgid "Opération mise en attente par le serveur : l'Admin décidera."
 msgstr "İşlem sunucu tarafından beklemeye alındı: Yönetici karar verecek."
+
+msgid "serveur injoignable"
+msgstr "sunucuya ulaşılamıyor"
+
+msgid "connexion au serveur impossible"
+msgstr "sunucuya bağlanılamıyor"
+
+msgid "Le serveur n'a pas répondu à temps : l'opération sera confirmée à la reconnexion"
+msgstr "Sunucu zamanında yanıt vermedi: işlem yeniden bağlanınca onaylanacak"
+
+msgid "Erreur technique : {}"
+msgstr "Teknik hata: {}"
+
+msgid "Connexion acceptée par le serveur. Les données de l'entreprise arrivent : la session s'ouvrira dès que votre compte sera reçu."
+msgstr "Oturum açma sunucu tarafından kabul edildi. Şirket verileri geliyor: hesabınız alınır alınmaz oturum açılacak."
+
+msgid "Votre mot de passe a changé ou votre compte a été désactivé sur le serveur : reconnectez-vous."
+msgstr "Parolanız değişti veya hesabınız sunucuda devre dışı bırakıldı: yeniden oturum açın."

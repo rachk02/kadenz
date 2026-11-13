@@ -3338,3 +3338,21 @@ msgstr "サーバーが操作を拒否しました：{}"
 
 msgid "Opération mise en attente par le serveur : l'Admin décidera."
 msgstr "サーバーが操作を保留にしました。管理者が判断します。"
+
+msgid "serveur injoignable"
+msgstr "サーバーに接続できません"
+
+msgid "connexion au serveur impossible"
+msgstr "サーバーに接続できません"
+
+msgid "Le serveur n'a pas répondu à temps : l'opération sera confirmée à la reconnexion"
+msgstr "サーバーが時間内に応答しませんでした。操作は再接続時に確認されます"
+
+msgid "Erreur technique : {}"
+msgstr "技術的なエラー：{}"
+
+msgid "Connexion acceptée par le serveur. Les données de l'entreprise arrivent : la session s'ouvrira dès que votre compte sera reçu."
+msgstr "サーバーがサインインを受け付けました。会社のデータを受信中です。アカウントを受信するとセッションが開きます。"
+
+msgid "Votre mot de passe a changé ou votre compte a été désactivé sur le serveur : reconnectez-vous."
+msgstr "パスワードが変更されたか、サーバーでアカウントが無効になりました。もう一度サインインしてください。"

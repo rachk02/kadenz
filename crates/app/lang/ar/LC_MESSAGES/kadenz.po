@@ -3338,3 +3338,21 @@ msgstr "رفض الخادم العملية: {}"
 
 msgid "Opération mise en attente par le serveur : l'Admin décidera."
 msgstr "وضع الخادم العملية قيد الانتظار: سيقرر المسؤول."
+
+msgid "serveur injoignable"
+msgstr "تعذر الوصول إلى الخادم"
+
+msgid "connexion au serveur impossible"
+msgstr "تعذر الاتصال بالخادم"
+
+msgid "Le serveur n'a pas répondu à temps : l'opération sera confirmée à la reconnexion"
+msgstr "لم يستجب الخادم في الوقت المحدد: سيتم تأكيد العملية عند إعادة الاتصال"
+
+msgid "Erreur technique : {}"
+msgstr "خطأ تقني: {}"
+
+msgid "Connexion acceptée par le serveur. Les données de l'entreprise arrivent : la session s'ouvrira dès que votre compte sera reçu."
+msgstr "قبل الخادم تسجيل الدخول. بيانات الشركة قيد الوصول: ستُفتح الجلسة بمجرد استلام حسابك."
+
+msgid "Votre mot de passe a changé ou votre compte a été désactivé sur le serveur : reconnectez-vous."
+msgstr "تغيرت كلمة المرور أو تم تعطيل حسابك على الخادم: سجّل الدخول مجددًا."

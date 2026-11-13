@@ -3338,3 +3338,21 @@ msgstr "服务器拒绝了操作：{}"
 
 msgid "Opération mise en attente par le serveur : l'Admin décidera."
 msgstr "服务器已将操作挂起：由管理员决定。"
+
+msgid "serveur injoignable"
+msgstr "无法连接服务器"
+
+msgid "connexion au serveur impossible"
+msgstr "无法连接到服务器"
+
+msgid "Le serveur n'a pas répondu à temps : l'opération sera confirmée à la reconnexion"
+msgstr "服务器未及时响应：操作将在重新连接时确认"
+
+msgid "Erreur technique : {}"
+msgstr "技术错误：{}"
+
+msgid "Connexion acceptée par le serveur. Les données de l'entreprise arrivent : la session s'ouvrira dès que votre compte sera reçu."
+msgstr "服务器已接受登录。正在接收企业数据：收到您的账户后将立即打开会话。"
+
+msgid "Votre mot de passe a changé ou votre compte a été désactivé sur le serveur : reconnectez-vous."
+msgstr "您的密码已更改或您的账户已在服务器上停用：请重新登录。"

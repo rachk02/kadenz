@@ -3338,3 +3338,21 @@ msgstr "Operation refused by the server: {}"
 
 msgid "Opération mise en attente par le serveur : l'Admin décidera."
 msgstr "Operation put on hold by the server: the Admin will decide."
+
+msgid "serveur injoignable"
+msgstr "server unreachable"
+
+msgid "connexion au serveur impossible"
+msgstr "cannot connect to the server"
+
+msgid "Le serveur n'a pas répondu à temps : l'opération sera confirmée à la reconnexion"
+msgstr "The server did not answer in time: the operation will be confirmed on reconnection"
+
+msgid "Erreur technique : {}"
+msgstr "Technical error: {}"
+
+msgid "Connexion acceptée par le serveur. Les données de l'entreprise arrivent : la session s'ouvrira dès que votre compte sera reçu."
+msgstr "Sign-in accepted by the server. The company data is arriving: the session will open as soon as your account is received."
+
+msgid "Votre mot de passe a changé ou votre compte a été désactivé sur le serveur : reconnectez-vous."
+msgstr "Your password has changed or your account has been disabled on the server: please sign in again."
