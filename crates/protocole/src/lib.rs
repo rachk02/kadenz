@@ -379,6 +379,25 @@ impl Action {
         })
     }
 
+    /// Ligne créée par l'action, avec l'identifiant choisi par le poste
+    /// (création, duplication, avoir, conversion, bordereau, règlement,
+    /// compte). Un import en crée une par fiche : voir son champ `uids`.
+    pub fn creee(&self) -> Option<(Entite, &str)> {
+        use Action::*;
+        Some(match self {
+            CreerTiers { uid, .. } => (Entite::Tiers, uid),
+            CreerProduit { uid, .. } => (Entite::Produit, uid),
+            CreerBrouillon { uid, .. } => (Entite::Document, uid),
+            Dupliquer { nouveau, .. }
+            | CreerAvoir { nouveau, .. }
+            | ConvertirEnFacture { nouveau, .. }
+            | CreerBordereau { nouveau, .. } => (Entite::Document, nouveau),
+            AjouterReglement { uid, .. } => (Entite::Reglement, uid),
+            CreerCompte { uid, .. } => (Entite::Utilisateur, uid),
+            _ => return None,
+        })
+    }
+
     /// Écriture du compte de la session sur lui-même : seule permise en
     /// lecture seule (abonnement échu).
     pub fn personnelle(&self) -> bool {

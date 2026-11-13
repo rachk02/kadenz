@@ -3152,6 +3152,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "kadenz-poste"
+version = "0.2.2"
+dependencies = [
+ "chrono",
+ "kadenz-client",
+ "kadenz-domaine",
+ "kadenz-licence",
+ "kadenz-protocole",
+ "kadenz-serveur",
+ "kadenz-stockage",
+ "rusqlite",
+]
+
+[[package]]
 name = "kadenz-protocole"
 version = "0.2.2"
 dependencies = [

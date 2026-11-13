@@ -11,6 +11,7 @@ members = [
     "crates/maj",
     "crates/protocole",
     "crates/client",
+    "crates/poste",
     "crates/serveur",
     "crates/app",
     "crates/admin",
@@ -38,6 +39,7 @@ kadenz-export = { path = "crates/export" }
 kadenz-maj = { path = "crates/maj" }
 kadenz-protocole = { path = "crates/protocole" }
 kadenz-client = { path = "crates/client" }
+kadenz-poste = { path = "crates/poste" }
 kadenz-serveur = { path = "crates/serveur" }
 rusqlite = { version = "0.41.1", features = ["bundled", "backup"] }
 slint = { version = "1.18.1", features = ["raw-window-handle-06"] }

@@ -55,7 +55,7 @@ pub const CLES_PARTAGEES: [&str; 19] = [
 /// Clés propres à chaque base, jamais transmises ni écrasées : identité de
 /// l'entreprise et du poste, licence V1, abonnement, port du service, dossiers
 /// d'export de la machine, suivi de la réplique.
-pub const CLES_LOCALES: [&str; 10] = [
+pub const CLES_LOCALES: [&str; 11] = [
     "identifiant_entreprise",
     "poste_relie",
     "licence.cle",
@@ -66,10 +66,13 @@ pub const CLES_LOCALES: [&str; 10] = [
     "port_serveur",
     "documents.dossiers",
     CLE_DERNIER_RANG,
+    CLE_EN_COURS,
 ];
 
 /// Dernier rang de la suite des changements reçu du serveur (sur un poste).
 const CLE_DERNIER_RANG: &str = "synchro.dernier_rang";
+/// Opération envoyée au serveur sans réponse reçue (sur un poste).
+const CLE_EN_COURS: &str = "synchro.operation_en_cours";
 
 /// Classement des colonnes d'une table répliquée. `id` et `uid` sont à part.
 pub(crate) struct Table {
@@ -673,6 +676,44 @@ pub fn recevoir(conn: &mut Connection, page: &[Changement]) -> Resultat<Receptio
     bilan.en_attente = attente.len();
     bilan.dernier = dernier;
     Ok(bilan)
+}
+
+/// Garde (ou oublie, avec `None`) l'opération envoyée au serveur dont la
+/// réponse n'est pas encore reçue : elle sera renvoyée avec le même
+/// identifiant, et le serveur rendra le résultat d'origine.
+pub fn garder_en_cours(
+    conn: &Connection,
+    op: Option<&kadenz_protocole::Operation>,
+) -> Resultat<()> {
+    match op {
+        Some(op) => {
+            let texte = serde_json::to_string(op).map_err(|e| Erreur::Validation(e.to_string()))?;
+            conn.execute(
+                "INSERT INTO parametre_systeme (cle, valeur) VALUES (?1, ?2)
+                 ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur",
+                params![CLE_EN_COURS, texte],
+            )?;
+        }
+        None => {
+            conn.execute(
+                "DELETE FROM parametre_systeme WHERE cle = ?1",
+                [CLE_EN_COURS],
+            )?;
+        }
+    }
+    Ok(())
+}
+
+/// Opération envoyée au serveur sans réponse reçue, s'il y en a une.
+pub fn operation_en_cours(conn: &Connection) -> Resultat<Option<kadenz_protocole::Operation>> {
+    let texte: Option<String> = conn
+        .query_row(
+            "SELECT valeur FROM parametre_systeme WHERE cle = ?1",
+            [CLE_EN_COURS],
+            |r| r.get(0),
+        )
+        .optional()?;
+    Ok(texte.and_then(|t| serde_json::from_str(&t).ok()))
 }
 
 /// Dernier rang reçu du serveur par ce poste (0 avant la première page).
