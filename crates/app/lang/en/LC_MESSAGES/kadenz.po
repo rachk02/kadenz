@@ -3389,3 +3389,15 @@ msgstr "Validation waits for the server: the number is assigned by the server."
 
 msgid "Comptes et réglages attendent le serveur : ils se modifient quand le poste est connecté."
 msgstr "Accounts and settings wait for the server: they can be changed when the workstation is connected."
+
+msgid "conflit tranché : la version du serveur est gardée"
+msgstr "conflict resolved: the server version is kept"
+
+msgid "opération rejetée par l'Admin"
+msgstr "operation rejected by the Admin"
+
+msgid "opération suspendue introuvable ou déjà décidée"
+msgstr "suspended operation not found or already decided"
+
+msgid "le résultat ne correspond pas à l'opération en conflit"
+msgstr "the result does not match the conflicting operation"

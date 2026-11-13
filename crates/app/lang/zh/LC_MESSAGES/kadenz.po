@@ -3389,3 +3389,15 @@ msgstr "验证需等待服务器：编号由服务器分配。"
 
 msgid "Comptes et réglages attendent le serveur : ils se modifient quand le poste est connecté."
 msgstr "账户和设置需等待服务器：工作站连接后才能修改。"
+
+msgid "conflit tranché : la version du serveur est gardée"
+msgstr "冲突已解决：保留服务器上的版本"
+
+msgid "opération rejetée par l'Admin"
+msgstr "管理员拒绝了该操作"
+
+msgid "opération suspendue introuvable ou déjà décidée"
+msgstr "找不到挂起的操作，或已作出决定"
+
+msgid "le résultat ne correspond pas à l'opération en conflit"
+msgstr "结果与冲突的操作不符"

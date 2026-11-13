@@ -3389,3 +3389,15 @@ msgstr "Onay sunucuyu bekliyor: numarayı sunucu verir."
 
 msgid "Comptes et réglages attendent le serveur : ils se modifient quand le poste est connecté."
 msgstr "Hesaplar ve ayarlar sunucuyu bekliyor: iş istasyonu bağlıyken değiştirilebilir."
+
+msgid "conflit tranché : la version du serveur est gardée"
+msgstr "çakışma çözüldü: sunucudaki sürüm korundu"
+
+msgid "opération rejetée par l'Admin"
+msgstr "işlem Yönetici tarafından reddedildi"
+
+msgid "opération suspendue introuvable ou déjà décidée"
+msgstr "askıdaki işlem bulunamadı veya zaten karara bağlandı"
+
+msgid "le résultat ne correspond pas à l'opération en conflit"
+msgstr "sonuç çakışan işlemle uyuşmuyor"

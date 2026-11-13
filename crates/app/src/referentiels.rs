@@ -709,5 +709,9 @@ mod tests {
         let manquants =
             crate::traduction::sans_traduction(&kadenz_stockage::synchro::MODELES_ERREUR);
         assert!(manquants.is_empty(), "sans traduction : {manquants:?}");
+        // Décisions sur les opérations suspendues (F6).
+        let manquants =
+            crate::traduction::sans_traduction(&kadenz_stockage::synchro::MODELES_DECISION);
+        assert!(manquants.is_empty(), "sans traduction : {manquants:?}");
     }
 }

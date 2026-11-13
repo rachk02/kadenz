@@ -3389,3 +3389,15 @@ msgstr "La validación espera al servidor: el número lo asigna el servidor."
 
 msgid "Comptes et réglages attendent le serveur : ils se modifient quand le poste est connecté."
 msgstr "Las cuentas y la configuración esperan al servidor: se modifican cuando el puesto está conectado."
+
+msgid "conflit tranché : la version du serveur est gardée"
+msgstr "conflicto resuelto: se conserva la versión del servidor"
+
+msgid "opération rejetée par l'Admin"
+msgstr "operación rechazada por el administrador"
+
+msgid "opération suspendue introuvable ou déjà décidée"
+msgstr "operación suspendida no encontrada o ya decidida"
+
+msgid "le résultat ne correspond pas à l'opération en conflit"
+msgstr "el resultado no corresponde a la operación en conflicto"

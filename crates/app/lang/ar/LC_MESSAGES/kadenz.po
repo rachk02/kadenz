@@ -3389,3 +3389,15 @@ msgstr "التحقق في انتظار الخادم: يُسند الخادم ا�
 
 msgid "Comptes et réglages attendent le serveur : ils se modifient quand le poste est connecté."
 msgstr "الحسابات والإعدادات في انتظار الخادم: تُعدَّل عندما تكون المحطة متصلة."
+
+msgid "conflit tranché : la version du serveur est gardée"
+msgstr "حُسم التعارض: احتُفظ بنسخة الخادم"
+
+msgid "opération rejetée par l'Admin"
+msgstr "رفض المسؤول العملية"
+
+msgid "opération suspendue introuvable ou déjà décidée"
+msgstr "العملية المعلّقة غير موجودة أو سبق البتّ فيها"
+
+msgid "le résultat ne correspond pas à l'opération en conflit"
+msgstr "النتيجة لا تطابق العملية المتعارضة"
