@@ -153,9 +153,10 @@ fn restaurer_en_session(
         Ok(()) => {
             crate::licence::ouvrir(fenetre, &e.conn, &e.poste);
             crate::fermer_session(fenetre, &mut e);
-            // Sauvegarde sans compte (base jamais installée) : retour à l'assistant.
+            // Sauvegarde sans compte (base jamais installée) : premier lancement,
+            // par code d'inscription.
             if comptes::etat_installation(&e.conn).ok() == Some(EtatInstallation::AssistantRequis) {
-                fenetre.set_ecran(crate::Ecran::Assistant);
+                fenetre.set_ecran(crate::Ecran::Inscription);
             }
             retour_ok("sauvegarde restaurée ; reconnectez-vous")
         }

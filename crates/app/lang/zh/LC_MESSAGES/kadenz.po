@@ -3374,3 +3374,12 @@ msgstr "保存许可证"
 
 msgid "Collez la nouvelle licence reçue de l'éditeur ou du revendeur : le serveur la vérifie et l'applique à tous les postes de l'entreprise."
 msgstr "粘贴从发行商或经销商处收到的新许可证：服务器会验证并将其应用于公司的所有工作站。"
+
+msgid "PREMIER LANCEMENT"
+msgstr "首次启动"
+
+msgid "Rejoindre l'entreprise"
+msgstr "加入公司"
+
+msgid "Ce poste travaille sur le serveur de l'entreprise. Demandez un code d'inscription à l'Admin : il le crée dans la fenêtre du serveur, ou depuis un poste déjà inscrit."
+msgstr "此工作站在公司服务器上工作。请向管理员索取注册码：管理员可在服务器窗口或已注册的工作站上创建。"

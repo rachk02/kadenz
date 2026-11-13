@@ -1,0 +1,68 @@
+// Premier lancement d'un poste de la phase 2 (écrans, sections 1 et 2) : aucune
+// base locale à créer, le poste rejoint le serveur de l'entreprise avec un code
+// d'inscription, puis passe à l'écran de connexion. Un poste seul reste la V1.
+import { MessageRetour, Rangee, Theme, Titre } from "composants.slint";
+import { PanneauMarque } from "connexion.slint";
+import { InscriptionPoste, ServeurApi } from "serveur.slint";
+
+export component EcranInscription inherits Rectangle {
+    in property <string> version-logiciel;
+    background: white;
+
+    Rangee {
+        remplit: true;
+
+        PanneauMarque {
+            width: max(340px, min(460px, root.width * 0.4));
+            version-logiciel: root.version-logiciel;
+        }
+
+        VerticalLayout {
+            alignment: center;
+
+            Rangee {
+                alignment: center;
+
+                VerticalLayout {
+                    width: 520px;
+                    spacing: 16px;
+                    padding: 24px;
+
+                    Text {
+                        horizontal-alignment: Theme.debut;
+                        text: @tr("PREMIER LANCEMENT");
+                        font-family: Theme.police-titre;
+                        font-size: 12px;
+                        font-weight: 800;
+                        letter-spacing: 1px;
+                        color: Theme.accent;
+                    }
+
+                    Titre {
+                        text: @tr("Rejoindre l'entreprise");
+                        wrap: word-wrap;
+                    }
+
+                    Text {
+                        horizontal-alignment: Theme.debut;
+                        text: @tr("Ce poste travaille sur le serveur de l'entreprise. Demandez un code d'inscription à l'Admin : il le crée dans la fenêtre du serveur, ou depuis un poste déjà inscrit.");
+                        color: Theme.texte-secondaire;
+                        wrap: word-wrap;
+                    }
+
+                    InscriptionPoste { }
+
+                    if ServeurApi.occupe: Text {
+                        horizontal-alignment: Theme.debut;
+                        text: @tr("Connexion au serveur en cours...");
+                        color: Theme.texte-secondaire;
+                    }
+
+                    MessageRetour {
+                        retour: ServeurApi.retour;
+                    }
+                }
+            }
+        }
+    }
+}

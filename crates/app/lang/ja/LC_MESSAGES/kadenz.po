@@ -3374,3 +3374,12 @@ msgstr "ライセンスを登録"
 
 msgid "Collez la nouvelle licence reçue de l'éditeur ou du revendeur : le serveur la vérifie et l'applique à tous les postes de l'entreprise."
 msgstr "発行元または販売店から受け取った新しいライセンスを貼り付けてください。サーバーが確認し、会社のすべての端末に適用します。"
+
+msgid "PREMIER LANCEMENT"
+msgstr "初回起動"
+
+msgid "Rejoindre l'entreprise"
+msgstr "会社に参加"
+
+msgid "Ce poste travaille sur le serveur de l'entreprise. Demandez un code d'inscription à l'Admin : il le crée dans la fenêtre du serveur, ou depuis un poste déjà inscrit."
+msgstr "この端末は会社のサーバーで動作します。管理者に登録コードを依頼してください。管理者はサーバーのウィンドウ、または登録済みの端末からコードを作成します。"

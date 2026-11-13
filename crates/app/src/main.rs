@@ -26,19 +26,13 @@ use std::path::PathBuf;
 use std::rc::Rc;
 
 use kadenz_domaine::langue::Langue;
-use kadenz_domaine::lettres::Orthographe;
 use kadenz_domaine::module::Module;
 use kadenz_domaine::role::Droit;
-use kadenz_domaine::saisie;
 use kadenz_stockage::Connexion;
-use kadenz_stockage::comptes::{
-    self, EtatInstallation, Navigation, NouvelUtilisateur, Utilisateur,
-};
+use kadenz_stockage::comptes::{self, EtatInstallation, Navigation, Utilisateur};
 use kadenz_stockage::documents::TypeDocument;
 use kadenz_stockage::droits;
-use kadenz_stockage::entreprise::{self, Entreprise};
-use kadenz_stockage::installation::{self, InstallationInitiale};
-use kadenz_stockage::parametres::Parametres;
+use kadenz_stockage::entreprise;
 use kadenz_stockage::produits::{FiltreProduits, Produit};
 use kadenz_stockage::tiers::{FiltreTiers, Tiers};
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
@@ -328,55 +322,6 @@ fn afficher_session(fenetre: &FenetrePrincipale, etat: &Etat) {
     }
 }
 
-fn installation_depuis_assistant(d: &DonneesAssistant) -> Result<InstallationInitiale, String> {
-    let taux = |libelle: &str, texte: &SharedString| {
-        saisie::liste_pourcentages_depuis_texte(texte).ok_or_else(|| {
-            traduction::trf(
-                "taux de {} invalides : saisir des pourcentages entre 0 et 100 séparés par des points-virgules",
-                &[&traduction::tr(libelle)],
-            )
-        })
-    };
-    Ok(InstallationInitiale {
-        entreprise: Entreprise {
-            nom: d.nom.to_string(),
-            adresse: d.adresse.to_string(),
-            telephone: d.telephone.to_string(),
-            email: d.email.to_string(),
-            site_web: d.site_web.to_string(),
-            localisation: d.localisation.to_string(),
-            regime_imposition: d.regime.to_string(),
-            rccm: d.rccm.to_string(),
-            ifu: d.ifu.to_string(),
-            banque1: d.banque1.to_string(),
-            banque2: d.banque2.to_string(),
-            responsable_facturation: d.responsable_facturation.to_string(),
-            responsable_comptabilite: d.responsable_comptabilite.to_string(),
-        },
-        admin: NouvelUtilisateur {
-            nom_complet: d.admin_nom.to_string(),
-            identifiant: d.admin_identifiant.to_string(),
-            mot_de_passe: d.admin_mot_de_passe.to_string(),
-            role: kadenz_domaine::role::Role::Admin,
-        },
-        parametres: Parametres {
-            taux_tva: taux("TVA", &d.taux_tva)?,
-            taux_remise: taux("remise", &d.taux_remise)?,
-            taux_retenue: taux("retenue", &d.taux_retenue)?,
-            modes_paiement: saisie::liste_libelles_depuis_texte(&d.modes_paiement),
-            orthographe: if d.orthographe_traditionnelle {
-                Orthographe::Traditionnelle
-            } else {
-                Orthographe::Rectifiee
-            },
-            validite_devis_jours: None,
-            delai_paiement_jours: None,
-            numerotation: Default::default(),
-            ..Parametres::default()
-        },
-    })
-}
-
 /// Fin de session (déconnexion, ou restauration d'une sauvegarde) : état de la
 /// session vidé, langue de démarrage, retour à l'écran de connexion.
 pub(crate) fn fermer_session(f: &FenetrePrincipale, etat: &mut Etat) {
@@ -399,42 +344,6 @@ pub(crate) fn fermer_session(f: &FenetrePrincipale, etat: &mut Etat) {
 }
 
 fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
-    let defaut = Parametres::default();
-    fenetre.set_defaut_taux_tva(saisie::liste_pourcentages_en_texte(&defaut.taux_tva).into());
-    fenetre.set_defaut_taux_remise(saisie::liste_pourcentages_en_texte(&defaut.taux_remise).into());
-    fenetre
-        .set_defaut_taux_retenue(saisie::liste_pourcentages_en_texte(&defaut.taux_retenue).into());
-    fenetre.set_defaut_modes_paiement(defaut.modes_paiement.join(" ; ").into());
-
-    let (f, e) = (fenetre.as_weak(), etat.clone());
-    fenetre.on_terminer_assistant(move |donnees| {
-        let init = match installation_depuis_assistant(&donnees) {
-            Ok(init) => init,
-            Err(message) => return phrase(message),
-        };
-        let mut etat = e.borrow_mut();
-        match installation::installer(&mut etat.conn, &init) {
-            Ok(admin) => {
-                if let Some(f) = f.upgrade() {
-                    licence::enregistrer_cle_assistant(
-                        &f,
-                        &etat.conn,
-                        &admin,
-                        &donnees.cle_licence,
-                        &etat.poste,
-                    );
-                }
-                etat.utilisateur = Some(admin);
-                if let Some(f) = f.upgrade() {
-                    afficher_session(&f, &etat);
-                    maj::verifier_apres_connexion(&f, gere_parametres(&etat));
-                }
-                SharedString::new()
-            }
-            Err(erreur) => phrase(erreur),
-        }
-    });
-
     let (f, e) = (fenetre.as_weak(), etat.clone());
     fenetre.on_connecter(move |identifiant, mot_de_passe| {
         // Poste relié : connexion par le serveur (ou locale, décision 48).
@@ -614,7 +523,7 @@ fn main() -> Result<(), slint::PlatformError> {
             }
             afficher_session(fenetre, &etat.borrow());
             fenetre.set_ecran(match ecran {
-                // Premier lancement : présentation, puis assistant.
+                // Premier lancement : présentation, puis inscription par code.
                 EtatInstallation::AssistantRequis => Ecran::Presentation,
                 EtatInstallation::ConnexionRequise => Ecran::Connexion,
             });

@@ -3374,3 +3374,12 @@ msgstr "حفظ الترخيص"
 
 msgid "Collez la nouvelle licence reçue de l'éditeur ou du revendeur : le serveur la vérifie et l'applique à tous les postes de l'entreprise."
 msgstr "الصق الترخيص الجديد الذي تلقيته من الناشر أو الموزّع: يتحقق منه الخادم ويطبّقه على جميع محطات الشركة."
+
+msgid "PREMIER LANCEMENT"
+msgstr "التشغيل الأول"
+
+msgid "Rejoindre l'entreprise"
+msgstr "الانضمام إلى الشركة"
+
+msgid "Ce poste travaille sur le serveur de l'entreprise. Demandez un code d'inscription à l'Admin : il le crée dans la fenêtre du serveur, ou depuis un poste déjà inscrit."
+msgstr "تعمل هذه المحطة على خادم الشركة. اطلب رمز تسجيل من المسؤول: ينشئه في نافذة الخادم أو من محطة مسجّلة بالفعل."

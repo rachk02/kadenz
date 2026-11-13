@@ -3374,3 +3374,12 @@ msgstr "Registrar la licencia"
 
 msgid "Collez la nouvelle licence reçue de l'éditeur ou du revendeur : le serveur la vérifie et l'applique à tous les postes de l'entreprise."
 msgstr "Pegue la nueva licencia recibida del editor o del revendedor: el servidor la verifica y la aplica a todos los puestos de la empresa."
+
+msgid "PREMIER LANCEMENT"
+msgstr "PRIMER INICIO"
+
+msgid "Rejoindre l'entreprise"
+msgstr "Unirse a la empresa"
+
+msgid "Ce poste travaille sur le serveur de l'entreprise. Demandez un code d'inscription à l'Admin : il le crée dans la fenêtre du serveur, ou depuis un poste déjà inscrit."
+msgstr "Este puesto trabaja en el servidor de la empresa. Pida un código de inscripción al administrador: lo crea en la ventana del servidor o desde un puesto ya inscrito."

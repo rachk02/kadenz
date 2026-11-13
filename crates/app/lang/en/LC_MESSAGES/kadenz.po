@@ -3374,3 +3374,12 @@ msgstr "Save the licence"
 
 msgid "Collez la nouvelle licence reçue de l'éditeur ou du revendeur : le serveur la vérifie et l'applique à tous les postes de l'entreprise."
 msgstr "Paste the new licence received from the publisher or the reseller: the server checks it and applies it to all the company's workstations."
+
+msgid "PREMIER LANCEMENT"
+msgstr "FIRST LAUNCH"
+
+msgid "Rejoindre l'entreprise"
+msgstr "Join the company"
+
+msgid "Ce poste travaille sur le serveur de l'entreprise. Demandez un code d'inscription à l'Admin : il le crée dans la fenêtre du serveur, ou depuis un poste déjà inscrit."
+msgstr "This workstation works on the company server. Ask the Admin for an enrolment code: they create it in the server window, or from a workstation that is already enrolled."

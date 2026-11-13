@@ -175,22 +175,6 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
     });
 }
 
-/// Enregistre la clé saisie dans l'assistant, une fois l'administrateur créé. Un échec
-/// laisse l'installation faite : la clé se saisit alors dans l'onglet Licence.
-pub(crate) fn enregistrer_cle_assistant(
-    f: &FenetrePrincipale,
-    conn: &kadenz_stockage::Connexion,
-    admin: &kadenz_stockage::comptes::Utilisateur,
-    cle: &str,
-    poste: &str,
-) {
-    if !cle.trim().is_empty()
-        && let Ok(etat) = stockage::enregistrer(conn, admin, cle, poste)
-    {
-        afficher(f, conn, &etat);
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

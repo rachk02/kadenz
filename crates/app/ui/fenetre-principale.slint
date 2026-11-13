@@ -1,7 +1,7 @@
 // Fenêtre principale : écrans de démarrage, puis application avec sa navigation
 // (bandeau ou barre latérale, navigation.slint) et ses pages.
 import { Affichage, Alerte, Confirmation, Droits, Ecriture, FenetreAlerte, FenetreConfirmation, Modules, Rangee, Retour, Theme } from "composants.slint";
-import { EcranAssistant, DonneesAssistant } from "assistant.slint";
+import { EcranInscription } from "premier-lancement.slint";
 import { EcranConnexion } from "connexion.slint";
 import { EcranPresentation } from "presentation.slint";
 import { PageProduits, PageTiers, ProduitsApi, TiersApi } from "referentiels.slint";
@@ -21,10 +21,10 @@ import { BandeauHaut, BoutonIcone, ContenuBarre, Infobulle, InfobulleFenetre, Me
 import { PageReglages, ReglagesApi, Rubrique } from "reglages.slint";
 import { EcranDemarrageImpossible, SauvegardesApi } from "sauvegardes.slint";
 
-export { AbonnementApi, ConnexionApi, ServeurApi, Affichage, Alerte, DonneesAssistant, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, TiersApi, UtilisateursApi }
+export { AbonnementApi, ConnexionApi, ServeurApi, Affichage, Alerte, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
-export enum Ecran { demarrage-impossible, presentation, assistant, connexion, application }
+export enum Ecran { demarrage-impossible, presentation, inscription, connexion, application }
 
 export component FenetrePrincipale inherits Window {
     in-out property <Ecran> ecran: Ecran.demarrage-impossible;
@@ -38,12 +38,7 @@ export component FenetrePrincipale inherits Window {
     in property <string> utilisateur-role;
     in-out property <int> utilisateur-langue;
 
-    in property <string> defaut-taux-tva;
-    in property <string> defaut-taux-remise;
-    in property <string> defaut-taux-retenue;
-    in property <string> defaut-modes-paiement;
 
-    callback terminer-assistant(DonneesAssistant) -> string;
     callback connecter(string, string) -> string;
     callback deconnecter();
     callback changer-mot-de-passe(string, string, string) -> string;
@@ -108,19 +103,13 @@ export component FenetrePrincipale inherits Window {
         version-logiciel: root.version-logiciel;
         depuis-a-propos: root.presentation-depuis-a-propos;
         terminer => {
-            root.ecran = root.presentation-depuis-a-propos ? Ecran.application : Ecran.assistant;
+            root.ecran = root.presentation-depuis-a-propos ? Ecran.application : Ecran.inscription;
             root.presentation-depuis-a-propos = false;
         }
     }
 
-    if root.ecran == Ecran.assistant: EcranAssistant {
-        defaut-taux-tva: root.defaut-taux-tva;
-        defaut-taux-remise: root.defaut-taux-remise;
-        defaut-taux-retenue: root.defaut-taux-retenue;
-        defaut-modes-paiement: root.defaut-modes-paiement;
-        terminer(donnees) => {
-            root.terminer-assistant(donnees)
-        }
+    if root.ecran == Ecran.inscription: EcranInscription {
+        version-logiciel: root.version-logiciel;
     }
 
     if root.ecran == Ecran.connexion: EcranConnexion {

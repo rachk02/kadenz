@@ -3374,3 +3374,12 @@ msgstr "Lisansı kaydet"
 
 msgid "Collez la nouvelle licence reçue de l'éditeur ou du revendeur : le serveur la vérifie et l'applique à tous les postes de l'entreprise."
 msgstr "Yayıncıdan veya bayiden aldığınız yeni lisansı yapıştırın: sunucu lisansı doğrular ve şirketin tüm iş istasyonlarına uygular."
+
+msgid "PREMIER LANCEMENT"
+msgstr "İLK BAŞLATMA"
+
+msgid "Rejoindre l'entreprise"
+msgstr "Şirkete katıl"
+
+msgid "Ce poste travaille sur le serveur de l'entreprise. Demandez un code d'inscription à l'Admin : il le crée dans la fenêtre du serveur, ou depuis un poste déjà inscrit."
+msgstr "Bu iş istasyonu şirket sunucusunda çalışır. Yöneticiden bir kayıt kodu isteyin: kodu sunucu penceresinde veya zaten kayıtlı bir iş istasyonundan oluşturur."
