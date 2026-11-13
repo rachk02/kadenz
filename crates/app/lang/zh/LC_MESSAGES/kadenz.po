@@ -3287,3 +3287,54 @@ msgstr "Kadenz 处于只读状态：续订订阅之前无法进行任何录入�
 
 msgid "la copie du serveur existe déjà sur ce poste"
 msgstr "此工作站上已存在服务器副本"
+
+msgid "Connexion au serveur..."
+msgstr "正在连接服务器..."
+
+msgid "Confirmation en attente"
+msgstr "等待确认"
+
+msgid "Connecté au serveur"
+msgstr "已连接服务器"
+
+msgid "Connecté au serveur, lecture seule"
+msgstr "已连接服务器，只读"
+
+msgid "Synchronisation... {} %"
+msgstr "正在同步... {} %"
+
+msgid "Synchronisation..."
+msgstr "正在同步..."
+
+msgid "Reconnexion au serveur (essai {})"
+msgstr "正在重新连接服务器（第 {} 次尝试）"
+
+msgid "Hors connexion : serveur injoignable"
+msgstr "离线：无法连接服务器"
+
+msgid "Serveur non reconnu"
+msgstr "无法识别服务器"
+
+msgid "Poste retiré du serveur"
+msgstr "工作站已从服务器移除"
+
+msgid "Version différente du serveur"
+msgstr "服务器版本不同"
+
+msgid "Connexion au serveur impossible : aucune saisie n'est possible. Voir Paramètres, rubrique « Serveur »."
+msgstr "无法连接服务器：无法进行任何录入。请参阅设置中的“服务器”部分。"
+
+msgid "Serveur injoignable : la saisie reprendra au retour du serveur. Consultation, impression et exports restent possibles."
+msgstr "无法连接服务器：服务器恢复后可继续录入。查看、打印和导出仍可使用。"
+
+msgid "Opération confirmée par le serveur : numéro {}."
+msgstr "服务器已确认操作：编号 {}。"
+
+msgid "Opération confirmée par le serveur."
+msgstr "服务器已确认操作。"
+
+msgid "Opération refusée par le serveur : {}"
+msgstr "服务器拒绝了操作：{}"
+
+msgid "Opération mise en attente par le serveur : l'Admin décidera."
+msgstr "服务器已将操作挂起：由管理员决定。"

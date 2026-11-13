@@ -3287,3 +3287,54 @@ msgstr "Kadenz は読み取り専用です。サブスクリプションが更�
 
 msgid "la copie du serveur existe déjà sur ce poste"
 msgstr "この端末にはサーバーのコピーがすでにあります"
+
+msgid "Connexion au serveur..."
+msgstr "サーバーに接続しています..."
+
+msgid "Confirmation en attente"
+msgstr "確認待ち"
+
+msgid "Connecté au serveur"
+msgstr "サーバーに接続済み"
+
+msgid "Connecté au serveur, lecture seule"
+msgstr "サーバーに接続済み（読み取り専用）"
+
+msgid "Synchronisation... {} %"
+msgstr "同期しています... {} %"
+
+msgid "Synchronisation..."
+msgstr "同期しています..."
+
+msgid "Reconnexion au serveur (essai {})"
+msgstr "サーバーに再接続しています（{} 回目）"
+
+msgid "Hors connexion : serveur injoignable"
+msgstr "オフライン：サーバーに接続できません"
+
+msgid "Serveur non reconnu"
+msgstr "サーバーを認識できません"
+
+msgid "Poste retiré du serveur"
+msgstr "端末はサーバーから削除されました"
+
+msgid "Version différente du serveur"
+msgstr "サーバーのバージョンが異なります"
+
+msgid "Connexion au serveur impossible : aucune saisie n'est possible. Voir Paramètres, rubrique « Serveur »."
+msgstr "サーバーに接続できません。入力はできません。設定の「サーバー」を参照してください。"
+
+msgid "Serveur injoignable : la saisie reprendra au retour du serveur. Consultation, impression et exports restent possibles."
+msgstr "サーバーに接続できません。サーバーが戻ると入力を再開できます。閲覧、印刷、エクスポートは引き続き可能です。"
+
+msgid "Opération confirmée par le serveur : numéro {}."
+msgstr "サーバーが操作を確認しました：番号 {}。"
+
+msgid "Opération confirmée par le serveur."
+msgstr "サーバーが操作を確認しました。"
+
+msgid "Opération refusée par le serveur : {}"
+msgstr "サーバーが操作を拒否しました：{}"
+
+msgid "Opération mise en attente par le serveur : l'Admin décidera."
+msgstr "サーバーが操作を保留にしました。管理者が判断します。"

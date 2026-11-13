@@ -3287,3 +3287,54 @@ msgstr "Kadenz está en modo de solo lectura: no se puede introducir ningún dat
 
 msgid "la copie du serveur existe déjà sur ce poste"
 msgstr "la copia del servidor ya existe en este puesto"
+
+msgid "Connexion au serveur..."
+msgstr "Conectando con el servidor..."
+
+msgid "Confirmation en attente"
+msgstr "Confirmación pendiente"
+
+msgid "Connecté au serveur"
+msgstr "Conectado al servidor"
+
+msgid "Connecté au serveur, lecture seule"
+msgstr "Conectado al servidor, solo lectura"
+
+msgid "Synchronisation... {} %"
+msgstr "Sincronizando... {} %"
+
+msgid "Synchronisation..."
+msgstr "Sincronizando..."
+
+msgid "Reconnexion au serveur (essai {})"
+msgstr "Reconectando con el servidor (intento {})"
+
+msgid "Hors connexion : serveur injoignable"
+msgstr "Sin conexión: servidor inaccesible"
+
+msgid "Serveur non reconnu"
+msgstr "Servidor no reconocido"
+
+msgid "Poste retiré du serveur"
+msgstr "Puesto retirado del servidor"
+
+msgid "Version différente du serveur"
+msgstr "Versión del servidor diferente"
+
+msgid "Connexion au serveur impossible : aucune saisie n'est possible. Voir Paramètres, rubrique « Serveur »."
+msgstr "No se puede conectar con el servidor: no es posible introducir datos. Vea Configuración, sección «Servidor»."
+
+msgid "Serveur injoignable : la saisie reprendra au retour du serveur. Consultation, impression et exports restent possibles."
+msgstr "Servidor inaccesible: la introducción de datos se reanudará cuando vuelva el servidor. La consulta, la impresión y las exportaciones siguen disponibles."
+
+msgid "Opération confirmée par le serveur : numéro {}."
+msgstr "Operación confirmada por el servidor: número {}."
+
+msgid "Opération confirmée par le serveur."
+msgstr "Operación confirmada por el servidor."
+
+msgid "Opération refusée par le serveur : {}"
+msgstr "Operación rechazada por el servidor: {}"
+
+msgid "Opération mise en attente par le serveur : l'Admin décidera."
+msgstr "Operación puesta en espera por el servidor: el administrador decidirá."

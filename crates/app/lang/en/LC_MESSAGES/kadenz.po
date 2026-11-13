@@ -3287,3 +3287,54 @@ msgstr "Kadenz is read-only: no data entry is possible until the subscription is
 
 msgid "la copie du serveur existe déjà sur ce poste"
 msgstr "the server copy already exists on this workstation"
+
+msgid "Connexion au serveur..."
+msgstr "Connecting to the server..."
+
+msgid "Confirmation en attente"
+msgstr "Confirmation pending"
+
+msgid "Connecté au serveur"
+msgstr "Connected to the server"
+
+msgid "Connecté au serveur, lecture seule"
+msgstr "Connected to the server, read-only"
+
+msgid "Synchronisation... {} %"
+msgstr "Synchronizing... {} %"
+
+msgid "Synchronisation..."
+msgstr "Synchronizing..."
+
+msgid "Reconnexion au serveur (essai {})"
+msgstr "Reconnecting to the server (attempt {})"
+
+msgid "Hors connexion : serveur injoignable"
+msgstr "Offline: server unreachable"
+
+msgid "Serveur non reconnu"
+msgstr "Server not recognized"
+
+msgid "Poste retiré du serveur"
+msgstr "Workstation removed from the server"
+
+msgid "Version différente du serveur"
+msgstr "Different server version"
+
+msgid "Connexion au serveur impossible : aucune saisie n'est possible. Voir Paramètres, rubrique « Serveur »."
+msgstr "Cannot connect to the server: no data entry is possible. See Settings, Server section."
+
+msgid "Serveur injoignable : la saisie reprendra au retour du serveur. Consultation, impression et exports restent possibles."
+msgstr "Server unreachable: data entry will resume when the server is back. Viewing, printing and exports remain available."
+
+msgid "Opération confirmée par le serveur : numéro {}."
+msgstr "Operation confirmed by the server: number {}."
+
+msgid "Opération confirmée par le serveur."
+msgstr "Operation confirmed by the server."
+
+msgid "Opération refusée par le serveur : {}"
+msgstr "Operation refused by the server: {}"
+
+msgid "Opération mise en attente par le serveur : l'Admin décidera."
+msgstr "Operation put on hold by the server: the Admin will decide."

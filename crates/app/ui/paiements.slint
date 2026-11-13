@@ -2,6 +2,7 @@
 // bons de commande non payés et relances des factures échues.
 import { ComboBox, LineEdit, StandardTableView } from "std-widgets.slint";
 import { Bouton, MessageRetour, Rangee, Retour, Theme, Titre } from "composants.slint";
+import { ConnexionApi } from "etat-connexion.slint";
 
 // Ligne des totaux du registre : total d'un sens (en gras) ou sous-total d'un mode.
 export struct TotalUi {
@@ -180,6 +181,12 @@ export component PageReglements inherits VerticalLayout {
     }
 
     init => {
+        root.filtrer();
+    }
+
+    // Poste relié : registre rechargé quand un autre poste change un règlement.
+    property <int> changements: ConnexionApi.changements-documents;
+    changed changements => {
         root.filtrer();
     }
 }

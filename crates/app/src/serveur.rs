@@ -168,7 +168,6 @@ fn inscription_reussie(
     let Some(etat) = ETAT.with_borrow(|e| e.clone()) else {
         return;
     };
-    let etat = etat.borrow();
     let poste = PosteRelie {
         adresse,
         empreinte_serveur: empreinte,
@@ -177,17 +176,34 @@ fn inscription_reussie(
         certificat: identite.certificat,
         cle: identite.cle,
     };
-    let retour = match poste_relie::garder(&etat.conn, &poste) {
-        Ok(()) => retour_ok(trf("Poste inscrit sous le nom « {} ».", &[&inscrit.nom])),
-        Err(e) => retour_erreur(texte_erreur(e)),
-    };
     EN_ATTENTE.set(None);
     f.global::<ServeurApi>()
         .set_empreinte_a_confirmer("".into());
-    afficher(f, &etat.conn);
-    // Rubriques : un poste inscrit n'a plus de « Sauvegardes » (décision 47).
-    crate::appliquer_droits(f, &etat);
-    finir(f, retour);
+    // Copie du serveur créée à côté de la base V1, qui reste intacte
+    // (décision 45) ; la session passe sur la copie et revient à l'écran de
+    // connexion, pour un compte de l'entreprise.
+    let dossier = crate::dossier_donnees();
+    let ouverture = poste_relie::creer_copie(&dossier, &poste)
+        .and_then(|chemin| poste_relie::ouvrir_copie(&chemin).map(|conn| (chemin, conn)));
+    match ouverture {
+        Ok((chemin, conn)) => {
+            finir(
+                f,
+                retour_ok(trf("Poste inscrit sous le nom « {} ».", &[&inscrit.nom])),
+            );
+            {
+                let mut e = etat.borrow_mut();
+                e.conn = conn;
+                crate::fermer_session(f, &mut e);
+            }
+            crate::relie::demarrer(f, &etat, chemin);
+            let e = etat.borrow();
+            crate::relie::appliquer_modules(f, &e.conn);
+            afficher(f, &e.conn);
+            crate::appliquer_droits(f, &e);
+        }
+        Err(e) => finir(f, retour_erreur(texte_erreur(e))),
+    }
 }
 
 pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {

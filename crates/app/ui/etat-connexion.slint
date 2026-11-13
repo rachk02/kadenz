@@ -13,6 +13,11 @@ export global ConnexionApi {
     // 0 : relié ; 1 : en cours (connexion, synchronisation, reconnexion) ;
     // 2 : coupé ou refusé (injoignable, certificat changé, poste retiré).
     in property <int> niveau;
+    // Changements reçus d'un autre poste : chaque page recharge sa liste quand
+    // le compteur de sa sorte avance (jamais une fiche en cours de saisie).
+    in-out property <int> changements-tiers;
+    in-out property <int> changements-produits;
+    in-out property <int> changements-documents;
 }
 
 export component IndicateurConnexion inherits Rectangle {

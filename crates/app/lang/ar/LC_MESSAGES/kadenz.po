@@ -3287,3 +3287,54 @@ msgstr "Kadenz في وضع القراءة فقط: لا يمكن إدخال أي 
 
 msgid "la copie du serveur existe déjà sur ce poste"
 msgstr "نسخة الخادم موجودة بالفعل على هذه المحطة"
+
+msgid "Connexion au serveur..."
+msgstr "جارٍ الاتصال بالخادم..."
+
+msgid "Confirmation en attente"
+msgstr "التأكيد قيد الانتظار"
+
+msgid "Connecté au serveur"
+msgstr "متصل بالخادم"
+
+msgid "Connecté au serveur, lecture seule"
+msgstr "متصل بالخادم، قراءة فقط"
+
+msgid "Synchronisation... {} %"
+msgstr "جارٍ المزامنة... {} %"
+
+msgid "Synchronisation..."
+msgstr "جارٍ المزامنة..."
+
+msgid "Reconnexion au serveur (essai {})"
+msgstr "إعادة الاتصال بالخادم (المحاولة {})"
+
+msgid "Hors connexion : serveur injoignable"
+msgstr "غير متصل: تعذر الوصول إلى الخادم"
+
+msgid "Serveur non reconnu"
+msgstr "الخادم غير معروف"
+
+msgid "Poste retiré du serveur"
+msgstr "تمت إزالة المحطة من الخادم"
+
+msgid "Version différente du serveur"
+msgstr "إصدار الخادم مختلف"
+
+msgid "Connexion au serveur impossible : aucune saisie n'est possible. Voir Paramètres, rubrique « Serveur »."
+msgstr "تعذر الاتصال بالخادم: لا يمكن إدخال أي بيانات. راجع الإعدادات، قسم «الخادم»."
+
+msgid "Serveur injoignable : la saisie reprendra au retour du serveur. Consultation, impression et exports restent possibles."
+msgstr "تعذر الوصول إلى الخادم: سيُستأنف الإدخال عند عودة الخادم. يظل العرض والطباعة والتصدير متاحًا."
+
+msgid "Opération confirmée par le serveur : numéro {}."
+msgstr "أكد الخادم العملية: الرقم {}."
+
+msgid "Opération confirmée par le serveur."
+msgstr "أكد الخادم العملية."
+
+msgid "Opération refusée par le serveur : {}"
+msgstr "رفض الخادم العملية: {}"
+
+msgid "Opération mise en attente par le serveur : l'Admin décidera."
+msgstr "وضع الخادم العملية قيد الانتظار: سيقرر المسؤول."

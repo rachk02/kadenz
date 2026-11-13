@@ -14,7 +14,7 @@ use slint::{ComponentHandle, ModelRc, VecModel};
 
 use crate::factures::date_en_texte;
 use crate::traduction::{tr, trf};
-use crate::{AbonnementApi, Ecriture, FenetrePrincipale, LigneAbonnementUi};
+use crate::{AbonnementApi, FenetrePrincipale, LigneAbonnementUi};
 
 /// Ce que montrent la rubrique et le bandeau, textes déjà traduits.
 #[derive(Debug, Default, PartialEq)]
@@ -246,8 +246,6 @@ pub(crate) fn afficher(
         .unwrap_or_default();
     api.set_disponible(recu.is_some());
     api.set_lecture_seule(v.lecture_seule);
-    f.global::<Ecriture>()
-        .set_permise(raison_blocage(recu.as_ref().map(|(a, _)| a)).is_none());
     api.set_lignes(ModelRc::new(VecModel::from(
         v.lignes
             .into_iter()

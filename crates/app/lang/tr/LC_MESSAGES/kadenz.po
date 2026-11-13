@@ -3287,3 +3287,54 @@ msgstr "Kadenz salt okunur durumda: abonelik yenilenene kadar hiçbir veri giri�
 
 msgid "la copie du serveur existe déjà sur ce poste"
 msgstr "sunucu kopyası bu iş istasyonunda zaten var"
+
+msgid "Connexion au serveur..."
+msgstr "Sunucuya bağlanılıyor..."
+
+msgid "Confirmation en attente"
+msgstr "Onay bekleniyor"
+
+msgid "Connecté au serveur"
+msgstr "Sunucuya bağlı"
+
+msgid "Connecté au serveur, lecture seule"
+msgstr "Sunucuya bağlı, salt okunur"
+
+msgid "Synchronisation... {} %"
+msgstr "Eşitleniyor... %{}"
+
+msgid "Synchronisation..."
+msgstr "Eşitleniyor..."
+
+msgid "Reconnexion au serveur (essai {})"
+msgstr "Sunucuya yeniden bağlanılıyor ({}. deneme)"
+
+msgid "Hors connexion : serveur injoignable"
+msgstr "Çevrimdışı: sunucuya ulaşılamıyor"
+
+msgid "Serveur non reconnu"
+msgstr "Sunucu tanınmadı"
+
+msgid "Poste retiré du serveur"
+msgstr "İş istasyonu sunucudan kaldırıldı"
+
+msgid "Version différente du serveur"
+msgstr "Sunucu sürümü farklı"
+
+msgid "Connexion au serveur impossible : aucune saisie n'est possible. Voir Paramètres, rubrique « Serveur »."
+msgstr "Sunucuya bağlanılamıyor: veri girişi yapılamaz. Ayarlar, «Sunucu» bölümüne bakın."
+
+msgid "Serveur injoignable : la saisie reprendra au retour du serveur. Consultation, impression et exports restent possibles."
+msgstr "Sunucuya ulaşılamıyor: veri girişi sunucu geri geldiğinde sürecek. Görüntüleme, yazdırma ve dışa aktarma kullanılabilir."
+
+msgid "Opération confirmée par le serveur : numéro {}."
+msgstr "İşlem sunucu tarafından onaylandı: numara {}."
+
+msgid "Opération confirmée par le serveur."
+msgstr "İşlem sunucu tarafından onaylandı."
+
+msgid "Opération refusée par le serveur : {}"
+msgstr "İşlem sunucu tarafından reddedildi: {}"
+
+msgid "Opération mise en attente par le serveur : l'Admin décidera."
+msgstr "İşlem sunucu tarafından beklemeye alındı: Yönetici karar verecek."

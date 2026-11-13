@@ -99,6 +99,12 @@ pub(crate) fn afficher(
             .collect::<Vec<_>>(),
     )));
 
+    afficher_modules(f, conn);
+}
+
+/// Modules visibles et types du bas des documents, d'après la table des
+/// modules actifs de la connexion (licence V1, ou abonnement d'un poste relié).
+pub(crate) fn afficher_modules(f: &FenetrePrincipale, conn: &kadenz_stockage::Connexion) {
     let modules = f.global::<Modules>();
     modules.set_devis(actif(conn, Module::Devis));
     modules.set_proforma(actif(conn, Module::Proforma));

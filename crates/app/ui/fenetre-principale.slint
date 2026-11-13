@@ -1,6 +1,6 @@
 // Fenêtre principale : écrans de démarrage, puis application avec sa navigation
 // (bandeau ou barre latérale, navigation.slint) et ses pages.
-import { Affichage, Confirmation, Droits, Ecriture, FenetreAlerte, FenetreConfirmation, Modules, Rangee, Retour, Theme } from "composants.slint";
+import { Affichage, Alerte, Confirmation, Droits, Ecriture, FenetreAlerte, FenetreConfirmation, Modules, Rangee, Retour, Theme } from "composants.slint";
 import { EcranAssistant, DonneesAssistant } from "assistant.slint";
 import { EcranConnexion } from "connexion.slint";
 import { EcranPresentation } from "presentation.slint";
@@ -21,7 +21,7 @@ import { BandeauHaut, BoutonIcone, ContenuBarre, Infobulle, InfobulleFenetre, Me
 import { PageReglages, ReglagesApi, Rubrique } from "reglages.slint";
 import { EcranDemarrageImpossible, SauvegardesApi } from "sauvegardes.slint";
 
-export { AbonnementApi, ConnexionApi, ServeurApi, Affichage, DonneesAssistant, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, TiersApi, UtilisateursApi }
+export { AbonnementApi, ConnexionApi, ServeurApi, Affichage, Alerte, DonneesAssistant, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, presentation, assistant, connexion, application }

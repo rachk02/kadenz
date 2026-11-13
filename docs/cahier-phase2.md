@@ -19,6 +19,7 @@
 | 0.15 | 2026-11-12 | Décisions 41 à 43 (F4) : un poste inscrit sans licence valide, postes en trop gardés, découverte sans le nom de l'entreprise. |
 | 0.16 | 2026-11-12 | Décision 44 : port 47380 gardé ; découverte coupée si son port UDP est pris, sans empêcher le service de démarrer. |
 | 0.17 | 2026-11-12 | Décisions 45 à 47 (F5) : copie locale séparée de la base V1 sur un poste relié, consultation seule quand le serveur est injoignable en attendant F6, rubrique « Sauvegardes » cachée sur un poste relié. |
+| 0.18 | 2026-11-13 | Décision 48 (F5) : connexion locale d'un compte quand le poste relié démarre sans serveur. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -84,6 +85,7 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 45. **Copie locale d'un poste relié** : un poste relié garde la copie des données du serveur dans une base séparée de sa base V1, qui reste intacte pour la reprise de ses données (F7) ; les données locales et celles du serveur ne se mélangent jamais.
 46. **Serveur injoignable en F5** : tout reste consultable dans la copie locale, et les écritures sont inactives avec la raison « Serveur injoignable », comme en lecture seule ; le travail hors connexion (file d'envoi, conflits) vient en F6.
 47. **Sauvegardes sur un poste relié** : la rubrique « Sauvegardes » des Paramètres est cachée, les données étant sauvegardées sur le serveur.
+48. **Démarrage sans serveur** : un poste relié qui démarre alors que le serveur est injoignable connecte quand même son compte en local, avec les empreintes des mots de passe gardées dans sa copie. On consulte, imprime et exporte ; les écritures restent inactives jusqu'au retour du serveur, où le compte s'y reconnecte de lui-même.
 
 ## 3. Candidats
 

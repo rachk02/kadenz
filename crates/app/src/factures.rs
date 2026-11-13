@@ -531,7 +531,7 @@ fn afficher_registre(f: &FenetrePrincipale, etat: &mut Etat) {
 /// Droit du compte connecté. En lecture seule, tout droit autre que la
 /// consultation est refusé : les boutons de saisie des documents disparaissent.
 fn possede(etat: &Etat, droit: Droit) -> bool {
-    if droit != Droit::Consulter && crate::abonnement::blocage(&etat.conn).is_some() {
+    if droit != Droit::Consulter && crate::relie::blocage(etat).is_some() {
         return false;
     }
     match &etat.utilisateur {
@@ -1042,7 +1042,7 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
             .into(),
         reglement_mode_index,
         en_preparation,
-        note: match crate::abonnement::blocage(&etat.conn) {
+        note: match crate::relie::blocage(etat) {
             Some(raison) if brouillon => raison,
             _ => note_fiche(t, statut, modifiable, admin_modifiable),
         }

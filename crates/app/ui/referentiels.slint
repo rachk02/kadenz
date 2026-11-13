@@ -4,6 +4,7 @@
 import { CheckBox, ComboBox, LineEdit, StandardTableView } from "std-widgets.slint";
 import { Alerte, Bouton, Champ, Confirmation, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 import { ImportApi } from "import.slint";
+import { ConnexionApi } from "etat-connexion.slint";
 
 // Fiche telle que l'écran la manipule ; `existe` est faux pour une nouvelle fiche.
 export struct FicheTiersUi {
@@ -171,6 +172,12 @@ export component PageTiers inherits VerticalLayout {
     init => {
         TiersApi.ouvrir();
         root.charger(TiersApi.nouvelle());
+    }
+
+    // Poste relié : liste rechargée quand un autre poste change un tiers.
+    property <int> changements: ConnexionApi.changements-tiers;
+    changed changements => {
+        TiersApi.ouvrir();
     }
 
     padding: 24px;
@@ -411,6 +418,12 @@ export component PageProduits inherits VerticalLayout {
     init => {
         ProduitsApi.ouvrir();
         root.charger(ProduitsApi.nouvelle());
+    }
+
+    // Poste relié : liste rechargée quand un autre poste change un produit.
+    property <int> changements: ConnexionApi.changements-produits;
+    changed changements => {
+        ProduitsApi.ouvrir();
     }
 
     padding: 24px;

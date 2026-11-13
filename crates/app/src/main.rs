@@ -15,6 +15,7 @@ mod paiements;
 mod pdf;
 mod pilotage;
 mod referentiels;
+mod relie;
 mod sauvegardes;
 mod serveur;
 mod traduction;
@@ -49,6 +50,16 @@ slint::include_modules!();
 /// Emplacement de la base : dossier de données de l'utilisateur Windows
 /// (cahier des charges, section 13). La variable d'environnement `KADENZ_BASE`
 /// permet de travailler sur une autre base en développement.
+/// Dossier des données : celui de la base V1, où se trouve aussi la copie du
+/// serveur d'un poste relié (décision 45).
+pub(crate) fn dossier_donnees() -> PathBuf {
+    let chemin = chemin_base();
+    chemin
+        .parent()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("."))
+}
+
 fn chemin_base() -> PathBuf {
     if let Some(chemin) = std::env::var_os("KADENZ_BASE") {
         return PathBuf::from(chemin);
@@ -115,6 +126,8 @@ struct Etat {
     document_a_ouvrir: Option<i64>,
     /// Identifiant de ce poste pour la licence (vide s'il n'a pas pu être lu).
     poste: String,
+    /// Poste relié (phase 2) : synchroniseur et état de la connexion.
+    relie: Option<relie::Relie>,
 }
 
 impl Etat {
@@ -130,6 +143,7 @@ impl Etat {
             type_document: TypeDocument::Facture,
             document_a_ouvrir: None,
             poste: licence::poste_local(),
+            relie: None,
         }
     }
 }
@@ -147,7 +161,8 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     // référentiels. Gérer les paramètres et les utilisateurs reste vrai : ces
     // droits ouvrent aussi des pages, dont « Abonnement », seule sortie de la
     // lecture seule ; leurs boutons d'enregistrement suivent `Ecriture`.
-    let ecrire = abonnement::blocage(&etat.conn).is_none();
+    let ecrire = relie::blocage(etat).is_none();
+    fenetre.global::<Ecriture>().set_permise(ecrire);
     let d = fenetre.global::<Droits>();
     d.set_ajouter_referentiel(ecrire && possede(Droit::AjouterReferentiel));
     d.set_modifier_referentiel(ecrire && possede(Droit::ModifierReferentiel));
@@ -272,6 +287,18 @@ fn appliquer_langue(fenetre: &FenetrePrincipale, code: &str) {
     fenetre.global::<Theme>().set_chinois(code == "zh");
 }
 
+/// Compte, droits ou entreprise changés sur un autre poste (poste relié) :
+/// la session relit son compte dans la copie, puis ses droits et son menu.
+pub(crate) fn relire_session(f: &FenetrePrincipale, etat: &EtatPartage) {
+    let mut e = etat.borrow_mut();
+    if let Some(id) = e.utilisateur.as_ref().map(|u| u.id)
+        && let Ok(Some(u)) = comptes::lire(&e.conn, id)
+    {
+        e.utilisateur = Some(u);
+    }
+    afficher_session(f, &e);
+}
+
 fn afficher_session(fenetre: &FenetrePrincipale, etat: &Etat) {
     if let Some(u) = &etat.utilisateur {
         // Langue du compte, avant tout texte construit ici.
@@ -344,7 +371,7 @@ fn installation_depuis_assistant(d: &DonneesAssistant) -> Result<InstallationIni
 
 /// Fin de session (déconnexion, ou restauration d'une sauvegarde) : état de la
 /// session vidé, langue de démarrage, retour à l'écran de connexion.
-fn fermer_session(f: &FenetrePrincipale, etat: &mut Etat) {
+pub(crate) fn fermer_session(f: &FenetrePrincipale, etat: &mut Etat) {
     etat.utilisateur = None;
     etat.tiers = Vue::default();
     etat.produits = Vue::default();
@@ -528,12 +555,22 @@ fn main() -> Result<(), slint::PlatformError> {
     let demarrer = {
         let session = session.clone();
         move |fenetre: &FenetrePrincipale, conn: Connexion| -> Result<(), kadenz_stockage::Erreur> {
-            let ecran = comptes::etat_installation(&conn)?;
+            // Poste relié : jamais l'assistant de création d'entreprise, même
+            // sur une copie neuve sans comptes.
+            let inscrit = serveur::inscrit(&conn);
+            let ecran = if inscrit {
+                EtatInstallation::ConnexionRequise
+            } else {
+                comptes::etat_installation(&conn)?
+            };
             let etat = Rc::new(RefCell::new(Etat::nouveau(conn)));
             {
                 // Licence d'abord : le menu de la session en dépend.
                 let e = etat.borrow();
                 licence::ouvrir(fenetre, &e.conn, &e.poste);
+                if inscrit {
+                    relie::appliquer_modules(fenetre, &e.conn);
+                }
             }
             afficher_session(fenetre, &etat.borrow());
             fenetre.set_ecran(match ecran {
@@ -542,12 +579,23 @@ fn main() -> Result<(), slint::PlatformError> {
                 EtatInstallation::ConnexionRequise => Ecran::Connexion,
             });
             brancher(fenetre, etat.clone());
+            if let Some(copie) = inscrit
+                .then(|| kadenz_stockage::poste_relie::copie(&dossier_donnees()))
+                .flatten()
+            {
+                relie::demarrer(fenetre, &etat, copie);
+            }
             *session.borrow_mut() = Some(etat);
             Ok(())
         }
     };
 
-    let demarrage = kadenz_stockage::ouvrir(&chemin).and_then(|conn| demarrer(&fenetre, conn));
+    // Poste relié : la copie du serveur ; la base V1 reste intacte (décision 45).
+    let demarrage = match kadenz_stockage::poste_relie::copie(&dossier_donnees()) {
+        Some(copie) => kadenz_stockage::poste_relie::ouvrir_copie(&copie)
+            .and_then(|conn| demarrer(&fenetre, conn)),
+        None => kadenz_stockage::ouvrir(&chemin).and_then(|conn| demarrer(&fenetre, conn)),
+    };
     if let Err(erreur) = demarrage {
         // L'emplacement des données ne s'affiche pas : il va dans erreurs.log.
         consigner_erreur(&format!(
@@ -561,8 +609,14 @@ fn main() -> Result<(), slint::PlatformError> {
 
     let resultat = fenetre.run();
     // Fenêtre fermée : sauvegarde automatique de la base ouverte.
+    // Poste relié : synchroniseur arrêté, et pas de sauvegarde de la copie, les
+    // données sont sauvegardées sur le serveur (décision 47).
     if let Some(etat) = session.borrow().as_ref() {
-        sauvegardes::sauvegarder_a_la_fermeture(&etat.borrow());
+        let mut e = etat.borrow_mut();
+        relie::arreter(&mut e);
+        if !serveur::inscrit(&e.conn) {
+            sauvegardes::sauvegarder_a_la_fermeture(&e);
+        }
     }
     resultat
 }

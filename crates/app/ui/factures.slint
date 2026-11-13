@@ -4,7 +4,8 @@
 // les textes propres au type : cet écran ne fait qu'afficher et transmettre la saisie.
 
 import { CheckBox, ComboBox, LineEdit, ScrollView, StandardTableView } from "std-widgets.slint";
-import { Alerte, Bouton, Champ, Confirmation, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { ConnexionApi } from "etat-connexion.slint";
+import { Alerte, Bouton, Champ, Confirmation, Droits, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct LigneFactureUi {
     // 0 pour une ligne libre, sans produit d'origine.
@@ -448,6 +449,12 @@ component Registre inherits VerticalLayout {
     init => {
         root.filtrer();
     }
+
+    // Poste relié : registre rechargé quand un autre poste change un document.
+    property <int> changements: ConnexionApi.changements-documents;
+    changed changements => {
+        root.filtrer();
+    }
 }
 
 // Libellé et valeur alignés à droite, pour le bloc des totaux.
@@ -809,7 +816,7 @@ component Fiche inherits ScrollView {
 
                 date := Champ {
                     libelle: @tr("Date (JJ/MM/AAAA)");
-                    lecture-seule: !root.fiche.modifiable;
+                    lecture-seule: !Ecriture.permise || !root.fiche.modifiable;
                     modifie(texte) => {
                         root.echeance-texte = FacturesApi.echeance-apres-date(root.date-precedente, texte, root.echeance-texte);
                         root.date-precedente = texte;
@@ -825,7 +832,7 @@ component Fiche inherits ScrollView {
 
                 Champ {
                     libelle: FacturesApi.textes.libelle-echeance;
-                    lecture-seule: !root.fiche.modifiable;
+                    lecture-seule: !Ecriture.permise || !root.fiche.modifiable;
                     valeur <=> root.echeance-texte;
                 }
             }
@@ -924,7 +931,7 @@ component Fiche inherits ScrollView {
 
         libelle := Champ {
             libelle: @tr("Libellé");
-            lecture-seule: !root.fiche.modifiable;
+            lecture-seule: !Ecriture.permise || !root.fiche.modifiable;
         }
 
         if !FacturesApi.avec-montants: Rangee {
@@ -1002,7 +1009,7 @@ component Fiche inherits ScrollView {
                 horizontal-alignment: Theme.fin;
             }
 
-            if root.fiche.modifiable: Rectangle {
+            if Ecriture.permise && root.fiche.modifiable: Rectangle {
                 width: 124px;
             }
         }
@@ -1013,7 +1020,7 @@ component Fiche inherits ScrollView {
             LineEdit {
                 width: 120px;
                 text <=> ligne.reference;
-                read-only: !root.fiche.modifiable;
+                read-only: !Ecriture.permise || !root.fiche.modifiable;
                 accepted => {
                     FacturesApi.reference-saisie(i);
                     root.recalculer();
@@ -1023,13 +1030,13 @@ component Fiche inherits ScrollView {
             LineEdit {
                 horizontal-stretch: 1;
                 text <=> ligne.designation;
-                read-only: !root.fiche.modifiable;
+                read-only: !Ecriture.permise || !root.fiche.modifiable;
             }
 
             LineEdit {
                 width: 110px;
                 text <=> ligne.prix;
-                read-only: !root.fiche.modifiable;
+                read-only: !Ecriture.permise || !root.fiche.modifiable;
                 horizontal-alignment: Theme.fin;
                 edited => {
                     root.recalculer();
@@ -1039,7 +1046,7 @@ component Fiche inherits ScrollView {
             LineEdit {
                 width: 80px;
                 text <=> ligne.quantite;
-                read-only: !root.fiche.modifiable;
+                read-only: !Ecriture.permise || !root.fiche.modifiable;
                 horizontal-alignment: Theme.fin;
                 edited => {
                     root.recalculer();
@@ -1061,7 +1068,7 @@ component Fiche inherits ScrollView {
                 horizontal-alignment: Theme.fin;
             }
 
-            if root.fiche.modifiable: PetitBouton {
+            if Ecriture.permise && root.fiche.modifiable: PetitBouton {
                 text: "↑";
                 enabled: i > 0;
                 clicked => {
@@ -1069,7 +1076,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            if root.fiche.modifiable: PetitBouton {
+            if Ecriture.permise && root.fiche.modifiable: PetitBouton {
                 text: "↓";
                 enabled: i < FacturesApi.lignes.length - 1;
                 clicked => {
@@ -1077,7 +1084,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            if root.fiche.modifiable: PetitBouton {
+            if Ecriture.permise && root.fiche.modifiable: PetitBouton {
                 text: "×";
                 // Les totaux sont recalculés par l'application : cette ligne,
                 // et donc ce gestionnaire, disparaît avec la suppression.
@@ -1130,7 +1137,7 @@ component Fiche inherits ScrollView {
                     width: 180px;
                 }
 
-                if root.fiche.modifiable && !root.fiche.lignes-verrouillees: Rectangle {
+                if Ecriture.permise && root.fiche.modifiable && !root.fiche.lignes-verrouillees: Rectangle {
                     width: 124px;
                 }
             }
@@ -1141,7 +1148,7 @@ component Fiche inherits ScrollView {
                 LineEdit {
                     width: 120px;
                     text <=> ligne.reference;
-                    read-only: !root.fiche.modifiable || root.fiche.lignes-verrouillees;
+                    read-only: !Ecriture.permise || !root.fiche.modifiable || root.fiche.lignes-verrouillees;
                     accepted => {
                         FacturesApi.reference-saisie(i);
                     }
@@ -1150,20 +1157,20 @@ component Fiche inherits ScrollView {
                 LineEdit {
                     horizontal-stretch: 1;
                     text <=> ligne.designation;
-                    read-only: !root.fiche.modifiable || root.fiche.lignes-verrouillees;
+                    read-only: !Ecriture.permise || !root.fiche.modifiable || root.fiche.lignes-verrouillees;
                 }
 
                 LineEdit {
                     width: 80px;
                     text <=> ligne.quantite;
-                    read-only: !root.fiche.modifiable || root.fiche.lignes-verrouillees;
+                    read-only: !Ecriture.permise || !root.fiche.modifiable || root.fiche.lignes-verrouillees;
                     horizontal-alignment: Theme.fin;
                 }
 
                 LineEdit {
                     width: 80px;
                     text <=> ligne.recue;
-                    read-only: !root.fiche.modifiable;
+                    read-only: !Ecriture.permise || !root.fiche.modifiable;
                     horizontal-alignment: Theme.fin;
                 }
 
@@ -1178,10 +1185,10 @@ component Fiche inherits ScrollView {
                 LineEdit {
                     width: 180px;
                     text <=> ligne.observations;
-                    read-only: !root.fiche.modifiable;
+                    read-only: !Ecriture.permise || !root.fiche.modifiable;
                 }
 
-                if root.fiche.modifiable && !root.fiche.lignes-verrouillees: PetitBouton {
+                if Ecriture.permise && root.fiche.modifiable && !root.fiche.lignes-verrouillees: PetitBouton {
                     text: "↑";
                     enabled: i > 0;
                     clicked => {
@@ -1189,7 +1196,7 @@ component Fiche inherits ScrollView {
                     }
                 }
 
-                if root.fiche.modifiable && !root.fiche.lignes-verrouillees: PetitBouton {
+                if Ecriture.permise && root.fiche.modifiable && !root.fiche.lignes-verrouillees: PetitBouton {
                     text: "↓";
                     enabled: i < FacturesApi.lignes.length - 1;
                     clicked => {
@@ -1197,7 +1204,7 @@ component Fiche inherits ScrollView {
                     }
                 }
 
-                if root.fiche.modifiable && !root.fiche.lignes-verrouillees: PetitBouton {
+                if Ecriture.permise && root.fiche.modifiable && !root.fiche.lignes-verrouillees: PetitBouton {
                     text: "×";
                     clicked => {
                         FacturesApi.demande-focus += 1;
@@ -1241,7 +1248,7 @@ component Fiche inherits ScrollView {
             }
         }
 
-        if root.fiche.modifiable && !root.fiche.lignes-verrouillees: Rangee {
+        if Ecriture.permise && root.fiche.modifiable && !root.fiche.lignes-verrouillees: Rangee {
             spacing: 8px;
 
             recherche-produit := LineEdit {
@@ -1275,7 +1282,7 @@ component Fiche inherits ScrollView {
             }
         }
 
-        if root.fiche.modifiable && FacturesApi.avec-montants: Text {
+        if Ecriture.permise && root.fiche.modifiable && FacturesApi.avec-montants: Text {
             horizontal-alignment: Theme.debut;
             text: @tr("Le produit choisi remplit la référence, la désignation et le prix, qui restent modifiables sur la ligne. Une référence tapée puis validée par Entrée reprend le produit correspondant.");
             font-size: 12px;
@@ -1424,7 +1431,7 @@ component Fiche inherits ScrollView {
             spacing: 8px;
             alignment: start;
 
-            if root.fiche.modifiable: Bouton {
+            if Ecriture.permise && root.fiche.modifiable: Bouton {
                 text: @tr("Enregistrer le brouillon");
                 primary: !root.fiche.peut-valider;
                 clicked => {
@@ -1434,7 +1441,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            if root.fiche.peut-valider: Bouton {
+            if Ecriture.permise && root.fiche.peut-valider: Bouton {
                 text: @tr("Valider");
                 primary: true;
                 clicked => {
@@ -1443,14 +1450,14 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            if root.fiche.admin-modifiable: Bouton {
+            if Ecriture.permise && root.fiche.admin-modifiable: Bouton {
                 text: root.fiche.libelle-administratif;
                 clicked => {
                     root.enregistrer-administratif();
                 }
             }
 
-            if root.fiche.peut-confirmer-livraison: Bouton {
+            if Ecriture.permise && root.fiche.peut-confirmer-livraison: Bouton {
                 text: @tr("Confirmer la livraison");
                 primary: true;
                 clicked => {
@@ -1459,7 +1466,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            if root.fiche.peut-envoyer: Bouton {
+            if Ecriture.permise && root.fiche.peut-envoyer: Bouton {
                 text: FacturesApi.textes.marquer-envoye;
                 clicked => {
                     root.confirmation = 0;
@@ -1468,7 +1475,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            if root.fiche.peut-annuler: Bouton {
+            if Ecriture.permise && root.fiche.peut-annuler: Bouton {
                 text: FacturesApi.textes.annuler;
                 clicked => {
                     root.retour = { };
@@ -1492,7 +1499,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            if root.fiche.peut-supprimer: Bouton {
+            if Ecriture.permise && root.fiche.peut-supprimer: Bouton {
                 text: @tr("Supprimer le brouillon");
                 clicked => {
                     root.retour = { };
@@ -1502,11 +1509,11 @@ component Fiche inherits ScrollView {
         }
 
         // Documents qui naissent de celui-ci : chacun ouvre sa fiche une fois créé.
-        if root.fiche.peut-convertir || root.fiche.peut-dupliquer || root.fiche.peut-corriger || root.fiche.peut-creer-avoir || root.fiche.peut-creer-bordereau: Rangee {
+        if Ecriture.permise && (root.fiche.peut-convertir || root.fiche.peut-dupliquer || root.fiche.peut-corriger || root.fiche.peut-creer-avoir || root.fiche.peut-creer-bordereau): Rangee {
             spacing: 8px;
             alignment: start;
 
-            if root.fiche.peut-convertir: Bouton {
+            if Ecriture.permise && root.fiche.peut-convertir: Bouton {
                 text: @tr("Convertir en facture");
                 clicked => {
                     root.confirmation = 0;
@@ -1515,7 +1522,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            if root.fiche.peut-creer-bordereau: Bouton {
+            if Ecriture.permise && root.fiche.peut-creer-bordereau: Bouton {
                 text: @tr("Créer un bordereau");
                 enabled: root.fiche.bordereau-possible;
                 clicked => {
@@ -1525,7 +1532,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            if root.fiche.peut-creer-avoir: Bouton {
+            if Ecriture.permise && root.fiche.peut-creer-avoir: Bouton {
                 text: @tr("Créer un avoir");
                 enabled: root.fiche.avoir-possible;
                 clicked => {
@@ -1535,7 +1542,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            if root.fiche.peut-dupliquer: Bouton {
+            if Ecriture.permise && root.fiche.peut-dupliquer: Bouton {
                 text: @tr("Dupliquer");
                 clicked => {
                     root.confirmation = 0;
@@ -1551,7 +1558,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            if root.fiche.peut-corriger: Bouton {
+            if Ecriture.permise && root.fiche.peut-corriger: Bouton {
                 text: @tr("Corriger");
                 clicked => {
                     root.retour = { };
@@ -1626,7 +1633,7 @@ component Fiche inherits ScrollView {
                 width: 160px;
             }
 
-            if root.fiche.peut-saisir-reglement: Rectangle {
+            if Ecriture.permise && root.fiche.peut-saisir-reglement: Rectangle {
                 width: 110px;
             }
         }
@@ -1677,7 +1684,7 @@ component Fiche inherits ScrollView {
                     color: Theme.texte-secondaire;
                 }
 
-                if root.fiche.peut-saisir-reglement: Bouton {
+                if Ecriture.permise && root.fiche.peut-saisir-reglement: Bouton {
                     width: 110px;
                     text: @tr("Supprimer");
                     clicked => {
@@ -1688,7 +1695,7 @@ component Fiche inherits ScrollView {
             }
         }
 
-        if root.fiche.peut-saisir-reglement && root.fiche.reglement-montant != "": Rangee {
+        if Ecriture.permise && root.fiche.peut-saisir-reglement && root.fiche.reglement-montant != "": Rangee {
             spacing: 12px;
 
             Champ {
@@ -1725,7 +1732,7 @@ component Fiche inherits ScrollView {
             }
         }
 
-        if root.fiche.peut-saisir-reglement && root.fiche.reglement-montant != "": Rangee {
+        if Ecriture.permise && root.fiche.peut-saisir-reglement && root.fiche.reglement-montant != "": Rangee {
             alignment: start;
 
             Bouton {
