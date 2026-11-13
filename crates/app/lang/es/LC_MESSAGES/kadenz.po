@@ -3362,3 +3362,15 @@ msgstr "La ficha ha cambiado en otro puesto: vuelva a abrirla para ver la versi�
 
 msgid "cette fiche n'existe plus"
 msgstr "esta ficha ya no existe"
+
+msgid "Collez d'abord la nouvelle licence."
+msgstr "Pegue primero la nueva licencia."
+
+msgid "Licence enregistrée par le serveur."
+msgstr "Licencia registrada por el servidor."
+
+msgid "Enregistrer la licence"
+msgstr "Registrar la licencia"
+
+msgid "Collez la nouvelle licence reçue de l'éditeur ou du revendeur : le serveur la vérifie et l'applique à tous les postes de l'entreprise."
+msgstr "Pegue la nueva licencia recibida del editor o del revendedor: el servidor la verifica y la aplica a todos los puestos de la empresa."

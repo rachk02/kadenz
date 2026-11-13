@@ -477,6 +477,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     licence::brancher(fenetre, &etat);
     sauvegardes::brancher(fenetre, &etat);
     serveur::brancher(fenetre, &etat);
+    relie::brancher(fenetre, &etat);
     maj::brancher(fenetre);
 
     let (f, e) = (fenetre.as_weak(), etat.clone());

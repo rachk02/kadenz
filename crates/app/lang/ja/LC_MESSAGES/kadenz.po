@@ -3362,3 +3362,15 @@ msgstr "別の端末でレコードが変更されました。もう一度開い
 
 msgid "cette fiche n'existe plus"
 msgstr "このレコードはもう存在しません"
+
+msgid "Collez d'abord la nouvelle licence."
+msgstr "先に新しいライセンスを貼り付けてください。"
+
+msgid "Licence enregistrée par le serveur."
+msgstr "サーバーがライセンスを登録しました。"
+
+msgid "Enregistrer la licence"
+msgstr "ライセンスを登録"
+
+msgid "Collez la nouvelle licence reçue de l'éditeur ou du revendeur : le serveur la vérifie et l'applique à tous les postes de l'entreprise."
+msgstr "発行元または販売店から受け取った新しいライセンスを貼り付けてください。サーバーが確認し、会社のすべての端末に適用します。"

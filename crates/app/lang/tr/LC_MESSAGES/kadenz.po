@@ -3362,3 +3362,15 @@ msgstr "Kayıt başka bir iş istasyonunda değişti: sunucudaki sürümü görm
 
 msgid "cette fiche n'existe plus"
 msgstr "bu kayıt artık mevcut değil"
+
+msgid "Collez d'abord la nouvelle licence."
+msgstr "Önce yeni lisansı yapıştırın."
+
+msgid "Licence enregistrée par le serveur."
+msgstr "Lisans sunucu tarafından kaydedildi."
+
+msgid "Enregistrer la licence"
+msgstr "Lisansı kaydet"
+
+msgid "Collez la nouvelle licence reçue de l'éditeur ou du revendeur : le serveur la vérifie et l'applique à tous les postes de l'entreprise."
+msgstr "Yayıncıdan veya bayiden aldığınız yeni lisansı yapıştırın: sunucu lisansı doğrular ve şirketin tüm iş istasyonlarına uygular."

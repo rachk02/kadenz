@@ -3362,3 +3362,15 @@ msgstr "该记录已在另一台工作站上更改：请重新打开以查看服
 
 msgid "cette fiche n'existe plus"
 msgstr "该记录已不存在"
+
+msgid "Collez d'abord la nouvelle licence."
+msgstr "请先粘贴新的许可证。"
+
+msgid "Licence enregistrée par le serveur."
+msgstr "服务器已保存许可证。"
+
+msgid "Enregistrer la licence"
+msgstr "保存许可证"
+
+msgid "Collez la nouvelle licence reçue de l'éditeur ou du revendeur : le serveur la vérifie et l'applique à tous les postes de l'entreprise."
+msgstr "粘贴从发行商或经销商处收到的新许可证：服务器会验证并将其应用于公司的所有工作站。"

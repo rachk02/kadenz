@@ -11,8 +11,9 @@ use kadenz_poste::{ErreurPoste, EtatConnexion, Evenement, Synchroniseur};
 use kadenz_protocole::{Action, Entite, Issue};
 use slint::{ComponentHandle, SharedString};
 
+use crate::referentiels::{retour_erreur, retour_ok};
 use crate::traduction::{tr, trf};
-use crate::{Alerte, ConnexionApi, Etat, EtatPartage, FenetrePrincipale};
+use crate::{AbonnementApi, Alerte, ConnexionApi, Etat, EtatPartage, FenetrePrincipale, Retour};
 
 thread_local! {
     /// État de l'application, pour les événements du synchroniseur.
@@ -183,6 +184,28 @@ pub(crate) fn ecrire_sur(
         return None;
     }
     Some(uid(etat, entite, id).and_then(|u| ecrire_relie(etat, action(u))))
+}
+
+/// Rubrique « Abonnement » : la nouvelle licence part au serveur, qui la
+/// vérifie et l'applique ; le nouvel état revient par le synchroniseur.
+pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
+    let e = etat.clone();
+    fenetre
+        .global::<AbonnementApi>()
+        .on_renouveler(move |cle| -> Retour {
+            let cle: String = cle.chars().filter(|c| !c.is_whitespace()).collect();
+            if cle.is_empty() {
+                return retour_erreur(tr("Collez d'abord la nouvelle licence."));
+            }
+            let etat = e.borrow();
+            let Some(r) = etat.relie.as_ref() else {
+                return retour_erreur(texte_erreur(&ErreurPoste::HorsConnexion));
+            };
+            match r.synchro.renouveler(&cle) {
+                Ok(_) => retour_ok(tr("Licence enregistrée par le serveur.")),
+                Err(e) => retour_erreur(texte_erreur(&e)),
+            }
+        });
 }
 
 /// Écriture d'un écran qui sait le poste relié : un synchroniseur absent rend

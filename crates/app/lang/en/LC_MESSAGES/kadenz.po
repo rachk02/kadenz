@@ -3362,3 +3362,15 @@ msgstr "The record was changed on another workstation: reopen it to see the serv
 
 msgid "cette fiche n'existe plus"
 msgstr "this record no longer exists"
+
+msgid "Collez d'abord la nouvelle licence."
+msgstr "Paste the new licence first."
+
+msgid "Licence enregistrée par le serveur."
+msgstr "Licence saved by the server."
+
+msgid "Enregistrer la licence"
+msgstr "Save the licence"
+
+msgid "Collez la nouvelle licence reçue de l'éditeur ou du revendeur : le serveur la vérifie et l'applique à tous les postes de l'entreprise."
+msgstr "Paste the new licence received from the publisher or the reseller: the server checks it and applies it to all the company's workstations."

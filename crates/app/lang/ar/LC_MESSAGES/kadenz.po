@@ -3362,3 +3362,15 @@ msgstr "تغيّر السجل على محطة أخرى: أعد فتحه لعرض
 
 msgid "cette fiche n'existe plus"
 msgstr "لم يعد هذا السجل موجودًا"
+
+msgid "Collez d'abord la nouvelle licence."
+msgstr "الصق الترخيص الجديد أولًا."
+
+msgid "Licence enregistrée par le serveur."
+msgstr "سجّل الخادم الترخيص."
+
+msgid "Enregistrer la licence"
+msgstr "حفظ الترخيص"
+
+msgid "Collez la nouvelle licence reçue de l'éditeur ou du revendeur : le serveur la vérifie et l'applique à tous les postes de l'entreprise."
+msgstr "الصق الترخيص الجديد الذي تلقيته من الناشر أو الموزّع: يتحقق منه الخادم ويطبّقه على جميع محطات الشركة."

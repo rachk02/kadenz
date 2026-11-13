@@ -4,7 +4,8 @@
 // lecture seule (permanent). Le serveur juge de l'état ; le poste montre le
 // dernier état reçu. Textes construits et traduits par l'application.
 import { ScrollView } from "std-widgets.slint";
-import { Bouton, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { SaisieCle } from "licence.slint";
 
 export struct LigneAbonnementUi {
     libelle: string,
@@ -21,8 +22,11 @@ export global AbonnementApi {
     // Vrai : lecture seule (rouge) ; faux : avertissement avant l'échéance.
     in property <bool> bandeau-grave;
     in property <string> bandeau-aide;
-    // Le compte gère les paramètres : le bandeau ouvre la rubrique.
+    // Le compte gère les paramètres : le bandeau ouvre la rubrique, et la
+    // rubrique permet de saisir une nouvelle licence.
     in property <bool> peut-ouvrir;
+    // Nouvelle licence envoyée au serveur, qui la vérifie et l'applique.
+    callback renouveler(cle: string) -> Retour;
 }
 
 // Bandeau en haut des pages, à bordure égale sur ses quatre côtés.
@@ -114,6 +118,9 @@ component LigneAbonnement inherits GridLayout {
 }
 
 export component PageAbonnement inherits ScrollView {
+    property <string> cle;
+    property <Retour> retour;
+
     VerticalLayout {
         padding: 24px;
         spacing: 12px;
@@ -143,11 +150,44 @@ export component PageAbonnement inherits ScrollView {
             text: @tr("Renouvellement");
         }
 
-        Text {
+        if !AbonnementApi.peut-ouvrir: Text {
             horizontal-alignment: Theme.debut;
-            text: @tr("La nouvelle licence s'enregistre sur le serveur ; ce poste reçoit le nouvel état à la connexion suivante.");
+            text: @tr("Adressez-vous à l'administrateur pour renouveler l'abonnement.");
             color: Theme.texte-secondaire;
             wrap: word-wrap;
+        }
+
+        if AbonnementApi.peut-ouvrir: Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Collez la nouvelle licence reçue de l'éditeur ou du revendeur : le serveur la vérifie et l'applique à tous les postes de l'entreprise.");
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        if AbonnementApi.peut-ouvrir: SaisieCle {
+            cle <=> root.cle;
+        }
+
+        if AbonnementApi.peut-ouvrir: Rangee {
+            spacing: 8px;
+            alignment: start;
+
+            Bouton {
+                text: @tr("Enregistrer la licence");
+                primary: true;
+                clicked => {
+                    root.retour = AbonnementApi.renouveler(root.cle);
+                    Alerte.retour(root.retour);
+                    if (root.retour.ok) {
+                        root.cle = "";
+                    }
+                }
+            }
+        }
+
+        MessageRetour {
+            erreurs-seules: true;
+            retour: root.retour;
         }
     }
 }
