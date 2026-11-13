@@ -753,6 +753,17 @@ impl Fil {
                     self.noter_refus(&identifiant);
                 }
                 let erreur = self.erreur_requete(e);
+                // Session TLS perdue en route (serveur relancé, coupure) :
+                // l'écran ouvre la session en local, et le compte se
+                // connectera au retour du serveur, comme sans client
+                // (décision 48).
+                if erreur == ErreurPoste::HorsConnexion {
+                    self.compte = Some(Compte {
+                        identifiant,
+                        mot_de_passe,
+                        uid: None,
+                    });
+                }
                 let _ = retour.send(Err(erreur));
             }
         }

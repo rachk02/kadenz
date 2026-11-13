@@ -376,6 +376,51 @@ fn compte_connecte_au_retour_du_serveur() {
     s.arreter();
 }
 
+/// Essai F6d : le serveur est relancé pendant que le poste garde une session
+/// TLS ouverte sans compte. La connexion du compte la trouve morte ; le
+/// compte doit alors attendre le retour du serveur, et s'y connecter seul.
+#[test]
+fn compte_connecte_apres_session_perdue_en_route() {
+    let b = banc("perdue", true);
+    let port = b.serveur.adresse().port();
+    let (s, evenements) = demarrer(&b.copie);
+    attendre("connexion", || s.etat() == EtatConnexion::Connecte);
+    let dossier_serveur = b.dossier_serveur.clone();
+    b.serveur.arreter();
+    let _serveur = relancer(&dossier_serveur, port);
+    // La session ouverte au démarrage est refermée par l'ancien serveur ; si
+    // le poste l'a déjà vu, il rouvre seul et le compte se connecte tout de
+    // suite.
+    match s.connecter("admin", MOT_DE_PASSE) {
+        Ok(c) => assert_eq!(c.compte, b.admin),
+        Err(e) => {
+            assert_eq!(e, ErreurPoste::HorsConnexion);
+            let debut = Instant::now();
+            let issue = loop {
+                let e = evenements
+                    .recv_timeout(Duration::from_secs(20))
+                    .expect("événement Compte attendu");
+                if let Evenement::Compte(issue) = e {
+                    break issue;
+                }
+                assert!(debut.elapsed() < Duration::from_secs(25));
+            };
+            assert_eq!(issue.map(|c| c.compte), Ok(b.admin.clone()));
+        }
+    }
+    attendre("connexion", || s.etat() == EtatConnexion::Connecte);
+    // Le compte est bien connecté : une écriture passe au serveur.
+    let t = synchro::nouvel_uid();
+    assert!(matches!(
+        s.ecrire(Action::CreerTiers {
+            uid: t.clone(),
+            fiche: fiche("Après relance"),
+        }),
+        Ok(Issue::Acceptee { .. })
+    ));
+    s.arreter();
+}
+
 /// Second poste inscrit sur le serveur du banc, avec sa propre copie.
 fn second_poste(b: &Banc, nom: &str) -> PathBuf {
     let identite = Identite::nouvelle("poste2").unwrap();
