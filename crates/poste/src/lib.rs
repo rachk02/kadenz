@@ -477,6 +477,14 @@ impl Fil {
         n
     }
 
+    /// Connexion d'un compte refusée par le serveur : ses écritures de la
+    /// file partiront sous la session d'un autre compte (décision 52).
+    fn noter_refus(&self, identifiant: &str) {
+        if let Ok(Some(uid)) = poste_relie::uid_du_compte(&self.copie, identifiant) {
+            let _ = poste_relie::noter_compte_refuse(&self.copie, &uid);
+        }
+    }
+
     /// Compte de la session connecté par le serveur.
     fn uid_session(&self) -> Option<String> {
         self.compte.as_ref().and_then(|c| c.uid.clone())
@@ -568,6 +576,8 @@ impl Fil {
                         .map(|c| c.connexion(&compte.identifiant, &compte.mot_de_passe));
                     match reprise {
                         Some(Ok(connecte)) => {
+                            let _ =
+                                poste_relie::oublier_compte_refuse(&self.copie, &connecte.compte);
                             compte.uid = Some(connecte.compte.clone());
                             self.compte = Some(compte);
                             (self.evenements)(Evenement::Compte(Ok(connecte)));
@@ -576,6 +586,7 @@ impl Fil {
                         // Mot de passe changé ailleurs, compte désactivé : le
                         // compte n'est plus connecté.
                         Some(Err(ErreurClient::CompteRefuse { attente_secondes })) => {
+                            self.noter_refus(&compte.identifiant);
                             (self.evenements)(Evenement::Compte(Err(ErreurPoste::CompteRefuse {
                                 attente_secondes,
                             })));
@@ -703,6 +714,7 @@ impl Fil {
         };
         match client.connexion(&identifiant, &mot_de_passe) {
             Ok(connecte) => {
+                let _ = poste_relie::oublier_compte_refuse(&self.copie, &connecte.compte);
                 self.compte = Some(Compte {
                     identifiant,
                     mot_de_passe,
@@ -714,6 +726,9 @@ impl Fil {
                 self.apres_connexion();
             }
             Err(e) => {
+                if matches!(e, ErreurClient::CompteRefuse { .. }) {
+                    self.noter_refus(&identifiant);
+                }
                 let erreur = self.erreur_requete(e);
                 let _ = retour.send(Err(erreur));
             }
@@ -945,16 +960,20 @@ impl Fil {
     }
 
     /// Envoie la file d'envoi dans l'ordre : les écritures du compte de la
-    /// session, et avec `suspendues` celles qui attendent une décision. Une
-    /// coupure arrête l'envoi ; ce qui reste part au prochain retour.
+    /// session et celles des comptes refusés par le serveur (décision 52, mises
+    /// en attente pour l'Admin), et avec `suspendues` celles qui attendent une
+    /// décision. Une coupure arrête l'envoi ; ce qui reste part au prochain
+    /// retour.
     fn vider_file(&mut self, suspendues: bool) -> Result<(), ErreurPoste> {
         let Some(uid) = self.uid_session() else {
             return Ok(());
         };
         let file = replique::file(&self.copie).map_err(base)?;
+        let refuses = poste_relie::comptes_refuses(&self.copie).map_err(base)?;
         let mut resultat = Ok(());
         for entree in file {
-            if entree.operation.compte != uid || (entree.suspendue && !suspendues) {
+            let compte = &entree.operation.compte;
+            if (*compte != uid && !refuses.contains(compte)) || (entree.suspendue && !suspendues) {
                 continue;
             }
             let Some(client) = self.client.as_mut() else {

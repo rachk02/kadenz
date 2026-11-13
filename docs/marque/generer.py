@@ -179,6 +179,52 @@ def motif(fond, trace, w=240, h=800, s=40):
             + "".join(out) + "</svg>\n")
 
 
+def motif_tournant(fond, trace, w=800, h=400, s=50, graine=7):
+    """Tournant (retenu le 2026-11-13) : le quart de disque seul, à la taille de la case, tourné d'un
+    quart de tour choisi au hasard d'une case à l'autre ; arcs, vagues et disques se forment d'eux-mêmes.
+    La graine fige les rotations : le motif est toujours le même."""
+    import random
+    alea = random.Random(graine)
+    out = [f'<rect width="{f(w)}" height="{f(h)}" fill="{fond}"/>']
+    for r in range(math.ceil(h / s)):
+        for col in range(math.ceil(w / s)):
+            x, y = col * s, r * s
+            rot = 90 * alea.randrange(4)
+            out.append(f'<path fill="{trace}" transform="rotate({rot} {f(x + s / 2)} {f(y + s / 2)})"'
+                       f' d="M{f(x)} {f(y)} L{f(x + s)} {f(y)} A{f(s)} {f(s)} 0 0 1 {f(x)} {f(y + s)} Z"/>')
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {f(w)} {f(h)}" aria-hidden="true">'
+            + "".join(out) + "</svg>\n")
+
+
+def motif_fondu(fond, trace, w=800, h=400, s=40, portee=0.6, sens="droite"):
+    """Fondu (retenu le 2026-11-13) : les quatre pièces du motif Quatre pièces, qui rapetissent vers la
+    droite (ou vers le bas) jusqu'à disparaître ; la zone calme du logo ou du titre naît du motif.
+    portee : part de la largeur (ou de la hauteur) sur laquelle les pièces s'effacent."""
+    m = 7 * s / 40
+    out = [f'<rect width="{f(w)}" height="{f(h)}" fill="{fond}"/>']
+    long = w if sens == "droite" else h
+    for r in range(math.ceil(h / s)):
+        for col in range(math.ceil(w / s)):
+            pos = col * s if sens == "droite" else r * s
+            e = 1 - pos / (long * portee)
+            if e <= 0.08:
+                continue
+            k = (s - 2 * m) * e
+            x, y = col * s + (s - k) / 2, r * s + (s - k) / 2
+            sorte = (col + r) % 4
+            if sorte == 0:
+                d = poly([(x, y), (x + k, y), (x + k, y + k), (x, y + k)])
+            elif sorte == 1:
+                d = f"M{f(x)} {f(y + k)} L{f(x)} {f(y)} A{f(k)} {f(k)} 0 0 1 {f(x + k)} {f(y + k)} Z"
+            elif sorte == 2:
+                d = poly([(x, y), (x + k, y + k), (x, y + k)])
+            else:
+                d = cercle(x + k / 2, y + k / 2, k / 2)
+            out.append(f'<path fill="{trace}" d="{d}"/>')
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {f(w)} {f(h)}" aria-hidden="true">'
+            + "".join(out) + "</svg>\n")
+
+
 if __name__ == "__main__":
     D_MOT, L_MOT = mot()
     p, _ = pieces()
@@ -213,4 +259,6 @@ if __name__ == "__main__":
                svg(f'<path fill="{trait}" fill-rule="evenodd" d="{autres}"/><path fill="{plein}" d="{p[piece]}"/>',
                    titre=f"Kadenz, module {nom}"))
         ec("motif-quatre-pieces.svg", motif(*v["motif"]))
+        ec("motif-tournant.svg", motif_tournant(*v["motif"]))
+        ec("motif-fondu.svg", motif_fondu(*v["motif"]))
     print("ok", L_MOT)

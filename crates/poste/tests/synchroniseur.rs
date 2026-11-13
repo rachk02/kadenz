@@ -780,3 +780,140 @@ fn conflit_hors_connexion_suspendu_puis_tranche() {
     s.arreter();
     serveur.arreter();
 }
+
+/// Décision 52 : un compte connecté en local saisit hors connexion, puis il
+/// est désactivé sur le serveur pendant la coupure. Au retour, sa connexion
+/// est refusée ; ses écritures partent sous la session de l'Admin, en
+/// attente, et l'Admin les accepte.
+#[test]
+fn compte_desactive_pendant_la_coupure_en_attente() {
+    let b = banc("relaie", true);
+    let port = b.serveur.adresse().port();
+    let admin = b.admin.clone();
+    let vente = b
+        .serveur
+        .base(move |c| {
+            let qui = comptes::lire(
+                c,
+                synchro::id_de(c, Entite::Utilisateur, &admin)
+                    .unwrap()
+                    .unwrap(),
+            )
+            .unwrap()
+            .unwrap();
+            let u = comptes::creer(
+                c,
+                &qui,
+                &NouvelUtilisateur {
+                    nom_complet: "Vente".into(),
+                    identifiant: "vente".into(),
+                    mot_de_passe: MOT_DE_PASSE.into(),
+                    role: Role::Commercial,
+                },
+            )
+            .unwrap();
+            synchro::completer_uids(c).unwrap();
+            synchro::uid_de(c, Entite::Utilisateur, u.id)
+                .unwrap()
+                .unwrap()
+        })
+        .unwrap();
+    {
+        let (s, _e) = demarrer(&b.copie);
+        attendre("connexion", || s.etat() == EtatConnexion::Connecte);
+        s.connecter("admin", MOT_DE_PASSE).unwrap();
+        attendre("compte du commercial dans la copie", || {
+            present(&b.copie, Entite::Utilisateur, &vente)
+        });
+        s.arreter();
+    }
+    let dossier_serveur = b.dossier_serveur.clone();
+    b.serveur.arreter();
+
+    let (s, evenements) = demarrer(&b.copie);
+    attendre("serveur injoignable", || injoignable(&s));
+    assert_eq!(
+        s.connecter("vente", MOT_DE_PASSE),
+        Err(ErreurPoste::HorsConnexion)
+    );
+    let t = synchro::nouvel_uid();
+    assert_eq!(
+        s.ecrire(Action::CreerTiers {
+            uid: t.clone(),
+            fiche: fiche("Client du commercial"),
+        }),
+        Ok(Issue::EnFile)
+    );
+
+    // Pendant la coupure, l'Admin désactive le commercial sur le serveur.
+    let ailleurs = relancer(&dossier_serveur, 0);
+    let (admin, v) = (b.admin.clone(), vente.clone());
+    ailleurs
+        .base(move |c| {
+            let qui = comptes::lire(
+                c,
+                synchro::id_de(c, Entite::Utilisateur, &admin)
+                    .unwrap()
+                    .unwrap(),
+            )
+            .unwrap()
+            .unwrap();
+            let id = synchro::id_de(c, Entite::Utilisateur, &v).unwrap().unwrap();
+            comptes::definir_actif(c, &qui, id, false).unwrap();
+        })
+        .unwrap();
+    ailleurs.arreter();
+
+    // Retour : la connexion du commercial est refusée, rien n'est parti.
+    let serveur = relancer(&dossier_serveur, port);
+    let debut = Instant::now();
+    let refus = loop {
+        let e = evenements
+            .recv_timeout(Duration::from_secs(20))
+            .expect("événement Compte attendu");
+        if let Evenement::Compte(r) = e {
+            break r;
+        }
+        assert!(debut.elapsed() < Duration::from_secs(25));
+    };
+    assert!(
+        matches!(refus, Err(ErreurPoste::CompteRefuse { .. })),
+        "{refus:?}"
+    );
+    assert_eq!(s.file(), 1);
+
+    // L'Admin se connecte sur ce poste : l'écriture part, en attente, et la
+    // fiche provisoire quitte la copie.
+    s.connecter("admin", MOT_DE_PASSE).unwrap();
+    let vus = RefCell::new(Vec::new());
+    attendre("attente confirmée", || {
+        confirmees(&evenements, &vus).contains(&Issue::EnAttente)
+    });
+    attendre("fiche provisoire retirée", || {
+        !present(&b.copie, Entite::Tiers, &t)
+    });
+    assert_eq!(s.file(), 0);
+    let liste = s.suspendues().unwrap();
+    assert_eq!(liste.len(), 1);
+    assert_eq!(liste[0].motif, Motif::Attente);
+    assert_eq!(liste[0].operation.compte, vente);
+
+    // Acceptée par l'Admin : la fiche revient, la file est vide.
+    assert_eq!(
+        s.ecrire(Action::DeciderAttente {
+            operation: liste[0].operation.id.clone(),
+            accepter: true,
+        }),
+        Ok(Issue::acceptee())
+    );
+    attendre("fiche acceptée dans la copie", || {
+        present(&b.copie, Entite::Tiers, &t)
+    });
+    attendre("file vide", || {
+        replique::file(&poste_relie::ouvrir_copie(&b.copie).unwrap())
+            .unwrap()
+            .is_empty()
+    });
+    s.arreter();
+    serveur.arreter();
+}

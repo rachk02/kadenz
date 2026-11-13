@@ -149,6 +149,30 @@ pub fn uid_du_compte(conn: &Connection, identifiant: &str) -> Resultat<Option<St
         .flatten())
 }
 
+/// Note un compte dont le serveur a refusé la connexion (décision 52).
+pub fn noter_compte_refuse(conn: &Connection, uid: &str) -> Resultat<()> {
+    conn.execute(
+        "INSERT OR IGNORE INTO synchro_compte_refuse (uid) VALUES (?1)",
+        [uid],
+    )?;
+    Ok(())
+}
+
+/// Oublie le refus d'un compte, connecté de nouveau par le serveur.
+pub fn oublier_compte_refuse(conn: &Connection, uid: &str) -> Resultat<()> {
+    conn.execute("DELETE FROM synchro_compte_refuse WHERE uid = ?1", [uid])?;
+    Ok(())
+}
+
+/// Comptes dont le serveur a refusé la connexion : leurs écritures de la file
+/// partent sous la session d'un autre compte.
+pub fn comptes_refuses(conn: &Connection) -> Resultat<Vec<String>> {
+    Ok(conn
+        .prepare("SELECT uid FROM synchro_compte_refuse ORDER BY uid")?
+        .query_map([], |r| r.get(0))?
+        .collect::<Result<_, _>>()?)
+}
+
 /// Note un brouillon dont la validation a été demandée hors connexion (écrans,
 /// section 4).
 pub fn noter_a_valider(conn: &Connection, uid: &str) -> Resultat<()> {

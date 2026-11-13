@@ -21,6 +21,7 @@
 | 0.17 | 2026-11-12 | Décisions 45 à 47 (F5) : copie locale séparée de la base V1 sur un poste relié, consultation seule quand le serveur est injoignable en attendant F6, rubrique « Sauvegardes » cachée sur un poste relié. |
 | 0.18 | 2026-11-13 | Décision 48 (F5) : connexion locale d'un compte quand le poste relié démarre sans serveur. |
 | 0.19 | 2026-11-13 | Décisions 49 à 51 (F5 et F6) : premier lancement d'un poste par code d'inscription seulement ; écritures permises hors connexion ; saisie par un compte connecté en local, qui complète la décision 48. |
+| 0.20 | 2026-11-13 | Décision 52 (F6) : écritures hors connexion d'un compte désactivé ou dont le mot de passe a changé pendant la coupure, apportées par la session d'un autre compte et toujours mises en attente pour l'Admin. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -90,6 +91,7 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 49. **Premier lancement d'un poste (phase 2)** : le premier lancement demande seulement le code d'inscription (écran « Rejoindre l'entreprise »), puis le poste crée sa copie du serveur ; il ne crée plus de base locale. Le poste seul reste la V1 (branche release/0.2.x).
 50. **Écritures hors connexion (F6)** : quand le serveur est injoignable, restent permises, à titre provisoire et mises en file d'envoi, les écritures sur les tiers, les produits, les documents (sauf la validation) et les règlements, ainsi que la langue et l'affichage du compte. La validation reste inactive (décision 9). Les écritures sur les comptes (création, activation, rôle, mots de passe) et les réglages (paramètres, fiche et logo de l'entreprise, droits, textes de relance, mise en page, bas de document) restent inactives jusqu'au retour du serveur.
 51. **Saisie par un compte connecté en local (F6)** : un compte connecté en local au démarrage sans serveur (décision 48) peut faire les écritures permises par la décision 50 ; le serveur juge chaque opération au retour, et celles d'un compte désactivé entre-temps vont en attente pour l'Admin (décisions 18 et 32). Elle complète la décision 48, dont la dernière phrase (écritures inactives jusqu'au retour du serveur) ne vaut plus qu'en F5.
+52. **Compte coupé pendant une coupure (F6)** : les écritures faites hors connexion par un compte que le serveur refuse ensuite (compte désactivé, mot de passe changé) partent du poste sous la session du compte suivant qui s'y connecte ; le serveur les met toujours en attente, sans les appliquer, et l'Admin les accepte ou les rejette (décisions 18 et 32). Personne n'agit ainsi au nom d'un autre sans l'accord de l'Admin.
 
 ## 3. Candidats
 

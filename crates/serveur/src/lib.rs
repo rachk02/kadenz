@@ -827,14 +827,22 @@ fn traiter(
             if operation.poste != poste {
                 return rejet("le poste de l'opération n'est pas celui du certificat");
             }
-            if operation.compte != uid {
+            // Écriture hors connexion d'un compte qui ne peut plus se
+            // connecter, apportée par la session d'un autre (décision 52) :
+            // toujours mise en attente pour l'Admin.
+            let relayee = operation.compte != uid;
+            if relayee && !operation.hors_connexion {
                 return rejet("le compte de l'opération n'est pas celui de la session");
             }
             let cles = contexte.cles.clone();
             match contexte.base.executer(move |c| {
                 // L'abonnement est réévalué à chaque opération : le jour change.
                 abonnement::appliquer_avec(c, abonnement::horloge(), &cles)?;
-                synchro::appliquer(c, &operation)
+                if relayee {
+                    synchro::appliquer_relayee(c, &operation)
+                } else {
+                    synchro::appliquer(c, &operation)
+                }
             }) {
                 Ok(Ok(issue)) => Reponse::Resultat { issue },
                 Ok(Err(Erreur::LectureSeule { echeance })) => Reponse::LectureSeule { echeance },

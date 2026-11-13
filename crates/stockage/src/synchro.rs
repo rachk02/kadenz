@@ -174,6 +174,19 @@ pub fn dernier_changement(conn: &Connection) -> Resultat<u64> {
 /// (base, fichier) n'est pas un résultat : rien n'est écrit, et le poste
 /// renverra l'opération.
 pub fn appliquer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
+    appliquer_avec(conn, op, false)
+}
+
+/// Applique une opération faite hors connexion par un autre compte que celui
+/// de la session qui l'apporte (compte désactivé ou mot de passe changé
+/// pendant la coupure, décision 52) : elle est toujours mise en attente, et
+/// l'Admin seul l'accepte ou la rejette. Rien n'est fait au nom d'un compte
+/// qui ne s'est pas connecté au serveur.
+pub fn appliquer_relayee(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
+    appliquer_avec(conn, op, true)
+}
+
+fn appliquer_avec(conn: &mut Connection, op: &Operation, relayee: bool) -> Resultat<Issue> {
     // Copie gardée : sans mot de passe ni contenu de logo. Le renvoi d'une
     // opération est reconnu sur cette copie.
     let gardee = Operation {
@@ -205,6 +218,16 @@ pub fn appliquer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
     if op.hors_connexion && op.action.en_coupure() != EnCoupure::Permise {
         return Err(refus_op("écriture impossible hors connexion"));
     }
+    if relayee {
+        if !op.hors_connexion {
+            return Err(refus_op(
+                "seule une écriture faite hors connexion peut venir d'un autre compte",
+            ));
+        }
+        if id_de(conn, Entite::Utilisateur, &op.compte)?.is_none() {
+            return Err(refus_op("compte inconnu sur le serveur"));
+        }
+    }
     // Lecture seule (abonnement) : après le renvoi d'une opération déjà
     // acceptée, qui garde son résultat, et avant tout effet. Seules passent
     // les écritures du compte sur lui-même (mot de passe, langue, affichage).
@@ -213,7 +236,7 @@ pub fn appliquer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
     }
 
     conn.execute_batch("SAVEPOINT operation")?;
-    let resultat = appliquer_dans(conn, op, &contenu);
+    let resultat = appliquer_dans(conn, op, &contenu, relayee);
     match resultat {
         Ok(issue) => {
             conn.execute_batch("RELEASE operation")?;
@@ -226,7 +249,12 @@ pub fn appliquer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
     }
 }
 
-fn appliquer_dans(conn: &mut Connection, op: &Operation, contenu: &str) -> Resultat<Issue> {
+fn appliquer_dans(
+    conn: &mut Connection,
+    op: &Operation,
+    contenu: &str,
+    relayee: bool,
+) -> Resultat<Issue> {
     let cible = op.action.cible();
     let cle_cible = cible.map(|(_, uid)| uid).unwrap_or_default();
     // Une opération du même poste sur la même ligne attend une décision : celle-ci
@@ -245,13 +273,16 @@ fn appliquer_dans(conn: &mut Connection, op: &Operation, contenu: &str) -> Resul
     if suspendue {
         return Ok(Issue::Bloquee);
     }
-    let changee = match (cible, op.action.si_changee()) {
-        (Some((entite, uid)), SiChangee::Conflit | SiChangee::Depassee) => {
-            modifiee_ailleurs(conn, op, entite, uid)?
-        }
-        _ => false,
-    };
-    let issue = if changee {
+    let changee = !relayee
+        && match (cible, op.action.si_changee()) {
+            (Some((entite, uid)), SiChangee::Conflit | SiChangee::Depassee) => {
+                modifiee_ailleurs(conn, op, entite, uid)?
+            }
+            _ => false,
+        };
+    let issue = if relayee {
+        Issue::EnAttente
+    } else if changee {
         match op.action.si_changee() {
             SiChangee::Depassee => Issue::Depassee,
             _ => Issue::EnConflit,
@@ -1867,6 +1898,65 @@ mod tests {
         assert_eq!(rendues[1].uid, inconnu);
         assert_eq!(rendues[1].etat, Etat::Supprime);
         assert_eq!(rendues[1].seq, 0);
+    }
+
+    #[test]
+    fn operation_relayee_toujours_en_attente() {
+        let mut b = banc();
+        let admin = b.admin.clone();
+        let t = nouvel_uid();
+        let mut op = b.op(
+            "p2",
+            &admin,
+            b.base(),
+            Action::CreerTiers {
+                uid: t.clone(),
+                fiche: fiche("Relayé"),
+            },
+        );
+        // Seule une écriture faite hors connexion peut venir d'un autre compte.
+        assert!(appliquer_relayee(&mut b.conn, &op).is_err());
+        op.hors_connexion = true;
+        // Même d'un Admin : rien n'est appliqué sans décision.
+        assert_eq!(
+            appliquer_relayee(&mut b.conn, &op).unwrap(),
+            Issue::EnAttente
+        );
+        assert_eq!(
+            appliquer_relayee(&mut b.conn, &op).unwrap(),
+            Issue::EnAttente
+        );
+        assert!(id_de(&b.conn, Entite::Tiers, &t).unwrap().is_none());
+        let liste = suspendues(&b.conn, &qui(&b, &admin)).unwrap();
+        assert_eq!(liste.len(), 1);
+        assert_eq!(liste[0].motif, Motif::Attente);
+        let accepter = b.op(
+            "p1",
+            &admin,
+            b.base(),
+            Action::DeciderAttente {
+                operation: op.id.clone(),
+                accepter: true,
+            },
+        );
+        assert_eq!(b.appliquer(&accepter), Issue::acceptee());
+        assert_eq!(
+            appliquer_relayee(&mut b.conn, &op).unwrap(),
+            Issue::acceptee()
+        );
+        assert!(id_de(&b.conn, Entite::Tiers, &t).unwrap().is_some());
+        // Compte inconnu : refusé sans rien garder.
+        let mut inconnu = b.op(
+            "p2",
+            &nouvel_uid(),
+            b.base(),
+            Action::CreerTiers {
+                uid: nouvel_uid(),
+                fiche: fiche("Inconnu"),
+            },
+        );
+        inconnu.hors_connexion = true;
+        assert!(appliquer_relayee(&mut b.conn, &inconnu).is_err());
     }
 
     #[test]
