@@ -620,12 +620,26 @@ fn lire_attente(tx: &Transaction<'_>) -> Resultat<BTreeMap<(Entite, String), Cha
 /// Écrit une page de changements reçue du serveur dans la copie du poste, avec
 /// ceux qui attendaient, et garde le dernier rang reçu : tout ou rien.
 pub fn recevoir(conn: &mut Connection, page: &[Changement]) -> Resultat<Reception> {
+    integrer(conn, page, true)
+}
+
+/// Remet des lignes de la copie à l'état présent du serveur (réponse à
+/// `Requete::Lignes`), pour défaire une écriture provisoire refusée,
+/// dépassée ou suspendue (F6). Comme `recevoir`, sans déplacer le dernier
+/// rang reçu.
+pub fn remettre(conn: &mut Connection, lignes: &[Changement]) -> Resultat<Reception> {
+    integrer(conn, lignes, false)
+}
+
+fn integrer(conn: &mut Connection, page: &[Changement], garder_rang: bool) -> Resultat<Reception> {
     let mut tx = conn.transaction()?;
     let avant = crate::synchro::dernier_changement(&tx)?;
     let mut attente = lire_attente(&tx)?;
     let mut dernier = dernier_recu(&tx)?;
     for ch in page {
-        dernier = dernier.max(ch.seq);
+        if garder_rang {
+            dernier = dernier.max(ch.seq);
+        }
         let cle = (ch.entite, ch.uid.clone());
         if attente.get(&cle).is_none_or(|ancien| ancien.seq <= ch.seq) {
             attente.insert(cle, ch.clone());
@@ -676,6 +690,133 @@ pub fn recevoir(conn: &mut Connection, page: &[Changement]) -> Resultat<Receptio
     bilan.en_attente = attente.len();
     bilan.dernier = dernier;
     Ok(bilan)
+}
+
+/// Écriture de la file d'envoi d'un poste (F6).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EnFile {
+    pub rang: i64,
+    pub operation: kadenz_protocole::Operation,
+    /// Lignes touchées, à remettre à l'état du serveur si l'écriture n'est
+    /// pas acceptée.
+    pub lignes: Vec<(Entite, String)>,
+    /// Suspendue sur le serveur (conflit ou attente) : renvoyée pour
+    /// apprendre la décision.
+    pub suspendue: bool,
+}
+
+/// Lignes qu'une écriture touche dans la copie : la ligne visée, la ligne
+/// créée, les fiches d'un import, et le document d'un règlement (son état de
+/// paiement suit).
+fn lignes_touchees(
+    conn: &Connection,
+    action: &kadenz_protocole::Action,
+) -> Resultat<Vec<(Entite, String)>> {
+    use kadenz_protocole::Action;
+    let mut lignes: Vec<(Entite, String)> = Vec::new();
+    let mut ajouter = |e: Entite, uid: &str| {
+        if !lignes.iter().any(|(e2, u2)| *e2 == e && u2 == uid) {
+            lignes.push((e, uid.to_string()));
+        }
+    };
+    if let Some((e, uid)) = action.cible() {
+        ajouter(e, uid);
+    }
+    if let Some((e, uid)) = action.creee() {
+        ajouter(e, uid);
+    }
+    match action {
+        Action::ImporterTiers { uids, .. } => uids.iter().for_each(|u| ajouter(Entite::Tiers, u)),
+        Action::ImporterProduits { uids, .. } => {
+            uids.iter().for_each(|u| ajouter(Entite::Produit, u))
+        }
+        Action::AjouterReglement { document, .. } => ajouter(Entite::Document, document),
+        Action::SupprimerReglement { uid } => {
+            let document: Option<String> = conn
+                .query_row(
+                    "SELECT d.uid FROM reglement r JOIN document d ON d.id = r.document_id
+                     WHERE r.uid = ?1",
+                    [uid],
+                    |r| r.get(0),
+                )
+                .optional()?
+                .flatten();
+            if let Some(d) = document {
+                ajouter(Entite::Document, &d);
+            }
+        }
+        _ => {}
+    }
+    Ok(lignes)
+}
+
+/// Ajoute une écriture faite hors connexion à la fin de la file d'envoi, avec
+/// les lignes qu'elle touche. À appeler avant de l'appliquer à titre
+/// provisoire (les lignes d'un règlement supprimé se lisent encore).
+pub fn mettre_en_file(
+    conn: &Connection,
+    op: &kadenz_protocole::Operation,
+) -> Resultat<Vec<(Entite, String)>> {
+    let lignes = lignes_touchees(conn, &op.action)?;
+    conn.execute(
+        "INSERT INTO synchro_file (operation, lignes) VALUES (?1, ?2)",
+        params![
+            en_texte(serde_json::to_string(op))?,
+            en_texte(serde_json::to_string(&lignes))?
+        ],
+    )?;
+    Ok(lignes)
+}
+
+fn en_texte(texte: serde_json::Result<String>) -> Resultat<String> {
+    texte.map_err(|e| Erreur::Validation(e.to_string()))
+}
+
+/// File d'envoi, dans l'ordre des écritures.
+pub fn file(conn: &Connection) -> Resultat<Vec<EnFile>> {
+    let lignes: Vec<(i64, String, String, String)> = conn
+        .prepare("SELECT rang, operation, lignes, etat FROM synchro_file ORDER BY rang")?
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))?
+        .collect::<Result<_, _>>()?;
+    let illisible = |e: serde_json::Error| Erreur::Validation(e.to_string());
+    lignes
+        .into_iter()
+        .map(|(rang, operation, lignes, etat)| {
+            Ok(EnFile {
+                rang,
+                operation: serde_json::from_str(&operation).map_err(illisible)?,
+                lignes: serde_json::from_str(&lignes).map_err(illisible)?,
+                suspendue: etat == "suspendue",
+            })
+        })
+        .collect()
+}
+
+/// Nombre d'écritures à envoyer : la file hors suspendues, plus l'écriture
+/// envoyée sans réponse.
+pub fn a_envoyer(conn: &Connection) -> Resultat<u32> {
+    let file: i64 = conn.query_row(
+        "SELECT count(*) FROM synchro_file WHERE etat = 'envoi'",
+        [],
+        |r| r.get(0),
+    )?;
+    let en_cours = u32::from(operation_en_cours(conn)?.is_some());
+    Ok(file as u32 + en_cours)
+}
+
+/// Retire une écriture de la file (acceptée, refusée ou décidée).
+pub fn retirer_de_file(conn: &Connection, rang: i64) -> Resultat<()> {
+    conn.execute("DELETE FROM synchro_file WHERE rang = ?1", [rang])?;
+    Ok(())
+}
+
+/// Note une écriture de la file comme suspendue sur le serveur.
+pub fn suspendre_en_file(conn: &Connection, rang: i64) -> Resultat<()> {
+    conn.execute(
+        "UPDATE synchro_file SET etat = 'suspendue' WHERE rang = ?1",
+        [rang],
+    )?;
+    Ok(())
 }
 
 /// Garde (ou oublie, avec `None`) l'opération envoyée au serveur dont la

@@ -381,6 +381,8 @@ struct Contexte {
     essais: Mutex<Essais>,
     inscriptions: Mutex<Inscriptions>,
     cles: Arc<[VerifyingKey]>,
+    /// Serveur arrêté : chaque session finit à sa requête suivante.
+    arret: Arc<AtomicBool>,
 }
 
 /// Rend sa place à la connexion quand la session se termine.
@@ -433,6 +435,7 @@ impl Serveur {
         };
         admin::noter_port(&conn, adresse.port())?;
         let base = Base::lancer(conn);
+        let arret = Arc::new(AtomicBool::new(false));
         let contexte = Arc::new(Contexte {
             base: base.clone(),
             tls,
@@ -442,8 +445,8 @@ impl Serveur {
             essais: Mutex::new(Essais::default()),
             inscriptions: Mutex::new(Inscriptions::default()),
             cles: config.cles_portail.clone().into(),
+            arret: arret.clone(),
         });
-        let arret = Arc::new(AtomicBool::new(false));
         let fil = {
             let arret = arret.clone();
             let max = config.connexions_max;
@@ -488,8 +491,8 @@ impl Serveur {
         self.base.executer(tache)
     }
 
-    /// Cesse d'écouter. Les sessions ouvertes finissent d'elles-mêmes, au plus
-    /// tard au bout du délai de lecture.
+    /// Cesse d'écouter. Les sessions ouvertes finissent à leur requête
+    /// suivante, ou au plus tard au bout du délai de lecture.
     pub fn arreter(mut self) {
         self.fermer();
     }
@@ -714,6 +717,11 @@ fn session(contexte: &Contexte, tcp: TcpStream) {
     flux.sock.fin = None;
     let mut compte: Option<String> = None;
     while let Some(requete) = lire(&mut flux) {
+        // Serveur arrêté : la session finit sans servir la requête, pour
+        // qu'un poste qui relève sans cesse voie bien la coupure.
+        if contexte.arret.load(Ordering::SeqCst) {
+            return fermer(&mut flux);
+        }
         let reponse = traiter(contexte, &poste, &mut compte, requete);
         if repondre(&mut flux, &reponse).is_err() {
             return;

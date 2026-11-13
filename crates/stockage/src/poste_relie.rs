@@ -11,7 +11,7 @@
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use rusqlite::Connection;
+use rusqlite::{Connection, OptionalExtension};
 use serde_json::{Value, json};
 
 use crate::chiffrement::{self, Portee};
@@ -134,6 +134,58 @@ pub fn ouvrir_copie(chemin: &Path) -> Resultat<Connection> {
     let conn = crate::ouvrir(chemin)?;
     conn.busy_timeout(Duration::from_secs(5))?;
     Ok(conn)
+}
+
+/// Identifiant global d'un compte de la copie, par son identifiant de
+/// connexion : pour un compte connecté en local sans serveur (décision 51).
+pub fn uid_du_compte(conn: &Connection, identifiant: &str) -> Resultat<Option<String>> {
+    Ok(conn
+        .query_row(
+            "SELECT uid FROM utilisateur WHERE identifiant = ?1",
+            [identifiant],
+            |r| r.get::<_, Option<String>>(0),
+        )
+        .optional()?
+        .flatten())
+}
+
+/// Note un brouillon dont la validation a été demandée hors connexion (écrans,
+/// section 4).
+pub fn noter_a_valider(conn: &Connection, uid: &str) -> Resultat<()> {
+    conn.execute(
+        "INSERT OR IGNORE INTO synchro_a_valider (uid) VALUES (?1)",
+        [uid],
+    )?;
+    Ok(())
+}
+
+/// Oublie un brouillon de la liste « à valider au retour ».
+pub fn oublier_a_valider(conn: &Connection, uid: &str) -> Resultat<()> {
+    conn.execute("DELETE FROM synchro_a_valider WHERE uid = ?1", [uid])?;
+    Ok(())
+}
+
+/// Brouillons à valider au retour du serveur, encore présents et encore en
+/// brouillon : `uid` et identifiant dans la copie.
+pub fn a_valider(conn: &Connection) -> Resultat<Vec<(String, i64)>> {
+    Ok(conn
+        .prepare(
+            "SELECT a.uid, d.id FROM synchro_a_valider a JOIN document d ON d.uid = a.uid
+             WHERE d.statut = 'brouillon' ORDER BY d.id",
+        )?
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?
+        .collect::<Result<_, _>>()?)
+}
+
+/// Retire de la liste « à valider au retour » les documents disparus ou qui
+/// ne sont plus des brouillons ; vrai si la liste a changé.
+pub fn purger_a_valider(conn: &Connection) -> Resultat<bool> {
+    let n = conn.execute(
+        "DELETE FROM synchro_a_valider WHERE uid NOT IN
+         (SELECT uid FROM document WHERE uid IS NOT NULL AND statut = 'brouillon')",
+        [],
+    )?;
+    Ok(n > 0)
 }
 
 /// Modules actifs sur la copie d'après le dernier abonnement reçu du serveur :

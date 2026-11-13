@@ -441,13 +441,15 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
             }
             afficher(f, &e);
         }
-        Evenement::ConfirmationEnAttente(attente) => {
+        Evenement::File(n) => {
             let mut e = etat.borrow_mut();
             if let Some(r) = e.relie.as_mut() {
-                r.confirmation = attente;
+                r.confirmation = n > 0;
             }
             afficher(f, &e);
         }
+        // Liste « à valider au retour » : écran de F6c.
+        Evenement::AValider(_) => {}
         Evenement::Changements { sortes } => {
             let api = f.global::<ConnexionApi>();
             let mut droits = false;

@@ -10,9 +10,9 @@ kadenz-protocole.workspace = true
 kadenz-client.workspace = true
 kadenz-stockage.workspace = true
 rusqlite.workspace = true
+chrono.workspace = true
 
 [dev-dependencies]
 kadenz-serveur.workspace = true
 kadenz-licence.workspace = true
 kadenz-domaine.workspace = true
-chrono.workspace = true

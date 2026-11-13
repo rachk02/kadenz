@@ -10,13 +10,19 @@
 //!
 //! Une écriture sans réponse à temps est gardée dans la copie et renvoyée avec
 //! le même identifiant avant toute autre : le serveur rend alors le résultat
-//! d'origine, sans l'appliquer deux fois. Hors connexion, une écriture est
-//! refusée jusqu'au jalon F6 (décision 46).
+//! d'origine, sans l'appliquer deux fois.
+//!
+//! Hors connexion (F6, décisions 50 et 51), une écriture permise est appliquée
+//! à titre provisoire dans la copie et mise dans la file d'envoi. Au retour du
+//! serveur, la file part dans l'ordre : une écriture refusée ou dépassée est
+//! retirée et ses lignes remises à l'état du serveur ; une écriture en conflit
+//! ou en attente est gardée comme suspendue, ses lignes remises aussi, et
+//! renvoyée ensuite pour apprendre la décision.
 
 use std::collections::BTreeSet;
 use std::fmt;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::mpsc::{self, RecvTimeoutError, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
@@ -24,7 +30,8 @@ use std::time::{Duration, Instant};
 
 pub use kadenz_client::CompteConnecte;
 use kadenz_client::{Client, ErreurClient, Identite};
-use kadenz_protocole::{Abonnement, Action, Entite, Issue, Operation};
+use kadenz_protocole::messages::LIGNES_MAX;
+use kadenz_protocole::{Abonnement, Action, EnCoupure, Entite, Issue, Operation, Suspendue};
 use kadenz_stockage::poste_relie::{self, PosteRelie};
 use kadenz_stockage::{replique, synchro};
 use rusqlite::Connection;
@@ -98,15 +105,19 @@ pub enum Evenement {
         dernier: u64,
     },
     Abonnement(Box<Abonnement>),
-    /// Résultat d'une écriture rendue sans réponse à temps (`ErreurPoste::Delai`),
-    /// confirmée plus tard.
+    /// Résultat appris plus tard : écriture rendue sans réponse à temps
+    /// (`ErreurPoste::Delai`), écriture de la file d'envoi (`Issue::EnFile`)
+    /// envoyée au retour du serveur, ou décision sur une écriture suspendue.
     Confirmee {
         action: Box<Action>,
         issue: Issue,
     },
-    /// Une écriture attend (vrai) ou n'attend plus (faux) la confirmation du
-    /// serveur : « Confirmation en attente ».
-    ConfirmationEnAttente(bool),
+    /// Nombre d'écritures qui attendent d'être envoyées au serveur (file
+    /// d'envoi, écriture sans réponse), à chaque changement.
+    File(u32),
+    /// Nombre de brouillons à valider au retour du serveur : à chaque
+    /// changement de la liste, et au retour du serveur s'il en reste.
+    AValider(u32),
     /// Connexion d'un compte faite par le synchroniseur : connexion différée
     /// (serveur injoignable lors de `connecter`) ou reprise après une
     /// coupure. Sur un refus (mot de passe changé ailleurs, compte
@@ -188,6 +199,8 @@ enum Commande {
         cle: String,
         retour: Sender<Result<Abonnement, ErreurPoste>>,
     },
+    /// Travail sur la copie ou la session, dans le fil.
+    Fil(Box<dyn FnOnce(&mut Fil) + Send>),
     Arreter,
 }
 
@@ -197,7 +210,7 @@ pub type Rappel = Box<dyn Fn(Evenement) + Send>;
 pub struct Synchroniseur {
     commandes: Sender<Commande>,
     etat: Arc<Mutex<EtatConnexion>>,
-    en_attente: Arc<AtomicBool>,
+    a_envoyer: Arc<AtomicU32>,
     fil: Option<JoinHandle<()>>,
 }
 
@@ -210,8 +223,7 @@ impl Synchroniseur {
             .map_err(base)?
             .ok_or_else(|| ErreurPoste::Base("la copie n'est reliée à aucun serveur".into()))?;
         let entreprise = synchro::identifiant_entreprise(&conn).map_err(base)?;
-        let deja = replique::operation_en_cours(&conn).map_err(base)?.is_some();
-        let en_attente = Arc::new(AtomicBool::new(deja));
+        let a_envoyer = Arc::new(AtomicU32::new(replique::a_envoyer(&conn).map_err(base)?));
         let etat = Arc::new(Mutex::new(EtatConnexion::Connexion));
         let (commandes, reception) = mpsc::channel();
         let identite = Identite {
@@ -225,7 +237,7 @@ impl Synchroniseur {
             entreprise,
             evenements,
             etat: etat.clone(),
-            en_attente: en_attente.clone(),
+            a_envoyer: a_envoyer.clone(),
             client: None,
             compte: None,
             echecs: 0,
@@ -240,7 +252,7 @@ impl Synchroniseur {
         Ok(Synchroniseur {
             commandes,
             etat,
-            en_attente,
+            a_envoyer,
             fil: Some(fil),
         })
     }
@@ -273,7 +285,10 @@ impl Synchroniseur {
     }
 
     /// Envoie une écriture et attend son résultat ; ne rend la main qu'avec
-    /// la copie à jour (la ligne créée y est), en `DELAI` au plus.
+    /// la copie à jour (la ligne créée y est), en `DELAI` au plus. Hors
+    /// connexion, une écriture permise (décision 50) est appliquée dans la
+    /// copie et mise en file : `Issue::EnFile`, son résultat viendra par
+    /// `Evenement::Confirmee` ; une autre rend `HorsConnexion`.
     pub fn ecrire(&self, action: Action) -> Result<Issue, ErreurPoste> {
         let (retour, reponse) = mpsc::channel();
         self.envoyer(Commande::Ecrire {
@@ -297,9 +312,42 @@ impl Synchroniseur {
             .unwrap_or(Err(ErreurPoste::Delai))
     }
 
-    /// Une écriture envoyée sans réponse attend sa confirmation.
-    pub fn confirmation_en_attente(&self) -> bool {
-        self.en_attente.load(Ordering::Relaxed)
+    /// Nombre d'écritures qui attendent d'être envoyées au serveur.
+    pub fn file(&self) -> u32 {
+        self.a_envoyer.load(Ordering::Relaxed)
+    }
+
+    /// Note un brouillon à valider au retour du serveur (écrans, section 4).
+    pub fn valider_au_retour(&self, document: &str) -> Result<(), ErreurPoste> {
+        let document = document.to_string();
+        self.sur_fil(move |fil| {
+            poste_relie::noter_a_valider(&fil.copie, &document).map_err(base)?;
+            fil.signaler_a_valider();
+            Ok(())
+        })
+    }
+
+    /// Retire un brouillon de la liste « à valider au retour ».
+    pub fn oublier_a_valider(&self, document: &str) -> Result<(), ErreurPoste> {
+        let document = document.to_string();
+        self.sur_fil(move |fil| {
+            poste_relie::oublier_a_valider(&fil.copie, &document).map_err(base)?;
+            fil.signaler_a_valider();
+            Ok(())
+        })
+    }
+
+    /// Brouillons à valider au retour : identifiant global et identifiant
+    /// dans la copie.
+    pub fn a_valider(&self) -> Result<Vec<(String, i64)>, ErreurPoste> {
+        self.sur_fil(|fil| poste_relie::a_valider(&fil.copie).map_err(base))
+    }
+
+    /// Opérations suspendues sur le serveur (conflits, attentes) que le
+    /// compte connecté peut voir ; à trancher par `ecrire` avec
+    /// `Action::TrancherConflit` ou `Action::DeciderAttente`.
+    pub fn suspendues(&self) -> Result<Vec<Suspendue>, ErreurPoste> {
+        self.sur_fil(|fil| fil.suspendues())
     }
 
     pub fn etat(&self) -> EtatConnexion {
@@ -321,6 +369,19 @@ impl Synchroniseur {
         self.commandes
             .send(commande)
             .map_err(|_| ErreurPoste::Base("synchroniseur arrêté".into()))
+    }
+
+    fn sur_fil<T: Send + 'static>(
+        &self,
+        travail: impl FnOnce(&mut Fil) -> Result<T, ErreurPoste> + Send + 'static,
+    ) -> Result<T, ErreurPoste> {
+        let (retour, reponse) = mpsc::channel();
+        self.envoyer(Commande::Fil(Box::new(move |fil: &mut Fil| {
+            let _ = retour.send(travail(fil));
+        })))?;
+        reponse
+            .recv_timeout(DELAI * 2)
+            .unwrap_or(Err(ErreurPoste::Delai))
     }
 }
 
@@ -346,7 +407,7 @@ struct Fil {
     entreprise: String,
     evenements: Rappel,
     etat: Arc<Mutex<EtatConnexion>>,
-    en_attente: Arc<AtomicBool>,
+    a_envoyer: Arc<AtomicU32>,
     client: Option<Client>,
     compte: Option<Compte>,
     echecs: u32,
@@ -397,11 +458,28 @@ impl Fil {
     /// Garde (ou oublie) l'opération sans réponse, et le signale à l'écran.
     fn garder(&self, op: Option<&Operation>) -> Result<(), ErreurPoste> {
         replique::garder_en_cours(&self.copie, op).map_err(base)?;
-        let attente = op.is_some();
-        if self.en_attente.swap(attente, Ordering::Relaxed) != attente {
-            (self.evenements)(Evenement::ConfirmationEnAttente(attente));
-        }
+        self.signaler_file();
         Ok(())
+    }
+
+    /// Nombre d'écritures à envoyer, signalé à l'écran s'il a changé.
+    fn signaler_file(&self) {
+        let n = replique::a_envoyer(&self.copie).unwrap_or(0);
+        if self.a_envoyer.swap(n, Ordering::Relaxed) != n {
+            (self.evenements)(Evenement::File(n));
+        }
+    }
+
+    /// Nombre de brouillons à valider au retour, signalé à l'écran.
+    fn signaler_a_valider(&self) -> u32 {
+        let n = poste_relie::a_valider(&self.copie).map_or(0, |l| l.len() as u32);
+        (self.evenements)(Evenement::AValider(n));
+        n
+    }
+
+    /// Compte de la session connecté par le serveur.
+    fn uid_session(&self) -> Option<String> {
+        self.compte.as_ref().and_then(|c| c.uid.clone())
     }
 
     /// État d'une session ouverte, selon l'abonnement.
@@ -440,6 +518,7 @@ impl Fil {
                 let resultat = self.renouveler(&cle);
                 let _ = retour.send(resultat);
             }
+            Commande::Fil(travail) => travail(self),
             Commande::Arreter => {}
         }
     }
@@ -461,6 +540,9 @@ impl Fil {
         if self.releves >= RELEVES_ABONNEMENT {
             self.releves = 0;
             let _ = self.lire_abonnement();
+            // Écritures restées dans la file (bloquées, lecture seule) et
+            // suspendues : la décision a pu être prise depuis.
+            let _ = self.vider_file(true);
         }
         if self.rattraper().is_ok() {
             self.poser_etat(self.etat_ouvert());
@@ -513,7 +595,7 @@ impl Fil {
     }
 
     /// Après la connexion d'un compte : abonnement, écriture restée sans
-    /// réponse, rattrapage de la copie.
+    /// réponse, file d'envoi, rattrapage de la copie.
     fn apres_connexion(&mut self) {
         if self.lire_abonnement().is_err() {
             return;
@@ -529,8 +611,15 @@ impl Fil {
                 Err(_) => {}
             }
         }
+        if let Err(ErreurPoste::HorsConnexion) = self.vider_file(true) {
+            return;
+        }
         if self.rattraper().is_ok() {
             self.poser_etat(self.etat_ouvert());
+        }
+        // Retour du serveur : l'écran propose de valider les brouillons notés.
+        if poste_relie::a_valider(&self.copie).is_ok_and(|l| !l.is_empty()) {
+            self.signaler_a_valider();
         }
     }
 
@@ -680,6 +769,10 @@ impl Fil {
                     sortes: bilan.sortes,
                 });
             }
+            // Brouillons validés ou supprimés : hors de la liste à valider.
+            if poste_relie::purger_a_valider(&self.copie).map_err(base)? {
+                self.signaler_a_valider();
+            }
             if annonce {
                 (self.evenements)(Evenement::Avancement {
                     recus: bilan.dernier,
@@ -697,15 +790,14 @@ impl Fil {
         if self.etat_present().definitif() {
             return Err(ErreurPoste::Injoignable);
         }
-        let uid = match self.compte.as_ref().map(|c| c.uid.clone()) {
-            None => return Err(ErreurPoste::Base("aucun compte connecté".into())),
-            // Compte pas encore connecté par le serveur (décision 48).
-            Some(None) => return Err(ErreurPoste::HorsConnexion),
-            Some(Some(uid)) => uid,
-        };
-        if self.client.is_none() {
-            return Err(ErreurPoste::HorsConnexion);
+        if self.compte.is_none() {
+            return Err(ErreurPoste::Base("aucun compte connecté".into()));
         }
+        // Compte pas encore connecté par le serveur (décision 48) ou
+        // serveur injoignable : hors connexion.
+        let (Some(uid), true) = (self.uid_session(), self.client.is_some()) else {
+            return self.hors_ligne(action);
+        };
         // Écriture précédente restée sans réponse : confirmée d'abord.
         if let Some(op) = replique::operation_en_cours(&self.copie).map_err(base)? {
             let precedente = op.action.clone();
@@ -714,12 +806,23 @@ impl Fil {
                     action: Box::new(precedente),
                     issue,
                 }),
+                // Coupure : la nouvelle écriture la suit dans la file.
                 Err(ErreurPoste::HorsConnexion | ErreurPoste::Delai) => {
-                    return Err(ErreurPoste::Delai);
+                    return self.hors_ligne(action);
                 }
                 Err(_) => {}
             }
         }
+        // File d'envoi d'abord, pour garder l'ordre des écritures du poste.
+        match self.vider_file(false) {
+            Ok(()) => {}
+            Err(ErreurPoste::HorsConnexion) => return self.hors_ligne(action),
+            Err(e) => return Err(e),
+        }
+        let decision = matches!(
+            action,
+            Action::TrancherConflit { .. } | Action::DeciderAttente { .. }
+        );
         let op = Operation {
             id: synchro::nouvel_uid(),
             entreprise: self.entreprise.clone(),
@@ -730,7 +833,14 @@ impl Fil {
             base: replique::dernier_recu(&self.copie).map_err(base)?,
             action,
         };
-        self.envoyer(op)
+        let issue = self.envoyer(op)?;
+        // Décision prise depuis ce poste : ses écritures suspendues sont
+        // renvoyées tout de suite pour l'apprendre.
+        if decision && matches!(issue, Issue::Acceptee { .. }) {
+            let _ = self.vider_file(true);
+            let _ = self.rattraper();
+        }
+        Ok(issue)
     }
 
     /// Envoie une opération gardée d'abord dans la copie, puis rattrape la
@@ -760,6 +870,178 @@ impl Fil {
                 self.garder(None)?;
                 Err(self.erreur_requete(e))
             }
+        }
+    }
+
+    /// Écriture hors connexion : appliquée à titre provisoire dans la copie et
+    /// mise en file si elle est permise (décision 50), par le compte connecté,
+    /// même en local (décision 51). Un refus de la copie (droit, règle) est
+    /// rendu tout de suite, sans rien garder.
+    fn hors_ligne(&mut self, action: Action) -> Result<Issue, ErreurPoste> {
+        if action.en_coupure() != EnCoupure::Permise {
+            return Err(ErreurPoste::HorsConnexion);
+        }
+        if let Some(echeance) = &self.lecture_seule
+            && !action.personnelle()
+        {
+            return Err(ErreurPoste::LectureSeule {
+                echeance: echeance.clone(),
+            });
+        }
+        let compte = match self.compte.as_ref() {
+            None => return Err(ErreurPoste::Base("aucun compte connecté".into())),
+            Some(Compte { uid: Some(uid), .. }) => uid.clone(),
+            // Copie jamais synchronisée avec ce compte : rien à faire
+            // hors connexion.
+            Some(Compte { identifiant, .. }) => {
+                poste_relie::uid_du_compte(&self.copie, identifiant)
+                    .map_err(base)?
+                    .ok_or(ErreurPoste::HorsConnexion)?
+            }
+        };
+        let op = Operation {
+            id: synchro::nouvel_uid(),
+            entreprise: self.entreprise.clone(),
+            poste: self.identite.empreinte(),
+            compte,
+            hors_connexion: true,
+            heure_poste: Some(chrono::Local::now().to_rfc3339()),
+            base: replique::dernier_recu(&self.copie).map_err(base)?,
+            action,
+        };
+        // Appliquée dans la copie comme en ligne : un droit manquant y est
+        // refusé, et non mis en attente.
+        let locale = Operation {
+            hors_connexion: false,
+            ..op.clone()
+        };
+        self.copie
+            .execute_batch("SAVEPOINT file_envoi")
+            .map_err(base)?;
+        let essai = replique::mettre_en_file(&self.copie, &op)
+            .and_then(|lignes| Ok((lignes, synchro::appliquer(&mut self.copie, &locale)?)));
+        match essai {
+            Ok((lignes, Issue::Acceptee { .. })) => {
+                self.copie
+                    .execute_batch("RELEASE file_envoi")
+                    .map_err(base)?;
+                self.signaler_file();
+                let sortes: BTreeSet<Entite> = lignes.into_iter().map(|(e, _)| e).collect();
+                if !sortes.is_empty() {
+                    (self.evenements)(Evenement::Changements { sortes });
+                }
+                Ok(Issue::EnFile)
+            }
+            autre => {
+                self.copie
+                    .execute_batch("ROLLBACK TO file_envoi; RELEASE file_envoi")
+                    .map_err(base)?;
+                match autre {
+                    Ok((_, issue)) => Ok(issue),
+                    Err(e) => Err(base(e)),
+                }
+            }
+        }
+    }
+
+    /// Envoie la file d'envoi dans l'ordre : les écritures du compte de la
+    /// session, et avec `suspendues` celles qui attendent une décision. Une
+    /// coupure arrête l'envoi ; ce qui reste part au prochain retour.
+    fn vider_file(&mut self, suspendues: bool) -> Result<(), ErreurPoste> {
+        let Some(uid) = self.uid_session() else {
+            return Ok(());
+        };
+        let file = replique::file(&self.copie).map_err(base)?;
+        let mut resultat = Ok(());
+        for entree in file {
+            if entree.operation.compte != uid || (entree.suspendue && !suspendues) {
+                continue;
+            }
+            let Some(client) = self.client.as_mut() else {
+                resultat = Err(ErreurPoste::HorsConnexion);
+                break;
+            };
+            let issue = match client.envoyer(&entree.operation) {
+                Ok(issue) => issue,
+                // Refusée sans être gardée (écriture non reçue hors
+                // connexion, requête rejetée) : elle ne passera jamais.
+                Err(ErreurClient::Refus { modele, valeurs }) => Issue::Refusee { modele, valeurs },
+                Err(ErreurClient::Rejet(motif)) => Issue::Refusee {
+                    modele: motif,
+                    valeurs: Vec::new(),
+                },
+                Err(e) => {
+                    resultat = Err(self.erreur_requete(e));
+                    break;
+                }
+            };
+            let etape = match &issue {
+                // Une écriture suspendue de ce poste sur la même ligne attend
+                // encore : celle-ci reste dans la file.
+                Issue::Bloquee | Issue::EnFile => continue,
+                Issue::EnConflit | Issue::EnAttente if entree.suspendue => continue,
+                Issue::EnConflit | Issue::EnAttente => {
+                    self.remettre_lignes(&entree.lignes).and_then(|()| {
+                        replique::suspendre_en_file(&self.copie, entree.rang).map_err(base)
+                    })
+                }
+                Issue::Acceptee { .. } => {
+                    replique::retirer_de_file(&self.copie, entree.rang).map_err(base)
+                }
+                Issue::Refusee { .. } | Issue::Depassee => {
+                    self.remettre_lignes(&entree.lignes).and_then(|()| {
+                        replique::retirer_de_file(&self.copie, entree.rang).map_err(base)
+                    })
+                }
+            };
+            // Lignes non remises (coupure) : l'écriture reste dans la file, et
+            // son renvoi rendra le même résultat.
+            if let Err(e) = etape {
+                resultat = Err(e);
+                break;
+            }
+            (self.evenements)(Evenement::Confirmee {
+                action: Box::new(entree.operation.action),
+                issue,
+            });
+        }
+        self.signaler_file();
+        resultat
+    }
+
+    /// Remet des lignes de la copie à l'état présent du serveur.
+    fn remettre_lignes(&mut self, lignes: &[(Entite, String)]) -> Result<(), ErreurPoste> {
+        for morceau in lignes.chunks(LIGNES_MAX) {
+            let Some(client) = self.client.as_mut() else {
+                return Err(ErreurPoste::HorsConnexion);
+            };
+            let rendues = match client.lignes(morceau.to_vec()) {
+                Ok(rendues) => rendues,
+                Err(e) => return Err(self.erreur_requete(e)),
+            };
+            let bilan = replique::remettre(&mut self.copie, &rendues).map_err(base)?;
+            if !bilan.sortes.is_empty() {
+                (self.evenements)(Evenement::Changements {
+                    sortes: bilan.sortes,
+                });
+            }
+        }
+        Ok(())
+    }
+
+    fn suspendues(&mut self) -> Result<Vec<Suspendue>, ErreurPoste> {
+        if self.etat_present().definitif() {
+            return Err(ErreurPoste::Injoignable);
+        }
+        if self.uid_session().is_none() {
+            return Err(ErreurPoste::HorsConnexion);
+        }
+        let Some(client) = self.client.as_mut() else {
+            return Err(ErreurPoste::HorsConnexion);
+        };
+        match client.suspendues() {
+            Ok(liste) => Ok(liste),
+            Err(e) => Err(self.erreur_requete(e)),
         }
     }
 

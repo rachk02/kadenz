@@ -1,6 +1,7 @@
 //! Essais de bout en bout du jalon F5c : un serveur réel sur 127.0.0.1, la
 //! copie d'un poste et son synchroniseur.
 
+use std::cell::RefCell;
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver};
@@ -14,7 +15,7 @@ use kadenz_domaine::role::Role;
 use kadenz_licence::SigningKey;
 use kadenz_licence::entreprise::{self as lic, LicenceEntreprise};
 use kadenz_poste::{ErreurPoste, EtatConnexion, Evenement, Synchroniseur};
-use kadenz_protocole::{Action, Entite, Issue, Ligne, Operation, Saisie, Tiers};
+use kadenz_protocole::{Action, Entite, Issue, Ligne, Motif, Operation, Saisie, Tiers};
 use kadenz_serveur::{Config, Serveur};
 use kadenz_stockage::comptes::{self, NouvelUtilisateur};
 use kadenz_stockage::entreprise::Entreprise;
@@ -510,4 +511,272 @@ fn deux_postes_numeros_consecutifs() {
     });
     s1.arreter();
     s2.arreter();
+}
+
+/// Serveur relancé sur le même dossier : sur un autre port (injoignable pour
+/// le poste) avec `Some(0)`, ou sur son port d'origine.
+fn relancer(dossier: &Path, port: u16) -> Serveur {
+    for _ in 0..40 {
+        match Serveur::demarrer(config(dossier, port)) {
+            Ok(sv) => return sv,
+            Err(_) => thread::sleep(Duration::from_millis(250)),
+        }
+    }
+    panic!("serveur non relancé sur le port {port}");
+}
+
+fn nom_du_tiers(conn: &rusqlite::Connection, uid: &str) -> Option<String> {
+    let id = synchro::id_de(conn, Entite::Tiers, uid).unwrap()?;
+    Some(tiers::lire(conn, id).unwrap().unwrap().fiche.nom)
+}
+
+fn nom_dans_la_copie(copie: &Path, uid: &str) -> Option<String> {
+    nom_du_tiers(&poste_relie::ouvrir_copie(copie).unwrap(), uid)
+}
+
+fn injoignable(s: &Synchroniseur) -> bool {
+    matches!(
+        s.etat(),
+        EtatConnexion::Reconnexion { .. } | EtatConnexion::Injoignable
+    )
+}
+
+/// Résultats appris plus tard (`Confirmee`), reçus jusqu'ici.
+fn confirmees(evenements: &Receiver<Evenement>, vus: &RefCell<Vec<Evenement>>) -> Vec<Issue> {
+    vus.borrow_mut().extend(evenements.try_iter());
+    vus.borrow()
+        .iter()
+        .filter_map(|e| match e {
+            Evenement::Confirmee { issue, .. } => Some(issue.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
+/// Jalon F6b : un compte connecté en local, serveur arrêté (décisions 48, 50
+/// et 51), saisit hors connexion ; au retour du serveur, la file part dans
+/// l'ordre et le brouillon noté se valide.
+#[test]
+fn ecritures_hors_connexion_envoyees_au_retour() {
+    let b = banc("file", true);
+    let port = b.serveur.adresse().port();
+    {
+        let (s, _e) = demarrer(&b.copie);
+        attendre("connexion", || s.etat() == EtatConnexion::Connecte);
+        s.connecter("admin", MOT_DE_PASSE).unwrap();
+        attendre("compte dans la copie", || {
+            present(&b.copie, Entite::Utilisateur, &b.admin)
+        });
+        s.arreter();
+    }
+    let dossier_serveur = b.dossier_serveur.clone();
+    b.serveur.arreter();
+
+    // Démarrage sans serveur : compte connecté en local.
+    let (s, evenements) = demarrer(&b.copie);
+    attendre("serveur injoignable", || injoignable(&s));
+    assert_eq!(
+        s.connecter("admin", MOT_DE_PASSE),
+        Err(ErreurPoste::HorsConnexion)
+    );
+    let t = synchro::nouvel_uid();
+    assert_eq!(
+        s.ecrire(Action::CreerTiers {
+            uid: t.clone(),
+            fiche: fiche("Client Hors Ligne"),
+        }),
+        Ok(Issue::EnFile)
+    );
+    assert!(present(&b.copie, Entite::Tiers, &t));
+    let d = synchro::nouvel_uid();
+    assert_eq!(
+        s.ecrire(Action::CreerBrouillon {
+            uid: d.clone(),
+            type_document: "facture".into(),
+            saisie: saisie(&t),
+        }),
+        Ok(Issue::EnFile)
+    );
+    assert_eq!(s.file(), 2);
+
+    // Refusée par la copie : rendue tout de suite, rien en file.
+    let refus = s.ecrire(Action::ModifierTiers {
+        uid: synchro::nouvel_uid(),
+        fiche: fiche("Inconnu"),
+    });
+    assert!(matches!(refus, Ok(Issue::Refusee { .. })), "{refus:?}");
+    // Validation, comptes et réglages attendent le serveur.
+    assert_eq!(
+        s.ecrire(Action::Valider { uid: d.clone() }),
+        Err(ErreurPoste::HorsConnexion)
+    );
+    assert_eq!(
+        s.ecrire(Action::CreerCompte {
+            uid: synchro::nouvel_uid(),
+            nom_complet: "Nouveau".into(),
+            identifiant: "nouveau".into(),
+            mot_de_passe: MOT_DE_PASSE.into(),
+            role: "commercial".into(),
+        }),
+        Err(ErreurPoste::HorsConnexion)
+    );
+    assert_eq!(s.file(), 2);
+    s.valider_au_retour(&d).unwrap();
+    assert_eq!(s.a_valider().unwrap().len(), 1);
+
+    // Retour du serveur : le compte se connecte, la file part.
+    let serveur = relancer(&dossier_serveur, port);
+    attendre("file envoyée", || s.file() == 0);
+    let vus = RefCell::new(Vec::new());
+    attendre("deux écritures confirmées", || {
+        confirmees(&evenements, &vus).len() == 2
+    });
+    assert!(
+        confirmees(&evenements, &vus)
+            .iter()
+            .all(|i| matches!(i, Issue::Acceptee { .. }))
+    );
+    assert!(vus.borrow().iter().any(|e| matches!(e, Evenement::File(2))));
+    assert!(vus.borrow().iter().any(|e| matches!(e, Evenement::File(0))));
+    assert!(
+        vus.borrow()
+            .iter()
+            .any(|e| matches!(e, Evenement::AValider(1)))
+    );
+    let (t2, d2) = (t.clone(), d.clone());
+    let (sur_serveur, heure) = serveur
+        .base(move |c| {
+            let heure: Option<String> = c
+                .query_row(
+                    "SELECT json_extract(contenu, '$.heure_poste') FROM operation
+                     WHERE json_extract(contenu, '$.hors_connexion') = 1 LIMIT 1",
+                    [],
+                    |r| r.get(0),
+                )
+                .unwrap();
+            (
+                synchro::id_de(c, Entite::Tiers, &t2).unwrap().is_some()
+                    && synchro::id_de(c, Entite::Document, &d2).unwrap().is_some(),
+                heure,
+            )
+        })
+        .unwrap();
+    assert!(sur_serveur);
+    assert!(heure.is_some(), "heure du poste gardée par le serveur");
+
+    // Validation au retour : numéro attribué, brouillon hors de la liste.
+    let issue = s.ecrire(Action::Valider { uid: d.clone() }).unwrap();
+    assert!(
+        matches!(
+            &issue,
+            Issue::Acceptee {
+                numero: Some(_),
+                ..
+            }
+        ),
+        "{issue:?}"
+    );
+    assert!(s.a_valider().unwrap().is_empty());
+    s.arreter();
+    serveur.arreter();
+}
+
+/// Jalon F6b : une fiche modifiée hors connexion et sur le serveur pendant la
+/// coupure ; au retour, la modification du poste est suspendue et la fiche
+/// remise à la version du serveur, puis l'Admin garde la version du poste.
+#[test]
+fn conflit_hors_connexion_suspendu_puis_tranche() {
+    let b = banc("conflit", true);
+    let port = b.serveur.adresse().port();
+    let (s, evenements) = demarrer(&b.copie);
+    attendre("connexion", || s.etat() == EtatConnexion::Connecte);
+    s.connecter("admin", MOT_DE_PASSE).unwrap();
+    let t = synchro::nouvel_uid();
+    assert_eq!(
+        s.ecrire(Action::CreerTiers {
+            uid: t.clone(),
+            fiche: fiche("Client"),
+        }),
+        Ok(Issue::acceptee())
+    );
+    let dossier_serveur = b.dossier_serveur.clone();
+    b.serveur.arreter();
+    attendre("serveur injoignable", || injoignable(&s));
+
+    let modifier = Action::ModifierTiers {
+        uid: t.clone(),
+        fiche: fiche("Version du poste"),
+    };
+    assert_eq!(s.ecrire(modifier.clone()), Ok(Issue::EnFile));
+    assert_eq!(
+        nom_dans_la_copie(&b.copie, &t).as_deref(),
+        Some("Version du poste")
+    );
+
+    // Pendant la coupure, la fiche change sur la machine du serveur (relancé
+    // sur un autre port, que le poste ne connaît pas).
+    let ailleurs = relancer(&dossier_serveur, 0);
+    let (t2, admin) = (t.clone(), b.admin.clone());
+    ailleurs
+        .base(move |c| {
+            let qui = comptes::lire(
+                c,
+                synchro::id_de(c, Entite::Utilisateur, &admin)
+                    .unwrap()
+                    .unwrap(),
+            )
+            .unwrap()
+            .unwrap();
+            let id = synchro::id_de(c, Entite::Tiers, &t2).unwrap().unwrap();
+            tiers::modifier(
+                c,
+                &qui,
+                id,
+                &FicheTiers {
+                    nom: "Version du serveur".into(),
+                    ..FicheTiers::vide(TypeTiers::Client)
+                },
+            )
+            .unwrap();
+        })
+        .unwrap();
+    ailleurs.arreter();
+
+    // Retour : conflit, fiche remise à la version du serveur.
+    let serveur = relancer(&dossier_serveur, port);
+    let vus = RefCell::new(Vec::new());
+    attendre("conflit confirmé", || {
+        confirmees(&evenements, &vus).contains(&Issue::EnConflit)
+    });
+    attendre("version du serveur dans la copie", || {
+        nom_dans_la_copie(&b.copie, &t).as_deref() == Some("Version du serveur")
+    });
+    assert_eq!(s.file(), 0, "une écriture suspendue n'est plus à envoyer");
+    let liste = s.suspendues().unwrap();
+    assert_eq!(liste.len(), 1);
+    assert_eq!(liste[0].motif, Motif::Conflit);
+    assert!(liste[0].operation.hors_connexion);
+
+    // L'Admin garde la version du poste : l'écriture suspendue est renvoyée
+    // et acceptée.
+    assert_eq!(
+        s.ecrire(Action::TrancherConflit {
+            operation: liste[0].operation.id.clone(),
+            resultat: Some(Box::new(modifier)),
+        }),
+        Ok(Issue::acceptee())
+    );
+    attendre("version du poste dans la copie", || {
+        nom_dans_la_copie(&b.copie, &t).as_deref() == Some("Version du poste")
+    });
+    attendre("décision confirmée", || {
+        confirmees(&evenements, &vus)
+            .last()
+            .is_some_and(|i| matches!(i, Issue::Acceptee { .. }))
+    });
+    let conn = poste_relie::ouvrir_copie(&b.copie).unwrap();
+    assert!(replique::file(&conn).unwrap().is_empty());
+    assert!(s.suspendues().unwrap().is_empty());
+    s.arreter();
+    serveur.arreter();
 }
