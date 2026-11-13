@@ -487,13 +487,13 @@ fn executer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
     match &op.action {
         // Tiers.
         Action::CreerTiers { uid, fiche } => {
-            let t = tiers::creer(conn, &qui, &fiche_tiers(fiche)?)?;
+            let t = tiers::creer(conn, &qui, &tiers_depuis_serveur(fiche)?)?;
             poser_uid(conn, Entite::Tiers, t.id, uid)?;
             Ok(acceptee)
         }
         Action::ModifierTiers { uid, fiche } => {
             let id = exiger_id(conn, Entite::Tiers, uid)?;
-            tiers::modifier(conn, &qui, id, &fiche_tiers(fiche)?)?;
+            tiers::modifier(conn, &qui, id, &tiers_depuis_serveur(fiche)?)?;
             Ok(acceptee)
         }
         Action::RetirerTiers { uid } => {
@@ -511,7 +511,7 @@ fn executer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
             }
             let fiches = fiches
                 .iter()
-                .map(fiche_tiers)
+                .map(tiers_depuis_serveur)
                 .collect::<Resultat<Vec<_>>>()?;
             let avant = dernier_id(conn, Entite::Tiers)?;
             let bilan = tiers::importer(conn, &qui, &fiches)?;
@@ -520,13 +520,13 @@ fn executer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
 
         // Produits.
         Action::CreerProduit { uid, fiche } => {
-            let p = produits::creer(conn, &qui, &fiche_produit(fiche)?)?;
+            let p = produits::creer(conn, &qui, &produit_depuis_serveur(fiche)?)?;
             poser_uid(conn, Entite::Produit, p.id, uid)?;
             Ok(acceptee)
         }
         Action::ModifierProduit { uid, fiche } => {
             let id = exiger_id(conn, Entite::Produit, uid)?;
-            produits::modifier(conn, &qui, id, &fiche_produit(fiche)?)?;
+            produits::modifier(conn, &qui, id, &produit_depuis_serveur(fiche)?)?;
             Ok(acceptee)
         }
         Action::RetirerProduit { uid } => {
@@ -544,7 +544,7 @@ fn executer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
             }
             let fiches = fiches
                 .iter()
-                .map(fiche_produit)
+                .map(produit_depuis_serveur)
                 .collect::<Resultat<Vec<_>>>()?;
             let avant = dernier_id(conn, Entite::Produit)?;
             let bilan = produits::importer(conn, &qui, &fiches)?;
@@ -558,14 +558,14 @@ fn executer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
             saisie,
         } => {
             let type_document = TypeDocument::depuis_code(type_document).ok_or_else(illisible)?;
-            let s = saisie_locale(conn, saisie)?;
+            let s = saisie_depuis_serveur(conn, saisie)?;
             let id = documents::creer_brouillon(conn, &qui, type_document, &s)?;
             poser_uid(conn, Entite::Document, id, uid)?;
             Ok(acceptee)
         }
         Action::ModifierBrouillon { uid, saisie } => {
             let id = doc(conn, uid)?;
-            let s = saisie_locale(conn, saisie)?;
+            let s = saisie_depuis_serveur(conn, saisie)?;
             documents::modifier_brouillon(conn, &qui, id, &s)?;
             Ok(acceptee)
         }
@@ -1098,7 +1098,10 @@ fn illisible() -> Erreur {
     Erreur::Validation("opération illisible".into())
 }
 
-fn fiche_tiers(f: &proto::Tiers) -> Resultat<FicheTiers> {
+/// Fiche de tiers d'une action traduite pour le domaine (réciproque de
+/// `tiers_pour_serveur`) : pour appliquer l'action, ou comparer les versions
+/// d'un conflit à l'écran.
+pub fn tiers_depuis_serveur(f: &proto::Tiers) -> Resultat<FicheTiers> {
     Ok(FicheTiers {
         nom: f.nom.clone(),
         adresse: f.adresse.clone(),
@@ -1111,7 +1114,9 @@ fn fiche_tiers(f: &proto::Tiers) -> Resultat<FicheTiers> {
     })
 }
 
-fn fiche_produit(f: &proto::Produit) -> Resultat<FicheProduit> {
+/// Fiche de produit d'une action traduite pour le domaine (réciproque de
+/// `produit_pour_serveur`).
+pub fn produit_depuis_serveur(f: &proto::Produit) -> Resultat<FicheProduit> {
     Ok(FicheProduit {
         designation: f.designation.clone(),
         reference: f.reference.clone(),
@@ -1152,7 +1157,9 @@ fn date(texte: &str) -> Resultat<NaiveDate> {
     NaiveDate::parse_from_str(texte, FORMAT_DATE).map_err(|_| illisible())
 }
 
-fn saisie_locale(conn: &Connection, s: &proto::Saisie) -> Resultat<Saisie> {
+/// Saisie d'une action traduite pour cette base (réciproque de
+/// `saisie_pour_serveur`) : le tiers et les produits cités doivent y être.
+pub fn saisie_depuis_serveur(conn: &Connection, s: &proto::Saisie) -> Resultat<Saisie> {
     let tiers_id = match &s.tiers {
         Some(uid) => Some(exiger_id(conn, Entite::Tiers, uid)?),
         None => None,
@@ -2368,7 +2375,7 @@ mod essais_actions {
                 regime_imposition: "Régime".into(),
                 type_tiers,
             };
-            assert_eq!(fiche_tiers(&tiers_pour_serveur(&f)).unwrap(), f);
+            assert_eq!(tiers_depuis_serveur(&tiers_pour_serveur(&f)).unwrap(), f);
         }
         for sens in Sens::TOUS {
             let f = FicheProduit {
@@ -2377,7 +2384,10 @@ mod essais_actions {
                 prix: 5000,
                 sens,
             };
-            assert_eq!(fiche_produit(&produit_pour_serveur(&f)).unwrap(), f);
+            assert_eq!(
+                produit_depuis_serveur(&produit_pour_serveur(&f)).unwrap(),
+                f
+            );
         }
     }
 
@@ -2402,7 +2412,7 @@ mod essais_actions {
             ..proto::Ligne::default()
         });
         // Sur le poste, les identifiants propres diffèrent de ceux du serveur.
-        let locale = saisie_locale(&b.poste, &s).unwrap();
+        let locale = saisie_depuis_serveur(&b.poste, &s).unwrap();
         assert_eq!(saisie_pour_serveur(&b.poste, &locale).unwrap(), s);
         let mut orpheline = locale.clone();
         orpheline.tiers_id = Some(999_999);

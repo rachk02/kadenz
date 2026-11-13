@@ -31,7 +31,7 @@ use std::time::{Duration, Instant};
 pub use kadenz_client::CompteConnecte;
 use kadenz_client::{Client, ErreurClient, Identite};
 use kadenz_protocole::messages::LIGNES_MAX;
-use kadenz_protocole::{Abonnement, Action, EnCoupure, Entite, Issue, Operation, Suspendue};
+use kadenz_protocole::{Abonnement, Action, EnCoupure, Entite, Issue, Motif, Operation, Suspendue};
 use kadenz_stockage::poste_relie::{self, PosteRelie};
 use kadenz_stockage::{replique, synchro};
 use rusqlite::Connection;
@@ -118,6 +118,16 @@ pub enum Evenement {
     /// Nombre de brouillons à valider au retour du serveur : à chaque
     /// changement de la liste, et au retour du serveur s'il en reste.
     AValider(u32),
+    /// Opérations suspendues que le compte connecté peut voir : à sa
+    /// connexion, quand le nombre change (relu toutes les minutes environ),
+    /// et après un conflit, une attente ou une décision venus de ce poste.
+    /// Les attentes ne sont montrées qu'à l'Admin.
+    Suspendues {
+        conflits: u32,
+        attentes: u32,
+    },
+    /// Réponse à `Synchroniseur::demander_suspendues`.
+    ListeSuspendues(Result<Vec<Suspendue>, ErreurPoste>),
     /// Connexion d'un compte faite par le synchroniseur : connexion différée
     /// (serveur injoignable lors de `connecter`) ou reprise après une
     /// coupure. Sur un refus (mot de passe changé ailleurs, compte
@@ -244,6 +254,7 @@ impl Synchroniseur {
             prochain_essai: Instant::now(),
             releves: 0,
             lecture_seule: None,
+            suspendues_vues: None,
         };
         let fil = std::thread::Builder::new()
             .name("kadenz-synchroniseur".into())
@@ -337,17 +348,24 @@ impl Synchroniseur {
         })
     }
 
-    /// Brouillons à valider au retour : identifiant global et identifiant
-    /// dans la copie.
-    pub fn a_valider(&self) -> Result<Vec<(String, i64)>, ErreurPoste> {
-        self.sur_fil(|fil| poste_relie::a_valider(&fil.copie).map_err(base))
-    }
-
     /// Opérations suspendues sur le serveur (conflits, attentes) que le
     /// compte connecté peut voir ; à trancher par `ecrire` avec
     /// `Action::TrancherConflit` ou `Action::DeciderAttente`.
     pub fn suspendues(&self) -> Result<Vec<Suspendue>, ErreurPoste> {
         self.sur_fil(|fil| fil.suspendues())
+    }
+
+    /// Comme `suspendues`, sans attendre : la liste arrive par
+    /// `Evenement::ListeSuspendues`, et le nombre par `Evenement::Suspendues`
+    /// s'il a changé.
+    pub fn demander_suspendues(&self) {
+        let _ = self.envoyer(Commande::Fil(Box::new(|fil: &mut Fil| {
+            let liste = fil.suspendues();
+            if let Ok(l) = &liste {
+                fil.noter_suspendues(l, false);
+            }
+            (fil.evenements)(Evenement::ListeSuspendues(liste));
+        })));
     }
 
     pub fn etat(&self) -> EtatConnexion {
@@ -415,6 +433,8 @@ struct Fil {
     releves: u32,
     /// Lecture seule selon le dernier abonnement lu : son échéance.
     lecture_seule: Option<Option<String>>,
+    /// Derniers nombres de suspendues signalés (conflits, attentes).
+    suspendues_vues: Option<(u32, u32)>,
 }
 
 impl Fil {
@@ -511,6 +531,7 @@ impl Fil {
                 // Le protocole n'a pas de fin de session de compte : la
                 // session TLS est refermée et rouverte sans compte.
                 self.compte = None;
+                self.suspendues_vues = None;
                 self.client = None;
                 self.prochain_essai = Instant::now();
             }
@@ -551,6 +572,7 @@ impl Fil {
             // Écritures restées dans la file (bloquées, lecture seule) et
             // suspendues : la décision a pu être prise depuis.
             let _ = self.vider_file(true);
+            self.compter_suspendues(false);
         }
         if self.rattraper().is_ok() {
             self.poser_etat(self.etat_ouvert());
@@ -632,6 +654,7 @@ impl Fil {
         if poste_relie::a_valider(&self.copie).is_ok_and(|l| !l.is_empty()) {
             self.signaler_a_valider();
         }
+        self.compter_suspendues(true);
     }
 
     /// Connexion perdue ou refusée : état et prochain essai. Rend l'erreur
@@ -854,6 +877,7 @@ impl Fil {
         if decision && matches!(issue, Issue::Acceptee { .. }) {
             let _ = self.vider_file(true);
             let _ = self.rattraper();
+            self.compter_suspendues(false);
         }
         Ok(issue)
     }
@@ -971,6 +995,7 @@ impl Fil {
         let file = replique::file(&self.copie).map_err(base)?;
         let refuses = poste_relie::comptes_refuses(&self.copie).map_err(base)?;
         let mut resultat = Ok(());
+        let mut suspendue = false;
         for entree in file {
             let compte = &entree.operation.compte;
             if (*compte != uid && !refuses.contains(compte)) || (entree.suspendue && !suspendues) {
@@ -1019,12 +1044,16 @@ impl Fil {
                 resultat = Err(e);
                 break;
             }
+            suspendue |= matches!(issue, Issue::EnConflit | Issue::EnAttente);
             (self.evenements)(Evenement::Confirmee {
                 action: Box::new(entree.operation.action),
                 issue,
             });
         }
         self.signaler_file();
+        if suspendue {
+            self.compter_suspendues(false);
+        }
         resultat
     }
 
@@ -1046,6 +1075,26 @@ impl Fil {
             }
         }
         Ok(())
+    }
+
+    /// Relit les suspendues visibles du compte connecté et signale leur
+    /// nombre s'il a changé (ou toujours, avec `toujours`).
+    fn compter_suspendues(&mut self, toujours: bool) {
+        if let Ok(liste) = self.suspendues() {
+            self.noter_suspendues(&liste, toujours);
+        }
+    }
+
+    fn noter_suspendues(&mut self, liste: &[Suspendue], toujours: bool) {
+        let compter = |motif: Motif| liste.iter().filter(|s| s.motif == motif).count() as u32;
+        let nombres = (compter(Motif::Conflit), compter(Motif::Attente));
+        if toujours || self.suspendues_vues != Some(nombres) {
+            self.suspendues_vues = Some(nombres);
+            (self.evenements)(Evenement::Suspendues {
+                conflits: nombres.0,
+                attentes: nombres.1,
+            });
+        }
     }
 
     fn suspendues(&mut self) -> Result<Vec<Suspendue>, ErreurPoste> {

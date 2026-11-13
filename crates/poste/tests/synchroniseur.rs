@@ -622,7 +622,9 @@ fn ecritures_hors_connexion_envoyees_au_retour() {
     );
     assert_eq!(s.file(), 2);
     s.valider_au_retour(&d).unwrap();
-    assert_eq!(s.a_valider().unwrap().len(), 1);
+    let a_valider =
+        || poste_relie::a_valider(&poste_relie::ouvrir_copie(&b.copie).unwrap()).unwrap();
+    assert_eq!(a_valider().len(), 1);
 
     // Retour du serveur : le compte se connecte, la file part.
     let serveur = relancer(&dossier_serveur, port);
@@ -676,7 +678,7 @@ fn ecritures_hors_connexion_envoyees_au_retour() {
         ),
         "{issue:?}"
     );
-    assert!(s.a_valider().unwrap().is_empty());
+    assert!(a_valider().is_empty());
     s.arreter();
     serveur.arreter();
 }
@@ -752,6 +754,26 @@ fn conflit_hors_connexion_suspendu_puis_tranche() {
         nom_dans_la_copie(&b.copie, &t).as_deref() == Some("Version du serveur")
     });
     assert_eq!(s.file(), 0, "une écriture suspendue n'est plus à envoyer");
+    attendre("un conflit signalé", || {
+        vus.borrow_mut().extend(evenements.try_iter());
+        vus.borrow().iter().any(|e| {
+            matches!(
+                e,
+                Evenement::Suspendues {
+                    conflits: 1,
+                    attentes: 0
+                }
+            )
+        })
+    });
+    // Liste demandée sans attendre : elle arrive par un événement.
+    s.demander_suspendues();
+    attendre("liste reçue", || {
+        vus.borrow_mut().extend(evenements.try_iter());
+        vus.borrow()
+            .iter()
+            .any(|e| matches!(e, Evenement::ListeSuspendues(Ok(l)) if l.len() == 1))
+    });
     let liste = s.suspendues().unwrap();
     assert_eq!(liste.len(), 1);
     assert_eq!(liste[0].motif, Motif::Conflit);
@@ -777,6 +799,19 @@ fn conflit_hors_connexion_suspendu_puis_tranche() {
     let conn = poste_relie::ouvrir_copie(&b.copie).unwrap();
     assert!(replique::file(&conn).unwrap().is_empty());
     assert!(s.suspendues().unwrap().is_empty());
+    attendre("plus aucun conflit signalé", || {
+        vus.borrow_mut().extend(evenements.try_iter());
+        matches!(
+            vus.borrow()
+                .iter()
+                .rev()
+                .find(|e| matches!(e, Evenement::Suspendues { .. })),
+            Some(Evenement::Suspendues {
+                conflits: 0,
+                attentes: 0
+            })
+        )
+    });
     s.arreter();
     serveur.arreter();
 }
@@ -893,6 +928,12 @@ fn compte_desactive_pendant_la_coupure_en_attente() {
         !present(&b.copie, Entite::Tiers, &t)
     });
     assert_eq!(s.file(), 0);
+    attendre("une attente signalée à l'Admin", || {
+        vus.borrow_mut().extend(evenements.try_iter());
+        vus.borrow()
+            .iter()
+            .any(|e| matches!(e, Evenement::Suspendues { attentes: 1, .. }))
+    });
     let liste = s.suspendues().unwrap();
     assert_eq!(liste.len(), 1);
     assert_eq!(liste[0].motif, Motif::Attente);

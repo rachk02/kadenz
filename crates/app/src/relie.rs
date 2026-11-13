@@ -638,6 +638,8 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
                 f.global::<Alerte>().invoke_montrer(texte.into());
             }
         }
+        // Conflits et attentes : écrans de F6c.
+        Evenement::Suspendues { .. } | Evenement::ListeSuspendues(_) => {}
         Evenement::Compte(resultat) => {
             let refuse = matches!(resultat, Err(ErreurPoste::CompteRefuse { .. }));
             if let Some(r) = etat.borrow_mut().relie.as_mut() {
