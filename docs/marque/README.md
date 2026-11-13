@@ -40,6 +40,7 @@ Statut : **« Quatre pièces »**, validée par l'utilisateur le 2026-11-11 et i
 | `kadenz-mot.svg`, `-negatif.svg` | Mot seul, quand le symbole est déjà présent à côté |
 | `kadenz-module-*.svg` | Marques des familles de modules (proposition) |
 | `motif-quatre-pieces.svg` | Motif ton sur ton des bandeaux de marque (240 x 800) |
+| `motif-tournant.svg`, `motif-fondu.svg` | Motifs Tournant et Fondu (800 x 400), voir « Motifs » |
 | `png/kadenz-16.png` à `kadenz-256.png`, `png/kadenz.ico` | Icône en images (16 à 256 px) |
 | `png/installateur-logo.png` | Icône en 64 x 64 px |
 | `png/kadenz-logo-horizontal-1200.png`, `-negatif-1200.png` | Logo en image pour les usages sans SVG |
@@ -82,6 +83,18 @@ Les valeurs CMJN sont une conversion directe, à faire vérifier par l'imprimeur
 Sur les bandeaux Nuit, les textes secondaires sont en `#C5CAE0` (9,1:1), la version en `#9AA3C7` (6,0:1) ; l'Ambre y atteint 6,7:1.
 
 **Associations permises** : logo couleur sur blanc ; logo blanc sur l'Indigo ; logo blanc sur Nuit ; logo noir sur blanc. Sur une photo, utiliser la version blanche ou noire sur une zone calme, ou l'icône sur sa tuile.
+
+## Motifs
+
+Trois motifs, tous tirés des quatre pièces et toujours ton sur ton (pièces `#232C6B` sur la Nuit, ou `#E6E9F0` sur la Brume). Tournant et Fondu ont été retenus par l'utilisateur le 2026-11-13 parmi neuf propositions (`propositions-2026-11-13-motifs/`).
+
+| Motif | Construction | Usages |
+|---|---|---|
+| Quatre pièces | Les quatre pièces en rangées, décalées d'un temps à chaque ligne | Bandeaux de l'application, couvertures, kakémono ; version claire pour les fonds de page |
+| Tournant | Le quart de disque seul, à la taille de la case, tourné d'un quart de tour d'une case à l'autre ; rotations figées par une graine | Grands fonds, écrans d'accueil, couvertures |
+| Fondu | Le motif Quatre pièces dont les pièces rapetissent vers la droite (ou vers le bas) jusqu'à disparaître ; la zone calme naît du motif | Bandeaux avec logo ou titre, connexion, présentation |
+
+Règles : le motif reste ton sur ton, jamais à plusieurs couleurs ; jamais derrière un texte courant, le logo se pose sur une zone calme ; chaque motif garde sa construction (ordre, pas, rotations), on agrandit, on ne déforme pas. Dans l'application, seul Quatre pièces est branché aujourd'hui (composant `MotifMarque`).
 
 ## Modules (proposition)
 

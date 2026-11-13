@@ -214,25 +214,32 @@ def p04():
 
 # --- 05 Brand pattern ---------------------------------------------------------------
 def p05():
-    mods = "".join(f'<div style="display:flex;flex-direction:column;align-items:center;gap:8px">{img(f"kadenz-module-{m}.svg", 92)}'
+    mods = "".join(f'<div style="display:flex;flex-direction:column;align-items:center;gap:8px">{img(f"kadenz-module-{m}.svg", 72)}'
                    f'<span class="petit">{lib}</span></div>'
                    for m, lib in (("ventes", "Ventes"), ("commandes", "Commandes"), ("livraisons", "Livraisons"), ("paiements", "Paiements")))
-    regles = "".join(f'<div><p class="t3" style="font-size:14px;margin-bottom:4px">{t}</p><p class="petit">{d}</p></div>' for t, d in (
+    regles = "".join(f'<div><p class="t3" style="font-size:14px;margin-bottom:2px">{t}</p><p class="petit">{d}</p></div>' for t, d in (
         ("Règle 1", "Le motif reste ton sur ton, dans la Nuit ou dans les neutres, jamais à plusieurs couleurs."),
         ("Règle 2", "Jamais derrière un texte courant ; le logo se pose sur une zone calme."),
-        ("Règle 3", "Les pièces gardent leur ordre et leur pas, décalées d'un temps à chaque rangée ; on agrandit, on ne déforme pas.")))
-    c = f"""<div style="display:grid;grid-template-columns:592px 1fr;gap:20px;flex:1">
-<div class="case" style="overflow:hidden;background:{NUIT};height:592px">{motif_calme(NUIT, "#232c6b", 592, 592, 46, [(173, 241, 419, 351), (0, 546, 592, 592)])}
-<div style="position:relative">{img("kadenz-logo-horizontal-negatif.svg", 54, "display:block")}</div>
-<span class="leg c">Quatre pièces : trame ton sur ton, bandeaux de l'application, couvertures, kakémono</span></div>
-<div style="display:flex;flex-direction:column;gap:16px">
-<div class="case" style="overflow:hidden;height:170px;background:{BRUME}">{motif_calme(BRUME, "#e6e9f0", 476, 170, 34, [(0, 130, 320, 170)])}
+        ("Règle 3", "Chaque motif garde sa construction (ordre, pas, rotations) ; on agrandit, on ne déforme pas.")))
+    lw, lh = 349, 330   # panneaux du haut
+
+    def absolu(s):
+        return s.replace("<svg ", f'<svg style="position:absolute;left:0;top:0;width:{lw}px;height:{lh}px" ', 1)
+    logo = f'<div style="position:relative">{img("kadenz-logo-horizontal-negatif.svg", 40, "display:block")}</div>'
+    c = f"""<div style="display:grid;grid-template-columns:repeat(3,{lw}px);grid-template-rows:{lh}px 1fr;justify-content:space-between;row-gap:18px;flex:1">
+<div class="case" style="overflow:hidden;background:{NUIT}">{motif_calme(NUIT, "#232c6b", lw, lh, 36, [(52, 130, 297, 200), (0, 300, lw, lh)])}{logo}
+<span class="leg c">Quatre pièces : bandeaux, couvertures, kakémono</span></div>
+<div class="case" style="overflow:hidden;background:{NUIT}">{absolu(gm.motif_tournant(NUIT, "#232c6b", lw, lh, 44))}
+<span class="leg c" style="background:{NUIT};padding:2px 6px;left:12px">Tournant : grands fonds, écrans d'accueil</span></div>
+<div class="case" style="overflow:hidden;background:{NUIT};justify-content:flex-end;padding-right:26px">{absolu(gm.motif_fondu(NUIT, "#232c6b", lw, lh, 36, 0.55))}{logo}
+<span class="leg c">Fondu : bandeaux avec logo ou titre</span></div>
+<div class="case" style="overflow:hidden;background:{BRUME}">{motif_calme(BRUME, "#e6e9f0", lw, 240, 30, [(0, 205, 300, 240)])}
 <span class="leg">Version claire : fonds de page, papeterie</span></div>
-<div class="bord" style="border-radius:4px;padding:16px 18px"><p class="t3" style="font-size:14px">Marques de modules (proposition)</p>
-<div style="display:flex;justify-content:space-between">{mods}</div></div>
-<div style="display:flex;flex-direction:column;gap:10px">{regles}</div>
-</div></div>"""
-    return planche(5, "Brand Pattern", "Les quatre pièces en rangées, décalées d'un temps : la cadence, ton sur ton", c)
+<div class="bord" style="border-radius:4px;padding:16px 18px;display:flex;flex-direction:column"><p class="t3" style="font-size:14px">Marques de modules (proposition)</p>
+<div style="display:flex;justify-content:space-between;align-items:center;flex:1">{mods}</div></div>
+<div style="display:flex;flex-direction:column;gap:8px">{regles}</div>
+</div>"""
+    return planche(5, "Brand Pattern", "Trois motifs tirés des quatre pièces : la cadence, le tournant, le fondu ; toujours ton sur ton", c)
 
 
 # --- 06 Typography ------------------------------------------------------------------
