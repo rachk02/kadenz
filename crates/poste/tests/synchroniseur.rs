@@ -58,8 +58,17 @@ fn dossier(nom: &str) -> PathBuf {
     d
 }
 
+fn config(dossier: &Path, port: u16) -> Config {
+    let mut config = Config::nouvelle(dossier.to_path_buf());
+    config.adresse = SocketAddr::from(([127, 0, 0, 1], port));
+    config.controle_droits = false;
+    config.cles_portail = vec![cle_portail().verifying_key()];
+    config
+}
+
 struct Banc {
     serveur: Serveur,
+    dossier_serveur: PathBuf,
     entreprise: String,
     admin: String,
     copie: PathBuf,
@@ -69,11 +78,8 @@ struct Banc {
 /// Serveur installé avec son abonnement, poste inscrit (ou non) et sa copie
 /// créée, vide.
 fn banc(nom: &str, inscrit: bool) -> Banc {
-    let mut config = Config::nouvelle(dossier(&format!("{nom}-serveur")));
-    config.adresse = SocketAddr::from(([127, 0, 0, 1], 0));
-    config.controle_droits = false;
-    config.cles_portail = vec![cle_portail().verifying_key()];
-    let serveur = Serveur::demarrer(config).unwrap();
+    let dossier_serveur = dossier(&format!("{nom}-serveur"));
+    let serveur = Serveur::demarrer(config(&dossier_serveur, 0)).unwrap();
     let (entreprise, admin) = serveur
         .base(|c| {
             let admin = installation::installer(
@@ -130,6 +136,7 @@ fn banc(nom: &str, inscrit: bool) -> Banc {
     .unwrap();
     Banc {
         serveur,
+        dossier_serveur,
         entreprise,
         admin,
         copie,
@@ -304,5 +311,64 @@ fn ecriture_sans_reponse_confirmee_a_la_connexion() {
     assert_eq!(confirmee, Some(Issue::acceptee()));
     let conn = poste_relie::ouvrir_copie(&b.copie).unwrap();
     assert!(replique::operation_en_cours(&conn).unwrap().is_none());
+    s.arreter();
+}
+
+#[test]
+fn compte_connecte_au_retour_du_serveur() {
+    let b = banc("differe", true);
+    let port = b.serveur.adresse().port();
+    b.serveur.arreter();
+    // Serveur arrêté : le compte attend (décision 48).
+    let (s, evenements) = demarrer(&b.copie);
+    attendre("serveur injoignable", || {
+        matches!(
+            s.etat(),
+            EtatConnexion::Reconnexion { .. } | EtatConnexion::Injoignable
+        )
+    });
+    assert_eq!(
+        s.connecter("admin", MOT_DE_PASSE),
+        Err(ErreurPoste::HorsConnexion)
+    );
+    assert_eq!(
+        s.ecrire(Action::CreerTiers {
+            uid: synchro::nouvel_uid(),
+            fiche: fiche("Hors connexion"),
+        }),
+        Err(ErreurPoste::HorsConnexion)
+    );
+    // Le serveur revient sur le même port : le compte se connecte seul.
+    let mut serveur = None;
+    for _ in 0..20 {
+        match Serveur::demarrer(config(&b.dossier_serveur, port)) {
+            Ok(sv) => {
+                serveur = Some(sv);
+                break;
+            }
+            Err(_) => thread::sleep(Duration::from_millis(250)),
+        }
+    }
+    let _serveur = serveur.expect("serveur redémarré");
+    let debut = Instant::now();
+    let issue = loop {
+        let e = evenements
+            .recv_timeout(Duration::from_secs(20))
+            .expect("événement Compte attendu");
+        if let Evenement::Compte(issue) = e {
+            break issue;
+        }
+        assert!(debut.elapsed() < Duration::from_secs(25));
+    };
+    assert_eq!(issue.map(|c| c.compte), Ok(b.admin.clone()));
+    attendre("compte dans la copie", || {
+        present(&b.copie, Entite::Utilisateur, &b.admin)
+    });
+    // L'abonnement reçu est gardé dans la copie, et ses modules s'appliquent.
+    let conn = poste_relie::ouvrir_copie(&b.copie).unwrap();
+    attendre("abonnement gardé", || {
+        abonnement::dernier_recu(&conn).unwrap().is_some()
+    });
+    poste_relie::appliquer_modules(&conn).unwrap();
     s.arreter();
 }

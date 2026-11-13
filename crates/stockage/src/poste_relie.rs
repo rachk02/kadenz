@@ -136,6 +136,22 @@ pub fn ouvrir_copie(chemin: &Path) -> Resultat<Connection> {
     Ok(conn)
 }
 
+/// Modules actifs sur la copie d'après le dernier abonnement reçu du serveur :
+/// ceux de la licence d'abonnement, ou le socle seul sans licence. À appeler
+/// après `ouvrir_copie` et à chaque abonnement reçu.
+pub fn appliquer_modules(conn: &Connection) -> Resultat<()> {
+    let modules: Vec<kadenz_domaine::module::Module> = crate::abonnement::dernier_recu(conn)?
+        .and_then(|(a, _)| a.licence)
+        .map(|l| {
+            l.modules
+                .iter()
+                .filter_map(|m| kadenz_domaine::module::Module::depuis_code(m))
+                .collect()
+        })
+        .unwrap_or_default();
+    crate::licence::remplir(conn, &modules)
+}
+
 /// Crée la copie du serveur, vide, dans le dossier donné : elle porte le lien
 /// au serveur et l'identifiant de l'entreprise du serveur ; la première
 /// synchronisation la remplit. Une copie déjà présente est refusée. En cas

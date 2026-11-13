@@ -107,6 +107,11 @@ pub enum Evenement {
     /// Une écriture attend (vrai) ou n'attend plus (faux) la confirmation du
     /// serveur : « Confirmation en attente ».
     ConfirmationEnAttente(bool),
+    /// Connexion d'un compte faite par le synchroniseur : connexion différée
+    /// (serveur injoignable lors de `connecter`) ou reprise après une
+    /// coupure. Sur un refus (mot de passe changé ailleurs, compte
+    /// désactivé), le compte n'est plus connecté.
+    Compte(Result<CompteConnecte, ErreurPoste>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -242,7 +247,9 @@ impl Synchroniseur {
 
     /// Connexion d'un compte par le serveur. La copie peut ne pas contenir
     /// encore le compte (première synchronisation) : l'état passe alors par
-    /// `Synchronisation`.
+    /// `Synchronisation`. Serveur injoignable (hors état final) : rend
+    /// `HorsConnexion` et garde le compte, connecté de lui-même au retour du
+    /// serveur (`Evenement::Compte`), décision 48.
     pub fn connecter(
         &self,
         identifiant: &str,
@@ -328,7 +335,8 @@ impl Drop for Synchroniseur {
 struct Compte {
     identifiant: String,
     mot_de_passe: String,
-    uid: String,
+    /// `None` tant que le serveur n'a pas encore connecté le compte.
+    uid: Option<String>,
 }
 
 struct Fil {
@@ -471,19 +479,25 @@ impl Fil {
                 self.client = Some(client);
                 self.echecs = 0;
                 self.poser_etat(self.etat_ouvert());
-                if let Some(compte) = self.compte.take() {
+                if let Some(mut compte) = self.compte.take() {
                     let reprise = self
                         .client
                         .as_mut()
                         .map(|c| c.connexion(&compte.identifiant, &compte.mot_de_passe));
                     match reprise {
-                        Some(Ok(_)) => {
+                        Some(Ok(connecte)) => {
+                            compte.uid = Some(connecte.compte.clone());
                             self.compte = Some(compte);
+                            (self.evenements)(Evenement::Compte(Ok(connecte)));
                             self.apres_connexion();
                         }
                         // Mot de passe changé ailleurs, compte désactivé : le
                         // compte n'est plus connecté.
-                        Some(Err(ErreurClient::CompteRefuse { .. })) => {}
+                        Some(Err(ErreurClient::CompteRefuse { attente_secondes })) => {
+                            (self.evenements)(Evenement::Compte(Err(ErreurPoste::CompteRefuse {
+                                attente_secondes,
+                            })));
+                        }
                         Some(Err(e)) => {
                             self.compte = Some(compte);
                             let _ = self.perdre(e);
@@ -587,6 +601,12 @@ impl Fil {
             let erreur = if self.etat_present().definitif() {
                 ErreurPoste::Injoignable
             } else {
+                // Décision 48 : le compte se connectera au retour du serveur.
+                self.compte = Some(Compte {
+                    identifiant,
+                    mot_de_passe,
+                    uid: None,
+                });
                 ErreurPoste::HorsConnexion
             };
             let _ = retour.send(Err(erreur));
@@ -597,7 +617,7 @@ impl Fil {
                 self.compte = Some(Compte {
                     identifiant,
                     mot_de_passe,
-                    uid: connecte.compte.clone(),
+                    uid: Some(connecte.compte.clone()),
                 });
                 // L'écran reprend la main avant le rattrapage, qui peut être
                 // long la première fois.
@@ -628,6 +648,9 @@ impl Fil {
         self.lecture_seule = abonnement
             .lecture_seule()
             .then(|| abonnement.licence.as_ref().map(|l| l.echeance.clone()));
+        // Gardé dans la copie pour un démarrage hors connexion (lecture
+        // seule, bandeaux, modules).
+        let _ = kadenz_stockage::abonnement::garder(&self.copie, &abonnement);
         (self.evenements)(Evenement::Abonnement(Box::new(abonnement)));
         self.poser_etat(self.etat_ouvert());
     }
@@ -674,8 +697,11 @@ impl Fil {
         if self.etat_present().definitif() {
             return Err(ErreurPoste::Injoignable);
         }
-        let Some(uid) = self.compte.as_ref().map(|c| c.uid.clone()) else {
-            return Err(ErreurPoste::Base("aucun compte connecté".into()));
+        let uid = match self.compte.as_ref().map(|c| c.uid.clone()) {
+            None => return Err(ErreurPoste::Base("aucun compte connecté".into())),
+            // Compte pas encore connecté par le serveur (décision 48).
+            Some(None) => return Err(ErreurPoste::HorsConnexion),
+            Some(Some(uid)) => uid,
         };
         if self.client.is_none() {
             return Err(ErreurPoste::HorsConnexion);
