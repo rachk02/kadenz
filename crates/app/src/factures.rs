@@ -268,7 +268,7 @@ fn resume_registre(t: TypeDocument, n: usize) -> String {
 }
 
 /// Titre de la fiche : numéro, brouillon ou nouveau document.
-fn titre_fiche(t: TypeDocument, numero: Option<&str>, existe: bool) -> String {
+pub(crate) fn titre_fiche(t: TypeDocument, numero: Option<&str>, existe: bool) -> String {
     match (t, numero, existe) {
         (TypeDocument::Devis, Some(n), _) => trf("Devis {}", &[&n]),
         (TypeDocument::Devis, None, true) => tr("Devis (brouillon)"),
@@ -1004,6 +1004,7 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
         taux_modifiables: client_modifiable,
         admin_modifiable,
         peut_valider: modifiable && possede(etat, Droit::ValiderDocument),
+        a_valider: id.is_some_and(|d| crate::relie::a_valider(etat).iter().any(|(_, i)| *i == d)),
         // Un bordereau ne s'envoie pas : il se confirme.
         peut_envoyer: statut == Statut::Valide
             && !livraison
@@ -1044,9 +1045,15 @@ fn ouvrir_fiche(f: &FenetrePrincipale, etat: &mut Etat, id: Option<i64>) -> Resu
             .into(),
         reglement_mode_index,
         en_preparation,
-        note: match crate::relie::blocage(etat)
-            .or_else(|| crate::relie::blocage_selon(etat, kadenz_protocole::EnCoupure::Validation))
-        {
+        note: match crate::relie::blocage(etat).or_else(|| {
+            crate::relie::blocage_selon(etat, kadenz_protocole::EnCoupure::Validation).map(|raison| {
+                if id.is_some_and(|d| crate::relie::a_valider(etat).iter().any(|(_, i)| *i == d)) {
+                    tr("Validation demandée : le document sera proposé à la validation au retour du serveur.")
+                } else {
+                    raison
+                }
+            })
+        }) {
             Some(raison) if brouillon => raison,
             _ => note_fiche(t, statut, modifiable, admin_modifiable),
         }
@@ -1230,6 +1237,28 @@ fn enregistrer_brouillon(
         None => documents::creer_brouillon(&mut etat.conn, acteur, etat.type_document, &s)
             .map_err(texte_erreur),
     }
+}
+
+/// Validation d'un brouillon enregistré : numéro du serveur sur un poste relié,
+/// de la base sinon.
+pub(crate) fn valider_document(etat: &mut Etat, id: i64) -> Result<String, String> {
+    let acteur = etat
+        .utilisateur
+        .clone()
+        .ok_or_else(|| tr("aucune session ouverte"))?;
+    sur_document(
+        etat,
+        id,
+        |uid| Action::Valider { uid },
+        |issue| match issue {
+            Issue::Acceptee {
+                numero: Some(numero),
+                ..
+            } => numero,
+            _ => String::new(),
+        },
+        |etat| documents::valider(&mut etat.conn, &acteur, id).map_err(texte_erreur),
+    )
 }
 
 /// Écriture sur un document existant : au serveur sur un poste relié (`serveur`
@@ -1878,19 +1907,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             Err(message) => return retour_erreur(message),
         };
         let t = etat.type_document;
-        let resultat = sur_document(
-            &mut etat,
-            id,
-            |uid| Action::Valider { uid },
-            |issue| match issue {
-                Issue::Acceptee {
-                    numero: Some(numero),
-                    ..
-                } => numero,
-                _ => String::new(),
-            },
-            |etat| documents::valider(&mut etat.conn, &acteur, id).map_err(texte_erreur),
-        );
+        let resultat = valider_document(&mut etat, id);
         // La fiche est rechargée dans tous les cas : le brouillon a été enregistré.
         let rechargement = ouvrir_fiche(&f, &mut etat, Some(id));
         afficher_registre(&f, &mut etat);
@@ -1901,6 +1918,32 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 &[&erreur],
             )),
             (Ok(_), Err(message)) => retour_erreur(message),
+        }
+    });
+
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_valider_au_retour(move |fiche| {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
+        let mut etat = e.borrow_mut();
+        let Some(acteur) = etat.utilisateur.clone() else {
+            return retour_erreur("aucune session ouverte");
+        };
+        // La saisie affichée part dans la file avant d'être notée.
+        let id = match enregistrer_brouillon(&mut etat, &acteur, &fiche) {
+            Ok(id) => id,
+            Err(message) => return retour_erreur(message),
+        };
+        let note = relie::uid(&etat, Entite::Document, id)
+            .and_then(|uid| relie::valider_au_retour(&etat, &uid));
+        let rechargement = ouvrir_fiche(&f, &mut etat, Some(id));
+        afficher_registre(&f, &mut etat);
+        match note.and(rechargement) {
+            Ok(()) => retour_ok(tr(
+                "Brouillon enregistré : il sera proposé à la validation au retour du serveur.",
+            )),
+            Err(message) => retour_erreur(message),
         }
     });
 

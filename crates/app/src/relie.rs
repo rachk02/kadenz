@@ -9,11 +9,14 @@ use std::path::PathBuf;
 
 use kadenz_poste::{ErreurPoste, EtatConnexion, Evenement, Synchroniseur};
 use kadenz_protocole::{Action, EnCoupure, Entite, Issue};
-use slint::{ComponentHandle, SharedString};
+use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 
 use crate::referentiels::{retour_erreur, retour_ok};
 use crate::traduction::{tr, trf};
-use crate::{AbonnementApi, Alerte, ConnexionApi, Etat, EtatPartage, FenetrePrincipale, Retour};
+use crate::{
+    AbonnementApi, Alerte, ConnexionApi, DocumentAValiderUi, Etat, EtatPartage, FenetrePrincipale,
+    Retour, ServeurApi,
+};
 
 thread_local! {
     /// État de l'application, pour les événements du synchroniseur.
@@ -26,6 +29,8 @@ pub(crate) struct Relie {
     pub(crate) connexion: EtatConnexion,
     /// Écritures en file d'envoi, y compris celle qui attend sa réponse.
     pub(crate) file: u32,
+    /// Documents à valider déjà annoncés depuis le retour du serveur.
+    pub(crate) a_valider_annonce: bool,
     /// Rattrapage en cours : rang reçu, dernier rang du serveur.
     pub(crate) avancement: Option<(u64, u64)>,
     /// Le compte de la session est connecté sur le serveur : sans cela (connexion
@@ -52,6 +57,7 @@ pub(crate) fn demarrer(f: &FenetrePrincipale, etat: &EtatPartage, copie: PathBuf
                 synchro,
                 connexion,
                 file: 0,
+                a_valider_annonce: false,
                 avancement: None,
                 compte_serveur: false,
                 compte_attendu: None,
@@ -189,6 +195,51 @@ pub(crate) fn ecrire_sur(
 /// Rubrique « Abonnement » : la nouvelle licence part au serveur, qui la
 /// vérifie et l'applique ; le nouvel état revient par le synchroniseur.
 pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
+    // Documents à valider au retour : ouverts dans la page de leur type, ou
+    // tous validés ensemble.
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    fenetre
+        .global::<ServeurApi>()
+        .on_ouvrir_a_valider(move |id| {
+            let Some(f) = f.upgrade() else { return };
+            let id = i64::from(id);
+            let t = kadenz_stockage::documents::lire(&e.borrow().conn, id)
+                .ok()
+                .flatten()
+                .map(|d| d.type_document);
+            if let Some(t) = t {
+                e.borrow_mut().document_a_ouvrir = Some(id);
+                f.set_page(crate::factures::page_du_type(t));
+            }
+        });
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    fenetre
+        .global::<ServeurApi>()
+        .on_tout_valider(move || -> Retour {
+            let ids: Vec<i64> = a_valider(&e.borrow())
+                .into_iter()
+                .map(|(_, id)| id)
+                .collect();
+            let mut valides = 0;
+            let mut refus = Vec::new();
+            for id in ids {
+                match crate::factures::valider_document(&mut e.borrow_mut(), id) {
+                    Ok(_) => valides += 1,
+                    Err(message) => refus.push(message),
+                }
+            }
+            if let Some(f) = f.upgrade() {
+                afficher_a_valider(&f, &e.borrow());
+            }
+            match refus.first() {
+                None => retour_ok(trf("Documents validés : {}.", &[&valides])),
+                Some(premier) => retour_erreur(trf(
+                    "Documents validés : {} ; refusés : {}. {}",
+                    &[&valides, &refus.len(), premier],
+                )),
+            }
+        });
+
     let e = etat.clone();
     fenetre
         .global::<AbonnementApi>()
@@ -206,6 +257,53 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 Err(e) => retour_erreur(texte_erreur(&e)),
             }
         });
+}
+
+/// Brouillons à valider au retour du serveur : uid et id dans la copie.
+/// Lue dans la copie, sans passer par le fil du synchroniseur, qui peut être
+/// occupé par une reconnexion.
+pub(crate) fn a_valider(etat: &Etat) -> Vec<(String, i64)> {
+    if !crate::serveur::inscrit(&etat.conn) {
+        return Vec::new();
+    }
+    kadenz_stockage::poste_relie::a_valider(&etat.conn).unwrap_or_default()
+}
+
+/// Note un brouillon pour la validation au retour du serveur (section 4).
+pub(crate) fn valider_au_retour(etat: &Etat, uid: &str) -> Result<(), String> {
+    match etat.relie.as_ref() {
+        Some(r) => r
+            .synchro
+            .valider_au_retour(uid)
+            .map_err(|e| texte_erreur(&e)),
+        None => Err(texte_erreur(&ErreurPoste::HorsConnexion)),
+    }
+}
+
+/// Liste des documents à valider dans la rubrique « Serveur ».
+fn afficher_a_valider(f: &FenetrePrincipale, etat: &Etat) {
+    let lignes: Vec<DocumentAValiderUi> = a_valider(etat)
+        .into_iter()
+        .filter_map(|(_, id)| {
+            let d = kadenz_stockage::documents::lire(&etat.conn, id)
+                .ok()
+                .flatten()?;
+            let mut libelle = crate::factures::titre_fiche(d.type_document, None, true);
+            if !d.tiers.nom.is_empty() {
+                libelle = format!("{libelle} - {}", d.tiers.nom);
+            }
+            libelle = format!(
+                "{libelle} - {}",
+                crate::factures::date_en_texte(d.saisie.date)
+            );
+            Some(DocumentAValiderUi {
+                id: i32::try_from(id).ok()?,
+                libelle: libelle.into(),
+            })
+        })
+        .collect();
+    f.global::<ServeurApi>()
+        .set_a_valider(ModelRc::new(VecModel::from(lignes)));
 }
 
 /// Écriture d'un écran qui sait le poste relié : un synchroniseur absent rend
@@ -457,7 +555,12 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
             }
             if connexion_ouverte(&etat) {
                 ouvrir_session_attendue(f, &etat);
+            } else if let Some(r) = etat.borrow_mut().relie.as_mut() {
+                // Prochain retour du serveur : les documents à valider seront
+                // proposés de nouveau.
+                r.a_valider_annonce = false;
             }
+            afficher_a_valider(f, &etat.borrow());
             // Écritures permises ou non : droits, menu et fiche ouverte suivent.
             let e = etat.borrow();
             afficher(f, &e);
@@ -477,8 +580,28 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
             }
             afficher(f, &e);
         }
-        // Liste « à valider au retour » : écran de F6c.
-        Evenement::AValider(_) => {}
+        // Liste « à valider au retour » (section 4) : au retour du serveur,
+        // l'application propose de valider, une fois par retour.
+        Evenement::AValider(n) => {
+            let ouverte = connexion_ouverte(&etat);
+            let annoncer = match etat.borrow_mut().relie.as_mut() {
+                Some(r) if ouverte && n > 0 && !r.a_valider_annonce => {
+                    r.a_valider_annonce = true;
+                    true
+                }
+                _ => false,
+            };
+            afficher_a_valider(f, &etat.borrow());
+            if annoncer {
+                f.global::<Alerte>().invoke_montrer(
+                    trf(
+                        "Serveur de retour : {} document(s) attendent leur validation. Voir Paramètres, rubrique « Serveur ».",
+                        &[&n],
+                    )
+                    .into(),
+                );
+            }
+        }
         Evenement::Changements { sortes } => {
             let api = f.global::<ConnexionApi>();
             let mut droits = false;

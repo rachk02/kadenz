@@ -3419,3 +3419,36 @@ msgstr "待解决的冲突：断线期间该记录已在另一台工作站上更
 
 msgid "La fiche a changé sur un autre poste : votre modification n'a pas été appliquée. Rouvrez-la pour voir la version du serveur."
 msgstr "该记录已在另一台工作站上更改：您的修改未被应用。请重新打开以查看服务器上的版本。"
+
+msgid "Ouvrir"
+msgstr "打开"
+
+msgid "Tout valider"
+msgstr "全部验证"
+
+msgid "Valider au retour"
+msgstr "恢复后验证"
+
+msgid "Validation demandée : le document sera proposé à la validation au retour du serveur."
+msgstr "已请求验证：服务器恢复后将提示验证该单据。"
+
+msgid "Brouillon enregistré : il sera proposé à la validation au retour du serveur."
+msgstr "草稿已保存：服务器恢复后将提示验证。"
+
+msgid "Documents à valider au retour"
+msgstr "恢复后待验证的单据"
+
+msgid "Ces brouillons attendent leur validation : le serveur leur attribue leur numéro. Validez-les un par un depuis leur fiche, ou tous ensemble."
+msgstr "这些草稿等待验证：编号由服务器分配。可在各自的记录中逐个验证，或全部一起验证。"
+
+msgid "Ces brouillons seront proposés à la validation au retour du serveur, qui leur attribuera leur numéro."
+msgstr "服务器恢复后将提示验证这些草稿，并由服务器分配编号。"
+
+msgid "Documents validés : {}."
+msgstr "已验证的单据：{}。"
+
+msgid "Documents validés : {} ; refusés : {}. {}"
+msgstr "已验证的单据：{}；被拒绝：{}。{}"
+
+msgid "Serveur de retour : {} document(s) attendent leur validation. Voir Paramètres, rubrique « Serveur »."
+msgstr "服务器已恢复：{} 个单据等待验证。请参阅设置中的“服务器”部分。"

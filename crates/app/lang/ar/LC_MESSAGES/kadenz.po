@@ -3419,3 +3419,36 @@ msgstr "تعارض يجب حسمه: تغيّر السجل على محطة أخر
 
 msgid "La fiche a changé sur un autre poste : votre modification n'a pas été appliquée. Rouvrez-la pour voir la version du serveur."
 msgstr "تغيّر السجل على محطة أخرى: لم يُطبَّق تعديلك. أعد فتحه لعرض نسخة الخادم."
+
+msgid "Ouvrir"
+msgstr "فتح"
+
+msgid "Tout valider"
+msgstr "التحقق من الكل"
+
+msgid "Valider au retour"
+msgstr "التحقق عند العودة"
+
+msgid "Validation demandée : le document sera proposé à la validation au retour du serveur."
+msgstr "طُلب التحقق: سيُعرض المستند للتحقق عند عودة الخادم."
+
+msgid "Brouillon enregistré : il sera proposé à la validation au retour du serveur."
+msgstr "حُفظت المسودة: ستُعرض للتحقق عند عودة الخادم."
+
+msgid "Documents à valider au retour"
+msgstr "مستندات للتحقق عند العودة"
+
+msgid "Ces brouillons attendent leur validation : le serveur leur attribue leur numéro. Validez-les un par un depuis leur fiche, ou tous ensemble."
+msgstr "تنتظر هذه المسودات التحقق: يُسند الخادم أرقامها. تحقق منها واحدة تلو الأخرى من سجلها، أو جميعها معًا."
+
+msgid "Ces brouillons seront proposés à la validation au retour du serveur, qui leur attribuera leur numéro."
+msgstr "ستُعرض هذه المسودات للتحقق عند عودة الخادم، الذي سيُسند أرقامها."
+
+msgid "Documents validés : {}."
+msgstr "المستندات التي تم التحقق منها: {}."
+
+msgid "Documents validés : {} ; refusés : {}. {}"
+msgstr "المستندات التي تم التحقق منها: {}؛ المرفوضة: {}. {}"
+
+msgid "Serveur de retour : {} document(s) attendent leur validation. Voir Paramètres, rubrique « Serveur »."
+msgstr "عاد الخادم: {} مستند (مستندات) في انتظار التحقق. راجع الإعدادات، قسم «الخادم»."

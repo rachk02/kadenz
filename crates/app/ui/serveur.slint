@@ -7,11 +7,17 @@
 // Les appels au réseau tournent hors du fil de l'interface : les résultats
 // arrivent par les propriétés (occupe, retour, trouves...).
 import { ScrollView, TextEdit } from "std-widgets.slint";
-import { Bouton, Champ, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Champ, Ecriture, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct ServeurTrouveUi {
     machine: string,
     adresse: string,
+}
+
+// Brouillon dont la validation a été demandée hors connexion (section 4).
+export struct DocumentAValiderUi {
+    id: int,
+    libelle: string,
 }
 
 export global ServeurApi {
@@ -33,6 +39,12 @@ export global ServeurApi {
     callback confirmer();
     callback abandonner();
     callback tester();
+
+    // Documents à valider au retour du serveur : ouverts un par un, ou tous
+    // validés ensemble, chacun recevant son numéro.
+    in property <[DocumentAValiderUi]> a-valider;
+    callback ouvrir-a-valider(id: int);
+    callback tout-valider() -> Retour;
 }
 
 component Ligne inherits GridLayout {
@@ -215,6 +227,8 @@ export component InscriptionPoste inherits VerticalLayout {
 }
 
 export component PageServeur inherits ScrollView {
+    property <Retour> retour-validation;
+
     VerticalLayout {
         padding: 24px;
         spacing: 12px;
@@ -268,6 +282,60 @@ export component PageServeur inherits ScrollView {
                         ServeurApi.tester();
                     }
                 }
+            }
+        }
+
+        if ServeurApi.relie && ServeurApi.a-valider.length > 0: VerticalLayout {
+            spacing: 12px;
+
+            Section {
+                text: @tr("Documents à valider au retour");
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: Ecriture.validation
+                    ? @tr("Ces brouillons attendent leur validation : le serveur leur attribue leur numéro. Validez-les un par un depuis leur fiche, ou tous ensemble.")
+                    : @tr("Ces brouillons seront proposés à la validation au retour du serveur, qui leur attribuera leur numéro.");
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+
+            for document in ServeurApi.a-valider: HorizontalLayout {
+                spacing: 12px;
+
+                Text {
+                    horizontal-stretch: 1;
+                    vertical-alignment: center;
+                    horizontal-alignment: Theme.debut;
+                    text: document.libelle;
+                    color: Theme.texte;
+                    wrap: word-wrap;
+                }
+
+                Bouton {
+                    text: @tr("Ouvrir");
+                    clicked => {
+                        ServeurApi.ouvrir-a-valider(document.id);
+                    }
+                }
+            }
+
+            HorizontalLayout {
+                alignment: Theme.rangee-debut;
+
+                Bouton {
+                    text: @tr("Tout valider");
+                    primary: true;
+                    enabled: Ecriture.validation;
+                    clicked => {
+                        root.retour-validation = Alerte.relayer(ServeurApi.tout-valider());
+                    }
+                }
+            }
+
+            MessageRetour {
+                retour: root.retour-validation;
             }
         }
 

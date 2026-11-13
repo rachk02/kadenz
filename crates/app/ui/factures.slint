@@ -48,6 +48,8 @@ export struct FicheFactureUi {
     taux-modifiables: bool,
     admin-modifiable: bool,
     peut-valider: bool,
+    // Validation demandée hors connexion : proposée au retour du serveur.
+    a-valider: bool,
     peut-envoyer: bool,
     peut-annuler: bool,
     peut-supprimer: bool,
@@ -223,6 +225,8 @@ export global FacturesApi {
     callback echeance-apres-date(date-precedente: string, date: string, echeance: string) -> string;
     callback enregistrer(fiche: FicheFactureUi) -> Retour;
     callback valider(fiche: FicheFactureUi) -> Retour;
+    // Hors connexion : brouillon enregistré et noté pour la validation au retour.
+    callback valider-au-retour(fiche: FicheFactureUi) -> Retour;
     callback marquer-envoye() -> Retour;
     // Réception d'un bon de commande : quantités reçues cumulées lues sur les lignes.
     callback enregistrer-reception() -> Retour;
@@ -1450,6 +1454,17 @@ component Fiche inherits ScrollView {
                 clicked => {
                     root.retour = { };
                     root.confirmation = 1;
+                }
+            }
+
+            // Section 4 : la validation demandée hors connexion attend le
+            // serveur, qui attribue le numéro.
+            if Ecriture.permise && root.fiche.peut-valider && !Ecriture.validation && !root.fiche.a-valider: Bouton {
+                text: @tr("Valider au retour");
+                clicked => {
+                    root.confirmation = 0;
+                    root.retour = Alerte.relayer(FacturesApi.valider-au-retour(root.saisie()));
+                    root.recharger-si-besoin();
                 }
             }
 

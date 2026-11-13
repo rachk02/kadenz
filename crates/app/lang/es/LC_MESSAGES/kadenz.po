@@ -3419,3 +3419,36 @@ msgstr "Conflicto por resolver: la ficha cambió en otro puesto durante el corte
 
 msgid "La fiche a changé sur un autre poste : votre modification n'a pas été appliquée. Rouvrez-la pour voir la version du serveur."
 msgstr "La ficha cambió en otro puesto: su modificación no se aplicó. Vuelva a abrirla para ver la versión del servidor."
+
+msgid "Ouvrir"
+msgstr "Abrir"
+
+msgid "Tout valider"
+msgstr "Validar todo"
+
+msgid "Valider au retour"
+msgstr "Validar al regresar"
+
+msgid "Validation demandée : le document sera proposé à la validation au retour du serveur."
+msgstr "Validación solicitada: el documento se propondrá para validar cuando vuelva el servidor."
+
+msgid "Brouillon enregistré : il sera proposé à la validation au retour du serveur."
+msgstr "Borrador guardado: se propondrá para validar cuando vuelva el servidor."
+
+msgid "Documents à valider au retour"
+msgstr "Documentos por validar al regresar"
+
+msgid "Ces brouillons attendent leur validation : le serveur leur attribue leur numéro. Validez-les un par un depuis leur fiche, ou tous ensemble."
+msgstr "Estos borradores esperan su validación: el servidor les asigna su número. Valídelos uno a uno desde su ficha, o todos juntos."
+
+msgid "Ces brouillons seront proposés à la validation au retour du serveur, qui leur attribuera leur numéro."
+msgstr "Estos borradores se propondrán para validar cuando vuelva el servidor, que les asignará su número."
+
+msgid "Documents validés : {}."
+msgstr "Documentos validados: {}."
+
+msgid "Documents validés : {} ; refusés : {}. {}"
+msgstr "Documentos validados: {}; rechazados: {}. {}"
+
+msgid "Serveur de retour : {} document(s) attendent leur validation. Voir Paramètres, rubrique « Serveur »."
+msgstr "El servidor ha vuelto: {} documento(s) esperan su validación. Vea Configuración, sección «Servidor»."

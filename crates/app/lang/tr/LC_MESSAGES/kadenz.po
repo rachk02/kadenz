@@ -3419,3 +3419,36 @@ msgstr "Çözülecek çakışma: kayıt kesinti sırasında başka bir iş istas
 
 msgid "La fiche a changé sur un autre poste : votre modification n'a pas été appliquée. Rouvrez-la pour voir la version du serveur."
 msgstr "Kayıt başka bir iş istasyonunda değişti: değişikliğiniz uygulanmadı. Sunucudaki sürümü görmek için yeniden açın."
+
+msgid "Ouvrir"
+msgstr "Aç"
+
+msgid "Tout valider"
+msgstr "Tümünü onayla"
+
+msgid "Valider au retour"
+msgstr "Dönüşte onayla"
+
+msgid "Validation demandée : le document sera proposé à la validation au retour du serveur."
+msgstr "Onay istendi: belge, sunucu geri geldiğinde onaya sunulacak."
+
+msgid "Brouillon enregistré : il sera proposé à la validation au retour du serveur."
+msgstr "Taslak kaydedildi: sunucu geri geldiğinde onaya sunulacak."
+
+msgid "Documents à valider au retour"
+msgstr "Dönüşte onaylanacak belgeler"
+
+msgid "Ces brouillons attendent leur validation : le serveur leur attribue leur numéro. Validez-les un par un depuis leur fiche, ou tous ensemble."
+msgstr "Bu taslaklar onay bekliyor: numaralarını sunucu verir. Onları kayıtlarından tek tek ya da hepsini birlikte onaylayın."
+
+msgid "Ces brouillons seront proposés à la validation au retour du serveur, qui leur attribuera leur numéro."
+msgstr "Bu taslaklar sunucu geri geldiğinde onaya sunulacak; numaralarını sunucu verecek."
+
+msgid "Documents validés : {}."
+msgstr "Onaylanan belgeler: {}."
+
+msgid "Documents validés : {} ; refusés : {}. {}"
+msgstr "Onaylanan belgeler: {}; reddedilen: {}. {}"
+
+msgid "Serveur de retour : {} document(s) attendent leur validation. Voir Paramètres, rubrique « Serveur »."
+msgstr "Sunucu geri geldi: {} belge onay bekliyor. Ayarlar, «Sunucu» bölümüne bakın."

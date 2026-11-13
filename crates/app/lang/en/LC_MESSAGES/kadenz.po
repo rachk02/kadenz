@@ -3419,3 +3419,36 @@ msgstr "Conflict to resolve: the record was changed on another workstation durin
 
 msgid "La fiche a changé sur un autre poste : votre modification n'a pas été appliquée. Rouvrez-la pour voir la version du serveur."
 msgstr "The record was changed on another workstation: your change was not applied. Reopen it to see the server version."
+
+msgid "Ouvrir"
+msgstr "Open"
+
+msgid "Tout valider"
+msgstr "Validate all"
+
+msgid "Valider au retour"
+msgstr "Validate on return"
+
+msgid "Validation demandée : le document sera proposé à la validation au retour du serveur."
+msgstr "Validation requested: the document will be offered for validation when the server is back."
+
+msgid "Brouillon enregistré : il sera proposé à la validation au retour du serveur."
+msgstr "Draft saved: it will be offered for validation when the server is back."
+
+msgid "Documents à valider au retour"
+msgstr "Documents to validate on return"
+
+msgid "Ces brouillons attendent leur validation : le serveur leur attribue leur numéro. Validez-les un par un depuis leur fiche, ou tous ensemble."
+msgstr "These drafts are waiting for validation: the server assigns their number. Validate them one by one from their record, or all together."
+
+msgid "Ces brouillons seront proposés à la validation au retour du serveur, qui leur attribuera leur numéro."
+msgstr "These drafts will be offered for validation when the server is back; it will assign their number."
+
+msgid "Documents validés : {}."
+msgstr "Documents validated: {}."
+
+msgid "Documents validés : {} ; refusés : {}. {}"
+msgstr "Documents validated: {}; refused: {}. {}"
+
+msgid "Serveur de retour : {} document(s) attendent leur validation. Voir Paramètres, rubrique « Serveur »."
+msgstr "Server is back: {} document(s) waiting for validation. See Settings, Server section."
