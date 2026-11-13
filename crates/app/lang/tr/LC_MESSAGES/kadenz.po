@@ -3401,3 +3401,21 @@ msgstr "askıdaki işlem bulunamadı veya zaten karara bağlandı"
 
 msgid "le résultat ne correspond pas à l'opération en conflit"
 msgstr "sonuç çakışan işlemle uyuşmuyor"
+
+msgid "Envoi au serveur : 1 opération en attente"
+msgstr "Sunucuya gönderiliyor: 1 işlem bekliyor"
+
+msgid "Envoi au serveur : {} opérations en attente"
+msgstr "Sunucuya gönderiliyor: {} işlem bekliyor"
+
+msgid "Hors connexion : 1 opération en attente d'envoi"
+msgstr "Çevrimdışı: gönderilmeyi bekleyen 1 işlem"
+
+msgid "Hors connexion : {} opérations en attente d'envoi"
+msgstr "Çevrimdışı: gönderilmeyi bekleyen {} işlem"
+
+msgid "Conflit à trancher : la fiche a changé sur un autre poste pendant la coupure. Elle reste utilisable dans la version du serveur."
+msgstr "Çözülecek çakışma: kayıt kesinti sırasında başka bir iş istasyonunda değişti. Sunucudaki sürümüyle kullanılmaya devam eder."
+
+msgid "La fiche a changé sur un autre poste : votre modification n'a pas été appliquée. Rouvrez-la pour voir la version du serveur."
+msgstr "Kayıt başka bir iş istasyonunda değişti: değişikliğiniz uygulanmadı. Sunucudaki sürümü görmek için yeniden açın."

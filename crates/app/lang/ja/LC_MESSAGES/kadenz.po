@@ -3401,3 +3401,21 @@ msgstr "保留中の操作が見つからないか、すでに判断済みです
 
 msgid "le résultat ne correspond pas à l'opération en conflit"
 msgstr "結果が競合中の操作と一致しません"
+
+msgid "Envoi au serveur : 1 opération en attente"
+msgstr "サーバーへ送信中：1 件の操作が待機中"
+
+msgid "Envoi au serveur : {} opérations en attente"
+msgstr "サーバーへ送信中：{} 件の操作が待機中"
+
+msgid "Hors connexion : 1 opération en attente d'envoi"
+msgstr "オフライン：送信待ちの操作 1 件"
+
+msgid "Hors connexion : {} opérations en attente d'envoi"
+msgstr "オフライン：送信待ちの操作 {} 件"
+
+msgid "Conflit à trancher : la fiche a changé sur un autre poste pendant la coupure. Elle reste utilisable dans la version du serveur."
+msgstr "解決が必要な競合：切断中に別の端末でレコードが変更されました。サーバーの版で引き続き使用できます。"
+
+msgid "La fiche a changé sur un autre poste : votre modification n'a pas été appliquée. Rouvrez-la pour voir la version du serveur."
+msgstr "別の端末でレコードが変更されたため、変更は適用されませんでした。もう一度開いてサーバーの版を確認してください。"

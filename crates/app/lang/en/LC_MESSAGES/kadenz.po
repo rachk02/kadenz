@@ -3401,3 +3401,21 @@ msgstr "suspended operation not found or already decided"
 
 msgid "le résultat ne correspond pas à l'opération en conflit"
 msgstr "the result does not match the conflicting operation"
+
+msgid "Envoi au serveur : 1 opération en attente"
+msgstr "Sending to the server: 1 operation pending"
+
+msgid "Envoi au serveur : {} opérations en attente"
+msgstr "Sending to the server: {} operations pending"
+
+msgid "Hors connexion : 1 opération en attente d'envoi"
+msgstr "Offline: 1 operation waiting to be sent"
+
+msgid "Hors connexion : {} opérations en attente d'envoi"
+msgstr "Offline: {} operations waiting to be sent"
+
+msgid "Conflit à trancher : la fiche a changé sur un autre poste pendant la coupure. Elle reste utilisable dans la version du serveur."
+msgstr "Conflict to resolve: the record was changed on another workstation during the outage. It remains usable in the server version."
+
+msgid "La fiche a changé sur un autre poste : votre modification n'a pas été appliquée. Rouvrez-la pour voir la version du serveur."
+msgstr "The record was changed on another workstation: your change was not applied. Reopen it to see the server version."

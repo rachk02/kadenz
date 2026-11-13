@@ -3401,3 +3401,21 @@ msgstr "找不到挂起的操作，或已作出决定"
 
 msgid "le résultat ne correspond pas à l'opération en conflit"
 msgstr "结果与冲突的操作不符"
+
+msgid "Envoi au serveur : 1 opération en attente"
+msgstr "正在发送到服务器：1 个操作等待中"
+
+msgid "Envoi au serveur : {} opérations en attente"
+msgstr "正在发送到服务器：{} 个操作等待中"
+
+msgid "Hors connexion : 1 opération en attente d'envoi"
+msgstr "离线：1 个操作等待发送"
+
+msgid "Hors connexion : {} opérations en attente d'envoi"
+msgstr "离线：{} 个操作等待发送"
+
+msgid "Conflit à trancher : la fiche a changé sur un autre poste pendant la coupure. Elle reste utilisable dans la version du serveur."
+msgstr "待解决的冲突：断线期间该记录已在另一台工作站上更改。仍可使用服务器上的版本。"
+
+msgid "La fiche a changé sur un autre poste : votre modification n'a pas été appliquée. Rouvrez-la pour voir la version du serveur."
+msgstr "该记录已在另一台工作站上更改：您的修改未被应用。请重新打开以查看服务器上的版本。"

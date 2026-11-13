@@ -24,8 +24,8 @@ thread_local! {
 pub(crate) struct Relie {
     pub(crate) synchro: Synchroniseur,
     pub(crate) connexion: EtatConnexion,
-    /// Une écriture attend la confirmation du serveur.
-    pub(crate) confirmation: bool,
+    /// Écritures en file d'envoi, y compris celle qui attend sa réponse.
+    pub(crate) file: u32,
     /// Rattrapage en cours : rang reçu, dernier rang du serveur.
     pub(crate) avancement: Option<(u64, u64)>,
     /// Le compte de la session est connecté sur le serveur : sans cela (connexion
@@ -51,7 +51,7 @@ pub(crate) fn demarrer(f: &FenetrePrincipale, etat: &EtatPartage, copie: PathBuf
             Some(Relie {
                 synchro,
                 connexion,
-                confirmation: false,
+                file: 0,
                 avancement: None,
                 compte_serveur: false,
                 compte_attendu: None,
@@ -271,14 +271,29 @@ pub(crate) fn arreter(etat: &mut Etat) {
 /// Texte et niveau de l'indicateur (0 relié, 1 en cours, 2 coupé ou refusé).
 fn indicateur(
     connexion: &EtatConnexion,
-    confirmation: bool,
+    file: u32,
     avancement: Option<(u64, u64)>,
 ) -> (String, i32) {
     match connexion {
         EtatConnexion::Connexion => (tr("Connexion au serveur..."), 1),
-        EtatConnexion::Connecte | EtatConnexion::LectureSeule { .. } if confirmation => {
-            (tr("Confirmation en attente"), 1)
+        EtatConnexion::Connecte | EtatConnexion::LectureSeule { .. } if file == 1 => {
+            (tr("Envoi au serveur : 1 opération en attente"), 1)
         }
+        EtatConnexion::Connecte | EtatConnexion::LectureSeule { .. } if file > 1 => (
+            trf("Envoi au serveur : {} opérations en attente", &[&file]),
+            1,
+        ),
+        // Hors connexion : les écritures attendent dans la file (décision 50).
+        EtatConnexion::Injoignable | EtatConnexion::Reconnexion { .. } if file == 1 => {
+            (tr("Hors connexion : 1 opération en attente d'envoi"), 2)
+        }
+        EtatConnexion::Injoignable | EtatConnexion::Reconnexion { .. } if file > 1 => (
+            trf(
+                "Hors connexion : {} opérations en attente d'envoi",
+                &[&file],
+            ),
+            2,
+        ),
         EtatConnexion::Connecte => (tr("Connecté au serveur"), 0),
         EtatConnexion::LectureSeule { .. } => (tr("Connecté au serveur, lecture seule"), 0),
         EtatConnexion::Synchronisation => match avancement {
@@ -298,14 +313,22 @@ fn indicateur(
     }
 }
 
-/// Résultat d'une écriture confirmée après coup.
-fn texte_confirmation(issue: &Issue) -> String {
-    match issue {
+/// Résultat d'une écriture appris après coup : envoyée de la file au retour
+/// du serveur, confirmée après un délai, ou décidée par l'Admin. `None` pour
+/// une écriture simplement appliquée, que l'indicateur montre déjà.
+fn texte_confirmation(issue: &Issue) -> Option<String> {
+    Some(match issue {
         Issue::Acceptee {
             numero: Some(numero),
             ..
         } => trf("Opération confirmée par le serveur : numéro {}.", &[numero]),
-        Issue::Acceptee { .. } => tr("Opération confirmée par le serveur."),
+        Issue::Acceptee { .. } | Issue::EnFile => return None,
+        Issue::EnConflit => tr(
+            "Conflit à trancher : la fiche a changé sur un autre poste pendant la coupure. Elle reste utilisable dans la version du serveur.",
+        ),
+        Issue::Depassee | Issue::Bloquee => tr(
+            "La fiche a changé sur un autre poste : votre modification n'a pas été appliquée. Rouvrez-la pour voir la version du serveur.",
+        ),
         Issue::Refusee { modele, valeurs } => trf(
             "Opération refusée par le serveur : {}",
             &[&crate::traduction::trf(
@@ -316,8 +339,8 @@ fn texte_confirmation(issue: &Issue) -> String {
                     .collect::<Vec<_>>(),
             )],
         ),
-        _ => tr("Opération mise en attente par le serveur : l'Admin décidera."),
-    }
+        Issue::EnAttente => tr("Opération mise en attente par le serveur : l'Admin décidera."),
+    })
 }
 
 /// Le serveur répond (connecté, même en rattrapage ou en lecture seule).
@@ -345,6 +368,10 @@ fn raison_connexion(
             | EtatConnexion::Synchronisation
             | EtatConnexion::LectureSeule { .. },
         ) => None,
+        // Sans synchroniseur (démarrage impossible) : rien ne part.
+        None => Some(tr(
+            "Connexion au serveur impossible : aucune saisie n'est possible. Voir Paramètres, rubrique « Serveur ».",
+        )),
         Some(e) if e.definitif() => Some(tr(
             "Connexion au serveur impossible : aucune saisie n'est possible. Voir Paramètres, rubrique « Serveur ».",
         )),
@@ -365,9 +392,9 @@ fn raison_connexion(
     }
 }
 
-/// File d'envoi de kadenz-poste (F6b) : tant qu'elle n'est pas livrée, le
-/// serveur injoignable bloque toute saisie, comme en F5 (décision 46).
-const FILE_D_ENVOI: bool = false;
+/// File d'envoi de kadenz-poste (F6b, décision 50) : serveur injoignable, la
+/// saisie continue dans la copie. Faux, tout attendrait le serveur (décision 46).
+const FILE_D_ENVOI: bool = true;
 
 /// Raison du blocage des écritures sur ce poste, ou `None` si la saisie est
 /// permise : seul point de décision pour les écrans. Poste V1 : seule la
@@ -382,12 +409,14 @@ pub(crate) fn blocage_selon(etat: &Etat, niveau: EnCoupure) -> Option<String> {
     if crate::serveur::inscrit(&etat.conn) {
         // Compte connecté en local (décisions 48 et 51) : il travaille comme
         // hors connexion tant qu'il n'est pas connecté sur le serveur.
-        let connexion = etat
-            .relie
-            .as_ref()
-            .filter(|r| r.compte_serveur || etat.utilisateur.is_none())
-            .map(|r| &r.connexion);
-        if let Some(raison) = raison_connexion(connexion, niveau, FILE_D_ENVOI) {
+        let connexion = etat.relie.as_ref().map(|r| {
+            if r.compte_serveur || etat.utilisateur.is_none() {
+                r.connexion.clone()
+            } else {
+                EtatConnexion::Injoignable
+            }
+        });
+        if let Some(raison) = raison_connexion(connexion.as_ref(), niveau, FILE_D_ENVOI) {
             return Some(raison);
         }
     }
@@ -403,8 +432,8 @@ pub(crate) fn afficher(f: &FenetrePrincipale, etat: &Etat) {
         return;
     }
     let (texte, niveau) = match &etat.relie {
-        Some(r) => indicateur(&r.connexion, r.confirmation, r.avancement),
-        None => indicateur(&EtatConnexion::Injoignable, false, None),
+        Some(r) => indicateur(&r.connexion, r.file, r.avancement),
+        None => indicateur(&EtatConnexion::Injoignable, 0, None),
     };
     api.set_texte(texte.into());
     api.set_niveau(niveau);
@@ -444,7 +473,7 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
         Evenement::File(n) => {
             let mut e = etat.borrow_mut();
             if let Some(r) = e.relie.as_mut() {
-                r.confirmation = n > 0;
+                r.file = n;
             }
             afficher(f, &e);
         }
@@ -480,10 +509,11 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
             crate::appliquer_droits(f, &e);
         }
         Evenement::Confirmee { issue, .. } => {
-            // Écriture rendue sans réponse à temps, confirmée plus tard : son
-            // résultat d'origine (décision de kadenz-34 et kadenz-8e, F5c).
-            f.global::<Alerte>()
-                .invoke_montrer(texte_confirmation(&issue).into());
+            // Écriture de la file envoyée au retour, confirmée après un délai,
+            // ou décidée par l'Admin : son résultat, s'il mérite d'être dit.
+            if let Some(texte) = texte_confirmation(&issue) {
+                f.global::<Alerte>().invoke_montrer(texte.into());
+            }
         }
         Evenement::Compte(resultat) => {
             let refuse = matches!(resultat, Err(ErreurPoste::CompteRefuse { .. }));
@@ -512,22 +542,30 @@ mod tests {
 
     #[test]
     fn indicateur_selon_l_etat() {
-        assert_eq!(indicateur(&EtatConnexion::Connecte, false, None).1, 0);
+        assert_eq!(indicateur(&EtatConnexion::Connecte, 0, None).1, 0);
         assert_eq!(
-            indicateur(&EtatConnexion::Connecte, true, None).0,
-            "Confirmation en attente"
+            indicateur(&EtatConnexion::Connecte, 1, None).0,
+            "Envoi au serveur : 1 opération en attente"
         );
         assert_eq!(
-            indicateur(&EtatConnexion::Synchronisation, false, Some((50, 200))).0,
+            indicateur(&EtatConnexion::Connecte, 3, None).0,
+            "Envoi au serveur : 3 opérations en attente"
+        );
+        assert_eq!(
+            indicateur(&EtatConnexion::Synchronisation, 0, Some((50, 200))).0,
             "Synchronisation... 25 %"
         );
-        assert_eq!(indicateur(&EtatConnexion::Injoignable, false, None).1, 2);
+        assert_eq!(indicateur(&EtatConnexion::Injoignable, 0, None).1, 2);
+        assert_eq!(
+            indicateur(&EtatConnexion::Injoignable, 2, None),
+            ("Hors connexion : 2 opérations en attente d'envoi".into(), 2)
+        );
         for final_ in [
             EtatConnexion::CertificatDifferent,
             EtatConnexion::PosteRetire,
             EtatConnexion::VersionDifferente { serveur: 3 },
         ] {
-            assert_eq!(indicateur(&final_, false, None).1, 2);
+            assert_eq!(indicateur(&final_, 0, None).1, 2);
         }
     }
 
@@ -584,8 +622,13 @@ mod tests {
                     .contains("réglages")
             );
         }
-        // Sans synchroniseur : comme une coupure.
-        assert!(raison_connexion(None, EnCoupure::Permise, false).is_some());
-        assert_eq!(raison_connexion(None, EnCoupure::Permise, true), None);
+        // Sans synchroniseur : rien ne part, même avec la file.
+        for file in [false, true] {
+            assert!(
+                raison_connexion(None, EnCoupure::Permise, file)
+                    .unwrap()
+                    .contains("impossible")
+            );
+        }
     }
 }

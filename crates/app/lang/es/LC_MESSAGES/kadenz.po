@@ -3401,3 +3401,21 @@ msgstr "operación suspendida no encontrada o ya decidida"
 
 msgid "le résultat ne correspond pas à l'opération en conflit"
 msgstr "el resultado no corresponde a la operación en conflicto"
+
+msgid "Envoi au serveur : 1 opération en attente"
+msgstr "Enviando al servidor: 1 operación pendiente"
+
+msgid "Envoi au serveur : {} opérations en attente"
+msgstr "Enviando al servidor: {} operaciones pendientes"
+
+msgid "Hors connexion : 1 opération en attente d'envoi"
+msgstr "Sin conexión: 1 operación pendiente de envío"
+
+msgid "Hors connexion : {} opérations en attente d'envoi"
+msgstr "Sin conexión: {} operaciones pendientes de envío"
+
+msgid "Conflit à trancher : la fiche a changé sur un autre poste pendant la coupure. Elle reste utilisable dans la version du serveur."
+msgstr "Conflicto por resolver: la ficha cambió en otro puesto durante el corte. Sigue utilizable en la versión del servidor."
+
+msgid "La fiche a changé sur un autre poste : votre modification n'a pas été appliquée. Rouvrez-la pour voir la version du serveur."
+msgstr "La ficha cambió en otro puesto: su modificación no se aplicó. Vuelva a abrirla para ver la versión del servidor."
