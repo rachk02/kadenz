@@ -184,19 +184,14 @@ fn brancher_comptes(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             return retour_erreur("aucun compte sélectionné");
         };
         let role = role_de_rang(role);
-        let resultat = match relie::uid(&etat, Entite::Utilisateur, id).map(|uid| {
-            relie::ecrire(
-                &etat,
-                Action::ChangerRole {
-                    uid,
-                    role: role.code().into(),
-                },
-            )
-        }) {
-            Err(texte) => Err(texte),
-            Ok(Some(r)) => r.map(|_| ()),
-            Ok(None) => comptes::changer_role(&etat.conn, &acteur, id, role).map_err(texte_erreur),
-        };
+        let resultat =
+            match relie::ecrire_sur(&etat, Entite::Utilisateur, id, |uid| Action::ChangerRole {
+                uid,
+                role: role.code().into(),
+            }) {
+                Some(r) => r.map(|_| ()),
+                None => comptes::changer_role(&etat.conn, &acteur, id, role).map_err(texte_erreur),
+            };
         if let Some(f) = f.upgrade() {
             afficher_comptes(&f, &mut etat);
         }
@@ -219,14 +214,11 @@ fn brancher_comptes(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             Ok(None) => return retour_erreur("ce compte n'existe plus"),
             Err(erreur) => return retour_erreur(erreur),
         };
-        let resultat = match relie::uid(&etat, Entite::Utilisateur, id)
-            .map(|uid| relie::ecrire(&etat, Action::DefinirActifCompte { uid, actif: !actif }))
-        {
-            Err(texte) => Err(texte),
-            Ok(Some(r)) => r.map(|_| ()),
-            Ok(None) => {
-                comptes::definir_actif(&etat.conn, &acteur, id, !actif).map_err(texte_erreur)
-            }
+        let resultat = match relie::ecrire_sur(&etat, Entite::Utilisateur, id, |uid| {
+            Action::DefinirActifCompte { uid, actif: !actif }
+        }) {
+            Some(r) => r.map(|_| ()),
+            None => comptes::definir_actif(&etat.conn, &acteur, id, !actif).map_err(texte_erreur),
         };
         if let Some(f) = f.upgrade() {
             afficher_comptes(&f, &mut etat);
@@ -247,18 +239,14 @@ fn brancher_comptes(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let (Some(acteur), Some(id)) = (&etat.utilisateur, etat.comptes.selection) else {
             return retour_erreur("aucun compte sélectionné");
         };
-        let resultat = match relie::uid(&etat, Entite::Utilisateur, id).map(|uid| {
-            relie::ecrire(
-                &etat,
-                Action::ReinitialiserMotDePasse {
-                    uid,
-                    nouveau: mot_de_passe.to_string(),
-                },
-            )
+        let resultat = match relie::ecrire_sur(&etat, Entite::Utilisateur, id, |uid| {
+            Action::ReinitialiserMotDePasse {
+                uid,
+                nouveau: mot_de_passe.to_string(),
+            }
         }) {
-            Err(texte) => Err(texte),
-            Ok(Some(r)) => r.map(|_| ()),
-            Ok(None) => comptes::reinitialiser_mot_de_passe(&etat.conn, acteur, id, &mot_de_passe)
+            Some(r) => r.map(|_| ()),
+            None => comptes::reinitialiser_mot_de_passe(&etat.conn, acteur, id, &mot_de_passe)
                 .map_err(texte_erreur),
         };
         match resultat {
