@@ -19,6 +19,7 @@ pub mod postes;
 pub mod produits;
 pub mod reglements;
 pub mod relances;
+pub mod replique;
 pub mod sauvegarde;
 pub mod synchro;
 pub mod tiers;
@@ -76,6 +77,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0007_synchro.sql"),
     include_str!("migrations/0008_postes.sql"),
     include_str!("migrations/0009_inscription.sql"),
+    include_str!("migrations/0010_replique.sql"),
 ];
 
 #[derive(Debug)]

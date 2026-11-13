@@ -14,7 +14,7 @@ use kadenz_licence::entreprise::{self as lic, LicenceEntreprise};
 use kadenz_protocole::abonnement::Statut;
 use kadenz_protocole::inscription::{CodeComplet, presenter_secret};
 use kadenz_protocole::messages::{self, Reponse, TAILLE_MAX};
-use kadenz_protocole::{Action, Etat, Issue, Operation, Tiers, VERSION};
+use kadenz_protocole::{Action, Entite, Etat, Issue, Operation, Tiers, VERSION};
 use kadenz_serveur::{Config, Serveur, admin};
 use kadenz_stockage::comptes::NouvelUtilisateur;
 use kadenz_stockage::entreprise::Entreprise;
@@ -203,7 +203,7 @@ fn session_complete() {
     let tiers: Vec<_> = changements
         .iter()
         .filter_map(|c| match &c.etat {
-            Etat::Tiers { fiche, .. } => Some(fiche.nom.as_str()),
+            Etat::Ligne { valeurs, .. } if c.entite == Entite::Tiers => valeurs["nom"].as_str(),
             _ => None,
         })
         .collect();

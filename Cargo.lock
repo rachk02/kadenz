@@ -3182,6 +3182,7 @@ name = "kadenz-stockage"
 version = "0.2.2"
 dependencies = [
  "argon2",
+ "base64 0.22.1",
  "chrono",
  "ed25519-dalek",
  "getrandom 0.3.4",

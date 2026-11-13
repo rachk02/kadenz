@@ -19,12 +19,25 @@ use rusqlite::{Connection, OptionalExtension, params};
 
 use crate::comptes::{self, Utilisateur};
 use crate::documents::{self, ChampsLivraison, LigneSaisie, Saisie};
-use crate::{Erreur, Resultat, maintenant, tiers};
+use crate::{Erreur, Resultat, maintenant, replique, tiers};
 
 /// Tables dont les lignes portent un identifiant global.
-const TABLES: [&str; 5] = ["utilisateur", "tiers", "produit", "document", "reglement"];
+const TABLES: [&str; 6] = [
+    "utilisateur",
+    "tiers",
+    "produit",
+    "document",
+    "reglement",
+    "instantane_entreprise",
+];
 
 const CLE_ENTREPRISE: &str = "identifiant_entreprise";
+
+/// Taille au-delà de laquelle une page de changements s'arrête (JSON des
+/// changements), sous la taille maximale d'un message : deux logos de 2 Mo en
+/// base64 tiennent dans un seul changement. Une page porte toujours au moins
+/// un changement.
+pub const BUDGET_PAGE: usize = 6 * 1024 * 1024;
 
 /// Modèle du refus pour un droit, avec le droit en valeur (même phrase que
 /// l'affichage de `Erreur::Interdit`).
@@ -83,11 +96,18 @@ pub fn identifiant_entreprise(conn: &Connection) -> Resultat<String> {
     )?)
 }
 
-/// Identifiant global d'une ligne.
+/// Identifiant global d'une ligne (le code de l'entité pour une entité d'une
+/// seule ligne).
 pub fn uid_de(conn: &Connection, entite: Entite, id: i64) -> Resultat<Option<String>> {
+    if entite.unique() {
+        return Ok(Some(entite.code().to_string()));
+    }
+    let Some(table) = replique::nom_table(entite) else {
+        return Ok(None);
+    };
     Ok(conn
         .query_row(
-            &format!("SELECT uid FROM {} WHERE id = ?1", entite.code()),
+            &format!("SELECT uid FROM {table} WHERE id = ?1"),
             [id],
             |r| r.get(0),
         )
@@ -97,9 +117,15 @@ pub fn uid_de(conn: &Connection, entite: Entite, id: i64) -> Resultat<Option<Str
 
 /// Identifiant propre à cette base d'une ligne désignée par son identifiant global.
 pub fn id_de(conn: &Connection, entite: Entite, uid: &str) -> Resultat<Option<i64>> {
+    if entite.unique() {
+        return Ok(Some(1));
+    }
+    let Some(table) = replique::nom_table(entite) else {
+        return Ok(None);
+    };
     Ok(conn
         .query_row(
-            &format!("SELECT id FROM {} WHERE uid = ?1", entite.code()),
+            &format!("SELECT id FROM {table} WHERE uid = ?1"),
             [uid],
             |r| r.get(0),
         )
@@ -378,19 +404,6 @@ fn fiche_tiers(f: &proto::Tiers) -> Resultat<FicheTiers> {
     })
 }
 
-fn tiers_proto(f: &FicheTiers) -> proto::Tiers {
-    proto::Tiers {
-        nom: f.nom.clone(),
-        adresse: f.adresse.clone(),
-        telephone: f.telephone.clone(),
-        localisation: f.localisation.clone(),
-        ifu: f.ifu.clone(),
-        rccm: f.rccm.clone(),
-        regime_imposition: f.regime_imposition.clone(),
-        type_tiers: f.type_tiers.code().into(),
-    }
-}
-
 const FORMAT_DATE: &str = "%Y-%m-%d";
 
 fn date(texte: &str) -> Resultat<NaiveDate> {
@@ -440,43 +453,6 @@ fn saisie_locale(conn: &Connection, s: &proto::Saisie) -> Resultat<Saisie> {
     })
 }
 
-fn saisie_proto(conn: &Connection, s: &Saisie) -> Resultat<proto::Saisie> {
-    let uid = |entite, id: Option<i64>| -> Resultat<Option<String>> {
-        match id {
-            Some(id) => uid_de(conn, entite, id),
-            None => Ok(None),
-        }
-    };
-    let mut lignes = Vec::with_capacity(s.lignes.len());
-    for l in &s.lignes {
-        lignes.push(proto::Ligne {
-            produit: uid(Entite::Produit, l.produit_id)?,
-            reference: l.reference.clone(),
-            designation: l.designation.clone(),
-            prix: l.prix,
-            quantite: l.quantite,
-            quantite_livree: l.quantite_livree,
-            observations: l.observations.clone(),
-        });
-    }
-    Ok(proto::Saisie {
-        date: s.date.format(FORMAT_DATE).to_string(),
-        tiers: uid(Entite::Tiers, s.tiers_id)?,
-        libelle: s.libelle.clone(),
-        remise: s.taux.remise,
-        tva: s.taux.tva,
-        retenue: s.taux.retenue,
-        mode_paiement: s.mode_paiement.clone(),
-        observations: s.observations.clone(),
-        date_echeance: s.date_echeance.map(|d| d.format(FORMAT_DATE).to_string()),
-        lignes,
-        visa_client: s.livraison.visa_client.clone(),
-        visa_fournisseur: s.livraison.visa_fournisseur.clone(),
-        date_livraison: s.livraison.date_livraison.clone(),
-        date_reception: s.livraison.date_reception.clone(),
-    })
-}
-
 /// Changements après le rang `depuis`, au plus `limite`, du plus ancien au plus
 /// récent : chaque ligne une seule fois, dans son état présent (une ligne qui a
 /// changé plusieurs fois prend le rang de son dernier changement).
@@ -485,6 +461,9 @@ pub fn changements_depuis(
     depuis: u64,
     limite: u32,
 ) -> Resultat<Vec<Changement>> {
+    // Une ligne créée hors d'une opération (fenêtre du serveur) reçoit ici son
+    // identifiant, avant d'être décrite.
+    completer_uids(conn)?;
     let lignes: Vec<(i64, String, i64)> = conn
         .prepare(
             "SELECT max(seq), entite, entite_id FROM changement WHERE seq > ?1
@@ -495,25 +474,14 @@ pub fn changements_depuis(
         })?
         .collect::<Result<_, _>>()?;
     let mut sortie = Vec::with_capacity(lignes.len());
+    let mut octets = 0;
     for (seq, code, id) in lignes {
         let Some(entite) = Entite::depuis_code(&code) else {
             continue;
         };
-        let present = uid_de(conn, entite, id)?;
-        let etat = if present.is_none()
-            && conn
-                .query_row(&format!("SELECT 1 FROM {code} WHERE id = ?1"), [id], |_| {
-                    Ok(())
-                })
-                .optional()?
-                .is_none()
-        {
-            Etat::Supprime
-        } else {
-            etat(conn, entite, id)?
-        };
+        let etat = replique::etat(conn, entite, id)?.unwrap_or(Etat::Supprime);
         // Ligne disparue : son identifiant est celui noté lors de sa suppression.
-        let uid = match present {
+        let uid = match uid_de(conn, entite, id)? {
             Some(uid) => Some(uid),
             None => conn
                 .query_row(
@@ -525,37 +493,21 @@ pub fn changements_depuis(
                 .optional()?,
         };
         if let Some(uid) = uid {
-            sortie.push(Changement {
+            let changement = Changement {
                 seq: seq as u64,
                 entite,
                 uid,
                 etat,
-            });
+            };
+            let taille = serde_json::to_vec(&changement).map_or(0, |v| v.len());
+            if !sortie.is_empty() && octets + taille > BUDGET_PAGE {
+                break;
+            }
+            octets += taille;
+            sortie.push(changement);
         }
     }
     Ok(sortie)
-}
-
-fn etat(conn: &Connection, entite: Entite, id: i64) -> Resultat<Etat> {
-    Ok(match entite {
-        Entite::Tiers => match tiers::lire(conn, id)? {
-            Some(t) => Etat::Tiers {
-                fiche: tiers_proto(&t.fiche),
-                actif: t.actif,
-            },
-            None => Etat::Supprime,
-        },
-        Entite::Document => match documents::lire(conn, id)? {
-            Some(d) => Etat::Document {
-                type_document: d.type_document.code().into(),
-                statut: d.statut.code().into(),
-                numero: d.numero.clone(),
-                saisie: saisie_proto(conn, &d.saisie)?,
-            },
-            None => Etat::Supprime,
-        },
-        Entite::Utilisateur | Entite::Produit | Entite::Reglement => Etat::NonTransmis,
-    })
 }
 
 #[cfg(test)]
@@ -1081,12 +1033,13 @@ mod tests {
         let (t, d) = client_et_brouillon(&mut b, "p1");
         let ch = changements_depuis(&b.conn, depart, 100).unwrap();
         let tiers_ch = ch.iter().find(|c| c.uid == t).expect("tiers");
-        assert!(
-            matches!(&tiers_ch.etat, Etat::Tiers { fiche, actif: true } if fiche.nom == "Client Alpha")
-        );
+        assert!(matches!(&tiers_ch.etat, Etat::Ligne { valeurs, .. }
+            if valeurs["nom"] == "Client Alpha" && valeurs["actif"] == 1));
         let doc = ch.iter().find(|c| c.uid == d).expect("document");
-        assert!(matches!(&doc.etat, Etat::Document { statut, saisie, .. }
-            if statut == "brouillon" && saisie.tiers.as_deref() == Some(t.as_str())));
+        assert!(matches!(&doc.etat, Etat::Ligne { valeurs, lignes }
+            if valeurs["statut"] == "brouillon"
+                && valeurs["tiers_id"] == t.as_str()
+                && !lignes.is_empty()));
         // Chaque ligne une seule fois, dans l'ordre des rangs.
         assert_eq!(ch.iter().filter(|c| c.uid == d).count(), 1);
         assert!(ch.windows(2).all(|w| w[0].seq < w[1].seq));

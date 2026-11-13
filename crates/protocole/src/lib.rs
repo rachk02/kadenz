@@ -20,7 +20,7 @@ pub use abonnement::Abonnement;
 
 /// Version du protocole, annoncée à la connexion (F2) : un poste d'une autre
 /// version est refusé.
-pub const VERSION: u32 = 1;
+pub const VERSION: u32 = 2;
 
 /// Action d'un compte, faite sur un poste et appliquée par le serveur.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -51,7 +51,7 @@ pub enum Famille {
 }
 
 /// Entité synchronisée, telle que nommée dans la suite des changements.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Entite {
     Utilisateur,
@@ -59,9 +59,26 @@ pub enum Entite {
     Produit,
     Document,
     Reglement,
+    /// Instantané de l'entreprise figé à la validation d'un document (F5).
+    Instantane,
+    /// Fiche de l'entreprise et ses logos : une seule ligne (F5).
+    Entreprise,
+    /// Paramètres partagés par tous les postes, en un seul bloc (F5).
+    Parametres,
 }
 
 impl Entite {
+    pub const TOUTES: [Entite; 8] = [
+        Entite::Utilisateur,
+        Entite::Tiers,
+        Entite::Produit,
+        Entite::Document,
+        Entite::Reglement,
+        Entite::Instantane,
+        Entite::Entreprise,
+        Entite::Parametres,
+    ];
+
     pub fn code(self) -> &'static str {
         match self {
             Entite::Utilisateur => "utilisateur",
@@ -69,19 +86,19 @@ impl Entite {
             Entite::Produit => "produit",
             Entite::Document => "document",
             Entite::Reglement => "reglement",
+            Entite::Instantane => "instantane",
+            Entite::Entreprise => "entreprise",
+            Entite::Parametres => "parametres",
         }
     }
 
     pub fn depuis_code(code: &str) -> Option<Entite> {
-        [
-            Entite::Utilisateur,
-            Entite::Tiers,
-            Entite::Produit,
-            Entite::Document,
-            Entite::Reglement,
-        ]
-        .into_iter()
-        .find(|e| e.code() == code)
+        Entite::TOUTES.into_iter().find(|e| e.code() == code)
+    }
+
+    /// Entité d'une seule ligne, désignée par son code au lieu d'un `uid`.
+    pub fn unique(self) -> bool {
+        matches!(self, Entite::Entreprise | Entite::Parametres)
     }
 }
 
@@ -210,7 +227,8 @@ pub enum Issue {
     Bloquee,
 }
 
-/// Une ligne qui a changé, telle qu'elle est maintenant sur le serveur.
+/// Une ligne qui a changé, telle qu'elle est maintenant sur le serveur. Pour
+/// une entité d'une seule ligne, `uid` est le code de l'entité.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Changement {
     /// Rang dans la suite des changements ; le poste garde le dernier reçu.
@@ -220,22 +238,21 @@ pub struct Changement {
     pub etat: Etat,
 }
 
+/// Valeurs d'une ligne, par nom de colonne (F5). Les deux côtés ont le même
+/// schéma, garanti par la version du protocole. Une référence à une autre
+/// ligne vaut son `uid`, un contenu binaire (logo) son encodage base64 ; les
+/// paramètres partagés valent leur valeur JSON, par clé.
+pub type Valeurs = serde_json::Map<String, serde_json::Value>;
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "etat", rename_all = "snake_case")]
 pub enum Etat {
-    Tiers {
-        fiche: Tiers,
-        actif: bool,
+    Ligne {
+        valeurs: Valeurs,
+        /// Lignes d'un document, dans l'ordre ; remplacées en bloc.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        lignes: Vec<Valeurs>,
     },
-    Document {
-        type_document: String,
-        statut: String,
-        numero: Option<String>,
-        saisie: Saisie,
-    },
-    /// Entité dont le contenu ne voyage pas encore (F5) : le poste sait
-    /// seulement qu'elle a changé.
-    NonTransmis,
     Supprime,
 }
 
@@ -287,13 +304,7 @@ mod tests {
             serde_json::to_string(&Issue::EnAttente).unwrap(),
             "{\"issue\":\"en_attente\"}"
         );
-        for e in [
-            Entite::Utilisateur,
-            Entite::Tiers,
-            Entite::Produit,
-            Entite::Document,
-            Entite::Reglement,
-        ] {
+        for e in Entite::TOUTES {
             assert_eq!(Entite::depuis_code(e.code()), Some(e));
         }
         assert_eq!(Entite::depuis_code("autre"), None);

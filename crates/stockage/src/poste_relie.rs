@@ -2,6 +2,14 @@
 //! adresse, empreinte du certificat du serveur (épinglage), entreprise, nom du
 //! poste et identité TLS du poste. La clé privée du poste est protégée par
 //! Windows pour le compte de la personne, comme `kadenz.cle`.
+//!
+//! Jalon F5 : un poste relié travaille sur une copie du serveur,
+//! `kadenz-poste.sqlite`, à côté de sa base locale (cahier de la phase 2,
+//! décisions 45 à 47). La base locale reste intacte et sert de nouveau si le
+//! poste est délié.
+
+use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use rusqlite::Connection;
 use serde_json::{Value, json};
@@ -10,6 +18,9 @@ use crate::chiffrement::{self, Portee};
 use crate::{Erreur, Resultat};
 
 const CLE: &str = "poste_relie";
+
+/// Nom de la copie du serveur, dans le dossier de la base locale.
+pub const NOM_COPIE: &str = "kadenz-poste.sqlite";
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct PosteRelie {
@@ -99,9 +110,99 @@ pub fn lire(conn: &Connection) -> Resultat<Option<PosteRelie>> {
     }))
 }
 
+/// Chemin de la copie du serveur dans le dossier donné. En développement, la
+/// variable d'environnement `KADENZ_COPIE` le remplace (comme `KADENZ_BASE`
+/// pour la base locale).
+pub fn chemin_copie(dossier: &Path) -> PathBuf {
+    #[cfg(debug_assertions)]
+    if let Some(chemin) = std::env::var_os("KADENZ_COPIE") {
+        return chemin.into();
+    }
+    dossier.join(NOM_COPIE)
+}
+
+/// Copie du serveur présente dans le dossier donné, s'il y en a une.
+pub fn copie(dossier: &Path) -> Option<PathBuf> {
+    let chemin = chemin_copie(dossier);
+    chemin.is_file().then_some(chemin)
+}
+
+/// Ouvre la copie du serveur : la fenêtre et la synchronisation l'ouvrent en
+/// même temps, d'où l'attente de 5 secondes sur un verrou. Les modules actifs
+/// sont ceux de l'abonnement, appliqués par l'application après l'ouverture.
+pub fn ouvrir_copie(chemin: &Path) -> Resultat<Connection> {
+    let conn = crate::ouvrir(chemin)?;
+    conn.busy_timeout(Duration::from_secs(5))?;
+    Ok(conn)
+}
+
+/// Crée la copie du serveur, vide, dans le dossier donné : elle porte le lien
+/// au serveur et l'identifiant de l'entreprise du serveur ; la première
+/// synchronisation la remplit. Une copie déjà présente est refusée. En cas
+/// d'échec, rien ne reste sur le disque.
+pub fn creer_copie(dossier: &Path, poste: &PosteRelie) -> Resultat<PathBuf> {
+    let chemin = chemin_copie(dossier);
+    if chemin.exists() {
+        return Err(Erreur::Validation(
+            "la copie du serveur existe déjà sur ce poste".into(),
+        ));
+    }
+    let creer = || -> Resultat<()> {
+        let conn = ouvrir_copie(&chemin)?;
+        garder(&conn, poste)?;
+        conn.execute(
+            "UPDATE parametre_systeme SET valeur = json_quote(?1)
+             WHERE cle = 'identifiant_entreprise'",
+            [&poste.entreprise],
+        )?;
+        Ok(())
+    };
+    if let Err(e) = creer() {
+        let mut fichiers = vec![chemin.clone(), crate::chiffrement::chemin_cle(&chemin)];
+        for suffixe in ["-wal", "-shm"] {
+            let mut nom = chemin.clone().into_os_string();
+            nom.push(suffixe);
+            fichiers.push(nom.into());
+        }
+        for f in fichiers {
+            let _ = std::fs::remove_file(f);
+        }
+        return Err(e);
+    }
+    Ok(chemin)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn copie_creee_une_seule_fois() {
+        let dossier =
+            std::env::temp_dir().join(format!("kadenz-essai-copie-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dossier);
+        std::fs::create_dir_all(&dossier).unwrap();
+        assert!(copie(&dossier).is_none());
+        let poste = PosteRelie {
+            adresse: "serveur:47380".into(),
+            empreinte_serveur: "ab".repeat(32),
+            entreprise: "0190e000-0000-7000-8000-000000000001".into(),
+            nom: "Comptabilité".into(),
+            certificat: vec![1, 2, 3],
+            cle: vec![9, 8, 7],
+        };
+        let chemin = creer_copie(&dossier, &poste).unwrap();
+        assert_eq!(copie(&dossier), Some(chemin.clone()));
+        assert!(creer_copie(&dossier, &poste).is_err());
+        let conn = ouvrir_copie(&chemin).unwrap();
+        assert_eq!(lire(&conn).unwrap().unwrap(), poste);
+        assert_eq!(
+            crate::synchro::identifiant_entreprise(&conn).unwrap(),
+            poste.entreprise
+        );
+        drop(conn);
+        let _ = std::fs::remove_dir_all(&dossier);
+    }
 
     #[test]
     fn garde_et_relit() {
