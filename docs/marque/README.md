@@ -50,6 +50,7 @@ Statut : **« Quatre pièces »**, validée par l'utilisateur le 2026-11-11 et i
 | `planches/generer_planches.py` | Regénère planches, PNG et PDF : `python docs/marque/planches/generer_planches.py .` (Chrome requis) |
 | `planches/scenes_signaletique.py` | Scènes de signalétique de la planche 07, utilisées par `generer_planches.py` |
 | `planches/scenes_papeterie.py` | Scènes de papeterie de la planche 08, utilisées par `generer_planches.py` |
+| `planches/apercu-papeterie.html`, `images/apercu-papeterie.png` | Aperçu complet de la papeterie en grand format : `python docs/marque/planches/generer_apercu_papeterie.py .` |
 | `generer.py` | Regénère tous les SVG : `python docs/marque/generer.py .` (fontTools requis) |
 
 Les PNG, le `.ico` et les icônes web ont été rendus avec les scripts du skill logo-design (`render_png.py`, `export_variants.py`, rendu par Chrome), sans Pillow.
