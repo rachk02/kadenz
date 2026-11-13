@@ -15,12 +15,13 @@ import { ImpressionApi } from "impression.slint";
 import { LicenceApi } from "licence.slint";
 import { AbonnementApi, BandeauAbonnement } from "abonnement.slint";
 import { ServeurApi } from "serveur.slint";
+import { ConnexionApi } from "etat-connexion.slint";
 import { InviteMiseAJour, MiseAJourApi } from "maj.slint";
 import { BandeauHaut, BoutonIcone, ContenuBarre, Infobulle, InfobulleFenetre, Menu, Page, PanneauFlottant } from "navigation.slint";
 import { PageReglages, ReglagesApi, Rubrique } from "reglages.slint";
 import { EcranDemarrageImpossible, SauvegardesApi } from "sauvegardes.slint";
 
-export { AbonnementApi, ServeurApi, Affichage, DonneesAssistant, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, TiersApi, UtilisateursApi }
+export { AbonnementApi, ConnexionApi, ServeurApi, Affichage, DonneesAssistant, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, presentation, assistant, connexion, application }
@@ -73,6 +74,12 @@ export component FenetrePrincipale inherits Window {
     function choisir(p: Page) {
         root.page = p;
         root.barre-flottante = false;
+    }
+
+    // Clic sur l'état de la connexion : le détail est dans la rubrique « Serveur ».
+    function ouvrir-connexion() {
+        root.choisir(Page.parametres);
+        ReglagesApi.rubrique = Rubrique.serveur;
     }
 
     title: root.nom-entreprise == "" ? "Kadenz" : root.nom-entreprise;
@@ -155,6 +162,9 @@ export component FenetrePrincipale inherits Window {
                 choisi(p) => {
                     root.choisir(p);
                 }
+                ouvrir-connexion => {
+                    root.ouvrir-connexion();
+                }
             }
 
             // Abonnement (F3) : avertissement avant l'échéance, ou lecture seule. Hors de
@@ -195,6 +205,9 @@ export component FenetrePrincipale inherits Window {
                         infobulle-bascule: @tr("Replier la barre latérale (Ctrl+B)");
                         choisi(p) => {
                             root.choisir(p);
+                        }
+                        ouvrir-connexion => {
+                            root.ouvrir-connexion();
                         }
                         basculer => {
                             root.barre-epinglee = false;
@@ -315,6 +328,9 @@ export component FenetrePrincipale inherits Window {
             infobulle-bascule: @tr("Épingler la barre latérale (Ctrl+B)");
             choisi(p) => {
                 root.choisir(p);
+            }
+            ouvrir-connexion => {
+                root.ouvrir-connexion();
             }
             basculer => {
                 root.barre-epinglee = true;

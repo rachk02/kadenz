@@ -1,0 +1,70 @@
+// État de la connexion au serveur (phase 2, jalon F5 ; écrans, section 3) :
+// indication permanente et discrète, avec texte et icône, jamais la couleur
+// seule. Elle n'existe que sur un poste inscrit sur un serveur. Le texte et le
+// niveau viennent du synchroniseur, traduits côté Rust ; un clic ouvre la
+// rubrique « Serveur » des Paramètres, où se trouve le détail (la fenêtre
+// principale s'en charge : `ouvrir` remonte jusqu'à elle).
+import { Affichage, Theme } from "composants.slint";
+
+export global ConnexionApi {
+    // Poste inscrit sur un serveur : sinon, pas d'indicateur.
+    in property <bool> visible;
+    in property <string> texte;
+    // 0 : relié ; 1 : en cours (connexion, synchronisation, reconnexion) ;
+    // 2 : coupé ou refusé (injoignable, certificat changé, poste retiré).
+    in property <int> niveau;
+}
+
+export component IndicateurConnexion inherits Rectangle {
+    // Largeur bornée : dans le bandeau, le texte est coupé au besoin.
+    in property <length> largeur-max: 260px;
+    callback ouvrir();
+
+    height: 30px;
+    width: min(rangee.preferred-width, root.largeur-max);
+    border-radius: 4px;
+    background: zone.has-hover ? Theme.accent-survol : transparent;
+    animate background { duration: Affichage.duree; }
+
+    accessible-role: button;
+    accessible-label: ConnexionApi.texte;
+    accessible-action-default => {
+        root.ouvrir();
+    }
+
+    rangee := HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        spacing: 6px;
+
+        if !Theme.rtl: Image {
+            width: 16px;
+            height: 16px;
+            source: ConnexionApi.niveau == 0 ? @image-url("icones/etat/relie.svg") : ConnexionApi.niveau == 1 ? @image-url("icones/etat/attente.svg") : @image-url("icones/etat/coupe.svg");
+            colorize: ConnexionApi.niveau == 2 ? Theme.erreur : Theme.texte-secondaire;
+        }
+
+        Text {
+            vertical-alignment: center;
+            horizontal-alignment: Theme.debut;
+            text: ConnexionApi.texte;
+            font-size: 12px;
+            font-weight: ConnexionApi.niveau == 2 ? 600 : 400;
+            color: ConnexionApi.niveau == 2 ? Theme.erreur : Theme.texte-secondaire;
+            overflow: elide;
+        }
+
+        if Theme.rtl: Image {
+            width: 16px;
+            height: 16px;
+            source: ConnexionApi.niveau == 0 ? @image-url("icones/etat/relie.svg") : ConnexionApi.niveau == 1 ? @image-url("icones/etat/attente.svg") : @image-url("icones/etat/coupe.svg");
+            colorize: ConnexionApi.niveau == 2 ? Theme.erreur : Theme.texte-secondaire;
+        }
+    }
+
+    zone := TouchArea {
+        clicked => {
+            root.ouvrir();
+        }
+    }
+}

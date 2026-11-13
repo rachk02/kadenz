@@ -7,6 +7,7 @@
 // De droite à gauche, la barre et le panneau passent à droite et glissent depuis la droite.
 import { ScrollView } from "std-widgets.slint";
 import { Affichage, Bouton, ElementNavigation, Symbole, Theme } from "composants.slint";
+import { ConnexionApi, IndicateurConnexion } from "etat-connexion.slint";
 
 // Pages de travail, plus les Paramètres (rubriques, voir reglages.slint).
 export enum Page {
@@ -239,6 +240,7 @@ export component ContenuBarre inherits VerticalLayout {
     in property <string> infobulle-bascule;
     callback choisi(Page);
     callback basculer();
+    callback ouvrir-connexion();
 
     padding: 10px;
     spacing: 4px;
@@ -319,6 +321,18 @@ export component ContenuBarre inherits VerticalLayout {
             overflow: elide;
         }
 
+    }
+
+    // Poste inscrit sur un serveur : état de la connexion (écrans, section 3).
+    if ConnexionApi.visible: HorizontalLayout {
+        alignment: Theme.rangee-debut;
+
+        IndicateurConnexion {
+            largeur-max: 228px;
+            ouvrir => {
+                root.ouvrir-connexion();
+            }
+        }
     }
 }
 
@@ -509,8 +523,16 @@ component CompteBandeau inherits HorizontalLayout {
     in property <string> utilisateur;
     in property <Page> page;
     callback choisi(Page);
+    callback ouvrir-connexion();
 
     spacing: 6px;
+
+    // Poste inscrit sur un serveur : état de la connexion (écrans, section 3).
+    if ConnexionApi.visible && !Theme.rtl: IndicateurConnexion {
+        ouvrir => {
+            root.ouvrir-connexion();
+        }
+    }
 
 
     if Theme.rtl: Text {
@@ -540,6 +562,11 @@ component CompteBandeau inherits HorizontalLayout {
         overflow: elide;
     }
 
+    if ConnexionApi.visible && Theme.rtl: IndicateurConnexion {
+        ouvrir => {
+            root.ouvrir-connexion();
+        }
+    }
 }
 
 // Groupes du bandeau, dans l'ordre de lecture.
@@ -625,6 +652,7 @@ export component BandeauHaut inherits Rectangle {
     in property <string> utilisateur;
     in property <Page> page;
     callback choisi(Page);
+    callback ouvrir-connexion();
 
     height: 52px;
     background: Theme.fond-lateral;
@@ -653,6 +681,9 @@ export component BandeauHaut inherits Rectangle {
             choisi(p) => {
                 root.choisi(p);
             }
+            ouvrir-connexion => {
+                root.ouvrir-connexion();
+            }
         }
 
         Rectangle {
@@ -664,6 +695,9 @@ export component BandeauHaut inherits Rectangle {
             page: root.page;
             choisi(p) => {
                 root.choisi(p);
+            }
+            ouvrir-connexion => {
+                root.ouvrir-connexion();
             }
         }
 
