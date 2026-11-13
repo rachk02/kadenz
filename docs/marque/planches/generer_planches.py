@@ -310,7 +310,7 @@ def p08():
     cases = "".join(f'<div style="display:flex;flex-direction:column;gap:6px">{scene(fn, f"p8h{k}", "0 0 400 500", 205, 256)}'
                     f'<p class="petit">{leg}</p></div>' for k, (fn, leg) in enumerate(haut))
     bas = ((sp.carnet, "Carnet A5 et autocollants", "0 0 400 500", 1), (sp.signatures, "Signatures de courriel, trois variantes", "0 0 680 428", 2),
-           (sp.tampons, "Tampons, trois variantes, une seule couleur d'encre", "0 0 680 428", 2))
+           (sp.tampons, "Tampons par degré, une seule couleur d'encre", "0 0 680 428", 2))
     cases += "".join(f'<div style="display:flex;flex-direction:column;gap:6px;grid-column:span {n}">'
                      f'{scene(fn, f"p8b{k}", vb, 205 if n == 1 else 426, 256)}<p class="petit">{leg}</p></div>'
                      for k, (fn, leg, vb, n) in enumerate(bas))

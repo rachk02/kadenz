@@ -122,10 +122,10 @@ Papeterie de l'éditeur seulement : les documents produits par le logiciel garde
 | Carte de visite | Recto Nuit : motif Tournant à gauche, logo blanc sur la partie calme. Verso blanc : symbole, nom, fonction, trois temps, coordonnées ; Fondu très clair à droite, qui s'efface avant le texte | 85 x 55 mm |
 | Papier à en-tête | Bandeau Fondu très clair qui s'efface vers le logo, coordonnées en pied, aucune barre latérale | A4 |
 | Enveloppe | Dehors : Fondu clair sous l'adresse de retour, zone du destinataire libre. Dedans : tout l'intérieur imprimé Nuit au motif Tournant | DL 220 x 110 mm |
-| Chemise à rabats | Dehors comme le carnet (Tournant sur les trois quarts, bande Nuit avec le logo, élastique) ; dedans Tournant, rabat Indigo ; sans les trois temps | A4 |
+| Chemise à rabats | Dehors comme le carnet, sans l'élastique (Tournant sur les trois quarts, bande Nuit avec le logo) ; dedans Tournant, rabat Indigo ; sans les trois temps | A4 |
 | Badge et tour de cou | Haut Nuit au Fondu qui descend vers le logo, nom sur blanc, trois temps ; tour de cou Indigo | 90 x 120 mm |
 | Signatures de courriel | Trois variantes : A bandeau Fondu avec le logo, B bloc Nuit au Fondu avec le texte en blanc, C fine bande Tournant | Largeur 300 à 340 px |
-| Tampons | Trois variantes, une seule couleur d'encre : A cachet rond, B rectangle Fondu, C cadre Tournant autour du logo empilé | 40 mm de diamètre, 50 x 22 mm, 30 x 30 mm environ |
+| Tampons par degré | Une forme par degré, une seule couleur d'encre (système 1, retenu le 2026-11-13) : 1 entreprise, cachet rond, un seul ; 2 direction, rectangle Fondu au nom de la direction, un par direction ; 3 responsable, rectangle nominatif avec cadre Tournant et ligne de signature, un par responsable ; 4 service, dateur « Reçu le … par … », un par service | 40 mm de diamètre ; 50 x 20 mm ; 55 x 23 mm ; 47 x 14 mm environ |
 | Carnet et autocollants | Carnet Nuit (Tournant, bande avec le logo, élastique) ; autocollants du symbole et de l'icône | A5, 50 mm |
 
 ## Modules (proposition)

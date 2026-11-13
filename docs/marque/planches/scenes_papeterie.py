@@ -1,8 +1,9 @@
 """Scènes de papeterie de la planche 08 (identité « Quatre pièces »), retenues par l'utilisateur le
 2026-11-13 après deux tours de propositions (propositions-2026-11-13-papeterie/) :
 carte de visite (recto Tournant, verso Fondu clair), papier à en-tête, enveloppe (Fondu dehors,
-intérieur entièrement imprimé), chemise (dehors comme le carnet, dedans Tournant et rabat Indigo),
-badge et tour de cou, trois signatures de courriel, trois tampons, carnet et autocollants.
+intérieur entièrement imprimé), chemise (dehors comme le carnet sans l'élastique, dedans Tournant et rabat Indigo),
+badge et tour de cou, trois signatures de courriel, tampons par degré (système 1 : entreprise, direction,
+responsable, service), carnet et autocollants.
 
 Papeterie de l'éditeur seulement : les documents produits par le logiciel gardent l'identité du client.
 Les coordonnées restent entre crochets. Le module generer.py de la marque et celui des scènes de
@@ -148,7 +149,7 @@ def couverture(i, x, y, w, h, elastique=True):
 def chemise(i):
     out = [ombre(i)]
     x1, x2, y, w, h = 24, 206, 110, 170, 240
-    out += couverture(i, x1, y, w, h)
+    out += couverture(i, x1, y, w, h, elastique=False)
     out.append(rect(x2, y, w, h, NUIT, 2, filtre(i)))
     out.append(imbrique(gm.motif_tournant(NUIT, PIECES, w, h, 28.3), x2, y, w, h))
     out.append(rect(x2, y + 160, w, 80, INDIGO, 2) + rect(x2 + 50, y + 168, 70, 3, "#20296A"))
@@ -248,10 +249,63 @@ def tampon_cadre(x, y, c=150):
             imbrique(empile_encre(), x + 35, y + 30, c - 70, c - 60)]
 
 
+def ecrit(x, y, s, taille=11, graisse=600, ancre="middle", esp=".04em"):
+    return (f'<text x="{x}" y="{y}" font-family="Inter" font-size="{taille}" font-weight="{graisse}" fill="{INDIGO}" '
+            f'text-anchor="{ancre}" letter-spacing="{esp}">{s}</text>')
+
+
+ENCRE_TRAIT = f'fill="none" stroke="{INDIGO}"'
+
+
+def tampon_direction(cx, cy, nom="[Direction]"):
+    """Degré 2 : rectangle Fondu au nom de la direction, un par direction."""
+    w, h = 250, 96
+    x, y = cx - w / 2, cy - h / 2
+    return [f'<rect x="{x}" y="{y}" width="{w}" height="{h}" {ENCRE_TRAIT} stroke-width="2.5"/>',
+            imbrique(transparent(gm.motif_fondu(BLANC, INDIGO, 90, h - 12, 12, 0.85)), x + 6, y + 6, 90, h - 12),
+            imbrique(logo_encre(), x + 100, y + 12, 100, 27),
+            ecrit(x + 102, y + 58, "DIRECTION", 9, 600, "start", ".12em"),
+            ecrit(x + 102, y + 78, nom, 13, 700, "start", "0")]
+
+
+def tampon_responsable(cx, cy):
+    """Degré 3 : rectangle nominatif, cadre Tournant autour du symbole, ligne de signature."""
+    w, h, c = 270, 112, 76
+    x, y = cx - w / 2, cy - h / 2
+    return [f'<rect x="{x}" y="{y}" width="{w}" height="{h}" {ENCRE_TRAIT} stroke-width="2.5"/>',
+            imbrique(transparent(gm.motif_tournant(BLANC, INDIGO, c, c, 9.5)), x + 12, y + 18, c, c),
+            f'<rect x="{x + 21.5}" y="{y + 27.5}" width="{c - 19}" height="{c - 19}" fill="{BLANC}"/>',
+            img("kadenz-symbole.svg", x + 30, y + 36, c - 36, c - 36),
+            ecrit(x + 102, y + 30, "[Prénom Nom]", 13, 700, "start", "0"),
+            ecrit(x + 102, y + 47, "[Fonction]", 10, 500, "start", "0"),
+            ecrit(x + 102, y + 62, "[Direction]", 10, 500, "start", "0"),
+            ecrit(x + 102, y + 96, "Signature", 8.5, 600, "start", ".08em"),
+            f'<path d="M{x + 152} {y + 96} L{x + w - 14} {y + 96}" {ENCRE_TRAIT} stroke-width="1" stroke-dasharray="2 3"/>']
+
+
+def tampon_service(cx, cy):
+    """Degré 4 : dateur du service (réception, courrier)."""
+    w, h = 230, 70
+    x, y = cx - w / 2, cy - h / 2
+    return [f'<rect x="{x}" y="{y}" width="{w}" height="{h}" {ENCRE_TRAIT} stroke-width="2"/>',
+            img("kadenz-symbole.svg", x + 12, y + 15, 40, 40),
+            ecrit(x + 64, y + 24, "[Service]", 11, 700, "start", "0"),
+            ecrit(x + 64, y + 44, "REÇU LE", 9, 600, "start", ".12em"),
+            f'<rect x="{x + 118}" y="{y + 32}" width="{w - 132}" height="18" {ENCRE_TRAIT} stroke-width="1"/>',
+            ecrit(x + 118 + (w - 132) / 2, y + 45, "[JJ / MM / AAAA]", 9, 500),
+            ecrit(x + 64, y + 62, "PAR", 8, 600, "start", ".12em"),
+            f'<path d="M{x + 88} {y + 62} L{x + w - 14} {y + 62}" {ENCRE_TRAIT} stroke-width="1" stroke-dasharray="2 3"/>']
+
+
 def tampons(i):
-    out = [ombre(i), rect(10, 10, 660, 408, BLANC, 2, filtre(i)), lignes(36, 40, (420, 560, 300), 12)]
-    empreintes = tampon_rond(i, 120, 250) + tampon_fondu(232, 202) + tampon_cadre(496, 175)
-    out.append(f'<g opacity=".85">{"".join(empreintes)}</g>')
-    for x, t in ((120, "A · cachet rond"), (346, "B · rectangle Fondu"), (571, "C · cadre Tournant")):
-        out.append(texte(x, 392, t, 11, ARDOISE, 600))
+    """Système 1, retenu le 2026-11-13 : une forme par degré, une seule couleur d'encre.
+    Degré 1 entreprise (un seul), 2 direction (un par direction), 3 responsable (un par responsable),
+    4 service (un par service)."""
+    out = [ombre(i), rect(10, 10, 660, 408, BLANC, 2, filtre(i))]
+    empreintes = (tampon_rond(i, 140, 214) + tampon_direction(480, 82) + tampon_responsable(480, 214)
+                  + tampon_service(480, 340))
+    out.append(f'<g opacity=".88">{"".join(empreintes)}</g>')
+    for x, y, t in ((140, 330, "1 · Entreprise, un seul"), (480, 26, "2 · Direction, une par direction"),
+                    (480, 150, "3 · Responsable, nominatif"), (480, 297, "4 · Service : réception, courrier")):
+        out.append(texte(x, y, t, 11, ARDOISE, 600))
     return out
