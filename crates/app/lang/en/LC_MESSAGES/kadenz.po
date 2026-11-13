@@ -3452,3 +3452,177 @@ msgstr "Documents validated: {}; refused: {}. {}"
 
 msgid "Serveur de retour : {} document(s) attendent leur validation. Voir Paramètres, rubrique « Serveur »."
 msgstr "Server is back: {} document(s) waiting for validation. See Settings, Server section."
+
+msgid "Conflit tranché : la version du serveur est gardée."
+msgstr "Conflict resolved: the server version is kept."
+
+msgid "Conflit tranché : la version du poste est appliquée."
+msgstr "Conflict resolved: this workstation's version is applied."
+
+msgid "Cette opération ne se tranche pas champ par champ."
+msgstr "This operation cannot be resolved field by field."
+
+msgid "Conflit tranché : votre choix est appliqué."
+msgstr "Conflict resolved: your choice is applied."
+
+msgid "Cette opération n'est plus dans la liste."
+msgstr "This operation is no longer in the list."
+
+msgid "Opération acceptée : elle est appliquée."
+msgstr "Operation accepted: it is applied."
+
+msgid "Opération rejetée."
+msgstr "Operation rejected."
+
+msgid "Serveur injoignable : la liste se lit quand le poste est connecté."
+msgstr "Server unreachable: the list can be read when the workstation is connected."
+
+msgid "Liste illisible : {}."
+msgstr "List unavailable: {}."
+
+msgid "compte inconnu"
+msgstr "unknown account"
+
+msgid "Par {}, le {} (heure du poste)"
+msgstr "By {}, on {} (workstation time)"
+
+msgid "Par {}, reçue par le serveur le {}"
+msgstr "By {}, received by the server on {}"
+
+msgid "document absent de ce poste"
+msgstr "document not on this workstation"
+
+msgid "fiche absente de ce poste"
+msgstr "record not on this workstation"
+
+msgid "Création de la fiche « {} »"
+msgstr "New record “{}”"
+
+msgid "Modification de la fiche « {} »"
+msgstr "Change to record “{}”"
+
+msgid "Retrait de la fiche « {} »"
+msgstr "Removal of record “{}”"
+
+msgid "Réactivation de la fiche « {} »"
+msgstr "Reactivation of record “{}”"
+
+msgid "Désactivation de la fiche « {} »"
+msgstr "Deactivation of record “{}”"
+
+msgid "Import de {} fiches de tiers"
+msgstr "Import of {} customer or supplier records"
+
+msgid "Import de {} produits"
+msgstr "Import of {} products"
+
+msgid "Nouveau document"
+msgstr "New document"
+
+msgid "Modification : {}"
+msgstr "Change: {}"
+
+msgid "Validation : {}"
+msgstr "Validation: {}"
+
+msgid "Annulation : {}"
+msgstr "Cancellation: {}"
+
+msgid "Suppression : {}"
+msgstr "Deletion: {}"
+
+msgid "Avoir sur : {}"
+msgstr "Credit note on: {}"
+
+msgid "Conversion en facture : {}"
+msgstr "Conversion to invoice: {}"
+
+msgid "Bordereau depuis : {}"
+msgstr "Delivery note from: {}"
+
+msgid "Livraison confirmée : {}"
+msgstr "Delivery confirmed: {}"
+
+msgid "Réception enregistrée : {}"
+msgstr "Receipt recorded: {}"
+
+msgid "Envoi noté : {}"
+msgstr "Marked as sent: {}"
+
+msgid "Règlement de {} : {}"
+msgstr "Payment of {}: {}"
+
+msgid "Suppression d'un règlement"
+msgstr "Deletion of a payment"
+
+msgid "Changement de langue"
+msgstr "Language change"
+
+msgid "Changement de navigation et d'affichage"
+msgstr "Navigation and display change"
+
+msgid "Opération sur les comptes ou les réglages"
+msgstr "Operation on accounts or settings"
+
+msgid "Opération faite hors connexion et refusée par le serveur pour un compte ou un droit : acceptez-la pour l'appliquer, ou rejetez-la."
+msgstr "Operation made offline and refused by the server because of an account or a permission: accept it to apply it, or reject it."
+
+msgid "Cette ligne n'est plus sur le serveur : seule la version du serveur peut être gardée."
+msgstr "This record is no longer on the server: only the server version can be kept."
+
+msgid "La fiche a changé sur un autre poste pendant la coupure. Gardez une version entière, ou cliquez sur la valeur à garder pour chaque champ qui diffère."
+msgstr "The record changed on another workstation during the outage. Keep one whole version, or click the value to keep for each field that differs."
+
+msgid "Le document a changé sur un autre poste pendant la coupure. Gardez la version du serveur ou celle du poste."
+msgstr "The document changed on another workstation during the outage. Keep the server version or this workstation's version."
+
+msgid "Champ"
+msgstr "Field"
+
+msgid "Version du serveur"
+msgstr "Server version"
+
+msgid "Version du poste"
+msgstr "This workstation's version"
+
+msgid "Garder la version du serveur"
+msgstr "Keep the server version"
+
+msgid "Garder la version du poste"
+msgstr "Keep this workstation's version"
+
+msgid "Garder mon choix"
+msgstr "Keep my choice"
+
+msgid "Accepter"
+msgstr "Accept"
+
+msgid "Rejeter"
+msgstr "Reject"
+
+msgid "La décision attend le serveur : elle se prend quand le poste est connecté."
+msgstr "The decision waits for the server: it is made when the workstation is connected."
+
+msgid "Opérations suspendues"
+msgstr "Suspended operations"
+
+msgid "Opérations suspendues ({})"
+msgstr "Suspended operations ({})"
+
+msgid "Écritures faites pendant une coupure que le serveur n'a pas pu appliquer seul : un conflit à trancher, ou une opération en attente de la décision de l'Admin."
+msgstr "Entries made during an outage that the server could not apply on its own: a conflict to resolve, or an operation waiting for the Admin's decision."
+
+msgid "Lecture de la liste sur le serveur..."
+msgstr "Reading the list from the server..."
+
+msgid "Aucune opération suspendue."
+msgstr "No suspended operations."
+
+msgid "CONFLIT"
+msgstr "CONFLICT"
+
+msgid "EN ATTENTE"
+msgstr "PENDING"
+
+msgid "Examiner"
+msgstr "Review"

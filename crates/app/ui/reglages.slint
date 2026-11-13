@@ -9,6 +9,7 @@ import { PageImpression } from "impression.slint";
 import { PageLicence } from "licence.slint";
 import { PageAbonnement } from "abonnement.slint";
 import { PageServeur } from "serveur.slint";
+import { PageSuspendues, SuspenduesApi } from "suspendues.slint";
 import { PageSauvegardes } from "sauvegardes.slint";
 import { Infobulle } from "navigation.slint";
 
@@ -25,6 +26,7 @@ export enum Rubrique {
     licence,
     abonnement,
     serveur,
+    suspendues,
     mises-a-jour,
     a-propos,
 }
@@ -59,6 +61,13 @@ public pure function libelle(r: Rubrique) -> string {
     if (r == Rubrique.licence) { return @tr("Licence"); }
     if (r == Rubrique.abonnement) { return @tr("Abonnement"); }
     if (r == Rubrique.serveur) { return @tr("Serveur"); }
+    // Marque : nombre d'opérations suspendues (les attentes ne sont comptées
+    // que pour l'Admin, le seul à qui le serveur les montre).
+    if (r == Rubrique.suspendues) {
+        return SuspenduesApi.conflits + SuspenduesApi.attentes > 0
+            ? @tr("Opérations suspendues ({})", SuspenduesApi.conflits + SuspenduesApi.attentes)
+            : @tr("Opérations suspendues");
+    }
     if (r == Rubrique.mises-a-jour) { return @tr("Mises à jour"); }
     return @tr("À propos");
 }
@@ -76,6 +85,7 @@ public pure function icone(r: Rubrique) -> image {
     if (r == Rubrique.licence) { return @image-url("icones/menu/licence.svg"); }
     if (r == Rubrique.abonnement) { return @image-url("icones/menu/licence.svg"); }
     if (r == Rubrique.serveur) { return @image-url("icones/menu/parametres.svg"); }
+    if (r == Rubrique.suspendues) { return @image-url("icones/menu/relances.svg"); }
     if (r == Rubrique.mises-a-jour) { return @image-url("icones/menu/mises-a-jour.svg"); }
     return @image-url("icones/menu/a-propos.svg");
 }
@@ -803,6 +813,8 @@ export component PageReglages inherits Rectangle {
         if ReglagesApi.rubrique == Rubrique.abonnement: PageAbonnement { }
 
         if ReglagesApi.rubrique == Rubrique.serveur: PageServeur { }
+
+        if ReglagesApi.rubrique == Rubrique.suspendues: PageSuspendues { }
 
         if ReglagesApi.rubrique == Rubrique.mises-a-jour: PageMisesAJour {
             version-logiciel: root.version-logiciel;

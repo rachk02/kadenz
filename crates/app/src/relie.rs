@@ -39,6 +39,8 @@ pub(crate) struct Relie {
     /// Compte accepté par le serveur mais pas encore reçu dans une copie neuve :
     /// la session s'ouvre dès qu'il arrive.
     pub(crate) compte_attendu: Option<String>,
+    /// Opérations suspendues sur le serveur, telles que la rubrique les montre.
+    pub(crate) suspendues: crate::suspendues::Suivi,
 }
 
 /// Démarre le synchroniseur sur la copie ; ses événements reviennent dans le
@@ -61,6 +63,7 @@ pub(crate) fn demarrer(f: &FenetrePrincipale, etat: &EtatPartage, copie: PathBuf
                 avancement: None,
                 compte_serveur: false,
                 compte_attendu: None,
+                suspendues: Default::default(),
             })
         }
         Err(e) => {
@@ -638,8 +641,13 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
                 f.global::<Alerte>().invoke_montrer(texte.into());
             }
         }
-        // Conflits et attentes : écrans de F6c.
-        Evenement::Suspendues { .. } | Evenement::ListeSuspendues(_) => {}
+        // Conflits et attentes : rubrique « Opérations suspendues » (F6c).
+        Evenement::Suspendues { conflits, attentes } => {
+            crate::suspendues::recevoir_nombres(f, &etat, conflits, attentes);
+        }
+        Evenement::ListeSuspendues(liste) => {
+            crate::suspendues::recevoir_liste(f, &etat, liste);
+        }
         Evenement::Compte(resultat) => {
             let refuse = matches!(resultat, Err(ErreurPoste::CompteRefuse { .. }));
             if let Some(r) = etat.borrow_mut().relie.as_mut() {

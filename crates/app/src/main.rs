@@ -18,6 +18,7 @@ mod referentiels;
 mod relie;
 mod sauvegardes;
 mod serveur;
+mod suspendues;
 mod traduction;
 mod utilisateurs;
 
@@ -253,9 +254,18 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
             Rubrique::Licence
         });
         rubriques.push(Rubrique::MisesAJour);
-        // Phase 2 : inscription de ce poste sur le serveur de l'entreprise.
+    }
+    // Phase 2 : inscription de ce poste sur le serveur de l'entreprise. Sur un
+    // poste inscrit, la rubrique est ouverte à tous les comptes : elle montre
+    // le serveur et les documents à valider au retour.
+    if gere || inscrit {
         rubriques.push(Rubrique::Serveur);
         serveur::afficher(fenetre, &etat.conn);
+    }
+    // Conflits et attentes (F6c) : chaque compte y voit ses conflits, l'Admin
+    // tout, y compris les opérations en attente.
+    if inscrit {
+        rubriques.push(Rubrique::Suspendues);
     }
     rubriques.push(Rubrique::APropos);
     let r = fenetre.global::<ReglagesApi>();
@@ -393,6 +403,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     sauvegardes::brancher(fenetre, &etat);
     serveur::brancher(fenetre, &etat);
     relie::brancher(fenetre, &etat);
+    suspendues::brancher(fenetre, &etat);
     maj::brancher(fenetre);
 
     let (f, e) = (fenetre.as_weak(), etat.clone());

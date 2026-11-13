@@ -3452,3 +3452,177 @@ msgstr "المستندات التي تم التحقق منها: {}؛ المرف�
 
 msgid "Serveur de retour : {} document(s) attendent leur validation. Voir Paramètres, rubrique « Serveur »."
 msgstr "عاد الخادم: {} مستند (مستندات) في انتظار التحقق. راجع الإعدادات، قسم «الخادم»."
+
+msgid "Conflit tranché : la version du serveur est gardée."
+msgstr "تم حل التعارض: احتُفظ بنسخة الخادم."
+
+msgid "Conflit tranché : la version du poste est appliquée."
+msgstr "تم حل التعارض: طُبّقت نسخة هذا الجهاز."
+
+msgid "Cette opération ne se tranche pas champ par champ."
+msgstr "لا يمكن حل هذه العملية حقلًا بحقل."
+
+msgid "Conflit tranché : votre choix est appliqué."
+msgstr "تم حل التعارض: طُبّق اختيارك."
+
+msgid "Cette opération n'est plus dans la liste."
+msgstr "لم تعد هذه العملية في القائمة."
+
+msgid "Opération acceptée : elle est appliquée."
+msgstr "قُبلت العملية: تم تطبيقها."
+
+msgid "Opération rejetée."
+msgstr "رُفضت العملية."
+
+msgid "Serveur injoignable : la liste se lit quand le poste est connecté."
+msgstr "تعذّر الوصول إلى الخادم: تُقرأ القائمة عندما يكون الجهاز متصلًا."
+
+msgid "Liste illisible : {}."
+msgstr "تعذّرت قراءة القائمة: {}."
+
+msgid "compte inconnu"
+msgstr "حساب غير معروف"
+
+msgid "Par {}, le {} (heure du poste)"
+msgstr "بواسطة {}، في {} (توقيت الجهاز)"
+
+msgid "Par {}, reçue par le serveur le {}"
+msgstr "بواسطة {}، استلمها الخادم في {}"
+
+msgid "document absent de ce poste"
+msgstr "المستند غير موجود على هذا الجهاز"
+
+msgid "fiche absente de ce poste"
+msgstr "البطاقة غير موجودة على هذا الجهاز"
+
+msgid "Création de la fiche « {} »"
+msgstr "إنشاء البطاقة «{}»"
+
+msgid "Modification de la fiche « {} »"
+msgstr "تعديل البطاقة «{}»"
+
+msgid "Retrait de la fiche « {} »"
+msgstr "سحب البطاقة «{}»"
+
+msgid "Réactivation de la fiche « {} »"
+msgstr "إعادة تفعيل البطاقة «{}»"
+
+msgid "Désactivation de la fiche « {} »"
+msgstr "تعطيل البطاقة «{}»"
+
+msgid "Import de {} fiches de tiers"
+msgstr "استيراد {} بطاقات عملاء أو موردين"
+
+msgid "Import de {} produits"
+msgstr "استيراد {} منتجات"
+
+msgid "Nouveau document"
+msgstr "مستند جديد"
+
+msgid "Modification : {}"
+msgstr "تعديل: {}"
+
+msgid "Validation : {}"
+msgstr "التحقق: {}"
+
+msgid "Annulation : {}"
+msgstr "إلغاء: {}"
+
+msgid "Suppression : {}"
+msgstr "حذف: {}"
+
+msgid "Avoir sur : {}"
+msgstr "إشعار دائن على: {}"
+
+msgid "Conversion en facture : {}"
+msgstr "التحويل إلى فاتورة: {}"
+
+msgid "Bordereau depuis : {}"
+msgstr "إشعار تسليم من: {}"
+
+msgid "Livraison confirmée : {}"
+msgstr "تأكيد التسليم: {}"
+
+msgid "Réception enregistrée : {}"
+msgstr "تسجيل الاستلام: {}"
+
+msgid "Envoi noté : {}"
+msgstr "تسجيل الإرسال: {}"
+
+msgid "Règlement de {} : {}"
+msgstr "دفعة بقيمة {}: {}"
+
+msgid "Suppression d'un règlement"
+msgstr "حذف دفعة"
+
+msgid "Changement de langue"
+msgstr "تغيير اللغة"
+
+msgid "Changement de navigation et d'affichage"
+msgstr "تغيير التنقل والعرض"
+
+msgid "Opération sur les comptes ou les réglages"
+msgstr "عملية على الحسابات أو الإعدادات"
+
+msgid "Opération faite hors connexion et refusée par le serveur pour un compte ou un droit : acceptez-la pour l'appliquer, ou rejetez-la."
+msgstr "عملية تمت دون اتصال ورفضها الخادم بسبب حساب أو صلاحية: اقبلها لتطبيقها أو ارفضها."
+
+msgid "Cette ligne n'est plus sur le serveur : seule la version du serveur peut être gardée."
+msgstr "لم يعد هذا السطر على الخادم: لا يمكن الاحتفاظ إلا بنسخة الخادم."
+
+msgid "La fiche a changé sur un autre poste pendant la coupure. Gardez une version entière, ou cliquez sur la valeur à garder pour chaque champ qui diffère."
+msgstr "تغيّرت البطاقة على جهاز آخر أثناء الانقطاع. احتفظ بنسخة كاملة، أو انقر على القيمة التي تريد الاحتفاظ بها في كل حقل مختلف."
+
+msgid "Le document a changé sur un autre poste pendant la coupure. Gardez la version du serveur ou celle du poste."
+msgstr "تغيّر المستند على جهاز آخر أثناء الانقطاع. احتفظ بنسخة الخادم أو بنسخة هذا الجهاز."
+
+msgid "Champ"
+msgstr "الحقل"
+
+msgid "Version du serveur"
+msgstr "نسخة الخادم"
+
+msgid "Version du poste"
+msgstr "نسخة الجهاز"
+
+msgid "Garder la version du serveur"
+msgstr "الاحتفاظ بنسخة الخادم"
+
+msgid "Garder la version du poste"
+msgstr "الاحتفاظ بنسخة الجهاز"
+
+msgid "Garder mon choix"
+msgstr "الاحتفاظ باختياري"
+
+msgid "Accepter"
+msgstr "قبول"
+
+msgid "Rejeter"
+msgstr "رفض"
+
+msgid "La décision attend le serveur : elle se prend quand le poste est connecté."
+msgstr "القرار ينتظر الخادم: يُتخذ عندما يكون الجهاز متصلًا."
+
+msgid "Opérations suspendues"
+msgstr "العمليات المعلّقة"
+
+msgid "Opérations suspendues ({})"
+msgstr "العمليات المعلّقة ({})"
+
+msgid "Écritures faites pendant une coupure que le serveur n'a pas pu appliquer seul : un conflit à trancher, ou une opération en attente de la décision de l'Admin."
+msgstr "عمليات تمت أثناء الانقطاع لم يستطع الخادم تطبيقها وحده: تعارض يجب حله، أو عملية تنتظر قرار المسؤول."
+
+msgid "Lecture de la liste sur le serveur..."
+msgstr "جارٍ قراءة القائمة من الخادم..."
+
+msgid "Aucune opération suspendue."
+msgstr "لا توجد عمليات معلّقة."
+
+msgid "CONFLIT"
+msgstr "تعارض"
+
+msgid "EN ATTENTE"
+msgstr "قيد الانتظار"
+
+msgid "Examiner"
+msgstr "فحص"

@@ -19,9 +19,10 @@ import { ConnexionApi } from "etat-connexion.slint";
 import { InviteMiseAJour, MiseAJourApi } from "maj.slint";
 import { BandeauHaut, BoutonIcone, ContenuBarre, Infobulle, InfobulleFenetre, Menu, Page, PanneauFlottant } from "navigation.slint";
 import { PageReglages, ReglagesApi, Rubrique } from "reglages.slint";
+import { ChampSuspenduUi, SuspendueUi, SuspenduesApi } from "suspendues.slint";
 import { EcranDemarrageImpossible, SauvegardesApi } from "sauvegardes.slint";
 
-export { AbonnementApi, ConnexionApi, DocumentAValiderUi, ServeurApi, Affichage, Alerte, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, TiersApi, UtilisateursApi }
+export { AbonnementApi, ChampSuspenduUi, ConnexionApi, DocumentAValiderUi, ServeurApi, SuspendueUi, SuspenduesApi, Affichage, Alerte, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, presentation, inscription, connexion, application }

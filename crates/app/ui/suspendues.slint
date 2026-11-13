@@ -1,0 +1,348 @@
+// Opérations suspendues sur le serveur (phase 2, jalon F6c) : rubrique des
+// Paramètres d'un poste relié. Un conflit (fiche ou brouillon modifié ailleurs
+// pendant la coupure, décision 17) se tranche ici : la version du serveur, celle
+// du poste, ou pour un client, un fournisseur ou un produit un choix champ par
+// champ. L'Admin y voit aussi les opérations en attente (décisions 18, 32 et
+// 52), avec leur auteur et leur heure, et les accepte ou les rejette. Un autre
+// compte ne voit que ses propres conflits (décision 33). Trancher et décider
+// demandent le serveur.
+import { ScrollView } from "std-widgets.slint";
+import { Alerte, Bouton, Ecriture, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+
+// Une opération suspendue de la liste.
+export struct SuspendueUi {
+    // Identifiant de l'opération : les boutons agissent sur lui, pas sur le
+    // rang, car la liste peut être relue entre deux gestes.
+    id: string,
+    conflit: bool,
+    titre: string,
+    // Auteur et heure.
+    detail: string,
+}
+
+// Un champ de l'opération ouverte : version du serveur et version du poste.
+export struct ChampSuspenduUi {
+    libelle: string,
+    serveur: string,
+    poste: string,
+    different: bool,
+    // Choix champ par champ : la version du poste est retenue.
+    choix-poste: bool,
+}
+
+export global SuspenduesApi {
+    // Nombres signalés par le synchroniseur (marque de la rubrique).
+    in property <int> conflits;
+    in property <int> attentes;
+    in property <bool> chargement;
+    in property <string> erreur;
+    in property <[SuspendueUi]> lignes;
+    // Opération ouverte, vide si aucune.
+    in property <string> selection;
+    in property <[ChampSuspenduUi]> champs;
+    // Conflit sur une fiche de client, de fournisseur ou de produit.
+    in property <bool> par-champ;
+    // La ligne n'est plus dans la copie : seule la version du serveur reste.
+    in property <bool> absente;
+
+    callback actualiser();
+    callback choisir(id: string);
+    callback choisir-champ(rang: int, poste: bool);
+    callback garder-serveur() -> Retour;
+    callback garder-poste() -> Retour;
+    callback garder-choix() -> Retour;
+    callback decider(accepter: bool) -> Retour;
+}
+
+// Une valeur du tableau de comparaison ; cliquable pour un choix champ par champ.
+component CelluleVersion inherits Rectangle {
+    in property <string> texte;
+    in property <bool> choisie;
+    in property <bool> cliquable;
+    callback clique();
+
+    horizontal-stretch: 1;
+    min-height: valeur.preferred-height + 12px;
+    border-radius: 4px;
+    border-width: root.choisie ? 2px : 1px;
+    border-color: root.choisie ? Theme.accent : Theme.bordure;
+    background: root.choisie ? Theme.accent-survol : transparent;
+
+    valeur := Text {
+        x: 8px;
+        width: parent.width - 16px;
+        horizontal-alignment: Theme.debut;
+        vertical-alignment: center;
+        text: root.texte == "" ? "-" : root.texte;
+        color: Theme.texte;
+        wrap: word-wrap;
+    }
+
+    if root.cliquable: TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            root.clique();
+        }
+    }
+}
+
+// Détail de l'opération ouverte : comparaison et décisions.
+component DetailSuspendue inherits VerticalLayout {
+    in property <bool> conflit;
+    in-out property <Retour> retour;
+
+    spacing: 10px;
+    padding-top: 4px;
+    padding-bottom: 8px;
+
+    Text {
+        horizontal-alignment: Theme.debut;
+        text: !root.conflit
+            ? @tr("Opération faite hors connexion et refusée par le serveur pour un compte ou un droit : acceptez-la pour l'appliquer, ou rejetez-la.")
+            : SuspenduesApi.absente
+            ? @tr("Cette ligne n'est plus sur le serveur : seule la version du serveur peut être gardée.")
+            : SuspenduesApi.par-champ
+            ? @tr("La fiche a changé sur un autre poste pendant la coupure. Gardez une version entière, ou cliquez sur la valeur à garder pour chaque champ qui diffère.")
+            : @tr("Le document a changé sur un autre poste pendant la coupure. Gardez la version du serveur ou celle du poste.");
+        color: Theme.texte-secondaire;
+        wrap: word-wrap;
+    }
+
+    if root.conflit && SuspenduesApi.champs.length > 0: HorizontalLayout {
+        spacing: 8px;
+
+        Text {
+            width: 170px;
+            text: @tr("Champ");
+            font-weight: 700;
+            color: Theme.texte-secondaire;
+            horizontal-alignment: Theme.debut;
+        }
+
+        Text {
+            horizontal-stretch: 1;
+            text: @tr("Version du serveur");
+            font-weight: 700;
+            color: Theme.texte-secondaire;
+            horizontal-alignment: Theme.debut;
+        }
+
+        Text {
+            horizontal-stretch: 1;
+            text: @tr("Version du poste");
+            font-weight: 700;
+            color: Theme.texte-secondaire;
+            horizontal-alignment: Theme.debut;
+        }
+    }
+
+    for champ[rang] in SuspenduesApi.champs: HorizontalLayout {
+        spacing: 8px;
+
+        Text {
+            width: 170px;
+            vertical-alignment: center;
+            horizontal-alignment: Theme.debut;
+            text: champ.libelle;
+            color: Theme.texte;
+            font-weight: champ.different ? 700 : 400;
+            wrap: word-wrap;
+        }
+
+        if root.conflit: CelluleVersion {
+            texte: champ.serveur;
+            choisie: champ.different && SuspenduesApi.par-champ && !champ.choix-poste;
+            cliquable: champ.different && SuspenduesApi.par-champ && !SuspenduesApi.absente;
+            clique => {
+                SuspenduesApi.choisir-champ(rang, false);
+            }
+        }
+
+        CelluleVersion {
+            texte: champ.poste;
+            choisie: champ.different && SuspenduesApi.par-champ && champ.choix-poste;
+            cliquable: champ.different && SuspenduesApi.par-champ && !SuspenduesApi.absente;
+            clique => {
+                SuspenduesApi.choisir-champ(rang, true);
+            }
+        }
+    }
+
+    if root.conflit: HorizontalLayout {
+        spacing: 8px;
+        alignment: Theme.rangee-debut;
+
+        Bouton {
+            text: @tr("Garder la version du serveur");
+            enabled: Ecriture.reglages;
+            clicked => {
+                root.retour = Alerte.relayer(SuspenduesApi.garder-serveur());
+            }
+        }
+
+        if !SuspenduesApi.absente: Bouton {
+            text: @tr("Garder la version du poste");
+            enabled: Ecriture.reglages;
+            clicked => {
+                root.retour = Alerte.relayer(SuspenduesApi.garder-poste());
+            }
+        }
+
+        if SuspenduesApi.par-champ && !SuspenduesApi.absente: Bouton {
+            text: @tr("Garder mon choix");
+            primary: true;
+            enabled: Ecriture.reglages;
+            clicked => {
+                root.retour = Alerte.relayer(SuspenduesApi.garder-choix());
+            }
+        }
+    }
+
+    if !root.conflit: HorizontalLayout {
+        spacing: 8px;
+        alignment: Theme.rangee-debut;
+
+        Bouton {
+            text: @tr("Accepter");
+            primary: true;
+            enabled: Ecriture.reglages;
+            clicked => {
+                root.retour = Alerte.relayer(SuspenduesApi.decider(true));
+            }
+        }
+
+        Bouton {
+            text: @tr("Rejeter");
+            enabled: Ecriture.reglages;
+            clicked => {
+                root.retour = Alerte.relayer(SuspenduesApi.decider(false));
+            }
+        }
+    }
+
+    if !Ecriture.reglages: Text {
+        horizontal-alignment: Theme.debut;
+        text: @tr("La décision attend le serveur : elle se prend quand le poste est connecté.");
+        color: Theme.texte-secondaire;
+        wrap: word-wrap;
+    }
+
+    MessageRetour {
+        retour: root.retour;
+    }
+}
+
+export component PageSuspendues inherits ScrollView {
+    property <Retour> retour;
+
+    init => {
+        SuspenduesApi.actualiser();
+    }
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 12px;
+        alignment: start;
+
+        Titre {
+            text: @tr("Opérations suspendues");
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Écritures faites pendant une coupure que le serveur n'a pas pu appliquer seul : un conflit à trancher, ou une opération en attente de la décision de l'Admin.");
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        HorizontalLayout {
+            alignment: Theme.rangee-debut;
+
+            Bouton {
+                text: @tr("Actualiser");
+                enabled: !SuspenduesApi.chargement;
+                clicked => {
+                    SuspenduesApi.actualiser();
+                }
+            }
+        }
+
+        if SuspenduesApi.chargement: Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Lecture de la liste sur le serveur...");
+            color: Theme.texte-secondaire;
+        }
+
+        if SuspenduesApi.erreur != "": Text {
+            horizontal-alignment: Theme.debut;
+            text: SuspenduesApi.erreur;
+            color: Theme.erreur;
+            wrap: word-wrap;
+        }
+
+        if !SuspenduesApi.chargement && SuspenduesApi.erreur == "" && SuspenduesApi.lignes.length == 0: Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Aucune opération suspendue.");
+            color: Theme.texte-secondaire;
+        }
+
+        for ligne in SuspenduesApi.lignes: VerticalLayout {
+            spacing: 6px;
+
+            Rectangle {
+                height: 1px;
+                background: Theme.bordure;
+            }
+
+            HorizontalLayout {
+                spacing: 12px;
+
+                VerticalLayout {
+                    horizontal-stretch: 1;
+                    spacing: 2px;
+
+                    Text {
+                        horizontal-alignment: Theme.debut;
+                        text: ligne.conflit ? @tr("CONFLIT") : @tr("EN ATTENTE");
+                        font-size: 11px;
+                        font-weight: 800;
+                        letter-spacing: 1px;
+                        color: ligne.conflit ? Theme.erreur : Theme.accent;
+                    }
+
+                    Text {
+                        horizontal-alignment: Theme.debut;
+                        text: ligne.titre;
+                        color: Theme.texte;
+                        font-weight: 600;
+                        wrap: word-wrap;
+                    }
+
+                    Text {
+                        horizontal-alignment: Theme.debut;
+                        text: ligne.detail;
+                        color: Theme.texte-secondaire;
+                        wrap: word-wrap;
+                    }
+                }
+
+                VerticalLayout {
+                    alignment: center;
+
+                    Bouton {
+                        text: SuspenduesApi.selection == ligne.id ? @tr("Fermer") : @tr("Examiner");
+                        clicked => {
+                            root.retour = { ok: true, message: "" };
+                            SuspenduesApi.choisir(ligne.id);
+                        }
+                    }
+                }
+            }
+
+            if SuspenduesApi.selection == ligne.id: DetailSuspendue {
+                conflit: ligne.conflit;
+                retour <=> root.retour;
+            }
+        }
+    }
+}

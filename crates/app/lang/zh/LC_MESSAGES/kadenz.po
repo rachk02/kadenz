@@ -3452,3 +3452,177 @@ msgstr "已验证的单据：{}；被拒绝：{}。{}"
 
 msgid "Serveur de retour : {} document(s) attendent leur validation. Voir Paramètres, rubrique « Serveur »."
 msgstr "服务器已恢复：{} 个单据等待验证。请参阅设置中的“服务器”部分。"
+
+msgid "Conflit tranché : la version du serveur est gardée."
+msgstr "冲突已处理：保留服务器版本。"
+
+msgid "Conflit tranché : la version du poste est appliquée."
+msgstr "冲突已处理：已应用本工作站的版本。"
+
+msgid "Cette opération ne se tranche pas champ par champ."
+msgstr "此操作不能逐字段处理。"
+
+msgid "Conflit tranché : votre choix est appliqué."
+msgstr "冲突已处理：已应用您的选择。"
+
+msgid "Cette opération n'est plus dans la liste."
+msgstr "此操作已不在列表中。"
+
+msgid "Opération acceptée : elle est appliquée."
+msgstr "操作已接受：已应用。"
+
+msgid "Opération rejetée."
+msgstr "操作已拒绝。"
+
+msgid "Serveur injoignable : la liste se lit quand le poste est connecté."
+msgstr "无法连接服务器：工作站连接后才能读取列表。"
+
+msgid "Liste illisible : {}."
+msgstr "无法读取列表：{}。"
+
+msgid "compte inconnu"
+msgstr "未知账户"
+
+msgid "Par {}, le {} (heure du poste)"
+msgstr "{}，{}（工作站时间）"
+
+msgid "Par {}, reçue par le serveur le {}"
+msgstr "{}，服务器接收于 {}"
+
+msgid "document absent de ce poste"
+msgstr "本工作站上没有此单据"
+
+msgid "fiche absente de ce poste"
+msgstr "本工作站上没有此档案"
+
+msgid "Création de la fiche « {} »"
+msgstr "创建档案“{}”"
+
+msgid "Modification de la fiche « {} »"
+msgstr "修改档案“{}”"
+
+msgid "Retrait de la fiche « {} »"
+msgstr "移除档案“{}”"
+
+msgid "Réactivation de la fiche « {} »"
+msgstr "重新启用档案“{}”"
+
+msgid "Désactivation de la fiche « {} »"
+msgstr "停用档案“{}”"
+
+msgid "Import de {} fiches de tiers"
+msgstr "导入 {} 个往来单位档案"
+
+msgid "Import de {} produits"
+msgstr "导入 {} 个产品"
+
+msgid "Nouveau document"
+msgstr "新单据"
+
+msgid "Modification : {}"
+msgstr "修改：{}"
+
+msgid "Validation : {}"
+msgstr "验证：{}"
+
+msgid "Annulation : {}"
+msgstr "作废：{}"
+
+msgid "Suppression : {}"
+msgstr "删除：{}"
+
+msgid "Avoir sur : {}"
+msgstr "红字发票：{}"
+
+msgid "Conversion en facture : {}"
+msgstr "转为发票：{}"
+
+msgid "Bordereau depuis : {}"
+msgstr "送货单来源：{}"
+
+msgid "Livraison confirmée : {}"
+msgstr "已确认交货：{}"
+
+msgid "Réception enregistrée : {}"
+msgstr "已登记收货：{}"
+
+msgid "Envoi noté : {}"
+msgstr "已标记为已发送：{}"
+
+msgid "Règlement de {} : {}"
+msgstr "付款 {}：{}"
+
+msgid "Suppression d'un règlement"
+msgstr "删除一笔付款"
+
+msgid "Changement de langue"
+msgstr "更改语言"
+
+msgid "Changement de navigation et d'affichage"
+msgstr "更改导航和显示"
+
+msgid "Opération sur les comptes ou les réglages"
+msgstr "账户或设置操作"
+
+msgid "Opération faite hors connexion et refusée par le serveur pour un compte ou un droit : acceptez-la pour l'appliquer, ou rejetez-la."
+msgstr "离线时进行、因账户或权限被服务器拒绝的操作：接受以应用，或拒绝。"
+
+msgid "Cette ligne n'est plus sur le serveur : seule la version du serveur peut être gardée."
+msgstr "此记录已不在服务器上：只能保留服务器版本。"
+
+msgid "La fiche a changé sur un autre poste pendant la coupure. Gardez une version entière, ou cliquez sur la valeur à garder pour chaque champ qui diffère."
+msgstr "中断期间此档案在另一个工作站上被修改。请保留其中一个完整版本，或在每个不同的字段上点击要保留的值。"
+
+msgid "Le document a changé sur un autre poste pendant la coupure. Gardez la version du serveur ou celle du poste."
+msgstr "中断期间此单据在另一个工作站上被修改。请保留服务器版本或本工作站的版本。"
+
+msgid "Champ"
+msgstr "字段"
+
+msgid "Version du serveur"
+msgstr "服务器版本"
+
+msgid "Version du poste"
+msgstr "工作站版本"
+
+msgid "Garder la version du serveur"
+msgstr "保留服务器版本"
+
+msgid "Garder la version du poste"
+msgstr "保留工作站版本"
+
+msgid "Garder mon choix"
+msgstr "保留我的选择"
+
+msgid "Accepter"
+msgstr "接受"
+
+msgid "Rejeter"
+msgstr "拒绝"
+
+msgid "La décision attend le serveur : elle se prend quand le poste est connecté."
+msgstr "此决定需要服务器：工作站连接后才能进行。"
+
+msgid "Opérations suspendues"
+msgstr "挂起的操作"
+
+msgid "Opérations suspendues ({})"
+msgstr "挂起的操作（{}）"
+
+msgid "Écritures faites pendant une coupure que le serveur n'a pas pu appliquer seul : un conflit à trancher, ou une opération en attente de la décision de l'Admin."
+msgstr "中断期间进行、服务器无法自行应用的记录：需要处理的冲突，或等待 Admin 决定的操作。"
+
+msgid "Lecture de la liste sur le serveur..."
+msgstr "正在从服务器读取列表..."
+
+msgid "Aucune opération suspendue."
+msgstr "没有挂起的操作。"
+
+msgid "CONFLIT"
+msgstr "冲突"
+
+msgid "EN ATTENTE"
+msgstr "待处理"
+
+msgid "Examiner"
+msgstr "查看"

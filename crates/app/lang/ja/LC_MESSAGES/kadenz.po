@@ -3452,3 +3452,177 @@ msgstr "確定した文書：{} 件、拒否：{} 件。{}"
 
 msgid "Serveur de retour : {} document(s) attendent leur validation. Voir Paramètres, rubrique « Serveur »."
 msgstr "サーバーが戻りました：確定待ちの文書が {} 件あります。設定の「サーバー」を参照してください。"
+
+msgid "Conflit tranché : la version du serveur est gardée."
+msgstr "競合を解決しました：サーバーの版を残しました。"
+
+msgid "Conflit tranché : la version du poste est appliquée."
+msgstr "競合を解決しました：この端末の版を適用しました。"
+
+msgid "Cette opération ne se tranche pas champ par champ."
+msgstr "この操作は項目ごとには解決できません。"
+
+msgid "Conflit tranché : votre choix est appliqué."
+msgstr "競合を解決しました：選んだ内容を適用しました。"
+
+msgid "Cette opération n'est plus dans la liste."
+msgstr "この操作はもう一覧にありません。"
+
+msgid "Opération acceptée : elle est appliquée."
+msgstr "操作を承認しました：適用されました。"
+
+msgid "Opération rejetée."
+msgstr "操作を却下しました。"
+
+msgid "Serveur injoignable : la liste se lit quand le poste est connecté."
+msgstr "サーバーに接続できません：一覧は端末の接続中に読み込まれます。"
+
+msgid "Liste illisible : {}."
+msgstr "一覧を読み込めません：{}。"
+
+msgid "compte inconnu"
+msgstr "不明なアカウント"
+
+msgid "Par {}, le {} (heure du poste)"
+msgstr "{}、{}（端末の時刻）"
+
+msgid "Par {}, reçue par le serveur le {}"
+msgstr "{}、サーバー受信 {}"
+
+msgid "document absent de ce poste"
+msgstr "この端末にない書類"
+
+msgid "fiche absente de ce poste"
+msgstr "この端末にないカード"
+
+msgid "Création de la fiche « {} »"
+msgstr "カード「{}」の作成"
+
+msgid "Modification de la fiche « {} »"
+msgstr "カード「{}」の変更"
+
+msgid "Retrait de la fiche « {} »"
+msgstr "カード「{}」の削除"
+
+msgid "Réactivation de la fiche « {} »"
+msgstr "カード「{}」の再有効化"
+
+msgid "Désactivation de la fiche « {} »"
+msgstr "カード「{}」の無効化"
+
+msgid "Import de {} fiches de tiers"
+msgstr "取引先カード {} 件の取り込み"
+
+msgid "Import de {} produits"
+msgstr "商品 {} 件の取り込み"
+
+msgid "Nouveau document"
+msgstr "新しい書類"
+
+msgid "Modification : {}"
+msgstr "変更：{}"
+
+msgid "Validation : {}"
+msgstr "確定：{}"
+
+msgid "Annulation : {}"
+msgstr "取消：{}"
+
+msgid "Suppression : {}"
+msgstr "削除：{}"
+
+msgid "Avoir sur : {}"
+msgstr "返金伝票の対象：{}"
+
+msgid "Conversion en facture : {}"
+msgstr "請求書への変換：{}"
+
+msgid "Bordereau depuis : {}"
+msgstr "納品書の元：{}"
+
+msgid "Livraison confirmée : {}"
+msgstr "納品確認：{}"
+
+msgid "Réception enregistrée : {}"
+msgstr "受領を記録：{}"
+
+msgid "Envoi noté : {}"
+msgstr "送付済みに設定：{}"
+
+msgid "Règlement de {} : {}"
+msgstr "{} の入金：{}"
+
+msgid "Suppression d'un règlement"
+msgstr "入金の削除"
+
+msgid "Changement de langue"
+msgstr "言語の変更"
+
+msgid "Changement de navigation et d'affichage"
+msgstr "ナビゲーションと表示の変更"
+
+msgid "Opération sur les comptes ou les réglages"
+msgstr "アカウントまたは設定の操作"
+
+msgid "Opération faite hors connexion et refusée par le serveur pour un compte ou un droit : acceptez-la pour l'appliquer, ou rejetez-la."
+msgstr "オフラインで行われ、アカウントまたは権限のためにサーバーが拒否した操作です。適用するには承認し、そうでなければ却下してください。"
+
+msgid "Cette ligne n'est plus sur le serveur : seule la version du serveur peut être gardée."
+msgstr "この行はもうサーバーにありません：サーバーの版だけを残せます。"
+
+msgid "La fiche a changé sur un autre poste pendant la coupure. Gardez une version entière, ou cliquez sur la valeur à garder pour chaque champ qui diffère."
+msgstr "停止中に別の端末でカードが変更されました。どちらかの版をまるごと残すか、異なる項目ごとに残す値をクリックしてください。"
+
+msgid "Le document a changé sur un autre poste pendant la coupure. Gardez la version du serveur ou celle du poste."
+msgstr "停止中に別の端末で書類が変更されました。サーバーの版か、この端末の版を残してください。"
+
+msgid "Champ"
+msgstr "項目"
+
+msgid "Version du serveur"
+msgstr "サーバーの版"
+
+msgid "Version du poste"
+msgstr "端末の版"
+
+msgid "Garder la version du serveur"
+msgstr "サーバーの版を残す"
+
+msgid "Garder la version du poste"
+msgstr "端末の版を残す"
+
+msgid "Garder mon choix"
+msgstr "選んだ内容で決定"
+
+msgid "Accepter"
+msgstr "承認"
+
+msgid "Rejeter"
+msgstr "却下"
+
+msgid "La décision attend le serveur : elle se prend quand le poste est connecté."
+msgstr "決定はサーバーを待っています：端末の接続中に行えます。"
+
+msgid "Opérations suspendues"
+msgstr "保留中の操作"
+
+msgid "Opérations suspendues ({})"
+msgstr "保留中の操作（{}）"
+
+msgid "Écritures faites pendant une coupure que le serveur n'a pas pu appliquer seul : un conflit à trancher, ou une opération en attente de la décision de l'Admin."
+msgstr "停止中に行われ、サーバーが単独では適用できなかった記録です。解決が必要な競合か、Admin の決定を待つ操作です。"
+
+msgid "Lecture de la liste sur le serveur..."
+msgstr "サーバーから一覧を読み込み中..."
+
+msgid "Aucune opération suspendue."
+msgstr "保留中の操作はありません。"
+
+msgid "CONFLIT"
+msgstr "競合"
+
+msgid "EN ATTENTE"
+msgstr "保留中"
+
+msgid "Examiner"
+msgstr "確認"

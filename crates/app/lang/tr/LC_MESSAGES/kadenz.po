@@ -3452,3 +3452,177 @@ msgstr "Onaylanan belgeler: {}; reddedilen: {}. {}"
 
 msgid "Serveur de retour : {} document(s) attendent leur validation. Voir Paramètres, rubrique « Serveur »."
 msgstr "Sunucu geri geldi: {} belge onay bekliyor. Ayarlar, «Sunucu» bölümüne bakın."
+
+msgid "Conflit tranché : la version du serveur est gardée."
+msgstr "Çakışma çözüldü: sunucu sürümü korundu."
+
+msgid "Conflit tranché : la version du poste est appliquée."
+msgstr "Çakışma çözüldü: bu iş istasyonunun sürümü uygulandı."
+
+msgid "Cette opération ne se tranche pas champ par champ."
+msgstr "Bu işlem alan alan çözülemez."
+
+msgid "Conflit tranché : votre choix est appliqué."
+msgstr "Çakışma çözüldü: seçiminiz uygulandı."
+
+msgid "Cette opération n'est plus dans la liste."
+msgstr "Bu işlem artık listede değil."
+
+msgid "Opération acceptée : elle est appliquée."
+msgstr "İşlem kabul edildi: uygulandı."
+
+msgid "Opération rejetée."
+msgstr "İşlem reddedildi."
+
+msgid "Serveur injoignable : la liste se lit quand le poste est connecté."
+msgstr "Sunucuya ulaşılamıyor: liste, iş istasyonu bağlıyken okunur."
+
+msgid "Liste illisible : {}."
+msgstr "Liste okunamadı: {}."
+
+msgid "compte inconnu"
+msgstr "bilinmeyen hesap"
+
+msgid "Par {}, le {} (heure du poste)"
+msgstr "{} tarafından, {} (iş istasyonu saati)"
+
+msgid "Par {}, reçue par le serveur le {}"
+msgstr "{} tarafından, sunucuya ulaşma: {}"
+
+msgid "document absent de ce poste"
+msgstr "belge bu iş istasyonunda yok"
+
+msgid "fiche absente de ce poste"
+msgstr "kayıt bu iş istasyonunda yok"
+
+msgid "Création de la fiche « {} »"
+msgstr "“{}” kaydının oluşturulması"
+
+msgid "Modification de la fiche « {} »"
+msgstr "“{}” kaydının değiştirilmesi"
+
+msgid "Retrait de la fiche « {} »"
+msgstr "“{}” kaydının kaldırılması"
+
+msgid "Réactivation de la fiche « {} »"
+msgstr "“{}” kaydının yeniden etkinleştirilmesi"
+
+msgid "Désactivation de la fiche « {} »"
+msgstr "“{}” kaydının devre dışı bırakılması"
+
+msgid "Import de {} fiches de tiers"
+msgstr "{} cari kaydının içe aktarılması"
+
+msgid "Import de {} produits"
+msgstr "{} ürünün içe aktarılması"
+
+msgid "Nouveau document"
+msgstr "Yeni belge"
+
+msgid "Modification : {}"
+msgstr "Değişiklik: {}"
+
+msgid "Validation : {}"
+msgstr "Onay: {}"
+
+msgid "Annulation : {}"
+msgstr "İptal: {}"
+
+msgid "Suppression : {}"
+msgstr "Silme: {}"
+
+msgid "Avoir sur : {}"
+msgstr "İade faturası: {}"
+
+msgid "Conversion en facture : {}"
+msgstr "Faturaya dönüştürme: {}"
+
+msgid "Bordereau depuis : {}"
+msgstr "İrsaliye kaynağı: {}"
+
+msgid "Livraison confirmée : {}"
+msgstr "Teslimat onaylandı: {}"
+
+msgid "Réception enregistrée : {}"
+msgstr "Teslim alma kaydedildi: {}"
+
+msgid "Envoi noté : {}"
+msgstr "Gönderildi olarak işaretlendi: {}"
+
+msgid "Règlement de {} : {}"
+msgstr "{} tutarında ödeme: {}"
+
+msgid "Suppression d'un règlement"
+msgstr "Bir ödemenin silinmesi"
+
+msgid "Changement de langue"
+msgstr "Dil değişikliği"
+
+msgid "Changement de navigation et d'affichage"
+msgstr "Gezinme ve görünüm değişikliği"
+
+msgid "Opération sur les comptes ou les réglages"
+msgstr "Hesaplar veya ayarlar üzerinde işlem"
+
+msgid "Opération faite hors connexion et refusée par le serveur pour un compte ou un droit : acceptez-la pour l'appliquer, ou rejetez-la."
+msgstr "Bağlantı yokken yapılan ve bir hesap veya yetki nedeniyle sunucunun reddettiği işlem: uygulamak için kabul edin ya da reddedin."
+
+msgid "Cette ligne n'est plus sur le serveur : seule la version du serveur peut être gardée."
+msgstr "Bu kayıt artık sunucuda yok: yalnızca sunucu sürümü korunabilir."
+
+msgid "La fiche a changé sur un autre poste pendant la coupure. Gardez une version entière, ou cliquez sur la valeur à garder pour chaque champ qui diffère."
+msgstr "Kayıt, kesinti sırasında başka bir iş istasyonunda değişti. Sürümlerden birini tümüyle koruyun ya da farklı olan her alan için korunacak değere tıklayın."
+
+msgid "Le document a changé sur un autre poste pendant la coupure. Gardez la version du serveur ou celle du poste."
+msgstr "Belge, kesinti sırasında başka bir iş istasyonunda değişti. Sunucu sürümünü ya da bu iş istasyonunun sürümünü koruyun."
+
+msgid "Champ"
+msgstr "Alan"
+
+msgid "Version du serveur"
+msgstr "Sunucu sürümü"
+
+msgid "Version du poste"
+msgstr "İş istasyonu sürümü"
+
+msgid "Garder la version du serveur"
+msgstr "Sunucu sürümünü koru"
+
+msgid "Garder la version du poste"
+msgstr "İş istasyonu sürümünü koru"
+
+msgid "Garder mon choix"
+msgstr "Seçimimi koru"
+
+msgid "Accepter"
+msgstr "Kabul et"
+
+msgid "Rejeter"
+msgstr "Reddet"
+
+msgid "La décision attend le serveur : elle se prend quand le poste est connecté."
+msgstr "Karar sunucuyu bekliyor: iş istasyonu bağlıyken verilir."
+
+msgid "Opérations suspendues"
+msgstr "Askıdaki işlemler"
+
+msgid "Opérations suspendues ({})"
+msgstr "Askıdaki işlemler ({})"
+
+msgid "Écritures faites pendant une coupure que le serveur n'a pas pu appliquer seul : un conflit à trancher, ou une opération en attente de la décision de l'Admin."
+msgstr "Kesinti sırasında yapılan ve sunucunun kendi başına uygulayamadığı kayıtlar: çözülecek bir çakışma ya da Admin kararını bekleyen bir işlem."
+
+msgid "Lecture de la liste sur le serveur..."
+msgstr "Liste sunucudan okunuyor..."
+
+msgid "Aucune opération suspendue."
+msgstr "Askıda işlem yok."
+
+msgid "CONFLIT"
+msgstr "ÇAKIŞMA"
+
+msgid "EN ATTENTE"
+msgstr "BEKLEMEDE"
+
+msgid "Examiner"
+msgstr "İncele"

@@ -3452,3 +3452,177 @@ msgstr "Documentos validados: {}; rechazados: {}. {}"
 
 msgid "Serveur de retour : {} document(s) attendent leur validation. Voir Paramètres, rubrique « Serveur »."
 msgstr "El servidor ha vuelto: {} documento(s) esperan su validación. Vea Configuración, sección «Servidor»."
+
+msgid "Conflit tranché : la version du serveur est gardée."
+msgstr "Conflicto resuelto: se conserva la versión del servidor."
+
+msgid "Conflit tranché : la version du poste est appliquée."
+msgstr "Conflicto resuelto: se aplica la versión del puesto."
+
+msgid "Cette opération ne se tranche pas champ par champ."
+msgstr "Esta operación no se resuelve campo por campo."
+
+msgid "Conflit tranché : votre choix est appliqué."
+msgstr "Conflicto resuelto: se aplica su elección."
+
+msgid "Cette opération n'est plus dans la liste."
+msgstr "Esta operación ya no está en la lista."
+
+msgid "Opération acceptée : elle est appliquée."
+msgstr "Operación aceptada: se aplica."
+
+msgid "Opération rejetée."
+msgstr "Operación rechazada."
+
+msgid "Serveur injoignable : la liste se lit quand le poste est connecté."
+msgstr "Servidor inaccesible: la lista se lee cuando el puesto está conectado."
+
+msgid "Liste illisible : {}."
+msgstr "Lista no disponible: {}."
+
+msgid "compte inconnu"
+msgstr "cuenta desconocida"
+
+msgid "Par {}, le {} (heure du poste)"
+msgstr "Por {}, el {} (hora del puesto)"
+
+msgid "Par {}, reçue par le serveur le {}"
+msgstr "Por {}, recibida por el servidor el {}"
+
+msgid "document absent de ce poste"
+msgstr "documento ausente en este puesto"
+
+msgid "fiche absente de ce poste"
+msgstr "ficha ausente en este puesto"
+
+msgid "Création de la fiche « {} »"
+msgstr "Creación de la ficha «{}»"
+
+msgid "Modification de la fiche « {} »"
+msgstr "Modificación de la ficha «{}»"
+
+msgid "Retrait de la fiche « {} »"
+msgstr "Retirada de la ficha «{}»"
+
+msgid "Réactivation de la fiche « {} »"
+msgstr "Reactivación de la ficha «{}»"
+
+msgid "Désactivation de la fiche « {} »"
+msgstr "Desactivación de la ficha «{}»"
+
+msgid "Import de {} fiches de tiers"
+msgstr "Importación de {} fichas de terceros"
+
+msgid "Import de {} produits"
+msgstr "Importación de {} productos"
+
+msgid "Nouveau document"
+msgstr "Nuevo documento"
+
+msgid "Modification : {}"
+msgstr "Modificación: {}"
+
+msgid "Validation : {}"
+msgstr "Validación: {}"
+
+msgid "Annulation : {}"
+msgstr "Anulación: {}"
+
+msgid "Suppression : {}"
+msgstr "Eliminación: {}"
+
+msgid "Avoir sur : {}"
+msgstr "Abono sobre: {}"
+
+msgid "Conversion en facture : {}"
+msgstr "Conversión en factura: {}"
+
+msgid "Bordereau depuis : {}"
+msgstr "Albarán desde: {}"
+
+msgid "Livraison confirmée : {}"
+msgstr "Entrega confirmada: {}"
+
+msgid "Réception enregistrée : {}"
+msgstr "Recepción registrada: {}"
+
+msgid "Envoi noté : {}"
+msgstr "Envío anotado: {}"
+
+msgid "Règlement de {} : {}"
+msgstr "Pago de {}: {}"
+
+msgid "Suppression d'un règlement"
+msgstr "Eliminación de un pago"
+
+msgid "Changement de langue"
+msgstr "Cambio de idioma"
+
+msgid "Changement de navigation et d'affichage"
+msgstr "Cambio de navegación y visualización"
+
+msgid "Opération sur les comptes ou les réglages"
+msgstr "Operación sobre las cuentas o los ajustes"
+
+msgid "Opération faite hors connexion et refusée par le serveur pour un compte ou un droit : acceptez-la pour l'appliquer, ou rejetez-la."
+msgstr "Operación hecha sin conexión y rechazada por el servidor por una cuenta o un permiso: acéptela para aplicarla, o recházela."
+
+msgid "Cette ligne n'est plus sur le serveur : seule la version du serveur peut être gardée."
+msgstr "Esta línea ya no está en el servidor: solo se puede conservar la versión del servidor."
+
+msgid "La fiche a changé sur un autre poste pendant la coupure. Gardez une version entière, ou cliquez sur la valeur à garder pour chaque champ qui diffère."
+msgstr "La ficha cambió en otro puesto durante el corte. Conserve una versión completa, o haga clic en el valor que desea conservar en cada campo que difiere."
+
+msgid "Le document a changé sur un autre poste pendant la coupure. Gardez la version du serveur ou celle du poste."
+msgstr "El documento cambió en otro puesto durante el corte. Conserve la versión del servidor o la del puesto."
+
+msgid "Champ"
+msgstr "Campo"
+
+msgid "Version du serveur"
+msgstr "Versión del servidor"
+
+msgid "Version du poste"
+msgstr "Versión del puesto"
+
+msgid "Garder la version du serveur"
+msgstr "Conservar la versión del servidor"
+
+msgid "Garder la version du poste"
+msgstr "Conservar la versión del puesto"
+
+msgid "Garder mon choix"
+msgstr "Conservar mi elección"
+
+msgid "Accepter"
+msgstr "Aceptar"
+
+msgid "Rejeter"
+msgstr "Rechazar"
+
+msgid "La décision attend le serveur : elle se prend quand le poste est connecté."
+msgstr "La decisión espera al servidor: se toma cuando el puesto está conectado."
+
+msgid "Opérations suspendues"
+msgstr "Operaciones suspendidas"
+
+msgid "Opérations suspendues ({})"
+msgstr "Operaciones suspendidas ({})"
+
+msgid "Écritures faites pendant une coupure que le serveur n'a pas pu appliquer seul : un conflit à trancher, ou une opération en attente de la décision de l'Admin."
+msgstr "Escrituras hechas durante un corte que el servidor no pudo aplicar solo: un conflicto por resolver, o una operación a la espera de la decisión del Admin."
+
+msgid "Lecture de la liste sur le serveur..."
+msgstr "Leyendo la lista en el servidor..."
+
+msgid "Aucune opération suspendue."
+msgstr "Ninguna operación suspendida."
+
+msgid "CONFLIT"
+msgstr "CONFLICTO"
+
+msgid "EN ATTENTE"
+msgstr "EN ESPERA"
+
+msgid "Examiner"
+msgstr "Examinar"
