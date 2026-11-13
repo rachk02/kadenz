@@ -4,15 +4,17 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use kadenz_domaine::role::{Droit, MatriceDroits, Role};
+use kadenz_protocole::{Action, Entite};
 use kadenz_stockage::comptes::{self, NouvelUtilisateur, Utilisateur};
 use kadenz_stockage::droits;
+use kadenz_stockage::synchro;
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 
-use crate::referentiels::{modele_lignes, retour_erreur, retour_ok};
+use crate::referentiels::{modele_lignes, retour_erreur, retour_ok, texte_erreur};
 use crate::traduction::tr;
 use crate::{
     CompteUi, EtatPartage, FenetrePrincipale, LigneDroitUi, UtilisateursApi, appliquer_droits,
-    phrase,
+    phrase, relie,
 };
 
 fn rang_role(role: Role) -> i32 {
@@ -149,9 +151,22 @@ fn brancher_comptes(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             mot_de_passe: mot_de_passe.to_string(),
             role: role_de_rang(role),
         };
-        let resultat = comptes::creer(&etat.conn, &acteur, &nouveau);
-        if let Ok(u) = &resultat {
-            etat.comptes.selection = Some(u.id);
+        // Poste relié : création envoyée au serveur, sous un nouvel uid.
+        let action = Action::CreerCompte {
+            uid: synchro::nouvel_uid(),
+            nom_complet: nouveau.nom_complet.clone(),
+            identifiant: nouveau.identifiant.clone(),
+            mot_de_passe: nouveau.mot_de_passe.clone(),
+            role: nouveau.role.code().into(),
+        };
+        let resultat = match relie::ecrire(&etat, action.clone()) {
+            Some(r) => r.map(|_| relie::id_cree(&etat, &action)),
+            None => comptes::creer(&etat.conn, &acteur, &nouveau)
+                .map(|u| Some(u.id))
+                .map_err(texte_erreur),
+        };
+        if let Ok(Some(id)) = &resultat {
+            etat.comptes.selection = Some(*id);
         }
         if let Some(f) = f.upgrade() {
             afficher_comptes(&f, &mut etat);
@@ -168,7 +183,20 @@ fn brancher_comptes(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let (Some(acteur), Some(id)) = (etat.utilisateur.clone(), etat.comptes.selection) else {
             return retour_erreur("aucun compte sélectionné");
         };
-        let resultat = comptes::changer_role(&etat.conn, &acteur, id, role_de_rang(role));
+        let role = role_de_rang(role);
+        let resultat = match relie::uid(&etat, Entite::Utilisateur, id).map(|uid| {
+            relie::ecrire(
+                &etat,
+                Action::ChangerRole {
+                    uid,
+                    role: role.code().into(),
+                },
+            )
+        }) {
+            Err(texte) => Err(texte),
+            Ok(Some(r)) => r.map(|_| ()),
+            Ok(None) => comptes::changer_role(&etat.conn, &acteur, id, role).map_err(texte_erreur),
+        };
         if let Some(f) = f.upgrade() {
             afficher_comptes(&f, &mut etat);
         }
@@ -191,7 +219,15 @@ fn brancher_comptes(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             Ok(None) => return retour_erreur("ce compte n'existe plus"),
             Err(erreur) => return retour_erreur(erreur),
         };
-        let resultat = comptes::definir_actif(&etat.conn, &acteur, id, !actif);
+        let resultat = match relie::uid(&etat, Entite::Utilisateur, id)
+            .map(|uid| relie::ecrire(&etat, Action::DefinirActifCompte { uid, actif: !actif }))
+        {
+            Err(texte) => Err(texte),
+            Ok(Some(r)) => r.map(|_| ()),
+            Ok(None) => {
+                comptes::definir_actif(&etat.conn, &acteur, id, !actif).map_err(texte_erreur)
+            }
+        };
         if let Some(f) = f.upgrade() {
             afficher_comptes(&f, &mut etat);
         }
@@ -211,7 +247,21 @@ fn brancher_comptes(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let (Some(acteur), Some(id)) = (&etat.utilisateur, etat.comptes.selection) else {
             return retour_erreur("aucun compte sélectionné");
         };
-        match comptes::reinitialiser_mot_de_passe(&etat.conn, acteur, id, &mot_de_passe) {
+        let resultat = match relie::uid(&etat, Entite::Utilisateur, id).map(|uid| {
+            relie::ecrire(
+                &etat,
+                Action::ReinitialiserMotDePasse {
+                    uid,
+                    nouveau: mot_de_passe.to_string(),
+                },
+            )
+        }) {
+            Err(texte) => Err(texte),
+            Ok(Some(r)) => r.map(|_| ()),
+            Ok(None) => comptes::reinitialiser_mot_de_passe(&etat.conn, acteur, id, &mot_de_passe)
+                .map_err(texte_erreur),
+        };
+        match resultat {
             Ok(()) => retour_ok("mot de passe réinitialisé"),
             Err(erreur) => retour_erreur(erreur),
         }
@@ -280,7 +330,16 @@ fn brancher_matrice(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let Some(acteur) = &etat.utilisateur else {
             return retour_erreur("aucune session ouverte");
         };
-        match droits::enregistrer_matrice(&etat.conn, acteur, &m.borrow()) {
+        let action = Action::EnregistrerMatrice {
+            contenu: droits::matrice_en_json(&m.borrow()),
+        };
+        let resultat = match relie::ecrire(&etat, action) {
+            Some(r) => r.map(|_| ()),
+            None => {
+                droits::enregistrer_matrice(&etat.conn, acteur, &m.borrow()).map_err(texte_erreur)
+            }
+        };
+        match resultat {
             Ok(()) => {
                 if let Some(f) = f.upgrade() {
                     // Les droits de la session en cours suivent tout de suite.

@@ -3356,3 +3356,9 @@ msgstr "Sign-in accepted by the server. The company data is arriving: the sessio
 
 msgid "Votre mot de passe a changé ou votre compte a été désactivé sur le serveur : reconnectez-vous."
 msgstr "Your password has changed or your account has been disabled on the server: please sign in again."
+
+msgid "La fiche a changé sur un autre poste : rouvrez-la pour voir la version du serveur."
+msgstr "The record was changed on another workstation: reopen it to see the server version."
+
+msgid "cette fiche n'existe plus"
+msgstr "this record no longer exists"

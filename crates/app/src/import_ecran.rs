@@ -7,16 +7,17 @@ use std::rc::Rc;
 
 use kadenz_import::analyse::{self, Analyse, LigneAnalysee, Statut, cle_produit, cle_tiers};
 use kadenz_import::lecture::{self, Table};
+use kadenz_protocole::{Action, Bilan, Issue};
 use kadenz_stockage::produits::{self, FicheProduit, FiltreProduits, Sens};
 use kadenz_stockage::tiers::{self, FicheTiers, FiltreTiers, TypeTiers};
-use kadenz_stockage::{BilanImport, Connexion};
+use kadenz_stockage::{BilanImport, Connexion, synchro};
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 
 use crate::referentiels::{
     afficher_produits, afficher_tiers, modele_lignes, retour_erreur, retour_ok, texte_erreur,
 };
 use crate::traduction::{tr, trf};
-use crate::{EtatPartage, FenetrePrincipale, ImportApi, Retour, phrase};
+use crate::{EtatPartage, FenetrePrincipale, ImportApi, Retour, phrase, relie};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Cible {
@@ -180,6 +181,23 @@ fn nom_de_fichier(chemin: &Path) -> String {
         .unwrap_or_default()
 }
 
+/// Bilan d'un import confirmé par le serveur.
+fn bilan_du_serveur(issue: Issue) -> BilanImport {
+    match issue {
+        Issue::Acceptee {
+            bilan: Some(Bilan::Import { ajoutees, ignorees }),
+            ..
+        } => BilanImport {
+            ajoutees: ajoutees as usize,
+            ignorees: ignorees
+                .into_iter()
+                .map(|(rang, raison)| (rang as usize, raison))
+                .collect(),
+        },
+        _ => BilanImport::default(),
+    }
+}
+
 fn message_bilan(bilan: &BilanImport) -> String {
     let mut message = trf("Fiches ajoutées : {}", &[&bilan.ajoutees]);
     if !bilan.ignorees.is_empty() {
@@ -270,12 +288,40 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             return;
         };
         let import = i.borrow();
-        let resultat = match &import.apercu {
-            Some(Apercu::Tiers(a)) => tiers::importer(&mut etat.conn, &acteur, &a.fiches_valides()),
+        // Poste relié : un seul envoi au serveur, chaque fiche sous un nouvel uid.
+        let action = match &import.apercu {
+            Some(Apercu::Tiers(a)) => {
+                let fiches: Vec<_> = a
+                    .fiches_valides()
+                    .iter()
+                    .map(synchro::tiers_pour_serveur)
+                    .collect();
+                let uids = fiches.iter().map(|_| synchro::nouvel_uid()).collect();
+                Action::ImporterTiers { fiches, uids }
+            }
             Some(Apercu::Produits(a)) => {
-                produits::importer(&mut etat.conn, &acteur, &a.fiches_valides())
+                let fiches: Vec<_> = a
+                    .fiches_valides()
+                    .iter()
+                    .map(synchro::produit_pour_serveur)
+                    .collect();
+                let uids = fiches.iter().map(|_| synchro::nouvel_uid()).collect();
+                Action::ImporterProduits { fiches, uids }
             }
             None => return,
+        };
+        let resultat = match relie::ecrire(&etat, action) {
+            Some(r) => r.map(bilan_du_serveur),
+            None => match &import.apercu {
+                Some(Apercu::Tiers(a)) => {
+                    tiers::importer(&mut etat.conn, &acteur, &a.fiches_valides())
+                }
+                Some(Apercu::Produits(a)) => {
+                    produits::importer(&mut etat.conn, &acteur, &a.fiches_valides())
+                }
+                None => return,
+            }
+            .map_err(texte_erreur),
         };
         match resultat {
             Ok(bilan) => {

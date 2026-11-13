@@ -8,16 +8,17 @@ use std::cmp::Ordering;
 
 use kadenz_domaine::saisie;
 use kadenz_domaine::texte::cle_comparaison;
+use kadenz_protocole::{Action, Bilan, Entite, Issue};
 use kadenz_stockage::produits::{self, FicheProduit, FiltreProduits, Produit, Sens};
 use kadenz_stockage::tiers::{self, FicheTiers, FiltreTiers, Tiers, TypeTiers};
-use kadenz_stockage::{Erreur, Retrait};
+use kadenz_stockage::{Erreur, Retrait, synchro};
 use slint::{ComponentHandle, ModelRc, SharedString, StandardListViewItem, VecModel};
 
 use crate::traduction::{tr, trf};
 
 use crate::{
     EtatPartage, FenetrePrincipale, FicheProduitUi, FicheTiersUi, ProduitsApi, Retour, TiersApi,
-    phrase,
+    phrase, relie,
 };
 
 /// Liste affichée d'un référentiel et fiche sélectionnée.
@@ -338,14 +339,35 @@ fn brancher_tiers(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             return retour_erreur("aucune session ouverte");
         };
         let fiche = fiche_tiers_depuis_ui(&saisie);
+        let pour_serveur = synchro::tiers_pour_serveur(&fiche);
         let resultat = match etat.tiers.selection {
             Some(id) => {
-                tiers::modifier(&etat.conn, &acteur, id, &fiche).map(|()| "fiche enregistrée")
+                match relie::ecrire_sur(&etat, Entite::Tiers, id, |uid| Action::ModifierTiers {
+                    uid,
+                    fiche: pour_serveur,
+                }) {
+                    Some(r) => r.map(|_| "fiche enregistrée"),
+                    None => tiers::modifier(&etat.conn, &acteur, id, &fiche)
+                        .map(|()| "fiche enregistrée")
+                        .map_err(texte_erreur),
+                }
             }
-            None => tiers::creer(&etat.conn, &acteur, &fiche).map(|t| {
-                etat.tiers.selection = Some(t.id);
-                "tiers ajouté"
-            }),
+            None => {
+                let action = Action::CreerTiers {
+                    uid: synchro::nouvel_uid(),
+                    fiche: pour_serveur,
+                };
+                let cree = match relie::ecrire(&etat, action.clone()) {
+                    Some(r) => r.map(|_| relie::id_cree(&etat, &action)),
+                    None => tiers::creer(&etat.conn, &acteur, &fiche)
+                        .map(|t| Some(t.id))
+                        .map_err(texte_erreur),
+                };
+                cree.map(|id| {
+                    etat.tiers.selection = id;
+                    "tiers ajouté"
+                })
+            }
         };
         if let Some(f) = f.upgrade() {
             afficher_tiers(&f, &mut etat);
@@ -362,7 +384,11 @@ fn brancher_tiers(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let (Some(acteur), Some(id)) = (etat.utilisateur.clone(), etat.tiers.selection) else {
             return retour_erreur("aucune fiche sélectionnée");
         };
-        let resultat = tiers::retirer(&etat.conn, &acteur, id);
+        let resultat =
+            match relie::ecrire_sur(&etat, Entite::Tiers, id, |uid| Action::RetirerTiers { uid }) {
+                Some(r) => r.map(retrait_du_serveur),
+                None => tiers::retirer(&etat.conn, &acteur, id).map_err(texte_erreur),
+            };
         if let Ok(Retrait::Supprimee) = resultat {
             etat.tiers.selection = None;
         }
@@ -378,7 +404,12 @@ fn brancher_tiers(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let (Some(acteur), Some(id)) = (etat.utilisateur.clone(), etat.tiers.selection) else {
             return retour_erreur("aucune fiche sélectionnée");
         };
-        let resultat = tiers::definir_actif(&etat.conn, &acteur, id, true);
+        let resultat = match relie::ecrire_sur(&etat, Entite::Tiers, id, |uid| {
+            Action::DefinirActifTiers { uid, actif: true }
+        }) {
+            Some(r) => r.map(|_| ()),
+            None => tiers::definir_actif(&etat.conn, &acteur, id, true).map_err(texte_erreur),
+        };
         if let Some(f) = f.upgrade() {
             afficher_tiers(&f, &mut etat);
         }
@@ -389,7 +420,18 @@ fn brancher_tiers(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
     });
 }
 
-fn retour_retrait(resultat: Result<Retrait, Erreur>) -> Retour {
+/// Retrait confirmé par le serveur : supprimée, ou seulement désactivée.
+fn retrait_du_serveur(issue: Issue) -> Retrait {
+    match issue {
+        Issue::Acceptee {
+            bilan: Some(Bilan::Retrait { supprimee: true }),
+            ..
+        } => Retrait::Supprimee,
+        _ => Retrait::Desactivee,
+    }
+}
+
+fn retour_retrait(resultat: Result<Retrait, String>) -> Retour {
     match resultat {
         Ok(Retrait::Supprimee) => retour_ok("fiche supprimée"),
         Ok(Retrait::Desactivee) => retour_ok(
@@ -572,14 +614,35 @@ fn brancher_produits(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             Ok(fiche) => fiche,
             Err(message) => return retour_erreur(message),
         };
+        let pour_serveur = synchro::produit_pour_serveur(&fiche);
         let resultat = match etat.produits.selection {
             Some(id) => {
-                produits::modifier(&etat.conn, &acteur, id, &fiche).map(|()| "fiche enregistrée")
+                match relie::ecrire_sur(&etat, Entite::Produit, id, |uid| Action::ModifierProduit {
+                    uid,
+                    fiche: pour_serveur,
+                }) {
+                    Some(r) => r.map(|_| "fiche enregistrée"),
+                    None => produits::modifier(&etat.conn, &acteur, id, &fiche)
+                        .map(|()| "fiche enregistrée")
+                        .map_err(texte_erreur),
+                }
             }
-            None => produits::creer(&etat.conn, &acteur, &fiche).map(|p| {
-                etat.produits.selection = Some(p.id);
-                "produit ajouté"
-            }),
+            None => {
+                let action = Action::CreerProduit {
+                    uid: synchro::nouvel_uid(),
+                    fiche: pour_serveur,
+                };
+                let cree = match relie::ecrire(&etat, action.clone()) {
+                    Some(r) => r.map(|_| relie::id_cree(&etat, &action)),
+                    None => produits::creer(&etat.conn, &acteur, &fiche)
+                        .map(|p| Some(p.id))
+                        .map_err(texte_erreur),
+                };
+                cree.map(|id| {
+                    etat.produits.selection = id;
+                    "produit ajouté"
+                })
+            }
         };
         if let Some(f) = f.upgrade() {
             afficher_produits(&f, &mut etat);
@@ -596,7 +659,12 @@ fn brancher_produits(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let (Some(acteur), Some(id)) = (etat.utilisateur.clone(), etat.produits.selection) else {
             return retour_erreur("aucune fiche sélectionnée");
         };
-        let resultat = produits::retirer(&etat.conn, &acteur, id);
+        let resultat = match relie::ecrire_sur(&etat, Entite::Produit, id, |uid| {
+            Action::RetirerProduit { uid }
+        }) {
+            Some(r) => r.map(retrait_du_serveur),
+            None => produits::retirer(&etat.conn, &acteur, id).map_err(texte_erreur),
+        };
         if let Ok(Retrait::Supprimee) = resultat {
             etat.produits.selection = None;
         }
@@ -612,7 +680,12 @@ fn brancher_produits(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let (Some(acteur), Some(id)) = (etat.utilisateur.clone(), etat.produits.selection) else {
             return retour_erreur("aucune fiche sélectionnée");
         };
-        let resultat = produits::definir_actif(&etat.conn, &acteur, id, true);
+        let resultat = match relie::ecrire_sur(&etat, Entite::Produit, id, |uid| {
+            Action::DefinirActifProduit { uid, actif: true }
+        }) {
+            Some(r) => r.map(|_| ()),
+            None => produits::definir_actif(&etat.conn, &acteur, id, true).map_err(texte_erreur),
+        };
         if let Some(f) = f.upgrade() {
             afficher_produits(&f, &mut etat);
         }

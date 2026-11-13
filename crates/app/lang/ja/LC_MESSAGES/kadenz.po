@@ -3356,3 +3356,9 @@ msgstr "サーバーがサインインを受け付けました。会社のデー
 
 msgid "Votre mot de passe a changé ou votre compte a été désactivé sur le serveur : reconnectez-vous."
 msgstr "パスワードが変更されたか、サーバーでアカウントが無効になりました。もう一度サインインしてください。"
+
+msgid "La fiche a changé sur un autre poste : rouvrez-la pour voir la version du serveur."
+msgstr "別の端末でレコードが変更されました。もう一度開いてサーバーの版を確認してください。"
+
+msgid "cette fiche n'existe plus"
+msgstr "このレコードはもう存在しません"

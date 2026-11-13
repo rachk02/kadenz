@@ -3356,3 +3356,9 @@ msgstr "Inicio de sesión aceptado por el servidor. Los datos de la empresa est�
 
 msgid "Votre mot de passe a changé ou votre compte a été désactivé sur le serveur : reconnectez-vous."
 msgstr "Su contraseña ha cambiado o su cuenta se ha desactivado en el servidor: vuelva a iniciar sesión."
+
+msgid "La fiche a changé sur un autre poste : rouvrez-la pour voir la version du serveur."
+msgstr "La ficha ha cambiado en otro puesto: vuelva a abrirla para ver la versión del servidor."
+
+msgid "cette fiche n'existe plus"
+msgstr "esta ficha ya no existe"

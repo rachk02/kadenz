@@ -6,6 +6,7 @@ use kadenz_domaine::mise_en_page::{
     self, BasDeDocument, Gabarit, LigneTotal, Marges, MiseEnPage, StylePied, Variable,
 };
 use kadenz_domaine::role::Droit;
+use kadenz_protocole::Action;
 use kadenz_stockage::{droits, mise_en_page as reglages};
 use slint::{
     ComponentHandle, Image, Model, ModelRc, Rgba8Pixel, SharedPixelBuffer, SharedString, VecModel,
@@ -14,7 +15,7 @@ use slint::{
 use crate::paiements::enregistrer_pdf;
 use crate::referentiels::{retour_erreur, retour_ok, texte_erreur};
 use crate::traduction::tr;
-use crate::{BasUi, EtatPartage, FenetrePrincipale, ImpressionApi, MiseEnPageUi, Retour};
+use crate::{BasUi, EtatPartage, FenetrePrincipale, ImpressionApi, MiseEnPageUi, Retour, relie};
 
 /// Largeur de l'aperçu en pixels (le cadre de l'écran fait 420 px, x 1,5 pour la netteté).
 const LARGEUR_APERCU: u32 = 630;
@@ -266,6 +267,28 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let Some(acteur) = &etat.utilisateur else {
             return retour_erreur(tr("aucune session ouverte"));
         };
+        // Poste relié : réglages analysés et bas de chaque type au serveur.
+        if crate::serveur::inscrit(&etat.conn) {
+            let analysee = match mise_en_page.analyser() {
+                Ok(a) => a,
+                Err(e) => return retour_erreur(message(e)),
+            };
+            let mut actions = vec![Action::EnregistrerMiseEnPage {
+                contenu: reglages::en_json(&analysee),
+            }];
+            for (t, b) in TypeDocument::TOUS.iter().zip(bas.iter()) {
+                actions.push(Action::EnregistrerBas {
+                    type_document: t.code().into(),
+                    contenu: reglages::bas_en_json(&bas_depuis_ecran(&b)),
+                });
+            }
+            for action in actions {
+                if let Some(Err(texte)) = relie::ecrire(&etat, action) {
+                    return retour_erreur(texte);
+                }
+            }
+            return retour_ok(tr("Mise en page enregistrée."));
+        }
         if let Err(erreur) = reglages::enregistrer(&etat.conn, acteur, &mise_en_page) {
             return retour_erreur(texte_erreur(erreur));
         }

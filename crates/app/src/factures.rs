@@ -19,6 +19,7 @@ use kadenz_domaine::module::Module;
 use kadenz_domaine::role::Droit;
 use kadenz_domaine::saisie;
 use kadenz_domaine::texte::{cle_comparaison, contient};
+use kadenz_protocole::{Action, Entite, Issue};
 use kadenz_stockage::comptes::Utilisateur;
 use kadenz_stockage::documents::{
     self, ChampsLivraison, EtatPaiement, FiltreDocuments, Lien, LigneSaisie, NatureLien,
@@ -27,10 +28,11 @@ use kadenz_stockage::documents::{
 use kadenz_stockage::produits::{self, FiltreProduits, Produit};
 use kadenz_stockage::reglements::{self, SaisieReglement};
 use kadenz_stockage::tiers::{self, FicheTiers, FiltreTiers, TypeTiers};
-use kadenz_stockage::{Connexion, droits, parametres};
+use kadenz_stockage::{Connexion, droits, parametres, synchro};
 use slint::{ComponentHandle, Model, ModelRc, SharedString, VecModel};
 
 use crate::referentiels::{Vue, modele_lignes, retour_erreur, retour_ok, texte_erreur};
+use crate::relie;
 use crate::traduction::{tr, trf};
 use crate::{
     Etat, EtatPartage, EvenementUi, FacturesApi, FenetrePrincipale, FicheFactureUi, LienUi,
@@ -1199,6 +1201,26 @@ fn enregistrer_brouillon(
     let e = etat.facture.as_ref().ok_or("aucune fiche ouverte")?;
     let s = saisie_depuis_ui(e, fiche)?;
     let id = e.id;
+    // Poste relié : la saisie part au serveur, tiers et produits par leur uid.
+    if crate::serveur::inscrit(&etat.conn) {
+        let saisie = synchro::saisie_pour_serveur(&etat.conn, &s).map_err(texte_erreur)?;
+        let action = match id {
+            Some(id) => Action::ModifierBrouillon {
+                uid: relie::uid(etat, Entite::Document, id)?,
+                saisie,
+            },
+            None => Action::CreerBrouillon {
+                uid: synchro::nouvel_uid(),
+                type_document: etat.type_document.code().into(),
+                saisie,
+            },
+        };
+        relie::ecrire_relie(etat, action.clone())?;
+        return match id {
+            Some(id) => Ok(id),
+            None => relie::id_cree(etat, &action).ok_or_else(|| tr("cette fiche n'existe plus")),
+        };
+    }
     match id {
         Some(id) => documents::modifier_brouillon(&mut etat.conn, acteur, id, &s)
             .map(|()| id)
@@ -1206,6 +1228,93 @@ fn enregistrer_brouillon(
         None => documents::creer_brouillon(&mut etat.conn, acteur, etat.type_document, &s)
             .map_err(texte_erreur),
     }
+}
+
+/// Écriture sur un document existant : au serveur sur un poste relié (`serveur`
+/// lit son issue), sinon dans la base par `local`.
+fn sur_document<T>(
+    etat: &mut Etat,
+    id: i64,
+    action: impl FnOnce(String) -> Action,
+    serveur: impl FnOnce(Issue) -> T,
+    local: impl FnOnce(&mut Etat) -> Result<T, String>,
+) -> Result<T, String> {
+    match relie::ecrire_sur(etat, Entite::Document, id, action) {
+        Some(r) => r.map(serveur),
+        None => local(etat),
+    }
+}
+
+/// Document créé à partir d'un autre (copie, avoir, facture, bordereau) : au
+/// serveur sous un nouvel uid sur un poste relié, sinon par `local`. Rend
+/// l'identifiant local du nouveau document.
+fn deriver(
+    etat: &mut Etat,
+    id: i64,
+    action: impl FnOnce(String, String) -> Action,
+    local: impl FnOnce(&mut Etat) -> Result<i64, String>,
+) -> Result<i64, String> {
+    let nouveau = synchro::nouvel_uid();
+    match relie::ecrire_sur(etat, Entite::Document, id, |uid| {
+        action(uid, nouveau.clone())
+    }) {
+        Some(r) => {
+            r?;
+            synchro::id_de(&etat.conn, Entite::Document, &nouveau)
+                .ok()
+                .flatten()
+                .ok_or_else(|| tr("cette fiche n'existe plus"))
+        }
+        None => local(etat),
+    }
+}
+
+/// Visas et dates d'un bordereau : au serveur ou dans la base.
+fn ecrire_livraison(
+    etat: &mut Etat,
+    acteur: &Utilisateur,
+    id: i64,
+    champs: &ChampsLivraison,
+) -> Result<(), String> {
+    sur_document(
+        etat,
+        id,
+        |uid| Action::ModifierLivraison {
+            uid,
+            visa_client: champs.visa_client.clone(),
+            visa_fournisseur: champs.visa_fournisseur.clone(),
+            date_livraison: champs.date_livraison.clone(),
+            date_reception: champs.date_reception.clone(),
+        },
+        |_| (),
+        |etat| {
+            documents::modifier_livraison(&mut etat.conn, acteur, id, champs).map_err(texte_erreur)
+        },
+    )
+}
+
+/// Mode de paiement et observations : au serveur ou dans la base.
+fn ecrire_administratif(
+    etat: &mut Etat,
+    acteur: &Utilisateur,
+    id: i64,
+    mode: &str,
+    observations: &str,
+) -> Result<(), String> {
+    sur_document(
+        etat,
+        id,
+        |uid| Action::ModifierAdministratif {
+            uid,
+            mode_paiement: mode.to_string(),
+            observations: observations.to_string(),
+        },
+        |_| (),
+        |etat| {
+            documents::modifier_administratif(&mut etat.conn, acteur, id, mode, observations)
+                .map_err(texte_erreur)
+        },
+    )
 }
 
 /// Action sur le document ouvert, puis rechargement de la fiche et du registre.
@@ -1767,7 +1876,19 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             Err(message) => return retour_erreur(message),
         };
         let t = etat.type_document;
-        let resultat = documents::valider(&mut etat.conn, &acteur, id);
+        let resultat = sur_document(
+            &mut etat,
+            id,
+            |uid| Action::Valider { uid },
+            |issue| match issue {
+                Issue::Acceptee {
+                    numero: Some(numero),
+                    ..
+                } => numero,
+                _ => String::new(),
+            },
+            |etat| documents::valider(&mut etat.conn, &acteur, id).map_err(texte_erreur),
+        );
         // La fiche est rechargée dans tous les cas : le brouillon a été enregistré.
         let rechargement = ouvrir_fiche(&f, &mut etat, Some(id));
         afficher_registre(&f, &mut etat);
@@ -1775,7 +1896,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             (Ok(numero), Ok(())) => retour_ok(message_validation(t, &numero)),
             (Err(erreur), _) => retour_erreur(trf(
                 "brouillon enregistré, mais validation refusée : {}",
-                &[&texte_erreur(erreur)],
+                &[&erreur],
             )),
             (Ok(_), Err(message)) => retour_erreur(message),
         }
@@ -1787,9 +1908,14 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             return Retour::default();
         };
         agir(&f, &e, |etat, acteur, id| {
-            documents::marquer_envoye(&mut etat.conn, acteur, id)
-                .map(|()| message_envoi(etat.type_document))
-                .map_err(texte_erreur)
+            sur_document(
+                etat,
+                id,
+                |uid| Action::MarquerEnvoye { uid },
+                |_| (),
+                |etat| documents::marquer_envoye(&mut etat.conn, acteur, id).map_err(texte_erreur),
+            )
+            .map(|()| message_envoi(etat.type_document))
         })
     });
 
@@ -1800,9 +1926,20 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         };
         agir(&f, &e, |etat, acteur, id| {
             let recues = quantites_recues(etat.facture.as_ref())?;
-            documents::enregistrer_reception(&mut etat.conn, acteur, id, &recues)
-                .map(|()| tr("réception enregistrée"))
-                .map_err(texte_erreur)
+            sur_document(
+                etat,
+                id,
+                |uid| Action::EnregistrerReception {
+                    uid,
+                    recues: recues.clone(),
+                },
+                |_| (),
+                |etat| {
+                    documents::enregistrer_reception(&mut etat.conn, acteur, id, &recues)
+                        .map_err(texte_erreur)
+                },
+            )
+            .map(|()| tr("réception enregistrée"))
         })
     });
 
@@ -1829,9 +1966,25 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 mode_paiement,
                 reference: reference.trim().to_string(),
             };
-            reglements::ajouter(&mut etat.conn, acteur, id, &saisie)
-                .map(|_| tr("règlement enregistré"))
-                .map_err(texte_erreur)
+            sur_document(
+                etat,
+                id,
+                |document| Action::AjouterReglement {
+                    uid: synchro::nouvel_uid(),
+                    document,
+                    date: saisie.date.format("%Y-%m-%d").to_string(),
+                    montant: saisie.montant,
+                    mode_paiement: saisie.mode_paiement.clone(),
+                    reference: saisie.reference.clone(),
+                },
+                |_| (),
+                |etat| {
+                    reglements::ajouter(&mut etat.conn, acteur, id, &saisie)
+                        .map(|_| ())
+                        .map_err(texte_erreur)
+                },
+            )
+            .map(|()| tr("règlement enregistré"))
         })
     });
 
@@ -1841,9 +1994,16 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             return Retour::default();
         };
         agir(&f, &e, |etat, acteur, _| {
-            reglements::supprimer(&mut etat.conn, acteur, i64::from(reglement_id))
-                .map(|()| tr("règlement supprimé"))
-                .map_err(texte_erreur)
+            let reglement = i64::from(reglement_id);
+            match relie::ecrire_sur(etat, Entite::Reglement, reglement, |uid| {
+                Action::SupprimerReglement { uid }
+            }) {
+                Some(r) => r.map(|_| ()),
+                None => {
+                    reglements::supprimer(&mut etat.conn, acteur, reglement).map_err(texte_erreur)
+                }
+            }
+            .map(|()| tr("règlement supprimé"))
         })
     });
 
@@ -1856,7 +2016,15 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             &f,
             &e,
             |etat, acteur, id| {
-                documents::creer_bordereau(&mut etat.conn, acteur, id).map_err(texte_erreur)
+                deriver(
+                    etat,
+                    id,
+                    |uid, nouveau| Action::CreerBordereau { uid, nouveau },
+                    |etat| {
+                        documents::creer_bordereau(&mut etat.conn, acteur, id)
+                            .map_err(texte_erreur)
+                    },
+                )
             },
             tr("bordereau créé en brouillon avec les lignes de la facture : ajuster les quantités livrées puis valider"),
         )
@@ -1873,8 +2041,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             };
             let champs = champs_livraison(&vc, &vf, &dl, &dr);
             if fiche.visas_modifiables && champs_changes(&fiche, &champs) {
-                documents::modifier_livraison(&mut etat.conn, acteur, id, &champs)
-                    .map_err(texte_erreur)?;
+                ecrire_livraison(etat, acteur, id, &champs)?;
             }
             if observations != fiche.observations {
                 // Le mode de paiement d'un bordereau reste celui du document.
@@ -1883,8 +2050,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                     .as_ref()
                     .and_then(|ed| au_rang(&ed.modes, fiche.mode_index))
                     .unwrap_or_default();
-                documents::modifier_administratif(&mut etat.conn, acteur, id, &mode, &observations)
-                    .map_err(texte_erreur)?;
+                ecrire_administratif(etat, acteur, id, &mode, &observations)?;
             }
             Ok(tr("bordereau enregistré"))
         })
@@ -1902,12 +2068,18 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             // Les visas saisis avant la confirmation sont enregistrés d'abord.
             let champs = champs_livraison(&vc, &vf, &dl, &dr);
             if fiche.visas_modifiables && champs_changes(&fiche, &champs) {
-                documents::modifier_livraison(&mut etat.conn, acteur, id, &champs)
-                    .map_err(texte_erreur)?;
+                ecrire_livraison(etat, acteur, id, &champs)?;
             }
-            documents::confirmer_livraison(&mut etat.conn, acteur, id)
-                .map(|()| tr("livraison confirmée"))
-                .map_err(texte_erreur)
+            sur_document(
+                etat,
+                id,
+                |uid| Action::ConfirmerLivraison { uid },
+                |_| (),
+                |etat| {
+                    documents::confirmer_livraison(&mut etat.conn, acteur, id).map_err(texte_erreur)
+                },
+            )
+            .map(|()| tr("livraison confirmée"))
         })
     });
 
@@ -1978,9 +2150,14 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             return Retour::default();
         };
         agir(&f, &e, |etat, acteur, id| {
-            documents::annuler(&mut etat.conn, acteur, id)
-                .map(|()| message_annulation(etat.type_document))
-                .map_err(texte_erreur)
+            sur_document(
+                etat,
+                id,
+                |uid| Action::Annuler { uid },
+                |_| (),
+                |etat| documents::annuler(&mut etat.conn, acteur, id).map_err(texte_erreur),
+            )
+            .map(|()| message_annulation(etat.type_document))
         })
     });
 
@@ -1995,9 +2172,8 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 .as_ref()
                 .and_then(|ed| au_rang(&ed.modes, mode))
                 .unwrap_or_default();
-            documents::modifier_administratif(&mut etat.conn, acteur, id, &mode, &observations)
+            ecrire_administratif(etat, acteur, id, &mode, &observations)
                 .map(|()| "mode de paiement et observations enregistrés".to_string())
-                .map_err(texte_erreur)
         })
     });
 
@@ -2010,8 +2186,15 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             &f,
             &e,
             |etat, acteur, id| {
-                documents::convertir_en_facture(&mut etat.conn, acteur, id)
-                    .map_err(texte_erreur)
+                deriver(
+                    etat,
+                    id,
+                    |uid, nouveau| Action::ConvertirEnFacture { uid, nouveau },
+                    |etat| {
+                        documents::convertir_en_facture(&mut etat.conn, acteur, id)
+                            .map_err(texte_erreur)
+                    },
+                )
             },
             tr("facture créée en brouillon ; sa validation marquera le document d'origine comme converti"),
         )
@@ -2031,8 +2214,19 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             &f,
             &e,
             |etat, acteur, id| {
-                documents::dupliquer(&mut etat.conn, acteur, id, annuler_original)
-                    .map_err(texte_erreur)
+                deriver(
+                    etat,
+                    id,
+                    |uid, nouveau| Action::Dupliquer {
+                        uid,
+                        nouveau,
+                        annuler_original,
+                    },
+                    |etat| {
+                        documents::dupliquer(&mut etat.conn, acteur, id, annuler_original)
+                            .map_err(texte_erreur)
+                    },
+                )
             },
             message,
         )
@@ -2047,7 +2241,12 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             &f,
             &e,
             |etat, acteur, id| {
-                documents::creer_avoir(&mut etat.conn, acteur, id).map_err(texte_erreur)
+                deriver(
+                    etat,
+                    id,
+                    |uid, nouveau| Action::CreerAvoir { uid, nouveau },
+                    |etat| documents::creer_avoir(&mut etat.conn, acteur, id).map_err(texte_erreur),
+                )
             },
             tr("avoir créé en brouillon avec les lignes de la facture : retirer des lignes ou baisser les quantités pour un avoir partiel"),
         )
@@ -2073,7 +2272,16 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let Some(id) = etat.facture.as_ref().and_then(|ed| ed.id) else {
             return retour_erreur("ce brouillon n'a pas été enregistré");
         };
-        match documents::supprimer_brouillon(&mut etat.conn, &acteur, id) {
+        let resultat = sur_document(
+            &mut etat,
+            id,
+            |uid| Action::SupprimerBrouillon { uid },
+            |_| (),
+            |etat| {
+                documents::supprimer_brouillon(&mut etat.conn, &acteur, id).map_err(texte_erreur)
+            },
+        );
+        match resultat {
             Ok(()) => {
                 etat.facture = None;
                 f.global::<FacturesApi>().set_fiche_ouverte(false);

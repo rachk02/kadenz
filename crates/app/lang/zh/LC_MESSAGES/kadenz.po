@@ -3356,3 +3356,9 @@ msgstr "服务器已接受登录。正在接收企业数据：收到您的账户
 
 msgid "Votre mot de passe a changé ou votre compte a été désactivé sur le serveur : reconnectez-vous."
 msgstr "您的密码已更改或您的账户已在服务器上停用：请重新登录。"
+
+msgid "La fiche a changé sur un autre poste : rouvrez-la pour voir la version du serveur."
+msgstr "该记录已在另一台工作站上更改：请重新打开以查看服务器上的版本。"
+
+msgid "cette fiche n'existe plus"
+msgstr "该记录已不存在"

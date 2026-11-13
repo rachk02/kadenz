@@ -3356,3 +3356,9 @@ msgstr "Oturum açma sunucu tarafından kabul edildi. Şirket verileri geliyor: 
 
 msgid "Votre mot de passe a changé ou votre compte a été désactivé sur le serveur : reconnectez-vous."
 msgstr "Parolanız değişti veya hesabınız sunucuda devre dışı bırakıldı: yeniden oturum açın."
+
+msgid "La fiche a changé sur un autre poste : rouvrez-la pour voir la version du serveur."
+msgstr "Kayıt başka bir iş istasyonunda değişti: sunucudaki sürümü görmek için yeniden açın."
+
+msgid "cette fiche n'existe plus"
+msgstr "bu kayıt artık mevcut değil"

@@ -3,11 +3,14 @@
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use chrono::Datelike;
 use kadenz_domaine::document::TypeDocument;
 use kadenz_domaine::lettres::{Orthographe, en_lettres};
 use kadenz_domaine::numerotation::{CHIFFRES_MAX, CHIFFRES_MIN, Numerotation, RemiseAZero};
 use kadenz_domaine::saisie;
+use kadenz_protocole::Action;
 use kadenz_stockage::entreprise::{self, Entreprise, FormatImage, Logo};
 use kadenz_stockage::parametres::{self, Parametres, TextesDocument};
 use kadenz_stockage::relances::{self, TextesRelance};
@@ -17,7 +20,7 @@ use crate::referentiels::{retour_erreur, retour_ok, texte_erreur};
 use crate::traduction::{tr, trf};
 use crate::{
     EntrepriseApi, EtatPartage, FenetrePrincipale, FicheEntrepriseUi, ParametresApi, ParametresUi,
-    Retour, TexteDocumentUi, TextesRelanceUi,
+    Retour, TexteDocumentUi, TextesRelanceUi, relie,
 };
 
 // ---------------------------------------------------------------- Entreprise
@@ -131,7 +134,14 @@ fn brancher_entreprise(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             return retour_erreur("aucune session ouverte");
         };
         let fiche = fiche_depuis_ui(&saisie);
-        match entreprise::enregistrer(&etat.conn, acteur, &fiche) {
+        let action = Action::EnregistrerEntreprise {
+            contenu: fiche.en_json(),
+        };
+        let resultat = match relie::ecrire(&etat, action) {
+            Some(r) => r.map(|_| ()),
+            None => entreprise::enregistrer(&etat.conn, acteur, &fiche).map_err(texte_erreur),
+        };
+        match resultat {
             Ok(()) => {
                 if let Some(f) = f.upgrade() {
                     f.set_nom_entreprise(fiche.nom.trim().into());
@@ -167,8 +177,16 @@ fn brancher_entreprise(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let Some(acteur) = &etat.utilisateur else {
             return retour_erreur("aucune session ouverte");
         };
-        let resultat =
-            entreprise::definir_logo(&etat.conn, acteur, logo_de_rang(rang), Some(&octets));
+        let logo = logo_de_rang(rang);
+        let action = Action::DefinirLogo {
+            logo: logo.code().into(),
+            octets: Some(BASE64.encode(&octets)),
+        };
+        let resultat = match relie::ecrire(&etat, action) {
+            Some(r) => r.map(|_| ()),
+            None => entreprise::definir_logo(&etat.conn, acteur, logo, Some(&octets))
+                .map_err(texte_erreur),
+        };
         afficher_logos(&f, &etat.conn);
         match resultat {
             Ok(()) => retour_ok("logo enregistré"),
@@ -182,7 +200,15 @@ fn brancher_entreprise(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let Some(acteur) = &etat.utilisateur else {
             return retour_erreur("aucune session ouverte");
         };
-        let resultat = entreprise::definir_logo(&etat.conn, acteur, logo_de_rang(rang), None);
+        let logo = logo_de_rang(rang);
+        let action = Action::DefinirLogo {
+            logo: logo.code().into(),
+            octets: None,
+        };
+        let resultat = match relie::ecrire(&etat, action) {
+            Some(r) => r.map(|_| ()),
+            None => entreprise::definir_logo(&etat.conn, acteur, logo, None).map_err(texte_erreur),
+        };
         if let Some(f) = f.upgrade() {
             afficher_logos(&f, &etat.conn);
         }
@@ -449,12 +475,35 @@ fn brancher_parametres(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let Some(acteur) = &etat.utilisateur else {
             return retour_erreur("aucune session ouverte");
         };
+        let relances_actives =
+            crate::licence::actif(&etat.conn, kadenz_domaine::module::Module::Relances);
+        // Poste relié : paramètres partagés et lettre de relance au serveur ; les
+        // dossiers d'export, propres à la machine, restent dans la copie.
+        if crate::serveur::inscrit(&etat.conn) {
+            let mut actions = vec![Action::EnregistrerParametres {
+                contenu: parametres::en_json(&p),
+            }];
+            if relances_actives {
+                actions.push(Action::EnregistrerTextesRelance {
+                    contenu: relances::en_json(&relance_depuis_ui(&saisie.relance)),
+                });
+            }
+            for action in actions {
+                if let Some(Err(texte)) = relie::ecrire(&etat, action) {
+                    return retour_erreur(texte);
+                }
+            }
+            return match parametres::enregistrer_dossiers(&etat.conn, acteur, &p.dossiers_export) {
+                Ok(()) => retour_ok("paramètres enregistrés"),
+                Err(erreur) => retour_erreur(erreur),
+            };
+        }
         // Paramètres et lettre de relance ensemble, ou rien.
         let enregistrer = || -> kadenz_stockage::Resultat<()> {
             let tx = etat.conn.unchecked_transaction()?;
             parametres::enregistrer(&tx, acteur, &p)?;
             // Lettre de relance masquée sans le module Relances : ses textes restent.
-            if crate::licence::actif(&tx, kadenz_domaine::module::Module::Relances) {
+            if relances_actives {
                 relances::enregistrer_textes(&tx, acteur, &relance_depuis_ui(&saisie.relance))?;
             }
             tx.commit()?;

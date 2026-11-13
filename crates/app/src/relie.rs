@@ -8,7 +8,7 @@ use std::cell::RefCell;
 use std::path::PathBuf;
 
 use kadenz_poste::{ErreurPoste, EtatConnexion, Evenement, Synchroniseur};
-use kadenz_protocole::{Entite, Issue};
+use kadenz_protocole::{Action, Entite, Issue};
 use slint::{ComponentHandle, SharedString};
 
 use crate::traduction::{tr, trf};
@@ -142,6 +142,71 @@ pub(crate) fn connecter(
         }
         Err(e) => crate::phrase(texte_erreur(&e)),
     })
+}
+
+/// Écriture d'un poste relié : l'action part au serveur, et la copie est à
+/// jour au retour. `None` si le poste n'est pas relié : l'écran écrit alors
+/// dans sa base comme en V1. Seule une action appliquée rend `Ok` ; un refus du
+/// serveur, une mise en attente ou une erreur du synchroniseur rendent leur
+/// texte traduit.
+pub(crate) fn ecrire(etat: &Etat, action: Action) -> Option<Result<Issue, String>> {
+    if !crate::serveur::inscrit(&etat.conn) {
+        return None;
+    }
+    let Some(r) = etat.relie.as_ref() else {
+        return Some(Err(texte_erreur(&ErreurPoste::HorsConnexion)));
+    };
+    Some(match r.synchro.ecrire(action) {
+        Ok(issue @ Issue::Acceptee { .. }) => Ok(issue),
+        Ok(Issue::Refusee { modele, valeurs }) => {
+            Err(texte_erreur(&ErreurPoste::Refus { modele, valeurs }))
+        }
+        Ok(Issue::EnAttente) => Err(tr(
+            "Opération mise en attente par le serveur : l'Admin décidera.",
+        )),
+        Ok(Issue::EnConflit | Issue::Depassee | Issue::Bloquee) => Err(tr(
+            "La fiche a changé sur un autre poste : rouvrez-la pour voir la version du serveur.",
+        )),
+        Err(e) => Err(texte_erreur(&e)),
+    })
+}
+
+/// Écriture visant une ligne existante : l'action reçoit l'uid de la ligne.
+/// `None` si le poste n'est pas relié.
+pub(crate) fn ecrire_sur(
+    etat: &Etat,
+    entite: Entite,
+    id: i64,
+    action: impl FnOnce(String) -> Action,
+) -> Option<Result<Issue, String>> {
+    if !crate::serveur::inscrit(&etat.conn) {
+        return None;
+    }
+    Some(uid(etat, entite, id).and_then(|u| ecrire_relie(etat, action(u))))
+}
+
+/// Écriture d'un écran qui sait le poste relié : un synchroniseur absent rend
+/// l'erreur « serveur injoignable ».
+pub(crate) fn ecrire_relie(etat: &Etat, action: Action) -> Result<Issue, String> {
+    ecrire(etat, action).unwrap_or_else(|| Err(texte_erreur(&ErreurPoste::HorsConnexion)))
+}
+
+/// Identifiant d'une ligne pour le serveur ; texte d'erreur si elle n'en a pas
+/// (cas anormal sur une copie).
+pub(crate) fn uid(etat: &Etat, entite: Entite, id: i64) -> Result<String, String> {
+    match kadenz_stockage::synchro::uid_de(&etat.conn, entite, id) {
+        Ok(Some(uid)) => Ok(uid),
+        Ok(None) => Err(tr("cette fiche n'existe plus")),
+        Err(e) => Err(trf("Erreur technique : {}", &[&e])),
+    }
+}
+
+/// Identifiant local de la ligne créée par une action, une fois la copie à jour.
+pub(crate) fn id_cree(etat: &Etat, action: &Action) -> Option<i64> {
+    let (entite, uid) = action.creee()?;
+    kadenz_stockage::synchro::id_de(&etat.conn, entite, uid)
+        .ok()
+        .flatten()
 }
 
 /// Ouvre la session du compte accepté par le serveur s'il est dans la copie.

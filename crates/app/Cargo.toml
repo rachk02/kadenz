@@ -17,6 +17,7 @@ kadenz-export.workspace = true
 kadenz-protocole.workspace = true
 kadenz-client.workspace = true
 kadenz-poste.workspace = true
+base64.workspace = true
 hayro.workspace = true
 slint.workspace = true
 chrono.workspace = true

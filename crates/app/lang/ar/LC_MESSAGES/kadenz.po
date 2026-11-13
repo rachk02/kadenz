@@ -3356,3 +3356,9 @@ msgstr "قبل الخادم تسجيل الدخول. بيانات الشركة �
 
 msgid "Votre mot de passe a changé ou votre compte a été désactivé sur le serveur : reconnectez-vous."
 msgstr "تغيرت كلمة المرور أو تم تعطيل حسابك على الخادم: سجّل الدخول مجددًا."
+
+msgid "La fiche a changé sur un autre poste : rouvrez-la pour voir la version du serveur."
+msgstr "تغيّر السجل على محطة أخرى: أعد فتحه لعرض نسخة الخادم."
+
+msgid "cette fiche n'existe plus"
+msgstr "لم يعد هذا السجل موجودًا"

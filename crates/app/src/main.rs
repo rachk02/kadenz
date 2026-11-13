@@ -491,7 +491,15 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
         let Some(utilisateur) = etat.utilisateur.clone() else {
             return phrase("aucune session ouverte");
         };
-        let resultat = comptes::changer_langue(&etat.conn, &utilisateur, langue);
+        let resultat = match relie::ecrire(
+            &etat,
+            kadenz_protocole::Action::ChangerLangue {
+                langue: langue.code().into(),
+            },
+        ) {
+            Some(r) => r.map(|_| ()).map_err(phrase),
+            None => comptes::changer_langue(&etat.conn, &utilisateur, langue).map_err(phrase),
+        };
         if resultat.is_ok()
             && let Some(u) = etat.utilisateur.as_mut()
         {
@@ -501,10 +509,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
         if let Some(f) = f.upgrade() {
             afficher_session(&f, &etat);
         }
-        match resultat {
-            Ok(()) => SharedString::new(),
-            Err(erreur) => phrase(erreur),
-        }
+        resultat.err().unwrap_or_default()
     });
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
@@ -520,8 +525,19 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
             let Some(utilisateur) = etat.utilisateur.clone() else {
                 return phrase("aucune session ouverte");
             };
-            let resultat =
-                comptes::changer_affichage(&etat.conn, &utilisateur, navigation, animations);
+            let resultat = match relie::ecrire(
+                &etat,
+                kadenz_protocole::Action::ChangerAffichage {
+                    navigation: navigation.code().into(),
+                    animations,
+                },
+            ) {
+                Some(r) => r.map(|_| ()).map_err(phrase),
+                None => {
+                    comptes::changer_affichage(&etat.conn, &utilisateur, navigation, animations)
+                        .map_err(phrase)
+                }
+            };
             if resultat.is_ok()
                 && let Some(u) = etat.utilisateur.as_mut()
             {
@@ -532,10 +548,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
             if let (Some(f), Some(u)) = (f.upgrade(), etat.utilisateur.as_ref()) {
                 appliquer_affichage(&f, u);
             }
-            match resultat {
-                Ok(()) => SharedString::new(),
-                Err(erreur) => phrase(erreur),
-            }
+            resultat.err().unwrap_or_default()
         });
 
     let e = etat;
@@ -547,9 +560,19 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
         let Some(utilisateur) = &etat.utilisateur else {
             return phrase("aucune session ouverte");
         };
-        match comptes::changer_mot_de_passe(&etat.conn, utilisateur.id, &ancien, &nouveau) {
-            Ok(()) => SharedString::new(),
-            Err(erreur) => phrase(erreur),
+        let action = kadenz_protocole::Action::ChangerMotDePasse {
+            ancien: ancien.to_string(),
+            nouveau: nouveau.to_string(),
+        };
+        match relie::ecrire(&etat, action) {
+            Some(Ok(_)) => SharedString::new(),
+            Some(Err(texte)) => phrase(texte),
+            None => {
+                match comptes::changer_mot_de_passe(&etat.conn, utilisateur.id, &ancien, &nouveau) {
+                    Ok(()) => SharedString::new(),
+                    Err(erreur) => phrase(erreur),
+                }
+            }
         }
     });
 }
