@@ -199,8 +199,7 @@ export component FenetreAlerte inherits Rectangle {
     }
 
     // Carré au début du sens de lecture (la Rangee s'inverse de droite à
-    // gauche) : vert pour une réussite, ambre pour un message du serveur, qui
-    // porte en plus une croix de fermeture.
+    // gauche) : vert pour une réussite, ambre pour un message du serveur.
     ligne := Rangee {
         padding-left: 16px;
         padding-right: 16px;
@@ -225,7 +224,8 @@ export component FenetreAlerte inherits Rectangle {
             overflow: elide;
         }
 
-        if Alerte.durable: Text {
+        // Croix de fermeture sur toute alerte (essai F6d, essai 4).
+        Text {
             text: "×";
             color: #c5cae0;
             font-size: 16px;
@@ -234,18 +234,28 @@ export component FenetreAlerte inherits Rectangle {
     }
 
     // Trois secondes d'affichage ; une nouvelle alerte relance le compte. Un
-    // message du serveur attend d'être fermé.
+    // message du serveur attend d'être fermé : le minuteur s'arrête. Il est
+    // piloté ici seulement : restart() réarme un minuteur déjà démarré une
+    // fois même quand running est faux, si bien qu'un message durable se
+    // fermait au bout de trois secondes (essai F6d, essai 3) ; et il ne fait
+    // rien sur un minuteur jamais démarré, d'où running posé avant.
     minuteur := Timer {
         interval: 3s;
-        running: Alerte.visible && !Alerte.durable;
+        running: false;
         triggered => {
             Alerte.visible = false;
+            self.running = false;
         }
     }
 
     property <int> numero: Alerte.numero;
     changed numero => {
-        minuteur.restart();
+        if (Alerte.durable) {
+            minuteur.running = false;
+        } else {
+            minuteur.running = true;
+            minuteur.restart();
+        }
     }
 }
 

@@ -301,6 +301,11 @@ fn appliquer_langue(fenetre: &FenetrePrincipale, code: &str) {
 /// mise à jour pour qui gère les paramètres.
 pub(crate) fn ouvrir_session(f: &FenetrePrincipale, etat: &mut Etat, utilisateur: Utilisateur) {
     etat.utilisateur = Some(utilisateur);
+    // Sans compte, le menu ne contient que les Paramètres, et appliquer_droits
+    // (appelé à l'écran de connexion par les événements du serveur) y range la
+    // page : la session s'ouvrait sur les Paramètres. Elle repart du tableau
+    // de bord, ou des Factures si la licence ne l'ouvre pas.
+    f.set_page(Page::TableauDeBord);
     afficher_session(f, etat);
     maj::verifier_apres_connexion(f, gere_parametres(etat));
 }

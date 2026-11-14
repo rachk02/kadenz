@@ -208,7 +208,10 @@ pub(crate) fn connecter(
                 tr("Connexion acceptée par le serveur. Les données de l'entreprise arrivent : la session s'ouvrira dès que votre compte sera reçu.").into()
             }
         }
-        Err(ErreurPoste::HorsConnexion | ErreurPoste::Injoignable) => {
+        // Delai : le fil était occupé par une tentative de reconnexion quand
+        // la demande est arrivée ; elle reste dans sa file et y gardera le
+        // compte comme hors connexion. La session s'ouvre en local.
+        Err(ErreurPoste::HorsConnexion | ErreurPoste::Injoignable | ErreurPoste::Delai) => {
             // Décision 48 : consultation sur la copie ; le synchroniseur garde
             // le compte et le connecte au retour du serveur.
             let local =
