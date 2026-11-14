@@ -89,6 +89,25 @@ public pure function icone(r: Rubrique) -> image {
     if (r == Rubrique.mises-a-jour) { return @image-url("icones/menu/mises-a-jour.svg"); }
     return @image-url("icones/menu/a-propos.svg");
 }
+
+// Version de l'icône pour la rubrique active : silhouette teintée.
+public pure function icone-active(r: Rubrique) -> image {
+    if (r == Rubrique.mon-compte) { return @image-url("icones/menu/mon-compte-actif.svg"); }
+    if (r == Rubrique.navigation) { return @image-url("icones/menu/navigation-actif.svg"); }
+    if (r == Rubrique.entreprise) { return @image-url("icones/menu/entreprise-actif.svg"); }
+    if (r == Rubrique.documents) { return @image-url("icones/menu/documents-actif.svg"); }
+    if (r == Rubrique.paiements) { return @image-url("icones/menu/paiements-actif.svg"); }
+    if (r == Rubrique.textes) { return @image-url("icones/menu/exports-actif.svg"); }
+    if (r == Rubrique.impression) { return @image-url("icones/menu/impression-actif.svg"); }
+    if (r == Rubrique.utilisateurs) { return @image-url("icones/menu/utilisateurs-actif.svg"); }
+    if (r == Rubrique.sauvegardes) { return @image-url("icones/menu/sauvegardes-actif.svg"); }
+    if (r == Rubrique.licence) { return @image-url("icones/menu/licence-actif.svg"); }
+    if (r == Rubrique.abonnement) { return @image-url("icones/menu/licence-actif.svg"); }
+    if (r == Rubrique.serveur) { return @image-url("icones/menu/parametres-actif.svg"); }
+    if (r == Rubrique.suspendues) { return @image-url("icones/menu/relances-actif.svg"); }
+    if (r == Rubrique.mises-a-jour) { return @image-url("icones/menu/mises-a-jour-actif.svg"); }
+    return @image-url("icones/menu/a-propos-actif.svg");
+}
 }
 
 component PageMonCompte inherits VerticalLayout {
@@ -701,7 +720,7 @@ export component PageReglages inherits Rectangle {
                     for r in ReglagesApi.rubriques: VerticalLayout {
                         if !root.liste-compacte: ElementNavigation {
                             libelle: Rubriques.libelle(r);
-                            icone: Rubriques.icone(r);
+                            icone: ReglagesApi.rubrique == r ? Rubriques.icone-active(r) : Rubriques.icone(r);
                             actif: ReglagesApi.rubrique == r;
                             clique => {
                                 ReglagesApi.rubrique = r;
@@ -710,7 +729,7 @@ export component PageReglages inherits Rectangle {
 
                         if root.liste-compacte: EntreeCompacte {
                             libelle: Rubriques.libelle(r);
-                            icone: Rubriques.icone(r);
+                            icone: ReglagesApi.rubrique == r ? Rubriques.icone-active(r) : Rubriques.icone(r);
                             actif: ReglagesApi.rubrique == r;
                             clique => {
                                 ReglagesApi.rubrique = r;

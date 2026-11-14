@@ -15,6 +15,7 @@ Statut : **« Quatre pièces »**, validée par l'utilisateur le 2026-11-11 et i
 
 - `crates/app/ui/composants.slint` : jetons de couleur `accent` (Indigo), `accent-survol`, `nuit`, `ambre` ; composants `Symbole` (icône sur tuile), `MotifMarque` (motif) et `TroisTemps` (les trois traits).
 - `crates/app/ui/icones/` : `kadenz-icone.svg`, `kadenz-logo-horizontal.svg`, `kadenz-logo-horizontal-negatif.svg`, `kadenz-32.png`, `kadenz-64.png`, `kadenz-256.png`, `motif-quatre-pieces.svg`.
+- Jeu d'icônes de l'interface (`crates/app/ui/icones/menu`, `actions`, `etat`, 49 icônes) : grille de 24, trait de 1,5 aux bouts arrondis au repos ; sur l'entrée active du menu et des rubriques des Paramètres, version `-actif.svg` à la silhouette teintée à 25 %. Livraisons : colis livré ; Produits : étiquette. Une seule couleur, recolorée par l'application. Source : `propositions-2026-11-14-icones/generer_v3.py` (choix de l'utilisateur du 2026-11-14).
 - `crates/app/kadenz.ico` : icône de `kadenz.exe` (16 à 256 px), intégrée par `build.rs` via `winresource`.
 - Bandeaux de marque (connexion, présentation, assistant, réglages) : aplat Nuit, motif Quatre pièces serré (pas de 40 px) sur tout le panneau, logo en négatif ; trois temps au-dessus de « Gestion commerciale » (connexion, présentation).
 - Installateur : `installateur/theme/logo.png` et `logoside.png` sont produits par `installateur/theme/generer.py` à partir de `crates/app/kadenz.ico`.

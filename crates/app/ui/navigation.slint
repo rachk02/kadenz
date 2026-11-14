@@ -70,6 +70,23 @@ export global Pages {
         return @image-url("icones/menu/parametres.svg");
     }
 
+    // Version de l'icône pour l'entrée active : silhouette teintée (docs/marque, jeu d'icônes).
+    public pure function icone-active(p: Page) -> image {
+        if (p == Page.tableau-de-bord) { return @image-url("icones/menu/tableau-de-bord-actif.svg"); }
+        if (p == Page.devis) { return @image-url("icones/menu/devis-actif.svg"); }
+        if (p == Page.proforma) { return @image-url("icones/menu/proforma-actif.svg"); }
+        if (p == Page.bons-commande) { return @image-url("icones/menu/bons-commande-actif.svg"); }
+        if (p == Page.livraisons) { return @image-url("icones/menu/livraisons-actif.svg"); }
+        if (p == Page.factures) { return @image-url("icones/menu/factures-actif.svg"); }
+        if (p == Page.avoirs) { return @image-url("icones/menu/avoirs-actif.svg"); }
+        if (p == Page.reglements) { return @image-url("icones/menu/reglements-actif.svg"); }
+        if (p == Page.suivi-fournisseurs) { return @image-url("icones/menu/suivi-fournisseurs-actif.svg"); }
+        if (p == Page.relances) { return @image-url("icones/menu/relances-actif.svg"); }
+        if (p == Page.tiers) { return @image-url("icones/menu/tiers-actif.svg"); }
+        if (p == Page.produits) { return @image-url("icones/menu/produits-actif.svg"); }
+        return @image-url("icones/menu/parametres-actif.svg");
+    }
+
     // Groupe d'une page : 1 documents, 2 paiements, 3 référentiels, 0 hors groupe.
     public pure function groupe(p: Page) -> int {
         if (p == Page.devis || p == Page.proforma || p == Page.bons-commande || p == Page.livraisons || p == Page.factures || p == Page.avoirs) { return 1; }
@@ -183,7 +200,7 @@ component ListeMenu inherits VerticalLayout {
 
     if Menu.tableau-de-bord: ElementNavigation {
         libelle: Pages.libelle(Page.tableau-de-bord);
-        icone: Pages.icone(Page.tableau-de-bord);
+        icone: root.page == Page.tableau-de-bord ? Pages.icone-active(Page.tableau-de-bord) : Pages.icone(Page.tableau-de-bord);
         actif: root.page == Page.tableau-de-bord;
         clique => {
             root.choisi(Page.tableau-de-bord);
@@ -196,7 +213,7 @@ component ListeMenu inherits VerticalLayout {
 
     for p in Menu.documents: ElementNavigation {
         libelle: Pages.libelle(p);
-        icone: Pages.icone(p);
+        icone: root.page == p ? Pages.icone-active(p) : Pages.icone(p);
         actif: root.page == p;
         clique => {
             root.choisi(p);
@@ -209,7 +226,7 @@ component ListeMenu inherits VerticalLayout {
 
     for p in Menu.paiements: ElementNavigation {
         libelle: Pages.libelle(p);
-        icone: Pages.icone(p);
+        icone: root.page == p ? Pages.icone-active(p) : Pages.icone(p);
         actif: root.page == p;
         clique => {
             root.choisi(p);
@@ -222,7 +239,7 @@ component ListeMenu inherits VerticalLayout {
 
     for p in Menu.referentiels: ElementNavigation {
         libelle: Pages.libelle(p);
-        icone: Pages.icone(p);
+        icone: root.page == p ? Pages.icone-active(p) : Pages.icone(p);
         actif: root.page == p;
         clique => {
             root.choisi(p);
@@ -301,7 +318,7 @@ export component ContenuBarre inherits VerticalLayout {
 
     ElementNavigation {
         libelle: Pages.libelle(Page.parametres);
-        icone: Pages.icone(Page.parametres);
+        icone: root.page == Page.parametres ? Pages.icone-active(Page.parametres) : Pages.icone(Page.parametres);
         actif: root.page == Page.parametres;
         clique => {
             root.choisi(Page.parametres);
@@ -435,7 +452,7 @@ component GroupeBandeau inherits Rectangle {
 
                 for p in root.pages: ElementNavigation {
                     libelle: Pages.libelle(p);
-                    icone: Pages.icone(p);
+                    icone: root.page == p ? Pages.icone-active(p) : Pages.icone(p);
                     actif: root.page == p;
                     clique => {
                         root.choisi(p);
@@ -546,7 +563,7 @@ component CompteBandeau inherits HorizontalLayout {
 
     EntreeBandeau {
         libelle: Pages.libelle(Page.parametres);
-        icone: Pages.icone(Page.parametres);
+        icone: root.page == Page.parametres ? Pages.icone-active(Page.parametres) : Pages.icone(Page.parametres);
         actif: root.page == Page.parametres;
         clique => {
             root.choisi(Page.parametres);
@@ -578,7 +595,7 @@ component GroupesBandeau inherits HorizontalLayout {
 
     if Menu.tableau-de-bord && !Theme.rtl: EntreeBandeau {
         libelle: Pages.libelle(Page.tableau-de-bord);
-        icone: Pages.icone(Page.tableau-de-bord);
+        icone: root.page == Page.tableau-de-bord ? Pages.icone-active(Page.tableau-de-bord) : Pages.icone(Page.tableau-de-bord);
         actif: root.page == Page.tableau-de-bord;
         clique => {
             root.choisi(Page.tableau-de-bord);
@@ -638,7 +655,7 @@ component GroupesBandeau inherits HorizontalLayout {
 
     if Menu.tableau-de-bord && Theme.rtl: EntreeBandeau {
         libelle: Pages.libelle(Page.tableau-de-bord);
-        icone: Pages.icone(Page.tableau-de-bord);
+        icone: root.page == Page.tableau-de-bord ? Pages.icone-active(Page.tableau-de-bord) : Pages.icone(Page.tableau-de-bord);
         actif: root.page == Page.tableau-de-bord;
         clique => {
             root.choisi(Page.tableau-de-bord);
