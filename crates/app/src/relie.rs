@@ -760,10 +760,23 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
         }
         Evenement::Compte(resultat) => {
             let refuse = matches!(resultat, Err(ErreurPoste::CompteRefuse { .. }));
+            let session = etat.borrow().utilisateur.is_some();
+            // Accepté en retard alors que l'écran a refusé la connexion en
+            // local (compte absent de la copie, mot de passe changé ailleurs) :
+            // aucune session ne l'attend, le fil le referme ; l'utilisateur
+            // se reconnecte par le serveur.
+            let attendu = etat
+                .borrow()
+                .relie
+                .as_ref()
+                .is_some_and(|r| r.compte_attendu.is_some());
+            if resultat.is_ok() && !session && !attendu {
+                deconnecter(&mut etat.borrow_mut());
+                return;
+            }
             if let Some(r) = etat.borrow_mut().relie.as_mut() {
                 r.compte_serveur = resultat.is_ok();
             }
-            let session = etat.borrow().utilisateur.is_some();
             if refuse && session {
                 // Mot de passe changé ailleurs ou compte désactivé : retour à
                 // l'écran de connexion.
