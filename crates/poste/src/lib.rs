@@ -211,6 +211,8 @@ enum Commande {
     },
     /// Travail sur la copie ou la session, dans le fil.
     Fil(Box<dyn FnOnce(&mut Fil) + Send>),
+    /// Fin d'une tentative de connexion menée par le fil auxiliaire.
+    Connectee(Result<Box<Client>, ErreurClient>),
     Arreter,
 }
 
@@ -244,6 +246,9 @@ impl Synchroniseur {
             cle: poste.cle.clone(),
         };
         let mut fil = Fil {
+            relais: commandes.clone(),
+            essai_en_cours: false,
+            connexion_attendue: None,
             copie: conn,
             poste,
             identite,
@@ -422,6 +427,13 @@ struct Compte {
 }
 
 struct Fil {
+    /// Pour le fil auxiliaire de connexion. Le fil garde ainsi l'envoi
+    /// ouvert : il s'arrête sur `Commande::Arreter`, envoyée par `Drop`.
+    relais: Sender<Commande>,
+    /// Une tentative de connexion est en cours dans le fil auxiliaire.
+    essai_en_cours: bool,
+    /// Connexion d'un compte qui attend la fin de cette tentative.
+    connexion_attendue: Option<Sender<Result<CompteConnecte, ErreurPoste>>>,
     copie: Connection,
     poste: PosteRelie,
     identite: Identite,
@@ -443,7 +455,10 @@ struct Fil {
 impl Fil {
     fn tourner(&mut self, commandes: mpsc::Receiver<Commande>) {
         loop {
-            let attente = if self.client.is_some() || self.etat_present().definitif() {
+            let attente = if self.client.is_some()
+                || self.essai_en_cours
+                || self.etat_present().definitif()
+            {
                 RELEVE
             } else {
                 self.prochain_essai
@@ -535,6 +550,7 @@ impl Fil {
                 // session TLS est refermée et rouverte sans compte.
                 self.compte = None;
                 self.suspendues_vues = None;
+                self.connexion_attendue = None;
                 self.client = None;
                 self.prochain_essai = Instant::now();
             }
@@ -551,6 +567,7 @@ impl Fil {
                 let _ = retour.send(resultat);
             }
             Commande::Fil(travail) => travail(self),
+            Commande::Connectee(resultat) => self.connectee(resultat),
             Commande::Arreter => {}
         }
     }
@@ -561,7 +578,7 @@ impl Fil {
         }
         if self.client.is_none() {
             if Instant::now() >= self.prochain_essai {
-                self.essayer_connexion();
+                self.lancer_essai();
             }
             return;
         }
@@ -582,50 +599,101 @@ impl Fil {
         }
     }
 
-    /// Ouvre la session TLS ; reconnecte le compte s'il y en avait un.
-    fn essayer_connexion(&mut self) {
-        match Client::connecter(
-            &self.poste.adresse,
-            &self.poste.empreinte_serveur,
-            &self.identite,
-            DELAI,
-        ) {
-            Ok((client, _)) => {
-                self.client = Some(client);
+    /// Lance une tentative de connexion dans un fil auxiliaire, s'il n'y en a
+    /// pas déjà une : l'ouverture TCP et TLS peut durer plusieurs secondes,
+    /// et le fil continue de servir l'écran pendant ce temps (écritures en
+    /// file hors connexion). Le résultat revient par `Commande::Connectee`.
+    fn lancer_essai(&mut self) {
+        if self.essai_en_cours {
+            return;
+        }
+        let adresse = self.poste.adresse.clone();
+        let empreinte = self.poste.empreinte_serveur.clone();
+        let identite = self.identite.clone();
+        let relais = self.relais.clone();
+        let lance = std::thread::Builder::new()
+            .name("kadenz-connexion".into())
+            .spawn(move || {
+                let resultat = Client::connecter(&adresse, &empreinte, &identite, DELAI)
+                    .map(|(c, _)| Box::new(c));
+                // Synchroniseur arrêté entre-temps : l'envoi échoue, sans suite.
+                let _ = relais.send(Commande::Connectee(resultat));
+            });
+        match lance {
+            Ok(_) => self.essai_en_cours = true,
+            Err(e) => self.connectee(Err(ErreurClient::Injoignable(e.to_string()))),
+        }
+    }
+
+    /// Fin d'une tentative : session TLS ouverte, puis le compte gardé est
+    /// connecté ; ou connexion perdue, et la connexion qui attendait rend
+    /// `HorsConnexion` (le compte reste gardé, décision 48).
+    fn connectee(&mut self, resultat: Result<Box<Client>, ErreurClient>) {
+        self.essai_en_cours = false;
+        let attendue = self.connexion_attendue.take();
+        match resultat {
+            Ok(client) => {
+                self.client = Some(*client);
                 self.echecs = 0;
                 self.poser_etat(self.etat_ouvert());
-                if let Some(mut compte) = self.compte.take() {
-                    let reprise = self
-                        .client
-                        .as_mut()
-                        .map(|c| c.connexion(&compte.identifiant, &compte.mot_de_passe));
-                    match reprise {
-                        Some(Ok(connecte)) => {
-                            let _ =
-                                poste_relie::oublier_compte_refuse(&self.copie, &connecte.compte);
-                            compte.uid = Some(connecte.compte.clone());
-                            self.compte = Some(compte);
-                            (self.evenements)(Evenement::Compte(Ok(connecte)));
-                            self.apres_connexion();
+                match self.compte.take() {
+                    Some(compte) => self.reprendre(compte, attendue),
+                    None => {
+                        if let Some(retour) = attendue {
+                            let _ = retour.send(Err(ErreurPoste::HorsConnexion));
                         }
-                        // Mot de passe changé ailleurs, compte désactivé : le
-                        // compte n'est plus connecté.
-                        Some(Err(ErreurClient::CompteRefuse { attente_secondes })) => {
-                            self.noter_refus(&compte.identifiant);
-                            (self.evenements)(Evenement::Compte(Err(ErreurPoste::CompteRefuse {
-                                attente_secondes,
-                            })));
-                        }
-                        Some(Err(e)) => {
-                            self.compte = Some(compte);
-                            let _ = self.perdre(e);
-                        }
-                        None => {}
                     }
                 }
             }
             Err(e) => {
-                let _ = self.perdre(e);
+                let erreur = self.perdre(e);
+                if let Some(retour) = attendue {
+                    let _ = retour.send(Err(erreur));
+                }
+            }
+        }
+    }
+
+    /// Connecte le compte gardé sur la session qui vient de s'ouvrir. Une
+    /// connexion demandée par l'écran (`attendue`) reçoit le résultat ;
+    /// sinon c'est une reprise après coupure, annoncée par un événement.
+    fn reprendre(
+        &mut self,
+        mut compte: Compte,
+        attendue: Option<Sender<Result<CompteConnecte, ErreurPoste>>>,
+    ) {
+        let Some(client) = self.client.as_mut() else {
+            self.compte = Some(compte);
+            return;
+        };
+        match client.connexion(&compte.identifiant, &compte.mot_de_passe) {
+            Ok(connecte) => {
+                let _ = poste_relie::oublier_compte_refuse(&self.copie, &connecte.compte);
+                compte.uid = Some(connecte.compte.clone());
+                self.compte = Some(compte);
+                match attendue {
+                    Some(retour) => self.rendre_compte(retour, Ok(connecte)),
+                    None => (self.evenements)(Evenement::Compte(Ok(connecte))),
+                }
+                self.apres_connexion();
+            }
+            // Mot de passe changé ailleurs, compte désactivé : le compte
+            // n'est plus connecté.
+            Err(ErreurClient::CompteRefuse { attente_secondes }) => {
+                self.noter_refus(&compte.identifiant);
+                let refus = Err(ErreurPoste::CompteRefuse { attente_secondes });
+                match attendue {
+                    Some(retour) => self.rendre_compte(retour, refus),
+                    None => (self.evenements)(Evenement::Compte(refus)),
+                }
+            }
+            Err(e) => {
+                // Le compte reste gardé pour la prochaine tentative.
+                self.compte = Some(compte);
+                let erreur = self.perdre(e);
+                if let Some(retour) = attendue {
+                    let _ = retour.send(Err(erreur));
+                }
             }
         }
     }
@@ -720,22 +788,20 @@ impl Fil {
             self.compte = None;
             self.client = None;
         }
-        if self.client.is_none() {
-            self.essayer_connexion();
-        }
         let Some(client) = self.client.as_mut() else {
-            let erreur = if self.etat_present().definitif() {
-                ErreurPoste::Injoignable
-            } else {
-                // Décision 48 : le compte se connectera au retour du serveur.
-                self.compte = Some(Compte {
-                    identifiant,
-                    mot_de_passe,
-                    uid: None,
-                });
-                ErreurPoste::HorsConnexion
-            };
-            let _ = retour.send(Err(erreur));
+            // Sans session : le compte est gardé et la connexion attend la
+            // tentative en cours (ou une nouvelle), sans en empiler une
+            // seconde. Échec : `HorsConnexion`, et le compte se connectera
+            // au retour du serveur (décision 48).
+            self.compte = Some(Compte {
+                identifiant,
+                mot_de_passe,
+                uid: None,
+            });
+            if let Some(ancienne) = self.connexion_attendue.replace(retour) {
+                let _ = ancienne.send(Err(ErreurPoste::HorsConnexion));
+            }
+            self.lancer_essai();
             return;
         };
         match client.connexion(&identifiant, &mot_de_passe) {
@@ -748,7 +814,7 @@ impl Fil {
                 });
                 // L'écran reprend la main avant le rattrapage, qui peut être
                 // long la première fois.
-                let _ = retour.send(Ok(connecte));
+                self.rendre_compte(retour, Ok(connecte));
                 self.apres_connexion();
             }
             Err(e) => {
@@ -767,8 +833,24 @@ impl Fil {
                         uid: None,
                     });
                 }
-                let _ = retour.send(Err(erreur));
+                self.rendre_compte(retour, Err(erreur));
             }
+        }
+    }
+
+    /// Rend le résultat de la connexion d'un compte. Si l'écran n'attend
+    /// plus (délai dépassé, session ouverte en local), il l'apprend par un
+    /// événement, comme au retour du serveur : compte connecté, ou refusé
+    /// (la session locale se ferme).
+    fn rendre_compte(
+        &self,
+        retour: Sender<Result<CompteConnecte, ErreurPoste>>,
+        resultat: Result<CompteConnecte, ErreurPoste>,
+    ) {
+        if let Err(mpsc::SendError(r)) = retour.send(resultat)
+            && matches!(r, Ok(_) | Err(ErreurPoste::CompteRefuse { .. }))
+        {
+            (self.evenements)(Evenement::Compte(r));
         }
     }
 

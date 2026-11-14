@@ -5,7 +5,7 @@ use std::cell::RefCell;
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver};
-use std::sync::{Arc, Barrier};
+use std::sync::{Arc, Barrier, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -15,7 +15,7 @@ use kadenz_domaine::referentiel::{FicheTiers, TypeTiers};
 use kadenz_domaine::role::Role;
 use kadenz_licence::SigningKey;
 use kadenz_licence::entreprise::{self as lic, LicenceEntreprise};
-use kadenz_poste::{ErreurPoste, EtatConnexion, Evenement, Synchroniseur};
+use kadenz_poste::{DELAI, ErreurPoste, EtatConnexion, Evenement, Synchroniseur};
 use kadenz_protocole::{Action, Entite, Issue, Ligne, Motif, Operation, Saisie, Tiers};
 use kadenz_serveur::{Config, Serveur};
 use kadenz_stockage::comptes::{self, NouvelUtilisateur};
@@ -523,6 +523,77 @@ fn devis_hors_connexion_avec_les_modules_gardes() {
         Ok(Issue::EnFile)
     );
     assert_eq!(s.file(), 2);
+    s.arreter();
+}
+
+/// Essai F6d : une tentative de connexion qui traîne (le serveur accepte la
+/// connexion TCP et ne répond jamais) ne bloque plus le fil. Une écriture
+/// permise part en file tout de suite, et la connexion d'un compte attend
+/// cette seule tentative, sans en empiler une seconde.
+#[test]
+fn tentative_qui_traine_sans_bloquer_le_fil() {
+    let b = banc("traine", true);
+    {
+        let (s, _e) = demarrer(&b.copie);
+        attendre("connexion", || s.etat() == EtatConnexion::Connecte);
+        s.connecter("admin", MOT_DE_PASSE).unwrap();
+        attendre("compte dans la copie", || {
+            present(&b.copie, Entite::Utilisateur, &b.admin)
+        });
+        let conn = poste_relie::ouvrir_copie(&b.copie).unwrap();
+        attendre("abonnement gardé", || {
+            abonnement::dernier_recu(&conn).unwrap().is_some()
+        });
+        s.arreter();
+    }
+    b.serveur.arreter();
+    // Écoute muette : chaque connexion est acceptée et gardée ouverte, sans
+    // réponse ; la poignée de main TLS attend donc `DELAI`.
+    let muet = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let adresse = muet.local_addr().unwrap().to_string();
+    let gardees = Arc::new(Mutex::new(Vec::new()));
+    {
+        let gardees = gardees.clone();
+        thread::spawn(move || {
+            for flux in muet.incoming().flatten() {
+                gardees.lock().unwrap().push(flux);
+            }
+        });
+    }
+    {
+        let conn = poste_relie::ouvrir_copie(&b.copie).unwrap();
+        let mut poste = poste_relie::lire(&conn).unwrap().unwrap();
+        poste.adresse = adresse;
+        poste_relie::garder(&conn, &poste).unwrap();
+    }
+
+    let (s, _e) = demarrer(&b.copie);
+    attendre("première tentative en cours", || {
+        !gardees.lock().unwrap().is_empty()
+    });
+    let debut = Instant::now();
+    assert_eq!(
+        s.connecter("admin", MOT_DE_PASSE),
+        Err(ErreurPoste::HorsConnexion)
+    );
+    assert!(debut.elapsed() < DELAI + Duration::from_secs(2));
+    // La tentative suivante part une seconde après l'échec, puis traîne.
+    let deja = gardees.lock().unwrap().len();
+    attendre("seconde tentative en cours", || {
+        gardees.lock().unwrap().len() > deja
+    });
+    let debut = Instant::now();
+    let t = synchro::nouvel_uid();
+    assert_eq!(
+        s.ecrire(Action::CreerTiers {
+            uid: t.clone(),
+            fiche: fiche("Client de la tentative"),
+        }),
+        Ok(Issue::EnFile)
+    );
+    assert!(debut.elapsed() < Duration::from_secs(1));
+    assert!(present(&b.copie, Entite::Tiers, &t));
+    assert_eq!(s.file(), 1);
     s.arreter();
 }
 
