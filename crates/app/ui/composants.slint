@@ -37,6 +37,8 @@ export global Theme {
     out property <color> texte: #1f2933;
     out property <color> texte-secondaire: #52606d;
     out property <color> erreur: #b42318;
+    // Ambre foncé, lisible sur fond blanc : résultat attendu du serveur.
+    out property <color> attente: #b54708;
     out property <color> succes: #067647;
     out property <color> fond-lateral: #f4f5f9;
     out property <color> bordure: #d9dce3;
@@ -104,16 +106,20 @@ export component Champ inherits VerticalLayout {
 export struct Retour {
     ok: bool,
     message: string,
+    // Écriture partie sans réponse du serveur à temps : ni réussie ni
+    // refusée, son résultat viendra au retour (message ambre, pas rouge).
+    attente: bool,
 }
 
-// Message de résultat, vert en cas de succès, rouge sinon.
+// Message de résultat, vert en cas de succès, ambre pour une écriture dont la
+// réponse est attendue, rouge sinon.
 export component MessageRetour inherits Text {
     in property <Retour> retour;
     // Vrai : un succès part en alerte brève (Alerte) ; seules les erreurs restent ici.
     in property <bool> erreurs-seules: false;
     property <bool> montre: root.retour.message != "" && !(root.erreurs-seules && root.retour.ok);
     text: root.montre ? root.retour.message : "";
-    color: root.retour.ok ? Theme.succes : Theme.erreur;
+    color: root.retour.ok ? Theme.succes : root.retour.attente ? Theme.attente : Theme.erreur;
     horizontal-alignment: Theme.debut;
     wrap: word-wrap;
     visible: root.montre;
@@ -126,10 +132,22 @@ export global Alerte {
     in-out property <string> texte;
     in-out property <bool> visible;
     in-out property <int> numero;
+    // Message venu du serveur sans geste de l'utilisateur : il reste affiché
+    // jusqu'à ce qu'on le ferme (essai F6d : l'annonce du retour du serveur
+    // disparaissait avant d'être lue).
+    in-out property <bool> durable;
 
     public function montrer(texte: string) {
         root.texte = texte;
         root.visible = true;
+        root.durable = false;
+        root.numero += 1;
+    }
+
+    public function signaler(texte: string) {
+        root.texte = texte;
+        root.visible = true;
+        root.durable = true;
         root.numero += 1;
     }
 
@@ -180,7 +198,9 @@ export component FenetreAlerte inherits Rectangle {
         }
     }
 
-    // Carré vert au début du sens de lecture (la Rangee s'inverse de droite à gauche).
+    // Carré au début du sens de lecture (la Rangee s'inverse de droite à
+    // gauche) : vert pour une réussite, ambre pour un message du serveur, qui
+    // porte en plus une croix de fermeture.
     ligne := Rangee {
         padding-left: 16px;
         padding-right: 16px;
@@ -193,7 +213,7 @@ export component FenetreAlerte inherits Rectangle {
             Rectangle {
                 width: 8px;
                 height: 8px;
-                background: #3ccb7f;
+                background: Alerte.durable ? Theme.ambre : #3ccb7f;
             }
         }
 
@@ -204,12 +224,20 @@ export component FenetreAlerte inherits Rectangle {
             vertical-alignment: center;
             overflow: elide;
         }
+
+        if Alerte.durable: Text {
+            text: "×";
+            color: #c5cae0;
+            font-size: 16px;
+            vertical-alignment: center;
+        }
     }
 
-    // Trois secondes d'affichage ; une nouvelle alerte relance le compte.
+    // Trois secondes d'affichage ; une nouvelle alerte relance le compte. Un
+    // message du serveur attend d'être fermé.
     minuteur := Timer {
         interval: 3s;
-        running: Alerte.visible;
+        running: Alerte.visible && !Alerte.durable;
         triggered => {
             Alerte.visible = false;
         }

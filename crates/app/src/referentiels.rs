@@ -44,6 +44,7 @@ pub(crate) fn retour_ok(message: impl std::fmt::Display + 'static) -> Retour {
     Retour {
         ok: true,
         message: phrase(message),
+        attente: false,
     }
 }
 
@@ -55,6 +56,7 @@ pub(crate) fn retour_erreur(message: impl std::fmt::Display + 'static) -> Retour
     };
     Retour {
         ok: false,
+        attente: texte == crate::relie::texte_delai(),
         message: phrase(texte),
     }
 }

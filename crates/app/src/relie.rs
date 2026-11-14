@@ -47,6 +47,10 @@ pub(crate) struct Relie {
     /// Écriture écartée comme doublon, et celle qu'elle répète : une création
     /// écartée retrouve ainsi la ligne créée par la première.
     pub(crate) substitut: RefCell<Option<(Action, Action)>>,
+    /// Création partie sans réponse à temps (`ErreurPoste::Delai`) : elle reste
+    /// dans le fil du synchroniseur et s'appliquera plus tard. La refaire
+    /// pendant ce temps créerait la ligne deux fois.
+    pub(crate) attendue: RefCell<Option<(serde_json::Value, Instant)>>,
 }
 
 /// Dernière écriture appliquée, pour reconnaître sa répétition immédiate.
@@ -62,6 +66,20 @@ pub(crate) struct Derniere {
 /// sur « Enregistrer » attend son tour et part juste après la première (essai
 /// F6d : une modification envoyée deux fois, à 6 ms d'écart).
 const DOUBLE_CLIC: Duration = Duration::from_millis(500);
+
+/// Délai pendant lequel une création restée sans réponse n'est pas refaite.
+/// Essai F6d : l'écran abandonne l'attente au bout de `DELAI`, mais le fil du
+/// synchroniseur, occupé par un serveur qui ne répond plus, traite l'écriture
+/// plus tard ; un nouveau clic entre-temps la faisait partir deux fois.
+const ATTENTE: Duration = Duration::from_secs(30);
+
+/// Création identique à une création encore sans réponse.
+fn deja_attendue(
+    attendue: Option<&(serde_json::Value, Instant)>,
+    empreinte: &serde_json::Value,
+) -> bool {
+    attendue.is_some_and(|(e, debut)| e == empreinte && debut.elapsed() < ATTENTE)
+}
 
 /// Contenu comparable d'une action : l'identifiant d'une ligne créée, nouveau
 /// à chaque clic, n'y compte pas.
@@ -112,6 +130,7 @@ pub(crate) fn demarrer(f: &FenetrePrincipale, etat: &EtatPartage, copie: PathBuf
                 suspendues: Default::default(),
                 derniere: RefCell::new(None),
                 substitut: RefCell::new(None),
+                attendue: RefCell::new(None),
             })
         }
         Err(e) => {
@@ -132,15 +151,19 @@ pub(crate) fn appliquer_modules(f: &FenetrePrincipale, conn: &kadenz_stockage::C
     crate::licence::afficher_modules(f, conn);
 }
 
+/// Écriture partie sans réponse à temps : ni réussie ni refusée, elle ne doit
+/// pas être refaite. L'écran la montre en ambre (`Retour::attente`).
+pub(crate) fn texte_delai() -> String {
+    tr("Le serveur n'a pas répondu à temps : l'opération sera confirmée à la reconnexion")
+}
+
 /// Texte traduit d'une erreur du synchroniseur.
 pub(crate) fn texte_erreur(e: &ErreurPoste) -> String {
     match e {
         ErreurPoste::HorsConnexion => tr("serveur injoignable"),
         ErreurPoste::Injoignable => tr("connexion au serveur impossible"),
         ErreurPoste::LectureSeule { .. } => tr("abonnement échu : Kadenz est en lecture seule"),
-        ErreurPoste::Delai => {
-            tr("Le serveur n'a pas répondu à temps : l'opération sera confirmée à la reconnexion")
-        }
+        ErreurPoste::Delai => texte_delai(),
         ErreurPoste::CompteRefuse { attente_secondes } => trf(
             "identifiant ou mot de passe incorrect (nouvel essai dans {} s)",
             &[attente_secondes],
@@ -219,6 +242,9 @@ pub(crate) fn ecrire(etat: &Etat, action: Action) -> Option<Result<Issue, String
         *r.substitut.borrow_mut() = Some((action, origine));
         return Some(Ok(issue));
     }
+    if deja_attendue(r.attendue.borrow().as_ref(), &empreinte) {
+        return Some(Err(texte_delai()));
+    }
     let resultat = match r.synchro.ecrire(action.clone()) {
         Ok(issue @ (Issue::Acceptee { .. } | Issue::EnFile)) => Ok(issue),
         Ok(Issue::Refusee { modele, valeurs }) => {
@@ -230,8 +256,21 @@ pub(crate) fn ecrire(etat: &Etat, action: Action) -> Option<Result<Issue, String
         Ok(Issue::EnConflit | Issue::Depassee | Issue::Bloquee) => Err(tr(
             "La fiche a changé sur un autre poste : rouvrez-la pour voir la version du serveur.",
         )),
+        // Pas de réponse à temps : l'écriture n'est pas perdue, elle finit
+        // acceptée ou dans la file (essai F6d). Sur une ligne qui existe déjà,
+        // l'écran continue comme pour la file ; une création n'a pas encore sa
+        // ligne dans la copie, son résultat est attendu.
+        Err(ErreurPoste::Delai) if action.creee().is_none() => Ok(Issue::EnFile),
         Err(e) => Err(texte_erreur(&e)),
     };
+    let sans_reponse = action.creee().is_some() && resultat.as_ref().err() == Some(&texte_delai());
+    let mut attendue = r.attendue.borrow_mut();
+    if sans_reponse {
+        *attendue = Some((empreinte.clone(), Instant::now()));
+    } else if attendue.as_ref().is_some_and(|(e, _)| *e == empreinte) {
+        *attendue = None;
+    }
+    drop(attendue);
     *r.derniere.borrow_mut() = resultat.as_ref().ok().map(|issue| Derniere {
         empreinte,
         action,
@@ -664,7 +703,7 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
             };
             afficher_a_valider(f, &etat.borrow());
             if annoncer {
-                f.global::<Alerte>().invoke_montrer(
+                f.global::<Alerte>().invoke_signaler(
                     trf(
                         "Serveur de retour : {} document(s) attendent leur validation. Voir Paramètres, rubrique « Serveur ».",
                         &[&n],
@@ -706,7 +745,7 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
             // Écriture de la file envoyée au retour, confirmée après un délai,
             // ou décidée par l'Admin : son résultat, s'il mérite d'être dit.
             if let Some(texte) = texte_confirmation(&issue) {
-                f.global::<Alerte>().invoke_montrer(texte.into());
+                f.global::<Alerte>().invoke_signaler(texte.into());
             }
         }
         // Conflits et attentes : rubrique « Opérations suspendues » (F6c).
@@ -726,7 +765,7 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
                 // Mot de passe changé ailleurs ou compte désactivé : retour à
                 // l'écran de connexion.
                 crate::fermer_session(f, &mut etat.borrow_mut());
-                f.global::<Alerte>().invoke_montrer(
+                f.global::<Alerte>().invoke_signaler(
                     tr("Votre mot de passe a changé ou votre compte a été désactivé sur le serveur : reconnectez-vous.").into(),
                 );
             } else {
@@ -812,6 +851,31 @@ mod tests {
             empreinte(&Action::Valider { uid: "d1".into() }),
             empreinte(&Action::Valider { uid: "d2".into() })
         );
+    }
+
+    #[test]
+    fn creation_sans_reponse_pas_refaite() {
+        let creer = |uid: &str| Action::CreerTiers {
+            uid: uid.into(),
+            fiche: kadenz_protocole::Tiers {
+                nom: "Quincaillerie Essai A".into(),
+                ..Default::default()
+            },
+        };
+        let attendue = (empreinte(&creer("a")), Instant::now());
+        // Nouveau clic sur la même fiche : identifiant neuf, même création.
+        assert!(deja_attendue(Some(&attendue), &empreinte(&creer("b"))));
+        assert!(!deja_attendue(None, &empreinte(&creer("b"))));
+        let autre = Action::CreerTiers {
+            uid: "c".into(),
+            fiche: kadenz_protocole::Tiers {
+                nom: "Quincaillerie Essai B".into(),
+                ..Default::default()
+            },
+        };
+        assert!(!deja_attendue(Some(&attendue), &empreinte(&autre)));
+        let ancienne = (attendue.0.clone(), Instant::now() - ATTENTE);
+        assert!(!deja_attendue(Some(&ancienne), &empreinte(&creer("b"))));
     }
 
     #[test]
