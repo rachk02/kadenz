@@ -10,9 +10,13 @@
 //!   d'inscription (« Poste 1 » à « Poste N »). Arrêt : fermer le processus.
 //! - `banc_essai <dossier> desactiver <identifiant>` : désactive un compte
 //!   directement dans la base, serveur arrêté (coupure du F6d).
+//! - `banc_essai <dossier> etat` : opérations reçues, suspendues, changements
+//!   et tiers, en lecture seule.
+//! - `banc_essai <dossier> operation <début d'identifiant>` : contenu complet
+//!   des opérations dont l'identifiant commence ainsi, en lecture seule.
 
 use std::net::SocketAddr;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use kadenz_domaine::module::Module;
@@ -119,7 +123,7 @@ fn installer(conn: &mut Connection) -> Result<(), String> {
     Ok(())
 }
 
-fn desactiver(dossier: &PathBuf, identifiant: &str) -> Result<(), String> {
+fn desactiver(dossier: &Path, identifiant: &str) -> Result<(), String> {
     let conn = admin::ouvrir_base(dossier)?;
     let admin = compte(&conn, "admin")?;
     let cible = compte(&conn, identifiant)?;
@@ -130,7 +134,7 @@ fn desactiver(dossier: &PathBuf, identifiant: &str) -> Result<(), String> {
 
 /// Lecture seule de la base : opérations reçues, suspendues, changements et
 /// tiers, pour suivre un essai.
-fn etat(dossier: &PathBuf) -> Result<(), String> {
+fn etat(dossier: &Path) -> Result<(), String> {
     let conn = admin::ouvrir_base(dossier)?;
     let afficher = |titre: &str, sql: &str| -> Result<(), String> {
         println!("== {titre}");
@@ -178,6 +182,34 @@ fn etat(dossier: &PathBuf) -> Result<(), String> {
     )
 }
 
+/// Contenu complet (JSON) des opérations dont l'identifiant commence par
+/// `debut`, en lecture seule.
+fn operation(dossier: &Path, debut: &str) -> Result<(), String> {
+    let conn = admin::ouvrir_base(dossier)?;
+    let mut req = conn
+        .prepare("SELECT id, issue, contenu FROM operation WHERE id LIKE ?1 || '%' ORDER BY recue, rowid")
+        .map_err(|e| e.to_string())?;
+    let lignes = req
+        .query_map([debut], |r| {
+            Ok((
+                r.get::<_, String>(0)?,
+                r.get::<_, String>(1)?,
+                r.get::<_, String>(2)?,
+            ))
+        })
+        .map_err(|e| e.to_string())?;
+    for l in lignes {
+        let (id, issue, contenu) = l.map_err(|e| e.to_string())?;
+        println!(
+            "== {id}
+issue : {issue}
+{contenu}
+"
+        );
+    }
+    Ok(())
+}
+
 fn lancer(dossier: PathBuf, port: u16, codes: u32) -> Result<(), String> {
     std::fs::create_dir_all(&dossier).map_err(|e| e.to_string())?;
     {
@@ -221,6 +253,9 @@ fn main() -> ExitCode {
             desactiver(&PathBuf::from(dossier), identifiant)
         }
         [dossier, commande] if commande == "etat" => etat(&PathBuf::from(dossier)),
+        [dossier, commande, debut] if commande == "operation" => {
+            operation(&PathBuf::from(dossier), debut)
+        }
         [dossier, port] => port
             .parse()
             .map_err(|_| "port invalide".to_string())
@@ -230,7 +265,9 @@ fn main() -> ExitCode {
             _ => Err("port ou nombre de codes invalide".into()),
         },
         _ => Err("usage : banc_essai <dossier> <port> [--codes N] | \
-                  banc_essai <dossier> desactiver <identifiant>"
+                  banc_essai <dossier> desactiver <identifiant> | \
+                  banc_essai <dossier> etat | \
+                  banc_essai <dossier> operation <début d'identifiant>"
             .into()),
     };
     match resultat {

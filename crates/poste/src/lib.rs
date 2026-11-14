@@ -229,6 +229,9 @@ impl Synchroniseur {
     /// pour le fil et part en connexion.
     pub fn demarrer(copie: PathBuf, evenements: Rappel) -> Result<Synchroniseur, ErreurPoste> {
         let conn = poste_relie::ouvrir_copie(&copie).map_err(base)?;
+        // Modules de la licence gardée, sur la connexion du fil : une
+        // écriture hors connexion est appliquée dans la copie avec eux.
+        poste_relie::appliquer_modules(&conn).map_err(base)?;
         let poste = poste_relie::lire(&conn)
             .map_err(base)?
             .ok_or_else(|| ErreurPoste::Base("la copie n'est reliée à aucun serveur".into()))?;
@@ -789,6 +792,7 @@ impl Fil {
         // Gardé dans la copie pour un démarrage hors connexion (lecture
         // seule, bandeaux, modules).
         let _ = kadenz_stockage::abonnement::garder(&self.copie, &abonnement);
+        let _ = poste_relie::appliquer_modules(&self.copie);
         (self.evenements)(Evenement::Abonnement(Box::new(abonnement)));
         self.poser_etat(self.etat_ouvert());
     }
@@ -882,7 +886,15 @@ impl Fil {
             base: replique::dernier_recu(&self.copie).map_err(base)?,
             action,
         };
-        let issue = self.envoyer(op)?;
+        let permise = op.action.en_coupure() == EnCoupure::Permise;
+        let issue = match self.envoyer(op.clone()) {
+            // Coupure vue pendant l'envoi : une écriture permise hors
+            // connexion passe dans la file avec le même identifiant, comme si
+            // la coupure était connue avant (décision 50) ; le serveur ne
+            // l'appliquera pas deux fois s'il l'avait déjà reçue.
+            Err(ErreurPoste::Delai) if permise => self.verser_garde(op)?,
+            autre => autre?,
+        };
         // Décision prise depuis ce poste : ses écritures suspendues sont
         // renvoyées tout de suite pour l'apprendre.
         if decision && matches!(issue, Issue::Acceptee { .. }) {
@@ -959,6 +971,26 @@ impl Fil {
             base: replique::dernier_recu(&self.copie).map_err(base)?,
             action,
         };
+        self.verser_en_file(op)
+    }
+
+    /// Écriture gardée sans réponse après une coupure (`envoyer`) : versée
+    /// dans la file telle quelle, puis oubliée comme opération en cours. Si la
+    /// copie la refuse, elle reste gardée et attend le retour (`Delai`).
+    fn verser_garde(&mut self, op: Operation) -> Result<Issue, ErreurPoste> {
+        match self.verser_en_file(op) {
+            Ok(Issue::EnFile) => {
+                self.garder(None)?;
+                Ok(Issue::EnFile)
+            }
+            _ => Err(ErreurPoste::Delai),
+        }
+    }
+
+    /// Applique une opération à titre provisoire dans la copie et la met en
+    /// file, ensemble ou pas du tout : `Issue::EnFile`, ou le refus de la
+    /// copie, rendu sans rien garder.
+    fn verser_en_file(&mut self, op: Operation) -> Result<Issue, ErreurPoste> {
         // Appliquée dans la copie comme en ligne : un droit manquant y est
         // refusé, et non mis en attente.
         let locale = Operation {

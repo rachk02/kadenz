@@ -10,6 +10,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use kadenz_client::Identite;
+use kadenz_domaine::module::Module;
 use kadenz_domaine::referentiel::{FicheTiers, TypeTiers};
 use kadenz_domaine::role::Role;
 use kadenz_licence::SigningKey;
@@ -42,7 +43,7 @@ fn licence(entreprise: &str) -> String {
             client: "Entreprise Essai".into(),
             formule: lic::Formule::Annuelle,
             postes: 5,
-            modules: Vec::new(),
+            modules: Module::TOUS.to_vec(),
             debut: jour(0),
             echeance: jour(365),
             emetteur: lic::Emetteur::Editeur,
@@ -418,6 +419,110 @@ fn compte_connecte_apres_session_perdue_en_route() {
         }),
         Ok(Issue::Acceptee { .. })
     ));
+    s.arreter();
+}
+
+/// Essai F6d : la coupure n'est vue qu'à l'envoi d'une écriture permise hors
+/// connexion. Elle passe dans la file, appliquée dans la copie, au lieu de
+/// rester sans réponse (`Delai`), puis part au retour du serveur.
+#[test]
+fn coupure_vue_a_l_envoi_ecriture_en_file() {
+    let b = banc("envoi", true);
+    let port = b.serveur.adresse().port();
+    let (s, evenements) = demarrer(&b.copie);
+    attendre("connexion", || s.etat() == EtatConnexion::Connecte);
+    s.connecter("admin", MOT_DE_PASSE).unwrap();
+    attendre("compte dans la copie", || {
+        present(&b.copie, Entite::Utilisateur, &b.admin)
+    });
+    let dossier_serveur = b.dossier_serveur.clone();
+    // Le serveur s'arrête ; le poste ne le voit qu'à sa prochaine requête.
+    b.serveur.arreter();
+    let t = synchro::nouvel_uid();
+    assert_eq!(
+        s.ecrire(Action::CreerTiers {
+            uid: t.clone(),
+            fiche: fiche("Client de la coupure"),
+        }),
+        Ok(Issue::EnFile)
+    );
+    assert!(present(&b.copie, Entite::Tiers, &t));
+    assert_eq!(s.file(), 1);
+    let conn = poste_relie::ouvrir_copie(&b.copie).unwrap();
+    assert!(replique::operation_en_cours(&conn).unwrap().is_none());
+    // Non permise hors connexion : rendue tout de suite.
+    assert_eq!(
+        s.ecrire(Action::CreerCompte {
+            uid: synchro::nouvel_uid(),
+            nom_complet: "Nouveau".into(),
+            identifiant: "nouveau".into(),
+            mot_de_passe: MOT_DE_PASSE.into(),
+            role: "commercial".into(),
+        }),
+        Err(ErreurPoste::HorsConnexion)
+    );
+
+    let serveur = relancer(&dossier_serveur, port);
+    attendre("file envoyée", || s.file() == 0);
+    let vus = RefCell::new(Vec::new());
+    attendre("écriture confirmée", || {
+        confirmees(&evenements, &vus)
+            .iter()
+            .any(|i| matches!(i, Issue::Acceptee { .. }))
+    });
+    let t2 = t.clone();
+    let sur_serveur = serveur
+        .base(move |c| synchro::id_de(c, Entite::Tiers, &t2).unwrap().is_some())
+        .unwrap();
+    assert!(sur_serveur, "le tiers est arrivé au serveur");
+    s.arreter();
+}
+
+/// Essai F6d : hors connexion, une écriture d'un module de la licence (un
+/// devis) est appliquée dans la copie avec les modules de la licence gardée,
+/// et non refusée comme si le module manquait.
+#[test]
+fn devis_hors_connexion_avec_les_modules_gardes() {
+    let b = banc("modules", true);
+    {
+        let (s, _e) = demarrer(&b.copie);
+        attendre("connexion", || s.etat() == EtatConnexion::Connecte);
+        s.connecter("admin", MOT_DE_PASSE).unwrap();
+        attendre("compte dans la copie", || {
+            present(&b.copie, Entite::Utilisateur, &b.admin)
+        });
+        let conn = poste_relie::ouvrir_copie(&b.copie).unwrap();
+        attendre("abonnement gardé", || {
+            abonnement::dernier_recu(&conn).unwrap().is_some()
+        });
+        s.arreter();
+    }
+    b.serveur.arreter();
+
+    let (s, _e) = demarrer(&b.copie);
+    attendre("serveur injoignable", || injoignable(&s));
+    assert_eq!(
+        s.connecter("admin", MOT_DE_PASSE),
+        Err(ErreurPoste::HorsConnexion)
+    );
+    let t = synchro::nouvel_uid();
+    assert_eq!(
+        s.ecrire(Action::CreerTiers {
+            uid: t.clone(),
+            fiche: fiche("Client du devis"),
+        }),
+        Ok(Issue::EnFile)
+    );
+    let d = synchro::nouvel_uid();
+    assert_eq!(
+        s.ecrire(Action::CreerBrouillon {
+            uid: d.clone(),
+            type_document: "devis".into(),
+            saisie: saisie(&t),
+        }),
+        Ok(Issue::EnFile)
+    );
+    assert_eq!(s.file(), 2);
     s.arreter();
 }
 
