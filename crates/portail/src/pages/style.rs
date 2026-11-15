@@ -27,7 +27,7 @@ pub const STYLE: &str = r#"
 * { box-sizing: border-box; }
 em, i, cite, var, address, dfn { font-style: normal; }
 
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scrollbar-gutter: stable; }
 body {
   margin: 0;
   background: var(--brume);
@@ -35,7 +35,6 @@ body {
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 15px;
   line-height: 1.5;
-  font-variant-numeric: tabular-nums;
 }
 
 a { color: var(--indigo); }
@@ -104,7 +103,7 @@ th, td { text-align: left; padding: 10px 16px; border-bottom: 1px solid var(--tr
 th { font-size: 13px; font-weight: 600; color: var(--ardoise); background: var(--brume); white-space: nowrap; }
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover td { background: #FAFBFD; }
-td.nombre, th.nombre { text-align: right; white-space: nowrap; }
+td.nombre, th.nombre { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 td.court { white-space: nowrap; }
 .identifiant.identifiant-court { word-break: normal; white-space: nowrap; }
 td.details { overflow-wrap: anywhere; min-width: 260px; }

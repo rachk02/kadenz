@@ -11,6 +11,17 @@ pub fn erreur(c: Option<&Cadre>, statut: u16, texte: &str) -> Markup {
         404 => "Page introuvable",
         _ => "Erreur",
     };
+    // Un texte qui ne fait que répéter l'intitulé laisse place à une phrase
+    // utile ; pour un revendeur, l'entreprise d'un autre répond aussi 404.
+    let texte = if texte.to_lowercase() == intitule.to_lowercase() {
+        match statut {
+            403 => "Votre compte n'a pas accès à cette page.",
+            404 => "Cette page n'existe pas, ou elle ne relève pas de votre compte.",
+            _ => texte,
+        }
+    } else {
+        texte
+    };
     let corps = html! {
         (titre(intitule, html! {}))
         p.texte { (texte) }
