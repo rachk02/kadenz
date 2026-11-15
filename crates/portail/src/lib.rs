@@ -260,6 +260,8 @@ fn refus<T>(message: &str) -> Resultat<T> {
     Err(ErreurPortail::Validation(message.into()))
 }
 
+/// Ordre des verrous, partout : la base d'abord, puis le frein ou les
+/// sessions ; jamais la base pendant que le frein ou les sessions sont tenus.
 struct Interieur {
     conn: Mutex<Connection>,
     cle: SigningKey,
@@ -745,7 +747,10 @@ impl Portail {
     }
 
     pub fn deconnecter(&self, jeton: &str) {
-        if let Some((compte, _)) = verrou(&self.0.sessions).fermer(jeton) {
+        // Verrou des sessions relâché avant de prendre la base (ordre des
+        // verrous : base, puis frein ou sessions).
+        let fermee = verrou(&self.0.sessions).fermer(jeton);
+        if let Some((compte, _)) = fermee {
             let _ = noter(&self.conn(), Some(compte), "deconnexion", None, "");
         }
     }

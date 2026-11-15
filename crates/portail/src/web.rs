@@ -275,7 +275,7 @@ fn adresse_client(etat: &Etat, entetes: &HeaderMap, pair: SocketAddr) -> String 
 }
 
 fn cookie_session(jeton: &str) -> String {
-    format!("{COOKIE_SESSION}={jeton}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=28800")
+    format!("{COOKIE_SESSION}={jeton}; Path=/; HttpOnly; Secure; SameSite=Strict")
 }
 
 // ----- Connexion -----

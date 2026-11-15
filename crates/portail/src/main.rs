@@ -109,6 +109,15 @@ fn main() -> ExitCode {
         eprintln!("{} : clé privée illisible", fichier.display());
         return ExitCode::FAILURE;
     };
+    // Seule une clé dont Kadenz connaît la moitié publique émet des licences
+    // acceptées par les installations : toute autre clé est refusée.
+    if !kadenz_licence::entreprise::cles_portail().contains(&cle.verifying_key()) {
+        eprintln!(
+            "{} : cette clé n'est pas une clé du portail reconnue par Kadenz",
+            fichier.display()
+        );
+        return ExitCode::FAILURE;
+    }
     let portail = match Portail::ouvrir(&dossier, cle) {
         Ok(p) => p,
         Err(e) => {

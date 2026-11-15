@@ -531,3 +531,27 @@ fn programme_refuse_sans_cle() {
     assert!(String::from_utf8_lossy(&sortie.stderr).contains("clé du portail manquante"));
     let _ = std::fs::remove_dir_all(d);
 }
+
+#[test]
+fn programme_refuse_une_cle_inconnue() {
+    // Clé valide mais inconnue de Kadenz (la clé d'essai) : ses licences
+    // seraient refusées partout, le programme ne démarre pas.
+    let d = dossier("cle-inconnue");
+    std::fs::create_dir_all(&d).unwrap();
+    let fichier = d.join("cle.hex");
+    std::fs::write(&fichier, kadenz_licence::en_hex(&cle_essai().to_bytes())).unwrap();
+    let sortie = std::process::Command::new(env!("CARGO_BIN_EXE_kadenz-portail"))
+        .args([
+            "--dossier",
+            d.to_str().unwrap(),
+            "--cle",
+            fichier.to_str().unwrap(),
+            "--ecoute",
+            "127.0.0.1:0",
+        ])
+        .output()
+        .unwrap();
+    assert!(!sortie.status.success());
+    assert!(String::from_utf8_lossy(&sortie.stderr).contains("pas une clé du portail reconnue"));
+    let _ = std::fs::remove_dir_all(d);
+}

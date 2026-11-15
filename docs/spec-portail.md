@@ -15,7 +15,7 @@ Statut : **proposé**. Les choix marqués « proposé » restent à confirmer pa
 ## 2. Programme (décision 61)
 
 - Un seul programme Rust, `kadenz-portail` (crate `crates/portail`), qui sert des pages HTML simples rendues sur le serveur : formulaires, aucun framework JavaScript. Bibliothèques : axum et tokio pour le HTTP, maud pour les pages (gabarits vérifiés à la compilation, échappement automatique), argon2 pour les mots de passe (choix de kadenz-34 et kadenz-8e).
-- Il dépend de `kadenz-licence` (et de `kadenz-domaine` pour les modules), jamais de `kadenz-stockage` : le chiffrement de la base et des clés de `kadenz-stockage` repose sur la protection des données de Windows, et le portail tourne sous Linux. Il se construit dans un conteneur comme le relais.
+- Il dépend de `kadenz-licence` (et de `kadenz-domaine` pour les modules), jamais de `kadenz-stockage` : le chiffrement de la base et des clés de `kadenz-stockage` repose sur la protection des données de Windows, et le portail tourne sous Linux. Il se construira dans un conteneur comme le relais ; cette construction sous Linux n'est pas encore essayée (SQLite de l'espace de travail remplacé par SQLite3 Multiple Ciphers, favicon repris de `docs/` malgré le `.dockerignore`), elle fait partie de F9c.
 - Lancement : `kadenz-portail --dossier <dossier> --cle <fichier> [--ecoute 127.0.0.1:47382]`. Le fichier de clé est la clé privée du portail en hexadécimal, au format de `kadenz-editeur`. Le programme refuse de démarrer sans `--cle` ; il ne prend jamais une clé d'essai à la place.
 - `kadenz-portail --dossier <dossier> creer-editeur <identifiant>` crée un compte éditeur, mot de passe lu sur l'entrée standard. C'est la seule façon de créer un compte éditeur.
 - Écoute en HTTP sur `127.0.0.1` par défaut. Sur le VPS, le TLS est assuré par un mandataire devant le portail (Caddy, certificats automatiques ; proposé).
@@ -47,7 +47,7 @@ Base SQLite dans le dossier du portail (proposé : protégée par les droits du 
 ## 6. Sécurité
 
 - Mots de passe : argon2id, 10 caractères au moins (proposé).
-- Session : jeton aléatoire de 32 octets, dans un cookie `HttpOnly`, `Secure`, `SameSite=Strict`, gardé côté portail ; fin après 8 heures sans activité (proposé) et à la déconnexion.
+- Session : jeton aléatoire de 32 octets, dans un cookie de session du navigateur `HttpOnly`, `Secure`, `SameSite=Strict`, gardé côté portail ; fin après 8 heures sans activité (proposé), à la déconnexion et à l'arrêt du portail.
 - Chaque formulaire porte un jeton anti-falsification de la session, vérifié avant toute écriture.
 - Connexions freinées : après 5 échecs par identifiant ou par adresse, attente de 5 secondes doublée à chaque échec jusqu'à 15 minutes, comme les sessions du serveur ; chaque échec est noté au journal.
 - En-têtes : `Content-Security-Policy: default-src 'self'; form-action 'self'; frame-ancestors 'none'`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex`.
@@ -57,4 +57,4 @@ Base SQLite dans le dossier du portail (proposé : protégée par les droits du 
 
 - **F9a** (kadenz-34) : crate `kadenz-portail` (données, rôles, émission, journal, sessions, freinage), table des routes axum, programme et exemple `portail_essai` ; essais en processus, dont un revendeur refusé sur le client d'un autre revendeur et une licence émise acceptée par `abonnement::enregistrer_avec`.
 - **F9b** (kadenz-8e) : pages dans `crates/portail/src/pages/` (un module par page), signatures fixées par F9a ; style des écrans (angles de 4 px au plus, palette et police de la marque, aucune italique), textes en français.
-- **F9c** : essai à l'écran, portail d'essai lancé en local : l'éditeur crée un revendeur ; le revendeur crée une entreprise (identifiant d'un banc d'essai), enregistre un paiement et émet la licence ; la licence est acceptée par le banc d'essai depuis la rubrique « Abonnement », émetteur visible ; journal complet.
+- **F9c** : construction de l'image du portail sous Linux (conteneur), puis essai à l'écran, portail d'essai lancé en local : l'éditeur crée un revendeur ; le revendeur crée une entreprise (identifiant d'un banc d'essai), enregistre un paiement et émet la licence ; la licence est acceptée par le banc d'essai depuis la rubrique « Abonnement », émetteur visible ; journal complet.
