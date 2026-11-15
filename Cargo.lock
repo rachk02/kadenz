@@ -3176,6 +3176,7 @@ dependencies = [
  "chrono",
  "kadenz-domaine",
  "kadenz-licence",
+ "kadenz-maj",
  "kadenz-protocole",
  "kadenz-serveur",
  "kadenz-stockage",
