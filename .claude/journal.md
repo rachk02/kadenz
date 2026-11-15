@@ -474,3 +474,4 @@
 [2026-11-15 06:47:35] Correction - Sauvegarde du serveur écrite dans le sous-dossier en-cours puis renommée une fois complète (une sauvegarde coupée n'entre plus dans la liste ni la rotation) ; spec : exception de l'opération restée sans réponse après une restauration.
 [2026-11-15 06:49:05] Suivi - Relecture des captures du nouveau tableau et de la liste déroulante (écran Tiers) : conformes à la planche ; signalé hors planche la colonne Téléphone et l'en-tête Localisation coupés.
 [2026-11-15 06:50:55] Suivi - Banc d'essai : commande base_v1 (base V1 de démonstration pour l'essai de reprise du F7d, créée dans le dossier temporaire de la session, jamais la vraie base).
+[2026-11-15 06:52:31] Suivi - F7d : déroulé côté serveur envoyé à kadenz-22, qui écrit la consigne d'essai ; restauration de la fenêtre en version de développement sur un dossier d'essai par restaurer_si, sans toucher au service.
