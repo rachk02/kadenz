@@ -87,6 +87,10 @@ pub enum Reponse {
         version: u32,
         entreprise: String,
         decalage_minutes: i32,
+        /// Génération de la base du serveur, tirée de nouveau à chaque
+        /// restauration (F7) : un poste qui en voit une autre refait sa copie.
+        #[serde(default)]
+        generation: String,
     },
     /// Version du protocole différente : la connexion est fermée.
     VersionRefusee {

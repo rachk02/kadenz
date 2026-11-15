@@ -116,6 +116,39 @@ pub fn completer_uids(conn: &Connection) -> Resultat<()> {
     Ok(())
 }
 
+/// Génération de la base : sur le serveur, tirée à la première ouverture puis
+/// à chaque restauration (F7) ; sur un poste, la dernière génération du
+/// serveur vue par sa copie. Valeur propre à chaque base.
+pub const CLE_GENERATION: &str = "synchro.generation";
+
+/// Génération de la base du serveur, tirée si elle manque.
+pub fn generation(conn: &Connection) -> Resultat<String> {
+    let lue: Option<String> = conn
+        .query_row(
+            "SELECT valeur ->> '$' FROM parametre_systeme WHERE cle = ?1",
+            [CLE_GENERATION],
+            |r| r.get(0),
+        )
+        .optional()?;
+    match lue {
+        Some(g) if !g.is_empty() => Ok(g),
+        _ => nouvelle_generation(conn),
+    }
+}
+
+/// Nouvelle génération de la base du serveur (restauration) : un tirage, jamais
+/// un compteur, pour que deux restaurations de la même sauvegarde se
+/// distinguent.
+pub fn nouvelle_generation(conn: &Connection) -> Resultat<String> {
+    let generation = nouvel_uid();
+    conn.execute(
+        "INSERT INTO parametre_systeme (cle, valeur) VALUES (?1, json_quote(?2))
+         ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur",
+        params![CLE_GENERATION, generation],
+    )?;
+    Ok(generation)
+}
+
 /// Identifiant de l'entreprise de cette base, tiré à sa création.
 pub fn identifiant_entreprise(conn: &Connection) -> Resultat<String> {
     Ok(conn.query_row(

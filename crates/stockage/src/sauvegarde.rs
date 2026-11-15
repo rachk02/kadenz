@@ -463,6 +463,68 @@ pub fn liste_sauvegardes(dossier: &Path) -> Resultat<Vec<InfoSauvegarde>> {
 ///    supprimés ; la base restaurée prend leur place. Un échec remet tout en état.
 pub fn restaurer(chemin_base: &Path, sauvegarde: &Path, mot_de_passe: &str) -> Resultat<()> {
     let reglage = lire_reglage(chemin_base)?;
+    let avant = |courante: &Connection| {
+        ecrire(
+            courante,
+            &reglage.dossier,
+            mot_de_passe,
+            Genre::AvantRestauration,
+        )
+        .map(Some)
+    };
+    restaurer_avec(
+        chemin_base,
+        sauvegarde,
+        mot_de_passe,
+        &Restauration {
+            portee: chiffrement::Portee::Compte,
+            avant: &avant,
+            ajuster: &|_, _| Ok(()),
+            fichiers: &[],
+        },
+    )
+    .map(|_| ())
+}
+
+/// Variantes d'une restauration : celle du serveur (F7) protège la clé au
+/// niveau de la machine, sauvegarde la base courante à sa façon, reporte
+/// dans la base restaurée ce qui ne doit pas revenir en arrière, et remplace
+/// d'autres fichiers (identité TLS) dans le même échange.
+pub struct Restauration<'a> {
+    pub portee: chiffrement::Portee,
+    /// Sauvegarde de la base courante (si elle s'ouvre et a des comptes),
+    /// avant tout échange ; rend son chemin.
+    pub avant: &'a dyn Fn(&Connection) -> Resultat<Option<PathBuf>>,
+    /// Ajuste la base restaurée, déjà vérifiée, avec la base courante si elle
+    /// s'ouvre et a des comptes.
+    pub ajuster: &'a dyn Fn(Option<&Connection>, &Connection) -> Resultat<()>,
+    /// Fichiers remplacés dans le même échange que la base, l'ancien contenu
+    /// mis de côté comme elle.
+    pub fichiers: &'a [(PathBuf, Vec<u8>)],
+}
+
+/// Ce qu'une restauration a fait.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Restauree {
+    /// Sauvegarde de la base courante faite avant l'échange.
+    pub avant: Option<PathBuf>,
+    /// Base courante mise de côté, s'il y en avait une.
+    pub mise_de_cote: Option<PathBuf>,
+}
+
+/// Début du message d'un échec dont la remise en place a elle aussi échoué :
+/// la base en place n'est alors plus sûre.
+pub const RESTAURATION_INTERROMPUE: &str = "restauration interrompue";
+
+/// Restauration générale ; voir [`restaurer`] et [`Restauration`]. En cas
+/// d'erreur, la base courante et les fichiers à remplacer sont en place,
+/// inchangés, sauf si l'erreur commence par [`RESTAURATION_INTERROMPUE`].
+pub fn restaurer_avec(
+    chemin_base: &Path,
+    sauvegarde: &Path,
+    mot_de_passe: &str,
+    r: &Restauration,
+) -> Resultat<Restauree> {
     let source = ouvrir_sauvegarde(sauvegarde, mot_de_passe)?;
     let version: u32 = source.pragma_query_value(None, "user_version", |r| r.get(0))?;
     let application = version_schema_application();
@@ -477,10 +539,10 @@ pub fn restaurer(chemin_base: &Path, sauvegarde: &Path, mot_de_passe: &str) -> R
     }
 
     let fichier_cle = chiffrement::chemin_cle(chemin_base);
-    let (cle, nouvelle_cle) = match chiffrement::cle(&fichier_cle, false) {
+    let (cle, nouvelle_cle) = match chiffrement::cle_avec(&fichier_cle, false, r.portee) {
         Ok(cle) => (cle, None),
         Err(Erreur::CleIntrouvable | Erreur::CleAutreCompte | Erreur::CleEndommagee) => {
-            let (cle, protegee) = chiffrement::nouvelle_cle()?;
+            let (cle, protegee) = chiffrement::nouvelle_cle_avec(r.portee)?;
             (cle, Some(protegee))
         }
         Err(e) => return Err(e),
@@ -488,10 +550,13 @@ pub fn restaurer(chemin_base: &Path, sauvegarde: &Path, mot_de_passe: &str) -> R
 
     let preparee = avec_suffixe(chemin_base, "restauration");
     let _ = fs::remove_file(&preparee);
-    if let Err(e) = preparer(&source, &preparee, &cle, sauvegarde) {
-        let _ = fs::remove_file(&preparee);
-        return Err(e);
-    }
+    let cible = match preparer(&source, &preparee, &cle, sauvegarde) {
+        Ok(cible) => cible,
+        Err(e) => {
+            let _ = fs::remove_file(&preparee);
+            return Err(e);
+        }
+    };
     drop(source);
 
     // Avec une clé illisible, la base courante ne peut pas s'ouvrir.
@@ -502,20 +567,20 @@ pub fn restaurer(chemin_base: &Path, sauvegarde: &Path, mot_de_passe: &str) -> R
         None => ouvrir_courante(chemin_base, &cle).filter(a_des_comptes),
         Some(_) => None,
     };
-    if let Some(courante) = courante {
-        let ecrite = ecrire(
-            &courante,
-            &reglage.dossier,
-            mot_de_passe,
-            Genre::AvantRestauration,
-        );
-        // Fermée avant l'échange : Windows refuse de renommer un fichier ouvert.
-        drop(courante);
-        if let Err(e) = ecrite {
+    let avant = (r.ajuster)(courante.as_ref(), &cible).and_then(|()| match &courante {
+        Some(c) => (r.avant)(c),
+        None => Ok(None),
+    });
+    // Fermées avant l'échange : Windows refuse de renommer un fichier ouvert.
+    drop(courante);
+    drop(cible);
+    let avant = match avant {
+        Ok(avant) => avant,
+        Err(e) => {
             let _ = fs::remove_file(&preparee);
             return Err(e);
         }
-    }
+    };
 
     let mut a_ecarter = vec![
         chemin_base.to_path_buf(),
@@ -525,7 +590,8 @@ pub fn restaurer(chemin_base: &Path, sauvegarde: &Path, mot_de_passe: &str) -> R
     if nouvelle_cle.is_some() {
         a_ecarter.push(fichier_cle.clone());
     }
-    // Un seul suffixe pour la base et sa clé, libre pour chacun des fichiers :
+    a_ecarter.extend(r.fichiers.iter().map(|(chemin, _)| chemin.clone()));
+    // Un seul suffixe pour la base et ses fichiers, libre pour chacun :
     // fs::rename remplacerait sans prévenir un fichier déjà mis de côté.
     let racine = format!(".avant-restauration-{}", Local::now().format(FORMAT_DATE));
     let mut suffixe = racine.clone();
@@ -538,7 +604,7 @@ pub fn restaurer(chemin_base: &Path, sauvegarde: &Path, mot_de_passe: &str) -> R
         rang += 1;
     }
     let mut ecartes: Vec<(PathBuf, PathBuf)> = Vec::new();
-    let mut cle_ecrite = false;
+    let mut ecrits: Vec<PathBuf> = Vec::new();
     let echange = (|| -> Resultat<()> {
         for fichier in &a_ecarter {
             if fichier.exists() {
@@ -549,28 +615,60 @@ pub fn restaurer(chemin_base: &Path, sauvegarde: &Path, mot_de_passe: &str) -> R
         }
         if let Some(protegee) = &nouvelle_cle {
             fs::write(&fichier_cle, protegee)?;
-            cle_ecrite = true;
+            ecrits.push(fichier_cle.clone());
+        }
+        for (chemin, contenu) in r.fichiers {
+            fs::write(chemin, contenu)?;
+            ecrits.push(chemin.clone());
         }
         fs::rename(&preparee, chemin_base)?;
         Ok(())
     })();
     if let Err(e) = echange {
-        // La clé retirée ici est celle que cette restauration vient d'écrire.
-        if cle_ecrite {
-            let _ = fs::remove_file(&fichier_cle);
+        // Les fichiers retirés ici sont ceux que cette restauration vient
+        // d'écrire.
+        let mut restes = Vec::new();
+        for fichier in &ecrits {
+            if fs::remove_file(fichier).is_err() && fichier.exists() {
+                restes.push(fichier.display().to_string());
+            }
         }
         for (origine, destination) in ecartes.iter().rev() {
-            let _ = fs::rename(destination, origine);
+            if fs::rename(destination, origine).is_err() {
+                restes.push(format!(
+                    "{} (resté sous {})",
+                    origine.display(),
+                    destination.display()
+                ));
+            }
         }
         let _ = fs::remove_file(&preparee);
+        if !restes.is_empty() {
+            return Err(Erreur::Validation(format!(
+                "{RESTAURATION_INTERROMPUE} : {e} ; fichiers à remettre en place à la main : {}",
+                restes.join(", ")
+            )));
+        }
         return Err(e);
     }
-    Ok(())
+    let mise_de_cote = ecartes
+        .iter()
+        .find(|(origine, _)| origine == chemin_base)
+        .map(|(_, destination)| destination.clone());
+    Ok(Restauree {
+        avant,
+        mise_de_cote,
+    })
 }
 
 /// Copie la sauvegarde dans `preparee`, chiffrée par `cle`, la vérifie, puis y
-/// consigne la restauration au journal d'audit.
-fn preparer(source: &Connection, preparee: &Path, cle: &str, sauvegarde: &Path) -> Resultat<()> {
+/// consigne la restauration au journal d'audit ; rend la connexion ouverte.
+fn preparer(
+    source: &Connection,
+    preparee: &Path,
+    cle: &str,
+    sauvegarde: &Path,
+) -> Resultat<Connection> {
     let mut cible = Connection::open(preparee)?;
     chiffrement::appliquer_cle(&cible, cle)?;
     rusqlite::backup::Backup::new(source, &mut cible)?.run_to_completion(
@@ -597,7 +695,8 @@ fn preparer(source: &Connection, preparee: &Path, cle: &str, sauvegarde: &Path) 
             nouvelle_valeur: Some(json!({ "fichier": nom_fichier(sauvegarde) })),
             utilisateur_id: None,
         },
-    )
+    )?;
+    Ok(cible)
 }
 
 /// Base courante ouverte avec la clé, sans migration ; `None` si elle n'existe
@@ -1012,7 +1111,7 @@ mod tests {
         let (chemin, conn, _) = base_avec_admin(&dossier);
         drop(conn);
         // Clé valide mais d'une autre base.
-        let (_, protegee) = chiffrement::nouvelle_cle().unwrap();
+        let (_, protegee) = chiffrement::nouvelle_cle_avec(chiffrement::Portee::Compte).unwrap();
         fs::write(chiffrement::chemin_cle(&chemin), protegee).unwrap();
         assert!(matches!(
             crate::ouvrir(&chemin),

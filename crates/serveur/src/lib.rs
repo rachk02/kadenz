@@ -10,6 +10,7 @@
 
 pub mod admin;
 pub mod droits;
+mod restauration;
 pub mod sauvegardes;
 
 use std::collections::HashMap;
@@ -382,6 +383,8 @@ struct Contexte {
     delai: Duration,
     ouverture: Duration,
     entreprise: String,
+    /// Génération de la base, lue au démarrage (F7).
+    generation: String,
     essais: Mutex<Essais>,
     inscriptions: Mutex<Inscriptions>,
     cles: Arc<[VerifyingKey]>,
@@ -422,6 +425,8 @@ impl Serveur {
         let conn = kadenz_stockage::ouvrir_serveur(&config.dossier.join(NOM_BASE))
             .map_err(|e| format!("base du serveur : {e}"))?;
         let entreprise = synchro::identifiant_entreprise(&conn).map_err(|e| e.to_string())?;
+        let generation =
+            synchro::generation(&conn).map_err(|e| format!("base du serveur : {e}"))?;
         let ecoute = TcpListener::bind(config.adresse)
             .map_err(|e| format!("écoute sur {} impossible : {e}", config.adresse))?;
         let adresse = ecoute.local_addr().map_err(|e| e.to_string())?;
@@ -451,6 +456,7 @@ impl Serveur {
             delai: config.delai_lecture,
             ouverture: config.delai_ouverture,
             entreprise,
+            generation,
             essais: Mutex::new(Essais::default()),
             inscriptions: Mutex::new(Inscriptions::default()),
             cles: config.cles_portail.clone().into(),
@@ -774,6 +780,7 @@ fn session(contexte: &Contexte, tcp: TcpStream) {
             version: VERSION,
             entreprise: contexte.entreprise.clone(),
             decalage_minutes: chrono::Local::now().offset().local_minus_utc() / 60,
+            generation: contexte.generation.clone(),
         },
         Requete::Bonjour { .. } => {
             let _ = repondre(&mut flux, &Reponse::VersionRefusee { version: VERSION });

@@ -54,8 +54,8 @@ pub const CLES_PARTAGEES: [&str; 19] = [
 
 /// Clés propres à chaque base, jamais transmises ni écrasées : identité de
 /// l'entreprise et du poste, licence V1, abonnement, port du service, dossiers
-/// d'export de la machine, suivi de la réplique.
-pub const CLES_LOCALES: [&str; 11] = [
+/// d'export de la machine, suivi de la réplique, génération de la base.
+pub const CLES_LOCALES: [&str; 12] = [
     "identifiant_entreprise",
     "poste_relie",
     "licence.cle",
@@ -67,6 +67,7 @@ pub const CLES_LOCALES: [&str; 11] = [
     "documents.dossiers",
     CLE_DERNIER_RANG,
     CLE_EN_COURS,
+    crate::synchro::CLE_GENERATION,
 ];
 
 /// Dernier rang de la suite des changements reçu du serveur (sur un poste).
@@ -655,6 +656,10 @@ fn integrer(conn: &mut Connection, page: &[Changement], garder_rang: bool) -> Re
             let point = tx.savepoint()?;
             match appliquer_un(&point, ch) {
                 Ok(()) => {
+                    point.execute(
+                        "DELETE FROM synchro_a_revoir WHERE entite = ?1 AND uid = ?2",
+                        params![ch.entite.code(), ch.uid],
+                    )?;
                     point.commit()?;
                     bilan.sortes.insert(ch.entite);
                     bilan.appliques += 1;
@@ -689,6 +694,103 @@ fn integrer(conn: &mut Connection, page: &[Changement], garder_rang: bool) -> Re
     tx.commit()?;
     bilan.en_attente = attente.len();
     bilan.dernier = dernier;
+    Ok(bilan)
+}
+
+/// Génération du serveur vue à l'ouverture de la session (F7). La première fois,
+/// elle est seulement notée. Si elle a changé (serveur restauré), la copie est
+/// à refaire : toutes ses lignes sont à revoir, le rang reçu repart de zéro,
+/// les changements en attente sont oubliés, et les écritures de la file
+/// d'envoi repartent avec la base zéro, pour que le serveur juge tout ce qui a
+/// changé depuis comme un conflit (décision de l'Admin). Rend `true` si la
+/// copie est à refaire. Une génération vide (serveur qui n'en donne pas) ne
+/// change rien.
+pub fn changer_de_generation(conn: &mut Connection, generation: &str) -> Resultat<bool> {
+    if generation.is_empty() {
+        return Ok(false);
+    }
+    let tx = conn.transaction()?;
+    let vue: Option<String> = tx
+        .query_row(
+            "SELECT valeur ->> '$' FROM parametre_systeme WHERE cle = ?1",
+            [crate::synchro::CLE_GENERATION],
+            |r| r.get(0),
+        )
+        .optional()?;
+    let a_refaire = vue.as_deref().is_some_and(|v| v != generation);
+    if a_refaire {
+        for table in TABLES.iter().filter(|t| !t.entite.unique()) {
+            tx.execute(
+                &format!(
+                    "INSERT OR IGNORE INTO synchro_a_revoir (entite, uid)
+                     SELECT ?1, uid FROM {} WHERE uid IS NOT NULL",
+                    table.nom
+                ),
+                [table.entite.code()],
+            )?;
+        }
+        tx.execute("DELETE FROM synchro_attente", [])?;
+        tx.execute(
+            "INSERT INTO parametre_systeme (cle, valeur) VALUES (?1, '0')
+             ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur",
+            [CLE_DERNIER_RANG],
+        )?;
+        let file: Vec<(i64, String)> = tx
+            .prepare("SELECT rang, operation FROM synchro_file")?
+            .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?
+            .collect::<Result<_, _>>()?;
+        for (rang, texte) in file {
+            let mut op: kadenz_protocole::Operation =
+                serde_json::from_str(&texte).map_err(|e| Erreur::Validation(e.to_string()))?;
+            op.base = 0;
+            tx.execute(
+                "UPDATE synchro_file SET operation = ?1 WHERE rang = ?2",
+                params![en_texte(serde_json::to_string(&op))?, rang],
+            )?;
+        }
+    }
+    if vue.as_deref() != Some(generation) {
+        tx.execute(
+            "INSERT INTO parametre_systeme (cle, valeur) VALUES (?1, json_quote(?2))
+             ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur",
+            params![crate::synchro::CLE_GENERATION, generation],
+        )?;
+    }
+    tx.commit()?;
+    Ok(a_refaire)
+}
+
+/// Nombre de lignes de la copie encore à revoir après un changement de
+/// génération du serveur.
+pub fn a_revoir(conn: &Connection) -> Resultat<u64> {
+    Ok(
+        conn.query_row("SELECT count(*) FROM synchro_a_revoir", [], |r| {
+            r.get::<_, i64>(0)
+        })? as u64,
+    )
+}
+
+/// Une fois le poste à jour après un changement de génération : retire de la
+/// copie les lignes à revoir qui ne sont pas revenues, absentes du serveur
+/// restauré, comme des suppressions reçues.
+pub fn retirer_lignes_disparues(conn: &mut Connection) -> Resultat<Reception> {
+    let lignes: Vec<(String, String)> = conn
+        .prepare("SELECT entite, uid FROM synchro_a_revoir")?
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?
+        .collect::<Result<_, _>>()?;
+    let page: Vec<Changement> = lignes
+        .into_iter()
+        .filter_map(|(code, uid)| {
+            Some(Changement {
+                seq: 0,
+                entite: Entite::depuis_code(&code)?,
+                uid,
+                etat: Etat::Supprime,
+            })
+        })
+        .collect();
+    let bilan = integrer(conn, &page, false)?;
+    conn.execute("DELETE FROM synchro_a_revoir", [])?;
     Ok(bilan)
 }
 
@@ -1196,6 +1298,79 @@ pub(crate) mod tests {
             // Les écritures de la réplique ne sont pas des changements du poste.
             assert_eq!(crate::synchro::dernier_changement(&poste).unwrap(), 0);
         }
+    }
+
+    #[test]
+    fn copie_refaite_apres_une_restauration_du_serveur() {
+        let mut serveur = ouvrir_en_memoire().unwrap();
+        let r = remplir(&mut serveur);
+        let mut poste = ouvrir_en_memoire().unwrap();
+        assert!(!changer_de_generation(&mut poste, "g1").unwrap());
+        synchroniser(&serveur, &mut poste, 500);
+        // Sauvegarde du serveur à cet instant.
+        let mut restaure = ouvrir_en_memoire().unwrap();
+        rusqlite::backup::Backup::new(&serveur, &mut restaure)
+            .unwrap()
+            .run_to_completion(256, std::time::Duration::ZERO, None)
+            .unwrap();
+        // Après la sauvegarde : tiers créé, tiers modifié, vus par le poste.
+        let perdu = tiers::creer(&serveur, &r.admin, &fiche_tiers("Client perdu"))
+            .unwrap()
+            .id;
+        completer_uids(&serveur).unwrap();
+        let perdu = uid_de(&serveur, Entite::Tiers, perdu).unwrap().unwrap();
+        tiers::modifier(&serveur, &r.admin, r.t1, &fiche_tiers("Alpha modifié")).unwrap();
+        synchroniser(&serveur, &mut poste, 500);
+        // Écriture hors connexion en file, faite sur l'ancienne suite.
+        let op = kadenz_protocole::Operation {
+            id: crate::synchro::nouvel_uid(),
+            entreprise: crate::synchro::identifiant_entreprise(&poste).unwrap(),
+            poste: "poste".into(),
+            compte: "compte".into(),
+            hors_connexion: true,
+            heure_poste: None,
+            base: dernier_recu(&poste).unwrap(),
+            action: kadenz_protocole::Action::CreerTiers {
+                uid: crate::synchro::nouvel_uid(),
+                fiche: kadenz_protocole::Tiers {
+                    nom: "Client hors connexion".into(),
+                    type_tiers: "client".into(),
+                    ..Default::default()
+                },
+            },
+        };
+        mettre_en_file(&poste, &op).unwrap();
+        assert!(file(&poste).unwrap()[0].operation.base > 0);
+
+        // Serveur restauré, puis une écriture sur la nouvelle suite.
+        tiers::creer(&restaure, &r.admin, &fiche_tiers("Client nouveau")).unwrap();
+        assert!(!changer_de_generation(&mut poste, "g1").unwrap());
+        assert!(changer_de_generation(&mut poste, "g2").unwrap());
+        assert!(!changer_de_generation(&mut poste, "g2").unwrap());
+        assert_eq!(dernier_recu(&poste).unwrap(), 0);
+        assert!(a_revoir(&poste).unwrap() > 0);
+        let en_file = file(&poste).unwrap();
+        assert_eq!(en_file[0].operation.base, 0);
+        assert_eq!(en_file[0].operation.id, op.id);
+        loop {
+            let page = changements_depuis(&restaure, dernier_recu(&poste).unwrap(), 3).unwrap();
+            if page.is_empty() {
+                break;
+            }
+            recevoir(&mut poste, &page).unwrap();
+        }
+        // Seul le tiers perdu n'est pas revenu.
+        assert_eq!(a_revoir(&poste).unwrap(), 1);
+        let bilan = retirer_lignes_disparues(&mut poste).unwrap();
+        assert!(bilan.sortes.contains(&Entite::Tiers));
+        assert_eq!(a_revoir(&poste).unwrap(), 0);
+        assert_eq!(en_attente(&poste).unwrap(), 0);
+        assert_eq!(
+            crate::synchro::id_de(&poste, Entite::Tiers, &perdu).unwrap(),
+            None
+        );
+        assert_eq!(vidage(&poste), vidage(&restaure));
+        assert_eq!(crate::synchro::dernier_changement(&poste).unwrap(), 0);
     }
 
     #[test]

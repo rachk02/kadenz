@@ -228,8 +228,19 @@ pub fn sauvegarder(conn: &Connection, donnees: &Path, genre: Genre) -> Result<Pa
         .mot_de_passe
         .as_deref()
         .ok_or("aucun mot de passe de sauvegarde n'est choisi")?;
+    sauvegarder_avec(conn, donnees, &reglage.dossier, mot_de_passe, genre)
+}
+
+/// Comme [`sauvegarder`], avec le dossier et le mot de passe donnés.
+pub(crate) fn sauvegarder_avec(
+    conn: &Connection,
+    donnees: &Path,
+    dossier: &Path,
+    mot_de_passe: &str,
+    genre: Genre,
+) -> Result<PathBuf, String> {
     let (certificat, cle) = identite(donnees)?;
-    let chemin = sauvegarde::ecrire(conn, &reglage.dossier, mot_de_passe, genre)
+    let chemin = sauvegarde::ecrire(conn, dossier, mot_de_passe, genre)
         .map_err(|e| format!("sauvegarde impossible : {e}"))?;
     if let Err(e) = ajouter_identite(&chemin, mot_de_passe, &certificat, &cle) {
         let _ = fs::remove_file(&chemin);
@@ -241,7 +252,7 @@ pub fn sauvegarder(conn: &Connection, donnees: &Path, genre: Genre) -> Result<Pa
         Genre::Manuelle | Genre::AvantRestauration => None,
     };
     if let Some(nombre) = gardees {
-        sauvegarde::garder(&reglage.dossier, genre, nombre)
+        sauvegarde::garder(dossier, genre, nombre)
             .map_err(|e| format!("rotation des sauvegardes impossible : {e}"))?;
     }
     Ok(chemin)

@@ -16,6 +16,12 @@ use rusqlite::{Connection, OptionalExtension};
 
 use crate::{NOM_BASE, PORT_PAR_DEFAUT, empreinte_du_dossier};
 
+pub use crate::restauration::{
+    BilanRestauration, Restauration, arreter_service, demarrer_service, preparer_restauration,
+    restaurer, restaurer_si,
+};
+pub use kadenz_stockage::sauvegarde::RESTAURATION_INTERROMPUE;
+
 const CLE_PORT: &str = "port_serveur";
 
 /// Ouvre la base du serveur (clé protégée au niveau de la machine), avec un

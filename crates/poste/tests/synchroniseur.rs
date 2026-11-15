@@ -19,6 +19,7 @@ use kadenz_poste::{
     AvertissementSauvegarde, DELAI, ErreurPoste, EtatConnexion, Evenement, SourceV1, Synchroniseur,
 };
 use kadenz_protocole::{Action, Entite, Issue, Ligne, Motif, Operation, Saisie, Tiers};
+use kadenz_serveur::admin::{self, EtatService};
 use kadenz_serveur::{Config, Serveur, sauvegardes};
 use kadenz_stockage::comptes::{self, NouvelUtilisateur};
 use kadenz_stockage::entreprise::Entreprise;
@@ -1318,4 +1319,76 @@ fn avertissement_des_sauvegardes_pour_un_admin() {
         dernier(&vus) == Some(Some(AvertissementSauvegarde::MemeDisque))
     });
     s.arreter();
+}
+
+#[test]
+fn copie_refaite_apres_une_restauration_du_serveur() {
+    const MDP: &str = "motdepasse-sauvegardes";
+    let Banc {
+        serveur,
+        dossier_serveur,
+        copie,
+        admin: uid_admin,
+        ..
+    } = banc("restauration", true);
+    let a_cote = dossier_serveur.with_file_name(format!(
+        "kadenz-poste-essai-restauration-sauvegardes-{}",
+        std::process::id()
+    ));
+    sauvegardes::enregistrer_reglage(
+        &dossier_serveur,
+        &a_cote,
+        chrono::NaiveTime::from_hms_opt(7, 30, 0).unwrap(),
+        Some(MDP),
+    )
+    .unwrap();
+    let (s, _e) = demarrer(&copie);
+    attendre("connexion", || s.etat() == EtatConnexion::Connecte);
+    s.connecter("admin", MOT_DE_PASSE).unwrap();
+    attendre("compte dans la copie", || {
+        present(&copie, Entite::Utilisateur, &uid_admin)
+    });
+    let creer = |s: &Synchroniseur, nom: &str| {
+        let uid = synchro::nouvel_uid();
+        let issue = s
+            .ecrire(Action::CreerTiers {
+                uid: uid.clone(),
+                fiche: fiche(nom),
+            })
+            .unwrap();
+        assert_eq!(issue, Issue::acceptee());
+        uid
+    };
+    let garde = creer(&s, "Client gardé");
+    let d = dossier_serveur.clone();
+    let sauvegarde = serveur
+        .base(move |c| {
+            sauvegardes::sauvegarder(c, &d, kadenz_stockage::sauvegarde::Genre::Manuelle)
+        })
+        .unwrap()
+        .unwrap();
+    let perdu = creer(&s, "Client perdu");
+    assert!(present(&copie, Entite::Tiers, &perdu));
+    s.arreter();
+    let port = serveur.adresse().port();
+    serveur.arreter();
+
+    let preparee = admin::preparer_restauration(&dossier_serveur, &sauvegarde, MDP).unwrap();
+    admin::restaurer_si(&dossier_serveur, &preparee, EtatService::NonInstalle).unwrap();
+    drop(preparee);
+    let _serveur = relancer(&dossier_serveur, port);
+
+    // Le poste voit une autre génération : il refait sa copie, le tiers créé
+    // après la sauvegarde en est retiré.
+    let (s, _e) = demarrer(&copie);
+    attendre("connexion", || s.etat() == EtatConnexion::Connecte);
+    s.connecter("admin", MOT_DE_PASSE).unwrap();
+    attendre("tiers perdu retiré de la copie", || {
+        !present(&copie, Entite::Tiers, &perdu)
+    });
+    assert!(present(&copie, Entite::Tiers, &garde));
+    let nouveau = creer(&s, "Client après la restauration");
+    assert!(present(&copie, Entite::Tiers, &nouveau));
+    s.arreter();
+    let _ = std::fs::remove_dir_all(&a_cote);
 }

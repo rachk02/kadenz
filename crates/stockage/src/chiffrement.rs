@@ -84,12 +84,8 @@ pub fn cle_avec(fichier: &Path, creer: bool, portee: Portee) -> Resultat<String>
 }
 
 /// Nouvelle clé tirée de l'aléa du système : la clé, et sa forme protégée par
-/// Windows à écrire dans `kadenz.cle`.
-pub(crate) fn nouvelle_cle() -> Resultat<(String, Vec<u8>)> {
-    nouvelle_cle_avec(Portee::Compte)
-}
-
-fn nouvelle_cle_avec(portee: Portee) -> Resultat<(String, Vec<u8>)> {
+/// Windows à écrire dans `kadenz.cle`, avec la portée voulue.
+pub(crate) fn nouvelle_cle_avec(portee: Portee) -> Resultat<(String, Vec<u8>)> {
     let mut alea = [0u8; 32];
     getrandom::fill(&mut alea)
         .map_err(|e| Erreur::Validation(format!("aléa du système indisponible : {e}")))?;

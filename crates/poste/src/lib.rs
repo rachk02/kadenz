@@ -261,7 +261,8 @@ enum Commande {
     /// Travail sur la copie ou la session, dans le fil.
     Fil(Box<dyn FnOnce(&mut Fil) + Send>),
     /// Fin d'une tentative de connexion menée par le fil auxiliaire.
-    Connectee(Result<Box<Client>, ErreurClient>),
+    /// Session ouverte, avec la génération de la base du serveur (F7).
+    Connectee(Result<(Box<Client>, String), ErreurClient>),
     Arreter,
 }
 
@@ -796,7 +797,7 @@ impl Fil {
             .name("kadenz-connexion".into())
             .spawn(move || {
                 let resultat = Client::connecter(&adresse, &empreinte, &identite, DELAI)
-                    .map(|(c, _)| Box::new(c));
+                    .map(|(c, bienvenue)| (Box::new(c), bienvenue.generation));
                 // Synchroniseur arrêté entre-temps : l'envoi échoue, sans suite.
                 let _ = relais.send(Commande::Connectee(resultat));
             });
@@ -809,11 +810,21 @@ impl Fil {
     /// Fin d'une tentative : session TLS ouverte, puis le compte gardé est
     /// connecté ; ou connexion perdue, et la connexion qui attendait rend
     /// `HorsConnexion` (le compte reste gardé, décision 48).
-    fn connectee(&mut self, resultat: Result<Box<Client>, ErreurClient>) {
+    fn connectee(&mut self, resultat: Result<(Box<Client>, String), ErreurClient>) {
         self.essai_en_cours = false;
         let attendue = self.connexion_attendue.take();
         match resultat {
-            Ok(client) => {
+            Ok((client, generation)) => {
+                // Serveur restauré (F7) : la copie est à refaire, avant tout
+                // envoi de la file. Les lignes reviennent par le rattrapage ;
+                // celles qui ne reviennent pas sont retirées à la fin.
+                if let Err(e) = replique::changer_de_generation(&mut self.copie, &generation) {
+                    let erreur = base(e);
+                    if let Some(retour) = attendue {
+                        let _ = retour.send(Err(erreur));
+                    }
+                    return;
+                }
                 self.client = Some(*client);
                 self.echecs = 0;
                 self.poser_etat(self.etat_ouvert());
@@ -1110,6 +1121,20 @@ impl Fil {
                 Err(e) => return Err(self.erreur_requete(e)),
             };
             if page.is_empty() {
+                // À jour après une restauration du serveur : les lignes qui ne
+                // sont pas revenues n'existent plus sur le serveur.
+                if replique::a_revoir(&self.copie).map_err(base)? > 0 {
+                    let bilan =
+                        replique::retirer_lignes_disparues(&mut self.copie).map_err(base)?;
+                    if !bilan.sortes.is_empty() {
+                        (self.evenements)(Evenement::Changements {
+                            sortes: bilan.sortes,
+                        });
+                    }
+                    if poste_relie::purger_a_valider(&self.copie).map_err(base)? {
+                        self.signaler_a_valider();
+                    }
+                }
                 break;
             }
             if !annonce && dernier.saturating_sub(depuis) > RETARD_ANNONCE {

@@ -82,6 +82,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0011_parametres_bas.sql"),
     include_str!("migrations/0012_file_envoi.sql"),
     include_str!("migrations/0013_comptes_refuses.sql"),
+    include_str!("migrations/0014_lignes_a_revoir.sql"),
 ];
 
 #[derive(Debug)]

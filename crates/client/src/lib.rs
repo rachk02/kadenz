@@ -233,6 +233,8 @@ impl ServerCertVerifier for Epinglage {
 pub struct Bienvenue {
     pub entreprise: String,
     pub decalage_minutes: i32,
+    /// Génération de la base du serveur (F7).
+    pub generation: String,
 }
 
 /// Connexion TCP au serveur, avec délais.
@@ -388,12 +390,14 @@ impl Client {
             Reponse::Bienvenue {
                 entreprise,
                 decalage_minutes,
+                generation,
                 ..
             } => Ok((
                 client,
                 Bienvenue {
                     entreprise,
                     decalage_minutes,
+                    generation,
                 },
             )),
             Reponse::VersionRefusee { version } => {

@@ -85,6 +85,29 @@ fn en_texte(d: NaiveDate) -> String {
     d.format("%Y-%m-%d").to_string()
 }
 
+/// Restauration du serveur (F7) : reporte dans la base restaurée `cible` ce
+/// qui ne doit pas revenir en arrière depuis la base courante, de la même
+/// entreprise : la date retenue (la plus récente des deux) et la licence
+/// installée la plus récente.
+pub fn reporter(courante: &Connection, cible: &Connection) -> Resultat<()> {
+    let vue_courante = lire(courante, DATE_VUE)?.as_deref().and_then(date);
+    let vue_cible = lire(cible, DATE_VUE)?.as_deref().and_then(date);
+    if let Some(vue) = vue_courante
+        && vue_cible.is_none_or(|c| c < vue)
+    {
+        ecrire(cible, DATE_VUE, &en_texte(vue))?;
+    }
+    let emission_courante = lire(courante, EMISSION_VUE)?.as_deref().and_then(date);
+    let emission_cible = lire(cible, EMISSION_VUE)?.as_deref().and_then(date);
+    if let (Some(emission), Some(cle)) = (emission_courante, lire(courante, CLE)?)
+        && emission_cible.is_none_or(|c| c < emission)
+    {
+        ecrire(cible, CLE, &cle)?;
+        ecrire(cible, EMISSION_VUE, &en_texte(emission))?;
+    }
+    Ok(())
+}
+
 /// Date du jour de l'horloge locale de la machine (fuseau de l'entreprise,
 /// décision 37).
 pub fn horloge() -> NaiveDate {
