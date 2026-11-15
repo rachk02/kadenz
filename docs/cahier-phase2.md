@@ -24,6 +24,7 @@
 | 0.20 | 2026-11-13 | Décision 52 (F6) : écritures hors connexion d'un compte désactivé ou dont le mot de passe a changé pendant la coupure, apportées par la session d'un autre compte et toujours mises en attente pour l'Admin. |
 | 0.21 | 2026-11-15 | Décisions 53 à 56 (F7) : comptes et fiche de l'entreprise à la reprise d'une base V1, serveur neuf, mot de passe des sauvegardes du serveur. |
 | 0.22 | 2026-11-15 | Décisions 57 à 59 (F8) : poste autorisé à distance par une case, licence valide exigée par le relais, traces du relais sans contenu gardées 30 jours. |
+| 0.23 | 2026-11-15 | Décisions 60 et 61 (F9), reçues par kadenz-8e : portail local sans carte, paiement saisi par l'éditeur ou un revendeur ; un seul programme Rust qui sert des pages HTML simples. Forme proposée dans `spec-portail.md`. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -101,6 +102,8 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 57. **Poste autorisé à distance (F8)** : dans la liste des postes inscrits, l'Admin coche « accès à distance » pour un poste et peut la décocher à tout moment, avec effet immédiat. Pas de second code : le poste a déjà prouvé son identité à l'inscription, faite au bureau.
 58. **Licence et relais (F8)** : le relais de l'éditeur ne sert qu'aux abonnés. Le serveur lui présente sa licence d'entreprise, sur une connexion chiffrée ; le relais vérifie sa signature et son entreprise, et refuse une licence échue.
 59. **Traces du relais (F8)** : le relais note, pour chaque session et chaque refus, l'heure, l'identifiant d'entreprise, l'empreinte du poste, la durée et le volume, jamais le contenu ; ces traces sont effacées au bout de 30 jours.
+60. **Portail sans carte (F9)** : le premier portail fonctionne en local, sans paiement par carte : l'éditeur ou un revendeur enregistre le paiement reçu (virement, chèque ou espèces) avec son montant et le nombre de postes, puis renouvelle la licence. Ni grille de prix ni carte pour l'instant ; elles s'ajouteront quand l'utilisateur les fournira.
+61. **Forme du portail (F9)** : un seul programme Rust qui sert des pages HTML simples, sans JavaScript lourd.
 
 ## 3. Candidats
 
