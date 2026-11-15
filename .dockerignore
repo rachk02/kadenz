@@ -5,6 +5,8 @@ target
 .idea
 .claude
 docs
+# Sauf le favicon, servi par le portail (crates/portail, F9).
+!docs/marque/web/favicon.svg
 docs_of_interest
 installateur
 **/*.sqlite

@@ -1,0 +1,21 @@
+[package]
+name = "kadenz-portail"
+description = "Portail des licences de Kadenz (phase 2, jalon F9) : comptes éditeur et revendeur, paiements enregistrés, émission des licences d'abonnement, journal des actions."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+kadenz-licence.workspace = true
+kadenz-domaine.workspace = true
+rusqlite.workspace = true
+argon2.workspace = true
+chrono.workspace = true
+ed25519-dalek.workspace = true
+getrandom.workspace = true
+axum = { version = "0.8.9", default-features = false, features = ["tokio", "http1", "form"] }
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "net", "sync"] }
+maud = "0.27.0"
+
+[dev-dependencies]
+kadenz-stockage.workspace = true

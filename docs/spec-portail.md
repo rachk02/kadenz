@@ -26,7 +26,7 @@ Statut : **proposé**. Les choix marqués « proposé » restent à confirmer pa
 Base SQLite dans le dossier du portail (proposé : protégée par les droits du compte de service, fichiers en mode 0600 comme l'identité du relais, et par le chiffrement du disque du VPS ; pas de chiffrement propre à la base en F9).
 
 - **Compte** : identifiant, nom, rôle (éditeur ou revendeur), mot de passe (argon2id), actif ou non. Un revendeur porte un identifiant public, repris comme émetteur dans les licences qu'il émet (décision 29).
-- **Entreprise** : identifiant d'entreprise (celui que l'Admin lit dans Kadenz, « Identifiant de l'entreprise », écran du serveur et assistant), nom du client, revendeur rattaché (aucun : client direct de l'éditeur).
+- **Entreprise** : identifiant d'entreprise (celui que l'Admin lit dans Kadenz, « Identifiant de l'entreprise » : rubrique « Serveur » d'un poste relié et assistant d'installation du serveur ; ajouté à la rubrique « Abonnement » par F9b), nom du client, revendeur rattaché (aucun : client direct de l'éditeur).
 - **Paiement** : entreprise, date de réception, mode (virement, chèque, espèces), montant entier et devise saisis, référence (numéro de chèque ou de virement, facultative), nombre de postes payés, formule (mensuelle ou annuelle), compte qui l'a saisi. Un paiement sert à une seule licence.
 - **Licence émise** : entreprise, paiement, texte complet de la licence, début, échéance, postes, modules, formule, émetteur, date d'émission, compte.
 - **Journal** : chaque action, avec l'heure UTC, le compte, l'action, l'entreprise ou le compte visé et les valeurs utiles (jamais un mot de passe). Ajout seul : la base refuse la modification et l'effacement d'une ligne.
