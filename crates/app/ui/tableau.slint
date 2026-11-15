@@ -7,6 +7,8 @@
 //
 // - Ligne de 34 px, angles de 4 px, en retrait de 4 px dans le cadre du tableau,
 //   sans alternance de fond ; texte en Theme.texte dans tous les états.
+// - Retrait du texte : 12 px aux deux bords de la ligne, 8 px de chaque côté
+//   entre deux colonnes (planche, 89467ac) ; le même pour l'en-tête.
 // - Survol : fond Theme.fond-lateral, sans cadre.
 // - Ligne choisie : fond Theme.accent-survol et cadre égal de 1 px Theme.accent ;
 //   survolée ou pressée, fond Theme.accent.mix(Theme.accent-survol, 0.06).
@@ -28,16 +30,24 @@ component ChevronTri inherits Path {
     commands: root.croissant ? "M 1 5.5 L 4 2.5 L 7 5.5" : "M 1 2.5 L 4 5.5 L 7 2.5";
 }
 
+// Retrait du texte d'une colonne, selon sa place dans la ligne.
+global RetraitColonnes {
+    out property <length> bord: 12px;
+    out property <length> entre: 8px;
+}
+
 component ColonneEntete inherits Rectangle {
     in property <string> titre;
     in property <SortOrder> ordre: SortOrder.unsorted;
+    in property <bool> premiere;
+    in property <bool> derniere;
     callback clicked <=> zone.clicked;
 
     zone := TouchArea { }
 
     HorizontalLayout {
-        padding-left: 12px;
-        padding-right: 12px;
+        padding-left: root.premiere ? RetraitColonnes.bord : RetraitColonnes.entre;
+        padding-right: root.derniere ? RetraitColonnes.bord : RetraitColonnes.entre;
         spacing: 8px;
 
         Text {
@@ -162,6 +172,8 @@ export component TableauDonnees {
                 for colonne[index] in root.columns: ColonneEntete {
                     titre: colonne.title;
                     ordre: colonne.sort-order;
+                    premiere: index == 0;
+                    derniere: index == root.columns.length - 1;
                     horizontal-stretch: colonne.horizontal-stretch;
                     min-width: max(colonne.min-width, colonne.width);
                     preferred-width: self.min-width;
@@ -196,9 +208,12 @@ export component TableauDonnees {
                         min-width: max(root.columns[index].min-width, root.columns[index].width);
                         preferred-width: self.min-width;
 
+                        property <length> gauche: index == 0 ? RetraitColonnes.bord : RetraitColonnes.entre;
+                        property <length> droite: index == root.columns.length - 1 ? RetraitColonnes.bord : RetraitColonnes.entre;
+
                         Text {
-                            x: 12px;
-                            width: parent.width - 24px;
+                            x: parent.gauche;
+                            width: parent.width - parent.gauche - parent.droite;
                             height: 100%;
                             vertical-alignment: center;
                             horizontal-alignment: Theme.debut;

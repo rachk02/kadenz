@@ -247,19 +247,19 @@ export component PageTiers inherits VerticalLayout {
             TableauDonnees {
                 // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
                 columns: Theme.rtl ? [
-                    { title: @tr("État"), min-width: 60px, horizontal-stretch: 1 },
-                    { title: @tr("IFU"), min-width: 60px, horizontal-stretch: 1 },
-                    { title: @tr("Localisation"), min-width: 80px, horizontal-stretch: 1 },
-                    { title: @tr("Téléphone"), min-width: 100px, horizontal-stretch: 1 },
-                    { title: @tr("Type"), min-width: 70px, horizontal-stretch: 1 },
-                    { title: @tr("Nom"), min-width: 130px, horizontal-stretch: 3 },
+                    { title: @tr("État"), min-width: 84px, horizontal-stretch: 1 },
+                    { title: @tr("IFU"), min-width: 88px, horizontal-stretch: 1 },
+                    { title: @tr("Localisation"), min-width: 55px, horizontal-stretch: 1 },
+                    { title: @tr("Téléphone"), min-width: 90px, horizontal-stretch: 1 },
+                    { title: @tr("Type"), min-width: 65px, horizontal-stretch: 1 },
+                    { title: @tr("Nom"), min-width: 135px, horizontal-stretch: 3 },
                 ] : [
-                    { title: @tr("Nom"), min-width: 130px, horizontal-stretch: 3 },
-                    { title: @tr("Type"), min-width: 70px, horizontal-stretch: 1 },
-                    { title: @tr("Téléphone"), min-width: 100px, horizontal-stretch: 1 },
-                    { title: @tr("Localisation"), min-width: 80px, horizontal-stretch: 1 },
-                    { title: @tr("IFU"), min-width: 60px, horizontal-stretch: 1 },
-                    { title: @tr("État"), min-width: 60px, horizontal-stretch: 1 },
+                    { title: @tr("Nom"), min-width: 135px, horizontal-stretch: 3 },
+                    { title: @tr("Type"), min-width: 65px, horizontal-stretch: 1 },
+                    { title: @tr("Téléphone"), min-width: 90px, horizontal-stretch: 1 },
+                    { title: @tr("Localisation"), min-width: 55px, horizontal-stretch: 1 },
+                    { title: @tr("IFU"), min-width: 88px, horizontal-stretch: 1 },
+                    { title: @tr("État"), min-width: 84px, horizontal-stretch: 1 },
                 ];
                 rows: TiersApi.lignes;
                 current-row <=> TiersApi.ligne-courante;
