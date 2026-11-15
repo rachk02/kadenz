@@ -3966,3 +3966,42 @@ msgstr "Aktarıcı kaydedilmedi: {}."
 
 msgid "Relais non effacé : {}."
 msgstr "Aktarıcı silinmedi: {}."
+
+msgid "Mise à jour du serveur"
+msgstr "Sunucu güncellemesi"
+
+msgid "Mettez à jour le serveur avant les postes : un poste plus récent que son serveur attend sa mise à jour et travaille hors connexion en attendant. L'installateur se télécharge, son empreinte est vérifiée, puis il démarre et cette fenêtre se ferme. Les données du serveur sont gardées."
+msgstr "Sunucuyu iş istasyonlarından önce güncelleyin: sunucusundan daha yeni bir iş istasyonu sunucunun güncellenmesini bekler ve bu sırada çevrimdışı çalışır. Yükleyici indirilir, parmak izi doğrulanır, ardından başlar ve bu pencere kapanır. Sunucunun verileri korunur."
+
+msgid "La version {} du serveur est disponible."
+msgstr "Sunucunun {} sürümü kullanılabilir."
+
+msgid "Le serveur est à jour."
+msgstr "Sunucu güncel."
+
+msgid "Installateur téléchargé et vérifié (essai : lancement désactivé) : {}"
+msgstr "Yükleyici indirildi ve doğrulandı (deneme: başlatma devre dışı): {}"
+
+msgid "Mise à jour du serveur attendue"
+msgstr "Sunucu güncellemesi bekleniyor"
+
+msgid "Mise à jour de ce poste requise"
+msgstr "Bu iş istasyonu güncellenmeli"
+
+msgid "Ce poste doit être mis à jour pour se connecter au serveur : aucune saisie n'est possible. Voir Paramètres, rubrique « Mises à jour »."
+msgstr "Sunucuya bağlanmak için bu iş istasyonu güncellenmelidir: veri girişi yapılamaz. Ayarlar, «Güncellemeler» bölümüne bakın."
+
+msgid "La version {} de Kadenz est disponible, mais le serveur est en version {} : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration. Ce poste se mettra à jour ensuite."
+msgstr "Kadenz {} sürümü kullanılabilir, ancak sunucu {} sürümünde: önce sunucuyu yönetim penceresinden güncelleyin. Bu iş istasyonu daha sonra güncellenecek."
+
+msgid "Version du serveur : {}"
+msgstr "Sunucu sürümü: {}"
+
+msgid "Le serveur est mis à jour en premier, depuis sa fenêtre d'administration : ce poste ne reçoit jamais une version plus récente que celle de son serveur."
+msgstr "Sunucu önce yönetim penceresinden güncellenir: bu iş istasyonu hiçbir zaman sunucusununkinden daha yeni bir sürüm almaz."
+
+msgid "le serveur est plus récent que ce poste : mettez à jour ce poste (Paramètres, rubrique « Mises à jour »)"
+msgstr "sunucu bu iş istasyonundan daha yeni: bu iş istasyonunu güncelleyin (Ayarlar, «Güncellemeler» bölümü)"
+
+msgid "le serveur est plus ancien que ce poste : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration"
+msgstr "sunucu bu iş istasyonundan daha eski: önce sunucuyu yönetim penceresinden güncelleyin"

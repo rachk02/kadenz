@@ -3966,3 +3966,42 @@ msgstr "Relay not saved: {}."
 
 msgid "Relais non effacé : {}."
 msgstr "Relay not cleared: {}."
+
+msgid "Mise à jour du serveur"
+msgstr "Server update"
+
+msgid "Mettez à jour le serveur avant les postes : un poste plus récent que son serveur attend sa mise à jour et travaille hors connexion en attendant. L'installateur se télécharge, son empreinte est vérifiée, puis il démarre et cette fenêtre se ferme. Les données du serveur sont gardées."
+msgstr "Update the server before the workstations: a workstation newer than its server waits for the server update and works offline in the meantime. The installer is downloaded, its fingerprint is checked, then it starts and this window closes. The server data is kept."
+
+msgid "La version {} du serveur est disponible."
+msgstr "Server version {} is available."
+
+msgid "Le serveur est à jour."
+msgstr "The server is up to date."
+
+msgid "Installateur téléchargé et vérifié (essai : lancement désactivé) : {}"
+msgstr "Installer downloaded and checked (test: launch disabled): {}"
+
+msgid "Mise à jour du serveur attendue"
+msgstr "Waiting for the server update"
+
+msgid "Mise à jour de ce poste requise"
+msgstr "This workstation must be updated"
+
+msgid "Ce poste doit être mis à jour pour se connecter au serveur : aucune saisie n'est possible. Voir Paramètres, rubrique « Mises à jour »."
+msgstr "This workstation must be updated to connect to the server: no data entry is possible. See Settings, Updates section."
+
+msgid "La version {} de Kadenz est disponible, mais le serveur est en version {} : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration. Ce poste se mettra à jour ensuite."
+msgstr "Kadenz version {} is available, but the server is at version {}: update the server first, from its administration window. This workstation will be updated afterwards."
+
+msgid "Version du serveur : {}"
+msgstr "Server version: {}"
+
+msgid "Le serveur est mis à jour en premier, depuis sa fenêtre d'administration : ce poste ne reçoit jamais une version plus récente que celle de son serveur."
+msgstr "The server is updated first, from its administration window: this workstation never receives a version newer than its server's."
+
+msgid "le serveur est plus récent que ce poste : mettez à jour ce poste (Paramètres, rubrique « Mises à jour »)"
+msgstr "the server is newer than this workstation: update this workstation (Settings, Updates section)"
+
+msgid "le serveur est plus ancien que ce poste : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration"
+msgstr "the server is older than this workstation: update the server first, from its administration window"

@@ -3966,3 +3966,42 @@ msgstr "リレーは保存されませんでした：{}。"
 
 msgid "Relais non effacé : {}."
 msgstr "リレーは消去されませんでした：{}。"
+
+msgid "Mise à jour du serveur"
+msgstr "サーバーのアップデート"
+
+msgid "Mettez à jour le serveur avant les postes : un poste plus récent que son serveur attend sa mise à jour et travaille hors connexion en attendant. L'installateur se télécharge, son empreinte est vérifiée, puis il démarre et cette fenêtre se ferme. Les données du serveur sont gardées."
+msgstr "端末より先にサーバーを更新してください。サーバーより新しい端末はサーバーの更新を待ち、その間はオフラインで動作します。インストーラーをダウンロードしてフィンガープリントを確認した後、起動してこのウィンドウを閉じます。サーバーのデータは保持されます。"
+
+msgid "La version {} du serveur est disponible."
+msgstr "サーバーのバージョン {} が利用できます。"
+
+msgid "Le serveur est à jour."
+msgstr "サーバーは最新です。"
+
+msgid "Installateur téléchargé et vérifié (essai : lancement désactivé) : {}"
+msgstr "インストーラーをダウンロードして確認しました（テスト：起動は無効）：{}"
+
+msgid "Mise à jour du serveur attendue"
+msgstr "サーバーの更新待ち"
+
+msgid "Mise à jour de ce poste requise"
+msgstr "この端末の更新が必要です"
+
+msgid "Ce poste doit être mis à jour pour se connecter au serveur : aucune saisie n'est possible. Voir Paramètres, rubrique « Mises à jour »."
+msgstr "サーバーに接続するにはこの端末を更新する必要があります。入力はできません。設定の「アップデート」を参照してください。"
+
+msgid "La version {} de Kadenz est disponible, mais le serveur est en version {} : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration. Ce poste se mettra à jour ensuite."
+msgstr "Kadenz のバージョン {} が利用できますが、サーバーはバージョン {} です。まず管理ウィンドウからサーバーを更新してください。この端末はその後に更新されます。"
+
+msgid "Version du serveur : {}"
+msgstr "サーバーのバージョン：{}"
+
+msgid "Le serveur est mis à jour en premier, depuis sa fenêtre d'administration : ce poste ne reçoit jamais une version plus récente que celle de son serveur."
+msgstr "サーバーは管理ウィンドウから最初に更新されます。この端末がサーバーより新しいバージョンを受け取ることはありません。"
+
+msgid "le serveur est plus récent que ce poste : mettez à jour ce poste (Paramètres, rubrique « Mises à jour »)"
+msgstr "サーバーがこの端末より新しいです。この端末を更新してください（設定の「アップデート」）"
+
+msgid "le serveur est plus ancien que ce poste : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration"
+msgstr "サーバーがこの端末より古いです。まず管理ウィンドウからサーバーを更新してください"

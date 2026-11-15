@@ -51,9 +51,14 @@ pub(crate) fn texte_erreur_client(e: &ErreurClient) -> String {
         ErreurClient::CertificatDifferent => tr(
             "Le serveur ne présente pas le certificat attendu : la connexion est bloquée. Vérifiez qu'il s'agit bien du serveur de l'entreprise ; s'il a été réinstallé, demandez un nouveau code à l'Admin.",
         ),
-        ErreurClient::VersionDifferente { serveur, .. } => trf(
-            "le serveur utilise une autre version du protocole ({}) : mettez à jour le serveur ou ce poste",
-            &[serveur],
+        // F10 : le sens de l'écart dit qui mettre à jour, le serveur d'abord.
+        ErreurClient::VersionDifferente { serveur, .. } if *serveur > kadenz_protocole::VERSION => {
+            tr(
+                "le serveur est plus récent que ce poste : mettez à jour ce poste (Paramètres, rubrique « Mises à jour »)",
+            )
+        }
+        ErreurClient::VersionDifferente { .. } => tr(
+            "le serveur est plus ancien que ce poste : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration",
         ),
         ErreurClient::PosteNonInscrit => tr("ce poste n'est pas inscrit sur le serveur"),
         ErreurClient::CompteRefuse { attente_secondes } => trf(

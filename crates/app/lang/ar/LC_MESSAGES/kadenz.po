@@ -3966,3 +3966,42 @@ msgstr "لم يُحفظ المرحّل: {}."
 
 msgid "Relais non effacé : {}."
 msgstr "لم يُمسح المرحّل: {}."
+
+msgid "Mise à jour du serveur"
+msgstr "تحديث الخادم"
+
+msgid "Mettez à jour le serveur avant les postes : un poste plus récent que son serveur attend sa mise à jour et travaille hors connexion en attendant. L'installateur se télécharge, son empreinte est vérifiée, puis il démarre et cette fenêtre se ferme. Les données du serveur sont gardées."
+msgstr "حدّث الخادم قبل محطات العمل: محطة العمل الأحدث من خادمها تنتظر تحديثه وتعمل دون اتصال في الأثناء. يُنزَّل برنامج التثبيت ويُتحقَّق من بصمته، ثم يبدأ وتُغلق هذه النافذة. تُحفظ بيانات الخادم."
+
+msgid "La version {} du serveur est disponible."
+msgstr "الإصدار {} من الخادم متاح."
+
+msgid "Le serveur est à jour."
+msgstr "الخادم محدّث."
+
+msgid "Installateur téléchargé et vérifié (essai : lancement désactivé) : {}"
+msgstr "نُزِّل برنامج التثبيت وتُحقِّق منه (تجربة: التشغيل معطّل): {}"
+
+msgid "Mise à jour du serveur attendue"
+msgstr "في انتظار تحديث الخادم"
+
+msgid "Mise à jour de ce poste requise"
+msgstr "يجب تحديث محطة العمل هذه"
+
+msgid "Ce poste doit être mis à jour pour se connecter au serveur : aucune saisie n'est possible. Voir Paramètres, rubrique « Mises à jour »."
+msgstr "يجب تحديث محطة العمل هذه للاتصال بالخادم: لا يمكن إدخال أي بيانات. راجع الإعدادات، قسم «التحديثات»."
+
+msgid "La version {} de Kadenz est disponible, mais le serveur est en version {} : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration. Ce poste se mettra à jour ensuite."
+msgstr "الإصدار {} من Kadenz متاح، لكن الخادم في الإصدار {}: حدّث الخادم أولاً من نافذة إدارته. ستُحدَّث محطة العمل هذه بعد ذلك."
+
+msgid "Version du serveur : {}"
+msgstr "إصدار الخادم: {}"
+
+msgid "Le serveur est mis à jour en premier, depuis sa fenêtre d'administration : ce poste ne reçoit jamais une version plus récente que celle de son serveur."
+msgstr "يُحدَّث الخادم أولاً من نافذة إدارته: لا تتلقى محطة العمل هذه أبداً إصداراً أحدث من إصدار خادمها."
+
+msgid "le serveur est plus récent que ce poste : mettez à jour ce poste (Paramètres, rubrique « Mises à jour »)"
+msgstr "الخادم أحدث من محطة العمل هذه: حدّث محطة العمل هذه (الإعدادات، قسم «التحديثات»)"
+
+msgid "le serveur est plus ancien que ce poste : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration"
+msgstr "الخادم أقدم من محطة العمل هذه: حدّث الخادم أولاً من نافذة إدارته"

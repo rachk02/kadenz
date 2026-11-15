@@ -1,19 +1,24 @@
 //! Mise à jour (jalon J10) : vérification sur un fil secondaire après la connexion
 //! d'un compte qui gère les paramètres, invite, téléchargement avec son avancement,
 //! lancement de l'installateur puis fermeture de Kadenz.
+//! Jalon F10 : un poste relié ne prend jamais une version plus récente que son
+//! serveur ; serveur plus récent, la recherche se relance pour ce poste.
 
 use std::cell::{Cell, RefCell};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use kadenz_domaine::message::MessageCompose;
-use kadenz_maj::{MiseAJour, Recherche};
+use kadenz_maj::{MiseAJour, Produit, Recherche, Version};
+use kadenz_poste::EtatConnexion;
 use slint::ComponentHandle;
 
 use crate::traduction::{tr, trf};
-use crate::{FenetrePrincipale, MiseAJourApi, ReglagesApi};
+use crate::{EtatPartage, FenetrePrincipale, MiseAJourApi, ReglagesApi};
 
 /// Une seule vérification par lancement, même après plusieurs connexions.
 static VERIFIEE: AtomicBool = AtomicBool::new(false);
+/// Une seule recherche par lancement quand le serveur est plus récent (F10).
+static POUR_LE_SERVEUR: AtomicBool = AtomicBool::new(false);
 
 thread_local! {
     /// Mise à jour proposée, gardée sur le fil de l'interface.
@@ -41,12 +46,47 @@ pub(crate) fn verifier_apres_connexion(f: &FenetrePrincipale, autorise: bool) {
     if !autorise || VERIFIEE.swap(true, Ordering::SeqCst) {
         return;
     }
+    verifier_en_fond(f, produit_poste());
+}
+
+/// Recherche silencieuse sur un fil secondaire ; une version à installer
+/// ouvre l'invite.
+fn verifier_en_fond(f: &FenetrePrincipale, produit: Produit) {
     let fenetre = f.as_weak();
     std::thread::spawn(move || {
-        if let Some(m) = kadenz_maj::verifier() {
+        if let Some(m) = kadenz_maj::verifier_pour(produit) {
             let _ = fenetre.upgrade_in_event_loop(move |f| proposer(&f, m));
         }
     });
+}
+
+/// Ce poste, plafonné à la version de son serveur quand il la connaît (F10) :
+/// un poste ne prend jamais une version plus récente que son serveur.
+fn produit_poste() -> Produit {
+    Produit::Poste {
+        serveur: crate::relie::logiciel_serveur()
+            .as_deref()
+            .and_then(Version::lire),
+    }
+}
+
+/// État de la connexion changé (F10) : version du serveur dans la rubrique
+/// Mises à jour ; serveur plus récent que ce poste, une recherche plafonnée à
+/// sa version, une fois par lancement, pour un compte qui gère les paramètres.
+pub(crate) fn connexion_changee(f: &FenetrePrincipale, etat: &EtatPartage) {
+    let (a_mettre_a_jour, autorise) = {
+        let e = etat.borrow();
+        let a_mettre_a_jour = e
+            .relie
+            .as_ref()
+            .is_some_and(|r| matches!(r.connexion, EtatConnexion::VersionDifferente { .. }));
+        (a_mettre_a_jour, crate::gere_parametres(&e))
+    };
+    f.global::<ReglagesApi>()
+        .set_version_serveur(crate::relie::logiciel_serveur().unwrap_or_default().into());
+    if a_mettre_a_jour && autorise && !POUR_LE_SERVEUR.swap(true, Ordering::SeqCst) {
+        verifier_en_fond(f, produit_poste());
+    }
 }
 
 fn proposer(f: &FenetrePrincipale, m: MiseAJour) {
@@ -80,9 +120,11 @@ fn brancher_recherche(fenetre: &FenetrePrincipale) {
         api.set_recherche_en_cours(true);
         api.set_erreur_maj(false);
         api.set_etat_maj(tr("Recherche en cours").into());
+        let produit = produit_poste();
+        api.set_version_serveur(crate::relie::logiciel_serveur().unwrap_or_default().into());
         let f = f.clone();
         std::thread::spawn(move || {
-            let recherche = kadenz_maj::rechercher();
+            let recherche = kadenz_maj::rechercher_pour(produit);
             let _ = f.upgrade_in_event_loop(move |f| {
                 let api = f.global::<ReglagesApi>();
                 api.set_recherche_en_cours(false);
@@ -94,11 +136,21 @@ fn brancher_recherche(fenetre: &FenetrePrincipale) {
                         );
                         proposer(&f, m);
                     }
-                    // Sans plafond (serveur inconnu), AttendServeur n'arrive pas ;
-                    // texte propre à venir avec les écrans de F10b.
-                    Recherche::AJour | Recherche::AttendServeur { .. } => {
+                    Recherche::AJour => {
                         api.set_erreur_maj(false);
                         api.set_etat_maj(tr("Kadenz est à jour.").into());
+                    }
+                    // Serveur plus ancien que la version publiée (F10) : il
+                    // passe d'abord, ce poste ensuite.
+                    Recherche::AttendServeur { version, serveur } => {
+                        api.set_erreur_maj(false);
+                        api.set_etat_maj(
+                            trf(
+                                "La version {} de Kadenz est disponible, mais le serveur est en version {} : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration. Ce poste se mettra à jour ensuite.",
+                                &[&version, &serveur],
+                            )
+                            .into(),
+                        );
                     }
                     Recherche::Refusee => {
                         api.set_erreur_maj(true);
@@ -171,6 +223,18 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale) {
                 }
             });
             let _ = f.upgrade_in_event_loop(move |f| match resultat {
+                // Essai (développement seulement) : rien n'est lancé.
+                Ok(chemin) if kadenz_maj::lancement_simule() => {
+                    let api = f.global::<MiseAJourApi>();
+                    api.set_en_cours(false);
+                    api.set_etat(
+                        trf(
+                            "Installateur téléchargé et vérifié (essai : lancement désactivé) : {}",
+                            &[&chemin.display()],
+                        )
+                        .into(),
+                    );
+                }
                 Ok(chemin) => match kadenz_maj::lancer(&chemin) {
                     // L'installateur a démarré : Kadenz se ferme pour le laisser remplacer
                     // l'exécutable ; la base est refermée proprement à la sortie.

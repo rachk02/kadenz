@@ -7,6 +7,8 @@
 // Jalon F7 (décision 56) : réglage des sauvegardes du serveur, liste, sauvegarde
 // immédiate, avertissement permanent et restauration (service arrêté, base
 // précédente sauvegardée et mise de côté, service redémarré).
+// Jalon F10 : version du serveur et sa mise à jour, avant celle des postes
+// (recherche, téléchargement vérifié par son empreinte, lancement de l'installateur).
 import { LineEdit, ScrollView, TextEdit } from "std-widgets.slint";
 import { Alerte, Bouton, Champ, Confirmation, FenetreAlerte, FenetreConfirmation, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "../../app/ui/composants.slint";
 import { DonneesAssistant, EcranAssistant } from "../../app/ui/assistant.slint";
@@ -77,6 +79,17 @@ export global AdminApi {
     in-out property <Retour> relais-retour;
     callback enregistrer-relais(adresse: string, empreinte: string) -> Retour;
     callback effacer-relais() -> Retour;
+
+    // Mise à jour du serveur (F10) : version installée, recherche à la
+    // demande, version proposée ("" sinon), téléchargement puis lancement.
+    in property <string> version;
+    in property <string> maj-version;
+    in property <string> maj-notes;
+    in property <string> maj-etat;
+    in property <bool> maj-erreur;
+    in property <bool> maj-en-cours;
+    callback rechercher-maj();
+    callback installer-maj();
 
     // Restauration d'une sauvegarde (décision 35). restauration-etat : 0 aucune,
     // 1 sauvegarde choisie, 2 sauvegarde vérifiée, 3 restauration en cours,
@@ -276,6 +289,66 @@ component Tableau inherits ScrollView {
             Ligne {
                 libelle: @tr("Dossier des données");
                 valeur: AdminApi.dossier;
+            }
+
+            Ligne {
+                libelle: @tr("Version");
+                valeur: AdminApi.version;
+            }
+
+            Section {
+                text: @tr("Mise à jour du serveur");
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Mettez à jour le serveur avant les postes : un poste plus récent que son serveur attend sa mise à jour et travaille hors connexion en attendant. L'installateur se télécharge, son empreinte est vérifiée, puis il démarre et cette fenêtre se ferme. Les données du serveur sont gardées.");
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+
+            if AdminApi.maj-version != "": Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("La version {} du serveur est disponible.", AdminApi.maj-version);
+                color: Theme.texte;
+                font-weight: 600;
+                wrap: word-wrap;
+            }
+
+            if AdminApi.maj-notes != "": Text {
+                horizontal-alignment: Theme.debut;
+                text: AdminApi.maj-notes;
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+
+            HorizontalLayout {
+                spacing: 8px;
+                alignment: Theme.rangee-debut;
+
+                Bouton {
+                    text: @tr("Rechercher une mise à jour");
+                    enabled: !AdminApi.maj-en-cours;
+                    clicked => {
+                        AdminApi.rechercher-maj();
+                    }
+                }
+
+                if AdminApi.maj-version != "": Bouton {
+                    text: @tr("Installer");
+                    primary: true;
+                    enabled: !AdminApi.maj-en-cours;
+                    clicked => {
+                        AdminApi.installer-maj();
+                    }
+                }
+            }
+
+            if AdminApi.maj-etat != "": Text {
+                horizontal-alignment: Theme.debut;
+                text: AdminApi.maj-etat;
+                color: AdminApi.maj-erreur ? Theme.erreur : Theme.texte;
+                wrap: word-wrap;
             }
 
             Section {

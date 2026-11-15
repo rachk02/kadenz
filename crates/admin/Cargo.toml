@@ -20,6 +20,7 @@ kadenz-stockage.workspace = true
 kadenz-licence.workspace = true
 kadenz-serveur.workspace = true
 kadenz-protocole.workspace = true
+kadenz-maj.workspace = true
 slint.workspace = true
 chrono.workspace = true
 rusqlite.workspace = true

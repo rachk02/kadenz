@@ -47,6 +47,8 @@ export global ReglagesApi {
     in property <bool> recherche-en-cours;
     in property <string> etat-maj;
     in property <bool> erreur-maj;
+    // Version logicielle du serveur pour un poste relié (F10), "" sinon.
+    in property <string> version-serveur;
 }
 
 // Libellé et icône de chaque rubrique.
@@ -392,6 +394,20 @@ component PageMisesAJour inherits VerticalLayout {
         horizontal-alignment: Theme.debut;
         text: @tr("Version installée : {}", root.version-logiciel);
         color: Theme.texte;
+    }
+
+    // Poste relié (F10) : le serveur passe d'abord, le poste ne le dépasse pas.
+    if ReglagesApi.version-serveur != "": Text {
+        horizontal-alignment: Theme.debut;
+        text: @tr("Version du serveur : {}", ReglagesApi.version-serveur);
+        color: Theme.texte;
+    }
+
+    if ReglagesApi.version-serveur != "": Text {
+        horizontal-alignment: Theme.debut;
+        text: @tr("Le serveur est mis à jour en premier, depuis sa fenêtre d'administration : ce poste ne reçoit jamais une version plus récente que celle de son serveur.");
+        color: Theme.texte-secondaire;
+        wrap: word-wrap;
     }
 
     Text {

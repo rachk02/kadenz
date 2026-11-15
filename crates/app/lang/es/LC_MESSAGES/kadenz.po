@@ -3966,3 +3966,42 @@ msgstr "Relé no guardado: {}."
 
 msgid "Relais non effacé : {}."
 msgstr "Relé no borrado: {}."
+
+msgid "Mise à jour du serveur"
+msgstr "Actualización del servidor"
+
+msgid "Mettez à jour le serveur avant les postes : un poste plus récent que son serveur attend sa mise à jour et travaille hors connexion en attendant. L'installateur se télécharge, son empreinte est vérifiée, puis il démarre et cette fenêtre se ferme. Les données du serveur sont gardées."
+msgstr "Actualice el servidor antes que los puestos: un puesto más reciente que su servidor espera su actualización y trabaja sin conexión mientras tanto. El instalador se descarga, se verifica su huella y luego se inicia y esta ventana se cierra. Los datos del servidor se conservan."
+
+msgid "La version {} du serveur est disponible."
+msgstr "La versión {} del servidor está disponible."
+
+msgid "Le serveur est à jour."
+msgstr "El servidor está actualizado."
+
+msgid "Installateur téléchargé et vérifié (essai : lancement désactivé) : {}"
+msgstr "Instalador descargado y verificado (prueba: inicio desactivado): {}"
+
+msgid "Mise à jour du serveur attendue"
+msgstr "Se espera la actualización del servidor"
+
+msgid "Mise à jour de ce poste requise"
+msgstr "Este puesto debe actualizarse"
+
+msgid "Ce poste doit être mis à jour pour se connecter au serveur : aucune saisie n'est possible. Voir Paramètres, rubrique « Mises à jour »."
+msgstr "Este puesto debe actualizarse para conectarse al servidor: no es posible introducir datos. Vea Configuración, sección «Actualizaciones»."
+
+msgid "La version {} de Kadenz est disponible, mais le serveur est en version {} : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration. Ce poste se mettra à jour ensuite."
+msgstr "La versión {} de Kadenz está disponible, pero el servidor está en la versión {}: actualice primero el servidor desde su ventana de administración. Este puesto se actualizará después."
+
+msgid "Version du serveur : {}"
+msgstr "Versión del servidor: {}"
+
+msgid "Le serveur est mis à jour en premier, depuis sa fenêtre d'administration : ce poste ne reçoit jamais une version plus récente que celle de son serveur."
+msgstr "El servidor se actualiza primero, desde su ventana de administración: este puesto nunca recibe una versión más reciente que la de su servidor."
+
+msgid "le serveur est plus récent que ce poste : mettez à jour ce poste (Paramètres, rubrique « Mises à jour »)"
+msgstr "el servidor es más reciente que este puesto: actualice este puesto (Configuración, sección «Actualizaciones»)"
+
+msgid "le serveur est plus ancien que ce poste : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration"
+msgstr "el servidor es más antiguo que este puesto: actualice primero el servidor desde su ventana de administración"

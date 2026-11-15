@@ -3966,3 +3966,42 @@ msgstr "中继未保存：{}。"
 
 msgid "Relais non effacé : {}."
 msgstr "中继未清除：{}。"
+
+msgid "Mise à jour du serveur"
+msgstr "服务器更新"
+
+msgid "Mettez à jour le serveur avant les postes : un poste plus récent que son serveur attend sa mise à jour et travaille hors connexion en attendant. L'installateur se télécharge, son empreinte est vérifiée, puis il démarre et cette fenêtre se ferme. Les données du serveur sont gardées."
+msgstr "请先更新服务器，再更新工作站：比服务器更新的工作站会等待服务器更新，期间以离线方式工作。安装程序下载后会校验其指纹，然后启动，此窗口随即关闭。服务器的数据会保留。"
+
+msgid "La version {} du serveur est disponible."
+msgstr "服务器版本 {} 可用。"
+
+msgid "Le serveur est à jour."
+msgstr "服务器已是最新版本。"
+
+msgid "Installateur téléchargé et vérifié (essai : lancement désactivé) : {}"
+msgstr "安装程序已下载并校验（测试：已禁用启动）：{}"
+
+msgid "Mise à jour du serveur attendue"
+msgstr "等待服务器更新"
+
+msgid "Mise à jour de ce poste requise"
+msgstr "需要更新此工作站"
+
+msgid "Ce poste doit être mis à jour pour se connecter au serveur : aucune saisie n'est possible. Voir Paramètres, rubrique « Mises à jour »."
+msgstr "必须更新此工作站才能连接服务器：无法进行任何录入。请参阅设置中的“更新”部分。"
+
+msgid "La version {} de Kadenz est disponible, mais le serveur est en version {} : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration. Ce poste se mettra à jour ensuite."
+msgstr "Kadenz 版本 {} 可用，但服务器为版本 {}：请先在服务器的管理窗口中更新服务器。此工作站将在之后更新。"
+
+msgid "Version du serveur : {}"
+msgstr "服务器版本：{}"
+
+msgid "Le serveur est mis à jour en premier, depuis sa fenêtre d'administration : ce poste ne reçoit jamais une version plus récente que celle de son serveur."
+msgstr "服务器在其管理窗口中首先更新：此工作站绝不会收到比其服务器更新的版本。"
+
+msgid "le serveur est plus récent que ce poste : mettez à jour ce poste (Paramètres, rubrique « Mises à jour »)"
+msgstr "服务器比此工作站新：请更新此工作站（设置中的“更新”部分）"
+
+msgid "le serveur est plus ancien que ce poste : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration"
+msgstr "服务器比此工作站旧：请先在服务器的管理窗口中更新服务器"

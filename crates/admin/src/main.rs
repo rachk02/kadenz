@@ -20,8 +20,10 @@ use std::time::Duration;
 
 use chrono::{DateTime, Local, NaiveDateTime, NaiveTime, Utc};
 use kadenz_domaine::lettres::Orthographe;
+use kadenz_domaine::message::MessageCompose;
 use kadenz_domaine::role::Role;
 use kadenz_domaine::saisie;
+use kadenz_maj::{MiseAJour, Produit, Recherche};
 use kadenz_protocole::inscription::presenter_secret;
 use kadenz_protocole::sauvegarde::AvertissementSauvegarde;
 use kadenz_serveur::admin::{self, BilanRestauration, EtatService, Restauration};
@@ -640,9 +642,159 @@ fn actualiser(f: &FenetreAdmin, conn: &Connection, dossier: &Path) {
     )));
 }
 
+thread_local! {
+    /// Mise à jour du serveur proposée, gardée sur le fil de l'interface.
+    static MAJ_PROPOSEE: RefCell<Option<MiseAJour>> = const { RefCell::new(None) };
+}
+
+/// Mégaoctets entiers.
+fn mo(octets: u64) -> String {
+    (octets / 1_048_576).to_string()
+}
+
+/// Avancement du téléchargement (mêmes textes que l'application).
+fn avancement(recus: u64, total: Option<u64>) -> String {
+    match total.filter(|t| *t > 0) {
+        Some(t) => trf(
+            "Téléchargement : {} Mo sur {} Mo ({} %)",
+            &[&mo(recus), &mo(t), &(recus * 100 / t)],
+        ),
+        None => trf("Téléchargement : {} Mo", &[&mo(recus)]),
+    }
+}
+
+/// Issue d'une recherche de mise à jour du serveur : texte et erreur.
+fn texte_recherche(recherche: &Recherche) -> (String, bool) {
+    match recherche {
+        Recherche::Disponible(m) => (trf("La version {} est disponible.", &[&m.version]), false),
+        // Un poste attend son serveur ; le serveur, lui, n'attend personne.
+        Recherche::AJour | Recherche::AttendServeur { .. } => (tr("Le serveur est à jour."), false),
+        Recherche::Refusee => (
+            tr(
+                "Une version plus récente a été trouvée, mais sa signature n'est pas valide : elle n'est pas proposée.",
+            ),
+            true,
+        ),
+        Recherche::AutreGeneration(version) => (
+            trf(
+                "Kadenz {} est une nouvelle génération : elle s'installe séparément.",
+                &[version],
+            ),
+            false,
+        ),
+        Recherche::HorsLigne => (
+            tr(
+                "Recherche impossible : le serveur des mises à jour ne répond pas. Vérifiez la connexion à Internet.",
+            ),
+            true,
+        ),
+    }
+}
+
+fn echec_maj(f: &FenetreAdmin, message: MessageCompose) {
+    let api = f.global::<AdminApi>();
+    api.set_maj_etat(texte_erreur(&Erreur::from(message)).into());
+    api.set_maj_erreur(true);
+    api.set_maj_en_cours(false);
+}
+
+/// Mise à jour du serveur (F10) : recherche à la demande sur un fil
+/// secondaire, puis téléchargement vérifié et lancement de l'installateur ;
+/// la fenêtre se ferme quand il démarre (Windows demande l'élévation).
+fn brancher_maj(f: &FenetreAdmin) {
+    let api = f.global::<AdminApi>();
+    api.set_version(kadenz_maj::version_installee().into());
+
+    let fa = f.as_weak();
+    api.on_rechercher_maj(move || {
+        let Some(f) = fa.upgrade() else {
+            return;
+        };
+        let api = f.global::<AdminApi>();
+        api.set_maj_en_cours(true);
+        api.set_maj_erreur(false);
+        api.set_maj_version("".into());
+        api.set_maj_notes("".into());
+        api.set_maj_etat(tr("Recherche en cours").into());
+        MAJ_PROPOSEE.with(|p| *p.borrow_mut() = None);
+        let fa = fa.clone();
+        std::thread::spawn(move || {
+            let recherche = kadenz_maj::rechercher_pour(Produit::Serveur);
+            let _ = fa.upgrade_in_event_loop(move |f| {
+                let api = f.global::<AdminApi>();
+                let (texte, erreur) = texte_recherche(&recherche);
+                api.set_maj_en_cours(false);
+                api.set_maj_etat(texte.into());
+                api.set_maj_erreur(erreur);
+                if let Recherche::Disponible(m) = recherche {
+                    api.set_maj_version(m.version.as_str().into());
+                    api.set_maj_notes(m.notes.trim().into());
+                    MAJ_PROPOSEE.with(|p| *p.borrow_mut() = Some(m));
+                }
+            });
+        });
+    });
+
+    let fa = f.as_weak();
+    api.on_installer_maj(move || {
+        let Some(f) = fa.upgrade() else {
+            return;
+        };
+        let Some(m) = MAJ_PROPOSEE.with(|p| p.borrow().clone()) else {
+            return;
+        };
+        let api = f.global::<AdminApi>();
+        api.set_maj_en_cours(true);
+        api.set_maj_erreur(false);
+        api.set_maj_etat(tr("Téléchargement en cours").into());
+        let fa = fa.clone();
+        std::thread::spawn(move || {
+            // L'écran n'est rafraîchi qu'à chaque pour cent (ou chaque mégaoctet).
+            let dernier = std::cell::Cell::new(u64::MAX);
+            let suivi = fa.clone();
+            let resultat = kadenz_maj::telecharger(&m, |recus, total| {
+                let palier = match total.filter(|t| *t > 0) {
+                    Some(t) => recus * 100 / t,
+                    None => recus / 1_048_576,
+                };
+                if palier != dernier.replace(palier) {
+                    let texte = avancement(recus, total);
+                    let _ = suivi.upgrade_in_event_loop(move |f| {
+                        f.global::<AdminApi>().set_maj_etat(texte.into());
+                    });
+                }
+            });
+            let _ = fa.upgrade_in_event_loop(move |f| match resultat {
+                // Essai (développement seulement) : rien n'est lancé.
+                Ok(chemin) if kadenz_maj::lancement_simule() => {
+                    let api = f.global::<AdminApi>();
+                    api.set_maj_en_cours(false);
+                    api.set_maj_etat(
+                        trf(
+                            "Installateur téléchargé et vérifié (essai : lancement désactivé) : {}",
+                            &[&chemin.display()],
+                        )
+                        .into(),
+                    );
+                }
+                Ok(chemin) => match kadenz_maj::lancer(&chemin) {
+                    // L'installateur a démarré : la fenêtre se ferme pour le
+                    // laisser remplacer ses fichiers.
+                    Ok(()) => {
+                        let _ = slint::quit_event_loop();
+                    }
+                    Err(message) => echec_maj(&f, message),
+                },
+                Err(message) => echec_maj(&f, message),
+            });
+        });
+    });
+}
+
 fn brancher_tableau(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossier: Rc<PathBuf>) {
     let api = f.global::<AdminApi>();
     api.set_dossier(dossier.display().to_string().into());
+    brancher_maj(f);
     montrer_reglage_sauvegardes(f, &dossier);
     montrer_relais(f, &conn.borrow());
     actualiser(f, &conn.borrow(), &dossier);

@@ -547,9 +547,8 @@ fn indicateur(
         EtatConnexion::Injoignable => (tr("Hors connexion : serveur injoignable"), 2),
         EtatConnexion::CertificatDifferent => (tr("Serveur non reconnu"), 2),
         EtatConnexion::PosteRetire => (tr("Poste retiré du serveur"), 2),
-        EtatConnexion::VersionDifferente { .. } | EtatConnexion::AttendServeur { .. } => {
-            (tr("Version différente du serveur"), 2)
-        }
+        EtatConnexion::VersionDifferente { .. } => (tr("Mise à jour de ce poste requise"), 2),
+        EtatConnexion::AttendServeur { .. } => (tr("Mise à jour du serveur attendue"), 2),
     }
 }
 
@@ -612,6 +611,10 @@ fn raison_connexion(
         None => Some(tr(
             "Connexion au serveur impossible : aucune saisie n'est possible. Voir Paramètres, rubrique « Serveur ».",
         )),
+        // Serveur plus récent (F10) : ce poste se met à jour avant tout.
+        Some(EtatConnexion::VersionDifferente { .. }) => Some(tr(
+            "Ce poste doit être mis à jour pour se connecter au serveur : aucune saisie n'est possible. Voir Paramètres, rubrique « Mises à jour ».",
+        )),
         Some(e) if e.definitif() => Some(tr(
             "Connexion au serveur impossible : aucune saisie n'est possible. Voir Paramètres, rubrique « Serveur ».",
         )),
@@ -663,6 +666,18 @@ pub(crate) fn blocage_selon(etat: &Etat, niveau: EnCoupure) -> Option<String> {
     crate::abonnement::blocage(&etat.conn)
 }
 
+/// Version logicielle du serveur (« 1.0.0 »), apprise à la connexion (F10) ;
+/// `None` pour un poste seul, ou tant que le serveur n'a pas répondu.
+pub(crate) fn logiciel_serveur() -> Option<String> {
+    ETAT.with_borrow(|e| {
+        e.as_ref()?
+            .borrow()
+            .relie
+            .as_ref()
+            .and_then(|r| r.synchro.logiciel_serveur())
+    })
+}
+
 /// Recopie l'état de la connexion dans l'indicateur.
 pub(crate) fn afficher(f: &FenetrePrincipale, etat: &Etat) {
     let api = f.global::<ConnexionApi>();
@@ -710,6 +725,7 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
                 crate::appliquer_droits(f, &e);
             }
             crate::acces_distant::connexion_changee(f, &etat);
+            crate::maj::connexion_changee(f, &etat);
         }
         Evenement::Avancement { recus, dernier } => {
             let mut e = etat.borrow_mut();
@@ -870,6 +886,32 @@ mod tests {
         ] {
             assert_eq!(indicateur(&final_, 0, None, false).1, 2);
         }
+        // F10 : le sens de l'écart de version dit qui mettre à jour.
+        let logiciel = Some("1.0.0".to_owned());
+        assert_eq!(
+            indicateur(
+                &EtatConnexion::VersionDifferente {
+                    serveur: 9,
+                    logiciel: logiciel.clone()
+                },
+                0,
+                None,
+                false
+            ),
+            ("Mise à jour de ce poste requise".into(), 2)
+        );
+        assert_eq!(
+            indicateur(
+                &EtatConnexion::AttendServeur {
+                    serveur: 1,
+                    logiciel
+                },
+                0,
+                None,
+                false
+            ),
+            ("Mise à jour du serveur attendue".into(), 2)
+        );
     }
 
     #[test]
@@ -961,12 +1003,27 @@ mod tests {
                         .unwrap()
                         .contains("impossible")
                 );
+                // Serveur plus récent (F10) : ce poste est à mettre à jour.
+                assert!(
+                    r(&EtatConnexion::VersionDifferente {
+                        serveur: 9,
+                        logiciel: None
+                    })
+                    .unwrap()
+                    .contains("Mises à jour")
+                );
             }
         }
+        // Poste plus récent que son serveur (F10) : il travaille comme hors
+        // connexion en attendant la mise à jour du serveur.
         let coupes = [
             EtatConnexion::Connexion,
             EtatConnexion::Reconnexion { essai: 2 },
             EtatConnexion::Injoignable,
+            EtatConnexion::AttendServeur {
+                serveur: 1,
+                logiciel: None,
+            },
         ];
         for coupe in &coupes {
             // Sans file d'envoi (F5) : toute saisie attend le serveur.

@@ -287,7 +287,7 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
 }
 
 /// Le compte connecté gère-t-il les paramètres ? (Invite de mise à jour, J10.)
-fn gere_parametres(etat: &Etat) -> bool {
+pub(crate) fn gere_parametres(etat: &Etat) -> bool {
     etat.utilisateur
         .as_ref()
         .is_some_and(|u| droits::possede(&etat.conn, u, Droit::GererParametres).unwrap_or(false))
@@ -535,7 +535,7 @@ fn main() -> Result<(), slint::PlatformError> {
     // Interface en français au démarrage, quelle que soit la langue de Windows, jusqu'à
     // la connexion d'un compte (voir traduction::choisir_demarrage).
     appliquer_langue(&fenetre, traduction::choisir_demarrage());
-    fenetre.set_version_logiciel(env!("CARGO_PKG_VERSION").into());
+    fenetre.set_version_logiciel(kadenz_maj::version_installee().into());
     let chemin = chemin_base();
 
     // Session ouverte, gardée pour la sauvegarde automatique à la fermeture.
