@@ -498,3 +498,4 @@
 [2026-11-15 08:13:03] Suivi - Arrêt à la limite d usage : F8b et corrections non compilés ni poussés, clippy à relancer à la reprise
 [2026-11-15 14:40:38] Instruction - L utilisateur s absente jusqu à 21h : continuer et prendre les décisions soi-même, informer l autre session
 [2026-11-15 14:42:09] Suivi - F8c : Docker Desktop pas démarré pendant l absence de l utilisateur (réservé à sa décision, mémoire de la machine) ; essai du relais fait en natif (relais_essai, banc_essai, poste) après F8b, partie conteneur gardée pour son retour.
+[2026-11-15 15:03:58] Correction - Essai F8c : un relais réglé par la fenêtre du serveur attendait la fin du recul de reconnexion (jusqu à 5 min) ; le service relit désormais le réglage toutes les 2 s pendant le recul (essai relais_regle_par_la_fenetre_pendant_le_recul). Enregistrement de l entreprise du banc vu par le relais natif.

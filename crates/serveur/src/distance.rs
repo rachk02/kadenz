@@ -24,7 +24,9 @@ const DELAI_RELAIS: Duration = Duration::from_secs(10);
 /// Reconnexion après un échec : 5 secondes doublées jusqu'à 5 minutes.
 const ATTENTE_MIN: Duration = Duration::from_secs(5);
 const ATTENTE_MAX: Duration = Duration::from_secs(300);
-/// Relecture du réglage pendant que la connexion de contrôle est ouverte.
+/// Relecture du réglage pendant que la connexion de contrôle est ouverte, et
+/// pendant l'attente d'une reconnexion : un réglage écrit par la fenêtre du
+/// serveur est pris sans attendre la fin du recul.
 const RELECTURE: Duration = Duration::from_secs(2);
 
 #[derive(Default)]
@@ -189,6 +191,34 @@ fn dormir(contexte: &Contexte, duree: Duration, vu: u64) {
     }
 }
 
+/// Attente avant un nouvel essai d'enregistrement : finie plus tôt par une
+/// requête de l'Admin, ou par un réglage changé dans la base par la fenêtre du
+/// serveur (accès désactivé, autre relais, autre licence), relu toutes les
+/// 2 secondes.
+fn attendre_reprise(contexte: &Contexte, duree: Duration, vu: u64, relais: &Relais, licence: &str) {
+    let fin = Instant::now() + duree;
+    loop {
+        let reste = fin.saturating_duration_since(Instant::now());
+        if reste.is_zero() {
+            return;
+        }
+        dormir(contexte, RELECTURE.min(reste), vu);
+        if contexte.arret.load(Ordering::SeqCst)
+            || contexte.distance.changements.load(Ordering::SeqCst) != vu
+        {
+            return;
+        }
+        if let Some((actif, nouveau, nouvelle_licence, _)) =
+            contexte.distance.rafraichir(&contexte.base)
+            && (!actif
+                || nouveau.as_ref() != Some(relais)
+                || nouvelle_licence.as_deref() != Some(licence))
+        {
+            return;
+        }
+    }
+}
+
 /// Fil de la connexion de contrôle, jusqu'à l'arrêt du serveur.
 pub(crate) fn veiller(contexte: Arc<Contexte>, identite: Identite) {
     let mut attente = ATTENTE_MIN;
@@ -228,7 +258,7 @@ pub(crate) fn veiller(contexte: Arc<Contexte>, identite: Identite) {
         match Controle::enregistrer(&enregistrement, DELAI_RELAIS) {
             Err(e) => {
                 contexte.distance.noter(false, Some(message(&e)));
-                dormir(&contexte, attente, vu);
+                attendre_reprise(&contexte, attente, vu, &relais, &licence);
                 attente = (attente * 2).min(ATTENTE_MAX);
             }
             Ok(controle) => {

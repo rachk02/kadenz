@@ -337,3 +337,66 @@ fn poste_distant_par_le_relais() {
     let _ = std::fs::remove_dir_all(dossier_serveur);
     let _ = std::fs::remove_dir_all(dossier_relais);
 }
+
+#[test]
+fn relais_regle_par_la_fenetre_pendant_le_recul() {
+    let dossier_serveur = dossier("recul");
+    let serveur = demarrer(&dossier_serveur);
+    let empreinte_serveur = serveur.empreinte().to_string();
+    let (entreprise, _) = installer(&serveur);
+    let poste = poste_inscrit(&serveur, "Poste distant");
+
+    // Relais réglé sur une adresse où rien n'écoute : l'enregistrement échoue
+    // et le service attend avant de réessayer (5 secondes, puis plus).
+    let ecoute = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let morte = ecoute.local_addr().unwrap().to_string();
+    drop(ecoute);
+    {
+        let morte = morte.clone();
+        serveur
+            .base(move |c| admin::regler_relais(c, Some((&morte, &"ab".repeat(32)))).unwrap())
+            .unwrap();
+    }
+    let (mut local, _) = Client::connecter(
+        &serveur.adresse().to_string(),
+        &empreinte_serveur,
+        &poste,
+        DELAI,
+    )
+    .unwrap();
+    local.connexion("admin", MOT_DE_PASSE).unwrap();
+    local.autoriser_distance(&poste.empreinte(), true).unwrap();
+    local.regler_acces_distant(true).unwrap();
+    attendre(|| local.acces_distant().unwrap().erreur.is_some());
+
+    // La fenêtre du serveur règle le bon relais, directement dans la base,
+    // sans requête : le service le prend sans attendre la fin du recul.
+    let dossier_relais = dossier("recul-relais");
+    let mut config = ConfigRelais::nouvelle(
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        dossier_relais.clone(),
+        vec![cle_portail().verifying_key()],
+    );
+    config.traces = None;
+    let relais = Relais::demarrer(config).unwrap();
+    let debut = Instant::now();
+    {
+        let adresse = relais.adresse().to_string();
+        let empreinte = relais.empreinte().to_string();
+        serveur
+            .base(move |c| admin::regler_relais(c, Some((&adresse, &empreinte))).unwrap())
+            .unwrap();
+    }
+    attendre(|| relais.entreprises() == vec![entreprise.clone()]);
+    assert!(
+        debut.elapsed() < Duration::from_millis(3500),
+        "relais pris après {:?}",
+        debut.elapsed()
+    );
+
+    drop(local);
+    serveur.arreter();
+    relais.arreter();
+    let _ = std::fs::remove_dir_all(dossier_serveur);
+    let _ = std::fs::remove_dir_all(dossier_relais);
+}
