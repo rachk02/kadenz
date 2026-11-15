@@ -36,7 +36,6 @@ struct Memoire {
     autorises: HashSet<String>,
     joignable: bool,
     erreur: Option<MessageRelais>,
-    derniere_distante: Option<String>,
 }
 
 /// État de l'accès à distance gardé en mémoire par le service, relu de la
@@ -98,9 +97,11 @@ impl Distance {
         }
     }
 
-    pub(crate) fn noter_session(&self) {
-        self.memoire().derniere_distante =
-            Some(chrono::Local::now().format("%Y-%m-%dT%H:%M").to_string());
+    /// Début d'une session distante, gardé dans la base pour survivre aux
+    /// arrêts du service.
+    pub(crate) fn noter_session(&self, base: &Base) {
+        let debut = chrono::Local::now().format("%Y-%m-%dT%H:%M").to_string();
+        let _ = base.executer(move |c| distance::noter_derniere_distante(c, &debut));
     }
 
     fn noter(&self, joignable: bool, erreur: Option<MessageRelais>) {
@@ -112,21 +113,22 @@ impl Distance {
     /// État complet pour la rubrique « Accès à distance », avec ce qui a été
     /// lu de la base par [`lire_etat`].
     pub(crate) fn etat(&self, lu: EtatLu) -> EtatAccesDistant {
-        let (actif, relais, postes) = lu;
+        let (actif, relais, derniere_distante, postes) = lu;
         let m = self.memoire();
         EtatAccesDistant {
             actif,
             relais,
             joignable: m.joignable,
             erreur: m.erreur.clone(),
-            derniere_distante: m.derniere_distante.clone(),
+            derniere_distante,
             postes,
         }
     }
 }
 
-/// Ce que la rubrique lit de la base : actif, adresse du relais, postes.
-pub(crate) type EtatLu = (bool, Option<String>, Vec<PosteDistant>);
+/// Ce que la rubrique lit de la base : actif, adresse du relais, dernière
+/// session distante, postes.
+pub(crate) type EtatLu = (bool, Option<String>, Option<String>, Vec<PosteDistant>);
 
 pub(crate) fn lire_etat(conn: &rusqlite::Connection) -> Resultat<EtatLu> {
     let postes = distance::postes(conn)?
@@ -140,6 +142,7 @@ pub(crate) fn lire_etat(conn: &rusqlite::Connection) -> Resultat<EtatLu> {
     Ok((
         distance::actif(conn)?,
         distance::relais(conn)?.map(|r| r.adresse),
+        distance::derniere_distante(conn)?,
         postes,
     ))
 }

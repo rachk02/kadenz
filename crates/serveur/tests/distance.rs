@@ -305,6 +305,11 @@ fn poste_distant_par_le_relais() {
     // Serveur rallumé : il se réenregistre seul, le poste distant revient.
     let serveur = demarrer(&dossier_serveur);
     attendre(|| relais.entreprises() == vec![entreprise.clone()]);
+    let derniere = serveur
+        .base(|c| kadenz_stockage::distance::derniere_distante(c))
+        .unwrap()
+        .unwrap();
+    assert!(derniere.is_some(), "dernière session distante perdue");
     let (mut distant, _) = Client::connecter_par_relais(
         &adresse_relais,
         &entreprise,

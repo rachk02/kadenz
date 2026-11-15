@@ -822,7 +822,7 @@ fn session(contexte: &Contexte, tcp: TcpStream, distante: bool) {
         return;
     }
     if distante {
-        contexte.distance.noter_session();
+        contexte.distance.noter_session(&contexte.base);
     }
     // Session ouverte : seul le délai de chaque lecture compte désormais.
     flux.sock.fin = None;

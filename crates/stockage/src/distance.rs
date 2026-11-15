@@ -16,6 +16,9 @@ pub const CLE_ACTIF: &str = "acces_distant.actif";
 pub const CLE_RELAIS: &str = "acces_distant.relais";
 /// Poste : adresse du relais apprise du serveur.
 pub const CLE_RELAIS_DU_POSTE: &str = "acces_distant.relais_du_poste";
+/// Serveur : début de la dernière session distante, gardé à travers les
+/// arrêts du service (rubrique « Accès à distance »).
+pub const CLE_DERNIERE_DISTANTE: &str = "acces_distant.derniere_distante";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Relais {
@@ -155,6 +158,20 @@ pub fn autorises(conn: &Connection) -> Resultat<Vec<String>> {
 /// Poste : adresse du relais apprise du serveur.
 pub fn relais_du_poste(conn: &Connection) -> Resultat<Option<String>> {
     Ok(lire(conn, CLE_RELAIS_DU_POSTE)?.and_then(|v| v.as_str().map(str::to_owned)))
+}
+
+/// Serveur : début de la dernière session distante, `AAAA-MM-JJTHH:MM`.
+pub fn derniere_distante(conn: &Connection) -> Resultat<Option<String>> {
+    Ok(lire(conn, CLE_DERNIERE_DISTANTE)?.and_then(|v| v.as_str().map(str::to_owned)))
+}
+
+/// Serveur : note le début d'une session distante.
+pub fn noter_derniere_distante(conn: &Connection, debut: &str) -> Resultat<()> {
+    ecrire(
+        conn,
+        CLE_DERNIERE_DISTANTE,
+        Some(Value::String(debut.into())),
+    )
 }
 
 /// Poste : garde l'adresse du relais reçue dans `Bienvenue` (`None` :
