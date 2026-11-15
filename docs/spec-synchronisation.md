@@ -137,7 +137,7 @@ Une opération est une action d'un compte, celle que l'écran demande aujourd'hu
 3. Réglée par la décision 35 (sauvegardes du serveur, section 8).
 4. Réglée par la décision 36 (code d'inscription, section 7).
 5. Réglée par la décision 37 (fuseau, section 4).
-6. **Releases et pont V1** : tranché par kadenz-34 (règle technique de publication). Un poste qui a le pont lit les 30 dernières releases (`releases?per_page=30`, `crates/maj/src/lib.rs`) ; au-delà de 30 releases de la phase 2 après la dernière release V1, il ne verrait plus une éventuelle mise à jour V1. Règle : la prochaine release V1, s'il y en a une, lira toutes les pages de la liste ; d'ici là, `scripts/release.ps1` devra refuser une release de la phase 2 qui porterait à plus de 25 le nombre de releases publiées depuis la dernière release V1 (marge de 5). À coder avec la première release de la phase 2.
+6. **Releases et pont V1** : tranché par kadenz-34 (règle technique de publication). Un poste qui a le pont lit les 30 dernières releases (`releases?per_page=30`, `crates/maj/src/lib.rs`) ; au-delà de 30 releases de la phase 2 après la dernière release V1, il ne verrait plus une éventuelle mise à jour V1. Règle : la prochaine release V1, s'il y en a une, lira toutes les pages de la liste ; d'ici là, `scripts/release.ps1` devra refuser une release de la phase 2 qui porterait à plus de 25 le nombre de releases publiées depuis la dernière release V1 (marge de 5). Codé en F10a (2026-11-15) : `scripts/release.ps1` compte les releases publiées depuis la dernière de la V1 (versions 0.x, la phase 2 commençant à 1.0.0, décision 62 du cahier).
 
 ## 10. Points notés pour les jalons suivants
 

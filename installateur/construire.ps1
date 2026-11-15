@@ -30,6 +30,16 @@
     Serveur d'horodatage RFC 3161 : la signature reste valide après
     l'expiration du certificat.
 
+.PARAMETER CertificatEssai
+    Fichier .pfx d'un certificat d'essai auto-signé (jalon F10, essai en
+    simulation), à la place de -Certificat : signature sans horodatage (pas
+    d'appel extérieur), vérifiée par l'empreinte du signataire, le certificat
+    n'étant reconnu par aucune autorité. Jamais pour une publication :
+    scripts\release.ps1 le refuse hors de -Simulation.
+
+.PARAMETER MotDePasseEssai
+    Mot de passe du fichier .pfx d'essai.
+
 .EXAMPLE
     .\installateur\construire.ps1
 #>
@@ -37,7 +47,9 @@ param(
     [switch]$SansCompilation,
     [string]$Editeur = 'Mcarre',
     [string]$Certificat = '',
-    [string]$Horodatage = 'http://time.certum.pl'
+    [string]$Horodatage = 'http://time.certum.pl',
+    [string]$CertificatEssai = '',
+    [string]$MotDePasseEssai = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -49,8 +61,16 @@ function Executer([string]$exe, [string[]]$arguments) {
     if ($LASTEXITCODE -ne 0) { throw "échec : $exe $($arguments -join ' ')" }
 }
 
+if ($Certificat -and $CertificatEssai) { throw "-Certificat et -CertificatEssai s'excluent" }
 $signtool = $null
-if ($Certificat) {
+$empreinteEssai = $null
+if ($CertificatEssai) {
+    if (-not (Test-Path -PathType Leaf $CertificatEssai)) { throw "certificat d'essai introuvable : $CertificatEssai" }
+    # Lu depuis le fichier, sans passer par le magasin de certificats de Windows.
+    $empreinteEssai = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new(
+        (Resolve-Path $CertificatEssai).Path, $MotDePasseEssai).Thumbprint
+}
+if ($Certificat -or $CertificatEssai) {
     $signtool = Get-ChildItem (Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\bin\*\x64\signtool.exe') -ErrorAction SilentlyContinue |
         Sort-Object FullName | Select-Object -Last 1 -ExpandProperty FullName
     if (-not $signtool) { throw "signtool.exe introuvable (Windows SDK) : il signe les fichiers livrés" }
@@ -59,6 +79,15 @@ if ($Certificat) {
 # Signe un fichier puis vérifie sa signature (stratégie Authenticode).
 function Signer([string]$fichier) {
     if (-not $signtool) { return }
+    if ($CertificatEssai) {
+        # Essai : sans horodatage ; signataire vérifié par son empreinte.
+        Executer $signtool @('sign', '/f', $CertificatEssai, '/p', $MotDePasseEssai, '/fd', 'sha256', '/d', 'Kadenz', $fichier)
+        $signature = Get-AuthenticodeSignature -FilePath $fichier
+        if (-not $signature.SignerCertificate -or $signature.SignerCertificate.Thumbprint -ne $empreinteEssai) {
+            throw "signature d'essai absente ou d'un autre signataire : $fichier"
+        }
+        return
+    }
     Executer $signtool @('sign', '/sha1', $Certificat, '/fd', 'sha256', '/tr', $Horodatage, '/td', 'sha256', '/d', 'Kadenz', $fichier)
     Executer $signtool @('verify', '/pa', '/q', $fichier)
 }
