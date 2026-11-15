@@ -14,22 +14,33 @@
 //!   et tiers, en lecture seule.
 //! - `banc_essai <dossier> operation <début d'identifiant>` : contenu complet
 //!   des opérations dont l'identifiant commence ainsi, en lecture seule.
+//! - `banc_essai <fichier.sqlite> base_v1` : crée une base V1 de démonstration
+//!   (chiffrée par une clé de ce compte Windows, à côté d'elle) pour l'essai
+//!   de reprise du F7d : comptes admin (écarté à la reprise, décision 53) et
+//!   caisse, deux clients, un fournisseur, deux produits, un devis converti en
+//!   facture validée et réglée en partie, un brouillon. Refusé si le fichier
+//!   existe.
 
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+use kadenz_domaine::calcul::Taux;
+use kadenz_domaine::document::TypeDocument;
 use kadenz_domaine::module::Module;
+use kadenz_domaine::referentiel::{FicheProduit, FicheTiers, Sens, TypeTiers};
 use kadenz_domaine::role::Role;
 use kadenz_licence::SigningKey;
 use kadenz_licence::entreprise::{self as lic, LicenceEntreprise};
 use kadenz_protocole::Entite;
 use kadenz_serveur::{Config, Serveur, admin};
 use kadenz_stockage::comptes::{self, NouvelUtilisateur, Utilisateur};
+use kadenz_stockage::documents::{self, ChampsLivraison, LigneSaisie, Saisie};
 use kadenz_stockage::entreprise::Entreprise;
 use kadenz_stockage::installation::InstallationInitiale;
 use kadenz_stockage::parametres::Parametres;
-use kadenz_stockage::{abonnement, inscription, synchro};
+use kadenz_stockage::reglements::{self, SaisieReglement};
+use kadenz_stockage::{abonnement, inscription, installation, produits, synchro, tiers};
 use rusqlite::Connection;
 
 const MOT_DE_PASSE: &str = "motdepasse1";
@@ -246,6 +257,133 @@ fn lancer(dossier: PathBuf, port: u16, codes: u32) -> Result<(), String> {
     }
 }
 
+fn base_v1(fichier: &Path) -> Result<(), String> {
+    if fichier.exists() {
+        return Err(format!("{} existe déjà", fichier.display()));
+    }
+    let e = |e: kadenz_stockage::Erreur| e.to_string();
+    let mut conn = kadenz_stockage::ouvrir(fichier).map_err(e)?;
+    // Modules de la licence V1 : table temporaire de cette seule connexion,
+    // rien n'est écrit dans la base.
+    for m in Module::TOUS {
+        conn.execute(
+            "INSERT OR IGNORE INTO temp.module_actif (code) VALUES (?1)",
+            [m.code()],
+        )
+        .map_err(|e| e.to_string())?;
+    }
+    let admin = installation::installer(
+        &mut conn,
+        &InstallationInitiale {
+            entreprise: Entreprise {
+                nom: "Quincaillerie Démo V1".into(),
+                adresse: "Secteur 15, Ouagadougou".into(),
+                ..Default::default()
+            },
+            admin: NouvelUtilisateur {
+                nom_complet: "Patron V1".into(),
+                identifiant: "admin".into(),
+                mot_de_passe: "motdepasse-v1".into(),
+                role: Role::Admin,
+            },
+            parametres: Parametres::default(),
+        },
+    )
+    .map_err(e)?;
+    comptes::creer(
+        &conn,
+        &admin,
+        &NouvelUtilisateur {
+            nom_complet: "Caisse V1".into(),
+            identifiant: "caisse".into(),
+            mot_de_passe: "motdepasse-caisse".into(),
+            role: Role::Commercial,
+        },
+    )
+    .map_err(e)?;
+    let fiche = |nom: &str, type_tiers| FicheTiers {
+        nom: nom.into(),
+        ..FicheTiers::vide(type_tiers)
+    };
+    let client_a = tiers::creer(&conn, &admin, &fiche("Client Démo A", TypeTiers::Client))
+        .map_err(e)?
+        .id;
+    let client_b = tiers::creer(&conn, &admin, &fiche("Client Démo B", TypeTiers::Client))
+        .map_err(e)?
+        .id;
+    tiers::creer(
+        &conn,
+        &admin,
+        &fiche("Fournisseur Démo", TypeTiers::Fournisseur),
+    )
+    .map_err(e)?;
+    let produit = |reference: &str, designation: &str, prix| FicheProduit {
+        designation: designation.into(),
+        reference: reference.into(),
+        prix,
+        sens: Sens::Vente,
+    };
+    let ciment = produits::creer(&conn, &admin, &produit("CIM50", "Ciment 50 kg", 6_500))
+        .map_err(e)?
+        .id;
+    let fer = produits::creer(&conn, &admin, &produit("FER10", "Fer de 10", 4_200))
+        .map_err(e)?
+        .id;
+    let saisie = |client, produit_id, reference: &str, designation: &str, prix, quantite| Saisie {
+        date: chrono::Local::now().date_naive(),
+        tiers_id: Some(client),
+        libelle: "Démonstration de reprise".into(),
+        taux: Taux::default(),
+        mode_paiement: String::new(),
+        observations: String::new(),
+        date_echeance: None,
+        lignes: vec![LigneSaisie {
+            produit_id: Some(produit_id),
+            reference: reference.into(),
+            designation: designation.into(),
+            prix,
+            quantite,
+            ..LigneSaisie::default()
+        }],
+        livraison: ChampsLivraison::default(),
+    };
+    let devis = documents::creer_brouillon(
+        &mut conn,
+        &admin,
+        TypeDocument::Devis,
+        &saisie(client_a, ciment, "CIM50", "Ciment 50 kg", 6_500, 10_000),
+    )
+    .map_err(e)?;
+    documents::valider(&mut conn, &admin, devis).map_err(e)?;
+    let facture = documents::convertir_en_facture(&mut conn, &admin, devis).map_err(e)?;
+    documents::valider(&mut conn, &admin, facture).map_err(e)?;
+    reglements::ajouter(
+        &mut conn,
+        &admin,
+        facture,
+        &SaisieReglement {
+            date: chrono::Local::now().date_naive(),
+            montant: 30_000,
+            mode_paiement: "Espèces".into(),
+            reference: String::new(),
+        },
+    )
+    .map_err(e)?;
+    documents::creer_brouillon(
+        &mut conn,
+        &admin,
+        TypeDocument::Facture,
+        &saisie(client_b, fer, "FER10", "Fer de 10", 4_200, 5_000),
+    )
+    .map_err(e)?;
+    println!(
+        "Base V1 de démonstration créée : {}\nComptes : admin / motdepasse-v1 (écarté à la reprise), \
+         caisse / motdepasse-caisse",
+        fichier.display()
+    );
+    Ok(())
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let resultat = match args.as_slice() {
@@ -253,6 +391,7 @@ fn main() -> ExitCode {
             desactiver(&PathBuf::from(dossier), identifiant)
         }
         [dossier, commande] if commande == "etat" => etat(&PathBuf::from(dossier)),
+        [fichier, commande] if commande == "base_v1" => base_v1(&PathBuf::from(fichier)),
         [dossier, commande, debut] if commande == "operation" => {
             operation(&PathBuf::from(dossier), debut)
         }
@@ -267,7 +406,8 @@ fn main() -> ExitCode {
         _ => Err("usage : banc_essai <dossier> <port> [--codes N] | \
                   banc_essai <dossier> desactiver <identifiant> | \
                   banc_essai <dossier> etat | \
-                  banc_essai <dossier> operation <début d'identifiant>"
+                  banc_essai <dossier> operation <début d'identifiant> | \
+                  banc_essai <fichier.sqlite> base_v1"
             .into()),
     };
     match resultat {
