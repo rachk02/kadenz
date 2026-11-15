@@ -493,10 +493,12 @@ pub(crate) fn arreter(etat: &mut Etat) {
 }
 
 /// Texte et niveau de l'indicateur (0 relié, 1 en cours, 2 coupé ou refusé).
+/// `distant` : la session passe par le relais d'accès à distance (F8).
 fn indicateur(
     connexion: &EtatConnexion,
     file: u32,
     avancement: Option<(u64, u64)>,
+    distant: bool,
 ) -> (String, i32) {
     match connexion {
         EtatConnexion::Connexion => (tr("Connexion au serveur..."), 1),
@@ -518,13 +520,25 @@ fn indicateur(
             ),
             2,
         ),
+        EtatConnexion::Connecte if distant => (tr("Connecté à distance"), 0),
         EtatConnexion::Connecte => (tr("Connecté au serveur"), 0),
+        EtatConnexion::LectureSeule { .. } if distant => {
+            (tr("Connecté à distance, lecture seule"), 0)
+        }
         EtatConnexion::LectureSeule { .. } => (tr("Connecté au serveur, lecture seule"), 0),
         EtatConnexion::Synchronisation => match avancement {
             Some((recus, dernier)) if dernier > 0 => {
                 let pourcentage = (recus.min(dernier) * 100 / dernier).min(99);
-                (trf("Synchronisation... {} %", &[&pourcentage]), 1)
+                if distant {
+                    (
+                        trf("Synchronisation à distance... {} %", &[&pourcentage]),
+                        1,
+                    )
+                } else {
+                    (trf("Synchronisation... {} %", &[&pourcentage]), 1)
+                }
             }
+            _ if distant => (tr("Synchronisation à distance..."), 1),
             _ => (tr("Synchronisation..."), 1),
         },
         EtatConnexion::Reconnexion { essai } => {
@@ -656,8 +670,8 @@ pub(crate) fn afficher(f: &FenetrePrincipale, etat: &Etat) {
         return;
     }
     let (texte, niveau) = match &etat.relie {
-        Some(r) => indicateur(&r.connexion, r.file, r.avancement),
-        None => indicateur(&EtatConnexion::Injoignable, 0, None),
+        Some(r) => indicateur(&r.connexion, r.file, r.avancement, r.synchro.distant()),
+        None => indicateur(&EtatConnexion::Injoignable, 0, None, false),
     };
     api.set_texte(texte.into());
     api.set_niveau(niveau);
@@ -688,9 +702,12 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
             }
             afficher_a_valider(f, &etat.borrow());
             // Écritures permises ou non : droits, menu et fiche ouverte suivent.
-            let e = etat.borrow();
-            afficher(f, &e);
-            crate::appliquer_droits(f, &e);
+            {
+                let e = etat.borrow();
+                afficher(f, &e);
+                crate::appliquer_droits(f, &e);
+            }
+            crate::acces_distant::connexion_changee(f, &etat);
         }
         Evenement::Avancement { recus, dernier } => {
             let mut e = etat.borrow_mut();
@@ -815,22 +832,30 @@ mod tests {
 
     #[test]
     fn indicateur_selon_l_etat() {
-        assert_eq!(indicateur(&EtatConnexion::Connecte, 0, None).1, 0);
+        assert_eq!(indicateur(&EtatConnexion::Connecte, 0, None, false).1, 0);
         assert_eq!(
-            indicateur(&EtatConnexion::Connecte, 1, None).0,
+            indicateur(&EtatConnexion::Connecte, 0, None, true).0,
+            "Connecté à distance"
+        );
+        assert_eq!(
+            indicateur(&EtatConnexion::Synchronisation, 0, Some((50, 200)), true).0,
+            "Synchronisation à distance... 25 %"
+        );
+        assert_eq!(
+            indicateur(&EtatConnexion::Connecte, 1, None, false).0,
             "Envoi au serveur : 1 opération en attente"
         );
         assert_eq!(
-            indicateur(&EtatConnexion::Connecte, 3, None).0,
+            indicateur(&EtatConnexion::Connecte, 3, None, false).0,
             "Envoi au serveur : 3 opérations en attente"
         );
         assert_eq!(
-            indicateur(&EtatConnexion::Synchronisation, 0, Some((50, 200))).0,
+            indicateur(&EtatConnexion::Synchronisation, 0, Some((50, 200)), false).0,
             "Synchronisation... 25 %"
         );
-        assert_eq!(indicateur(&EtatConnexion::Injoignable, 0, None).1, 2);
+        assert_eq!(indicateur(&EtatConnexion::Injoignable, 0, None, false).1, 2);
         assert_eq!(
-            indicateur(&EtatConnexion::Injoignable, 2, None),
+            indicateur(&EtatConnexion::Injoignable, 2, None, false),
             ("Hors connexion : 2 opérations en attente d'envoi".into(), 2)
         );
         for final_ in [
@@ -838,7 +863,7 @@ mod tests {
             EtatConnexion::PosteRetire,
             EtatConnexion::VersionDifferente { serveur: 3 },
         ] {
-            assert_eq!(indicateur(&final_, 0, None).1, 2);
+            assert_eq!(indicateur(&final_, 0, None, false).1, 2);
         }
     }
 

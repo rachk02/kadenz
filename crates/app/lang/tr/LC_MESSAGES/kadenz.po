@@ -3830,3 +3830,139 @@ msgstr "Sunucunun şirketi: {}"
 
 msgid "Chaque poste refait sa copie de la base à sa prochaine connexion."
 msgstr "Her iş istasyonu bir sonraki bağlantısında veritabanı kopyasını yeniden oluşturur."
+
+# Phase 2, F8b : accès à distance et relais.
+
+msgid "Accès à distance"
+msgstr "Uzaktan erişim"
+
+msgid "Un poste hors du bureau rejoint le serveur de l'entreprise par le relais de l'éditeur. Les échanges sont chiffrés de bout en bout : l'éditeur ne peut pas les lire, et le relais ne garde aucune donnée. Si le serveur de l'entreprise est éteint, un poste distant travaille hors connexion."
+msgstr "Ofis dışındaki bir istasyon, şirket sunucusuna yayıncının aktarıcısı üzerinden bağlanır. Alışverişler uçtan uca şifrelenir: yayıncı bunları okuyamaz ve aktarıcı hiçbir veri saklamaz. Şirket sunucusu kapalıysa uzak istasyon çevrimdışı çalışır."
+
+msgid "Lecture de l'état sur le serveur..."
+msgstr "Durum sunucudan okunuyor..."
+
+msgid "Aucun relais n'est réglé dans la fenêtre du serveur : l'accès à distance n'est pas encore disponible."
+msgstr "Sunucu penceresinde hiçbir aktarıcı ayarlanmamış: uzaktan erişim henüz kullanılamıyor."
+
+msgid "Activer l'accès à distance pour l'entreprise"
+msgstr "Şirket için uzaktan erişimi etkinleştir"
+
+msgid "État du relais"
+msgstr "Aktarıcı durumu"
+
+msgid "Relais"
+msgstr "Aktarıcı"
+
+msgid "Aucun"
+msgstr "Yok"
+
+msgid "Aucune"
+msgstr "Yok"
+
+msgid "Accès désactivé"
+msgstr "Erişim devre dışı"
+
+msgid "Aucun relais réglé"
+msgstr "Aktarıcı ayarlanmamış"
+
+msgid "Joignable depuis le serveur"
+msgstr "Sunucudan erişilebilir"
+
+msgid "Injoignable depuis le serveur"
+msgstr "Sunucudan erişilemiyor"
+
+msgid "Dernière connexion distante"
+msgstr "Son uzak bağlantı"
+
+msgid "Postes autorisés à distance"
+msgstr "Uzaktan izin verilen istasyonlar"
+
+msgid "Seuls les postes cochés peuvent passer par le relais. Décocher un poste ferme aussitôt ses sessions distantes. Les cases se règlent aussi quand l'accès est désactivé."
+msgstr "Yalnızca işaretli istasyonlar aktarıcıdan geçebilir. Bir istasyonun işaretini kaldırmak uzak oturumlarını hemen kapatır. Kutular erişim devre dışıyken de ayarlanabilir."
+
+msgid "Réglage non enregistré : {}."
+msgstr "Ayar kaydedilmedi: {}."
+
+msgid "État illisible : {}."
+msgstr "Durum okunamadı: {}."
+
+msgid "Disponible seulement quand le poste est connecté au serveur."
+msgstr "Yalnızca istasyon sunucuya bağlıyken kullanılabilir."
+
+msgid "Connecté à distance"
+msgstr "Uzaktan bağlı"
+
+msgid "Connecté à distance, lecture seule"
+msgstr "Uzaktan bağlı, salt okunur"
+
+msgid "Synchronisation à distance... {} %"
+msgstr "Uzaktan eşitleme... %{}"
+
+msgid "Synchronisation à distance..."
+msgstr "Uzaktan eşitleme..."
+
+msgid "relais injoignable : {}"
+msgstr "aktarıcıya erişilemiyor: {}"
+
+msgid "le relais ne présente pas le certificat attendu"
+msgstr "aktarıcı beklenen sertifikayı sunmuyor"
+
+msgid "aucune licence d'abonnement : l'accès à distance demande un abonnement actif"
+msgstr "abonelik lisansı yok: uzaktan erişim etkin bir abonelik gerektirir"
+
+msgid "abonnement échu le {} : l'accès à distance demande un abonnement actif"
+msgstr "abonelik {} tarihinde sona erdi: uzaktan erişim etkin bir abonelik gerektirir"
+
+msgid "licence d'abonnement refusée par le relais"
+msgstr "abonelik lisansı aktarıcı tarafından reddedildi"
+
+msgid "un autre serveur de cette entreprise est déjà enregistré sur le relais"
+msgstr "bu şirketin başka bir sunucusu aktarıcıda zaten kayıtlı"
+
+msgid "le relais utilise une autre version ({})"
+msgstr "aktarıcı başka bir sürüm kullanıyor ({})"
+
+msgid "réponse du relais inattendue : {}"
+msgstr "beklenmeyen aktarıcı yanıtı: {}"
+
+msgid "Relais d'accès à distance"
+msgstr "Uzaktan erişim aktarıcısı"
+
+msgid "Adresse et empreinte du relais de l'éditeur, par lequel passent les postes hors du bureau. Le service s'y connecte seul quand l'accès à distance est activé depuis un poste, avec un compte Admin (Paramètres, rubrique « Accès à distance »)."
+msgstr "Ofis dışındaki istasyonların geçtiği yayıncı aktarıcısının adresi ve parmak izi. Uzaktan erişim bir istasyondan Admin hesabıyla etkinleştirildiğinde hizmet ona kendiliğinden bağlanır (Ayarlar, « Uzaktan erişim » bölümü)."
+
+msgid "Adresse du relais (hôte:port)"
+msgstr "Aktarıcı adresi (ana makine:bağlantı noktası)"
+
+msgid "Empreinte du relais"
+msgstr "Aktarıcı parmak izi"
+
+msgid "Enregistrer le relais"
+msgstr "Aktarıcıyı kaydet"
+
+msgid "Effacer le relais"
+msgstr "Aktarıcıyı sil"
+
+msgid "Relais enregistré. Le service le prend en compte dans quelques secondes."
+msgstr "Aktarıcı kaydedildi. Hizmet birkaç saniye içinde uygular."
+
+msgid "Relais effacé : l'accès à distance n'est plus possible."
+msgstr "Aktarıcı silindi: uzaktan erişim artık mümkün değil."
+
+# Phase 2, F8b : erreurs du réglage du relais (fenêtre du serveur).
+
+msgid "adresse du relais invalide : hôte:port attendu"
+msgstr "geçersiz aktarıcı adresi: ana makine:bağlantı noktası bekleniyor"
+
+msgid "port du relais invalide : de 1 à 65535"
+msgstr "geçersiz aktarıcı bağlantı noktası: 1 ile 65535 arası"
+
+msgid "empreinte du relais invalide : 64 caractères hexadécimaux attendus"
+msgstr "geçersiz aktarıcı parmak izi: 64 onaltılık karakter bekleniyor"
+
+msgid "Relais non enregistré : {}."
+msgstr "Aktarıcı kaydedilmedi: {}."
+
+msgid "Relais non effacé : {}."
+msgstr "Aktarıcı silinmedi: {}."

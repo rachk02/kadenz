@@ -266,6 +266,25 @@ fn brancher_tiers(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         }
     });
 
+    // Changement venu du serveur : la vue (filtre, tri, fiche ouverte) reste ;
+    // une fiche qui n'existe plus (nouvelle copie après une restauration) se
+    // ferme.
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_actualiser(move || {
+        let mut etat = e.borrow_mut();
+        let disparue = etat
+            .tiers
+            .selection
+            .is_some_and(|id| !matches!(tiers::lire(&etat.conn, id), Ok(Some(_))));
+        if disparue {
+            etat.tiers.selection = None;
+        }
+        if let Some(f) = f.upgrade() {
+            afficher_tiers(&f, &mut etat);
+        }
+        disparue
+    });
+
     let (f, e) = (fenetre.as_weak(), etat.clone());
     api.on_filtrer(move |texte, type_tiers, inactifs| {
         let mut etat = e.borrow_mut();
@@ -536,6 +555,23 @@ fn brancher_produits(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         if let Some(f) = f.upgrade() {
             afficher_produits(&f, &mut etat);
         }
+    });
+
+    // Comme pour les tiers : vue gardée, fiche disparue fermée.
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_actualiser(move || {
+        let mut etat = e.borrow_mut();
+        let disparue = etat
+            .produits
+            .selection
+            .is_some_and(|id| !matches!(produits::lire(&etat.conn, id), Ok(Some(_))));
+        if disparue {
+            etat.produits.selection = None;
+        }
+        if let Some(f) = f.upgrade() {
+            afficher_produits(&f, &mut etat);
+        }
+        disparue
     });
 
     let (f, e) = (fenetre.as_weak(), etat.clone());

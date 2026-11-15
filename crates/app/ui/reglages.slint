@@ -12,6 +12,7 @@ import { PageAbonnement } from "abonnement.slint";
 import { PageServeur } from "serveur.slint";
 import { PageSuspendues, SuspenduesApi } from "suspendues.slint";
 import { PageSauvegardes } from "sauvegardes.slint";
+import { PageAccesDistant } from "acces-distant.slint";
 import { Infobulle } from "navigation.slint";
 
 export enum Rubrique {
@@ -27,6 +28,7 @@ export enum Rubrique {
     licence,
     abonnement,
     serveur,
+    acces-distant,
     suspendues,
     mises-a-jour,
     a-propos,
@@ -62,6 +64,7 @@ public pure function libelle(r: Rubrique) -> string {
     if (r == Rubrique.licence) { return @tr("Licence"); }
     if (r == Rubrique.abonnement) { return @tr("Abonnement"); }
     if (r == Rubrique.serveur) { return @tr("Serveur"); }
+    if (r == Rubrique.acces-distant) { return @tr("Accès à distance"); }
     // Marque : nombre d'opérations suspendues (les attentes ne sont comptées
     // que pour l'Admin, le seul à qui le serveur les montre).
     if (r == Rubrique.suspendues) {
@@ -86,6 +89,7 @@ public pure function icone(r: Rubrique) -> image {
     if (r == Rubrique.licence) { return @image-url("icones/menu/licence.svg"); }
     if (r == Rubrique.abonnement) { return @image-url("icones/menu/licence.svg"); }
     if (r == Rubrique.serveur) { return @image-url("icones/menu/parametres.svg"); }
+    if (r == Rubrique.acces-distant) { return @image-url("icones/menu/acces-distant.svg"); }
     if (r == Rubrique.suspendues) { return @image-url("icones/menu/relances.svg"); }
     if (r == Rubrique.mises-a-jour) { return @image-url("icones/menu/mises-a-jour.svg"); }
     return @image-url("icones/menu/a-propos.svg");
@@ -105,6 +109,7 @@ public pure function icone-active(r: Rubrique) -> image {
     if (r == Rubrique.licence) { return @image-url("icones/menu/licence-actif.svg"); }
     if (r == Rubrique.abonnement) { return @image-url("icones/menu/licence-actif.svg"); }
     if (r == Rubrique.serveur) { return @image-url("icones/menu/parametres-actif.svg"); }
+    if (r == Rubrique.acces-distant) { return @image-url("icones/menu/acces-distant-actif.svg"); }
     if (r == Rubrique.suspendues) { return @image-url("icones/menu/relances-actif.svg"); }
     if (r == Rubrique.mises-a-jour) { return @image-url("icones/menu/mises-a-jour-actif.svg"); }
     return @image-url("icones/menu/a-propos-actif.svg");
@@ -835,6 +840,8 @@ export component PageReglages inherits Rectangle {
         if ReglagesApi.rubrique == Rubrique.abonnement: PageAbonnement { }
 
         if ReglagesApi.rubrique == Rubrique.serveur: PageServeur { }
+
+        if ReglagesApi.rubrique == Rubrique.acces-distant: PageAccesDistant { }
 
         if ReglagesApi.rubrique == Rubrique.suspendues: PageSuspendues { }
 

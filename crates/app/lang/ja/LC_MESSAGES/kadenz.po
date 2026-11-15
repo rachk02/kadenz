@@ -3830,3 +3830,139 @@ msgstr "サーバーの会社：{}"
 
 msgid "Chaque poste refait sa copie de la base à sa prochaine connexion."
 msgstr "各端末は次回の接続時にデータベースのコピーを作り直します。"
+
+# Phase 2, F8b : accès à distance et relais.
+
+msgid "Accès à distance"
+msgstr "リモートアクセス"
+
+msgid "Un poste hors du bureau rejoint le serveur de l'entreprise par le relais de l'éditeur. Les échanges sont chiffrés de bout en bout : l'éditeur ne peut pas les lire, et le relais ne garde aucune donnée. Si le serveur de l'entreprise est éteint, un poste distant travaille hors connexion."
+msgstr "社外の端末は、発行元のリレーを経由して会社のサーバーに接続します。通信はエンドツーエンドで暗号化され、発行元は内容を読めず、リレーはデータを一切保存しません。会社のサーバーが停止している場合、リモート端末はオフラインで動作します。"
+
+msgid "Lecture de l'état sur le serveur..."
+msgstr "サーバーから状態を読み込んでいます..."
+
+msgid "Aucun relais n'est réglé dans la fenêtre du serveur : l'accès à distance n'est pas encore disponible."
+msgstr "サーバーのウィンドウでリレーが設定されていません。リモートアクセスはまだ利用できません。"
+
+msgid "Activer l'accès à distance pour l'entreprise"
+msgstr "会社のリモートアクセスを有効にする"
+
+msgid "État du relais"
+msgstr "リレーの状態"
+
+msgid "Relais"
+msgstr "リレー"
+
+msgid "Aucun"
+msgstr "なし"
+
+msgid "Aucune"
+msgstr "なし"
+
+msgid "Accès désactivé"
+msgstr "アクセス無効"
+
+msgid "Aucun relais réglé"
+msgstr "リレー未設定"
+
+msgid "Joignable depuis le serveur"
+msgstr "サーバーから到達可能"
+
+msgid "Injoignable depuis le serveur"
+msgstr "サーバーから到達不可"
+
+msgid "Dernière connexion distante"
+msgstr "最後のリモート接続"
+
+msgid "Postes autorisés à distance"
+msgstr "リモートを許可された端末"
+
+msgid "Seuls les postes cochés peuvent passer par le relais. Décocher un poste ferme aussitôt ses sessions distantes. Les cases se règlent aussi quand l'accès est désactivé."
+msgstr "チェックした端末だけがリレーを経由できます。チェックを外すと、その端末のリモートセッションはただちに閉じられます。アクセスが無効のときもチェックを設定できます。"
+
+msgid "Réglage non enregistré : {}."
+msgstr "設定は保存されませんでした：{}。"
+
+msgid "État illisible : {}."
+msgstr "状態を読み取れません：{}。"
+
+msgid "Disponible seulement quand le poste est connecté au serveur."
+msgstr "端末がサーバーに接続しているときのみ利用できます。"
+
+msgid "Connecté à distance"
+msgstr "リモート接続中"
+
+msgid "Connecté à distance, lecture seule"
+msgstr "リモート接続中、読み取り専用"
+
+msgid "Synchronisation à distance... {} %"
+msgstr "リモート同期中... {} %"
+
+msgid "Synchronisation à distance..."
+msgstr "リモート同期中..."
+
+msgid "relais injoignable : {}"
+msgstr "リレーに到達できません：{}"
+
+msgid "le relais ne présente pas le certificat attendu"
+msgstr "リレーが想定した証明書を提示していません"
+
+msgid "aucune licence d'abonnement : l'accès à distance demande un abonnement actif"
+msgstr "サブスクリプションのライセンスがありません：リモートアクセスには有効なサブスクリプションが必要です"
+
+msgid "abonnement échu le {} : l'accès à distance demande un abonnement actif"
+msgstr "サブスクリプションは {} に期限切れになりました：リモートアクセスには有効なサブスクリプションが必要です"
+
+msgid "licence d'abonnement refusée par le relais"
+msgstr "サブスクリプションのライセンスがリレーに拒否されました"
+
+msgid "un autre serveur de cette entreprise est déjà enregistré sur le relais"
+msgstr "この会社の別のサーバーがすでにリレーに登録されています"
+
+msgid "le relais utilise une autre version ({})"
+msgstr "リレーは別のバージョンを使用しています（{}）"
+
+msgid "réponse du relais inattendue : {}"
+msgstr "リレーからの予期しない応答：{}"
+
+msgid "Relais d'accès à distance"
+msgstr "リモートアクセスのリレー"
+
+msgid "Adresse et empreinte du relais de l'éditeur, par lequel passent les postes hors du bureau. Le service s'y connecte seul quand l'accès à distance est activé depuis un poste, avec un compte Admin (Paramètres, rubrique « Accès à distance »)."
+msgstr "社外の端末が経由する、発行元のリレーのアドレスとフィンガープリントです。Admin アカウントで端末からリモートアクセスを有効にすると、サービスが自動的に接続します（設定、「リモートアクセス」）。"
+
+msgid "Adresse du relais (hôte:port)"
+msgstr "リレーのアドレス（ホスト:ポート）"
+
+msgid "Empreinte du relais"
+msgstr "リレーのフィンガープリント"
+
+msgid "Enregistrer le relais"
+msgstr "リレーを保存"
+
+msgid "Effacer le relais"
+msgstr "リレーを消去"
+
+msgid "Relais enregistré. Le service le prend en compte dans quelques secondes."
+msgstr "リレーを保存しました。サービスは数秒以内に反映します。"
+
+msgid "Relais effacé : l'accès à distance n'est plus possible."
+msgstr "リレーを消去しました。リモートアクセスはできなくなりました。"
+
+# Phase 2, F8b : erreurs du réglage du relais (fenêtre du serveur).
+
+msgid "adresse du relais invalide : hôte:port attendu"
+msgstr "リレーのアドレスが無効です：ホスト:ポートの形式で入力してください"
+
+msgid "port du relais invalide : de 1 à 65535"
+msgstr "リレーのポートが無効です：1〜65535"
+
+msgid "empreinte du relais invalide : 64 caractères hexadécimaux attendus"
+msgstr "リレーのフィンガープリントが無効です：16進数64文字が必要です"
+
+msgid "Relais non enregistré : {}."
+msgstr "リレーは保存されませんでした：{}。"
+
+msgid "Relais non effacé : {}."
+msgstr "リレーは消去されませんでした：{}。"

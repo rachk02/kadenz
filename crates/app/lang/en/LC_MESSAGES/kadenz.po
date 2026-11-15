@@ -3830,3 +3830,139 @@ msgstr "Server company: {}"
 
 msgid "Chaque poste refait sa copie de la base à sa prochaine connexion."
 msgstr "Each workstation rebuilds its copy of the database at its next connection."
+
+# Phase 2, F8b : accès à distance et relais.
+
+msgid "Accès à distance"
+msgstr "Remote access"
+
+msgid "Un poste hors du bureau rejoint le serveur de l'entreprise par le relais de l'éditeur. Les échanges sont chiffrés de bout en bout : l'éditeur ne peut pas les lire, et le relais ne garde aucune donnée. Si le serveur de l'entreprise est éteint, un poste distant travaille hors connexion."
+msgstr "A workstation outside the office reaches the company server through the publisher's relay. Exchanges are encrypted end to end: the publisher cannot read them, and the relay keeps no data. If the company server is off, a remote workstation works offline."
+
+msgid "Lecture de l'état sur le serveur..."
+msgstr "Reading the status from the server..."
+
+msgid "Aucun relais n'est réglé dans la fenêtre du serveur : l'accès à distance n'est pas encore disponible."
+msgstr "No relay is set in the server window: remote access is not available yet."
+
+msgid "Activer l'accès à distance pour l'entreprise"
+msgstr "Enable remote access for the company"
+
+msgid "État du relais"
+msgstr "Relay status"
+
+msgid "Relais"
+msgstr "Relay"
+
+msgid "Aucun"
+msgstr "None"
+
+msgid "Aucune"
+msgstr "None"
+
+msgid "Accès désactivé"
+msgstr "Access disabled"
+
+msgid "Aucun relais réglé"
+msgstr "No relay set"
+
+msgid "Joignable depuis le serveur"
+msgstr "Reachable from the server"
+
+msgid "Injoignable depuis le serveur"
+msgstr "Unreachable from the server"
+
+msgid "Dernière connexion distante"
+msgstr "Last remote connection"
+
+msgid "Postes autorisés à distance"
+msgstr "Workstations allowed remotely"
+
+msgid "Seuls les postes cochés peuvent passer par le relais. Décocher un poste ferme aussitôt ses sessions distantes. Les cases se règlent aussi quand l'accès est désactivé."
+msgstr "Only checked workstations can go through the relay. Unchecking a workstation immediately closes its remote sessions. The boxes can also be set while access is disabled."
+
+msgid "Réglage non enregistré : {}."
+msgstr "Setting not saved: {}."
+
+msgid "État illisible : {}."
+msgstr "Status unreadable: {}."
+
+msgid "Disponible seulement quand le poste est connecté au serveur."
+msgstr "Available only when the workstation is connected to the server."
+
+msgid "Connecté à distance"
+msgstr "Connected remotely"
+
+msgid "Connecté à distance, lecture seule"
+msgstr "Connected remotely, read-only"
+
+msgid "Synchronisation à distance... {} %"
+msgstr "Remote synchronisation... {} %"
+
+msgid "Synchronisation à distance..."
+msgstr "Remote synchronisation..."
+
+msgid "relais injoignable : {}"
+msgstr "relay unreachable: {}"
+
+msgid "le relais ne présente pas le certificat attendu"
+msgstr "the relay does not present the expected certificate"
+
+msgid "aucune licence d'abonnement : l'accès à distance demande un abonnement actif"
+msgstr "no subscription licence: remote access requires an active subscription"
+
+msgid "abonnement échu le {} : l'accès à distance demande un abonnement actif"
+msgstr "subscription expired on {}: remote access requires an active subscription"
+
+msgid "licence d'abonnement refusée par le relais"
+msgstr "subscription licence refused by the relay"
+
+msgid "un autre serveur de cette entreprise est déjà enregistré sur le relais"
+msgstr "another server of this company is already registered on the relay"
+
+msgid "le relais utilise une autre version ({})"
+msgstr "the relay uses another version ({})"
+
+msgid "réponse du relais inattendue : {}"
+msgstr "unexpected relay response: {}"
+
+msgid "Relais d'accès à distance"
+msgstr "Remote access relay"
+
+msgid "Adresse et empreinte du relais de l'éditeur, par lequel passent les postes hors du bureau. Le service s'y connecte seul quand l'accès à distance est activé depuis un poste, avec un compte Admin (Paramètres, rubrique « Accès à distance »)."
+msgstr "Address and fingerprint of the publisher's relay, through which workstations outside the office connect. The service connects to it on its own when remote access is enabled from a workstation with an Admin account (Settings, “Remote access” section)."
+
+msgid "Adresse du relais (hôte:port)"
+msgstr "Relay address (host:port)"
+
+msgid "Empreinte du relais"
+msgstr "Relay fingerprint"
+
+msgid "Enregistrer le relais"
+msgstr "Save the relay"
+
+msgid "Effacer le relais"
+msgstr "Clear the relay"
+
+msgid "Relais enregistré. Le service le prend en compte dans quelques secondes."
+msgstr "Relay saved. The service applies it within a few seconds."
+
+msgid "Relais effacé : l'accès à distance n'est plus possible."
+msgstr "Relay cleared: remote access is no longer possible."
+
+# Phase 2, F8b : erreurs du réglage du relais (fenêtre du serveur).
+
+msgid "adresse du relais invalide : hôte:port attendu"
+msgstr "invalid relay address: host:port expected"
+
+msgid "port du relais invalide : de 1 à 65535"
+msgstr "invalid relay port: from 1 to 65535"
+
+msgid "empreinte du relais invalide : 64 caractères hexadécimaux attendus"
+msgstr "invalid relay fingerprint: 64 hexadecimal characters expected"
+
+msgid "Relais non enregistré : {}."
+msgstr "Relay not saved: {}."
+
+msgid "Relais non effacé : {}."
+msgstr "Relay not cleared: {}."

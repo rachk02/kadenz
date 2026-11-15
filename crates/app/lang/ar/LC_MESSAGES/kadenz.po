@@ -3830,3 +3830,139 @@ msgstr "مؤسسة الخادم: {}"
 
 msgid "Chaque poste refait sa copie de la base à sa prochaine connexion."
 msgstr "يعيد كل جهاز إنشاء نسخته من القاعدة عند اتصاله التالي."
+
+# Phase 2, F8b : accès à distance et relais.
+
+msgid "Accès à distance"
+msgstr "الوصول عن بُعد"
+
+msgid "Un poste hors du bureau rejoint le serveur de l'entreprise par le relais de l'éditeur. Les échanges sont chiffrés de bout en bout : l'éditeur ne peut pas les lire, et le relais ne garde aucune donnée. Si le serveur de l'entreprise est éteint, un poste distant travaille hors connexion."
+msgstr "يتصل جهاز خارج المكتب بخادم الشركة عبر مرحّل الناشر. التبادلات مشفرة من طرف إلى طرف: لا يستطيع الناشر قراءتها، ولا يحتفظ المرحّل بأي بيانات. إذا كان خادم الشركة متوقفًا، يعمل الجهاز البعيد دون اتصال."
+
+msgid "Lecture de l'état sur le serveur..."
+msgstr "جارٍ قراءة الحالة من الخادم..."
+
+msgid "Aucun relais n'est réglé dans la fenêtre du serveur : l'accès à distance n'est pas encore disponible."
+msgstr "لم يُضبط أي مرحّل في نافذة الخادم: الوصول عن بُعد غير متاح بعد."
+
+msgid "Activer l'accès à distance pour l'entreprise"
+msgstr "تفعيل الوصول عن بُعد للشركة"
+
+msgid "État du relais"
+msgstr "حالة المرحّل"
+
+msgid "Relais"
+msgstr "المرحّل"
+
+msgid "Aucun"
+msgstr "لا يوجد"
+
+msgid "Aucune"
+msgstr "لا توجد"
+
+msgid "Accès désactivé"
+msgstr "الوصول معطّل"
+
+msgid "Aucun relais réglé"
+msgstr "لم يُضبط أي مرحّل"
+
+msgid "Joignable depuis le serveur"
+msgstr "يمكن الوصول إليه من الخادم"
+
+msgid "Injoignable depuis le serveur"
+msgstr "لا يمكن الوصول إليه من الخادم"
+
+msgid "Dernière connexion distante"
+msgstr "آخر اتصال عن بُعد"
+
+msgid "Postes autorisés à distance"
+msgstr "الأجهزة المسموح لها عن بُعد"
+
+msgid "Seuls les postes cochés peuvent passer par le relais. Décocher un poste ferme aussitôt ses sessions distantes. Les cases se règlent aussi quand l'accès est désactivé."
+msgstr "لا يمكن المرور عبر المرحّل إلا للأجهزة المحددة. إلغاء تحديد جهاز يغلق جلساته البعيدة فورًا. يمكن ضبط الخانات أيضًا عندما يكون الوصول معطّلًا."
+
+msgid "Réglage non enregistré : {}."
+msgstr "لم يُحفظ الإعداد: {}."
+
+msgid "État illisible : {}."
+msgstr "تعذّرت قراءة الحالة: {}."
+
+msgid "Disponible seulement quand le poste est connecté au serveur."
+msgstr "متاح فقط عندما يكون الجهاز متصلًا بالخادم."
+
+msgid "Connecté à distance"
+msgstr "متصل عن بُعد"
+
+msgid "Connecté à distance, lecture seule"
+msgstr "متصل عن بُعد، للقراءة فقط"
+
+msgid "Synchronisation à distance... {} %"
+msgstr "مزامنة عن بُعد... {} %"
+
+msgid "Synchronisation à distance..."
+msgstr "مزامنة عن بُعد..."
+
+msgid "relais injoignable : {}"
+msgstr "تعذّر الوصول إلى المرحّل: {}"
+
+msgid "le relais ne présente pas le certificat attendu"
+msgstr "لا يقدّم المرحّل الشهادة المتوقعة"
+
+msgid "aucune licence d'abonnement : l'accès à distance demande un abonnement actif"
+msgstr "لا توجد رخصة اشتراك: يتطلب الوصول عن بُعد اشتراكًا نشطًا"
+
+msgid "abonnement échu le {} : l'accès à distance demande un abonnement actif"
+msgstr "انتهى الاشتراك في {}: يتطلب الوصول عن بُعد اشتراكًا نشطًا"
+
+msgid "licence d'abonnement refusée par le relais"
+msgstr "رفض المرحّل رخصة الاشتراك"
+
+msgid "un autre serveur de cette entreprise est déjà enregistré sur le relais"
+msgstr "خادم آخر لهذه الشركة مسجّل بالفعل على المرحّل"
+
+msgid "le relais utilise une autre version ({})"
+msgstr "يستخدم المرحّل إصدارًا آخر ({})"
+
+msgid "réponse du relais inattendue : {}"
+msgstr "استجابة غير متوقعة من المرحّل: {}"
+
+msgid "Relais d'accès à distance"
+msgstr "مرحّل الوصول عن بُعد"
+
+msgid "Adresse et empreinte du relais de l'éditeur, par lequel passent les postes hors du bureau. Le service s'y connecte seul quand l'accès à distance est activé depuis un poste, avec un compte Admin (Paramètres, rubrique « Accès à distance »)."
+msgstr "عنوان وبصمة مرحّل الناشر، الذي تمر عبره الأجهزة خارج المكتب. تتصل الخدمة به تلقائيًا عند تفعيل الوصول عن بُعد من جهاز بحساب Admin (الإعدادات، قسم « الوصول عن بُعد »)."
+
+msgid "Adresse du relais (hôte:port)"
+msgstr "عنوان المرحّل (المضيف:المنفذ)"
+
+msgid "Empreinte du relais"
+msgstr "بصمة المرحّل"
+
+msgid "Enregistrer le relais"
+msgstr "حفظ المرحّل"
+
+msgid "Effacer le relais"
+msgstr "مسح المرحّل"
+
+msgid "Relais enregistré. Le service le prend en compte dans quelques secondes."
+msgstr "حُفظ المرحّل. تطبّقه الخدمة خلال بضع ثوانٍ."
+
+msgid "Relais effacé : l'accès à distance n'est plus possible."
+msgstr "مُسح المرحّل: لم يعد الوصول عن بُعد ممكنًا."
+
+# Phase 2, F8b : erreurs du réglage du relais (fenêtre du serveur).
+
+msgid "adresse du relais invalide : hôte:port attendu"
+msgstr "عنوان المرحّل غير صالح: المتوقع المضيف:المنفذ"
+
+msgid "port du relais invalide : de 1 à 65535"
+msgstr "منفذ المرحّل غير صالح: من 1 إلى 65535"
+
+msgid "empreinte du relais invalide : 64 caractères hexadécimaux attendus"
+msgstr "بصمة المرحّل غير صالحة: المتوقع 64 حرفًا ست عشريًا"
+
+msgid "Relais non enregistré : {}."
+msgstr "لم يُحفظ المرحّل: {}."
+
+msgid "Relais non effacé : {}."
+msgstr "لم يُمسح المرحّل: {}."

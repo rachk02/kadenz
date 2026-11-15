@@ -69,6 +69,15 @@ export global AdminApi {
     callback enregistrer-sauvegardes(mot-de-passe: string, confirmation: string) -> Retour;
     callback sauvegarder-maintenant();
 
+    // Relais d'accès à distance (F8) : adresse hôte:port et empreinte, fournies
+    // par l'éditeur. relais-regle : un relais est enregistré.
+    in-out property <string> relais-adresse;
+    in-out property <string> relais-empreinte;
+    in property <bool> relais-regle;
+    in-out property <Retour> relais-retour;
+    callback enregistrer-relais(adresse: string, empreinte: string) -> Retour;
+    callback effacer-relais() -> Retour;
+
     // Restauration d'une sauvegarde (décision 35). restauration-etat : 0 aucune,
     // 1 sauvegarde choisie, 2 sauvegarde vérifiée, 3 restauration en cours,
     // 4 terminée (bilan ou erreur).
@@ -388,6 +397,7 @@ component Tableau inherits ScrollView {
 
                 Text {
                     width: 150px;
+                    vertical-alignment: center;
                     horizontal-alignment: Theme.debut;
                     text: sauvegarde.date;
                     color: Theme.texte;
@@ -395,6 +405,7 @@ component Tableau inherits ScrollView {
 
                 Text {
                     horizontal-stretch: 1;
+                    vertical-alignment: center;
                     horizontal-alignment: Theme.debut;
                     text: sauvegarde.genre;
                     color: Theme.texte;
@@ -669,6 +680,57 @@ component Tableau inherits ScrollView {
                         Confirmation.demander(@tr("Annuler le code du poste « {} » ? Il ne pourra plus servir.", code.nom), @tr("Annuler le code"), true);
                     }
                 }
+            }
+
+            Section {
+                text: @tr("Relais d'accès à distance");
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Adresse et empreinte du relais de l'éditeur, par lequel passent les postes hors du bureau. Le service s'y connecte seul quand l'accès à distance est activé depuis un poste, avec un compte Admin (Paramètres, rubrique « Accès à distance »).");
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+
+            HorizontalLayout {
+                spacing: 8px;
+
+                Champ {
+                    horizontal-stretch: 1;
+                    libelle: @tr("Adresse du relais (hôte:port)");
+                    valeur <=> AdminApi.relais-adresse;
+                }
+
+                Champ {
+                    horizontal-stretch: 2;
+                    libelle: @tr("Empreinte du relais");
+                    valeur <=> AdminApi.relais-empreinte;
+                }
+            }
+
+            HorizontalLayout {
+                spacing: 8px;
+                alignment: Theme.rangee-debut;
+
+                Bouton {
+                    text: @tr("Enregistrer le relais");
+                    primary: true;
+                    clicked => {
+                        AdminApi.relais-retour = AdminApi.enregistrer-relais(AdminApi.relais-adresse, AdminApi.relais-empreinte);
+                    }
+                }
+
+                if AdminApi.relais-regle: Bouton {
+                    text: @tr("Effacer le relais");
+                    clicked => {
+                        AdminApi.relais-retour = AdminApi.effacer-relais();
+                    }
+                }
+            }
+
+            MessageRetour {
+                retour: AdminApi.relais-retour;
             }
 
             Section {

@@ -39,6 +39,9 @@ export global TiersApi {
     in property <string> resume;
     in-out property <int> ligne-courante: -1;
     callback ouvrir();
+    // Poste relié : liste relue après un changement venu du serveur, filtre,
+    // tri et fiche ouverte gardés ; vrai si la fiche ouverte n'existe plus.
+    callback actualiser() -> bool;
     // Type : 0 tous, 1 clients, 2 fournisseurs, 3 les deux seulement.
     callback filtrer(texte: string, type-tiers: int, inactifs: bool);
     callback trier(colonne: int, croissant: bool);
@@ -57,6 +60,8 @@ export global ProduitsApi {
     in property <string> resume;
     in-out property <int> ligne-courante: -1;
     callback ouvrir();
+    // Comme TiersApi.actualiser.
+    callback actualiser() -> bool;
     // Sens : 0 tous, 1 vente, 2 achat, 3 les deux seulement.
     callback filtrer(texte: string, sens: int, inactifs: bool);
     callback trier(colonne: int, croissant: bool);
@@ -179,7 +184,9 @@ export component PageTiers inherits VerticalLayout {
     // Poste relié : liste rechargée quand un autre poste change un tiers.
     property <int> changements: ConnexionApi.changements-tiers;
     changed changements => {
-        TiersApi.ouvrir();
+        if (TiersApi.actualiser()) {
+            root.charger(TiersApi.nouvelle());
+        }
     }
 
     padding: 24px;
@@ -425,7 +432,9 @@ export component PageProduits inherits VerticalLayout {
     // Poste relié : liste rechargée quand un autre poste change un produit.
     property <int> changements: ConnexionApi.changements-produits;
     changed changements => {
-        ProduitsApi.ouvrir();
+        if (ProduitsApi.actualiser()) {
+            root.charger(ProduitsApi.nouvelle());
+        }
     }
 
     padding: 24px;

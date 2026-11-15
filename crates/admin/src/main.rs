@@ -229,6 +229,23 @@ fn montrer_reglage_sauvegardes(f: &FenetreAdmin, dossier: &Path) {
     api.set_sauvegarde_heure(reglage.heure.format("%H:%M").to_string().into());
 }
 
+/// Relais d'accès à distance réglé (F8) : recopié dans les champs, vides
+/// s'il n'y en a pas. Une erreur de lecture est montrée sous les champs.
+fn montrer_relais(f: &FenetreAdmin, conn: &Connection) {
+    let api = f.global::<AdminApi>();
+    match admin::lire_relais(conn) {
+        Ok(relais) => {
+            api.set_relais_regle(relais.is_some());
+            let (adresse, empreinte) = relais
+                .map(|r| (r.adresse, empreinte_lisible(&r.empreinte)))
+                .unwrap_or_default();
+            api.set_relais_adresse(adresse.into());
+            api.set_relais_empreinte(empreinte.into());
+        }
+        Err(e) => api.set_relais_retour(retour_erreur(tr(&e))),
+    }
+}
+
 /// Délai de l'arrêt du service : il fait une sauvegarde en s'arrêtant.
 const DELAI_ARRET: Duration = Duration::from_secs(300);
 const DELAI_DEMARRAGE: Duration = Duration::from_secs(120);
@@ -627,7 +644,44 @@ fn brancher_tableau(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossier: Rc
     let api = f.global::<AdminApi>();
     api.set_dossier(dossier.display().to_string().into());
     montrer_reglage_sauvegardes(f, &dossier);
+    montrer_relais(f, &conn.borrow());
     actualiser(f, &conn.borrow(), &dossier);
+
+    // Relais d'accès à distance (F8) : regler_relais valide l'adresse et
+    // l'empreinte ; le service relit le réglage seul.
+    let (fa, c) = (f.as_weak(), conn.clone());
+    api.on_enregistrer_relais(move |adresse, empreinte| {
+        let Some(f) = fa.upgrade() else {
+            return retour_erreur(String::new());
+        };
+        let resultat = admin::regler_relais(&c.borrow(), Some((adresse.trim(), empreinte.trim())));
+        match resultat {
+            Ok(()) => {
+                montrer_relais(&f, &c.borrow());
+                retour_ok(tr(
+                    "Relais enregistré. Le service le prend en compte dans quelques secondes.",
+                ))
+            }
+            Err(e) => retour_erreur(trf("Relais non enregistré : {}.", &[&tr(&e)])),
+        }
+    });
+
+    let (fa, c) = (f.as_weak(), conn.clone());
+    api.on_effacer_relais(move || {
+        let Some(f) = fa.upgrade() else {
+            return retour_erreur(String::new());
+        };
+        let resultat = admin::regler_relais(&c.borrow(), None);
+        match resultat {
+            Ok(()) => {
+                montrer_relais(&f, &c.borrow());
+                retour_ok(tr(
+                    "Relais effacé : l'accès à distance n'est plus possible.",
+                ))
+            }
+            Err(e) => retour_erreur(trf("Relais non effacé : {}.", &[&tr(&e)])),
+        }
+    });
 
     // Réglage des sauvegardes (décision 56) : mot de passe vide, il est gardé.
     let (fa, c, d) = (f.as_weak(), conn.clone(), dossier.clone());

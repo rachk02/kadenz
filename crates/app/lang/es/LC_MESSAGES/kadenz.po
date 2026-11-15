@@ -3830,3 +3830,139 @@ msgstr "Empresa del servidor: {}"
 
 msgid "Chaque poste refait sa copie de la base à sa prochaine connexion."
 msgstr "Cada puesto rehace su copia de la base en su próxima conexión."
+
+# Phase 2, F8b : accès à distance et relais.
+
+msgid "Accès à distance"
+msgstr "Acceso remoto"
+
+msgid "Un poste hors du bureau rejoint le serveur de l'entreprise par le relais de l'éditeur. Les échanges sont chiffrés de bout en bout : l'éditeur ne peut pas les lire, et le relais ne garde aucune donnée. Si le serveur de l'entreprise est éteint, un poste distant travaille hors connexion."
+msgstr "Un puesto fuera de la oficina se conecta al servidor de la empresa a través del relé del editor. Los intercambios están cifrados de extremo a extremo: el editor no puede leerlos y el relé no guarda ningún dato. Si el servidor de la empresa está apagado, un puesto remoto trabaja sin conexión."
+
+msgid "Lecture de l'état sur le serveur..."
+msgstr "Leyendo el estado en el servidor..."
+
+msgid "Aucun relais n'est réglé dans la fenêtre du serveur : l'accès à distance n'est pas encore disponible."
+msgstr "No hay ningún relé configurado en la ventana del servidor: el acceso remoto aún no está disponible."
+
+msgid "Activer l'accès à distance pour l'entreprise"
+msgstr "Activar el acceso remoto para la empresa"
+
+msgid "État du relais"
+msgstr "Estado del relé"
+
+msgid "Relais"
+msgstr "Relé"
+
+msgid "Aucun"
+msgstr "Ninguno"
+
+msgid "Aucune"
+msgstr "Ninguna"
+
+msgid "Accès désactivé"
+msgstr "Acceso desactivado"
+
+msgid "Aucun relais réglé"
+msgstr "Ningún relé configurado"
+
+msgid "Joignable depuis le serveur"
+msgstr "Accesible desde el servidor"
+
+msgid "Injoignable depuis le serveur"
+msgstr "Inaccesible desde el servidor"
+
+msgid "Dernière connexion distante"
+msgstr "Última conexión remota"
+
+msgid "Postes autorisés à distance"
+msgstr "Puestos autorizados a distancia"
+
+msgid "Seuls les postes cochés peuvent passer par le relais. Décocher un poste ferme aussitôt ses sessions distantes. Les cases se règlent aussi quand l'accès est désactivé."
+msgstr "Solo los puestos marcados pueden pasar por el relé. Desmarcar un puesto cierra de inmediato sus sesiones remotas. Las casillas también se pueden ajustar cuando el acceso está desactivado."
+
+msgid "Réglage non enregistré : {}."
+msgstr "Ajuste no guardado: {}."
+
+msgid "État illisible : {}."
+msgstr "Estado ilegible: {}."
+
+msgid "Disponible seulement quand le poste est connecté au serveur."
+msgstr "Disponible solo cuando el puesto está conectado al servidor."
+
+msgid "Connecté à distance"
+msgstr "Conectado a distancia"
+
+msgid "Connecté à distance, lecture seule"
+msgstr "Conectado a distancia, solo lectura"
+
+msgid "Synchronisation à distance... {} %"
+msgstr "Sincronización a distancia... {} %"
+
+msgid "Synchronisation à distance..."
+msgstr "Sincronización a distancia..."
+
+msgid "relais injoignable : {}"
+msgstr "relé inaccesible: {}"
+
+msgid "le relais ne présente pas le certificat attendu"
+msgstr "el relé no presenta el certificado esperado"
+
+msgid "aucune licence d'abonnement : l'accès à distance demande un abonnement actif"
+msgstr "ninguna licencia de suscripción: el acceso remoto requiere una suscripción activa"
+
+msgid "abonnement échu le {} : l'accès à distance demande un abonnement actif"
+msgstr "suscripción vencida el {}: el acceso remoto requiere una suscripción activa"
+
+msgid "licence d'abonnement refusée par le relais"
+msgstr "licencia de suscripción rechazada por el relé"
+
+msgid "un autre serveur de cette entreprise est déjà enregistré sur le relais"
+msgstr "otro servidor de esta empresa ya está registrado en el relé"
+
+msgid "le relais utilise une autre version ({})"
+msgstr "el relé usa otra versión ({})"
+
+msgid "réponse du relais inattendue : {}"
+msgstr "respuesta inesperada del relé: {}"
+
+msgid "Relais d'accès à distance"
+msgstr "Relé de acceso remoto"
+
+msgid "Adresse et empreinte du relais de l'éditeur, par lequel passent les postes hors du bureau. Le service s'y connecte seul quand l'accès à distance est activé depuis un poste, avec un compte Admin (Paramètres, rubrique « Accès à distance »)."
+msgstr "Dirección y huella del relé del editor, por el que pasan los puestos fuera de la oficina. El servicio se conecta a él por sí solo cuando el acceso remoto se activa desde un puesto con una cuenta Admin (Parámetros, sección «Acceso remoto»)."
+
+msgid "Adresse du relais (hôte:port)"
+msgstr "Dirección del relé (host:puerto)"
+
+msgid "Empreinte du relais"
+msgstr "Huella del relé"
+
+msgid "Enregistrer le relais"
+msgstr "Guardar el relé"
+
+msgid "Effacer le relais"
+msgstr "Borrar el relé"
+
+msgid "Relais enregistré. Le service le prend en compte dans quelques secondes."
+msgstr "Relé guardado. El servicio lo aplica en unos segundos."
+
+msgid "Relais effacé : l'accès à distance n'est plus possible."
+msgstr "Relé borrado: el acceso remoto ya no es posible."
+
+# Phase 2, F8b : erreurs du réglage du relais (fenêtre du serveur).
+
+msgid "adresse du relais invalide : hôte:port attendu"
+msgstr "dirección del relé no válida: se espera host:puerto"
+
+msgid "port du relais invalide : de 1 à 65535"
+msgstr "puerto del relé no válido: de 1 a 65535"
+
+msgid "empreinte du relais invalide : 64 caractères hexadécimaux attendus"
+msgstr "huella del relé no válida: se esperan 64 caracteres hexadecimales"
+
+msgid "Relais non enregistré : {}."
+msgstr "Relé no guardado: {}."
+
+msgid "Relais non effacé : {}."
+msgstr "Relé no borrado: {}."

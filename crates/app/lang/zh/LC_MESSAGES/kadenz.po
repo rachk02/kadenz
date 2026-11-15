@@ -3830,3 +3830,139 @@ msgstr "服务器企业：{}"
 
 msgid "Chaque poste refait sa copie de la base à sa prochaine connexion."
 msgstr "每个工作站在下次连接时重建其数据库副本。"
+
+# Phase 2, F8b : accès à distance et relais.
+
+msgid "Accès à distance"
+msgstr "远程访问"
+
+msgid "Un poste hors du bureau rejoint le serveur de l'entreprise par le relais de l'éditeur. Les échanges sont chiffrés de bout en bout : l'éditeur ne peut pas les lire, et le relais ne garde aucune donnée. Si le serveur de l'entreprise est éteint, un poste distant travaille hors connexion."
+msgstr "办公室外的工作站通过发行方的中继连接到公司服务器。通信采用端到端加密：发行方无法读取，中继也不保存任何数据。如果公司服务器关闭，远程工作站将离线工作。"
+
+msgid "Lecture de l'état sur le serveur..."
+msgstr "正在从服务器读取状态..."
+
+msgid "Aucun relais n'est réglé dans la fenêtre du serveur : l'accès à distance n'est pas encore disponible."
+msgstr "服务器窗口中未设置中继：远程访问暂不可用。"
+
+msgid "Activer l'accès à distance pour l'entreprise"
+msgstr "为公司启用远程访问"
+
+msgid "État du relais"
+msgstr "中继状态"
+
+msgid "Relais"
+msgstr "中继"
+
+msgid "Aucun"
+msgstr "无"
+
+msgid "Aucune"
+msgstr "无"
+
+msgid "Accès désactivé"
+msgstr "访问已停用"
+
+msgid "Aucun relais réglé"
+msgstr "未设置中继"
+
+msgid "Joignable depuis le serveur"
+msgstr "可从服务器访问"
+
+msgid "Injoignable depuis le serveur"
+msgstr "无法从服务器访问"
+
+msgid "Dernière connexion distante"
+msgstr "最近一次远程连接"
+
+msgid "Postes autorisés à distance"
+msgstr "允许远程访问的工作站"
+
+msgid "Seuls les postes cochés peuvent passer par le relais. Décocher un poste ferme aussitôt ses sessions distantes. Les cases se règlent aussi quand l'accès est désactivé."
+msgstr "只有勾选的工作站可以通过中继。取消勾选会立即关闭该工作站的远程会话。访问停用时也可以设置这些复选框。"
+
+msgid "Réglage non enregistré : {}."
+msgstr "设置未保存：{}。"
+
+msgid "État illisible : {}."
+msgstr "无法读取状态：{}。"
+
+msgid "Disponible seulement quand le poste est connecté au serveur."
+msgstr "仅当工作站连接到服务器时可用。"
+
+msgid "Connecté à distance"
+msgstr "已远程连接"
+
+msgid "Connecté à distance, lecture seule"
+msgstr "已远程连接，只读"
+
+msgid "Synchronisation à distance... {} %"
+msgstr "远程同步中... {} %"
+
+msgid "Synchronisation à distance..."
+msgstr "远程同步中..."
+
+msgid "relais injoignable : {}"
+msgstr "无法访问中继：{}"
+
+msgid "le relais ne présente pas le certificat attendu"
+msgstr "中继未出示预期的证书"
+
+msgid "aucune licence d'abonnement : l'accès à distance demande un abonnement actif"
+msgstr "没有订阅许可证：远程访问需要有效的订阅"
+
+msgid "abonnement échu le {} : l'accès à distance demande un abonnement actif"
+msgstr "订阅已于 {} 到期：远程访问需要有效的订阅"
+
+msgid "licence d'abonnement refusée par le relais"
+msgstr "订阅许可证被中继拒绝"
+
+msgid "un autre serveur de cette entreprise est déjà enregistré sur le relais"
+msgstr "该公司的另一台服务器已在中继上注册"
+
+msgid "le relais utilise une autre version ({})"
+msgstr "中继使用其他版本（{}）"
+
+msgid "réponse du relais inattendue : {}"
+msgstr "中继的意外响应：{}"
+
+msgid "Relais d'accès à distance"
+msgstr "远程访问中继"
+
+msgid "Adresse et empreinte du relais de l'éditeur, par lequel passent les postes hors du bureau. Le service s'y connecte seul quand l'accès à distance est activé depuis un poste, avec un compte Admin (Paramètres, rubrique « Accès à distance »)."
+msgstr "发行方中继的地址和指纹，办公室外的工作站通过它连接。在工作站上用 Admin 账户启用远程访问后，服务会自动连接到中继（设置，“远程访问”栏目）。"
+
+msgid "Adresse du relais (hôte:port)"
+msgstr "中继地址（主机:端口）"
+
+msgid "Empreinte du relais"
+msgstr "中继指纹"
+
+msgid "Enregistrer le relais"
+msgstr "保存中继"
+
+msgid "Effacer le relais"
+msgstr "清除中继"
+
+msgid "Relais enregistré. Le service le prend en compte dans quelques secondes."
+msgstr "中继已保存。服务将在几秒内生效。"
+
+msgid "Relais effacé : l'accès à distance n'est plus possible."
+msgstr "中继已清除：无法再进行远程访问。"
+
+# Phase 2, F8b : erreurs du réglage du relais (fenêtre du serveur).
+
+msgid "adresse du relais invalide : hôte:port attendu"
+msgstr "中继地址无效：应为 主机:端口"
+
+msgid "port du relais invalide : de 1 à 65535"
+msgstr "中继端口无效：应为 1 到 65535"
+
+msgid "empreinte du relais invalide : 64 caractères hexadécimaux attendus"
+msgstr "中继指纹无效：应为 64 个十六进制字符"
+
+msgid "Relais non enregistré : {}."
+msgstr "中继未保存：{}。"
+
+msgid "Relais non effacé : {}."
+msgstr "中继未清除：{}。"

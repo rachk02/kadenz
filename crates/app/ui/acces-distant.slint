@@ -1,0 +1,238 @@
+// Accès à distance (phase 2, jalon F8 ; écrans, section 9) : rubrique des
+// Paramètres pour l'Admin d'un poste relié. Le serveur de l'entreprise ouvre
+// lui-même une connexion vers le relais de l'éditeur ; un poste hors du bureau
+// passe par ce relais, chiffré de bout en bout. L'Admin active l'accès pour
+// l'entreprise et coche les postes autorisés (décision 57), avec effet immédiat.
+// Le relais lui-même (adresse et empreinte) se règle dans la fenêtre du serveur.
+// Les appels au serveur tournent hors du fil de l'interface : l'état revient par
+// les propriétés. La page relit l'état à l'ouverture, après chaque action, et
+// toutes les 15 secondes tant qu'elle est ouverte.
+import { CheckBox, ScrollView } from "std-widgets.slint";
+import { MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+
+export struct PosteDistantUi {
+    empreinte: string,
+    nom: string,
+    autorise: bool,
+}
+
+export global AccesDistantApi {
+    // Poste connecté au serveur : sans lui, rien ne se lit ni ne se règle.
+    in property <bool> connecte;
+    // Un état a été reçu du serveur.
+    in property <bool> charge;
+    // Une demande est en cours.
+    in property <bool> occupe;
+    // Message quand l'état ne peut pas être lu (hors connexion, refus).
+    in property <string> indisponible;
+
+    in property <bool> actif;
+    // Adresse du relais réglée dans la fenêtre du serveur ; vide si aucune.
+    in property <string> relais;
+    in property <bool> joignable;
+    // Erreur du relais, déjà traduite ; vide si aucune.
+    in property <string> erreur;
+    // Dernière connexion distante, JJ/MM/AAAA HH:MM ; vide si aucune.
+    in property <string> derniere;
+    in property <[PosteDistantUi]> postes;
+    in property <Retour> retour;
+
+    callback actualiser();
+    callback regler(actif: bool);
+    callback autoriser(empreinte: string, autorise: bool);
+}
+
+component Ligne inherits GridLayout {
+    in property <string> libelle;
+    in property <string> valeur;
+    in property <color> couleur: Theme.texte;
+    spacing: 16px;
+
+    Text {
+        row: 0;
+        col: Theme.rtl ? 1 : 0;
+        width: 200px;
+        horizontal-alignment: Theme.debut;
+        text: root.libelle;
+        color: Theme.texte-secondaire;
+    }
+
+    Text {
+        row: 0;
+        col: Theme.rtl ? 0 : 1;
+        horizontal-alignment: Theme.debut;
+        text: root.valeur;
+        color: root.couleur;
+        wrap: word-wrap;
+    }
+}
+
+// Encadré ambre d'un avertissement.
+component Avertissement inherits Rectangle {
+    in property <string> texte;
+    background: #fff8eb;
+    border-width: 1px;
+    border-color: Theme.ambre;
+    border-radius: 4px;
+
+    HorizontalLayout {
+        padding-left: 14px;
+        padding-right: 14px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: root.texte;
+            color: Theme.texte;
+            font-weight: 600;
+            wrap: word-wrap;
+        }
+    }
+}
+
+// Case qui montre l'état du serveur : un clic la remet à cet état, et elle
+// change quand le serveur a confirmé (la liaison de checked se perd au
+// premier clic, d'où cette recopie).
+component CaseServeur inherits HorizontalLayout {
+    in property <string> texte;
+    in property <bool> etat;
+    in property <bool> modifiable;
+    callback basculer(coche: bool);
+    alignment: Theme.rangee-debut;
+
+    changed etat => {
+        case.checked = self.etat;
+    }
+
+    case := CheckBox {
+        text: root.texte;
+        checked: root.etat;
+        enabled: root.modifiable;
+        toggled => {
+            root.basculer(self.checked);
+            self.checked = root.etat;
+        }
+    }
+}
+
+export component PageAccesDistant inherits ScrollView {
+    property <bool> modifiable: AccesDistantApi.connecte && AccesDistantApi.charge && !AccesDistantApi.occupe;
+
+    init => {
+        AccesDistantApi.actualiser();
+    }
+
+    // L'état du relais bouge seul (joignable, dernière connexion).
+    Timer {
+        interval: 15s;
+        running: AccesDistantApi.connecte && !AccesDistantApi.occupe;
+        triggered => {
+            AccesDistantApi.actualiser();
+        }
+    }
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 12px;
+        alignment: start;
+
+        Titre {
+            text: @tr("Accès à distance");
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Un poste hors du bureau rejoint le serveur de l'entreprise par le relais de l'éditeur. Les échanges sont chiffrés de bout en bout : l'éditeur ne peut pas les lire, et le relais ne garde aucune donnée. Si le serveur de l'entreprise est éteint, un poste distant travaille hors connexion.");
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        if AccesDistantApi.indisponible != "": Text {
+            horizontal-alignment: Theme.debut;
+            text: AccesDistantApi.indisponible;
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        if !AccesDistantApi.charge && AccesDistantApi.occupe: Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Lecture de l'état sur le serveur...");
+            color: Theme.texte-secondaire;
+        }
+
+        if AccesDistantApi.charge: VerticalLayout {
+            spacing: 12px;
+
+            if AccesDistantApi.relais == "": Avertissement {
+                texte: @tr("Aucun relais n'est réglé dans la fenêtre du serveur : l'accès à distance n'est pas encore disponible.");
+            }
+
+            CaseServeur {
+                texte: @tr("Activer l'accès à distance pour l'entreprise");
+                etat: AccesDistantApi.actif;
+                modifiable: root.modifiable;
+                basculer(coche) => {
+                    AccesDistantApi.regler(coche);
+                }
+            }
+
+            Section {
+                text: @tr("État du relais");
+            }
+
+            Ligne {
+                libelle: @tr("Relais");
+                valeur: AccesDistantApi.relais == "" ? @tr("Aucun") : AccesDistantApi.relais;
+            }
+
+            Ligne {
+                libelle: @tr("État");
+                valeur: !AccesDistantApi.actif ? @tr("Accès désactivé")
+                    : AccesDistantApi.relais == "" ? @tr("Aucun relais réglé")
+                    : AccesDistantApi.joignable ? @tr("Joignable depuis le serveur")
+                    : @tr("Injoignable depuis le serveur");
+                couleur: AccesDistantApi.actif && AccesDistantApi.relais != "" && AccesDistantApi.joignable ? Theme.succes : Theme.texte;
+            }
+
+            Ligne {
+                libelle: @tr("Dernière connexion distante");
+                valeur: AccesDistantApi.derniere == "" ? @tr("Aucune") : AccesDistantApi.derniere;
+            }
+
+            if AccesDistantApi.erreur != "": Avertissement {
+                texte: AccesDistantApi.erreur;
+            }
+
+            Section {
+                text: @tr("Postes autorisés à distance");
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Seuls les postes cochés peuvent passer par le relais. Décocher un poste ferme aussitôt ses sessions distantes. Les cases se règlent aussi quand l'accès est désactivé.");
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+
+            if AccesDistantApi.postes.length == 0: Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Aucun poste inscrit.");
+                color: Theme.texte-secondaire;
+            }
+
+            for poste in AccesDistantApi.postes: CaseServeur {
+                texte: poste.nom;
+                etat: poste.autorise;
+                modifiable: root.modifiable;
+                basculer(coche) => {
+                    AccesDistantApi.autoriser(poste.empreinte, coche);
+                }
+            }
+        }
+
+        MessageRetour {
+            retour: AccesDistantApi.retour;
+        }
+    }
+}

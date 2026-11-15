@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod abonnement;
+mod acces_distant;
 mod administration;
 mod excel;
 mod factures;
@@ -29,7 +30,7 @@ use std::rc::Rc;
 
 use kadenz_domaine::langue::Langue;
 use kadenz_domaine::module::Module;
-use kadenz_domaine::role::Droit;
+use kadenz_domaine::role::{Droit, Role};
 use kadenz_stockage::Connexion;
 use kadenz_stockage::comptes::{self, EtatInstallation, Navigation, Utilisateur};
 use kadenz_stockage::documents::TypeDocument;
@@ -263,6 +264,15 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
         rubriques.push(Rubrique::Serveur);
         serveur::afficher(fenetre, &etat.conn);
     }
+    // Accès à distance (F8, section 9) : réglé sur le serveur par l'Admin
+    // d'un poste relié.
+    let admin = etat
+        .utilisateur
+        .as_ref()
+        .is_some_and(|u| u.role == Role::Admin);
+    if relie && admin {
+        rubriques.push(Rubrique::AccesDistant);
+    }
     // Conflits et attentes (F6c) : chaque compte y voit ses conflits, l'Admin
     // tout, y compris les opérations en attente.
     if inscrit {
@@ -415,6 +425,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     reprise::brancher(fenetre, &etat);
     relie::brancher(fenetre, &etat);
     suspendues::brancher(fenetre, &etat);
+    acces_distant::brancher(fenetre, &etat);
     maj::brancher(fenetre);
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
