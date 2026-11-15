@@ -42,11 +42,17 @@ fn avancement(recus: u64, total: Option<u64>) -> String {
 
 /// Après la connexion : vérifie, sans bloquer l'interface, si une version plus
 /// récente existe. Hors ligne ou à jour, rien ne s'affiche.
-pub(crate) fn verifier_apres_connexion(f: &FenetrePrincipale, autorise: bool) {
+/// `serveur` : version logicielle du serveur, lue par l'appelant dans l'état
+/// qu'il tient déjà (l'état partagé est alors emprunté en écriture).
+pub(crate) fn verifier_apres_connexion(
+    f: &FenetrePrincipale,
+    autorise: bool,
+    serveur: Option<String>,
+) {
     if !autorise || VERIFIEE.swap(true, Ordering::SeqCst) {
         return;
     }
-    verifier_en_fond(f, produit_poste());
+    verifier_en_fond(f, produit_poste(serveur));
 }
 
 /// Recherche silencieuse sur un fil secondaire ; une version à installer
@@ -62,11 +68,9 @@ fn verifier_en_fond(f: &FenetrePrincipale, produit: Produit) {
 
 /// Ce poste, plafonné à la version de son serveur quand il la connaît (F10) :
 /// un poste ne prend jamais une version plus récente que son serveur.
-fn produit_poste() -> Produit {
+fn produit_poste(serveur: Option<String>) -> Produit {
     Produit::Poste {
-        serveur: crate::relie::logiciel_serveur()
-            .as_deref()
-            .and_then(Version::lire),
+        serveur: serveur.as_deref().and_then(Version::lire),
     }
 }
 
@@ -74,18 +78,29 @@ fn produit_poste() -> Produit {
 /// Mises à jour ; serveur plus récent que ce poste, une recherche plafonnée à
 /// sa version, une fois par lancement, pour un compte qui gère les paramètres.
 pub(crate) fn connexion_changee(f: &FenetrePrincipale, etat: &EtatPartage) {
-    let (a_mettre_a_jour, autorise) = {
+    let (a_mettre_a_jour, autorise, serveur) = {
         let e = etat.borrow();
         let a_mettre_a_jour = e
             .relie
             .as_ref()
             .is_some_and(|r| matches!(r.connexion, EtatConnexion::VersionDifferente { .. }));
-        (a_mettre_a_jour, crate::gere_parametres(&e))
+        (
+            a_mettre_a_jour,
+            crate::gere_parametres(&e),
+            crate::relie::logiciel_de(&e),
+        )
     };
-    f.global::<ReglagesApi>()
-        .set_version_serveur(crate::relie::logiciel_serveur().unwrap_or_default().into());
+    let api = f.global::<ReglagesApi>();
+    let version = serveur.clone().unwrap_or_default();
+    // Serveur mis à jour entre-temps : le résultat de la recherche précédente
+    // ne vaut plus.
+    if api.get_version_serveur() != version.as_str() && !api.get_recherche_en_cours() {
+        api.set_etat_maj("".into());
+        api.set_erreur_maj(false);
+    }
+    api.set_version_serveur(version.into());
     if a_mettre_a_jour && autorise && !POUR_LE_SERVEUR.swap(true, Ordering::SeqCst) {
-        verifier_en_fond(f, produit_poste());
+        verifier_en_fond(f, produit_poste(serveur));
     }
 }
 
@@ -120,8 +135,9 @@ fn brancher_recherche(fenetre: &FenetrePrincipale) {
         api.set_recherche_en_cours(true);
         api.set_erreur_maj(false);
         api.set_etat_maj(tr("Recherche en cours").into());
-        let produit = produit_poste();
-        api.set_version_serveur(crate::relie::logiciel_serveur().unwrap_or_default().into());
+        let serveur = crate::relie::logiciel_serveur();
+        api.set_version_serveur(serveur.clone().unwrap_or_default().into());
+        let produit = produit_poste(serveur);
         let f = f.clone();
         std::thread::spawn(move || {
             let recherche = kadenz_maj::rechercher_pour(produit);

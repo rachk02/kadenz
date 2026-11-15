@@ -318,7 +318,7 @@ pub(crate) fn ouvrir_session(f: &FenetrePrincipale, etat: &mut Etat, utilisateur
     // de bord, ou des Factures si la licence ne l'ouvre pas.
     f.set_page(Page::TableauDeBord);
     afficher_session(f, etat);
-    maj::verifier_apres_connexion(f, gere_parametres(etat));
+    maj::verifier_apres_connexion(f, gere_parametres(etat), relie::logiciel_de(etat));
 }
 
 /// Compte, droits ou entreprise changés sur un autre poste (poste relié) :
@@ -394,7 +394,11 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
                 etat.utilisateur = Some(utilisateur);
                 if let Some(f) = f.upgrade() {
                     afficher_session(&f, &etat);
-                    maj::verifier_apres_connexion(&f, gere_parametres(&etat));
+                    maj::verifier_apres_connexion(
+                        &f,
+                        gere_parametres(&etat),
+                        relie::logiciel_de(&etat),
+                    );
                 }
                 SharedString::new()
             }

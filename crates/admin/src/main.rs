@@ -666,7 +666,8 @@ fn avancement(recus: u64, total: Option<u64>) -> String {
 /// Issue d'une recherche de mise à jour du serveur : texte et erreur.
 fn texte_recherche(recherche: &Recherche) -> (String, bool) {
     match recherche {
-        Recherche::Disponible(m) => (trf("La version {} est disponible.", &[&m.version]), false),
+        // La version proposée s'affiche déjà au-dessus des boutons.
+        Recherche::Disponible(_) => (String::new(), false),
         // Un poste attend son serveur ; le serveur, lui, n'attend personne.
         Recherche::AJour | Recherche::AttendServeur { .. } => (tr("Le serveur est à jour."), false),
         Recherche::Refusee => (

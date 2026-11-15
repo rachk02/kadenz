@@ -668,13 +668,21 @@ pub(crate) fn blocage_selon(etat: &Etat, niveau: EnCoupure) -> Option<String> {
 
 /// Version logicielle du serveur (« 1.0.0 »), apprise à la connexion (F10) ;
 /// `None` pour un poste seul, ou tant que le serveur n'a pas répondu.
+pub(crate) fn logiciel_de(etat: &Etat) -> Option<String> {
+    etat.relie
+        .as_ref()
+        .and_then(|r| r.synchro.logiciel_serveur())
+}
+
+/// [`logiciel_de`] depuis un rappel de l'écran, sur l'état partagé ; `None`
+/// s'il est déjà emprunté en écriture (connexion d'un compte en cours).
 pub(crate) fn logiciel_serveur() -> Option<String> {
     ETAT.with_borrow(|e| {
         e.as_ref()?
-            .borrow()
-            .relie
-            .as_ref()
-            .and_then(|r| r.synchro.logiciel_serveur())
+            .try_borrow()
+            .ok()
+            .as_deref()
+            .and_then(logiciel_de)
     })
 }
 
