@@ -32,7 +32,7 @@ use kadenz_protocole::messages::{
 };
 use kadenz_protocole::{Entite, VERSION};
 use kadenz_stockage::chiffrement::{self, Portee};
-use kadenz_stockage::{Erreur, abonnement, comptes, inscription, postes, synchro};
+use kadenz_stockage::{Erreur, abonnement, comptes, inscription, postes, reprise, synchro};
 use rusqlite::Connection;
 use rustls::client::danger::HandshakeSignatureValid;
 use rustls::crypto::{CryptoProvider, verify_tls12_signature, verify_tls13_signature};
@@ -383,6 +383,8 @@ struct Contexte {
     cles: Arc<[VerifyingKey]>,
     /// Serveur arrêté : chaque session finit à sa requête suivante.
     arret: Arc<AtomicBool>,
+    /// Dossier des données, pour le fichier de travail d'une reprise (F7).
+    dossier: PathBuf,
 }
 
 /// Rend sa place à la connexion quand la session se termine.
@@ -446,6 +448,7 @@ impl Serveur {
             inscriptions: Mutex::new(Inscriptions::default()),
             cles: config.cles_portail.clone().into(),
             arret: arret.clone(),
+            dossier: config.dossier.clone(),
         });
         let fil = {
             let arret = arret.clone();
@@ -922,6 +925,74 @@ fn traiter(
                 Err(e) => rejet(&e),
             }
         }
+        Requete::ReprisePossible => {
+            if compte.is_none() {
+                return rejet("aucun compte connecté");
+            }
+            match contexte.base.executer(|c| reprise::serveur_neuf(c)) {
+                Ok(Ok(possible)) => Reponse::ReprisePossible { possible },
+                Ok(Err(e)) => rejet(&e.to_string()),
+                Err(e) => rejet(&e),
+            }
+        }
+        Requete::Reprise {
+            sauvegarde,
+            mot_de_passe,
+        } => {
+            let Some(uid) = compte.clone() else {
+                return rejet("aucun compte connecté");
+            };
+            let Some(octets) = kadenz_protocole::reprise::decoder(&sauvegarde) else {
+                return rejet("sauvegarde illisible ou trop grande");
+            };
+            drop(sauvegarde);
+            let cles = contexte.cles.clone();
+            let fichier = contexte
+                .dossier
+                .join(format!("reprise-{}.kzs", synchro::nouvel_uid()));
+            reponse_reprise(contexte.base.executer(move |c| {
+                let id = synchro::id_de(c, Entite::Utilisateur, &uid)?
+                    .ok_or_else(|| Erreur::Validation("compte inconnu sur le serveur".into()))?;
+                let acteur = comptes::lire(c, id)?
+                    .ok_or_else(|| Erreur::Validation("compte inconnu sur le serveur".into()))?;
+                abonnement::appliquer_avec(c, abonnement::horloge(), &cles)?;
+                fs::write(&fichier, &octets)?;
+                let resultat = reprise::ouvrir_pour_reprise(&fichier, &mot_de_passe)
+                    .and_then(|source| reprise::reprendre(c, &acteur, &source));
+                let _ = fs::remove_file(&fichier);
+                resultat
+            }))
+        }
+    }
+}
+
+/// Bilan d'une reprise, ou refus à traduire (serveur pas neuf, mot de passe
+/// de la sauvegarde, droit manquant, lecture seule).
+fn reponse_reprise(
+    resultat: Result<kadenz_stockage::Resultat<kadenz_protocole::reprise::ResumeReprise>, String>,
+) -> Reponse {
+    match resultat {
+        Ok(Ok(bilan)) => Reponse::Reprise {
+            bilan: Box::new(bilan),
+        },
+        Ok(Err(Erreur::LectureSeule { echeance })) => Reponse::LectureSeule { echeance },
+        Ok(Err(Erreur::Validation(modele))) => Reponse::Refus {
+            refus: Refus {
+                modele,
+                valeurs: Vec::new(),
+            },
+        },
+        Ok(Err(Erreur::ValidationComposee { modele, valeurs })) => Reponse::Refus {
+            refus: Refus { modele, valeurs },
+        },
+        Ok(Err(Erreur::Interdit(droit))) => Reponse::Refus {
+            refus: Refus {
+                modele: synchro::MODELE_INTERDIT.into(),
+                valeurs: vec![droit.to_string()],
+            },
+        },
+        Ok(Err(e)) => rejet(&e.to_string()),
+        Err(e) => rejet(&e),
     }
 }
 

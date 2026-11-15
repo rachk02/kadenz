@@ -19,6 +19,7 @@ use std::time::{Duration, Instant};
 
 use kadenz_protocole::inscription::{DECOUVERTE, PORT_PAR_DEFAUT, ServeurTrouve};
 use kadenz_protocole::messages::{self, ErreurTrame, Reponse, Requete};
+use kadenz_protocole::reprise::ResumeReprise;
 use kadenz_protocole::{Abonnement, Changement, Entite, Issue, Operation, Suspendue, VERSION};
 use rustls::client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier};
 use rustls::crypto::{CryptoProvider, verify_tls12_signature, verify_tls13_signature};
@@ -556,6 +557,37 @@ impl Client {
     pub fn renouveler(&mut self, cle: &str) -> Result<Abonnement, ErreurClient> {
         match self.echanger(&Requete::RenouvelerAbonnement { cle: cle.into() })? {
             Reponse::Abonnement { abonnement } => Ok(*abonnement),
+            autre => Err(inattendue(&autre)),
+        }
+    }
+
+    /// Le serveur est-il neuf, prêt pour la reprise d'une base V1 (F7) ?
+    pub fn reprise_possible(&mut self) -> Result<bool, ErreurClient> {
+        match self.echanger(&Requete::ReprisePossible)? {
+            Reponse::ReprisePossible { possible } => Ok(possible),
+            autre => Err(inattendue(&autre)),
+        }
+    }
+
+    /// Reprise d'une base V1 (F7) : la sauvegarde `.kzs` et son mot de passe ;
+    /// rend le bilan mesuré sur le serveur. La réponse est attendue `delai`
+    /// au plus, au lieu du délai de lecture habituel.
+    pub fn reprise(
+        &mut self,
+        sauvegarde: &[u8],
+        mot_de_passe: &str,
+        delai: Duration,
+    ) -> Result<ResumeReprise, ErreurClient> {
+        let requete = Requete::Reprise {
+            sauvegarde: kadenz_protocole::reprise::encoder(sauvegarde),
+            mot_de_passe: mot_de_passe.into(),
+        };
+        let habituel = self.flux.sock.read_timeout().ok().flatten();
+        let _ = self.flux.sock.set_read_timeout(Some(delai));
+        let reponse = self.echanger(&requete);
+        let _ = self.flux.sock.set_read_timeout(habituel);
+        match reponse? {
+            Reponse::Reprise { bilan } => Ok(*bilan),
             autre => Err(inattendue(&autre)),
         }
     }

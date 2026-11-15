@@ -21,7 +21,7 @@
 
 use std::collections::BTreeSet;
 use std::fmt;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::mpsc::{self, RecvTimeoutError, Sender};
 use std::sync::{Arc, Mutex};
@@ -31,6 +31,8 @@ use std::time::{Duration, Instant};
 pub use kadenz_client::CompteConnecte;
 use kadenz_client::{Client, ErreurClient, Identite};
 use kadenz_protocole::messages::LIGNES_MAX;
+use kadenz_protocole::reprise::TAILLE_MAX_REPRISE;
+pub use kadenz_protocole::reprise::{DocumentsRepris, ResumeReprise};
 use kadenz_protocole::{Abonnement, Action, EnCoupure, Entite, Issue, Motif, Operation, Suspendue};
 use kadenz_stockage::poste_relie::{self, PosteRelie};
 use kadenz_stockage::{replique, synchro};
@@ -194,6 +196,25 @@ fn base(e: impl fmt::Display) -> ErreurPoste {
     ErreurPoste::Base(e.to_string())
 }
 
+/// Refus du stockage à traduire (mot de passe d'une sauvegarde, base V1
+/// introuvable) ; une autre erreur reste technique.
+fn stockage(e: kadenz_stockage::Erreur) -> ErreurPoste {
+    match e {
+        kadenz_stockage::Erreur::Validation(modele) => ErreurPoste::Refus {
+            modele,
+            valeurs: Vec::new(),
+        },
+        kadenz_stockage::Erreur::ValidationComposee { modele, valeurs } => {
+            ErreurPoste::Refus { modele, valeurs }
+        }
+        autre => base(autre),
+    }
+}
+
+/// Refus d'une base V1 trop grande pour la reprise ; `{}` : taille permise en
+/// mégaoctets.
+pub const MODELE_TROP_GRANDE: &str = "la base V1 dépasse la taille permise pour la reprise ({} Mo)";
+
 enum Commande {
     Connecter {
         identifiant: String,
@@ -219,17 +240,39 @@ enum Commande {
 /// Rappel des événements : appelé depuis le fil du synchroniseur.
 pub type Rappel = Box<dyn Fn(Evenement) + Send>;
 
+/// Base V1 à reprendre dans le serveur (F7, écrans, section 8).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SourceV1 {
+    /// Base V1 du poste (`kadenz.sqlite`) : jamais ouverte ni modifiée, une
+    /// copie de ses fichiers est sauvegardée pour l'envoi (décision 45).
+    Base(PathBuf),
+    /// Sauvegarde `.kzs` de la V1, avec son mot de passe.
+    Sauvegarde {
+        chemin: PathBuf,
+        mot_de_passe: String,
+    },
+}
+
+/// Attente de la réponse du serveur à une reprise : il verse toute la base.
+pub const DELAI_REPRISE: Duration = Duration::from_secs(120);
+
 pub struct Synchroniseur {
     commandes: Sender<Commande>,
     etat: Arc<Mutex<EtatConnexion>>,
     a_envoyer: Arc<AtomicU32>,
     fil: Option<JoinHandle<()>>,
+    /// Dossier de la copie, pour la sauvegarde envoyée par une reprise.
+    dossier: PathBuf,
 }
 
 impl Synchroniseur {
     /// Lit le lien au serveur dans la copie, ouvre une connexion à la copie
     /// pour le fil et part en connexion.
     pub fn demarrer(copie: PathBuf, evenements: Rappel) -> Result<Synchroniseur, ErreurPoste> {
+        let dossier = copie
+            .parent()
+            .map(Path::to_path_buf)
+            .unwrap_or_else(|| PathBuf::from("."));
         let conn = poste_relie::ouvrir_copie(&copie).map_err(base)?;
         // Modules de la licence gardée, sur la connexion du fil : une
         // écriture hors connexion est appliquée dans la copie avec eux.
@@ -273,6 +316,7 @@ impl Synchroniseur {
             etat,
             a_envoyer,
             fil: Some(fil),
+            dossier,
         })
     }
 
@@ -374,6 +418,76 @@ impl Synchroniseur {
             }
             (fil.evenements)(Evenement::ListeSuspendues(liste));
         })));
+    }
+
+    /// Résumé d'une base V1 avant sa reprise (F7), lu sur ce poste, sans le
+    /// serveur : entreprise, tiers, produits, règlements, documents et dernier
+    /// numéro par type, comptes repris et comptes écartés parce que leur
+    /// identifiant existe déjà dans la copie (décision 53).
+    pub fn resume_reprise(&self, source: &SourceV1) -> Result<ResumeReprise, ErreurPoste> {
+        let (kzs, mot_de_passe, temporaire) = self.sauvegarde_v1(source)?;
+        let lu = kadenz_stockage::ouvrir_sauvegarde(&kzs, &mot_de_passe)
+            .and_then(|conn| kadenz_stockage::reprise::resume(&conn));
+        if temporaire {
+            let _ = std::fs::remove_file(&kzs);
+        }
+        let mut resume = lu.map_err(stockage)?;
+        self.sur_fil(move |fil| {
+            kadenz_stockage::reprise::separer_comptes(&mut resume, &fil.copie).map_err(base)?;
+            Ok(resume)
+        })
+    }
+
+    /// Le serveur est-il neuf, prêt pour une reprise (décision 55) ? Demande
+    /// au serveur, avec un compte connecté.
+    pub fn reprise_possible(&self) -> Result<bool, ErreurPoste> {
+        self.sur_fil(|fil| fil.reprise_possible())
+    }
+
+    /// Reprend la base V1 dans le serveur (F7), compte Admin seul ; rend le
+    /// bilan mesuré sur le serveur. Refus du serveur à traduire : serveur
+    /// qui n'est pas neuf ([`kadenz_stockage::reprise::MODELE_PAS_NEUF`]),
+    /// mot de passe de la sauvegarde, droit manquant. Les lignes reprises
+    /// arrivent ensuite dans la copie par les changements habituels.
+    pub fn reprendre(&self, source: &SourceV1) -> Result<ResumeReprise, ErreurPoste> {
+        let (kzs, mot_de_passe, temporaire) = self.sauvegarde_v1(source)?;
+        let lu = std::fs::read(&kzs);
+        if temporaire {
+            let _ = std::fs::remove_file(&kzs);
+        }
+        let octets = lu.map_err(base)?;
+        if octets.len() > TAILLE_MAX_REPRISE {
+            return Err(ErreurPoste::Refus {
+                modele: MODELE_TROP_GRANDE.into(),
+                valeurs: vec![(TAILLE_MAX_REPRISE / (1024 * 1024)).to_string()],
+            });
+        }
+        let (retour, reponse) = mpsc::channel();
+        self.envoyer(Commande::Fil(Box::new(move |fil: &mut Fil| {
+            let _ = retour.send(fil.reprendre_v1(&octets, &mot_de_passe));
+        })))?;
+        reponse
+            .recv_timeout(DELAI_REPRISE + DELAI * 2)
+            .unwrap_or(Err(ErreurPoste::Delai))
+    }
+
+    /// Sauvegarde `.kzs` de la source et son mot de passe ; `true` si elle a
+    /// été faite pour l'occasion (base V1 du poste), à effacer après usage.
+    fn sauvegarde_v1(&self, source: &SourceV1) -> Result<(PathBuf, String, bool), ErreurPoste> {
+        match source {
+            SourceV1::Sauvegarde {
+                chemin,
+                mot_de_passe,
+            } => Ok((chemin.clone(), mot_de_passe.clone(), false)),
+            SourceV1::Base(chemin) => {
+                let kzs = self.dossier.join("reprise-v1.kzs");
+                // Mot de passe à usage unique : la sauvegarde ne sert qu'à l'envoi.
+                let mot_de_passe = synchro::nouvel_uid();
+                kadenz_stockage::reprise::exporter_base_v1(chemin, &kzs, &mot_de_passe)
+                    .map_err(stockage)?;
+                Ok((kzs, mot_de_passe, true))
+            }
+        }
     }
 
     pub fn etat(&self) -> EtatConnexion {
@@ -753,6 +867,42 @@ impl Fil {
             EtatConnexion::Reconnexion { essai: self.echecs }
         });
         ErreurPoste::HorsConnexion
+    }
+
+    fn reprise_possible(&mut self) -> Result<bool, ErreurPoste> {
+        if self.etat_present().definitif() {
+            return Err(ErreurPoste::Injoignable);
+        }
+        if self.uid_session().is_none() {
+            return Err(ErreurPoste::HorsConnexion);
+        }
+        let Some(client) = self.client.as_mut() else {
+            return Err(ErreurPoste::HorsConnexion);
+        };
+        match client.reprise_possible() {
+            Ok(possible) => Ok(possible),
+            Err(e) => Err(self.erreur_requete(e)),
+        }
+    }
+
+    fn reprendre_v1(
+        &mut self,
+        sauvegarde: &[u8],
+        mot_de_passe: &str,
+    ) -> Result<ResumeReprise, ErreurPoste> {
+        if self.etat_present().definitif() {
+            return Err(ErreurPoste::Injoignable);
+        }
+        if self.uid_session().is_none() {
+            return Err(ErreurPoste::HorsConnexion);
+        }
+        let Some(client) = self.client.as_mut() else {
+            return Err(ErreurPoste::HorsConnexion);
+        };
+        match client.reprise(sauvegarde, mot_de_passe, DELAI_REPRISE) {
+            Ok(bilan) => Ok(bilan),
+            Err(e) => Err(self.erreur_requete(e)),
+        }
     }
 
     /// Erreur d'une requête : la session reste ouverte pour un refus, elle est

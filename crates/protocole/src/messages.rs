@@ -13,6 +13,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 use crate::abonnement::{Abonnement, Refus};
+use crate::reprise::ResumeReprise;
 use crate::{Changement, Entite, Issue, Operation, Suspendue};
 
 /// Taille maximale d'un message, en octets.
@@ -60,6 +61,16 @@ pub enum Requete {
     /// écriture provisoire (F6) ; au plus [`LIGNES_MAX`].
     Lignes {
         lignes: Vec<(Entite, String)>,
+    },
+    /// Le serveur est-il neuf, prêt pour la reprise d'une base V1 (F7,
+    /// décision 55) ?
+    ReprisePossible,
+    /// Reprise d'une base V1 (F7), compte Admin seul : sauvegarde `.kzs` en
+    /// base64, au plus [`crate::reprise::TAILLE_MAX_REPRISE`] octets, et son
+    /// mot de passe.
+    Reprise {
+        sauvegarde: String,
+        mot_de_passe: String,
     },
 }
 
@@ -118,6 +129,13 @@ pub enum Reponse {
     /// ligne (0 si aucun) et ne déplace pas le dernier rang reçu du poste.
     Lignes {
         lignes: Vec<Changement>,
+    },
+    ReprisePossible {
+        possible: bool,
+    },
+    /// Base V1 reprise : bilan mesuré sur le serveur.
+    Reprise {
+        bilan: Box<ResumeReprise>,
     },
     /// Demande refusée, message à traduire (licence refusée, droit manquant).
     Refus {

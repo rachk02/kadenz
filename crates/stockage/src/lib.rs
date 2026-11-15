@@ -20,6 +20,7 @@ pub mod produits;
 pub mod reglements;
 pub mod relances;
 pub mod replique;
+pub mod reprise;
 pub mod sauvegarde;
 pub mod synchro;
 pub mod tiers;

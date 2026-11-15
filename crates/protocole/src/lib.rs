@@ -16,12 +16,13 @@ use serde::{Deserialize, Serialize};
 pub mod abonnement;
 pub mod inscription;
 pub mod messages;
+pub mod reprise;
 
 pub use abonnement::Abonnement;
 
 /// Version du protocole, annoncée à la connexion (F2) : un poste d'une autre
 /// version est refusé.
-pub const VERSION: u32 = 3;
+pub const VERSION: u32 = 4;
 
 /// Action d'un compte, faite sur un poste et appliquée par le serveur.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

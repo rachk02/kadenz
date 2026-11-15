@@ -15,7 +15,7 @@ use kadenz_domaine::referentiel::{FicheTiers, TypeTiers};
 use kadenz_domaine::role::Role;
 use kadenz_licence::SigningKey;
 use kadenz_licence::entreprise::{self as lic, LicenceEntreprise};
-use kadenz_poste::{DELAI, ErreurPoste, EtatConnexion, Evenement, Synchroniseur};
+use kadenz_poste::{DELAI, ErreurPoste, EtatConnexion, Evenement, SourceV1, Synchroniseur};
 use kadenz_protocole::{Action, Entite, Issue, Ligne, Motif, Operation, Saisie, Tiers};
 use kadenz_serveur::{Config, Serveur};
 use kadenz_stockage::comptes::{self, NouvelUtilisateur};
@@ -23,6 +23,7 @@ use kadenz_stockage::entreprise::Entreprise;
 use kadenz_stockage::installation::{self, InstallationInitiale};
 use kadenz_stockage::parametres::Parametres;
 use kadenz_stockage::poste_relie::{self, PosteRelie};
+use kadenz_stockage::reprise::MODELE_PAS_NEUF;
 use kadenz_stockage::{abonnement, postes, replique, synchro, tiers};
 
 const MOT_DE_PASSE: &str = "motdepasse1";
@@ -1178,4 +1179,94 @@ fn compte_desactive_pendant_la_coupure_en_attente() {
     });
     s.arreter();
     serveur.arreter();
+}
+
+/// Essai F7a : un Admin reprend la base V1 de son poste dans un serveur neuf.
+/// Le résumé lu sur le poste et le bilan du serveur portent les mêmes nombres,
+/// la base V1 reste intacte, les lignes reprises arrivent dans la copie, et
+/// une seconde reprise est refusée (décision 55).
+#[test]
+fn reprise_d_une_base_v1() {
+    let b = banc("reprise", true);
+    // Base V1 du poste, chiffrée par la clé du poste comme en V1.
+    let v1 = dossier("reprise-v1").join("kadenz.sqlite");
+    let client_v1 = {
+        let mut conn = kadenz_stockage::ouvrir(&v1).unwrap();
+        let admin = installation::installer(
+            &mut conn,
+            &InstallationInitiale {
+                entreprise: Entreprise {
+                    nom: "Quincaillerie V1".into(),
+                    ..Default::default()
+                },
+                admin: NouvelUtilisateur {
+                    nom_complet: "Patron V1".into(),
+                    identifiant: "admin".into(),
+                    mot_de_passe: "motdepasse-v1".into(),
+                    role: Role::Admin,
+                },
+                parametres: Parametres::default(),
+            },
+        )
+        .unwrap();
+        comptes::creer(
+            &conn,
+            &admin,
+            &NouvelUtilisateur {
+                nom_complet: "Vendeur V1".into(),
+                identifiant: "vente".into(),
+                mot_de_passe: "motdepasse-vente".into(),
+                role: Role::Commercial,
+            },
+        )
+        .unwrap();
+        let mut f = FicheTiers::vide(TypeTiers::Client);
+        f.nom = "Client de la V1".into();
+        let t = tiers::creer(&conn, &admin, &f).unwrap();
+        synchro::completer_uids(&conn).unwrap();
+        synchro::uid_de(&conn, Entite::Tiers, t.id)
+            .unwrap()
+            .unwrap()
+    };
+    let avant = std::fs::read(&v1).unwrap();
+
+    let (s, _e) = demarrer(&b.copie);
+    attendre("connexion", || s.etat() == EtatConnexion::Connecte);
+    s.connecter("admin", MOT_DE_PASSE).unwrap();
+    attendre("compte dans la copie", || {
+        present(&b.copie, Entite::Utilisateur, &b.admin)
+    });
+    assert_eq!(s.reprise_possible(), Ok(true));
+
+    let source = SourceV1::Base(v1.clone());
+    let resume = s.resume_reprise(&source).unwrap();
+    assert_eq!(resume.entreprise, "Quincaillerie V1");
+    assert_eq!(resume.clients, 1);
+    assert_eq!(resume.comptes_repris, ["vente"]);
+    assert_eq!(resume.comptes_ecartes, ["admin"]);
+
+    let bilan = s.reprendre(&source).unwrap();
+    assert_eq!(bilan, resume);
+    // La base V1 n'est pas modifiée, la sauvegarde envoyée est effacée.
+    assert_eq!(std::fs::read(&v1).unwrap(), avant);
+    assert!(!b.copie.with_file_name("reprise-v1.kzs").exists());
+    attendre("client de la V1 dans la copie", || {
+        present(&b.copie, Entite::Tiers, &client_v1)
+    });
+
+    assert_eq!(s.reprise_possible(), Ok(false));
+    match s.reprendre(&source) {
+        Err(ErreurPoste::Refus { modele, .. }) => assert_eq!(modele, MODELE_PAS_NEUF),
+        autre => panic!("refus attendu : {autre:?}"),
+    }
+    // Mot de passe faux d'une sauvegarde : refus à traduire, lu sur le poste.
+    let faux = SourceV1::Sauvegarde {
+        chemin: v1.clone(),
+        mot_de_passe: "pas-le-bon-mot".into(),
+    };
+    assert!(matches!(
+        s.resume_reprise(&faux),
+        Err(ErreurPoste::Refus { .. })
+    ));
+    s.arreter();
 }
