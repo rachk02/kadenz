@@ -93,8 +93,13 @@ pub enum ErreurClient {
     Injoignable(String),
     /// Le serveur ne présente pas le certificat épinglé.
     CertificatDifferent,
+    /// Le serveur parle une autre version du protocole : `serveur` est la
+    /// sienne, `logiciel` sa version logicielle (« 1.0.0 », absente avant
+    /// F10). Plus ancienne que celle du poste : le serveur est à mettre à
+    /// jour ; plus récente : le poste.
     VersionDifferente {
         serveur: u32,
+        logiciel: Option<String>,
     },
     PosteNonInscrit,
     /// Identifiant ou mot de passe refusé ; attente imposée avant le prochain essai.
@@ -126,7 +131,7 @@ impl fmt::Display for ErreurClient {
             ErreurClient::CertificatDifferent => {
                 f.write_str("le serveur ne présente pas le certificat attendu")
             }
-            ErreurClient::VersionDifferente { serveur } => {
+            ErreurClient::VersionDifferente { serveur, .. } => {
                 write!(
                     f,
                     "le serveur utilise une autre version du protocole ({serveur})"
@@ -238,6 +243,13 @@ pub struct Bienvenue {
     pub generation: String,
     /// Adresse du relais, pour un poste autorisé à distance (F8).
     pub relais: Option<String>,
+    /// Version logicielle du serveur (« 1.0.0 », F10) ; `None` avant F10.
+    pub logiciel: Option<String>,
+}
+
+/// Version logicielle annoncée ; vide (serveur d'avant F10) : `None`.
+fn non_vide(logiciel: String) -> Option<String> {
+    (!logiciel.is_empty()).then_some(logiciel)
 }
 
 /// Connexion TCP au serveur, avec délais.
@@ -449,6 +461,7 @@ impl Client {
                 decalage_minutes,
                 generation,
                 relais,
+                logiciel,
                 ..
             } => Ok((
                 self,
@@ -457,11 +470,13 @@ impl Client {
                     decalage_minutes,
                     generation,
                     relais,
+                    logiciel: non_vide(logiciel),
                 },
             )),
-            Reponse::VersionRefusee { version } => {
-                Err(ErreurClient::VersionDifferente { serveur: version })
-            }
+            Reponse::VersionRefusee { version, logiciel } => Err(ErreurClient::VersionDifferente {
+                serveur: version,
+                logiciel: non_vide(logiciel),
+            }),
             Reponse::PosteNonInscrit => Err(ErreurClient::PosteNonInscrit),
             autre => Err(inattendue(&autre)),
         }
@@ -484,9 +499,10 @@ impl Client {
             secret: secret.into(),
         })? {
             Reponse::Inscrit { entreprise, nom } => Ok(Inscrit { entreprise, nom }),
-            Reponse::VersionRefusee { version } => {
-                Err(ErreurClient::VersionDifferente { serveur: version })
-            }
+            Reponse::VersionRefusee { version, logiciel } => Err(ErreurClient::VersionDifferente {
+                serveur: version,
+                logiciel: non_vide(logiciel),
+            }),
             autre => Err(inattendue(&autre)),
         }
     }

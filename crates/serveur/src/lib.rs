@@ -808,9 +808,10 @@ fn session(contexte: &Contexte, tcp: TcpStream, distante: bool) {
             decalage_minutes: chrono::Local::now().offset().local_minus_utc() / 60,
             generation: contexte.generation.clone(),
             relais: contexte.distance.relais_pour(&poste),
+            logiciel: kadenz_protocole::logiciel(),
         },
         Requete::Bonjour { .. } => {
-            let _ = repondre(&mut flux, &Reponse::VersionRefusee { version: VERSION });
+            let _ = repondre(&mut flux, &version_refusee());
             return fermer(&mut flux);
         }
         _ => {
@@ -844,13 +845,21 @@ fn session(contexte: &Contexte, tcp: TcpStream, distante: bool) {
     }
 }
 
+/// Refus d'un poste d'une autre version du protocole, avec la version
+/// logicielle du serveur (F10) : le poste sait s'il doit attendre la mise à
+/// jour du serveur ou se mettre à jour lui-même.
+fn version_refusee() -> Reponse {
+    Reponse::VersionRefusee {
+        version: VERSION,
+        logiciel: kadenz_protocole::logiciel(),
+    }
+}
+
 /// Poste pas encore inscrit : une seule trame, courte, est lue ; seule une
 /// demande d'inscription par code est servie, puis la connexion est fermée.
 fn inscription(contexte: &Contexte, flux: &mut Flux, poste: &str, ip: &str) {
     let reponse = match messages::lire_borne::<Requete>(flux, TAILLE_INSCRIPTION) {
-        Ok(Requete::Inscription { version, .. }) if version != VERSION => {
-            Reponse::VersionRefusee { version: VERSION }
-        }
+        Ok(Requete::Inscription { version, .. }) if version != VERSION => version_refusee(),
         Ok(Requete::Inscription { secret, .. }) => inscrire(contexte, poste, ip, secret),
         Ok(_) | Err(ErreurTrame::TropGrand(_)) | Err(ErreurTrame::Illisible(_)) => {
             Reponse::PosteNonInscrit

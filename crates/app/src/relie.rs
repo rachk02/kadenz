@@ -547,7 +547,9 @@ fn indicateur(
         EtatConnexion::Injoignable => (tr("Hors connexion : serveur injoignable"), 2),
         EtatConnexion::CertificatDifferent => (tr("Serveur non reconnu"), 2),
         EtatConnexion::PosteRetire => (tr("Poste retiré du serveur"), 2),
-        EtatConnexion::VersionDifferente { .. } => (tr("Version différente du serveur"), 2),
+        EtatConnexion::VersionDifferente { .. } | EtatConnexion::AttendServeur { .. } => {
+            (tr("Version différente du serveur"), 2)
+        }
     }
 }
 
@@ -861,7 +863,10 @@ mod tests {
         for final_ in [
             EtatConnexion::CertificatDifferent,
             EtatConnexion::PosteRetire,
-            EtatConnexion::VersionDifferente { serveur: 3 },
+            EtatConnexion::VersionDifferente {
+                serveur: 3,
+                logiciel: None,
+            },
         ] {
             assert_eq!(indicateur(&final_, 0, None, false).1, 2);
         }

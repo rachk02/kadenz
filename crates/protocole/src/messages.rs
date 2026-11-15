@@ -108,10 +108,16 @@ pub enum Reponse {
         /// distance quand l'accès est actif (F8).
         #[serde(default)]
         relais: Option<String>,
+        /// Version logicielle du serveur (« 1.0.0 », F10) ; vide avant F10.
+        #[serde(default)]
+        logiciel: String,
     },
     /// Version du protocole différente : la connexion est fermée.
     VersionRefusee {
         version: u32,
+        /// Version logicielle du serveur (F10) ; vide avant F10.
+        #[serde(default)]
+        logiciel: String,
     },
     /// Certificat du poste inconnu ou retiré : la connexion est fermée.
     PosteNonInscrit,

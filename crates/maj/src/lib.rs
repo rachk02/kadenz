@@ -12,9 +12,18 @@
 //! et vérifie son empreinte, celle du manifeste signé, puis [`lancer`] l'ouvre ;
 //! l'application se ferme ensuite.
 //!
-//! Les versions d'une autre génération (phase 2) sont publiées dans le même
-//! dépôt sans le drapeau Latest, que les postes antérieurs au pont suivent
-//! encore : elles ne sont jamais proposées ici, seulement signalées.
+//! Les versions d'une autre génération sont publiées dans le même dépôt :
+//! elles ne sont jamais proposées, seulement signalées. La phase 2 est la
+//! génération `v2` (jalon F10), publiée sans le drapeau Latest, que les postes
+//! antérieurs au pont suivent encore. Son manifeste garde les cinq champs du
+//! pont (l'installateur est celui du poste), pour qu'un poste du pont le lise
+//! et le signale comme une nouvelle génération ; il y ajoute l'installateur du
+//! serveur (`serveur`).
+//!
+//! Phase 2 : le serveur est mis à jour avant ses postes. Un poste ne se voit
+//! proposer que les versions que son serveur a déjà ([`Produit::Poste`]) ; une
+//! version plus récente que le serveur est signalée
+//! ([`Recherche::AttendServeur`]).
 //!
 //! Aucune donnée du poste, de la licence ou du client n'est envoyée : la seule
 //! en-tête propre à Kadenz est `User-Agent: Kadenz/<version>`. Toute erreur de
@@ -41,8 +50,9 @@ const RELEASES: &str = "https://api.github.com/repos/rachk02/kadenz/releases?per
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Génération de cette application : seules les releases de la même
-/// génération lui sont proposées.
-pub const GENERATION: &str = "v1";
+/// génération lui sont proposées. `v1` jusqu'au pont (v0.2.2), `v2` pour la
+/// phase 2 (jalon F10).
+pub const GENERATION: &str = "v2";
 
 /// Nom du manifeste joint à chaque release, et de sa signature.
 pub const MANIFESTE: &str = "kadenz-maj.json";
@@ -55,6 +65,22 @@ const CLE_MAJ: &str = include_str!("../cle-maj.hex");
 
 /// Variable d'environnement qui désactive la vérification (développement).
 pub const SANS_MAJ: &str = "KADENZ_SANS_MAJ";
+
+/// Variable des versions de développement : clé publique de mise à jour
+/// d'essai (hexadécimal), qui remplace la clé embarquée, pour essayer une
+/// release d'essai signée par une clé d'essai (jalon F10). Sans effet dans
+/// une version optimisée.
+pub const CLE_ESSAI: &str = "KADENZ_MAJ_CLE";
+
+/// Variable des versions de développement : version installée simulée
+/// (« 1.2.3 »), pour essayer une mise à jour vers la version du dépôt. Sans
+/// effet dans une version optimisée.
+pub const VERSION_ESSAI: &str = "KADENZ_VERSION_ESSAI";
+
+/// Variable des versions de développement : l'installateur est téléchargé et
+/// vérifié, mais jamais lancé (essai F10c, sans installation). Sans effet
+/// dans une version optimisée.
+pub const SANS_LANCER: &str = "KADENZ_MAJ_SANS_LANCER";
 
 /// Taille maximale acceptée pour l'installateur.
 const TAILLE_MAX: u64 = 300 * 1024 * 1024;
@@ -111,6 +137,14 @@ impl fmt::Display for Version {
     }
 }
 
+/// Installateur désigné par un manifeste : nom du fichier dans la release et
+/// empreinte SHA-256.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Installateur {
+    pub nom: String,
+    pub empreinte: [u8; 32],
+}
+
 /// Manifeste de mise à jour d'une release.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Manifeste {
@@ -118,34 +152,52 @@ pub struct Manifeste {
     pub generation: String,
     /// Version minimale depuis laquelle la mise à jour est permise.
     pub depuis: Version,
-    /// Nom du fichier de l'installateur dans la release.
+    /// Nom du fichier de l'installateur du poste dans la release.
     pub installateur: String,
     pub empreinte: [u8; 32],
+    /// Installateur du serveur (phase 2) ; absent des manifestes de la V1.
+    pub serveur: Option<Installateur>,
 }
 
 impl Manifeste {
-    /// Texte JSON du manifeste, tel qu'il est signé et publié.
+    /// Texte JSON du manifeste, tel qu'il est signé et publié. Les cinq
+    /// champs du pont restent toujours présents, le serveur s'y ajoute.
     pub fn json(&self) -> String {
-        serde_json::json!({
+        let mut json = serde_json::json!({
             "version": self.version.to_string(),
             "generation": self.generation,
             "depuis": self.depuis.to_string(),
             "installateur": self.installateur,
             "sha256": en_hex(&self.empreinte),
-        })
-        .to_string()
+        });
+        if let Some(serveur) = &self.serveur {
+            json["serveur"] = serde_json::json!({
+                "installateur": serveur.nom,
+                "sha256": en_hex(&serveur.empreinte),
+            });
+        }
+        json.to_string()
     }
 
-    /// Lit un manifeste ; `None` s'il manque un champ ou qu'un champ est illisible.
+    /// Lit un manifeste ; `None` s'il manque un champ ou qu'un champ est
+    /// illisible, serveur compris quand il est présent.
     pub fn lire(octets: &[u8]) -> Option<Manifeste> {
         let v: serde_json::Value = serde_json::from_slice(octets).ok()?;
         let texte = |cle: &str| v[cle].as_str();
+        let serveur = match &v["serveur"] {
+            serde_json::Value::Null => None,
+            s => Some(Installateur {
+                nom: s["installateur"].as_str()?.to_owned(),
+                empreinte: lire_empreinte(s["sha256"].as_str()?)?,
+            }),
+        };
         Some(Manifeste {
             version: Version::lire(texte("version")?)?,
             generation: texte("generation")?.to_owned(),
             depuis: Version::lire(texte("depuis")?)?,
             installateur: texte("installateur")?.to_owned(),
             empreinte: lire_empreinte(texte("sha256")?)?,
+            serveur,
         })
     }
 }
@@ -166,9 +218,32 @@ fn depuis_hex<const N: usize>(texte: &str) -> Option<[u8; N]> {
     Some(octets)
 }
 
-/// Clé publique de mise à jour embarquée ; `None` si elle n'est pas encore générée.
+/// Clé publique de mise à jour embarquée ; `None` si elle n'est pas encore
+/// générée. En développement seulement, `KADENZ_MAJ_CLE` la remplace.
 pub fn cle_maj() -> Option<VerifyingKey> {
+    #[cfg(debug_assertions)]
+    if let Some(cle) = std::env::var(CLE_ESSAI).ok().filter(|v| !v.is_empty()) {
+        return cle_publique_depuis_hex(&cle);
+    }
     cle_publique_depuis_hex(CLE_MAJ)
+}
+
+/// Vrai si l'installateur vérifié ne doit pas être lancé (`KADENZ_MAJ_SANS_LANCER`,
+/// en développement seulement) : l'écran s'arrête alors après
+/// [`telecharger`], sans appeler [`lancer`] ni fermer l'application. Toujours
+/// faux dans une version optimisée.
+pub fn lancement_simule() -> bool {
+    cfg!(debug_assertions) && std::env::var_os(SANS_LANCER).is_some_and(|v| !v.is_empty())
+}
+
+/// Version installée : celle de cette application ; en développement
+/// seulement, `KADENZ_VERSION_ESSAI` la remplace.
+pub fn version_installee() -> String {
+    #[cfg(debug_assertions)]
+    if let Some(v) = std::env::var(VERSION_ESSAI).ok().filter(|v| !v.is_empty()) {
+        return v;
+    }
+    VERSION.to_owned()
 }
 
 pub fn cle_publique_depuis_hex(texte: &str) -> Option<VerifyingKey> {
@@ -203,17 +278,39 @@ pub enum Recherche {
     /// La release la plus récente est d'une autre génération (version donnée) :
     /// elle s'installe séparément.
     AutreGeneration(String),
+    /// Une version plus récente du poste existe, mais son serveur ne l'a pas
+    /// encore : le serveur est mis à jour d'abord.
+    AttendServeur {
+        /// Version la plus récente du poste, en attente.
+        version: String,
+        /// Version du serveur.
+        serveur: String,
+    },
     /// GitHub injoignable ou réponse illisible.
     HorsLigne,
 }
 
+/// Ce qui est mis à jour.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Produit {
+    /// Un poste. `serveur` : version logicielle de son serveur, annoncée à la
+    /// connexion ; aucune version plus récente ne lui est proposée. `None` :
+    /// serveur inconnu, sans plafond.
+    Poste { serveur: Option<Version> },
+    /// Le serveur (installateur `serveur` du manifeste).
+    Serveur,
+}
+
 /// Choisit la release à proposer dans la liste renvoyée par l'API GitHub.
 /// `lire(url)` rend le contenu d'un fichier joint (manifeste, signature), ou
-/// `None` s'il est injoignable ; `cle` est la clé publique de mise à jour.
+/// `None` s'il est injoignable ; `cle` est la clé publique de mise à jour,
+/// `generation` celle de l'application ([`GENERATION`]).
 pub fn choisir(
     liste: &str,
     actuelle: &str,
     cle: Option<&VerifyingKey>,
+    generation: &str,
+    produit: Produit,
     lire: impl Fn(&str) -> Option<Vec<u8>>,
 ) -> Recherche {
     let Ok(serde_json::Value::Array(releases)) = serde_json::from_str(liste) else {
@@ -233,6 +330,7 @@ pub fn choisir(
 
     let mut refusee = false;
     let mut autre_generation: Option<Version> = None;
+    let mut attend: Option<(Version, Version)> = None;
     for (version, release) in candidates {
         let actif = |nom: &str| {
             release["assets"].as_array()?.iter().find_map(|a| {
@@ -257,14 +355,30 @@ pub fn choisir(
             refusee = true;
             continue;
         };
-        if manifeste.generation != GENERATION {
+        if manifeste.generation != generation {
             autre_generation = autre_generation.max(Some(version));
             continue;
         }
         if manifeste.depuis > actuelle {
             continue;
         }
-        let Some(installateur_url) = actif(&manifeste.installateur) else {
+        let installateur = match produit {
+            Produit::Poste { serveur } => {
+                if let Some(serveur) = serveur.filter(|s| version > *s) {
+                    attend = attend.max(Some((version, serveur)));
+                    continue;
+                }
+                Installateur {
+                    nom: manifeste.installateur,
+                    empreinte: manifeste.empreinte,
+                }
+            }
+            Produit::Serveur => match manifeste.serveur {
+                Some(s) => s,
+                None => continue,
+            },
+        };
+        let Some(installateur_url) = actif(&installateur.nom) else {
             continue;
         };
         return Recherche::Disponible(MiseAJour {
@@ -275,13 +389,18 @@ pub fn choisir(
                 .unwrap_or_default()
                 .trim()
                 .to_owned(),
-            installateur_nom: manifeste.installateur,
+            installateur_nom: installateur.nom,
             installateur_url,
-            empreinte: manifeste.empreinte,
+            empreinte: installateur.empreinte,
         });
     }
     if refusee {
         Recherche::Refusee
+    } else if let Some((version, serveur)) = attend {
+        Recherche::AttendServeur {
+            version: version.to_string(),
+            serveur: serveur.to_string(),
+        }
     } else if let Some(version) = autre_generation {
         Recherche::AutreGeneration(version.to_string())
     } else {
@@ -304,28 +423,54 @@ fn agent(delai_global: Option<Duration>) -> Agent {
         .into()
 }
 
-/// Cherche une release à installer. `None` si l'application est à jour, si la
-/// vérification est désactivée (`KADENZ_SANS_MAJ`) ou en cas d'erreur.
-/// Bloquant (quelques secondes au plus) : à appeler hors du fil de l'interface.
-pub fn verifier() -> Option<MiseAJour> {
+/// Cherche une release à installer pour `produit`. `None` si le produit est
+/// à jour, si la vérification est désactivée (`KADENZ_SANS_MAJ`) ou en cas
+/// d'erreur. Bloquant (quelques secondes au plus) : à appeler hors du fil de
+/// l'interface.
+pub fn verifier_pour(produit: Produit) -> Option<MiseAJour> {
     if std::env::var_os(SANS_MAJ).is_some_and(|v| !v.is_empty()) {
         return None;
     }
-    match choisir(&releases()?, VERSION, cle_maj().as_ref(), lire_actif) {
+    match rechercher_dans(&releases()?, produit) {
         Recherche::Disponible(maj) => Some(maj),
         _ => None,
     }
 }
 
-/// Recherche à la demande (bouton « Rechercher une mise à jour » des
-/// Paramètres) : comme [`verifier`], mais dit pourquoi il n'y a rien à
-/// installer. `KADENZ_SANS_MAJ` ne s'applique pas : l'utilisateur a demandé la
+/// Recherche à la demande (bouton « Rechercher une mise à jour ») : comme
+/// [`verifier_pour`], mais dit pourquoi il n'y a rien à installer.
+/// `KADENZ_SANS_MAJ` ne s'applique pas : l'utilisateur a demandé la
 /// recherche. Bloquant : à appeler hors du fil de l'interface.
-pub fn rechercher() -> Recherche {
+pub fn rechercher_pour(produit: Produit) -> Recherche {
     match releases() {
-        Some(liste) => choisir(&liste, VERSION, cle_maj().as_ref(), lire_actif),
+        Some(liste) => rechercher_dans(&liste, produit),
         None => Recherche::HorsLigne,
     }
+}
+
+fn rechercher_dans(liste: &str, produit: Produit) -> Recherche {
+    choisir(
+        liste,
+        &version_installee(),
+        cle_maj().as_ref(),
+        GENERATION,
+        produit,
+        lire_actif,
+    )
+}
+
+/// Poste dont le serveur est inconnu : [`verifier_pour`] sans plafond.
+/// Transitoire, jusqu'à ce que l'application passe la version de son serveur
+/// (jalon F10b).
+pub fn verifier() -> Option<MiseAJour> {
+    verifier_pour(Produit::Poste { serveur: None })
+}
+
+/// Poste dont le serveur est inconnu : [`rechercher_pour`] sans plafond.
+/// Transitoire, jusqu'à ce que l'application passe la version de son serveur
+/// (jalon F10b).
+pub fn rechercher() -> Recherche {
+    rechercher_pour(Produit::Poste { serveur: None })
 }
 
 /// Variable des versions de développement : chemin d'un fichier JSON local
@@ -396,6 +541,15 @@ pub fn telecharger(
     maj: &MiseAJour,
     progression: impl Fn(u64, Option<u64>),
 ) -> Result<PathBuf, MessageCompose> {
+    // Développement : release d'essai locale (`KADENZ_MAJ_JSON`), installateur
+    // désigné par un chemin, vérifié de la même façon.
+    #[cfg(debug_assertions)]
+    if !maj.installateur_url.starts_with("https://") {
+        let octets =
+            std::fs::read(&maj.installateur_url).map_err(|e| refus(ERREUR_TELECHARGEMENT, e))?;
+        progression(octets.len() as u64, Some(octets.len() as u64));
+        return ecrire_installateur(maj, &octets);
+    }
     let corps = agent(None)
         .get(&maj.installateur_url)
         .call()
@@ -416,13 +570,19 @@ pub fn telecharger(
         octets.extend_from_slice(&tampon[..n]);
         progression(octets.len() as u64, total);
     }
-    if Sha256::digest(&octets).as_slice() != maj.empreinte {
+    ecrire_installateur(maj, &octets)
+}
+
+/// Vérifie l'empreinte de l'installateur reçu, puis l'écrit dans le dossier
+/// temporaire.
+fn ecrire_installateur(maj: &MiseAJour, octets: &[u8]) -> Result<PathBuf, MessageCompose> {
+    if Sha256::digest(octets).as_slice() != maj.empreinte {
         return Err(refus_fixe(ERREUR_EMPREINTE));
     }
     let dossier = std::env::temp_dir().join("Kadenz");
     std::fs::create_dir_all(&dossier).map_err(|e| refus(ERREUR_ECRITURE, e))?;
     let chemin = dossier.join(&maj.installateur_nom);
-    std::fs::write(&chemin, &octets).map_err(|e| refus(ERREUR_ECRITURE, e))?;
+    std::fs::write(&chemin, octets).map_err(|e| refus(ERREUR_ECRITURE, e))?;
     Ok(chemin)
 }
 
@@ -485,9 +645,11 @@ mod tests {
         let v = tag.trim_start_matches('v');
         let url = |nom: &str| format!("https://exemple/{v}/{nom}");
         let installateur = format!("KadenzSetup-{v}.exe");
+        let serveur = format!("KadenzServeur-{v}.msi");
         let mut actifs = vec![
             serde_json::json!({"name": installateur, "browser_download_url": url(&installateur)}),
             serde_json::json!({"name": format!("{installateur}.sha256"), "browser_download_url": url("sha")}),
+            serde_json::json!({"name": serveur, "browser_download_url": url(&serveur)}),
         ];
         if let Some((m, cle)) = manifeste {
             let json = m.json();
@@ -520,19 +682,55 @@ mod tests {
             depuis: Version::lire(depuis).unwrap(),
             installateur: format!("KadenzSetup-{version}.exe"),
             empreinte: [0xab; 32],
+            serveur: None,
         }
     }
 
+    /// Manifeste de la phase 2 : poste et serveur.
+    fn manifeste_v2(version: &str, depuis: &str) -> Manifeste {
+        Manifeste {
+            serveur: Some(Installateur {
+                nom: format!("KadenzServeur-{version}.msi"),
+                empreinte: [0xcd; 32],
+            }),
+            ..manifeste(version, "v2", depuis)
+        }
+    }
+
+    /// Choix d'un poste du pont (génération v1, sans serveur) : comportement
+    /// de la v0.2.2, que les manifestes de la phase 2 ne doivent pas changer.
     fn choisir_dans(
         releases: &[serde_json::Value],
         fichiers: &HashMap<String, Vec<u8>>,
         actuelle: &str,
     ) -> Recherche {
+        choisir_pour(
+            releases,
+            fichiers,
+            actuelle,
+            "v1",
+            Produit::Poste { serveur: None },
+        )
+    }
+
+    fn choisir_pour(
+        releases: &[serde_json::Value],
+        fichiers: &HashMap<String, Vec<u8>>,
+        actuelle: &str,
+        generation: &str,
+        produit: Produit,
+    ) -> Recherche {
         let cle = cle_essai().verifying_key();
         let liste = serde_json::Value::Array(releases.to_vec()).to_string();
-        choisir(&liste, actuelle, Some(&cle), |url| {
+        choisir(&liste, actuelle, Some(&cle), generation, produit, |url| {
             fichiers.get(url).cloned()
         })
+    }
+
+    fn poste(serveur: &str) -> Produit {
+        Produit::Poste {
+            serveur: Version::lire(serveur),
+        }
     }
 
     #[test]
@@ -567,6 +765,119 @@ mod tests {
             None
         );
         assert_eq!(verifier_manifeste(json.as_bytes(), "zz", &cle), None);
+    }
+
+    #[test]
+    fn manifeste_v2_aller_retour() {
+        let m = manifeste_v2("1.0.0", "0.0.0");
+        let json = m.json();
+        let signature = signer_manifeste(json.as_bytes(), &cle_essai());
+        let cle = cle_essai().verifying_key();
+        assert_eq!(
+            verifier_manifeste(json.as_bytes(), &signature, &cle),
+            Some(m.clone())
+        );
+        // Les cinq champs du pont restent au premier niveau.
+        let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+        for champ in ["version", "generation", "depuis", "installateur", "sha256"] {
+            assert!(v[champ].is_string(), "{champ}");
+        }
+        assert_eq!(v["installateur"], "KadenzSetup-1.0.0.exe");
+        assert_eq!(v["serveur"]["installateur"], "KadenzServeur-1.0.0.msi");
+        // Un manifeste V1 n'a pas de champ serveur.
+        assert!(!manifeste("0.3.0", "v1", "0.0.0").json().contains("serveur"));
+        // Serveur présent mais illisible : manifeste refusé.
+        let abime = json.replace(&"cd".repeat(32), "zz");
+        assert_eq!(Manifeste::lire(abime.as_bytes()), None);
+    }
+
+    /// Un poste du pont (v0.2.2, génération v1) qui voit une release de la
+    /// phase 2 la signale comme une nouvelle génération, sans jamais la
+    /// proposer ni la prendre pour une signature non valide.
+    #[test]
+    fn pont_signale_la_phase_2() {
+        let cle = cle_essai();
+        let mut f = HashMap::new();
+        let r = [release(
+            "v1.0.0",
+            Some((&manifeste_v2("1.0.0", "0.0.0"), &cle)),
+            &mut f,
+        )];
+        assert_eq!(
+            choisir_dans(&r, &f, "0.2.2"),
+            Recherche::AutreGeneration("1.0.0".into())
+        );
+    }
+
+    #[test]
+    fn serveur_avant_les_postes() {
+        let cle = cle_essai();
+        let mut f = HashMap::new();
+        let r = [
+            release(
+                "v1.1.0",
+                Some((&manifeste_v2("1.1.0", "0.0.0"), &cle)),
+                &mut f,
+            ),
+            release(
+                "v1.0.1",
+                Some((&manifeste_v2("1.0.1", "0.0.0"), &cle)),
+                &mut f,
+            ),
+            release(
+                "v0.3.0",
+                Some((&manifeste("0.3.0", "v1", "0.0.0"), &cle)),
+                &mut f,
+            ),
+        ];
+        // Serveur en 1.0.0 : sa mise à jour est proposée, avec son installateur.
+        let Recherche::Disponible(m) = choisir_pour(&r, &f, "1.0.0", "v2", Produit::Serveur) else {
+            panic!("mise à jour du serveur attendue");
+        };
+        assert_eq!(m.version, "1.1.0");
+        assert_eq!(m.installateur_nom, "KadenzServeur-1.1.0.msi");
+        assert_eq!(
+            m.installateur_url,
+            "https://exemple/1.1.0/KadenzServeur-1.1.0.msi"
+        );
+        assert_eq!(m.empreinte, [0xcd; 32]);
+
+        // Poste dont le serveur est encore en 1.0.0 : il attend.
+        assert_eq!(
+            choisir_pour(&r, &f, "1.0.0", "v2", poste("1.0.0")),
+            Recherche::AttendServeur {
+                version: "1.1.0".into(),
+                serveur: "1.0.0".into()
+            }
+        );
+        // Serveur en 1.0.1 : le poste prend la 1.0.1, pas plus.
+        let Recherche::Disponible(m) = choisir_pour(&r, &f, "1.0.0", "v2", poste("1.0.1")) else {
+            panic!("mise à jour du poste attendue");
+        };
+        assert_eq!(m.version, "1.0.1");
+        assert_eq!(m.installateur_nom, "KadenzSetup-1.0.1.exe");
+        assert_eq!(m.empreinte, [0xab; 32]);
+        // Serveur à jour : le poste prend la plus récente.
+        assert!(matches!(
+            choisir_pour(&r, &f, "1.0.0", "v2", poste("1.1.0")),
+            Recherche::Disponible(m) if m.version == "1.1.0"
+        ));
+        // Serveur inconnu : sans plafond.
+        assert!(matches!(
+            choisir_pour(&r, &f, "1.0.0", "v2", Produit::Poste { serveur: None }),
+            Recherche::Disponible(m) if m.version == "1.1.0"
+        ));
+        // Release sans installateur du serveur : rien pour le serveur.
+        let mut f = HashMap::new();
+        let r = [release(
+            "v1.1.0",
+            Some((&manifeste("1.1.0", "v2", "0.0.0"), &cle)),
+            &mut f,
+        )];
+        assert_eq!(
+            choisir_pour(&r, &f, "1.0.0", "v2", Produit::Serveur),
+            Recherche::AJour
+        );
     }
 
     #[test]
@@ -685,23 +996,31 @@ mod tests {
         )];
         let liste = serde_json::Value::Array(r.to_vec()).to_string();
         // Clé de mise à jour pas encore embarquée : rien n'est proposé.
+        let pont = Produit::Poste { serveur: None };
         assert_eq!(
-            choisir(&liste, "0.2.1", None, |u| f.get(u).cloned()),
+            choisir(&liste, "0.2.1", None, "v1", pont, |u| f.get(u).cloned()),
             Recherche::Refusee
         );
         // Fichier joint injoignable : release passée.
         let cle = cle_essai().verifying_key();
         assert_eq!(
-            choisir(&liste, "0.2.1", Some(&cle), |_| None),
+            choisir(&liste, "0.2.1", Some(&cle), "v1", pont, |_| None),
             Recherche::AJour
         );
         assert_eq!(choisir_dans(&[], &f, "0.2.1"), Recherche::AJour);
         assert_eq!(
-            choisir("<html>erreur</html>", "0.2.1", Some(&cle), |_| None),
+            choisir(
+                "<html>erreur</html>",
+                "0.2.1",
+                Some(&cle),
+                "v1",
+                pont,
+                |_| None
+            ),
             Recherche::HorsLigne
         );
         assert_eq!(
-            choisir("{}", "0.2.1", Some(&cle), |_| None),
+            choisir("{}", "0.2.1", Some(&cle), "v1", pont, |_| None),
             Recherche::HorsLigne
         );
     }
@@ -744,7 +1063,8 @@ mod tests {
     fn release_reelle_du_pont_proposee() {
         let json = releases_github().expect("réponse de GitHub");
         let cle = cle_maj().expect("clé de mise à jour embarquée");
-        match choisir(&json, "0.2.1", Some(&cle), lire_actif) {
+        let pont = Produit::Poste { serveur: None };
+        match choisir(&json, "0.2.1", Some(&cle), "v1", pont, lire_actif) {
             Recherche::Disponible(m) => {
                 assert!(Version::lire(&m.version) >= Version::lire("0.2.2"));
                 assert_eq!(m.installateur_nom, format!("KadenzSetup-{}.exe", m.version));

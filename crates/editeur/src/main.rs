@@ -14,12 +14,14 @@
 //!   clé de licence ; `<modules>` est une liste de codes séparés par des
 //!   virgules (devis,proforma,bons_commande,livraisons,paiements,
 //!   tableau_de_bord,relances), ou `tous`, ou `aucun`.
-//! - `manifeste <fichier de clé privée de mise à jour> <installateur> <depuis>` :
-//!   écrit `kadenz-maj.json` et sa signature à côté de l'installateur, pour la
-//!   release (cahier de la phase 2, pont V1, règle b). Refuse si une clé
-//!   embarquée manque ou si la clé privée ne correspond pas à la clé de mise à
-//!   jour embarquée : une release signée autrement couperait les postes de
-//!   toute mise à jour. Affiche la génération (`v1`), lue par `release.ps1`.
+//! - `manifeste <fichier de clé privée de mise à jour> <installateur> <depuis>
+//!   [<installateur du serveur>]` : écrit `kadenz-maj.json` et sa signature à
+//!   côté de l'installateur, pour la release (cahier de la phase 2, pont V1,
+//!   règle b ; jalon F10). L'installateur du serveur est exigé à partir de la
+//!   génération `v2`, refusé avant. Refuse si une clé embarquée manque ou si la
+//!   clé privée ne correspond pas à la clé de mise à jour embarquée : une
+//!   release signée autrement couperait les postes de toute mise à jour.
+//!   Affiche la génération (`v2`), lue par `release.ps1`.
 //! - `entreprise <fichier de clé privée du portail> <entreprise> <client>
 //!   <formule> <postes> <modules> <échéance> [<revendeur> <nom du revendeur>]` :
 //!   affiche une licence d'abonnement d'entreprise (phase 2, F3), en attendant
@@ -194,7 +196,12 @@ fn verifier_cle(cle: &str, poste: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn ecrire_manifeste(fichier_cle: &str, installateur: &str, depuis: &str) -> Result<(), String> {
+fn ecrire_manifeste(
+    fichier_cle: &str,
+    installateur: &str,
+    depuis: &str,
+    serveur: Option<&str>,
+) -> Result<(), String> {
     kadenz_licence::controler_cles_embarquees()?;
     let publique = kadenz_maj::cle_maj()
         .ok_or("crates/maj/cle-maj.hex : clé publique de mise à jour absente ou invalide")?;
@@ -226,12 +233,42 @@ fn ecrire_manifeste(fichier_cle: &str, installateur: &str, depuis: &str) -> Resu
         ));
     }
     let octets = std::fs::read(chemin).map_err(|e| format!("{installateur} : {e}"))?;
+    let serveur = match (kadenz_maj::GENERATION, serveur) {
+        ("v1", None) => None,
+        ("v1", Some(_)) => {
+            return Err("génération v1 : pas d'installateur du serveur".into());
+        }
+        (_, None) => {
+            return Err(format!(
+                "génération {} : installateur du serveur KadenzServeur-{version}.msi exigé",
+                kadenz_maj::GENERATION
+            ));
+        }
+        (_, Some(fichier)) => {
+            let chemin = Path::new(fichier);
+            let nom = chemin
+                .file_name()
+                .and_then(|n| n.to_str())
+                .ok_or("nom de l'installateur du serveur illisible")?;
+            if nom != format!("KadenzServeur-{version}.msi") {
+                return Err(format!(
+                    "installateur du serveur {nom} : KadenzServeur-{version}.msi attendu pour la version {version}"
+                ));
+            }
+            let octets = std::fs::read(chemin).map_err(|e| format!("{fichier} : {e}"))?;
+            Some(kadenz_maj::Installateur {
+                nom: nom.into(),
+                empreinte: Sha256::digest(&octets).into(),
+            })
+        }
+    };
     let manifeste = kadenz_maj::Manifeste {
         version,
         generation: kadenz_maj::GENERATION.into(),
         depuis,
         installateur: nom.into(),
         empreinte: Sha256::digest(&octets).into(),
+        serveur,
     };
     let json = manifeste.json();
     let signature = kadenz_maj::signer_manifeste(json.as_bytes(), &privee);
@@ -260,7 +297,10 @@ fn main() -> ExitCode {
         ["verifier", cle, poste] => verifier_cle(cle, poste),
         ["emettre", fichier, poste, client, liste] => emettre_cle(fichier, poste, client, liste),
         ["manifeste", fichier, installateur, depuis] => {
-            ecrire_manifeste(fichier, installateur, depuis)
+            ecrire_manifeste(fichier, installateur, depuis, None)
+        }
+        ["manifeste", fichier, installateur, depuis, serveur] => {
+            ecrire_manifeste(fichier, installateur, depuis, Some(serveur))
         }
         [
             "entreprise",
@@ -299,7 +339,8 @@ fn main() -> ExitCode {
         _ => Err(
             "usage : kadenz-editeur generer <dossier> | poste | verifier <clé> <poste> | \
                   emettre <fichier de clé privée> <poste> <client> <modules> | \
-                  manifeste <fichier de clé privée de mise à jour> <installateur> <depuis> | \
+                  manifeste <fichier de clé privée de mise à jour> <installateur> <depuis> \
+                  [<installateur du serveur>] | \
                   entreprise <fichier de clé privée du portail> <entreprise> <client> <formule> \
                   <postes> <modules> <échéance> [<revendeur> <nom du revendeur>] | \
                   verifier-entreprise <licence> <entreprise>"

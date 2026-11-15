@@ -169,6 +169,11 @@ fn session_complete() {
     )
     .unwrap();
     assert_eq!(bienvenue.entreprise, entreprise);
+    // Version logicielle annoncée (F10) : plafond des mises à jour du poste.
+    assert_eq!(
+        bienvenue.logiciel.as_deref(),
+        Some(env!("CARGO_PKG_VERSION"))
+    );
 
     // Rien avant la connexion d'un compte.
     let op = creer_tiers(&entreprise, &poste.empreinte(), &admin, "Ouédraogo");
@@ -256,7 +261,8 @@ fn autre_version_du_protocole() {
     );
     assert!(matches!(
         resultat,
-        Err(ErreurClient::VersionDifferente { serveur: v }) if v == VERSION
+        Err(ErreurClient::VersionDifferente { serveur: v, logiciel: Some(l) })
+            if v == VERSION && l == env!("CARGO_PKG_VERSION")
     ));
 }
 

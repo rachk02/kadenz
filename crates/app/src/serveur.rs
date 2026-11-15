@@ -51,7 +51,7 @@ pub(crate) fn texte_erreur_client(e: &ErreurClient) -> String {
         ErreurClient::CertificatDifferent => tr(
             "Le serveur ne présente pas le certificat attendu : la connexion est bloquée. Vérifiez qu'il s'agit bien du serveur de l'entreprise ; s'il a été réinstallé, demandez un nouveau code à l'Admin.",
         ),
-        ErreurClient::VersionDifferente { serveur } => trf(
+        ErreurClient::VersionDifferente { serveur, .. } => trf(
             "le serveur utilise une autre version du protocole ({}) : mettez à jour le serveur ou ce poste",
             &[serveur],
         ),

@@ -25,6 +25,7 @@
 | 0.21 | 2026-11-15 | Décisions 53 à 56 (F7) : comptes et fiche de l'entreprise à la reprise d'une base V1, serveur neuf, mot de passe des sauvegardes du serveur. |
 | 0.22 | 2026-11-15 | Décisions 57 à 59 (F8) : poste autorisé à distance par une case, licence valide exigée par le relais, traces du relais sans contenu gardées 30 jours. |
 | 0.23 | 2026-11-15 | Décisions 60 et 61 (F9), reçues par kadenz-8e : portail local sans carte, paiement saisi par l'éditeur ou un revendeur ; un seul programme Rust qui sert des pages HTML simples. Forme proposée dans `spec-portail.md`. |
+| 0.24 | 2026-11-15 | Décisions 62 et 63 (F10), reçues par kadenz-8e : première version de la phase 2 en 1.0.0 ; essai F10c en simulation, sans installer. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -104,6 +105,8 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 59. **Traces du relais (F8)** : le relais note, pour chaque session et chaque refus, l'heure, l'identifiant d'entreprise, l'empreinte du poste, la durée et le volume, jamais le contenu ; ces traces sont effacées au bout de 30 jours.
 60. **Portail sans carte (F9)** : le premier portail fonctionne en local, sans paiement par carte : l'éditeur ou un revendeur enregistre le paiement reçu (virement, chèque ou espèces) avec son montant et le nombre de postes, puis renouvelle la licence. Ni grille de prix ni carte pour l'instant ; elles s'ajouteront quand l'utilisateur les fournira.
 61. **Forme du portail (F9)** : un seul programme Rust qui sert des pages HTML simples, sans JavaScript lourd.
+62. **Numéro de la phase 2 (F10)** : la première version de la phase 2 est la 1.0.0. Elle dépasse la 0.2.2 du pont, ce qui permet aux postes du pont de la voir et de la signaler comme une nouvelle génération.
+63. **Essai de F10 (F10c)** : en simulation, sans installer : recherche, téléchargement, empreinte, signature de l'installateur d'essai et ordre serveur puis postes sont vérifiés, sans jamais lancer le paquet du serveur sur le service de la machine. L'installation réelle viendra plus tard.
 
 ## 3. Candidats
 

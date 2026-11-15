@@ -94,7 +94,9 @@ fn brancher_recherche(fenetre: &FenetrePrincipale) {
                         );
                         proposer(&f, m);
                     }
-                    Recherche::AJour => {
+                    // Sans plafond (serveur inconnu), AttendServeur n'arrive pas ;
+                    // texte propre à venir avec les écrans de F10b.
+                    Recherche::AJour | Recherche::AttendServeur { .. } => {
                         api.set_erreur_maj(false);
                         api.set_etat_maj(tr("Kadenz est à jour.").into());
                     }

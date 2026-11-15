@@ -26,6 +26,21 @@ pub use abonnement::Abonnement;
 /// version est refusé.
 pub const VERSION: u32 = 5;
 
+/// Variable des versions de développement : version logicielle simulée
+/// (« 1.2.3 »), annoncée à la place de la vraie, pour essayer l'ordre des
+/// mises à jour (F10). Sans effet dans une version optimisée.
+pub const LOGICIEL_ESSAI: &str = "KADENZ_VERSION_ESSAI";
+
+/// Version logicielle de ce programme (« 1.0.0 »), annoncée par le serveur à
+/// la connexion (F10) : un poste ne se met pas à jour au-delà de son serveur.
+pub fn logiciel() -> String {
+    #[cfg(debug_assertions)]
+    if let Some(v) = std::env::var(LOGICIEL_ESSAI).ok().filter(|v| !v.is_empty()) {
+        return v;
+    }
+    env!("CARGO_PKG_VERSION").to_owned()
+}
+
 /// Action d'un compte, faite sur un poste et appliquée par le serveur.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Operation {

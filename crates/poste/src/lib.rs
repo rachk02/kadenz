@@ -49,6 +49,8 @@ const ATTENTE_DIRECTE: Duration = Duration::from_millis(1500);
 const RELEVE: Duration = Duration::from_secs(2);
 /// Attentes successives avant de réessayer la connexion, en secondes.
 const ATTENTES: [u64; 4] = [1, 2, 4, 8];
+/// Attente entre deux essais d'un poste plus récent que son serveur (F10).
+const ATTENTE_SERVEUR: Duration = Duration::from_secs(30);
 /// Échecs de connexion d'affilée avant l'état « injoignable ».
 const ECHECS_INJOIGNABLE: u32 = 3;
 /// Changements demandés par page.
@@ -81,9 +83,19 @@ pub enum EtatConnexion {
     CertificatDifferent,
     /// État final : le poste a été retiré par l'Admin.
     PosteRetire,
-    /// État final : il faut mettre ce poste (ou le serveur) à jour.
+    /// État final : le serveur parle un protocole plus récent, ce poste est
+    /// à mettre à jour (jusqu'à la version logicielle du serveur, `logiciel`,
+    /// absente avant F10).
     VersionDifferente {
         serveur: u32,
+        logiciel: Option<String>,
+    },
+    /// Le serveur parle un protocole plus ancien : ce poste, plus récent,
+    /// attend la mise à jour du serveur (F10). Il travaille hors connexion
+    /// et réessaie régulièrement.
+    AttendServeur {
+        serveur: u32,
+        logiciel: Option<String>,
     },
 }
 
@@ -300,6 +312,8 @@ pub struct Synchroniseur {
     dossier: PathBuf,
     /// La session en cours passe par le relais (F8).
     distant: Arc<AtomicBool>,
+    /// Version logicielle du serveur, apprise à la connexion (F10).
+    logiciel: Arc<Mutex<Option<String>>>,
 }
 
 impl Synchroniseur {
@@ -321,6 +335,7 @@ impl Synchroniseur {
         let a_envoyer = Arc::new(AtomicU32::new(replique::a_envoyer(&conn).map_err(base)?));
         let etat = Arc::new(Mutex::new(EtatConnexion::Connexion));
         let distant = Arc::new(AtomicBool::new(false));
+        let logiciel = Arc::new(Mutex::new(None));
         let (commandes, reception) = mpsc::channel();
         let identite = Identite {
             certificat: poste.certificat.clone(),
@@ -346,6 +361,7 @@ impl Synchroniseur {
             suspendues_vues: None,
             sauvegarde_vue: None,
             distant: distant.clone(),
+            logiciel: logiciel.clone(),
         };
         let fil = std::thread::Builder::new()
             .name("kadenz-synchroniseur".into())
@@ -358,6 +374,7 @@ impl Synchroniseur {
             fil: Some(fil),
             dossier,
             distant,
+            logiciel,
         })
     }
 
@@ -468,12 +485,18 @@ impl Synchroniseur {
             commandes: self.commandes.clone(),
             dossier: self.dossier.clone(),
             distant: self.distant.clone(),
+            logiciel: self.logiciel.clone(),
         }
     }
 
     /// Voir [`Poignee::distant`].
     pub fn distant(&self) -> bool {
         self.distant.load(Ordering::SeqCst)
+    }
+
+    /// Voir [`Poignee::logiciel_serveur`].
+    pub fn logiciel_serveur(&self) -> Option<String> {
+        self.logiciel.lock().ok().and_then(|l| l.clone())
     }
 
     /// Voir [`Poignee::acces_distant`].
@@ -560,6 +583,7 @@ pub struct Poignee {
     commandes: Sender<Commande>,
     dossier: PathBuf,
     distant: Arc<AtomicBool>,
+    logiciel: Arc<Mutex<Option<String>>>,
 }
 
 impl Poignee {
@@ -568,6 +592,14 @@ impl Poignee {
     /// `Evenement::Etat` qui annonce la session.
     pub fn distant(&self) -> bool {
         self.distant.load(Ordering::SeqCst)
+    }
+
+    /// Version logicielle du serveur (« 1.0.0 »), apprise à la dernière
+    /// connexion ou au dernier refus de version (F10) ; `None` tant qu'aucun
+    /// serveur d'après F10 n'a répondu. Plafond des mises à jour de ce poste :
+    /// le serveur est mis à jour avant ses postes.
+    pub fn logiciel_serveur(&self) -> Option<String> {
+        self.logiciel.lock().ok().and_then(|l| l.clone())
     }
 
     /// État de l'accès à distance (F8), compte Admin seul ; `HorsConnexion`
@@ -702,6 +734,8 @@ struct Fil {
     sauvegarde_vue: Option<Option<AvertissementSauvegarde>>,
     /// La session en cours passe par le relais (F8).
     distant: Arc<AtomicBool>,
+    /// Version logicielle du serveur (F10).
+    logiciel: Arc<Mutex<Option<String>>>,
 }
 
 impl Fil {
@@ -730,6 +764,13 @@ impl Fil {
             .lock()
             .map(|e| e.clone())
             .unwrap_or(EtatConnexion::Connexion)
+    }
+
+    /// Retient la version logicielle annoncée par le serveur (F10).
+    fn noter_logiciel(&self, logiciel: Option<String>) {
+        if let Ok(mut present) = self.logiciel.lock() {
+            *present = logiciel;
+        }
     }
 
     fn poser_etat(&self, etat: EtatConnexion) {
@@ -909,6 +950,7 @@ impl Fil {
         let attendue = self.connexion_attendue.take();
         match resultat {
             Ok((client, bienvenue, distant)) => {
+                self.noter_logiciel(bienvenue.logiciel.clone());
                 let generation = bienvenue.generation;
                 // Relais donné par le serveur à un poste autorisé (F8) ;
                 // aucun : le poste n'essaie plus le relais.
@@ -1028,8 +1070,22 @@ impl Fil {
         let definitif = match &e {
             ErreurClient::CertificatDifferent => Some(EtatConnexion::CertificatDifferent),
             ErreurClient::PosteNonInscrit => Some(EtatConnexion::PosteRetire),
-            ErreurClient::VersionDifferente { serveur } => {
-                Some(EtatConnexion::VersionDifferente { serveur: *serveur })
+            ErreurClient::VersionDifferente { serveur, logiciel } => {
+                self.noter_logiciel(logiciel.clone());
+                if *serveur < kadenz_protocole::VERSION {
+                    // Poste plus récent que son serveur (F10) : il attend sa
+                    // mise à jour, hors connexion, et réessaie.
+                    self.prochain_essai = Instant::now() + ATTENTE_SERVEUR;
+                    self.poser_etat(EtatConnexion::AttendServeur {
+                        serveur: *serveur,
+                        logiciel: logiciel.clone(),
+                    });
+                    return ErreurPoste::HorsConnexion;
+                }
+                Some(EtatConnexion::VersionDifferente {
+                    serveur: *serveur,
+                    logiciel: logiciel.clone(),
+                })
             }
             _ => None,
         };
