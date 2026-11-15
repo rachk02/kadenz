@@ -55,6 +55,7 @@ fn retour_ok(message: String) -> Retour {
     Retour {
         ok: true,
         message: message.into(),
+        attente: false,
     }
 }
 
@@ -62,6 +63,7 @@ fn retour_erreur(message: String) -> Retour {
     Retour {
         ok: false,
         message: message.into(),
+        attente: false,
     }
 }
 
