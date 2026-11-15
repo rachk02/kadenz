@@ -85,7 +85,7 @@ Les heures affichées (synchronisation, journal, opérations en attente) sont da
 
 - **Activer ou désactiver** l'accès à distance pour l'entreprise (décision 16) ; désactivé par défaut.
 - **État du relais** : joignable ou non depuis le serveur, dernière connexion distante.
-- **Postes autorisés à distance** : liste, avec ajout par code à usage unique et retrait immédiat (un poste retiré ne peut plus passer par le relais).
+- **Postes autorisés à distance (décision 57)** : liste des postes inscrits, chacun avec une case « accès à distance », décochée par défaut ; la décocher a un effet immédiat (un poste retiré ne peut plus passer par le relais, ses sessions distantes sont fermées).
 - Texte d'explication court : les échanges passent par le relais de l'éditeur, chiffrés de bout en bout, sans que l'éditeur puisse les lire (décisions 10 et 28) ; si le serveur de l'entreprise est éteint, un poste distant travaille hors connexion.
 
 ## 10. Questions

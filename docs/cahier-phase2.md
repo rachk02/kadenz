@@ -23,6 +23,7 @@
 | 0.19 | 2026-11-13 | Décisions 49 à 51 (F5 et F6) : premier lancement d'un poste par code d'inscription seulement ; écritures permises hors connexion ; saisie par un compte connecté en local, qui complète la décision 48. |
 | 0.20 | 2026-11-13 | Décision 52 (F6) : écritures hors connexion d'un compte désactivé ou dont le mot de passe a changé pendant la coupure, apportées par la session d'un autre compte et toujours mises en attente pour l'Admin. |
 | 0.21 | 2026-11-15 | Décisions 53 à 56 (F7) : comptes et fiche de l'entreprise à la reprise d'une base V1, serveur neuf, mot de passe des sauvegardes du serveur. |
+| 0.22 | 2026-11-15 | Décisions 57 à 59 (F8) : poste autorisé à distance par une case, licence valide exigée par le relais, traces du relais sans contenu gardées 30 jours. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -97,6 +98,9 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 54. **Fiche de l'entreprise à la reprise (F7)** : la fiche de l'entreprise de la base V1 (avec ses logos) et ses paramètres (TVA, numérotation, mise en page, textes de relance) remplacent ceux du serveur neuf. L'identifiant d'entreprise du serveur, lié à la licence d'abonnement, est gardé.
 55. **Serveur neuf (F7)** : la reprise est refusée dès que le serveur a un tiers, un produit, un document ou un règlement ; des comptes créés après l'installation ne l'empêchent pas.
 56. **Mot de passe des sauvegardes du serveur (F7)** : le mot de passe, le dossier et l'heure des sauvegardes se règlent dans la fenêtre d'administration du serveur, et son assistant d'installation les demande. Sans mot de passe, aucune sauvegarde n'est faite et un avertissement permanent s'affiche dans la fenêtre et sur les postes connectés avec un compte Admin.
+57. **Poste autorisé à distance (F8)** : dans la liste des postes inscrits, l'Admin coche « accès à distance » pour un poste et peut la décocher à tout moment, avec effet immédiat. Pas de second code : le poste a déjà prouvé son identité à l'inscription, faite au bureau.
+58. **Licence et relais (F8)** : le relais de l'éditeur ne sert qu'aux abonnés. Le serveur lui présente sa licence d'entreprise, sur une connexion chiffrée ; le relais vérifie sa signature et son entreprise, et refuse une licence échue.
+59. **Traces du relais (F8)** : le relais note, pour chaque session et chaque refus, l'heure, l'identifiant d'entreprise, l'empreinte du poste, la durée et le volume, jamais le contenu ; ces traces sont effacées au bout de 30 jours.
 
 ## 3. Candidats
 
