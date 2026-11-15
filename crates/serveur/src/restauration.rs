@@ -66,8 +66,11 @@ pub struct BilanRestauration {
     pub avant: Option<PathBuf>,
     /// Base courante mise de côté.
     pub mise_de_cote: Option<PathBuf>,
-    /// Le certificat du serveur a changé : les postes qui l'ont épinglé ne se
-    /// connectent plus sans une nouvelle inscription.
+    /// Le certificat du dossier a été remplacé par celui de la sauvegarde :
+    /// les postes inscrits du temps de la sauvegarde (cas d'une nouvelle
+    /// machine) se reconnectent sans rien faire ; seul un poste inscrit
+    /// depuis sur ce serveur doit être réinscrit. L'empreinte et le code
+    /// complet sont à relire.
     pub identite_remplacee: bool,
     /// L'entreprise du serveur a été remplacée par celle de la sauvegarde.
     pub entreprise_changee: bool,
