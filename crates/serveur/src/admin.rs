@@ -178,6 +178,22 @@ pub fn installer_avec(
 /// Fichier de trace du service, dans son dossier des données.
 pub const NOM_TRACE: &str = "kadenz-serveur.log";
 
+/// Ajoute une ligne horodatée à la trace du service (il n'a pas de console).
+pub fn noter_trace(dossier: &Path, texte: &str) {
+    use std::io::Write;
+    let ligne = format!(
+        "[{}] {texte}\n",
+        chrono::Local::now().format("%Y-%m-%d %H:%M:%S")
+    );
+    if let Ok(mut f) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(dossier.join(NOM_TRACE))
+    {
+        let _ = f.write_all(ligne.as_bytes());
+    }
+}
+
 /// Dernière erreur du service : échec du dernier démarrage, ou problème non
 /// bloquant noté depuis (découverte impossible, décision 44). Un démarrage
 /// réussi sans problème efface les erreurs précédentes.

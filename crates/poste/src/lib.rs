@@ -33,6 +33,7 @@ use kadenz_client::{Client, ErreurClient, Identite};
 use kadenz_protocole::messages::LIGNES_MAX;
 use kadenz_protocole::reprise::TAILLE_MAX_REPRISE;
 pub use kadenz_protocole::reprise::{DocumentsRepris, ResumeReprise};
+pub use kadenz_protocole::sauvegarde::AvertissementSauvegarde;
 use kadenz_protocole::{Abonnement, Action, EnCoupure, Entite, Issue, Motif, Operation, Suspendue};
 use kadenz_stockage::poste_relie::{self, PosteRelie};
 use kadenz_stockage::{replique, synchro};
@@ -135,6 +136,10 @@ pub enum Evenement {
     /// coupure. Sur un refus (mot de passe changé ailleurs, compte
     /// désactivé), le compte n'est plus connecté.
     Compte(Result<CompteConnecte, ErreurPoste>),
+    /// Avertissement sur les sauvegardes du serveur, pour un compte Admin
+    /// (décision 56) : à la connexion d'un compte, puis à chaque changement
+    /// (relu toutes les minutes environ) ; `None` l'efface.
+    Sauvegarde(Option<AvertissementSauvegarde>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -208,6 +213,29 @@ fn stockage(e: kadenz_stockage::Erreur) -> ErreurPoste {
             ErreurPoste::Refus { modele, valeurs }
         }
         autre => base(autre),
+    }
+}
+
+/// Sauvegarde `.kzs` de la source et son mot de passe ; `true` si elle a été
+/// faite pour l'occasion dans `dossier` (base V1 du poste), à effacer après
+/// usage.
+fn sauvegarde_v1(
+    dossier: &Path,
+    source: &SourceV1,
+) -> Result<(PathBuf, String, bool), ErreurPoste> {
+    match source {
+        SourceV1::Sauvegarde {
+            chemin,
+            mot_de_passe,
+        } => Ok((chemin.clone(), mot_de_passe.clone(), false)),
+        SourceV1::Base(chemin) => {
+            let kzs = dossier.join("reprise-v1.kzs");
+            // Mot de passe à usage unique : la sauvegarde ne sert qu'à l'envoi.
+            let mot_de_passe = synchro::nouvel_uid();
+            kadenz_stockage::reprise::exporter_base_v1(chemin, &kzs, &mot_de_passe)
+                .map_err(stockage)?;
+            Ok((kzs, mot_de_passe, true))
+        }
     }
 }
 
@@ -306,6 +334,7 @@ impl Synchroniseur {
             releves: 0,
             lecture_seule: None,
             suspendues_vues: None,
+            sauvegarde_vue: None,
         };
         let fil = std::thread::Builder::new()
             .name("kadenz-synchroniseur".into())
@@ -420,74 +449,28 @@ impl Synchroniseur {
         })));
     }
 
-    /// Résumé d'une base V1 avant sa reprise (F7), lu sur ce poste, sans le
-    /// serveur : entreprise, tiers, produits, règlements, documents et dernier
-    /// numéro par type, comptes repris et comptes écartés parce que leur
-    /// identifiant existe déjà dans la copie (décision 53).
+    /// Poignée pour les appels longs (reprise d'une base V1), utilisable
+    /// depuis un autre fil que celui de l'écran.
+    pub fn poignee(&self) -> Poignee {
+        Poignee {
+            commandes: self.commandes.clone(),
+            dossier: self.dossier.clone(),
+        }
+    }
+
+    /// Voir [`Poignee::resume_reprise`].
     pub fn resume_reprise(&self, source: &SourceV1) -> Result<ResumeReprise, ErreurPoste> {
-        let (kzs, mot_de_passe, temporaire) = self.sauvegarde_v1(source)?;
-        let lu = kadenz_stockage::ouvrir_sauvegarde(&kzs, &mot_de_passe)
-            .and_then(|conn| kadenz_stockage::reprise::resume(&conn));
-        if temporaire {
-            let _ = std::fs::remove_file(&kzs);
-        }
-        let mut resume = lu.map_err(stockage)?;
-        self.sur_fil(move |fil| {
-            kadenz_stockage::reprise::separer_comptes(&mut resume, &fil.copie).map_err(base)?;
-            Ok(resume)
-        })
+        self.poignee().resume_reprise(source)
     }
 
-    /// Le serveur est-il neuf, prêt pour une reprise (décision 55) ? Demande
-    /// au serveur, avec un compte connecté.
+    /// Voir [`Poignee::reprise_possible`].
     pub fn reprise_possible(&self) -> Result<bool, ErreurPoste> {
-        self.sur_fil(|fil| fil.reprise_possible())
+        self.poignee().reprise_possible()
     }
 
-    /// Reprend la base V1 dans le serveur (F7), compte Admin seul ; rend le
-    /// bilan mesuré sur le serveur. Refus du serveur à traduire : serveur
-    /// qui n'est pas neuf ([`kadenz_stockage::reprise::MODELE_PAS_NEUF`]),
-    /// mot de passe de la sauvegarde, droit manquant. Les lignes reprises
-    /// arrivent ensuite dans la copie par les changements habituels.
+    /// Voir [`Poignee::reprendre`].
     pub fn reprendre(&self, source: &SourceV1) -> Result<ResumeReprise, ErreurPoste> {
-        let (kzs, mot_de_passe, temporaire) = self.sauvegarde_v1(source)?;
-        let lu = std::fs::read(&kzs);
-        if temporaire {
-            let _ = std::fs::remove_file(&kzs);
-        }
-        let octets = lu.map_err(base)?;
-        if octets.len() > TAILLE_MAX_REPRISE {
-            return Err(ErreurPoste::Refus {
-                modele: MODELE_TROP_GRANDE.into(),
-                valeurs: vec![(TAILLE_MAX_REPRISE / (1024 * 1024)).to_string()],
-            });
-        }
-        let (retour, reponse) = mpsc::channel();
-        self.envoyer(Commande::Fil(Box::new(move |fil: &mut Fil| {
-            let _ = retour.send(fil.reprendre_v1(&octets, &mot_de_passe));
-        })))?;
-        reponse
-            .recv_timeout(DELAI_REPRISE + DELAI * 2)
-            .unwrap_or(Err(ErreurPoste::Delai))
-    }
-
-    /// Sauvegarde `.kzs` de la source et son mot de passe ; `true` si elle a
-    /// été faite pour l'occasion (base V1 du poste), à effacer après usage.
-    fn sauvegarde_v1(&self, source: &SourceV1) -> Result<(PathBuf, String, bool), ErreurPoste> {
-        match source {
-            SourceV1::Sauvegarde {
-                chemin,
-                mot_de_passe,
-            } => Ok((chemin.clone(), mot_de_passe.clone(), false)),
-            SourceV1::Base(chemin) => {
-                let kzs = self.dossier.join("reprise-v1.kzs");
-                // Mot de passe à usage unique : la sauvegarde ne sert qu'à l'envoi.
-                let mot_de_passe = synchro::nouvel_uid();
-                kadenz_stockage::reprise::exporter_base_v1(chemin, &kzs, &mot_de_passe)
-                    .map_err(stockage)?;
-                Ok((kzs, mot_de_passe, true))
-            }
-        }
+        self.poignee().reprendre(source)
     }
 
     pub fn etat(&self) -> EtatConnexion {
@@ -531,6 +514,86 @@ impl Drop for Synchroniseur {
     }
 }
 
+/// Poignée du synchroniseur, `Clone` et `Send` : ses appels attendent la
+/// réponse du fil du synchroniseur, et se font donc hors du fil de l'écran.
+/// Elle n'arrête pas le synchroniseur ; après son arrêt, ses appels rendent
+/// une erreur.
+#[derive(Clone)]
+pub struct Poignee {
+    commandes: Sender<Commande>,
+    dossier: PathBuf,
+}
+
+impl Poignee {
+    /// Résumé d'une base V1 avant sa reprise (F7), lu sur ce poste, sans le
+    /// serveur : entreprise, tiers, produits, règlements, documents et dernier
+    /// numéro par type, comptes repris et comptes écartés parce que leur
+    /// identifiant existe déjà dans la copie (décision 53).
+    pub fn resume_reprise(&self, source: &SourceV1) -> Result<ResumeReprise, ErreurPoste> {
+        let (kzs, mot_de_passe, temporaire) = sauvegarde_v1(&self.dossier, source)?;
+        let lu = kadenz_stockage::ouvrir_sauvegarde(&kzs, &mot_de_passe)
+            .and_then(|conn| kadenz_stockage::reprise::resume(&conn));
+        if temporaire {
+            let _ = std::fs::remove_file(&kzs);
+        }
+        let mut resume = lu.map_err(stockage)?;
+        self.sur_fil(DELAI * 2, move |fil| {
+            kadenz_stockage::reprise::separer_comptes(&mut resume, &fil.copie).map_err(base)?;
+            Ok(resume)
+        })
+    }
+
+    /// Le serveur est-il neuf, prêt pour une reprise (décision 55) ? Demande
+    /// au serveur, avec un compte connecté. Après un `Delai` de `reprendre`,
+    /// `Ok(false)` dit que la reprise est faite : elle est d'un seul tenant.
+    pub fn reprise_possible(&self) -> Result<bool, ErreurPoste> {
+        self.sur_fil(DELAI * 2, |fil| fil.reprise_possible())
+    }
+
+    /// Reprend la base V1 dans le serveur (F7), compte Admin seul ; rend le
+    /// bilan mesuré sur le serveur. Refus à traduire : serveur qui n'est pas
+    /// neuf ([`kadenz_stockage::reprise::MODELE_PAS_NEUF`]), base trop grande
+    /// ([`MODELE_TROP_GRANDE`]), base introuvable, mot de passe de la
+    /// sauvegarde, droit manquant. Attend jusqu'à [`DELAI_REPRISE`] ; les
+    /// lignes reprises arrivent ensuite dans la copie par les changements
+    /// habituels.
+    pub fn reprendre(&self, source: &SourceV1) -> Result<ResumeReprise, ErreurPoste> {
+        let source = source.clone();
+        let dossier = self.dossier.clone();
+        self.sur_fil(DELAI_REPRISE + DELAI * 2, move |fil| {
+            let (kzs, mot_de_passe, temporaire) = sauvegarde_v1(&dossier, &source)?;
+            let lu = std::fs::read(&kzs);
+            if temporaire {
+                let _ = std::fs::remove_file(&kzs);
+            }
+            let octets = lu.map_err(base)?;
+            if octets.len() > TAILLE_MAX_REPRISE {
+                return Err(ErreurPoste::Refus {
+                    modele: MODELE_TROP_GRANDE.into(),
+                    valeurs: vec![(TAILLE_MAX_REPRISE / (1024 * 1024)).to_string()],
+                });
+            }
+            fil.reprendre_v1(&octets, &mot_de_passe)
+        })
+    }
+
+    fn sur_fil<T: Send + 'static>(
+        &self,
+        delai: Duration,
+        travail: impl FnOnce(&mut Fil) -> Result<T, ErreurPoste> + Send + 'static,
+    ) -> Result<T, ErreurPoste> {
+        let (retour, reponse) = mpsc::channel();
+        self.commandes
+            .send(Commande::Fil(Box::new(move |fil: &mut Fil| {
+                let _ = retour.send(travail(fil));
+            })))
+            .map_err(|_| ErreurPoste::Base("synchroniseur arrêté".into()))?;
+        reponse
+            .recv_timeout(delai)
+            .unwrap_or(Err(ErreurPoste::Delai))
+    }
+}
+
 /// Compte connecté : de quoi le reconnecter après une coupure (en mémoire
 /// seulement).
 struct Compte {
@@ -564,6 +627,8 @@ struct Fil {
     lecture_seule: Option<Option<String>>,
     /// Derniers nombres de suspendues signalés (conflits, attentes).
     suspendues_vues: Option<(u32, u32)>,
+    /// Dernier avertissement des sauvegardes du serveur signalé (F7).
+    sauvegarde_vue: Option<Option<AvertissementSauvegarde>>,
 }
 
 impl Fil {
@@ -664,6 +729,7 @@ impl Fil {
                 // session TLS est refermée et rouverte sans compte.
                 self.compte = None;
                 self.suspendues_vues = None;
+                self.sauvegarde_vue = None;
                 self.connexion_attendue = None;
                 self.client = None;
                 self.prochain_essai = Instant::now();
@@ -707,6 +773,7 @@ impl Fil {
             // suspendues : la décision a pu être prise depuis.
             let _ = self.vider_file(true);
             self.compter_suspendues(false);
+            self.lire_sauvegarde(false);
         }
         if self.rattraper().is_ok() {
             self.poser_etat(self.etat_ouvert());
@@ -840,6 +907,7 @@ impl Fil {
             self.signaler_a_valider();
         }
         self.compter_suspendues(true);
+        self.lire_sauvegarde(true);
     }
 
     /// Connexion perdue ou refusée : état et prochain essai. Rend l'erreur
@@ -1357,6 +1425,29 @@ impl Fil {
     fn compter_suspendues(&mut self, toujours: bool) {
         if let Ok(liste) = self.suspendues() {
             self.noter_suspendues(&liste, toujours);
+        }
+    }
+
+    /// Relit l'avertissement des sauvegardes du serveur (décision 56 ; rien
+    /// pour un compte qui n'est pas Admin) et le signale s'il a changé (ou
+    /// toujours, avec `toujours`).
+    fn lire_sauvegarde(&mut self, toujours: bool) {
+        if self.etat_present().definitif() || self.uid_session().is_none() {
+            return;
+        }
+        let Some(client) = self.client.as_mut() else {
+            return;
+        };
+        let avertissement = match client.sauvegarde() {
+            Ok(a) => a,
+            Err(e) => {
+                let _ = self.erreur_requete(e);
+                return;
+            }
+        };
+        if toujours || self.sauvegarde_vue != Some(avertissement) {
+            self.sauvegarde_vue = Some(avertissement);
+            (self.evenements)(Evenement::Sauvegarde(avertissement));
         }
     }
 

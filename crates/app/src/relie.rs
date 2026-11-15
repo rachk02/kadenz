@@ -789,6 +789,8 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
                 crate::appliquer_droits(f, &e);
             }
         }
+        // Bandeau des sauvegardes du serveur (décision 56) : écran du jalon F7c.
+        Evenement::Sauvegarde(_) => {}
     }
 }
 

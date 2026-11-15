@@ -908,3 +908,69 @@ fn conflit_liste_et_tranche_par_la_session() {
     let trop = vec![(Entite::Tiers, t); messages::LIGNES_MAX + 1];
     assert!(matches!(client.lignes(trop), Err(ErreurClient::Rejet(_))));
 }
+
+#[test]
+fn sauvegarde_du_serveur_avec_son_identite() {
+    use kadenz_protocole::sauvegarde::AvertissementSauvegarde;
+    use kadenz_serveur::sauvegardes;
+    use kadenz_stockage::sauvegarde::Genre;
+
+    let serveur = demarrer("sauvegardes", DELAI_CLIENT, 8);
+    let donnees = chemin("sauvegardes");
+    installer(&serveur);
+    let mut client = connecter(&serveur, &poste_inscrit(&serveur)).unwrap();
+    // Sans compte connecté : refus ; compte Admin sans mot de passe réglé :
+    // avertissement permanent (décision 56).
+    assert!(matches!(client.sauvegarde(), Err(ErreurClient::Rejet(_))));
+    client.connexion("admin", MOT_DE_PASSE).unwrap();
+    assert_eq!(
+        client.sauvegarde().unwrap(),
+        Some(AvertissementSauvegarde::SansMotDePasse)
+    );
+    let sans = donnees.clone();
+    let refus = serveur
+        .base(move |c| sauvegardes::sauvegarder(c, &sans, Genre::Manuelle))
+        .unwrap();
+    assert!(refus.is_err());
+
+    let dossier = dossier("sauvegardes-dossier");
+    sauvegardes::enregistrer_reglage(
+        &donnees,
+        &dossier,
+        chrono::NaiveTime::from_hms_opt(7, 30, 0).unwrap(),
+        Some("motdepasse-sauvegardes"),
+    )
+    .unwrap();
+    assert_eq!(
+        client.sauvegarde().unwrap(),
+        Some(AvertissementSauvegarde::MemeDisque)
+    );
+    let avec = donnees.clone();
+    let fichier = serveur
+        .base(move |c| sauvegardes::sauvegarder(c, &avec, Genre::Manuelle))
+        .unwrap()
+        .unwrap();
+    assert!(fichier.starts_with(&dossier));
+    assert_eq!(sauvegardes::liste(&donnees).unwrap().len(), 1);
+    // L'identité TLS du serveur est dans la sauvegarde, chiffrée avec elle.
+    let conn = kadenz_stockage::ouvrir_sauvegarde(&fichier, "motdepasse-sauvegardes").unwrap();
+    let certificat: Vec<u8> = conn
+        .query_row(
+            &format!(
+                "SELECT certificat FROM {} WHERE id = 1",
+                sauvegardes::TABLE_IDENTITE
+            ),
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(
+        certificat,
+        std::fs::read(donnees.join(kadenz_serveur::NOM_CERTIFICAT)).unwrap()
+    );
+    assert!(kadenz_stockage::ouvrir_sauvegarde(&fichier, "pas-le-bon-mot").is_err());
+    drop(conn);
+    drop(client);
+    serveur.arreter();
+    let _ = std::fs::remove_dir_all(&dossier);
+}

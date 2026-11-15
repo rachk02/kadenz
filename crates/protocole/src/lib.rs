@@ -17,6 +17,7 @@ pub mod abonnement;
 pub mod inscription;
 pub mod messages;
 pub mod reprise;
+pub mod sauvegarde;
 
 pub use abonnement::Abonnement;
 

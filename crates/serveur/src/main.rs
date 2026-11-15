@@ -89,18 +89,7 @@ fn console(config: Config) -> Result<(), String> {
 
 /// Trace du service, dans son dossier des données (il n'a pas de console).
 fn noter(config: &Config, texte: &str) {
-    use std::io::Write;
-    let ligne = format!(
-        "[{}] {texte}\n",
-        chrono::Local::now().format("%Y-%m-%d %H:%M:%S")
-    );
-    if let Ok(mut f) = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(config.dossier.join(kadenz_serveur::admin::NOM_TRACE))
-    {
-        let _ = f.write_all(ligne.as_bytes());
-    }
+    kadenz_serveur::admin::noter_trace(&config.dossier, texte);
 }
 
 #[cfg(windows)]
@@ -139,7 +128,8 @@ mod service {
                 ServiceExitCode::ServiceSpecific(code)
             },
             checkpoint: 0,
-            wait_hint: Duration::from_secs(10),
+            // L'arrêt comprend une sauvegarde de la base (F7).
+            wait_hint: Duration::from_secs(60),
             process_id: None,
         }
     }

@@ -10,6 +10,7 @@
 
 pub mod admin;
 pub mod droits;
+pub mod sauvegardes;
 
 use std::collections::HashMap;
 use std::fs;
@@ -24,6 +25,7 @@ use std::time::{Duration, Instant};
 
 use kadenz_client::{Identite, NOM_TLS, empreinte, fournisseur};
 use kadenz_domaine::message::MessageCompose;
+use kadenz_domaine::role::Role;
 use kadenz_licence::VerifyingKey;
 use kadenz_protocole::abonnement::Refus;
 use kadenz_protocole::inscription::{DECOUVERTE, ServeurTrouve};
@@ -32,7 +34,9 @@ use kadenz_protocole::messages::{
 };
 use kadenz_protocole::{Entite, VERSION};
 use kadenz_stockage::chiffrement::{self, Portee};
-use kadenz_stockage::{Erreur, abonnement, comptes, inscription, postes, reprise, synchro};
+use kadenz_stockage::{
+    Erreur, abonnement, comptes, inscription, postes, reprise, sauvegarde, synchro,
+};
 use rusqlite::Connection;
 use rustls::client::danger::HandshakeSignatureValid;
 use rustls::crypto::{CryptoProvider, verify_tls12_signature, verify_tls13_signature};
@@ -403,6 +407,9 @@ pub struct Serveur {
     arret: Arc<AtomicBool>,
     ecoute: Option<JoinHandle<()>>,
     decouverte: Option<JoinHandle<()>>,
+    /// Sauvegarde quotidienne (F7).
+    planification: Option<JoinHandle<()>>,
+    dossier: PathBuf,
     avertissement: Option<String>,
 }
 
@@ -459,6 +466,15 @@ impl Serveur {
             let arret = arret.clone();
             thread::spawn(move || repondre_decouverte(socket, adresse.port(), arret))
         });
+        let planification = {
+            let arret = arret.clone();
+            let base = base.clone();
+            let dossier = config.dossier.clone();
+            thread::Builder::new()
+                .name("kadenz-sauvegardes".into())
+                .spawn(move || planifier(base, dossier, arret))
+                .ok()
+        };
         Ok(Serveur {
             adresse,
             empreinte: identite.empreinte(),
@@ -466,6 +482,8 @@ impl Serveur {
             arret,
             ecoute: Some(fil),
             decouverte,
+            planification,
+            dossier: config.dossier,
             avertissement,
         })
     }
@@ -515,6 +533,55 @@ impl Serveur {
         if let Some(fil) = self.decouverte.take() {
             let _ = fil.join();
         }
+        if let Some(fil) = self.planification.take() {
+            let _ = fil.join();
+        }
+        // Sauvegarde à l'arrêt (décision 35), après la dernière session.
+        if sauvegardes::lire_reglage(&self.dossier)
+            .mot_de_passe
+            .is_some()
+        {
+            sauvegarder_et_noter(&self.base, &self.dossier, "à l'arrêt");
+        }
+    }
+}
+
+/// Sauvegarde automatique sur le fil de la base, notée dans la trace du
+/// service ; rend `false` sur un échec.
+fn sauvegarder_et_noter(base: &Base, dossier: &Path, quand: &str) -> bool {
+    let donnees = dossier.to_path_buf();
+    let resultat = base
+        .executer(move |c| sauvegardes::sauvegarder(c, &donnees, sauvegarde::Genre::Automatique))
+        .and_then(|r| r);
+    match resultat {
+        Ok(chemin) => {
+            admin::noter_trace(
+                dossier,
+                &format!("sauvegarde {quand} : {}", chemin.display()),
+            );
+            true
+        }
+        Err(e) => {
+            admin::noter_trace(dossier, &format!("sauvegarde {quand} impossible : {e}"));
+            false
+        }
+    }
+}
+
+/// Fait la sauvegarde quotidienne quand elle est due ; après un échec, attend
+/// une heure avant de réessayer.
+fn planifier(base: Base, dossier: PathBuf, arret: Arc<AtomicBool>) {
+    let mut prochain = Instant::now();
+    while !arret.load(Ordering::SeqCst) {
+        if Instant::now() >= prochain {
+            prochain = Instant::now() + sauvegardes::EXAMEN;
+            if sauvegardes::quotidienne_due(&dossier)
+                && !sauvegarder_et_noter(&base, &dossier, "quotidienne")
+            {
+                prochain = Instant::now() + sauvegardes::APRES_ECHEC;
+            }
+        }
+        thread::sleep(Duration::from_millis(250));
     }
 }
 
@@ -962,6 +1029,27 @@ fn traiter(
                 let _ = fs::remove_file(&fichier);
                 resultat
             }))
+        }
+        Requete::Sauvegarde => {
+            let Some(uid) = compte.clone() else {
+                return rejet("aucun compte connecté");
+            };
+            let admin = contexte.base.executer(move |c| {
+                let id = synchro::id_de(c, Entite::Utilisateur, &uid)?;
+                Ok::<_, Erreur>(match id {
+                    Some(id) => comptes::lire(c, id)?.is_some_and(|u| u.role == Role::Admin),
+                    None => false,
+                })
+            });
+            match admin {
+                Ok(Ok(admin)) => Reponse::Sauvegarde {
+                    avertissement: admin
+                        .then(|| sauvegardes::avertissement(&contexte.dossier))
+                        .flatten(),
+                },
+                Ok(Err(e)) => rejet(&e.to_string()),
+                Err(e) => rejet(&e),
+            }
         }
     }
 }

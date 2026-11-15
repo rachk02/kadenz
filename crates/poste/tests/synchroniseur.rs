@@ -15,9 +15,11 @@ use kadenz_domaine::referentiel::{FicheTiers, TypeTiers};
 use kadenz_domaine::role::Role;
 use kadenz_licence::SigningKey;
 use kadenz_licence::entreprise::{self as lic, LicenceEntreprise};
-use kadenz_poste::{DELAI, ErreurPoste, EtatConnexion, Evenement, SourceV1, Synchroniseur};
+use kadenz_poste::{
+    AvertissementSauvegarde, DELAI, ErreurPoste, EtatConnexion, Evenement, SourceV1, Synchroniseur,
+};
 use kadenz_protocole::{Action, Entite, Issue, Ligne, Motif, Operation, Saisie, Tiers};
-use kadenz_serveur::{Config, Serveur};
+use kadenz_serveur::{Config, Serveur, sauvegardes};
 use kadenz_stockage::comptes::{self, NouvelUtilisateur};
 use kadenz_stockage::entreprise::Entreprise;
 use kadenz_stockage::installation::{self, InstallationInitiale};
@@ -1245,7 +1247,13 @@ fn reprise_d_une_base_v1() {
     assert_eq!(resume.comptes_repris, ["vente"]);
     assert_eq!(resume.comptes_ecartes, ["admin"]);
 
-    let bilan = s.reprendre(&source).unwrap();
+    // La reprise passe par la poignée, depuis un autre fil que l'écran.
+    let poignee = s.poignee();
+    let envoi = source.clone();
+    let bilan = thread::spawn(move || poignee.reprendre(&envoi))
+        .join()
+        .unwrap()
+        .unwrap();
     assert_eq!(bilan, resume);
     // La base V1 n'est pas modifiée, la sauvegarde envoyée est effacée.
     assert_eq!(std::fs::read(&v1).unwrap(), avant);
@@ -1268,5 +1276,46 @@ fn reprise_d_une_base_v1() {
         s.resume_reprise(&faux),
         Err(ErreurPoste::Refus { .. })
     ));
+    s.arreter();
+}
+
+#[test]
+fn avertissement_des_sauvegardes_pour_un_admin() {
+    let b = banc("sauvegardes", true);
+    let (s, e) = demarrer(&b.copie);
+    let vus = RefCell::new(Vec::new());
+    let dernier = |vus: &RefCell<Vec<Evenement>>| {
+        vus.borrow_mut().extend(e.try_iter());
+        vus.borrow().iter().rev().find_map(|ev| match ev {
+            Evenement::Sauvegarde(a) => Some(*a),
+            _ => None,
+        })
+    };
+    attendre("connexion", || s.etat() == EtatConnexion::Connecte);
+    // Sans compte connecté, rien n'est signalé.
+    assert_eq!(dernier(&vus), None);
+    s.connecter("admin", MOT_DE_PASSE).unwrap();
+    // Serveur sans mot de passe des sauvegardes : bandeau permanent.
+    attendre("avertissement sans mot de passe", || {
+        dernier(&vus) == Some(Some(AvertissementSauvegarde::SansMotDePasse))
+    });
+    // Mot de passe réglé, dossier sur le même disque que les données.
+    let a_cote = b.dossier_serveur.with_file_name(format!(
+        "kadenz-poste-essai-sauvegardes-{}",
+        std::process::id()
+    ));
+    sauvegardes::enregistrer_reglage(
+        &b.dossier_serveur,
+        &a_cote,
+        chrono::NaiveTime::from_hms_opt(7, 30, 0).unwrap(),
+        Some("motdepasse-sauvegardes"),
+    )
+    .unwrap();
+    s.deconnecter();
+    vus.borrow_mut().clear();
+    s.connecter("admin", MOT_DE_PASSE).unwrap();
+    attendre("avertissement même disque", || {
+        dernier(&vus) == Some(Some(AvertissementSauvegarde::MemeDisque))
+    });
     s.arreter();
 }

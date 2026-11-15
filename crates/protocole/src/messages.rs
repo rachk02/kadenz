@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::abonnement::{Abonnement, Refus};
 use crate::reprise::ResumeReprise;
+use crate::sauvegarde::AvertissementSauvegarde;
 use crate::{Changement, Entite, Issue, Operation, Suspendue};
 
 /// Taille maximale d'un message, en octets.
@@ -72,6 +73,9 @@ pub enum Requete {
         sauvegarde: String,
         mot_de_passe: String,
     },
+    /// Avertissement sur les sauvegardes du serveur (F7, décision 56) ; le
+    /// serveur ne le donne qu'à un compte Admin.
+    Sauvegarde,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -136,6 +140,10 @@ pub enum Reponse {
     /// Base V1 reprise : bilan mesuré sur le serveur.
     Reprise {
         bilan: Box<ResumeReprise>,
+    },
+    /// `None` : rien à signaler, ou compte qui n'est pas Admin.
+    Sauvegarde {
+        avertissement: Option<AvertissementSauvegarde>,
     },
     /// Demande refusée, message à traduire (licence refusée, droit manquant).
     Refus {

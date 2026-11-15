@@ -308,7 +308,10 @@ fn nom_libre(dossier: &Path, genre: Genre) -> PathBuf {
     }
 }
 
-fn ecrire(
+/// Écrit une sauvegarde de ce genre dans `dossier` (créé au besoin), sous un
+/// nom libre ; sans contrôle de droit ni rotation (sauvegardes du serveur,
+/// F7). Un échec ne laisse pas de fichier.
+pub fn ecrire(
     conn: &Connection,
     dossier: &Path,
     mot_de_passe: &str,
@@ -338,14 +341,21 @@ pub fn sauvegarde_auto(conn: &Connection, reglage: &Reglage) -> Resultat<Option<
         return Ok(None);
     };
     let chemin = ecrire(conn, &reglage.dossier, mot_de_passe, Genre::Automatique)?;
-    for ancienne in liste_sauvegardes(&reglage.dossier)?
+    garder_automatiques(&reglage.dossier)?;
+    Ok(Some(chemin))
+}
+
+/// Supprime les sauvegardes automatiques au-delà des
+/// [`AUTOMATIQUES_GARDEES`] plus récentes ; les autres genres restent.
+pub fn garder_automatiques(dossier: &Path) -> Resultat<()> {
+    for ancienne in liste_sauvegardes(dossier)?
         .into_iter()
         .filter(|s| s.genre == Genre::Automatique)
         .skip(AUTOMATIQUES_GARDEES)
     {
         fs::remove_file(&ancienne.chemin)?;
     }
-    Ok(Some(chemin))
+    Ok(())
 }
 
 /// Sauvegarde à la demande, hors de la rotation des automatiques.

@@ -20,6 +20,7 @@ use std::time::{Duration, Instant};
 use kadenz_protocole::inscription::{DECOUVERTE, PORT_PAR_DEFAUT, ServeurTrouve};
 use kadenz_protocole::messages::{self, ErreurTrame, Reponse, Requete};
 use kadenz_protocole::reprise::ResumeReprise;
+use kadenz_protocole::sauvegarde::AvertissementSauvegarde;
 use kadenz_protocole::{Abonnement, Changement, Entite, Issue, Operation, Suspendue, VERSION};
 use rustls::client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier};
 use rustls::crypto::{CryptoProvider, verify_tls12_signature, verify_tls13_signature};
@@ -557,6 +558,15 @@ impl Client {
     pub fn renouveler(&mut self, cle: &str) -> Result<Abonnement, ErreurClient> {
         match self.echanger(&Requete::RenouvelerAbonnement { cle: cle.into() })? {
             Reponse::Abonnement { abonnement } => Ok(*abonnement),
+            autre => Err(inattendue(&autre)),
+        }
+    }
+
+    /// Avertissement sur les sauvegardes du serveur (F7) ; `None` pour un
+    /// compte qui n'est pas Admin.
+    pub fn sauvegarde(&mut self) -> Result<Option<AvertissementSauvegarde>, ErreurClient> {
+        match self.echanger(&Requete::Sauvegarde)? {
+            Reponse::Sauvegarde { avertissement } => Ok(avertissement),
             autre => Err(inattendue(&autre)),
         }
     }
