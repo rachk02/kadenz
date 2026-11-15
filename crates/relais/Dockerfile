@@ -17,6 +17,9 @@
 
 FROM rust:1.99.1-slim-trixie@sha256:f6c4a35d21dbb3c89d7a8d056c193e94fc09037f2b58dd858b09c39a47dd02d7 AS construction
 WORKDIR /source
+# Deux compilations en parallèle au plus, comme sur le poste de développement
+# (docker build --build-arg CARGO_BUILD_JOBS=N pour changer).
+ARG CARGO_BUILD_JOBS=2
 COPY . .
 RUN cargo build --locked --release -p kadenz-relais --bin kadenz-relais --example relais_essai
 
