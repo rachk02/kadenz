@@ -37,7 +37,8 @@ fn reglage() -> Reglage {
 
 fn genre(g: &Genre) -> String {
     match g {
-        Genre::Automatique => tr("Automatique"),
+        // Le poste n'écrit jamais de sauvegarde d'arrêt : genre du serveur.
+        Genre::Automatique | Genre::Arret => tr("Automatique"),
         Genre::Manuelle => tr("Manuelle"),
         Genre::AvantRestauration => tr("Avant restauration"),
     }

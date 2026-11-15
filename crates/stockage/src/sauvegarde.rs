@@ -33,6 +33,10 @@ use crate::{Erreur, Resultat, ouvrir_sauvegarde, refus, sauvegarder, version_sch
 
 /// Nombre de sauvegardes automatiques conservées (section 10.3).
 pub const AUTOMATIQUES_GARDEES: usize = 10;
+/// Nombre de sauvegardes faites à l'arrêt du service du serveur conservées,
+/// à part des automatiques : des arrêts rapprochés ne chassent pas les
+/// sauvegardes quotidiennes.
+pub const ARRETS_GARDES: usize = 10;
 
 const EXTENSION: &str = "kzs";
 const FICHIER_REGLAGE: &str = "sauvegarde.reglage";
@@ -53,13 +57,16 @@ pub enum Genre {
     Automatique,
     Manuelle,
     AvantRestauration,
+    /// Sauvegarde faite à l'arrêt du service du serveur (phase 2).
+    Arret,
 }
 
 impl Genre {
-    const TOUS: [Genre; 3] = [
+    const TOUS: [Genre; 4] = [
         Genre::Automatique,
         Genre::Manuelle,
         Genre::AvantRestauration,
+        Genre::Arret,
     ];
 
     fn prefixe(self) -> &'static str {
@@ -67,6 +74,7 @@ impl Genre {
             Genre::Automatique => "kadenz-auto-",
             Genre::Manuelle => "kadenz-manuelle-",
             Genre::AvantRestauration => "kadenz-avant-restauration-",
+            Genre::Arret => "kadenz-arret-",
         }
     }
 }
@@ -348,10 +356,16 @@ pub fn sauvegarde_auto(conn: &Connection, reglage: &Reglage) -> Resultat<Option<
 /// Supprime les sauvegardes automatiques au-delà des
 /// [`AUTOMATIQUES_GARDEES`] plus récentes ; les autres genres restent.
 pub fn garder_automatiques(dossier: &Path) -> Resultat<()> {
+    garder(dossier, Genre::Automatique, AUTOMATIQUES_GARDEES)
+}
+
+/// Supprime les sauvegardes du genre donné au-delà des `nombre` plus
+/// récentes ; les autres genres restent.
+pub fn garder(dossier: &Path, genre: Genre, nombre: usize) -> Resultat<()> {
     for ancienne in liste_sauvegardes(dossier)?
         .into_iter()
-        .filter(|s| s.genre == Genre::Automatique)
-        .skip(AUTOMATIQUES_GARDEES)
+        .filter(|s| s.genre == genre)
+        .skip(nombre)
     {
         fs::remove_file(&ancienne.chemin)?;
     }
@@ -792,6 +806,46 @@ mod tests {
         // Chaque sauvegarde s'ouvre avec le mot de passe.
         ouvrir_sauvegarde(&auto[0], MOT_DE_PASSE).unwrap();
         assert!(ouvrir_sauvegarde(&auto[0], "mauvais-mot-de-passe").is_err());
+    }
+
+    #[test]
+    fn arrets_comptes_a_part() {
+        let dossier =
+            std::env::temp_dir().join(format!("kadenz-essai-arrets-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dossier);
+        fs::create_dir_all(&dossier).unwrap();
+        for minute in 0..12 {
+            for prefixe in ["kadenz-auto-", "kadenz-arret-"] {
+                let nom = format!("{prefixe}20261115-10{minute:02}00.{EXTENSION}");
+                fs::write(dossier.join(nom), b"essai").unwrap();
+            }
+        }
+        let compter = |genre: Genre| {
+            liste_sauvegardes(&dossier)
+                .unwrap()
+                .into_iter()
+                .filter(|s| s.genre == genre)
+                .count()
+        };
+        assert_eq!(compter(Genre::Arret), 12);
+        garder(&dossier, Genre::Arret, ARRETS_GARDES).unwrap();
+        assert_eq!(compter(Genre::Arret), ARRETS_GARDES);
+        assert_eq!(compter(Genre::Automatique), 12);
+        garder_automatiques(&dossier).unwrap();
+        assert_eq!(compter(Genre::Automatique), AUTOMATIQUES_GARDEES);
+        assert_eq!(compter(Genre::Arret), ARRETS_GARDES);
+        // Les plus récentes restent.
+        assert!(
+            dossier
+                .join(format!("kadenz-arret-20261115-101100.{EXTENSION}"))
+                .exists()
+        );
+        assert!(
+            !dossier
+                .join(format!("kadenz-arret-20261115-100000.{EXTENSION}"))
+                .exists()
+        );
+        let _ = fs::remove_dir_all(&dossier);
     }
 
     #[test]

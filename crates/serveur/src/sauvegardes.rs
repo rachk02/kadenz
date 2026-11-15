@@ -8,8 +8,9 @@
 //!   dans la fenêtre d'administration (décision 56).
 //! - Le service sauvegarde chaque jour à l'heure réglée, et à son arrêt ; une
 //!   sauvegarde du jour manquée (machine éteinte à l'heure dite) est faite dès
-//!   que possible. Ces sauvegardes sont du genre automatique : les
-//!   [`AUTOMATIQUES_GARDEES`] plus récentes sont gardées.
+//!   que possible. Les [`AUTOMATIQUES_GARDEES`] sauvegardes quotidiennes et
+//!   les [`ARRETS_GARDES`] sauvegardes d'arrêt les plus récentes sont gardées,
+//!   comptées à part : des arrêts rapprochés ne chassent pas les quotidiennes.
 //! - Chaque sauvegarde porte l'identité TLS du serveur (certificat et clé) :
 //!   restaurée sur une nouvelle machine, elle garde l'empreinte que les postes
 //!   ont épinglée. Elle est chiffrée par le mot de passe, comme toute la base.
@@ -29,7 +30,7 @@ use kadenz_stockage::sauvegarde::{self, Genre, InfoSauvegarde};
 use rusqlite::Connection;
 use serde_json::{Value, json};
 
-pub use kadenz_stockage::sauvegarde::AUTOMATIQUES_GARDEES;
+pub use kadenz_stockage::sauvegarde::{ARRETS_GARDES, AUTOMATIQUES_GARDEES};
 
 use crate::{NOM_CERTIFICAT, NOM_CLE_TLS};
 
@@ -234,8 +235,13 @@ pub fn sauvegarder(conn: &Connection, donnees: &Path, genre: Genre) -> Result<Pa
         let _ = fs::remove_file(&chemin);
         return Err(format!("sauvegarde impossible : {e}"));
     }
-    if genre == Genre::Automatique {
-        sauvegarde::garder_automatiques(&reglage.dossier)
+    let gardees = match genre {
+        Genre::Automatique => Some(AUTOMATIQUES_GARDEES),
+        Genre::Arret => Some(ARRETS_GARDES),
+        Genre::Manuelle | Genre::AvantRestauration => None,
+    };
+    if let Some(nombre) = gardees {
+        sauvegarde::garder(&reglage.dossier, genre, nombre)
             .map_err(|e| format!("rotation des sauvegardes impossible : {e}"))?;
     }
     Ok(chemin)

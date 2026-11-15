@@ -541,17 +541,21 @@ impl Serveur {
             .mot_de_passe
             .is_some()
         {
-            sauvegarder_et_noter(&self.base, &self.dossier, "à l'arrêt");
+            sauvegarder_et_noter(&self.base, &self.dossier, sauvegarde::Genre::Arret);
         }
     }
 }
 
 /// Sauvegarde automatique sur le fil de la base, notée dans la trace du
 /// service ; rend `false` sur un échec.
-fn sauvegarder_et_noter(base: &Base, dossier: &Path, quand: &str) -> bool {
+fn sauvegarder_et_noter(base: &Base, dossier: &Path, genre: sauvegarde::Genre) -> bool {
+    let quand = match genre {
+        sauvegarde::Genre::Arret => "à l'arrêt",
+        _ => "quotidienne",
+    };
     let donnees = dossier.to_path_buf();
     let resultat = base
-        .executer(move |c| sauvegardes::sauvegarder(c, &donnees, sauvegarde::Genre::Automatique))
+        .executer(move |c| sauvegardes::sauvegarder(c, &donnees, genre))
         .and_then(|r| r);
     match resultat {
         Ok(chemin) => {
@@ -576,7 +580,7 @@ fn planifier(base: Base, dossier: PathBuf, arret: Arc<AtomicBool>) {
         if Instant::now() >= prochain {
             prochain = Instant::now() + sauvegardes::EXAMEN;
             if sauvegardes::quotidienne_due(&dossier)
-                && !sauvegarder_et_noter(&base, &dossier, "quotidienne")
+                && !sauvegarder_et_noter(&base, &dossier, sauvegarde::Genre::Automatique)
             {
                 prochain = Instant::now() + sauvegardes::APRES_ECHEC;
             }

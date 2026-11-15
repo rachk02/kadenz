@@ -196,12 +196,21 @@ pub fn noter_trace(dossier: &Path, texte: &str) {
 
 /// Dernière erreur du service : échec du dernier démarrage, ou problème non
 /// bloquant noté depuis (découverte impossible, décision 44). Un démarrage
-/// réussi sans problème efface les erreurs précédentes.
+/// réussi sans problème efface les erreurs précédentes ; une sauvegarde
+/// réussie efface les échecs de sauvegarde précédents.
 pub fn derniere_erreur(dossier: &Path) -> Option<String> {
     let trace = std::fs::read_to_string(dossier.join(NOM_TRACE)).ok()?;
+    let mut sauvegarde_reussie = false;
     for ligne in trace.lines().rev().filter(|l| !l.trim().is_empty()) {
+        let sauvegarde = ligne.contains("] sauvegarde ");
         if ligne.contains("impossible") {
+            if sauvegarde && sauvegarde_reussie {
+                continue;
+            }
             return Some(ligne.to_string());
+        }
+        if sauvegarde {
+            sauvegarde_reussie = true;
         }
         if ligne.contains("] démarrage sur ") {
             return None;
@@ -236,6 +245,30 @@ mod tests {
             format!(
                 "{erreur}\n[2026-11-12 10:01:00] démarrage sur 0.0.0.0:47380\n{udp}\n\
                  [2026-11-12 11:00:00] arrêt\n"
+            ),
+        )
+        .unwrap();
+        assert_eq!(derniere_erreur(&dossier).as_deref(), Some(udp));
+        // Échec de sauvegarde : affiché tant qu'une sauvegarde n'a pas réussi.
+        let demarrage = "[2026-11-12 10:01:00] démarrage sur 0.0.0.0:47380";
+        let echec = "[2026-11-12 12:00:00] sauvegarde quotidienne impossible : disque plein";
+        std::fs::write(dossier.join(NOM_TRACE), format!("{demarrage}\n{echec}\n")).unwrap();
+        assert_eq!(derniere_erreur(&dossier).as_deref(), Some(echec));
+        std::fs::write(
+            dossier.join(NOM_TRACE),
+            format!(
+                "{demarrage}\n{echec}\n\
+                 [2026-11-12 13:00:00] sauvegarde quotidienne : D:\\S\\kadenz-auto-20261112-130000.kzs\n"
+            ),
+        )
+        .unwrap();
+        assert_eq!(derniere_erreur(&dossier), None);
+        // Une autre erreur, notée avant, reste affichée.
+        std::fs::write(
+            dossier.join(NOM_TRACE),
+            format!(
+                "{demarrage}\n{udp}\n{echec}\n\
+                 [2026-11-12 13:00:00] sauvegarde quotidienne : D:\\S\\kadenz-auto-20261112-130000.kzs\n"
             ),
         )
         .unwrap();
