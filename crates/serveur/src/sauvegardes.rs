@@ -41,6 +41,10 @@ pub const FICHIER_REGLAGE: &str = "sauvegardes.reglage";
 /// journée, quand la machine d'un bureau est allumée.
 pub const HEURE_PAR_DEFAUT: (u32, u32) = (12, 0);
 
+/// Sous-dossier du dossier des sauvegardes où une sauvegarde s'écrit avant
+/// d'être complète.
+const SOUS_DOSSIER_EN_COURS: &str = "en-cours";
+
 /// Table ajoutée à chaque sauvegarde (jamais à la base vivante) : identité
 /// TLS du serveur.
 pub const TABLE_IDENTITE: &str = "serveur_identite";
@@ -240,12 +244,36 @@ pub(crate) fn sauvegarder_avec(
     genre: Genre,
 ) -> Result<PathBuf, String> {
     let (certificat, cle) = identite(donnees)?;
-    let chemin = sauvegarde::ecrire(conn, dossier, mot_de_passe, genre)
-        .map_err(|e| format!("sauvegarde impossible : {e}"))?;
-    if let Err(e) = ajouter_identite(&chemin, mot_de_passe, &certificat, &cle) {
-        let _ = fs::remove_file(&chemin);
-        return Err(format!("sauvegarde impossible : {e}"));
+    // Écrite d'abord dans un sous-dossier, puis renommée une fois complète :
+    // une sauvegarde coupée (arrêt de Windows) n'entre jamais dans la liste
+    // ni dans la rotation. Les restes d'une sauvegarde coupée sont effacés.
+    let en_cours = dossier.join(SOUS_DOSSIER_EN_COURS);
+    if let Ok(restes) = fs::read_dir(&en_cours) {
+        for reste in restes.flatten() {
+            let _ = fs::remove_file(reste.path());
+        }
     }
+    let provisoire = sauvegarde::ecrire(conn, &en_cours, mot_de_passe, genre)
+        .map_err(|e| format!("sauvegarde impossible : {e}"))?;
+    let complete = ajouter_identite(&provisoire, mot_de_passe, &certificat, &cle).and_then(|()| {
+        let nom = provisoire
+            .file_name()
+            .ok_or_else(|| "nom de sauvegarde manquant".to_string())?
+            .to_os_string();
+        let chemin = dossier.join(nom);
+        if chemin.exists() {
+            return Err(format!("{} existe déjà", chemin.display()));
+        }
+        fs::rename(&provisoire, &chemin).map_err(|e| e.to_string())?;
+        Ok(chemin)
+    });
+    let chemin = match complete {
+        Ok(chemin) => chemin,
+        Err(e) => {
+            let _ = fs::remove_file(&provisoire);
+            return Err(format!("sauvegarde impossible : {e}"));
+        }
+    };
     let gardees = match genre {
         Genre::Automatique => Some(AUTOMATIQUES_GARDEES),
         Genre::Arret => Some(ARRETS_GARDES),

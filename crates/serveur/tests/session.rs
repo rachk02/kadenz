@@ -950,7 +950,12 @@ fn sauvegarde_du_serveur_avec_son_identite() {
         .base(move |c| sauvegardes::sauvegarder(c, &avec, Genre::Manuelle))
         .unwrap()
         .unwrap();
-    assert!(fichier.starts_with(&dossier));
+    assert_eq!(fichier.parent(), Some(dossier.as_path()));
+    // Rien ne reste du sous-dossier où elle s'est écrite.
+    assert_eq!(
+        std::fs::read_dir(dossier.join("en-cours")).unwrap().count(),
+        0
+    );
     assert_eq!(sauvegardes::liste(&donnees).unwrap().len(), 1);
     // L'identité TLS du serveur est dans la sauvegarde, chiffrée avec elle.
     let conn = kadenz_stockage::ouvrir_sauvegarde(&fichier, "motdepasse-sauvegardes").unwrap();
