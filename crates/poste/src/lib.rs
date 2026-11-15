@@ -42,6 +42,9 @@ use rusqlite::Connection;
 
 /// Attente au plus d'une réponse du serveur, et d'une écriture pour l'écran.
 pub const DELAI: Duration = Duration::from_secs(5);
+/// Attente de la connexion à l'adresse du bureau quand un relais est connu
+/// (F8) : hors du bureau, le poste passe vite au relais.
+const ATTENTE_DIRECTE: Duration = Duration::from_millis(1500);
 /// Relève des changements entre deux écritures.
 const RELEVE: Duration = Duration::from_secs(2);
 /// Attentes successives avant de réessayer la connexion, en secondes.
@@ -343,7 +346,6 @@ impl Synchroniseur {
             suspendues_vues: None,
             sauvegarde_vue: None,
             distant: distant.clone(),
-            relais_d_abord: false,
         };
         let fil = std::thread::Builder::new()
             .name("kadenz-synchroniseur".into())
@@ -700,9 +702,6 @@ struct Fil {
     sauvegarde_vue: Option<Option<AvertissementSauvegarde>>,
     /// La session en cours passe par le relais (F8).
     distant: Arc<AtomicBool>,
-    /// La dernière session ouverte passait par le relais : le prochain essai
-    /// commence par lui.
-    relais_d_abord: bool,
 }
 
 impl Fil {
@@ -869,17 +868,17 @@ impl Fil {
         let entreprise = self.entreprise.clone();
         let relais = self.relais.clone();
         // Adresse du relais apprise du serveur (F8) : hors du bureau, le poste
-        // passe par lui. Le chemin qui a réussi la dernière fois est essayé
-        // en premier ; on ne change de chemin que si le premier est
-        // injoignable (un certificat différent, un poste retiré ou une autre
-        // version sont des réponses du serveur).
+        // passe par lui. L'adresse du bureau est toujours essayée d'abord,
+        // avec une attente courte quand un relais est connu, pour qu'un poste
+        // revenu au bureau ne passe plus par le relais. On ne passe au relais
+        // que si le bureau est injoignable (un certificat différent, un poste
+        // retiré ou une autre version sont des réponses du serveur).
         let par_relais = distance::relais_du_poste(&self.copie).ok().flatten();
-        let relais_d_abord = self.relais_d_abord;
         let lance = std::thread::Builder::new()
             .name("kadenz-connexion".into())
             .spawn(move || {
-                let direct = || {
-                    Client::connecter(&adresse, &empreinte, &identite, DELAI)
+                let direct = |attente: Duration| {
+                    Client::connecter_avec_attente(&adresse, &empreinte, &identite, attente, DELAI)
                         .map(|(c, b)| (Box::new(c), b, false))
                 };
                 let distant = |r: &str| {
@@ -887,12 +886,8 @@ impl Fil {
                         .map(|(c, b)| (Box::new(c), b, true))
                 };
                 let resultat = match par_relais.as_deref() {
-                    None => direct(),
-                    Some(r) if relais_d_abord => match distant(r) {
-                        Err(ErreurClient::Injoignable(_)) => direct(),
-                        autre => autre,
-                    },
-                    Some(r) => match direct() {
+                    None => direct(DELAI),
+                    Some(r) => match direct(ATTENTE_DIRECTE) {
                         Err(ErreurClient::Injoignable(_)) => distant(r),
                         autre => autre,
                     },
@@ -931,7 +926,6 @@ impl Fil {
                 self.client = Some(*client);
                 self.echecs = 0;
                 self.distant.store(distant, Ordering::SeqCst);
-                self.relais_d_abord = distant;
                 self.poser_etat(self.etat_ouvert());
                 match self.compte.take() {
                     Some(compte) => self.reprendre(compte, attendue),

@@ -1456,6 +1456,7 @@ fn poste_hors_du_bureau_par_le_relais() {
     let Banc {
         serveur,
         dossier_serveur,
+        copie: b_copie,
         ..
     } = b;
     serveur.arreter();
@@ -1465,6 +1466,21 @@ fn poste_hors_du_bureau_par_le_relais() {
     attendre("retour par le relais", || {
         s.etat() == EtatConnexion::Connecte && s.distant()
     });
+    s.arreter();
+
+    // Revenu au bureau : l'adresse du serveur répond de nouveau, le poste ne
+    // passe plus par le relais.
+    {
+        let conn = poste_relie::ouvrir_copie(&b_copie).unwrap();
+        let mut poste = poste_relie::lire(&conn).unwrap().unwrap();
+        poste.adresse = serveur.adresse().to_string();
+        poste_relie::garder(&conn, &poste).unwrap();
+    }
+    let (s, _e) = demarrer(&b_copie);
+    attendre("connexion directe au retour", || {
+        s.etat() == EtatConnexion::Connecte
+    });
+    assert!(!s.distant());
     s.arreter();
     serveur.arreter();
     relais.arreter();

@@ -1000,13 +1000,19 @@ fn traiter(
                 return rejet("aucun compte connecté");
             };
             let cles = contexte.cles.clone();
-            reponse_abonnement(contexte.base.executer(move |c| {
+            let reponse = reponse_abonnement(contexte.base.executer(move |c| {
                 let id = synchro::id_de(c, Entite::Utilisateur, &uid)?
                     .ok_or_else(|| Erreur::Validation("compte inconnu sur le serveur".into()))?;
                 let acteur = comptes::lire(c, id)?
                     .ok_or_else(|| Erreur::Validation("compte inconnu sur le serveur".into()))?;
                 abonnement::enregistrer_avec(c, &acteur, &cle, abonnement::horloge(), &cles)
-            }))
+            }));
+            // Nouvelle licence : le relais la reçoit sans attendre la fin
+            // d'une attente de reconnexion (F8).
+            if matches!(reponse, Reponse::Abonnement { .. }) {
+                contexte.distance.changer(&contexte.base);
+            }
+            reponse
         }
         Requete::Suspendues => {
             let Some(uid) = compte.clone() else {

@@ -144,6 +144,9 @@ impl Controle {
                     return Ok(Some(session));
                 }
                 Some(Trame::Battement) => self.vu = Instant::now(),
+                Some(Trame::Refus { motif, valeurs }) => {
+                    return Err(ErreurRelais::Refus { motif, valeurs });
+                }
                 Some(autre) => return Err(ErreurRelais::Protocole(format!("{autre:?}"))),
                 None => {}
             }

@@ -242,12 +242,21 @@ pub struct Bienvenue {
 
 /// Connexion TCP au serveur, avec délais.
 fn tcp_vers(adresse: &str, delai: Duration) -> Result<TcpStream, ErreurClient> {
+    tcp_vers_avec(adresse, delai, delai)
+}
+
+/// Comme [`tcp_vers`], avec une attente de connexion à part.
+fn tcp_vers_avec(
+    adresse: &str,
+    attente: Duration,
+    delai: Duration,
+) -> Result<TcpStream, ErreurClient> {
     let injoignable = |e: io::Error| ErreurClient::Injoignable(e.to_string());
     let adresses: Vec<_> = adresse.to_socket_addrs().map_err(injoignable)?.collect();
     let mut derniere = ErreurClient::Injoignable("adresse sans résultat".into());
     let mut tcp = None;
     for a in adresses {
-        match TcpStream::connect_timeout(&a, delai) {
+        match TcpStream::connect_timeout(&a, attente) {
             Ok(s) => {
                 tcp = Some(s);
                 break;
@@ -390,6 +399,20 @@ impl Client {
     ) -> Result<(Client, Bienvenue), ErreurClient> {
         let client = Client::ouvrir(adresse, empreinte_serveur, identite, delai)?;
         client.accueillir(version)
+    }
+
+    /// Comme [`Client::connecter`], avec une attente de connexion TCP plus
+    /// courte que le délai des échanges : un poste qui connaît un relais
+    /// essaie d'abord l'adresse du bureau sans l'attendre longtemps (F8).
+    pub fn connecter_avec_attente(
+        adresse: &str,
+        empreinte_serveur: &str,
+        identite: &Identite,
+        attente: Duration,
+        delai: Duration,
+    ) -> Result<(Client, Bienvenue), ErreurClient> {
+        let tcp = tcp_vers_avec(adresse, attente, delai)?;
+        Client::sur(tcp, empreinte_serveur, identite)?.accueillir(VERSION)
     }
 
     /// Ouvre une session par le relais (F8) : le relais relie ce poste au

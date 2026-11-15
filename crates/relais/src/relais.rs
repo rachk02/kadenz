@@ -47,7 +47,13 @@ pub struct Config {
     pub attente_serveur: Duration,
     pub battement: Duration,
     pub silence: Duration,
+    /// Date UTC du jour, `AAAA-MM-JJ`, pour l'échéance des licences
+    /// (remplacée par les essais).
+    pub date_utc: Horloge,
 }
+
+/// Date UTC du jour, `AAAA-MM-JJ`.
+pub type Horloge = Arc<dyn Fn() -> String + Send + Sync>;
 
 impl Config {
     pub fn nouvelle(
@@ -63,6 +69,7 @@ impl Config {
             attente_serveur: Duration::from_secs(3),
             battement: BATTEMENT,
             silence: SILENCE,
+            date_utc: Arc::new(aujourdhui_utc),
         }
     }
 }
@@ -72,6 +79,9 @@ struct Inscrite {
     entreprise: String,
     /// Empreinte du certificat du serveur.
     serveur: String,
+    /// Échéance de la licence présentée : dépassée, l'enregistrement finit
+    /// (décision 58).
+    echeance: String,
     postes: Mutex<HashSet<String>>,
     demandes: Mutex<mpsc::Sender<String>>,
     /// Connexion de contrôle, pour la couper quand un autre enregistrement
@@ -179,6 +189,7 @@ struct Etat {
     attente_serveur: Duration,
     battement: Duration,
     silence: Duration,
+    date_utc: Horloge,
 }
 
 /// Rend sa place au compteur quand la connexion se termine.
@@ -228,6 +239,7 @@ impl Relais {
             attente_serveur: config.attente_serveur,
             battement: config.battement,
             silence: config.silence,
+            date_utc: config.date_utc,
         });
         let fil = {
             let etat = etat.clone();
@@ -309,6 +321,25 @@ fn ecouter(ecoute: TcpListener, etat: Arc<Etat>) {
     }
 }
 
+/// Lecture bornée par une échéance totale : un pair qui envoie un octet de
+/// temps en temps ne garde pas sa place au-delà.
+struct Borne<'a> {
+    tcp: &'a TcpStream,
+    fin: Instant,
+}
+
+impl Read for Borne<'_> {
+    fn read(&mut self, tampon: &mut [u8]) -> io::Result<usize> {
+        let reste = self.fin.saturating_duration_since(Instant::now());
+        if reste.is_zero() {
+            return Err(io::Error::new(io::ErrorKind::TimedOut, "délai dépassé"));
+        }
+        self.tcp.set_read_timeout(Some(reste))?;
+        let mut tcp = self.tcp;
+        tcp.read(tampon)
+    }
+}
+
 /// Premier octet 0x16 : poignée de main TLS, connexion de contrôle d'un
 /// serveur ; sinon, trames en clair (une trame en clair fait moins de 4 Kio,
 /// son premier octet est au plus 0x10).
@@ -317,10 +348,13 @@ fn connexion(etat: &Etat, tcp: TcpStream) {
         return;
     }
     let _ = tcp.set_write_timeout(Some(DELAI_TRAMES));
+    // Trames d'ouverture : 5 secondes en tout (la connexion de contrôle a
+    // ses propres échéances).
+    let fin = Instant::now() + DELAI_TRAMES;
     let mut premier = [0u8; 1];
     match tcp.peek(&mut premier) {
         Ok(1) if premier[0] == 0x16 => controle(etat, tcp),
-        Ok(1) => en_clair(etat, tcp),
+        Ok(1) => en_clair(etat, tcp, fin),
         _ => {}
     }
 }
@@ -335,12 +369,13 @@ fn refuser(flux: &mut impl Write, motif: &str, valeurs: Vec<String>) {
     );
 }
 
-fn en_clair(etat: &Etat, mut tcp: TcpStream) {
-    match trames::lire(&mut tcp, TAILLE_EN_CLAIR) {
+fn en_clair(etat: &Etat, mut tcp: TcpStream, fin: Instant) {
+    let lu = trames::lire(&mut Borne { tcp: &tcp, fin }, TAILLE_EN_CLAIR);
+    match lu {
         Ok(Trame::Poste {
             version,
             entreprise,
-        }) => poste(etat, tcp, version, &entreprise),
+        }) => poste(etat, tcp, version, &entreprise, fin),
         Ok(Trame::Session { session, .. }) => {
             let attendue = etat
                 .attente
@@ -356,7 +391,7 @@ fn en_clair(etat: &Etat, mut tcp: TcpStream) {
     }
 }
 
-fn poste(etat: &Etat, mut tcp: TcpStream, version: u32, entreprise: &str) {
+fn poste(etat: &Etat, mut tcp: TcpStream, version: u32, entreprise: &str, fin: Instant) {
     let refus = |tcp: &mut TcpStream, motif: &str, poste: &str, valeurs: Vec<String>| {
         refuser(tcp, motif, valeurs);
         etat.traces.noter(&format!(
@@ -387,7 +422,8 @@ fn poste(etat: &Etat, mut tcp: TcpStream, version: u32, entreprise: &str) {
     {
         return;
     }
-    let (certificat, signature) = match trames::lire(&mut tcp, TAILLE_EN_CLAIR) {
+    let preuve_lue = trames::lire(&mut Borne { tcp: &tcp, fin }, TAILLE_EN_CLAIR);
+    let (certificat, signature) = match preuve_lue {
         Ok(Trame::Preuve {
             certificat,
             signature,
@@ -599,8 +635,8 @@ fn controle(etat: &Etat, tcp: TcpStream) {
     };
     // Licence de cette entreprise, signée par le portail, pas échue
     // (décision 58).
-    match kadenz_licence::entreprise::verifier(&licence, &entreprise, &etat.cles) {
-        Ok(l) if l.echeance < aujourdhui_utc() => {
+    let echeance = match kadenz_licence::entreprise::verifier(&licence, &entreprise, &etat.cles) {
+        Ok(l) if l.echeance < (etat.date_utc)() => {
             return refus(
                 &mut canal,
                 motif::LICENCE_ECHUE,
@@ -608,9 +644,9 @@ fn controle(etat: &Etat, tcp: TcpStream) {
                 vec![l.echeance],
             );
         }
-        Ok(_) => {}
+        Ok(l) => l.echeance,
         Err(_) => return refus(&mut canal, motif::LICENCE_REFUSEE, &entreprise, Vec::new()),
-    }
+    };
     if !preuve::verifier(
         &certificat,
         &preuve::message(ROLE_SERVEUR, &entreprise, &defi),
@@ -623,6 +659,7 @@ fn controle(etat: &Etat, tcp: TcpStream) {
     let inscrite = Arc::new(Inscrite {
         entreprise: entreprise.clone(),
         serveur: serveur.clone(),
+        echeance,
         postes: Mutex::new(postes.into_iter().collect()),
         demandes: Mutex::new(demandes),
         controle: copie,
@@ -679,9 +716,27 @@ fn servir_controle(
 ) {
     let mut dernier_envoi = Instant::now();
     let mut vu = Instant::now();
+    let mut date_verifiee = Instant::now();
     loop {
         if etat.arret.load(Ordering::SeqCst) {
             return;
+        }
+        // Licence échue pendant la connexion (décision 58) : refus, puis
+        // fin. Le serveur se réenregistre de lui-même après un renouvellement.
+        if date_verifiee.elapsed() >= Duration::from_secs(1) {
+            date_verifiee = Instant::now();
+            if inscrite.echeance < (etat.date_utc)() {
+                let _ = canal.envoyer(&Trame::Refus {
+                    motif: motif::LICENCE_ECHUE.into(),
+                    valeurs: vec![inscrite.echeance.clone()],
+                });
+                etat.traces.noter(&format!(
+                    "refus_serveur entreprise={} motif={}",
+                    inscrite.entreprise,
+                    motif::LICENCE_ECHUE
+                ));
+                return;
+            }
         }
         let courante = etat
             .inscrites

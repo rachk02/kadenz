@@ -339,3 +339,90 @@ fn enregistrements_refuses() {
     r.arreter();
     let _ = std::fs::remove_dir_all(d);
 }
+
+#[test]
+fn trames_au_compte_gouttes_coupees() {
+    let (r, d) = relais("gouttes");
+    let mut tcp = TcpStream::connect(r.adresse()).unwrap();
+    let debut = std::time::Instant::now();
+    // Longueur annoncée, puis un octet par seconde : chaque lecture du relais
+    // reçoit quelque chose avant 5 secondes, mais le total les dépasse.
+    let _ = tcp.write_all(&[0x00, 0x10]);
+    for _ in 0..7 {
+        thread::sleep(Duration::from_secs(1));
+        let _ = tcp.write_all(b"x");
+    }
+    tcp.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+    let mut tampon = [0u8; 16];
+    match tcp.read(&mut tampon) {
+        Ok(0) => {}
+        Ok(n) => panic!("{n} octets reçus"),
+        Err(e) => assert!(
+            !matches!(
+                e.kind(),
+                std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut
+            ),
+            "connexion encore ouverte après {:?}",
+            debut.elapsed()
+        ),
+    }
+    r.arreter();
+    let _ = std::fs::remove_dir_all(d);
+}
+
+#[test]
+fn licence_echue_pendant_la_connexion() {
+    let d = dossier("echeance");
+    let jour = |n: i64| {
+        (chrono::Utc::now() + chrono::Duration::days(n))
+            .format("%Y-%m-%d")
+            .to_string()
+    };
+    let date = Arc::new(std::sync::Mutex::new(jour(0)));
+    let mut config = Config::nouvelle(
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        d.clone(),
+        vec![cle_portail().verifying_key()],
+    );
+    config.traces = None;
+    config.battement = Duration::from_millis(200);
+    {
+        let date = date.clone();
+        config.date_utc = Arc::new(move || date.lock().unwrap().clone());
+    }
+    let r = Relais::demarrer(config).unwrap();
+    let adresse = r.adresse().to_string();
+    let serveur = identite("serveur");
+    let lic = licence(ENTREPRISE, 1);
+    let mut controle = Controle::enregistrer(
+        &enregistrement(&adresse, r.empreinte(), &lic, &serveur, Vec::new()),
+        DELAI,
+    )
+    .unwrap();
+    controle.regler_battement(Duration::from_millis(200), Duration::from_secs(2));
+    assert!(matches!(
+        controle.attendre(Duration::from_millis(500)),
+        Ok(None)
+    ));
+
+    // Le lendemain de l'échéance, sans couper la connexion : refus et fin.
+    *date.lock().unwrap() = jour(2);
+    let fin = std::time::Instant::now() + Duration::from_secs(5);
+    let refus = loop {
+        match controle.attendre(Duration::from_millis(200)) {
+            Ok(_) => assert!(std::time::Instant::now() < fin, "aucun refus"),
+            Err(e) => break e,
+        }
+    };
+    assert_eq!(
+        refus,
+        ErreurRelais::Refus {
+            motif: motif::LICENCE_ECHUE.into(),
+            valeurs: vec![jour(1)],
+        }
+    );
+    thread::sleep(Duration::from_millis(200));
+    assert!(r.entreprises().is_empty());
+    r.arreter();
+    let _ = std::fs::remove_dir_all(d);
+}
