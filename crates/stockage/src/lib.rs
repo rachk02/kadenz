@@ -4,6 +4,7 @@ pub mod abonnement;
 pub mod audit;
 pub mod chiffrement;
 pub mod comptes;
+pub mod distance;
 pub mod documents;
 pub mod droits;
 pub mod entreprise;
@@ -83,6 +84,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0012_file_envoi.sql"),
     include_str!("migrations/0013_comptes_refuses.sql"),
     include_str!("migrations/0014_lignes_a_revoir.sql"),
+    include_str!("migrations/0015_postes_distance.sql"),
 ];
 
 #[derive(Debug)]

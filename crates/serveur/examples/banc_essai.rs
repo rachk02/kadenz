@@ -10,6 +10,10 @@
 //!   d'inscription (« Poste 1 » à « Poste N »). Arrêt propre : touche Entrée
 //!   (sauvegarde d'arrêt si un mot de passe est réglé) ; Ctrl+C ou la croix
 //!   arrêtent sans elle.
+//! - `banc_essai <dossier> relais <adresse:port> <empreinte>` : règle le
+//!   relais de l'accès à distance (F8), comme la fenêtre du serveur ; le
+//!   service relit ce réglage de lui-même. L'accès se règle ensuite depuis un
+//!   poste Admin (rubrique « Accès à distance »).
 //! - `banc_essai <dossier> desactiver <identifiant>` : désactive un compte
 //!   directement dans la base, serveur arrêté (coupure du F6d).
 //! - `banc_essai <dossier> etat` : opérations reçues, suspendues, changements
@@ -133,6 +137,13 @@ fn installer(conn: &mut Connection) -> Result<(), String> {
     }
     synchro::completer_uids(conn).map_err(|e| e.to_string())?;
     println!("Serveur d'essai installé : entreprise « Entreprise d'essai », licence de 5 postes.");
+    Ok(())
+}
+
+fn regler_relais(dossier: &Path, adresse: &str, empreinte: &str) -> Result<(), String> {
+    let conn = admin::ouvrir_base(dossier)?;
+    admin::regler_relais(&conn, Some((adresse, empreinte)))?;
+    println!("Relais réglé : {adresse}.");
     Ok(())
 }
 
@@ -407,6 +418,9 @@ fn main() -> ExitCode {
         [dossier, commande, identifiant] if commande == "desactiver" => {
             desactiver(&PathBuf::from(dossier), identifiant)
         }
+        [dossier, commande, adresse, empreinte] if commande == "relais" => {
+            regler_relais(&PathBuf::from(dossier), adresse, empreinte)
+        }
         [dossier, commande] if commande == "etat" => etat(&PathBuf::from(dossier)),
         [fichier, commande] if commande == "base_v1" => base_v1(&PathBuf::from(fichier)),
         [dossier, commande, debut] if commande == "operation" => {
@@ -421,6 +435,7 @@ fn main() -> ExitCode {
             _ => Err("port ou nombre de codes invalide".into()),
         },
         _ => Err("usage : banc_essai <dossier> <port> [--codes N] | \
+                  banc_essai <dossier> relais <adresse:port> <empreinte> | \
                   banc_essai <dossier> desactiver <identifiant> | \
                   banc_essai <dossier> etat | \
                   banc_essai <dossier> operation <début d'identifiant> | \

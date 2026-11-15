@@ -1392,3 +1392,81 @@ fn copie_refaite_apres_une_restauration_du_serveur() {
     s.arreter();
     let _ = std::fs::remove_dir_all(&a_cote);
 }
+
+#[test]
+fn poste_hors_du_bureau_par_le_relais() {
+    let b = banc("distance", true);
+    let dossier_relais = dossier("distance-relais");
+    let mut config_relais = kadenz_relais::relais::Config::nouvelle(
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        dossier_relais.clone(),
+        vec![cle_portail().verifying_key()],
+    );
+    config_relais.traces = None;
+    let relais = kadenz_relais::relais::Relais::demarrer(config_relais).unwrap();
+    let adresse_relais = relais.adresse().to_string();
+    let empreinte_relais = relais.empreinte().to_string();
+    let empreinte_poste = b.identite.empreinte();
+    {
+        let adresse = adresse_relais.clone();
+        b.serveur
+            .base(move |c| {
+                admin::regler_relais(c, Some((&adresse, &empreinte_relais))).unwrap();
+                kadenz_stockage::distance::autoriser(c, &empreinte_poste, true, None).unwrap();
+                kadenz_stockage::distance::activer(c, true, None).unwrap();
+            })
+            .unwrap();
+    }
+    attendre("serveur enregistré", || !relais.entreprises().is_empty());
+
+    // Au bureau : session directe ; le serveur donne l'adresse du relais.
+    let (s, _e) = demarrer(&b.copie);
+    attendre("connexion directe", || s.etat() == EtatConnexion::Connecte);
+    assert!(!s.distant());
+    s.connecter("admin", MOT_DE_PASSE).unwrap();
+    attendre("relais appris", || {
+        let conn = poste_relie::ouvrir_copie(&b.copie).unwrap();
+        kadenz_stockage::distance::relais_du_poste(&conn).unwrap() == Some(adresse_relais.clone())
+    });
+    s.arreter();
+
+    // Hors du bureau : l'adresse du serveur ne répond plus, le poste passe
+    // par le relais.
+    {
+        let conn = poste_relie::ouvrir_copie(&b.copie).unwrap();
+        let mut poste = poste_relie::lire(&conn).unwrap().unwrap();
+        poste.adresse = "127.0.0.1:1".into();
+        poste_relie::garder(&conn, &poste).unwrap();
+    }
+    let (s, _e) = demarrer(&b.copie);
+    attendre("connexion par le relais", || {
+        s.etat() == EtatConnexion::Connecte && s.distant()
+    });
+    s.connecter("admin", MOT_DE_PASSE).unwrap();
+    let issue = s
+        .ecrire(Action::CreerTiers {
+            uid: synchro::nouvel_uid(),
+            fiche: fiche("Client à distance"),
+        })
+        .unwrap();
+    assert!(matches!(issue, Issue::Acceptee { .. }), "{issue:?}");
+
+    // Serveur coupé puis rallumé : le poste distant passe hors connexion,
+    // puis revient par le relais.
+    let Banc {
+        serveur,
+        dossier_serveur,
+        ..
+    } = b;
+    serveur.arreter();
+    attendre("hors connexion", || injoignable(&s));
+    assert!(!s.distant());
+    let serveur = relancer(&dossier_serveur, 0);
+    attendre("retour par le relais", || {
+        s.etat() == EtatConnexion::Connecte && s.distant()
+    });
+    s.arreter();
+    serveur.arreter();
+    relais.arreter();
+    let _ = std::fs::remove_dir_all(dossier_relais);
+}

@@ -31,6 +31,60 @@ pub fn ouvrir_base(dossier: &Path) -> Result<Connection, String> {
         .map_err(|e| format!("base du serveur : {e}"))
 }
 
+/// Relais de l'accès à distance réglé sur ce serveur (F8).
+pub use kadenz_stockage::distance::Relais;
+
+/// Modèles des erreurs de [`regler_relais`], pour les traductions.
+pub const MODELES_ERREUR_RELAIS: &[&str] = &[
+    "adresse du relais invalide : hôte:port attendu",
+    "port du relais invalide : de 1 à 65535",
+    "empreinte du relais invalide : 64 caractères hexadécimaux attendus",
+];
+
+/// Relais réglé, ou `None`.
+pub fn lire_relais(conn: &Connection) -> Result<Option<Relais>, String> {
+    kadenz_stockage::distance::relais(conn).map_err(|e| format!("base du serveur : {e}"))
+}
+
+/// Règle le relais (adresse `hôte:port`, empreinte de son certificat) ou
+/// l'efface (`None`). Les espaces et les deux-points de l'empreinte sont
+/// ignorés, comme pour l'empreinte du serveur. Le service relit le réglage
+/// de lui-même.
+pub fn regler_relais(conn: &Connection, relais: Option<(&str, &str)>) -> Result<(), String> {
+    let relais = match relais {
+        None => None,
+        Some((adresse, empreinte)) => {
+            let adresse = adresse.trim();
+            let (hote, port) = adresse
+                .rsplit_once(':')
+                .filter(|(h, _)| !h.is_empty() && !h.contains(char::is_whitespace))
+                .ok_or_else(|| MODELES_ERREUR_RELAIS[0].to_string())?;
+            match port.parse::<u32>() {
+                Ok(p) if (1..=65535).contains(&p) => {}
+                Ok(_) => return Err(MODELES_ERREUR_RELAIS[1].to_string()),
+                Err(_) if port.is_empty() || port.chars().all(|c| c.is_ascii_digit()) => {
+                    return Err(MODELES_ERREUR_RELAIS[1].to_string());
+                }
+                Err(_) => return Err(MODELES_ERREUR_RELAIS[0].to_string()),
+            }
+            let empreinte: String = empreinte
+                .chars()
+                .filter(|c| !c.is_whitespace() && *c != ':')
+                .collect::<String>()
+                .to_lowercase();
+            if empreinte.len() != 64 || !empreinte.chars().all(|c| c.is_ascii_hexdigit()) {
+                return Err(MODELES_ERREUR_RELAIS[2].to_string());
+            }
+            Some(Relais {
+                adresse: format!("{hote}:{port}"),
+                empreinte,
+            })
+        }
+    };
+    kadenz_stockage::distance::regler_relais(conn, relais.as_ref())
+        .map_err(|e| format!("base du serveur : {e}"))
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EtatService {
     NonInstalle,

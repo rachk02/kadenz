@@ -22,21 +22,22 @@
 use std::collections::BTreeSet;
 use std::fmt;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::mpsc::{self, RecvTimeoutError, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
 pub use kadenz_client::CompteConnecte;
-use kadenz_client::{Client, ErreurClient, Identite};
+use kadenz_client::{Bienvenue, Client, ErreurClient, Identite};
+pub use kadenz_protocole::distance::{EtatAccesDistant, MessageRelais, PosteDistant};
 use kadenz_protocole::messages::LIGNES_MAX;
 use kadenz_protocole::reprise::TAILLE_MAX_REPRISE;
 pub use kadenz_protocole::reprise::{DocumentsRepris, ResumeReprise};
 pub use kadenz_protocole::sauvegarde::AvertissementSauvegarde;
 use kadenz_protocole::{Abonnement, Action, EnCoupure, Entite, Issue, Motif, Operation, Suspendue};
 use kadenz_stockage::poste_relie::{self, PosteRelie};
-use kadenz_stockage::{replique, synchro};
+use kadenz_stockage::{distance, replique, synchro};
 use rusqlite::Connection;
 
 /// Attente au plus d'une réponse du serveur, et d'une écriture pour l'écran.
@@ -262,7 +263,9 @@ enum Commande {
     Fil(Box<dyn FnOnce(&mut Fil) + Send>),
     /// Fin d'une tentative de connexion menée par le fil auxiliaire.
     /// Session ouverte, avec la génération de la base du serveur (F7).
-    Connectee(Result<(Box<Client>, String), ErreurClient>),
+    /// Session ouverte : client, accueil du serveur, et vrai si elle passe
+    /// par le relais (F8).
+    Connectee(Result<(Box<Client>, Bienvenue, bool), ErreurClient>),
     Arreter,
 }
 
@@ -292,6 +295,8 @@ pub struct Synchroniseur {
     fil: Option<JoinHandle<()>>,
     /// Dossier de la copie, pour la sauvegarde envoyée par une reprise.
     dossier: PathBuf,
+    /// La session en cours passe par le relais (F8).
+    distant: Arc<AtomicBool>,
 }
 
 impl Synchroniseur {
@@ -312,6 +317,7 @@ impl Synchroniseur {
         let entreprise = synchro::identifiant_entreprise(&conn).map_err(base)?;
         let a_envoyer = Arc::new(AtomicU32::new(replique::a_envoyer(&conn).map_err(base)?));
         let etat = Arc::new(Mutex::new(EtatConnexion::Connexion));
+        let distant = Arc::new(AtomicBool::new(false));
         let (commandes, reception) = mpsc::channel();
         let identite = Identite {
             certificat: poste.certificat.clone(),
@@ -336,6 +342,8 @@ impl Synchroniseur {
             lecture_seule: None,
             suspendues_vues: None,
             sauvegarde_vue: None,
+            distant: distant.clone(),
+            relais_d_abord: false,
         };
         let fil = std::thread::Builder::new()
             .name("kadenz-synchroniseur".into())
@@ -347,6 +355,7 @@ impl Synchroniseur {
             a_envoyer,
             fil: Some(fil),
             dossier,
+            distant,
         })
     }
 
@@ -456,7 +465,32 @@ impl Synchroniseur {
         Poignee {
             commandes: self.commandes.clone(),
             dossier: self.dossier.clone(),
+            distant: self.distant.clone(),
         }
+    }
+
+    /// Voir [`Poignee::distant`].
+    pub fn distant(&self) -> bool {
+        self.distant.load(Ordering::SeqCst)
+    }
+
+    /// Voir [`Poignee::acces_distant`].
+    pub fn acces_distant(&self) -> Result<EtatAccesDistant, ErreurPoste> {
+        self.poignee().acces_distant()
+    }
+
+    /// Voir [`Poignee::regler_acces_distant`].
+    pub fn regler_acces_distant(&self, actif: bool) -> Result<EtatAccesDistant, ErreurPoste> {
+        self.poignee().regler_acces_distant(actif)
+    }
+
+    /// Voir [`Poignee::autoriser_distance`].
+    pub fn autoriser_distance(
+        &self,
+        poste: &str,
+        autorise: bool,
+    ) -> Result<EtatAccesDistant, ErreurPoste> {
+        self.poignee().autoriser_distance(poste, autorise)
     }
 
     /// Voir [`Poignee::resume_reprise`].
@@ -523,9 +557,43 @@ impl Drop for Synchroniseur {
 pub struct Poignee {
     commandes: Sender<Commande>,
     dossier: PathBuf,
+    distant: Arc<AtomicBool>,
 }
 
 impl Poignee {
+    /// Vrai tant que la session en cours passe par le relais (F8) : la barre
+    /// d'état dit alors « Connecté à distance ». Posé avant l'événement
+    /// `Evenement::Etat` qui annonce la session.
+    pub fn distant(&self) -> bool {
+        self.distant.load(Ordering::SeqCst)
+    }
+
+    /// État de l'accès à distance (F8), compte Admin seul ; `HorsConnexion`
+    /// sans serveur.
+    pub fn acces_distant(&self) -> Result<EtatAccesDistant, ErreurPoste> {
+        self.sur_fil(DELAI * 2, |fil| fil.requete_distance(|c| c.acces_distant()))
+    }
+
+    /// Active ou désactive l'accès à distance (F8), compte Admin seul.
+    pub fn regler_acces_distant(&self, actif: bool) -> Result<EtatAccesDistant, ErreurPoste> {
+        self.sur_fil(DELAI * 2, move |fil| {
+            fil.requete_distance(|c| c.regler_acces_distant(actif))
+        })
+    }
+
+    /// Coche ou décoche « accès à distance » pour un poste inscrit (F8,
+    /// décision 57), compte Admin seul.
+    pub fn autoriser_distance(
+        &self,
+        poste: &str,
+        autorise: bool,
+    ) -> Result<EtatAccesDistant, ErreurPoste> {
+        let poste = poste.to_string();
+        self.sur_fil(DELAI * 2, move |fil| {
+            fil.requete_distance(|c| c.autoriser_distance(&poste, autorise))
+        })
+    }
+
     /// Résumé d'une base V1 avant sa reprise (F7), lu sur ce poste, sans le
     /// serveur : entreprise, tiers, produits, règlements, documents et dernier
     /// numéro par type, comptes repris et comptes écartés parce que leur
@@ -630,6 +698,11 @@ struct Fil {
     suspendues_vues: Option<(u32, u32)>,
     /// Dernier avertissement des sauvegardes du serveur signalé (F7).
     sauvegarde_vue: Option<Option<AvertissementSauvegarde>>,
+    /// La session en cours passe par le relais (F8).
+    distant: Arc<AtomicBool>,
+    /// La dernière session ouverte passait par le relais : le prochain essai
+    /// commence par lui.
+    relais_d_abord: bool,
 }
 
 impl Fil {
@@ -733,6 +806,7 @@ impl Fil {
                 self.sauvegarde_vue = None;
                 self.connexion_attendue = None;
                 self.client = None;
+                self.distant.store(false, Ordering::SeqCst);
                 self.prochain_essai = Instant::now();
             }
             Commande::Ecrire { action, retour } => {
@@ -792,12 +866,37 @@ impl Fil {
         let adresse = self.poste.adresse.clone();
         let empreinte = self.poste.empreinte_serveur.clone();
         let identite = self.identite.clone();
+        let entreprise = self.entreprise.clone();
         let relais = self.relais.clone();
+        // Adresse du relais apprise du serveur (F8) : hors du bureau, le poste
+        // passe par lui. Le chemin qui a réussi la dernière fois est essayé
+        // en premier ; on ne change de chemin que si le premier est
+        // injoignable (un certificat différent, un poste retiré ou une autre
+        // version sont des réponses du serveur).
+        let par_relais = distance::relais_du_poste(&self.copie).ok().flatten();
+        let relais_d_abord = self.relais_d_abord;
         let lance = std::thread::Builder::new()
             .name("kadenz-connexion".into())
             .spawn(move || {
-                let resultat = Client::connecter(&adresse, &empreinte, &identite, DELAI)
-                    .map(|(c, bienvenue)| (Box::new(c), bienvenue.generation));
+                let direct = || {
+                    Client::connecter(&adresse, &empreinte, &identite, DELAI)
+                        .map(|(c, b)| (Box::new(c), b, false))
+                };
+                let distant = |r: &str| {
+                    Client::connecter_par_relais(r, &entreprise, &empreinte, &identite, DELAI)
+                        .map(|(c, b)| (Box::new(c), b, true))
+                };
+                let resultat = match par_relais.as_deref() {
+                    None => direct(),
+                    Some(r) if relais_d_abord => match distant(r) {
+                        Err(ErreurClient::Injoignable(_)) => direct(),
+                        autre => autre,
+                    },
+                    Some(r) => match direct() {
+                        Err(ErreurClient::Injoignable(_)) => distant(r),
+                        autre => autre,
+                    },
+                };
                 // Synchroniseur arrêté entre-temps : l'envoi échoue, sans suite.
                 let _ = relais.send(Commande::Connectee(resultat));
             });
@@ -810,11 +909,15 @@ impl Fil {
     /// Fin d'une tentative : session TLS ouverte, puis le compte gardé est
     /// connecté ; ou connexion perdue, et la connexion qui attendait rend
     /// `HorsConnexion` (le compte reste gardé, décision 48).
-    fn connectee(&mut self, resultat: Result<(Box<Client>, String), ErreurClient>) {
+    fn connectee(&mut self, resultat: Result<(Box<Client>, Bienvenue, bool), ErreurClient>) {
         self.essai_en_cours = false;
         let attendue = self.connexion_attendue.take();
         match resultat {
-            Ok((client, generation)) => {
+            Ok((client, bienvenue, distant)) => {
+                let generation = bienvenue.generation;
+                // Relais donné par le serveur à un poste autorisé (F8) ;
+                // aucun : le poste n'essaie plus le relais.
+                let _ = distance::garder_relais_du_poste(&self.copie, bienvenue.relais.as_deref());
                 // Serveur restauré (F7) : la copie est à refaire, avant tout
                 // envoi de la file. Les lignes reviennent par le rattrapage ;
                 // celles qui ne reviennent pas sont retirées à la fin.
@@ -827,6 +930,8 @@ impl Fil {
                 }
                 self.client = Some(*client);
                 self.echecs = 0;
+                self.distant.store(distant, Ordering::SeqCst);
+                self.relais_d_abord = distant;
                 self.poser_etat(self.etat_ouvert());
                 match self.compte.take() {
                     Some(compte) => self.reprendre(compte, attendue),
@@ -925,6 +1030,7 @@ impl Fil {
     /// pour l'écran.
     fn perdre(&mut self, e: ErreurClient) -> ErreurPoste {
         self.client = None;
+        self.distant.store(false, Ordering::SeqCst);
         let definitif = match &e {
             ErreurClient::CertificatDifferent => Some(EtatConnexion::CertificatDifferent),
             ErreurClient::PosteNonInscrit => Some(EtatConnexion::PosteRetire),
@@ -960,6 +1066,26 @@ impl Fil {
         };
         match client.reprise_possible() {
             Ok(possible) => Ok(possible),
+            Err(e) => Err(self.erreur_requete(e)),
+        }
+    }
+
+    /// Requête de la rubrique « Accès à distance » (F8).
+    fn requete_distance(
+        &mut self,
+        requete: impl FnOnce(&mut Client) -> Result<EtatAccesDistant, ErreurClient>,
+    ) -> Result<EtatAccesDistant, ErreurPoste> {
+        if self.etat_present().definitif() {
+            return Err(ErreurPoste::Injoignable);
+        }
+        if self.uid_session().is_none() {
+            return Err(ErreurPoste::HorsConnexion);
+        }
+        let Some(client) = self.client.as_mut() else {
+            return Err(ErreurPoste::HorsConnexion);
+        };
+        match requete(client) {
+            Ok(etat) => Ok(etat),
             Err(e) => Err(self.erreur_requete(e)),
         }
     }
@@ -1016,6 +1142,7 @@ impl Fil {
         if self.compte.is_some() {
             self.compte = None;
             self.client = None;
+            self.distant.store(false, Ordering::SeqCst);
         }
         let Some(client) = self.client.as_mut() else {
             // Sans session : le compte est gardé et la connexion attend la

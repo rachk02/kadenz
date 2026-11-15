@@ -68,6 +68,11 @@ fn lire(conn: &Connection, cle: &str) -> Resultat<Option<String>> {
     }))
 }
 
+/// Licence d'entreprise en place sur le serveur (présentée au relais, F8).
+pub fn licence(conn: &Connection) -> Resultat<Option<String>> {
+    lire(conn, CLE)
+}
+
 fn ecrire(conn: &Connection, cle: &str, valeur: &str) -> Resultat<()> {
     conn.execute(
         "INSERT INTO parametre_systeme (cle, valeur) VALUES (?1, ?2)

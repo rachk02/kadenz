@@ -55,7 +55,7 @@ pub const CLES_PARTAGEES: [&str; 19] = [
 /// Clés propres à chaque base, jamais transmises ni écrasées : identité de
 /// l'entreprise et du poste, licence V1, abonnement, port du service, dossiers
 /// d'export de la machine, suivi de la réplique, génération de la base.
-pub const CLES_LOCALES: [&str; 12] = [
+pub const CLES_LOCALES: [&str; 15] = [
     "identifiant_entreprise",
     "poste_relie",
     "licence.cle",
@@ -68,6 +68,9 @@ pub const CLES_LOCALES: [&str; 12] = [
     CLE_DERNIER_RANG,
     CLE_EN_COURS,
     crate::synchro::CLE_GENERATION,
+    crate::distance::CLE_ACTIF,
+    crate::distance::CLE_RELAIS,
+    crate::distance::CLE_RELAIS_DU_POSTE,
 ];
 
 /// Dernier rang de la suite des changements reçu du serveur (sur un poste).

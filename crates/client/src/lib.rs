@@ -17,6 +17,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
+use kadenz_protocole::distance::EtatAccesDistant;
 use kadenz_protocole::inscription::{DECOUVERTE, PORT_PAR_DEFAUT, ServeurTrouve};
 use kadenz_protocole::messages::{self, ErreurTrame, Reponse, Requete};
 use kadenz_protocole::reprise::ResumeReprise;
@@ -235,6 +236,8 @@ pub struct Bienvenue {
     pub decalage_minutes: i32,
     /// Génération de la base du serveur (F7).
     pub generation: String,
+    /// Adresse du relais, pour un poste autorisé à distance (F8).
+    pub relais: Option<String>,
 }
 
 /// Connexion TCP au serveur, avec délais.
@@ -385,19 +388,52 @@ impl Client {
         delai: Duration,
         version: u32,
     ) -> Result<(Client, Bienvenue), ErreurClient> {
-        let mut client = Client::ouvrir(adresse, empreinte_serveur, identite, delai)?;
+        let client = Client::ouvrir(adresse, empreinte_serveur, identite, delai)?;
+        client.accueillir(version)
+    }
+
+    /// Ouvre une session par le relais (F8) : le relais relie ce poste au
+    /// serveur de son entreprise, puis la session TLS se fait de bout en bout
+    /// comme en réseau local, avec le même épinglage. Un refus du relais
+    /// (serveur injoignable, poste non autorisé) rend `Injoignable`.
+    pub fn connecter_par_relais(
+        relais: &str,
+        entreprise: &str,
+        empreinte_serveur: &str,
+        identite: &Identite,
+        delai: Duration,
+    ) -> Result<(Client, Bienvenue), ErreurClient> {
+        let tcp = kadenz_relais::poste::ouvrir(
+            relais,
+            entreprise,
+            &identite.certificat,
+            &identite.cle,
+            delai,
+        )
+        .map_err(|e| ErreurClient::Injoignable(e.to_string()))?;
+        let injoignable = |e: io::Error| ErreurClient::Injoignable(e.to_string());
+        tcp.set_read_timeout(Some(delai)).map_err(injoignable)?;
+        tcp.set_write_timeout(Some(delai)).map_err(injoignable)?;
+        Client::sur(tcp, empreinte_serveur, identite)?.accueillir(VERSION)
+    }
+
+    /// `Bonjour` et sa réponse.
+    fn accueillir(mut self, version: u32) -> Result<(Client, Bienvenue), ErreurClient> {
+        let client = &mut self;
         match client.echanger(&Requete::Bonjour { version })? {
             Reponse::Bienvenue {
                 entreprise,
                 decalage_minutes,
                 generation,
+                relais,
                 ..
             } => Ok((
-                client,
+                self,
                 Bienvenue {
                     entreprise,
                     decalage_minutes,
                     generation,
+                    relais,
                 },
             )),
             Reponse::VersionRefusee { version } => {
@@ -452,6 +488,15 @@ impl Client {
         delai: Duration,
     ) -> Result<Client, ErreurClient> {
         let tcp = tcp_vers(adresse, delai)?;
+        Client::sur(tcp, empreinte_serveur, identite)
+    }
+
+    /// TLS épinglé sur une connexion déjà ouverte (directe ou par le relais).
+    fn sur(
+        tcp: TcpStream,
+        empreinte_serveur: &str,
+        identite: &Identite,
+    ) -> Result<Client, ErreurClient> {
         let fournisseur = fournisseur();
         let ecart = Arc::new(AtomicBool::new(false));
         let verification = Arc::new(Epinglage {
@@ -571,6 +616,36 @@ impl Client {
     pub fn sauvegarde(&mut self) -> Result<Option<AvertissementSauvegarde>, ErreurClient> {
         match self.echanger(&Requete::Sauvegarde)? {
             Reponse::Sauvegarde { avertissement } => Ok(avertissement),
+            autre => Err(inattendue(&autre)),
+        }
+    }
+
+    /// État de l'accès à distance (F8), compte Admin seul.
+    pub fn acces_distant(&mut self) -> Result<EtatAccesDistant, ErreurClient> {
+        self.etat_distant(&Requete::AccesDistant)
+    }
+
+    /// Active ou désactive l'accès à distance (F8), compte Admin seul.
+    pub fn regler_acces_distant(&mut self, actif: bool) -> Result<EtatAccesDistant, ErreurClient> {
+        self.etat_distant(&Requete::ReglerAccesDistant { actif })
+    }
+
+    /// Coche ou décoche « accès à distance » pour un poste (F8, décision 57),
+    /// compte Admin seul.
+    pub fn autoriser_distance(
+        &mut self,
+        poste: &str,
+        autorise: bool,
+    ) -> Result<EtatAccesDistant, ErreurClient> {
+        self.etat_distant(&Requete::AutoriserDistance {
+            poste: poste.into(),
+            autorise,
+        })
+    }
+
+    fn etat_distant(&mut self, requete: &Requete) -> Result<EtatAccesDistant, ErreurClient> {
+        match self.echanger(requete)? {
+            Reponse::AccesDistant { etat } => Ok(*etat),
             autre => Err(inattendue(&autre)),
         }
     }

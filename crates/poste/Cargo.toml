@@ -14,5 +14,6 @@ chrono.workspace = true
 
 [dev-dependencies]
 kadenz-serveur.workspace = true
+kadenz-relais.workspace = true
 kadenz-licence.workspace = true
 kadenz-domaine.workspace = true

@@ -9,6 +9,7 @@
 //! simultanées, attente croissante après des échecs de connexion.
 
 pub mod admin;
+mod distance;
 pub mod droits;
 mod restauration;
 pub mod sauvegardes;
@@ -26,7 +27,7 @@ use std::time::{Duration, Instant};
 
 use kadenz_client::{Identite, NOM_TLS, empreinte, fournisseur};
 use kadenz_domaine::message::MessageCompose;
-use kadenz_domaine::role::Role;
+use kadenz_domaine::role::{Droit, Role};
 use kadenz_licence::VerifyingKey;
 use kadenz_protocole::abonnement::Refus;
 use kadenz_protocole::inscription::{DECOUVERTE, ServeurTrouve};
@@ -392,6 +393,8 @@ struct Contexte {
     arret: Arc<AtomicBool>,
     /// Dossier des données, pour le fichier de travail d'une reprise (F7).
     dossier: PathBuf,
+    /// Accès à distance par le relais (F8).
+    distance: distance::Distance,
 }
 
 /// Rend sa place à la connexion quand la session se termine.
@@ -412,6 +415,8 @@ pub struct Serveur {
     decouverte: Option<JoinHandle<()>>,
     /// Sauvegarde quotidienne (F7).
     planification: Option<JoinHandle<()>>,
+    /// Connexion de contrôle vers le relais (F8).
+    relais: Option<JoinHandle<()>>,
     dossier: PathBuf,
     avertissement: Option<String>,
 }
@@ -462,7 +467,17 @@ impl Serveur {
             cles: config.cles_portail.clone().into(),
             arret: arret.clone(),
             dossier: config.dossier.clone(),
+            distance: distance::Distance::default(),
         });
+        contexte.distance.rafraichir(&contexte.base);
+        let relais = {
+            let contexte = contexte.clone();
+            let identite = identite.clone();
+            thread::Builder::new()
+                .name("kadenz-relais".into())
+                .spawn(move || distance::veiller(contexte, identite))
+                .ok()
+        };
         let fil = {
             let arret = arret.clone();
             let max = config.connexions_max;
@@ -489,6 +504,7 @@ impl Serveur {
             ecoute: Some(fil),
             decouverte,
             planification,
+            relais,
             dossier: config.dossier,
             avertissement,
         })
@@ -540,6 +556,9 @@ impl Serveur {
             let _ = fil.join();
         }
         if let Some(fil) = self.planification.take() {
+            let _ = fil.join();
+        }
+        if let Some(fil) = self.relais.take() {
             let _ = fil.join();
         }
         // Sauvegarde à l'arrêt (décision 35), après la dernière session.
@@ -642,7 +661,7 @@ fn ecouter(ecoute: TcpListener, contexte: Arc<Contexte>, arret: Arc<AtomicBool>,
         let contexte = contexte.clone();
         thread::spawn(move || {
             let _place = place;
-            session(&contexte, tcp);
+            session(&contexte, tcp, false);
         });
     }
 }
@@ -734,7 +753,11 @@ fn lire(flux: &mut Flux) -> Option<Requete> {
     }
 }
 
-fn session(contexte: &Contexte, tcp: TcpStream) {
+/// Session d'un poste ; `distante` : connexion ouverte par le serveur à la
+/// demande du relais (F8). Le serveur ne croit pas le relais : le poste doit
+/// être inscrit et autorisé à distance, l'accès actif, et l'inscription est
+/// refusée (réservée au réseau local).
+fn session(contexte: &Contexte, tcp: TcpStream, distante: bool) {
     if tcp.set_nodelay(true).is_err() {
         return;
     }
@@ -766,10 +789,13 @@ fn session(contexte: &Contexte, tcp: TcpStream) {
     else {
         return;
     };
+    if distante && !contexte.distance.autorise(&poste) {
+        return fermer(&mut flux);
+    }
     let p = poste.clone();
     match contexte.base.executer(move |c| postes::est_inscrit(c, &p)) {
         Ok(Ok(true)) => {}
-        Ok(Ok(false)) => return inscription(contexte, &mut flux, &poste, &ip),
+        Ok(Ok(false)) if !distante => return inscription(contexte, &mut flux, &poste, &ip),
         _ => return fermer(&mut flux),
     }
     let Some(premiere) = lire(&mut flux) else {
@@ -781,6 +807,7 @@ fn session(contexte: &Contexte, tcp: TcpStream) {
             entreprise: contexte.entreprise.clone(),
             decalage_minutes: chrono::Local::now().offset().local_minus_utc() / 60,
             generation: contexte.generation.clone(),
+            relais: contexte.distance.relais_pour(&poste),
         },
         Requete::Bonjour { .. } => {
             let _ = repondre(&mut flux, &Reponse::VersionRefusee { version: VERSION });
@@ -794,6 +821,9 @@ fn session(contexte: &Contexte, tcp: TcpStream) {
     if repondre(&mut flux, &accueil).is_err() {
         return;
     }
+    if distante {
+        contexte.distance.noter_session();
+    }
     // Session ouverte : seul le délai de chaque lecture compte désormais.
     flux.sock.fin = None;
     let mut compte: Option<String> = None;
@@ -801,6 +831,10 @@ fn session(contexte: &Contexte, tcp: TcpStream) {
         // Serveur arrêté : la session finit sans servir la requête, pour
         // qu'un poste qui relève sans cesse voie bien la coupure.
         if contexte.arret.load(Ordering::SeqCst) {
+            return fermer(&mut flux);
+        }
+        // Poste décoché ou accès désactivé : la session distante finit.
+        if distante && !contexte.distance.autorise(&poste) {
             return fermer(&mut flux);
         }
         let reponse = traiter(contexte, &poste, &mut compte, requete);
@@ -1041,6 +1075,15 @@ fn traiter(
                 resultat
             }))
         }
+        Requete::AccesDistant => acces_distant(contexte, compte, None),
+        Requete::ReglerAccesDistant { actif } => {
+            acces_distant(contexte, compte, Some(ReglageDistant::Actif(actif)))
+        }
+        Requete::AutoriserDistance { poste, autorise } => acces_distant(
+            contexte,
+            compte,
+            Some(ReglageDistant::Poste(poste, autorise)),
+        ),
         Requete::Sauvegarde => {
             let Some(uid) = compte.clone() else {
                 return rejet("aucun compte connecté");
@@ -1062,6 +1105,65 @@ fn traiter(
                 Err(e) => rejet(&e),
             }
         }
+    }
+}
+
+enum ReglageDistant {
+    Actif(bool),
+    Poste(String, bool),
+}
+
+/// Rubrique « Accès à distance » (F8), compte Admin seul : réglage
+/// éventuel, puis état à jour. Permis en lecture seule : c'est un réglage du
+/// serveur, pas une opération sur les données.
+fn acces_distant(
+    contexte: &Contexte,
+    compte: &Option<String>,
+    reglage: Option<ReglageDistant>,
+) -> Reponse {
+    let Some(uid) = compte.clone() else {
+        return rejet("aucun compte connecté");
+    };
+    let change = reglage.is_some();
+    let resultat = contexte.base.executer(move |c| {
+        let inconnu = || Erreur::Validation("compte inconnu sur le serveur".into());
+        let id = synchro::id_de(c, Entite::Utilisateur, &uid)?.ok_or_else(inconnu)?;
+        let acteur = comptes::lire(c, id)?.ok_or_else(inconnu)?;
+        if acteur.role != Role::Admin {
+            return Err(Erreur::Interdit(Droit::GererParametres));
+        }
+        match reglage {
+            Some(ReglageDistant::Actif(actif)) => {
+                kadenz_stockage::distance::activer(c, actif, Some(id))?
+            }
+            Some(ReglageDistant::Poste(poste, autorise)) => {
+                kadenz_stockage::distance::autoriser(c, &poste, autorise, Some(id))?
+            }
+            None => {}
+        }
+        distance::lire_etat(c)
+    });
+    if change && matches!(resultat, Ok(Ok(_))) {
+        contexte.distance.changer(&contexte.base);
+    }
+    match resultat {
+        Ok(Ok(lu)) => Reponse::AccesDistant {
+            etat: Box::new(contexte.distance.etat(lu)),
+        },
+        Ok(Err(Erreur::Interdit(droit))) => Reponse::Refus {
+            refus: Refus {
+                modele: synchro::MODELE_INTERDIT.into(),
+                valeurs: vec![droit.to_string()],
+            },
+        },
+        Ok(Err(Erreur::Validation(modele))) => Reponse::Refus {
+            refus: Refus {
+                modele,
+                valeurs: Vec::new(),
+            },
+        },
+        Ok(Err(e)) => rejet(&e.to_string()),
+        Err(e) => rejet(&e),
     }
 }
 

@@ -13,6 +13,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 use crate::abonnement::{Abonnement, Refus};
+use crate::distance::EtatAccesDistant;
 use crate::reprise::ResumeReprise;
 use crate::sauvegarde::AvertissementSauvegarde;
 use crate::{Changement, Entite, Issue, Operation, Suspendue};
@@ -76,6 +77,18 @@ pub enum Requete {
     /// Avertissement sur les sauvegardes du serveur (F7, décision 56) ; le
     /// serveur ne le donne qu'à un compte Admin.
     Sauvegarde,
+    /// État de l'accès à distance (F8), compte Admin seul.
+    AccesDistant,
+    /// Active ou désactive l'accès à distance (F8), compte Admin seul.
+    ReglerAccesDistant {
+        actif: bool,
+    },
+    /// Coche ou décoche « accès à distance » pour un poste inscrit (F8,
+    /// décision 57), compte Admin seul.
+    AutoriserDistance {
+        poste: String,
+        autorise: bool,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -91,6 +104,10 @@ pub enum Reponse {
         /// restauration (F7) : un poste qui en voit une autre refait sa copie.
         #[serde(default)]
         generation: String,
+        /// Adresse du relais, donnée seulement à un poste autorisé à
+        /// distance quand l'accès est actif (F8).
+        #[serde(default)]
+        relais: Option<String>,
     },
     /// Version du protocole différente : la connexion est fermée.
     VersionRefusee {
@@ -148,6 +165,10 @@ pub enum Reponse {
     /// `None` : rien à signaler, ou compte qui n'est pas Admin.
     Sauvegarde {
         avertissement: Option<AvertissementSauvegarde>,
+    },
+    /// État de l'accès à distance (F8), à jour après un réglage.
+    AccesDistant {
+        etat: Box<EtatAccesDistant>,
     },
     /// Demande refusée, message à traduire (licence refusée, droit manquant).
     Refus {

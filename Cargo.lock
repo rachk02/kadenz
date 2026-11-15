@@ -3079,6 +3079,7 @@ name = "kadenz-client"
 version = "0.2.2"
 dependencies = [
  "kadenz-protocole",
+ "kadenz-relais",
  "rcgen",
  "rustls",
  "serde_json",
@@ -3163,6 +3164,7 @@ dependencies = [
  "kadenz-domaine",
  "kadenz-licence",
  "kadenz-protocole",
+ "kadenz-relais",
  "kadenz-serveur",
  "kadenz-stockage",
  "rusqlite",
@@ -3203,6 +3205,7 @@ dependencies = [
  "kadenz-domaine",
  "kadenz-licence",
  "kadenz-protocole",
+ "kadenz-relais",
  "kadenz-stockage",
  "rusqlite",
  "rustls",

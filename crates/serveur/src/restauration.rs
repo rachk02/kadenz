@@ -25,7 +25,7 @@ use std::time::Duration;
 
 use kadenz_stockage::chiffrement::{self, Portee};
 use kadenz_stockage::sauvegarde::{self, Genre, Restauration as Variantes};
-use kadenz_stockage::{Erreur, abonnement, synchro};
+use kadenz_stockage::{Erreur, abonnement, distance, synchro};
 use rusqlite::{Connection, OptionalExtension};
 
 use crate::admin::{self, EtatService};
@@ -257,21 +257,29 @@ pub fn restaurer_si(
     })
 }
 
-/// Postes inscrits, codes d'inscription et port : l'état courant prime.
+/// Postes inscrits (avec leur case « accès à distance »), codes
+/// d'inscription, port et réglage de l'accès à distance : l'état courant
+/// prime.
 fn reporter_postes(courante: &Connection, cible: &Connection) -> kadenz_stockage::Resultat<()> {
-    let postes: Vec<(String, String, String, Option<String>)> = courante
-        .prepare("SELECT empreinte, nom, inscrit_le, retire_le FROM poste_inscrit")?
-        .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))?
+    type Poste = (String, String, String, Option<String>, bool);
+    let postes: Vec<Poste> = courante
+        .prepare("SELECT empreinte, nom, inscrit_le, retire_le, distance FROM poste_inscrit")?
+        .query_map([], |r| {
+            Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?))
+        })?
         .collect::<Result<_, _>>()?;
-    for (empreinte, nom, inscrit_le, retire_le) in postes {
+    for (empreinte, nom, inscrit_le, retire_le, distance) in postes {
         cible.execute(
-            "INSERT INTO poste_inscrit (empreinte, nom, inscrit_le, retire_le)
-             VALUES (?1, ?2, ?3, ?4)
+            "INSERT INTO poste_inscrit (empreinte, nom, inscrit_le, retire_le, distance)
+             VALUES (?1, ?2, ?3, ?4, ?5)
              ON CONFLICT (empreinte) DO UPDATE SET nom = excluded.nom,
-                 inscrit_le = excluded.inscrit_le, retire_le = excluded.retire_le",
-            rusqlite::params![empreinte, nom, inscrit_le, retire_le],
+                 inscrit_le = excluded.inscrit_le, retire_le = excluded.retire_le,
+                 distance = excluded.distance",
+            rusqlite::params![empreinte, nom, inscrit_le, retire_le, distance],
         )?;
     }
+    distance::activer(cible, distance::actif(courante)?, None)?;
+    distance::regler_relais(cible, distance::relais(courante)?.as_ref())?;
     type Code = (
         i64,
         String,
