@@ -316,49 +316,60 @@ fn reporter_postes(courante: &Connection, cible: &Connection) -> kadenz_stockage
 
 /// Arrête le service du serveur et attend son arrêt, au plus `delai` (prévoir
 /// large : l'arrêt fait une sauvegarde). Déjà arrêté ou non installé : rien.
+/// Un démarrage en cours est attendu d'abord : le service n'accepte l'arrêt
+/// qu'une fois démarré.
 #[cfg(windows)]
 pub fn arreter_service(delai: Duration) -> Result<(), String> {
     use windows_service::service::{ServiceAccess, ServiceState};
-    match admin::etat_service()? {
-        EtatService::NonInstalle | EtatService::Arrete => return Ok(()),
-        _ => {}
+    if admin::etat_service()? == EtatService::NonInstalle {
+        return Ok(());
     }
+    let fin = std::time::Instant::now() + delai;
     let service = ouvrir_service(ServiceAccess::STOP | ServiceAccess::QUERY_STATUS)?;
-    if service
-        .query_status()
-        .map_err(|e| format!("état du service illisible : {e}"))?
-        .current_state
-        != ServiceState::StopPending
-    {
-        service
+    match attendre_hors(&service, ServiceState::StartPending, fin, delai, "arrêt")? {
+        ServiceState::Stopped => return Ok(()),
+        ServiceState::StopPending => {}
+        _ => service
             .stop()
-            .map_err(|e| format!("arrêt du service impossible : {e}"))?;
+            .map(|_| ())
+            .map_err(|e| format!("arrêt du service impossible : {e}"))?,
     }
-    attendre(&service, ServiceState::Stopped, delai, "arrêt")
+    match attendre_hors(&service, ServiceState::StopPending, fin, delai, "arrêt")? {
+        ServiceState::Stopped => Ok(()),
+        _ => Err("arrêt du service impossible : il tourne encore".into()),
+    }
 }
 
 /// Démarre le service du serveur et attend qu'il tourne, au plus `delai`.
-/// Un échec du démarrage se lit ensuite dans [`admin::derniere_erreur`].
+/// Un arrêt en cours (par exemple un arrêt qui a dépassé son délai) est
+/// attendu d'abord. Un échec du démarrage se lit ensuite dans
+/// [`admin::derniere_erreur`].
 #[cfg(windows)]
 pub fn demarrer_service(delai: Duration) -> Result<(), String> {
     use windows_service::service::{ServiceAccess, ServiceState};
-    match admin::etat_service()? {
-        EtatService::NonInstalle => return Err("le service du serveur n'est pas installé".into()),
-        EtatService::Demarre => return Ok(()),
+    if admin::etat_service()? == EtatService::NonInstalle {
+        return Err("le service du serveur n'est pas installé".into());
+    }
+    let fin = std::time::Instant::now() + delai;
+    let service = ouvrir_service(ServiceAccess::START | ServiceAccess::QUERY_STATUS)?;
+    match attendre_hors(&service, ServiceState::StopPending, fin, delai, "démarrage")? {
+        ServiceState::Running => return Ok(()),
+        ServiceState::Stopped => service
+            .start::<&str>(&[])
+            .map_err(|e| format!("démarrage du service impossible : {e}"))?,
         _ => {}
     }
-    let service = ouvrir_service(ServiceAccess::START | ServiceAccess::QUERY_STATUS)?;
-    if service
-        .query_status()
-        .map_err(|e| format!("état du service illisible : {e}"))?
-        .current_state
-        == ServiceState::Stopped
-    {
-        service
-            .start::<&str>(&[])
-            .map_err(|e| format!("démarrage du service impossible : {e}"))?;
+    match attendre_hors(
+        &service,
+        ServiceState::StartPending,
+        fin,
+        delai,
+        "démarrage",
+    )? {
+        ServiceState::Running => Ok(()),
+        ServiceState::Stopped => Err("démarrage du service impossible : il s'est arrêté".into()),
+        _ => Err("démarrage du service impossible : état inattendu".into()),
     }
-    attendre(&service, ServiceState::Running, delai, "démarrage")
 }
 
 #[cfg(windows)]
@@ -373,28 +384,25 @@ fn ouvrir_service(
         .map_err(|e| format!("service inaccessible : {e}"))
 }
 
+/// Attend que le service quitte l'état transitoire donné, jusqu'à `fin` ;
+/// rend l'état atteint.
 #[cfg(windows)]
-fn attendre(
+fn attendre_hors(
     service: &windows_service::service::Service,
-    voulu: windows_service::service::ServiceState,
+    transitoire: windows_service::service::ServiceState,
+    fin: std::time::Instant,
     delai: Duration,
     quoi: &str,
-) -> Result<(), String> {
-    let debut = std::time::Instant::now();
+) -> Result<windows_service::service::ServiceState, String> {
     loop {
         let etat = service
             .query_status()
             .map_err(|e| format!("état du service illisible : {e}"))?
             .current_state;
-        if etat == voulu {
-            return Ok(());
+        if etat != transitoire {
+            return Ok(etat);
         }
-        if etat == windows_service::service::ServiceState::Stopped
-            && voulu == windows_service::service::ServiceState::Running
-        {
-            return Err(format!("{quoi} du service impossible : il s'est arrêté"));
-        }
-        if debut.elapsed() >= delai {
+        if std::time::Instant::now() >= fin {
             return Err(format!(
                 "{quoi} du service non terminé après {} s",
                 delai.as_secs()
