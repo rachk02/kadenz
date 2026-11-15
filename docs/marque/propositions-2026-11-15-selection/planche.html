@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Ligne sélectionnée : planche</title>
+<style>
+@font-face { font-family: Inter; src: url("../../../crates/app/ui/polices/Inter-Regular.ttf"); font-weight: 400; }
+@font-face { font-family: Inter; src: url("../../../crates/app/ui/polices/Inter-Medium.ttf"); font-weight: 500; }
+@font-face { font-family: Inter; src: url("../../../crates/app/ui/polices/Inter-SemiBold.ttf"); font-weight: 600; }
+@font-face { font-family: "Space Grotesk"; src: url("../../../crates/app/ui/polices/SpaceGrotesk-Bold.ttf"); font-weight: 700; }
+:root {
+  --nuit: #1a2259; --accent: #2d3a8c; --accent-survol: #e8eaf6; --texte: #1f2933;
+  --texte-secondaire: #52606d; --fond-lateral: #f4f5f9; --bordure: #d9dce3;
+  /* Theme.accent.mix(Theme.accent-survol, 0.06) : 6 % d'Indigo dans accent-survol */
+  --selection-survol: #dddff0;
+}
+body { margin: 0; background: var(--fond-lateral); font: 13px/1.4 Inter, sans-serif; color: var(--texte); width: 1120px; }
+header { padding: 28px 32px 6px; }
+h1 { font: 700 22px "Space Grotesk", sans-serif; margin: 0 0 4px; color: var(--nuit); }
+header p { margin: 0; color: var(--texte-secondaire); max-width: 900px; }
+section { background: #fff; margin: 16px 32px; padding: 20px 24px; border: 1px solid var(--bordure); border-radius: 4px; }
+h2 { font: 700 16px "Space Grotesk", sans-serif; margin: 0 0 4px; color: var(--nuit); }
+.sous { margin: 0 0 16px; color: var(--texte-secondaire); }
+.etats { display: grid; grid-template-columns: 190px 1fr 250px; gap: 10px 20px; align-items: center; }
+.nom { font-weight: 600; }
+.jeton { font: 12px/1.4 Consolas, monospace; color: var(--texte-secondaire); }
+.tableau { background: #fff; border: 1px solid var(--bordure); border-radius: 4px; padding: 0 4px 4px; }
+.tableau.focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.entete, .ligne { display: grid; grid-template-columns: 2.2fr 1.4fr 1.4fr 1fr; align-items: center; padding: 0 12px; }
+.entete { height: 36px; color: var(--texte-secondaire); border-bottom: 1px solid var(--bordure); margin: 0 -4px 4px; padding: 0 16px; }
+.tri::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 8px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: translateY(-2px) rotate(45deg); }
+.ligne { height: 34px; border-radius: 4px; box-sizing: border-box; }
+.survol { background: var(--fond-lateral); }
+.sel { background: var(--accent-survol); box-shadow: inset 0 0 0 1px var(--accent); }
+.sel-survol { background: var(--selection-survol); box-shadow: inset 0 0 0 1px var(--accent); }
+.fluent-sel { background: #f0f0f0; position: relative; }
+.fluent-sel::before { content: ""; position: absolute; left: 0; top: 9px; width: 3px; height: 16px; border-radius: 2px; background: #0f6cbd; }
+.contexte { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.legende { margin: 8px 0 0; font-size: 12px; color: var(--texte-secondaire); }
+.combos { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.champ-lib { font-size: 12px; color: var(--texte-secondaire); margin-bottom: 4px; }
+.combo { width: 260px; height: 32px; box-sizing: border-box; border: 1px solid var(--bordure); border-radius: 4px; background: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
+.combo::after { content: ""; width: 6px; height: 6px; border-right: 1.5px solid var(--texte-secondaire); border-bottom: 1.5px solid var(--texte-secondaire); transform: translateY(-2px) rotate(45deg); }
+.popup { width: 260px; box-sizing: border-box; margin-top: 4px; background: #fff; border: 1px solid var(--bordure); border-radius: 4px; padding: 4px; box-shadow: 0 4px 12px rgba(26, 34, 89, .12); }
+.item { height: 32px; display: flex; align-items: center; padding: 0 10px; border-radius: 4px; box-sizing: border-box; }
+.titre-col { font-weight: 600; margin-bottom: 10px; }
+table.spec { border-collapse: collapse; width: 100%; }
+table.spec th, table.spec td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--bordure); vertical-align: top; }
+table.spec th { color: var(--texte-secondaire); font-weight: 500; }
+table.spec td.code { font: 12px/1.5 Consolas, monospace; }
+.pastille { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; box-sizing: border-box; }
+ul { margin: 0; padding-left: 18px; color: var(--texte-secondaire); }
+li { margin: 3px 0; }
+</style></head><body>
+<header><h1>Ligne sélectionnée des tableaux et des listes</h1>
+<p>Choix de l'utilisateur du 2026-11-15 (proposition 2) : la ligne sélectionnée prend le fond Indigo léger et un fin cadre Indigo de 1 px, égal sur les quatre côtés, à la place du trait bleu à gauche du style Fluent. Tous les états viennent des jetons du thème (crates/app/ui/composants.slint).</p></header>
+
+<section>
+<h2>Les états d'une ligne de tableau</h2>
+<p class="sous">Hauteur 34 px, angles de 4 px, ligne en retrait de 4 px dans le cadre du tableau pour que son cadre ne touche pas celui du tableau. Le texte reste en Theme.texte dans tous les états.</p>
+<div class="etats">
+  <div class="nom">Repos</div>
+  <div class="tableau"><div class="ligne"><span>Administrateur</span><span>admin</span><span>Administrateur</span><span></span></div></div>
+  <div class="jeton">fond transparent, pas de cadre</div>
+
+  <div class="nom">Ligne paire</div>
+  <div class="tableau"><div class="ligne"><span>Comptable d'essai</span><span>compta</span><span>Comptable</span><span></span></div></div>
+  <div class="jeton">aucune zébrure : identique au repos</div>
+
+  <div class="nom">Survol</div>
+  <div class="tableau"><div class="ligne survol"><span>Comptable d'essai</span><span>compta</span><span>Comptable</span><span></span></div></div>
+  <div class="jeton">fond Theme.fond-lateral, pas de cadre</div>
+
+  <div class="nom">Sélectionnée</div>
+  <div class="tableau"><div class="ligne sel"><span>Commercial d'essai</span><span>vente</span><span>Commercial</span><span>Désactivé</span></div></div>
+  <div class="jeton">fond Theme.accent-survol<br>cadre 1 px Theme.accent</div>
+
+  <div class="nom">Sélectionnée au survol<br><span class="jeton">et pressée</span></div>
+  <div class="tableau"><div class="ligne sel-survol"><span>Commercial d'essai</span><span>vente</span><span>Commercial</span><span>Désactivé</span></div></div>
+  <div class="jeton">fond Theme.accent.mix(<br>Theme.accent-survol, 0.06)<br>cadre 1 px Theme.accent</div>
+
+  <div class="nom">Focus clavier</div>
+  <div class="tableau focus"><div class="ligne sel"><span>Commercial d'essai</span><span>vente</span><span>Commercial</span><span>Désactivé</span></div></div>
+  <div class="jeton">cadre 2 px Theme.accent autour du tableau entier, à 1 px de son bord ; la ligne ne change pas</div>
+</div>
+</section>
+
+<section>
+<h2>Dans un tableau</h2>
+<p class="sous">Écran Utilisateurs : la troisième ligne est survolée pendant que la deuxième est sélectionnée. À droite, le même tableau quand il a le focus clavier (flèches haut et bas).</p>
+<div class="contexte">
+  <div>
+    <div class="tableau">
+      <div class="entete"><span class="tri">Nom complet</span><span>Identifiant</span><span>Rôle</span><span>État</span></div>
+      <div class="ligne"><span>Administrateur</span><span>admin</span><span>Administrateur</span><span></span></div>
+      <div class="ligne sel"><span>Commercial d'essai</span><span>vente</span><span>Commercial</span><span>Désactivé</span></div>
+      <div class="ligne survol"><span>Comptable d'essai</span><span>compta</span><span>Comptable</span><span></span></div>
+    </div>
+    <p class="legende">Sélection à la souris, sans focus clavier</p>
+  </div>
+  <div>
+    <div class="tableau focus">
+      <div class="entete"><span class="tri">Nom complet</span><span>Identifiant</span><span>Rôle</span><span>État</span></div>
+      <div class="ligne"><span>Administrateur</span><span>admin</span><span>Administrateur</span><span></span></div>
+      <div class="ligne sel"><span>Commercial d'essai</span><span>vente</span><span>Commercial</span><span>Désactivé</span></div>
+      <div class="ligne"><span>Comptable d'essai</span><span>compta</span><span>Comptable</span><span></span></div>
+    </div>
+    <p class="legende">Focus clavier sur le tableau</p>
+  </div>
+</div>
+</section>
+
+<section>
+<h2>Liste déroulante : à trancher</h2>
+<p class="sous">Le style Fluent met le même trait bleu à gauche de l'entrée choisie. Traitée comme les tableaux, elle prend le fond Indigo léger et le cadre de 1 px. Exemple : le champ Rôle de l'écran Utilisateurs, avec Consultation survolée.</p>
+<div class="combos">
+  <div>
+    <div class="titre-col">Aujourd'hui (Fluent)</div>
+    <div class="champ-lib">Rôle</div>
+    <div class="combo">Commercial</div>
+    <div class="popup">
+      <div class="item">Administrateur</div>
+      <div class="item">Comptable</div>
+      <div class="item fluent-sel">Commercial</div>
+      <div class="item survol">Consultation</div>
+    </div>
+  </div>
+  <div>
+    <div class="titre-col">Proposée</div>
+    <div class="champ-lib">Rôle</div>
+    <div class="combo">Commercial</div>
+    <div class="popup">
+      <div class="item">Administrateur</div>
+      <div class="item">Comptable</div>
+      <div class="item sel">Commercial</div>
+      <div class="item survol">Consultation</div>
+    </div>
+  </div>
+</div>
+<p class="legende">La liste déroulante du style Fluent ne se règle pas de l'extérieur : la traiter ainsi demande un composant maison à la place de ComboBox (35 emplois dans crates/app/ui).</p>
+</section>
+
+<section>
+<h2>Pour le composant</h2>
+<table class="spec">
+<tr><th>État</th><th>Fond</th><th>Cadre</th><th>Expression Slint</th></tr>
+<tr><td>Repos, ligne paire</td><td>transparent</td><td>aucun</td><td class="code">background: transparent;</td></tr>
+<tr><td>Survol</td><td><span class="pastille" style="background:#f4f5f9;border:1px solid #d9dce3"></span>#f4f5f9</td><td>aucun</td><td class="code">background: Theme.fond-lateral;</td></tr>
+<tr><td>Sélectionnée</td><td><span class="pastille" style="background:#e8eaf6"></span>#e8eaf6</td><td><span class="pastille" style="background:#2d3a8c"></span>1 px #2d3a8c</td><td class="code">background: Theme.accent-survol;<br>border-width: 1px; border-color: Theme.accent;</td></tr>
+<tr><td>Sélectionnée au survol, pressée</td><td><span class="pastille" style="background:#dddff0"></span>#dddff0</td><td>1 px #2d3a8c</td><td class="code">background: Theme.accent.mix(Theme.accent-survol, 0.06);</td></tr>
+<tr><td>Focus clavier</td><td>inchangé</td><td>2 px #2d3a8c autour du tableau</td><td class="code">Rectangle hors du flux, x: -3px, y: -3px,<br>width: parent.width + 6px, border-width: 2px,<br>border-color: Theme.accent, border-radius: 7px,<br>visible: focus.has-focus;</td></tr>
+</table>
+<ul style="margin-top:12px">
+<li>Angles de 4 px sur la ligne et sur le tableau ; le cadre de focus a 7 px (4 + 1 + 2) pour rester concentrique, à 1 px du bord du tableau.</li>
+<li>Pas de zébrure : le fond Indigo léger reste la seule ligne colorée, et la zébrure Fluent actuelle est presque invisible.</li>
+<li>Le cadre est dessiné dans la ligne (border de Slint), donc la sélection ne décale pas le texte.</li>
+<li>Même cadre en arabe, de droite à gauche : il est égal sur les quatre côtés, rien à mettre en miroir.</li>
+</ul>
+</section>
+</body></html>
