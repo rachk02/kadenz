@@ -23,6 +23,7 @@ kadenz-protocole.workspace = true
 slint.workspace = true
 chrono.workspace = true
 rusqlite.workspace = true
+rfd.workspace = true
 
 [build-dependencies]
 slint-build.workspace = true

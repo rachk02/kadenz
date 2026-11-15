@@ -3703,3 +3703,62 @@ msgstr "the V1 database exceeds the size allowed for import ({} MB)"
 
 msgid "base V1 introuvable : {}"
 msgstr "V1 database not found: {}"
+
+# Phase 2, F7c : sauvegardes dans la fenêtre du serveur.
+
+msgid "Le dossier et l'heure des sauvegardes sont obligatoires."
+msgstr "The backup folder and time are required."
+
+msgid "Le mot de passe des sauvegardes doit compter au moins 8 caractères."
+msgstr "The backup password must have at least 8 characters."
+
+msgid "Le serveur sauvegarde sa base chaque jour à l'heure choisie, et à l'arrêt du service. Les sauvegardes sont chiffrées par ce mot de passe : sans lui, aucune ne peut être restaurée, et l'éditeur ne peut pas le retrouver. Notez-le en lieu sûr. Choisissez de préférence un dossier sur un autre disque que celui du serveur (disque externe ou partage réseau)."
+msgstr "The server backs up its database every day at the chosen time, and when the service stops. Backups are encrypted with this password: without it, none can be restored, and the publisher cannot recover it. Write it down somewhere safe. Preferably choose a folder on a different disk from the server's (external disk or network share)."
+
+msgid "Choisir un dossier"
+msgstr "Choose a folder"
+
+msgid "Heure de la sauvegarde quotidienne (HH:MM)"
+msgstr "Time of the daily backup (HH:MM)"
+
+msgid "Mot de passe des sauvegardes (8 caractères au moins)"
+msgstr "Backup password (at least 8 characters)"
+
+msgid "Sauvegardes : chaque jour à {}, dans {}"
+msgstr "Backups: every day at {}, in {}"
+
+msgid "Le service sauvegarde la base chaque jour à l'heure choisie, et à son arrêt ; seules les plus récentes sont gardées. Chaque sauvegarde est chiffrée par le mot de passe et porte l'identité du serveur : restaurée sur une autre machine, les postes la reconnaissent."
+msgstr "The service backs up the database every day at the chosen time, and when it stops; only the most recent backups are kept. Each backup is encrypted with the password and carries the server's identity: restored on another machine, the workstations recognise it."
+
+msgid "Un mot de passe est choisi. Laissez les deux champs vides pour le garder ; un nouveau mot de passe sert aux sauvegardes suivantes, les précédentes gardent le leur."
+msgstr "A password is set. Leave both fields empty to keep it; a new password is used for the next backups, earlier ones keep theirs."
+
+msgid "Aucun mot de passe n'est choisi : aucune sauvegarde n'est faite. Notez-le en lieu sûr ; sans lui, une sauvegarde ne peut pas être restaurée."
+msgstr "No password is set: no backup is made. Write it down somewhere safe; without it, a backup cannot be restored."
+
+msgid "Enregistrer le réglage"
+msgstr "Save the settings"
+
+msgid "Sauvegarde en cours..."
+msgstr "Backup in progress..."
+
+msgid "heure des sauvegardes invalide : la saisir sous la forme HH:MM, par exemple 12:00"
+msgstr "invalid backup time: enter it as HH:MM, for example 12:00"
+
+msgid "À l'arrêt du service"
+msgstr "When the service stops"
+
+msgid "Aucune sauvegarde n'est faite : leur mot de passe n'est pas choisi. Choisissez-le dans la section Sauvegardes."
+msgstr "No backup is being made: their password is not set. Set it in the Backups section."
+
+msgid "Les sauvegardes sont sur le même disque que la base du serveur : une panne de ce disque les perdrait toutes. Choisissez un dossier sur un autre disque (disque externe ou partage réseau)."
+msgstr "The backups are on the same disk as the server database: a failure of this disk would lose them all. Choose a folder on another disk (external disk or network share)."
+
+msgid "Réglage des sauvegardes enregistré. Le service le prend en compte dans la minute."
+msgstr "Backup settings saved. The service applies them within a minute."
+
+msgid "Sauvegarde faite : {}"
+msgstr "Backup made: {}"
+
+msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données du serveur"
+msgstr "the backup folder cannot be inside the server data folder"

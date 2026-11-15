@@ -3703,3 +3703,62 @@ msgstr "V1 veritabanı aktarım için izin verilen boyutu aşıyor ({} MB)"
 
 msgid "base V1 introuvable : {}"
 msgstr "V1 veritabanı bulunamadı: {}"
+
+# Phase 2, F7c : sauvegardes dans la fenêtre du serveur.
+
+msgid "Le dossier et l'heure des sauvegardes sont obligatoires."
+msgstr "Yedekleme klasörü ve saati zorunludur."
+
+msgid "Le mot de passe des sauvegardes doit compter au moins 8 caractères."
+msgstr "Yedekleme parolası en az 8 karakter olmalıdır."
+
+msgid "Le serveur sauvegarde sa base chaque jour à l'heure choisie, et à l'arrêt du service. Les sauvegardes sont chiffrées par ce mot de passe : sans lui, aucune ne peut être restaurée, et l'éditeur ne peut pas le retrouver. Notez-le en lieu sûr. Choisissez de préférence un dossier sur un autre disque que celui du serveur (disque externe ou partage réseau)."
+msgstr "Sunucu, veritabanını her gün seçilen saatte ve hizmet durduğunda yedekler. Yedekler bu parolayla şifrelenir: o olmadan hiçbiri geri yüklenemez ve yayıncı onu kurtaramaz. Güvenli bir yere not edin. Tercihen sunucununkinden farklı bir diskte bir klasör seçin (harici disk veya ağ paylaşımı)."
+
+msgid "Choisir un dossier"
+msgstr "Klasör seç"
+
+msgid "Heure de la sauvegarde quotidienne (HH:MM)"
+msgstr "Günlük yedekleme saati (SS:DD)"
+
+msgid "Mot de passe des sauvegardes (8 caractères au moins)"
+msgstr "Yedekleme parolası (en az 8 karakter)"
+
+msgid "Sauvegardes : chaque jour à {}, dans {}"
+msgstr "Yedekler: her gün saat {}, {} içinde"
+
+msgid "Le service sauvegarde la base chaque jour à l'heure choisie, et à son arrêt ; seules les plus récentes sont gardées. Chaque sauvegarde est chiffrée par le mot de passe et porte l'identité du serveur : restaurée sur une autre machine, les postes la reconnaissent."
+msgstr "Hizmet, veritabanını her gün seçilen saatte ve durduğunda yedekler; yalnızca en yeni yedekler saklanır. Her yedek parolayla şifrelenir ve sunucunun kimliğini taşır: başka bir makineye geri yüklendiğinde iş istasyonları onu tanır."
+
+msgid "Un mot de passe est choisi. Laissez les deux champs vides pour le garder ; un nouveau mot de passe sert aux sauvegardes suivantes, les précédentes gardent le leur."
+msgstr "Bir parola seçilmiş. Korumak için iki alanı da boş bırakın; yeni bir parola sonraki yedekler için kullanılır, öncekiler kendi parolalarını korur."
+
+msgid "Aucun mot de passe n'est choisi : aucune sauvegarde n'est faite. Notez-le en lieu sûr ; sans lui, une sauvegarde ne peut pas être restaurée."
+msgstr "Parola seçilmemiş: hiçbir yedek alınmıyor. Parolayı güvenli bir yere not edin; o olmadan bir yedek geri yüklenemez."
+
+msgid "Enregistrer le réglage"
+msgstr "Ayarı kaydet"
+
+msgid "Sauvegarde en cours..."
+msgstr "Yedekleme sürüyor..."
+
+msgid "heure des sauvegardes invalide : la saisir sous la forme HH:MM, par exemple 12:00"
+msgstr "geçersiz yedekleme saati: SS:DD biçiminde girin, örneğin 12:00"
+
+msgid "À l'arrêt du service"
+msgstr "Hizmet durduğunda"
+
+msgid "Aucune sauvegarde n'est faite : leur mot de passe n'est pas choisi. Choisissez-le dans la section Sauvegardes."
+msgstr "Hiçbir yedek alınmıyor: yedek parolası seçilmemiş. Yedekler bölümünden seçin."
+
+msgid "Les sauvegardes sont sur le même disque que la base du serveur : une panne de ce disque les perdrait toutes. Choisissez un dossier sur un autre disque (disque externe ou partage réseau)."
+msgstr "Yedekler sunucu veritabanıyla aynı diskte: bu diskin arızalanması hepsini kaybettirir. Başka bir diskte bir klasör seçin (harici disk veya ağ paylaşımı)."
+
+msgid "Réglage des sauvegardes enregistré. Le service le prend en compte dans la minute."
+msgstr "Yedekleme ayarı kaydedildi. Hizmet bir dakika içinde uygular."
+
+msgid "Sauvegarde faite : {}"
+msgstr "Yedek alındı: {}"
+
+msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données du serveur"
+msgstr "yedekleme klasörü sunucunun veri klasörünün içinde olamaz"

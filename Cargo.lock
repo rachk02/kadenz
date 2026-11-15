@@ -3067,6 +3067,7 @@ dependencies = [
  "kadenz-protocole",
  "kadenz-serveur",
  "kadenz-stockage",
+ "rfd",
  "rusqlite",
  "slint",
  "slint-build",

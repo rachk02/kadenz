@@ -7,7 +7,8 @@
 // l'entreprise ; sans elle, le serveur reste en lecture seule avec un seul poste
 // permis, pour l'installer plus tard depuis ce poste (décisions 40 et 41).
 // LicenceApi.poste porte alors l'identifiant de l'entreprise, et la restauration
-// attend le jalon F7.
+// attend le jalon F7. Une étape « Sauvegardes » demande le dossier, l'heure et le
+// mot de passe des sauvegardes du serveur (décision 56).
 
 import { CheckBox } from "std-widgets.slint";
 import { Bouton, Champ, MessageErreur, MotifMarque, Rangee, Section, Theme, Titre } from "composants.slint";
@@ -38,6 +39,10 @@ export struct DonneesAssistant {
     orthographe-traditionnelle: bool,
     // Clé de licence vérifiée à la première étape, vide pour le socle seul.
     cle-licence: string,
+    // Sauvegardes du serveur (mode serveur seulement, décision 56).
+    sauvegarde-dossier: string,
+    sauvegarde-heure: string,
+    sauvegarde-mot-de-passe: string,
 }
 
 export component EcranAssistant inherits Rectangle {
@@ -49,11 +54,19 @@ export component EcranAssistant inherits Rectangle {
 
     // Fenêtre d'administration du serveur (voir l'en-tête).
     in property <bool> serveur: false;
+    // Réglage proposé pour les sauvegardes du serveur, et choix d'un dossier
+    // (rend le dossier choisi, ou le dossier actuel si le choix est abandonné).
+    in property <string> defaut-dossier-sauvegardes;
+    in property <string> defaut-heure-sauvegardes;
+    callback choisir-dossier-sauvegardes(actuel: string) -> string;
 
     // Renvoie un message d'erreur, ou une chaîne vide si l'installation a réussi.
     callback terminer(DonneesAssistant) -> string;
 
-    property <[string]> etapes: [@tr("Licence"), @tr("Entreprise"), @tr("Administrateur"), @tr("Taux et paiements"), @tr("Récapitulatif")];
+    property <[string]> etapes: root.serveur
+        ? [@tr("Licence"), @tr("Entreprise"), @tr("Administrateur"), @tr("Taux et paiements"), @tr("Sauvegardes"), @tr("Récapitulatif")]
+        : [@tr("Licence"), @tr("Entreprise"), @tr("Administrateur"), @tr("Taux et paiements"), @tr("Récapitulatif")];
+    property <int> recapitulatif: root.etapes.length - 1;
     property <int> etape: 0;
     property <string> erreur;
     property <string> cle-licence;
@@ -84,6 +97,10 @@ export component EcranAssistant inherits Rectangle {
     property <string> modes-paiement: root.defaut-modes-paiement;
     // Orthographe traditionnelle par défaut (décision de l'utilisateur du 2026-11-11).
     property <bool> orthographe-traditionnelle: true;
+    property <string> sauvegarde-dossier: root.defaut-dossier-sauvegardes;
+    property <string> sauvegarde-heure: root.defaut-heure-sauvegardes;
+    property <string> sauvegarde-mot-de-passe;
+    property <string> sauvegarde-confirmation;
 
     function suivant() {
         if (root.etape == 0 && root.cle-licence != "") {
@@ -97,6 +114,12 @@ export component EcranAssistant inherits Rectangle {
         } else if (root.etape == 2 && (root.admin-nom == "" || root.admin-identifiant == "")) {
             root.erreur = @tr("Le nom complet et l'identifiant sont obligatoires.");
         } else if (root.etape == 2 && root.admin-mot-de-passe != root.admin-confirmation) {
+            root.erreur = @tr("Les deux mots de passe ne correspondent pas.");
+        } else if (root.serveur && root.etape == 4 && (root.sauvegarde-dossier == "" || root.sauvegarde-heure == "")) {
+            root.erreur = @tr("Le dossier et l'heure des sauvegardes sont obligatoires.");
+        } else if (root.serveur && root.etape == 4 && root.sauvegarde-mot-de-passe.character-count < 8) {
+            root.erreur = @tr("Le mot de passe des sauvegardes doit compter au moins 8 caractères.");
+        } else if (root.serveur && root.etape == 4 && root.sauvegarde-mot-de-passe != root.sauvegarde-confirmation) {
             root.erreur = @tr("Les deux mots de passe ne correspondent pas.");
         } else {
             if (root.etape == 0) {
@@ -385,7 +408,56 @@ export component EcranAssistant inherits Rectangle {
                         }
                     }
 
-                    if root.etape == 4: VerticalLayout {
+                    if root.serveur && root.etape == 4: VerticalLayout {
+                        spacing: 12px;
+
+                        Text {
+                            horizontal-alignment: Theme.debut;
+                            text: @tr("Le serveur sauvegarde sa base chaque jour à l'heure choisie, et à l'arrêt du service. Les sauvegardes sont chiffrées par ce mot de passe : sans lui, aucune ne peut être restaurée, et l'éditeur ne peut pas le retrouver. Notez-le en lieu sûr. Choisissez de préférence un dossier sur un autre disque que celui du serveur (disque externe ou partage réseau).");
+                            color: Theme.texte-secondaire;
+                            wrap: word-wrap;
+                        }
+
+                        Rangee {
+                            spacing: 8px;
+
+                            Champ {
+                                horizontal-stretch: 1;
+                                libelle: @tr("Dossier des sauvegardes");
+                                valeur <=> root.sauvegarde-dossier;
+                            }
+
+                            VerticalLayout {
+                                alignment: end;
+
+                                Bouton {
+                                    text: @tr("Choisir un dossier");
+                                    clicked => {
+                                        root.sauvegarde-dossier = root.choisir-dossier-sauvegardes(root.sauvegarde-dossier);
+                                    }
+                                }
+                            }
+                        }
+
+                        Champ {
+                            libelle: @tr("Heure de la sauvegarde quotidienne (HH:MM)");
+                            valeur <=> root.sauvegarde-heure;
+                        }
+
+                        Champ {
+                            libelle: @tr("Mot de passe des sauvegardes (8 caractères au moins)");
+                            secret: true;
+                            valeur <=> root.sauvegarde-mot-de-passe;
+                        }
+
+                        Champ {
+                            libelle: @tr("Confirmation du mot de passe");
+                            secret: true;
+                            valeur <=> root.sauvegarde-confirmation;
+                        }
+                    }
+
+                    if root.etape == root.recapitulatif: VerticalLayout {
                         spacing: 8px;
 
                         Text {
@@ -426,6 +498,13 @@ export component EcranAssistant inherits Rectangle {
                             horizontal-alignment: Theme.debut;
                             text: @tr("Montant en lettres : {}", root.orthographe-traditionnelle ? @tr("orthographe traditionnelle") : @tr("orthographe rectifiée"));
                             color: Theme.texte;
+                        }
+
+                        if root.serveur: Text {
+                            horizontal-alignment: Theme.debut;
+                            text: @tr("Sauvegardes : chaque jour à {}, dans {}", root.sauvegarde-heure, root.sauvegarde-dossier);
+                            color: Theme.texte;
+                            wrap: word-wrap;
                         }
                     }
 
@@ -480,6 +559,9 @@ export component EcranAssistant inherits Rectangle {
                                     modes-paiement: root.modes-paiement,
                                     orthographe-traditionnelle: root.orthographe-traditionnelle,
                                     cle-licence: root.cle-licence,
+                                    sauvegarde-dossier: root.sauvegarde-dossier,
+                                    sauvegarde-heure: root.sauvegarde-heure,
+                                    sauvegarde-mot-de-passe: root.serveur ? root.sauvegarde-mot-de-passe : "",
                                 });
                             }
                         }

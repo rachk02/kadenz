@@ -3703,3 +3703,62 @@ msgstr "تتجاوز قاعدة الإصدار 1 الحجم المسموح به 
 
 msgid "base V1 introuvable : {}"
 msgstr "قاعدة الإصدار 1 غير موجودة: {}"
+
+# Phase 2, F7c : sauvegardes dans la fenêtre du serveur.
+
+msgid "Le dossier et l'heure des sauvegardes sont obligatoires."
+msgstr "مجلد النسخ الاحتياطية ووقتها إلزاميان."
+
+msgid "Le mot de passe des sauvegardes doit compter au moins 8 caractères."
+msgstr "يجب أن تتكون كلمة مرور النسخ الاحتياطية من 8 أحرف على الأقل."
+
+msgid "Le serveur sauvegarde sa base chaque jour à l'heure choisie, et à l'arrêt du service. Les sauvegardes sont chiffrées par ce mot de passe : sans lui, aucune ne peut être restaurée, et l'éditeur ne peut pas le retrouver. Notez-le en lieu sûr. Choisissez de préférence un dossier sur un autre disque que celui du serveur (disque externe ou partage réseau)."
+msgstr "يحفظ الخادم نسخة احتياطية من قاعدته كل يوم في الوقت المختار وعند توقف الخدمة. النسخ الاحتياطية مشفرة بكلمة المرور هذه: بدونها لا يمكن استعادة أي منها، ولا يستطيع الناشر استرجاعها. دوّنها في مكان آمن. يُفضل اختيار مجلد على قرص غير قرص الخادم (قرص خارجي أو مجلد مشترك على الشبكة)."
+
+msgid "Choisir un dossier"
+msgstr "اختيار مجلد"
+
+msgid "Heure de la sauvegarde quotidienne (HH:MM)"
+msgstr "وقت النسخ الاحتياطي اليومي (HH:MM)"
+
+msgid "Mot de passe des sauvegardes (8 caractères au moins)"
+msgstr "كلمة مرور النسخ الاحتياطية (8 أحرف على الأقل)"
+
+msgid "Sauvegardes : chaque jour à {}, dans {}"
+msgstr "النسخ الاحتياطية: كل يوم في {}، في {}"
+
+msgid "Le service sauvegarde la base chaque jour à l'heure choisie, et à son arrêt ; seules les plus récentes sont gardées. Chaque sauvegarde est chiffrée par le mot de passe et porte l'identité du serveur : restaurée sur une autre machine, les postes la reconnaissent."
+msgstr "تحفظ الخدمة نسخة احتياطية من القاعدة كل يوم في الوقت المختار وعند توقفها؛ ولا يُحتفظ إلا بأحدث النسخ. كل نسخة مشفرة بكلمة المرور وتحمل هوية الخادم: إذا استُعيدت على جهاز آخر تتعرف عليها الأجهزة."
+
+msgid "Un mot de passe est choisi. Laissez les deux champs vides pour le garder ; un nouveau mot de passe sert aux sauvegardes suivantes, les précédentes gardent le leur."
+msgstr "تم اختيار كلمة مرور. اترك الحقلين فارغين للاحتفاظ بها؛ تُستخدم كلمة المرور الجديدة للنسخ التالية، وتحتفظ النسخ السابقة بكلمة مرورها."
+
+msgid "Aucun mot de passe n'est choisi : aucune sauvegarde n'est faite. Notez-le en lieu sûr ; sans lui, une sauvegarde ne peut pas être restaurée."
+msgstr "لم يتم اختيار كلمة مرور: لا تُحفظ أي نسخة احتياطية. دوّنها في مكان آمن؛ بدونها لا يمكن استعادة النسخة الاحتياطية."
+
+msgid "Enregistrer le réglage"
+msgstr "حفظ الإعداد"
+
+msgid "Sauvegarde en cours..."
+msgstr "جارٍ النسخ الاحتياطي..."
+
+msgid "heure des sauvegardes invalide : la saisir sous la forme HH:MM, par exemple 12:00"
+msgstr "وقت النسخ الاحتياطي غير صالح: أدخله بالصيغة HH:MM، مثل 12:00"
+
+msgid "À l'arrêt du service"
+msgstr "عند توقف الخدمة"
+
+msgid "Aucune sauvegarde n'est faite : leur mot de passe n'est pas choisi. Choisissez-le dans la section Sauvegardes."
+msgstr "لا تُحفظ أي نسخة احتياطية: لم يتم اختيار كلمة المرور الخاصة بها. اخترها في قسم النسخ الاحتياطية."
+
+msgid "Les sauvegardes sont sur le même disque que la base du serveur : une panne de ce disque les perdrait toutes. Choisissez un dossier sur un autre disque (disque externe ou partage réseau)."
+msgstr "النسخ الاحتياطية على القرص نفسه الذي عليه قاعدة الخادم: عطل هذا القرص سيفقدها كلها. اختر مجلدًا على قرص آخر (قرص خارجي أو مجلد مشترك على الشبكة)."
+
+msgid "Réglage des sauvegardes enregistré. Le service le prend en compte dans la minute."
+msgstr "تم حفظ إعداد النسخ الاحتياطية. تطبقه الخدمة خلال دقيقة."
+
+msgid "Sauvegarde faite : {}"
+msgstr "تم النسخ الاحتياطي: {}"
+
+msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données du serveur"
+msgstr "لا يمكن أن يكون مجلد النسخ الاحتياطية داخل مجلد بيانات الخادم"

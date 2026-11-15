@@ -3703,3 +3703,62 @@ msgstr "la base V1 supera el tamaño permitido para la recuperación ({} MB)"
 
 msgid "base V1 introuvable : {}"
 msgstr "base V1 no encontrada: {}"
+
+# Phase 2, F7c : sauvegardes dans la fenêtre du serveur.
+
+msgid "Le dossier et l'heure des sauvegardes sont obligatoires."
+msgstr "La carpeta y la hora de las copias de seguridad son obligatorias."
+
+msgid "Le mot de passe des sauvegardes doit compter au moins 8 caractères."
+msgstr "La contraseña de las copias de seguridad debe tener al menos 8 caracteres."
+
+msgid "Le serveur sauvegarde sa base chaque jour à l'heure choisie, et à l'arrêt du service. Les sauvegardes sont chiffrées par ce mot de passe : sans lui, aucune ne peut être restaurée, et l'éditeur ne peut pas le retrouver. Notez-le en lieu sûr. Choisissez de préférence un dossier sur un autre disque que celui du serveur (disque externe ou partage réseau)."
+msgstr "El servidor hace una copia de seguridad de su base cada día a la hora elegida y al detenerse el servicio. Las copias están cifradas con esta contraseña: sin ella no se puede restaurar ninguna, y el editor no puede recuperarla. Anótela en un lugar seguro. Elija preferentemente una carpeta en un disco distinto del del servidor (disco externo o recurso compartido de red)."
+
+msgid "Choisir un dossier"
+msgstr "Elegir una carpeta"
+
+msgid "Heure de la sauvegarde quotidienne (HH:MM)"
+msgstr "Hora de la copia de seguridad diaria (HH:MM)"
+
+msgid "Mot de passe des sauvegardes (8 caractères au moins)"
+msgstr "Contraseña de las copias de seguridad (al menos 8 caracteres)"
+
+msgid "Sauvegardes : chaque jour à {}, dans {}"
+msgstr "Copias de seguridad: cada día a las {}, en {}"
+
+msgid "Le service sauvegarde la base chaque jour à l'heure choisie, et à son arrêt ; seules les plus récentes sont gardées. Chaque sauvegarde est chiffrée par le mot de passe et porte l'identité du serveur : restaurée sur une autre machine, les postes la reconnaissent."
+msgstr "El servicio hace una copia de seguridad de la base cada día a la hora elegida y al detenerse; solo se conservan las más recientes. Cada copia está cifrada con la contraseña y lleva la identidad del servidor: restaurada en otra máquina, los puestos la reconocen."
+
+msgid "Un mot de passe est choisi. Laissez les deux champs vides pour le garder ; un nouveau mot de passe sert aux sauvegardes suivantes, les précédentes gardent le leur."
+msgstr "Hay una contraseña elegida. Deje ambos campos vacíos para conservarla; una nueva contraseña sirve para las copias siguientes, las anteriores conservan la suya."
+
+msgid "Aucun mot de passe n'est choisi : aucune sauvegarde n'est faite. Notez-le en lieu sûr ; sans lui, une sauvegarde ne peut pas être restaurée."
+msgstr "No hay ninguna contraseña elegida: no se hace ninguna copia de seguridad. Anótela en un lugar seguro; sin ella, una copia no puede restaurarse."
+
+msgid "Enregistrer le réglage"
+msgstr "Guardar la configuración"
+
+msgid "Sauvegarde en cours..."
+msgstr "Copia de seguridad en curso..."
+
+msgid "heure des sauvegardes invalide : la saisir sous la forme HH:MM, par exemple 12:00"
+msgstr "hora de las copias de seguridad no válida: introdúzcala con el formato HH:MM, por ejemplo 12:00"
+
+msgid "À l'arrêt du service"
+msgstr "Al detenerse el servicio"
+
+msgid "Aucune sauvegarde n'est faite : leur mot de passe n'est pas choisi. Choisissez-le dans la section Sauvegardes."
+msgstr "No se hace ninguna copia de seguridad: su contraseña no está elegida. Elíjala en la sección Copias de seguridad."
+
+msgid "Les sauvegardes sont sur le même disque que la base du serveur : une panne de ce disque les perdrait toutes. Choisissez un dossier sur un autre disque (disque externe ou partage réseau)."
+msgstr "Las copias de seguridad están en el mismo disco que la base del servidor: una avería de este disco las perdería todas. Elija una carpeta en otro disco (disco externo o recurso compartido de red)."
+
+msgid "Réglage des sauvegardes enregistré. Le service le prend en compte dans la minute."
+msgstr "Configuración de las copias de seguridad guardada. El servicio la aplica en menos de un minuto."
+
+msgid "Sauvegarde faite : {}"
+msgstr "Copia de seguridad hecha: {}"
+
+msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données du serveur"
+msgstr "la carpeta de las copias de seguridad no puede estar dentro de la carpeta de datos del servidor"

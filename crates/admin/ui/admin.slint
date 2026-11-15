@@ -4,7 +4,8 @@
 // premier compte Admin avec la licence d'abonnement (même assistant que
 // l'application), crée et annule les codes d'inscription des postes, et retire un
 // poste. Tout le reste se fait depuis un poste connecté avec un compte Admin.
-// La restauration et les sauvegardes viennent avec le jalon F7.
+// Jalon F7 (décision 56) : réglage des sauvegardes du serveur, liste, sauvegarde
+// immédiate et avertissement permanent ; la restauration vient ensuite.
 import { LineEdit, ScrollView, TextEdit } from "std-widgets.slint";
 import { Alerte, Bouton, Champ, Confirmation, FenetreAlerte, FenetreConfirmation, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "../../app/ui/composants.slint";
 import { DonneesAssistant, EcranAssistant } from "../../app/ui/assistant.slint";
@@ -23,6 +24,12 @@ export struct PosteUi {
     empreinte: string,
     nom: string,
     inscrit-le: string,
+}
+
+export struct SauvegardeUi {
+    date: string,
+    genre: string,
+    taille: string,
 }
 
 export global AdminApi {
@@ -45,6 +52,20 @@ export global AdminApi {
     callback creer-code(nom: string) -> Retour;
     callback annuler-code(id: int) -> Retour;
     callback retirer-poste(empreinte: string) -> Retour;
+
+    // Sauvegardes du serveur (décision 56). avertissement-sauvegarde : texte
+    // du bandeau permanent, vide si tout va bien.
+    in property <string> avertissement-sauvegarde;
+    in property <bool> sauvegarde-mot-de-passe-choisi;
+    in property <[SauvegardeUi]> sauvegardes;
+    in-out property <string> sauvegarde-dossier;
+    in-out property <string> sauvegarde-heure;
+    in property <bool> sauvegarde-en-cours;
+    in-out property <Retour> sauvegarde-retour;
+    // Rend le dossier choisi, ou `actuel` si le choix est abandonné.
+    callback choisir-dossier(actuel: string) -> string;
+    callback enregistrer-sauvegardes(mot-de-passe: string, confirmation: string) -> Retour;
+    callback sauvegarder-maintenant();
 }
 
 export enum EcranAdmin { erreur, assistant, tableau }
@@ -128,6 +149,8 @@ component TexteACopier inherits VerticalLayout {
 component Tableau inherits ScrollView {
     property <string> nom-poste;
     property <Retour> retour;
+    property <string> mot-de-passe-sauvegardes;
+    property <string> confirmation-sauvegardes;
     // Action en attente de la fenêtre de confirmation.
     property <int> code-a-annuler: -1;
     property <string> poste-a-retirer;
@@ -168,6 +191,29 @@ component Tableau inherits ScrollView {
                 wrap: word-wrap;
             }
 
+            // Sauvegardes en défaut (décision 56) : bandeau permanent.
+            if AdminApi.avertissement-sauvegarde != "": Rectangle {
+                background: #fff8eb;
+                border-width: 1px;
+                border-color: Theme.ambre;
+                border-radius: 4px;
+
+                HorizontalLayout {
+                    padding-left: 14px;
+                    padding-right: 14px;
+                    padding-top: 8px;
+                    padding-bottom: 8px;
+
+                    Text {
+                        horizontal-alignment: Theme.debut;
+                        text: AdminApi.avertissement-sauvegarde;
+                        color: Theme.texte;
+                        font-weight: 600;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+
             Section {
                 text: @tr("Service");
             }
@@ -187,6 +233,136 @@ component Tableau inherits ScrollView {
             Ligne {
                 libelle: @tr("Dossier des données");
                 valeur: AdminApi.dossier;
+            }
+
+            Section {
+                text: @tr("Sauvegardes");
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Le service sauvegarde la base chaque jour à l'heure choisie, et à son arrêt ; seules les plus récentes sont gardées. Chaque sauvegarde est chiffrée par le mot de passe et porte l'identité du serveur : restaurée sur une autre machine, les postes la reconnaissent.");
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+
+            HorizontalLayout {
+                spacing: 8px;
+
+                Champ {
+                    horizontal-stretch: 1;
+                    libelle: @tr("Dossier des sauvegardes");
+                    valeur <=> AdminApi.sauvegarde-dossier;
+                }
+
+                VerticalLayout {
+                    alignment: end;
+
+                    Bouton {
+                        text: @tr("Choisir un dossier");
+                        clicked => {
+                            AdminApi.sauvegarde-dossier = AdminApi.choisir-dossier(AdminApi.sauvegarde-dossier);
+                        }
+                    }
+                }
+            }
+
+            Champ {
+                libelle: @tr("Heure de la sauvegarde quotidienne (HH:MM)");
+                valeur <=> AdminApi.sauvegarde-heure;
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: AdminApi.sauvegarde-mot-de-passe-choisi
+                    ? @tr("Un mot de passe est choisi. Laissez les deux champs vides pour le garder ; un nouveau mot de passe sert aux sauvegardes suivantes, les précédentes gardent le leur.")
+                    : @tr("Aucun mot de passe n'est choisi : aucune sauvegarde n'est faite. Notez-le en lieu sûr ; sans lui, une sauvegarde ne peut pas être restaurée.");
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+
+            HorizontalLayout {
+                spacing: 8px;
+
+                Champ {
+                    horizontal-stretch: 1;
+                    libelle: @tr("Mot de passe des sauvegardes (8 caractères au moins)");
+                    secret: true;
+                    valeur <=> root.mot-de-passe-sauvegardes;
+                }
+
+                Champ {
+                    horizontal-stretch: 1;
+                    libelle: @tr("Confirmation du mot de passe");
+                    secret: true;
+                    valeur <=> root.confirmation-sauvegardes;
+                }
+            }
+
+            HorizontalLayout {
+                spacing: 8px;
+                alignment: Theme.rangee-debut;
+
+                Bouton {
+                    text: @tr("Enregistrer le réglage");
+                    primary: true;
+                    enabled: !AdminApi.sauvegarde-en-cours;
+                    clicked => {
+                        AdminApi.sauvegarde-retour = AdminApi.enregistrer-sauvegardes(root.mot-de-passe-sauvegardes, root.confirmation-sauvegardes);
+                        if (AdminApi.sauvegarde-retour.ok) {
+                            root.mot-de-passe-sauvegardes = "";
+                            root.confirmation-sauvegardes = "";
+                        }
+                    }
+                }
+
+                Bouton {
+                    text: @tr("Sauvegarder maintenant");
+                    enabled: AdminApi.sauvegarde-mot-de-passe-choisi && !AdminApi.sauvegarde-en-cours;
+                    clicked => {
+                        AdminApi.sauvegarder-maintenant();
+                    }
+                }
+            }
+
+            if AdminApi.sauvegarde-en-cours: Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Sauvegarde en cours...");
+                color: Theme.texte-secondaire;
+            }
+
+            MessageRetour {
+                retour: AdminApi.sauvegarde-retour;
+            }
+
+            if AdminApi.sauvegardes.length == 0: Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Aucune sauvegarde dans ce dossier.");
+                color: Theme.texte-secondaire;
+            }
+
+            for sauvegarde in AdminApi.sauvegardes: HorizontalLayout {
+                spacing: 16px;
+
+                Text {
+                    width: 150px;
+                    horizontal-alignment: Theme.debut;
+                    text: sauvegarde.date;
+                    color: Theme.texte;
+                }
+
+                Text {
+                    horizontal-stretch: 1;
+                    horizontal-alignment: Theme.debut;
+                    text: sauvegarde.genre;
+                    color: Theme.texte;
+                }
+
+                Text {
+                    horizontal-alignment: Theme.fin;
+                    text: sauvegarde.taille;
+                    color: Theme.texte-secondaire;
+                }
             }
 
             Section {
@@ -426,6 +602,11 @@ export component FenetreAdmin inherits Window {
 
     if root.ecran == EcranAdmin.assistant: EcranAssistant {
         serveur: true;
+        defaut-dossier-sauvegardes: AdminApi.sauvegarde-dossier;
+        defaut-heure-sauvegardes: AdminApi.sauvegarde-heure;
+        choisir-dossier-sauvegardes(actuel) => {
+            AdminApi.choisir-dossier(actuel)
+        }
         defaut-taux-tva: root.defaut-taux-tva;
         defaut-taux-remise: root.defaut-taux-remise;
         defaut-taux-retenue: root.defaut-taux-retenue;

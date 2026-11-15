@@ -17,17 +17,20 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::Duration;
 
-use chrono::{DateTime, Local, NaiveDateTime, Utc};
+use chrono::{DateTime, Local, NaiveDateTime, NaiveTime, Utc};
 use kadenz_domaine::lettres::Orthographe;
 use kadenz_domaine::role::Role;
 use kadenz_domaine::saisie;
 use kadenz_protocole::inscription::presenter_secret;
+use kadenz_protocole::sauvegarde::AvertissementSauvegarde;
 use kadenz_serveur::admin::{self, EtatService};
+use kadenz_serveur::sauvegardes;
 use kadenz_stockage::Erreur;
 use kadenz_stockage::comptes::{self, EtatInstallation, NouvelUtilisateur};
 use kadenz_stockage::entreprise::{self, Entreprise};
 use kadenz_stockage::installation::InstallationInitiale;
 use kadenz_stockage::parametres::Parametres;
+use kadenz_stockage::sauvegarde::Genre;
 use kadenz_stockage::{abonnement, inscription, postes, synchro};
 use rusqlite::Connection;
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
@@ -166,6 +169,58 @@ fn ouvrir(dossier: &Path) -> Result<Connection, String> {
     })
 }
 
+/// Heure de la sauvegarde quotidienne, saisie HH:MM (12:00, ou 12h00).
+fn heure_sauvegarde(texte: &str) -> Result<NaiveTime, String> {
+    NaiveTime::parse_from_str(&texte.trim().replace(['h', 'H'], ":"), "%H:%M").map_err(|_| {
+        tr("heure des sauvegardes invalide : la saisir sous la forme HH:MM, par exemple 12:00")
+    })
+}
+
+fn genre_sauvegarde(genre: Genre) -> String {
+    match genre {
+        Genre::Automatique => tr("Automatique"),
+        Genre::Manuelle => tr("Manuelle"),
+        Genre::AvantRestauration => tr("Avant restauration"),
+        Genre::Arret => tr("À l'arrêt du service"),
+    }
+}
+
+/// Bandeau permanent des sauvegardes (décision 56) ; vide si tout va bien.
+fn texte_avertissement(avertissement: Option<AvertissementSauvegarde>) -> String {
+    match avertissement {
+        None => String::new(),
+        Some(AvertissementSauvegarde::SansMotDePasse) => tr(
+            "Aucune sauvegarde n'est faite : leur mot de passe n'est pas choisi. Choisissez-le dans la section Sauvegardes.",
+        ),
+        Some(AvertissementSauvegarde::MemeDisque) => tr(
+            "Les sauvegardes sont sur le même disque que la base du serveur : une panne de ce disque les perdrait toutes. Choisissez un dossier sur un autre disque (disque externe ou partage réseau).",
+        ),
+    }
+}
+
+/// Dossier choisi dans la boîte de Windows ; `actuel` si le choix est abandonné.
+fn choisir_dossier(f: &FenetreAdmin, actuel: &str) -> SharedString {
+    let mut boite = rfd::FileDialog::new()
+        .set_title(tr("Dossier des sauvegardes"))
+        .set_parent(&f.window().window_handle());
+    if Path::new(actuel).is_dir() {
+        boite = boite.set_directory(actuel);
+    }
+    match boite.pick_folder() {
+        Some(dossier) => dossier.display().to_string().into(),
+        None => actuel.into(),
+    }
+}
+
+/// Recopie le réglage des sauvegardes dans les champs (dossier et heure),
+/// à l'ouverture et après un enregistrement : jamais pendant une saisie.
+fn montrer_reglage_sauvegardes(f: &FenetreAdmin, dossier: &Path) {
+    let reglage = sauvegardes::lire_reglage(dossier);
+    let api = f.global::<AdminApi>();
+    api.set_sauvegarde_dossier(reglage.dossier.display().to_string().into());
+    api.set_sauvegarde_heure(reglage.heure.format("%H:%M").to_string().into());
+}
+
 fn installation_depuis_assistant(d: &DonneesAssistant) -> Result<InstallationInitiale, String> {
     let taux = |libelle: &str, texte: &SharedString| {
         saisie::liste_pourcentages_depuis_texte(texte).ok_or_else(|| {
@@ -258,6 +313,23 @@ fn actualiser(f: &FenetreAdmin, conn: &Connection, dossier: &Path) {
             })
             .collect::<Vec<_>>(),
     )));
+    api.set_avertissement_sauvegarde(
+        texte_avertissement(sauvegardes::avertissement(dossier)).into(),
+    );
+    api.set_sauvegarde_mot_de_passe_choisi(
+        sauvegardes::lire_reglage(dossier).mot_de_passe.is_some(),
+    );
+    api.set_sauvegardes(ModelRc::new(VecModel::from(
+        sauvegardes::liste(dossier)
+            .unwrap_or_default()
+            .into_iter()
+            .map(|s| SauvegardeUi {
+                date: s.date.format("%d/%m/%Y %H:%M").to_string().into(),
+                genre: genre_sauvegarde(s.genre).into(),
+                taille: trf("{} Ko", &[&s.taille.div_ceil(1024)]).into(),
+            })
+            .collect::<Vec<_>>(),
+    )));
     api.set_codes(ModelRc::new(VecModel::from(
         inscription::codes_en_cours(conn, Utc::now())
             .unwrap_or_default()
@@ -274,7 +346,60 @@ fn actualiser(f: &FenetreAdmin, conn: &Connection, dossier: &Path) {
 fn brancher_tableau(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossier: Rc<PathBuf>) {
     let api = f.global::<AdminApi>();
     api.set_dossier(dossier.display().to_string().into());
+    montrer_reglage_sauvegardes(f, &dossier);
     actualiser(f, &conn.borrow(), &dossier);
+
+    // Réglage des sauvegardes (décision 56) : mot de passe vide, il est gardé.
+    let (fa, c, d) = (f.as_weak(), conn.clone(), dossier.clone());
+    api.on_enregistrer_sauvegardes(move |mot_de_passe, confirmation| {
+        let Some(f) = fa.upgrade() else {
+            return retour_erreur(String::new());
+        };
+        if mot_de_passe != confirmation {
+            return retour_erreur(tr("Les deux mots de passe ne correspondent pas."));
+        }
+        let api = f.global::<AdminApi>();
+        let heure = match heure_sauvegarde(&api.get_sauvegarde_heure()) {
+            Ok(heure) => heure,
+            Err(message) => return retour_erreur(message),
+        };
+        let dossier_sauvegardes = PathBuf::from(api.get_sauvegarde_dossier().trim());
+        let nouveau = (!mot_de_passe.is_empty()).then_some(mot_de_passe.as_str());
+        match sauvegardes::enregistrer_reglage(&d, &dossier_sauvegardes, heure, nouveau) {
+            Ok(()) => {
+                montrer_reglage_sauvegardes(&f, &d);
+                actualiser(&f, &c.borrow(), &d);
+                retour_ok(tr(
+                    "Réglage des sauvegardes enregistré. Le service le prend en compte dans la minute.",
+                ))
+            }
+            Err(e) => retour_erreur(tr(&e)),
+        }
+    });
+
+    // Sauvegarde immédiate, sur une connexion à part dans un fil : la copie et
+    // son chiffrement peuvent prendre quelques secondes.
+    let (fa, d) = (f.as_weak(), dossier.clone());
+    api.on_sauvegarder_maintenant(move || {
+        let Some(f) = fa.upgrade() else { return };
+        let api = f.global::<AdminApi>();
+        api.set_sauvegarde_en_cours(true);
+        api.set_sauvegarde_retour(retour_ok(String::new()));
+        let (fa, d) = (f.as_weak(), (*d).clone());
+        std::thread::spawn(move || {
+            let resultat = admin::ouvrir_base(&d)
+                .and_then(|conn| sauvegardes::sauvegarder(&conn, &d, Genre::Manuelle));
+            let _ = fa.upgrade_in_event_loop(move |f| {
+                let api = f.global::<AdminApi>();
+                api.set_sauvegarde_en_cours(false);
+                api.set_sauvegarde_retour(match resultat {
+                    Ok(chemin) => retour_ok(trf("Sauvegarde faite : {}", &[&chemin.display()])),
+                    Err(e) => retour_erreur(tr(&e)),
+                });
+                api.invoke_actualiser();
+            });
+        });
+    });
 
     let (fa, c, d) = (f.as_weak(), conn.clone(), dossier.clone());
     api.on_actualiser(move || {
@@ -336,6 +461,7 @@ fn brancher_tableau(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossier: Rc
 }
 
 fn brancher_assistant(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossier: Rc<PathBuf>) {
+    montrer_reglage_sauvegardes(f, &dossier);
     let defaut = Parametres::default();
     f.set_defaut_taux_tva(saisie::liste_pourcentages_en_texte(&defaut.taux_tva).into());
     f.set_defaut_taux_remise(saisie::liste_pourcentages_en_texte(&defaut.taux_remise).into());
@@ -384,6 +510,19 @@ fn brancher_assistant(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossier: 
             Ok(init) => init,
             Err(message) => return message.into(),
         };
+        // Sauvegardes d'abord (décision 56) : un réglage refusé n'installe rien.
+        let heure = match heure_sauvegarde(&d.sauvegarde_heure) {
+            Ok(heure) => heure,
+            Err(message) => return message.into(),
+        };
+        if let Err(e) = sauvegardes::enregistrer_reglage(
+            &dossier,
+            Path::new(d.sauvegarde_dossier.trim()),
+            heure,
+            Some(d.sauvegarde_mot_de_passe.as_str()),
+        ) {
+            return tr(&e).into();
+        }
         // Licence facultative : sans elle, lecture seule et un seul poste
         // permis, le temps de l'installer depuis ce poste (décisions 40 et 41).
         let cle = d.cle_licence.trim().to_string();
@@ -404,6 +543,13 @@ fn main() -> Result<(), slint::PlatformError> {
     traduction::choisir_demarrage();
     let fenetre = FenetreAdmin::new()?;
     let dossier = Rc::new(dossier());
+    let fa = fenetre.as_weak();
+    fenetre
+        .global::<AdminApi>()
+        .on_choisir_dossier(move |actuel| match fa.upgrade() {
+            Some(f) => choisir_dossier(&f, &actuel),
+            None => actuel,
+        });
     match ouvrir(&dossier) {
         Err(message) => {
             fenetre.set_message_erreur(message.into());

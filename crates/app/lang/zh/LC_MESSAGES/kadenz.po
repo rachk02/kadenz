@@ -3703,3 +3703,62 @@ msgstr "V1 数据库超出导入允许的大小（{} MB）"
 
 msgid "base V1 introuvable : {}"
 msgstr "未找到 V1 数据库：{}"
+
+# Phase 2, F7c : sauvegardes dans la fenêtre du serveur.
+
+msgid "Le dossier et l'heure des sauvegardes sont obligatoires."
+msgstr "备份文件夹和时间为必填项。"
+
+msgid "Le mot de passe des sauvegardes doit compter au moins 8 caractères."
+msgstr "备份密码至少需要 8 个字符。"
+
+msgid "Le serveur sauvegarde sa base chaque jour à l'heure choisie, et à l'arrêt du service. Les sauvegardes sont chiffrées par ce mot de passe : sans lui, aucune ne peut être restaurée, et l'éditeur ne peut pas le retrouver. Notez-le en lieu sûr. Choisissez de préférence un dossier sur un autre disque que celui du serveur (disque externe ou partage réseau)."
+msgstr "服务器每天在所选时间以及服务停止时备份其数据库。备份使用此密码加密：没有密码，任何备份都无法恢复，发行方也无法找回密码。请将其记在安全的地方。最好选择与服务器不同磁盘上的文件夹（外部磁盘或网络共享）。"
+
+msgid "Choisir un dossier"
+msgstr "选择文件夹"
+
+msgid "Heure de la sauvegarde quotidienne (HH:MM)"
+msgstr "每日备份时间（HH:MM）"
+
+msgid "Mot de passe des sauvegardes (8 caractères au moins)"
+msgstr "备份密码（至少 8 个字符）"
+
+msgid "Sauvegardes : chaque jour à {}, dans {}"
+msgstr "备份：每天 {}，保存在 {}"
+
+msgid "Le service sauvegarde la base chaque jour à l'heure choisie, et à son arrêt ; seules les plus récentes sont gardées. Chaque sauvegarde est chiffrée par le mot de passe et porte l'identité du serveur : restaurée sur une autre machine, les postes la reconnaissent."
+msgstr "服务每天在所选时间以及停止时备份数据库；只保留最新的备份。每个备份都用密码加密并带有服务器的身份：在另一台机器上恢复后，工作站仍能识别它。"
+
+msgid "Un mot de passe est choisi. Laissez les deux champs vides pour le garder ; un nouveau mot de passe sert aux sauvegardes suivantes, les précédentes gardent le leur."
+msgstr "已设置密码。两个字段都留空即可保留；新密码用于之后的备份，之前的备份保留原密码。"
+
+msgid "Aucun mot de passe n'est choisi : aucune sauvegarde n'est faite. Notez-le en lieu sûr ; sans lui, une sauvegarde ne peut pas être restaurée."
+msgstr "未设置密码：不会进行任何备份。请将密码记在安全的地方；没有它，备份无法恢复。"
+
+msgid "Enregistrer le réglage"
+msgstr "保存设置"
+
+msgid "Sauvegarde en cours..."
+msgstr "正在备份..."
+
+msgid "heure des sauvegardes invalide : la saisir sous la forme HH:MM, par exemple 12:00"
+msgstr "备份时间无效：请按 HH:MM 格式输入，例如 12:00"
+
+msgid "À l'arrêt du service"
+msgstr "服务停止时"
+
+msgid "Aucune sauvegarde n'est faite : leur mot de passe n'est pas choisi. Choisissez-le dans la section Sauvegardes."
+msgstr "未进行任何备份：尚未设置备份密码。请在“备份”部分设置。"
+
+msgid "Les sauvegardes sont sur le même disque que la base du serveur : une panne de ce disque les perdrait toutes. Choisissez un dossier sur un autre disque (disque externe ou partage réseau)."
+msgstr "备份与服务器数据库位于同一磁盘：该磁盘故障将导致全部丢失。请选择另一磁盘上的文件夹（外部磁盘或网络共享）。"
+
+msgid "Réglage des sauvegardes enregistré. Le service le prend en compte dans la minute."
+msgstr "备份设置已保存。服务将在一分钟内应用。"
+
+msgid "Sauvegarde faite : {}"
+msgstr "备份完成：{}"
+
+msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données du serveur"
+msgstr "备份文件夹不能位于服务器数据文件夹内"
