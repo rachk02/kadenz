@@ -362,6 +362,23 @@ fn ajouter_periode(jour: NaiveDate, formule: Formule) -> NaiveDate {
     jour.checked_add_months(Months::new(mois)).unwrap_or(jour)
 }
 
+/// Montant entier avec une espace fine insécable entre les milliers, pour
+/// le journal (150000 : « 150 000 »).
+fn milliers(montant: i64) -> String {
+    let chiffres = montant.unsigned_abs().to_string();
+    let mut texte = String::new();
+    for (i, c) in chiffres.chars().enumerate() {
+        if i > 0 && (chiffres.len() - i).is_multiple_of(3) {
+            texte.push('\u{202f}');
+        }
+        texte.push(c);
+    }
+    if montant < 0 {
+        texte.insert(0, '-');
+    }
+    texte
+}
+
 fn modules_en_texte(modules: &[Module]) -> String {
     modules
         .iter()
@@ -947,8 +964,9 @@ impl Portail {
         )?;
         let id = conn.last_insert_rowid();
         let details = format!(
-            "{} {montant} {devise}, {postes} postes, {}{}",
+            "{} {} {devise}, {postes} postes, {}{}",
             mode.libelle(),
+            milliers(montant),
             formule.code(),
             reference
                 .map(|r| format!(", référence {r}"))
@@ -1075,11 +1093,19 @@ impl Portail {
         )?;
         let id = conn.last_insert_rowid();
         let details = format!(
-            "paiement {}, {} postes, échéance {}, modules {}",
+            "paiement {}, {} postes, échéance {}, modules : {}",
             paiement.id,
             licence.postes,
             licence.echeance,
-            modules_en_texte(&modules)
+            if modules.is_empty() {
+                "aucun".to_string()
+            } else {
+                modules
+                    .iter()
+                    .map(|m| m.libelle())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            }
         );
         noter(
             &conn,
@@ -1184,4 +1210,17 @@ fn licence_permise(conn: &Connection, acteur: &Compte, id: i64) -> Resultat<Lice
         .ok_or(ErreurPortail::Introuvable)?;
     entreprise_permise(conn, acteur, &licence.entreprise)?;
     Ok(licence)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::milliers;
+
+    #[test]
+    fn montants_groupes_par_milliers() {
+        assert_eq!(milliers(12500), "12\u{202f}500");
+        assert_eq!(milliers(150_000), "150\u{202f}000");
+        assert_eq!(milliers(999), "999");
+        assert_eq!(milliers(1_000_000), "1\u{202f}000\u{202f}000");
+    }
 }
