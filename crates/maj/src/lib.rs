@@ -2,7 +2,7 @@
 //! phase 2, pont V1, règles a et b).
 //!
 //! L'application parcourt la liste des releases publiées sur GitHub
-//! ([`verifier`], [`rechercher`]). Chaque release porte un manifeste
+//! ([`verifier_pour`], [`rechercher_pour`]). Chaque release porte un manifeste
 //! `kadenz-maj.json` (version, génération, version minimale d'où la mise à
 //! jour est permise, nom et empreinte SHA-256 de l'installateur), signé en
 //! Ed25519 par la clé de mise à jour de l'éditeur (`kadenz-maj.json.sig`). Seule
@@ -457,20 +457,6 @@ fn rechercher_dans(liste: &str, produit: Produit) -> Recherche {
         produit,
         lire_actif,
     )
-}
-
-/// Poste dont le serveur est inconnu : [`verifier_pour`] sans plafond.
-/// Transitoire, jusqu'à ce que l'application passe la version de son serveur
-/// (jalon F10b).
-pub fn verifier() -> Option<MiseAJour> {
-    verifier_pour(Produit::Poste { serveur: None })
-}
-
-/// Poste dont le serveur est inconnu : [`rechercher_pour`] sans plafond.
-/// Transitoire, jusqu'à ce que l'application passe la version de son serveur
-/// (jalon F10b).
-pub fn rechercher() -> Recherche {
-    rechercher_pour(Produit::Poste { serveur: None })
 }
 
 /// Variable des versions de développement : chemin d'un fichier JSON local

@@ -284,6 +284,62 @@ fn poste_retire_etat_final() {
     s.arreter();
 }
 
+/// Serveur relancé avec une configuration donnée, le port pouvant tarder à
+/// se libérer.
+fn relancer_avec(config: Config) -> Serveur {
+    for _ in 0..40 {
+        match Serveur::demarrer(config.clone()) {
+            Ok(sv) => return sv,
+            Err(_) => thread::sleep(Duration::from_millis(250)),
+        }
+    }
+    panic!("serveur non relancé sur {}", config.adresse);
+}
+
+/// Serveur d'une autre version du protocole (F10) : plus ancienne, le poste
+/// attend sa mise à jour en réessayant ; plus récente, le poste est à mettre
+/// à jour (état final). La version logicielle du serveur est retenue.
+#[test]
+fn version_du_serveur_differente() {
+    let b = banc("version", true);
+    let port = b.serveur.adresse().port();
+    b.serveur.arreter();
+    let mut ancien = config(&b.dossier_serveur, port);
+    ancien.version_protocole = kadenz_protocole::VERSION - 1;
+    let serveur = relancer_avec(ancien);
+    let (s, _evenements) = demarrer(&b.copie);
+    let attendu = EtatConnexion::AttendServeur {
+        serveur: kadenz_protocole::VERSION - 1,
+        logiciel: Some(env!("CARGO_PKG_VERSION").into()),
+    };
+    attendre("attente du serveur", || s.etat() == attendu);
+    assert!(!s.etat().definitif());
+    assert_eq!(
+        s.logiciel_serveur().as_deref(),
+        Some(env!("CARGO_PKG_VERSION"))
+    );
+    // Hors connexion en attendant : la connexion d'un compte le dit.
+    assert_eq!(
+        s.connecter("admin", MOT_DE_PASSE),
+        Err(ErreurPoste::HorsConnexion)
+    );
+    s.arreter();
+    serveur.arreter();
+
+    let mut recent = config(&b.dossier_serveur, port);
+    recent.version_protocole = kadenz_protocole::VERSION + 1;
+    let serveur = relancer_avec(recent);
+    let (s, _evenements) = demarrer(&b.copie);
+    let attendu = EtatConnexion::VersionDifferente {
+        serveur: kadenz_protocole::VERSION + 1,
+        logiciel: Some(env!("CARGO_PKG_VERSION").into()),
+    };
+    attendre("poste à mettre à jour", || s.etat() == attendu);
+    assert!(s.etat().definitif());
+    s.arreter();
+    serveur.arreter();
+}
+
 #[test]
 fn ecriture_sans_reponse_confirmee_a_la_connexion() {
     let b = banc("en-cours", true);

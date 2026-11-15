@@ -97,6 +97,9 @@ pub struct Config {
     /// Réponse aux requêtes de découverte du réseau local, en UDP sur le même
     /// port que les sessions.
     pub decouverte: bool,
+    /// Version du protocole parlée : [`VERSION`], sauf pour les essais d'un
+    /// poste face à un serveur d'une autre version (F10).
+    pub version_protocole: u32,
 }
 
 impl Config {
@@ -110,6 +113,7 @@ impl Config {
             controle_droits: true,
             cles_portail: kadenz_licence::entreprise::cles_portail(),
             decouverte: true,
+            version_protocole: VERSION,
         }
     }
 }
@@ -395,6 +399,8 @@ struct Contexte {
     dossier: PathBuf,
     /// Accès à distance par le relais (F8).
     distance: distance::Distance,
+    /// Version du protocole parlée ([`Config::version_protocole`]).
+    version: u32,
 }
 
 /// Rend sa place à la connexion quand la session se termine.
@@ -468,6 +474,7 @@ impl Serveur {
             arret: arret.clone(),
             dossier: config.dossier.clone(),
             distance: distance::Distance::default(),
+            version: config.version_protocole,
         });
         contexte.distance.rafraichir(&contexte.base);
         let relais = {
@@ -802,8 +809,8 @@ fn session(contexte: &Contexte, tcp: TcpStream, distante: bool) {
         return;
     };
     let accueil = match premiere {
-        Requete::Bonjour { version } if version == VERSION => Reponse::Bienvenue {
-            version: VERSION,
+        Requete::Bonjour { version } if version == contexte.version => Reponse::Bienvenue {
+            version: contexte.version,
             entreprise: contexte.entreprise.clone(),
             decalage_minutes: chrono::Local::now().offset().local_minus_utc() / 60,
             generation: contexte.generation.clone(),
@@ -811,7 +818,7 @@ fn session(contexte: &Contexte, tcp: TcpStream, distante: bool) {
             logiciel: kadenz_protocole::logiciel(),
         },
         Requete::Bonjour { .. } => {
-            let _ = repondre(&mut flux, &version_refusee());
+            let _ = repondre(&mut flux, &version_refusee(contexte));
             return fermer(&mut flux);
         }
         _ => {
@@ -848,9 +855,9 @@ fn session(contexte: &Contexte, tcp: TcpStream, distante: bool) {
 /// Refus d'un poste d'une autre version du protocole, avec la version
 /// logicielle du serveur (F10) : le poste sait s'il doit attendre la mise à
 /// jour du serveur ou se mettre à jour lui-même.
-fn version_refusee() -> Reponse {
+fn version_refusee(contexte: &Contexte) -> Reponse {
     Reponse::VersionRefusee {
-        version: VERSION,
+        version: contexte.version,
         logiciel: kadenz_protocole::logiciel(),
     }
 }
@@ -859,7 +866,9 @@ fn version_refusee() -> Reponse {
 /// demande d'inscription par code est servie, puis la connexion est fermée.
 fn inscription(contexte: &Contexte, flux: &mut Flux, poste: &str, ip: &str) {
     let reponse = match messages::lire_borne::<Requete>(flux, TAILLE_INSCRIPTION) {
-        Ok(Requete::Inscription { version, .. }) if version != VERSION => version_refusee(),
+        Ok(Requete::Inscription { version, .. }) if version != contexte.version => {
+            version_refusee(contexte)
+        }
         Ok(Requete::Inscription { secret, .. }) => inscrire(contexte, poste, ip, secret),
         Ok(_) | Err(ErreurTrame::TropGrand(_)) | Err(ErreurTrame::Illisible(_)) => {
             Reponse::PosteNonInscrit
