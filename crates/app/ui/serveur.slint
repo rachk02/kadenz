@@ -7,11 +7,17 @@
 // Les appels au réseau tournent hors du fil de l'interface : les résultats
 // arrivent par les propriétés (occupe, retour, trouves...).
 import { ScrollView, TextEdit } from "std-widgets.slint";
-import { Alerte, Bouton, Champ, Ecriture, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Champ, Confirmation, Droits, Ecriture, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct ServeurTrouveUi {
     machine: string,
     adresse: string,
+}
+
+// Ligne du résumé d'une base V1 avant sa reprise (F7, section 8).
+export struct LigneResumeUi {
+    libelle: string,
+    valeur: string,
 }
 
 // Brouillon dont la validation a été demandée hors connexion (section 4).
@@ -45,6 +51,48 @@ export global ServeurApi {
     in property <[DocumentAValiderUi]> a-valider;
     callback ouvrir-a-valider(id: int);
     callback tout-valider() -> Retour;
+
+    // Reprise d'une base V1 (F7, section 8), Admin d'un poste relié et
+    // connecté. reprise-etat : 0 pas encore vérifié, 1 serveur neuf, 2 serveur
+    // qui a déjà des données (décision 55), 3 reprise faite.
+    in property <int> reprise-etat;
+    in property <string> reprise-fichier;
+    in property <[LigneResumeUi]> reprise-resume;
+    in property <[string]> reprise-ecartes;
+    in property <bool> reprise-occupe;
+    in property <Retour> reprise-retour;
+    callback reprise-verifier();
+    callback reprise-choisir-fichier();
+    callback reprise-resumer(sauvegarde: bool, mot-de-passe: string);
+    callback reprise-lancer(sauvegarde: bool, mot-de-passe: string);
+
+    // Sauvegardes du serveur en défaut (décision 56), pour un compte Admin :
+    // texte du bandeau permanent, vide sinon.
+    in property <string> avertissement-sauvegarde;
+}
+
+// Bandeau permanent des sauvegardes du serveur (décision 56) : le réglage se
+// fait dans la fenêtre du serveur, sur sa machine, d'où l'absence de bouton.
+export component BandeauSauvegarde inherits Rectangle {
+    background: #fff8eb;
+    border-width: 1px;
+    border-color: Theme.ambre;
+    border-radius: 4px;
+
+    HorizontalLayout {
+        padding-left: 14px;
+        padding-right: 14px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: ServeurApi.avertissement-sauvegarde;
+            color: Theme.texte;
+            font-weight: 600;
+            wrap: word-wrap;
+        }
+    }
 }
 
 component Ligne inherits GridLayout {
@@ -226,6 +274,188 @@ export component InscriptionPoste inherits VerticalLayout {
     }
 }
 
+// Assistant de reprise d'une base V1 dans un serveur neuf (F7, section 8 ;
+// décisions 19 et 53 à 55) : source, résumé lu sur ce poste, confirmation,
+// bilan mesuré sur le serveur.
+component RepriseV1 inherits VerticalLayout {
+    property <bool> sauvegarde;
+    property <string> mot-de-passe;
+    property <bool> demande;
+    spacing: 12px;
+
+    Section {
+        text: @tr("Reprise d'une base V1");
+    }
+
+    Text {
+        horizontal-alignment: Theme.debut;
+        text: @tr("Un serveur neuf peut reprendre une base de la version 1 : celle de ce poste ou une sauvegarde .kzs. La reprise se fait une seule fois ; la base d'origine n'est jamais effacée et la numérotation continue après ses numéros.");
+        color: Theme.texte-secondaire;
+        wrap: word-wrap;
+    }
+
+    if ServeurApi.reprise-etat == 0: HorizontalLayout {
+        alignment: Theme.rangee-debut;
+
+        Bouton {
+            text: @tr("Vérifier que le serveur est neuf");
+            enabled: Ecriture.reglages && !ServeurApi.reprise-occupe;
+            clicked => {
+                ServeurApi.reprise-verifier();
+            }
+        }
+    }
+
+    if ServeurApi.reprise-etat == 2: Text {
+        horizontal-alignment: Theme.debut;
+        text: @tr("Le serveur a déjà des données (tiers, produits, documents ou règlements) : une base V1 ne peut être reprise que sur un serveur neuf. Les autres installations V1 restent consultables à part.");
+        color: Theme.texte;
+        wrap: word-wrap;
+    }
+
+    if ServeurApi.reprise-etat == 1: VerticalLayout {
+        spacing: 12px;
+
+        HorizontalLayout {
+            spacing: 8px;
+            alignment: Theme.rangee-debut;
+
+            Bouton {
+                text: @tr("Base V1 de ce poste");
+                primary: !root.sauvegarde;
+                enabled: !ServeurApi.reprise-occupe;
+                clicked => {
+                    root.sauvegarde = false;
+                }
+            }
+
+            Bouton {
+                text: @tr("Sauvegarde .kzs");
+                primary: root.sauvegarde;
+                enabled: !ServeurApi.reprise-occupe;
+                clicked => {
+                    root.sauvegarde = true;
+                }
+            }
+        }
+
+        if root.sauvegarde: HorizontalLayout {
+            spacing: 12px;
+
+            Text {
+                horizontal-stretch: 1;
+                vertical-alignment: center;
+                horizontal-alignment: Theme.debut;
+                text: ServeurApi.reprise-fichier == "" ? @tr("Aucune sauvegarde choisie.") : ServeurApi.reprise-fichier;
+                color: ServeurApi.reprise-fichier == "" ? Theme.texte-secondaire : Theme.texte;
+                wrap: char-wrap;
+            }
+
+            Bouton {
+                text: @tr("Choisir une sauvegarde");
+                enabled: !ServeurApi.reprise-occupe;
+                clicked => {
+                    ServeurApi.reprise-choisir-fichier();
+                }
+            }
+        }
+
+        if root.sauvegarde: Champ {
+            libelle: @tr("Mot de passe de la sauvegarde");
+            secret: true;
+            valeur <=> root.mot-de-passe;
+        }
+
+        HorizontalLayout {
+            alignment: Theme.rangee-debut;
+
+            Bouton {
+                text: @tr("Voir le résumé");
+                enabled: !ServeurApi.reprise-occupe && (!root.sauvegarde || ServeurApi.reprise-fichier != "");
+                clicked => {
+                    ServeurApi.reprise-resumer(root.sauvegarde, root.mot-de-passe);
+                }
+            }
+        }
+
+        if ServeurApi.reprise-resume.length > 0: Rectangle {
+            border-width: 1px;
+            border-color: Theme.bordure;
+            border-radius: 4px;
+
+            VerticalLayout {
+                padding: 14px;
+                spacing: 8px;
+
+                for ligne in ServeurApi.reprise-resume: Ligne {
+                    libelle: ligne.libelle;
+                    valeur: ligne.valeur;
+                }
+
+                if ServeurApi.reprise-ecartes.length > 0: Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("Comptes non repris, parce que le serveur a déjà un compte du même identifiant :");
+                    color: Theme.texte;
+                    wrap: word-wrap;
+                }
+
+                for identifiant in ServeurApi.reprise-ecartes: Text {
+                    horizontal-alignment: Theme.debut;
+                    text: identifiant;
+                    color: Theme.texte;
+                    font-family: "Consolas";
+                }
+            }
+        }
+
+        if ServeurApi.reprise-resume.length > 0: HorizontalLayout {
+            alignment: Theme.rangee-debut;
+
+            Bouton {
+                text: @tr("Reprendre cette base");
+                primary: true;
+                enabled: Ecriture.reglages && !ServeurApi.reprise-occupe;
+                clicked => {
+                    root.demande = true;
+                    Confirmation.demander(@tr("Reprendre cette base dans le serveur ? La reprise ne se fait qu'une fois. La fiche de l'entreprise et les paramètres de la base V1 remplacent ceux du serveur ; la base V1 d'origine n'est pas effacée."), @tr("Reprendre"), false);
+                }
+            }
+        }
+    }
+
+    if ServeurApi.reprise-occupe: Text {
+        horizontal-alignment: Theme.debut;
+        text: @tr("Reprise en cours : le serveur reçoit la base, cela peut prendre une ou deux minutes...");
+        color: Theme.texte-secondaire;
+        wrap: word-wrap;
+    }
+
+    // Bilan mesuré sur le serveur, une fois la reprise faite.
+    if ServeurApi.reprise-etat == 3: VerticalLayout {
+        spacing: 8px;
+
+        for ligne in ServeurApi.reprise-resume: Ligne {
+            libelle: ligne.libelle;
+            valeur: ligne.valeur;
+        }
+    }
+
+    MessageRetour {
+        retour: ServeurApi.reprise-retour;
+    }
+
+    // Réponse de la confirmation commune : seule celle que cette page a demandée.
+    property <int> reponses: Confirmation.reponses;
+    changed reponses => {
+        if (root.demande) {
+            root.demande = false;
+            if (Confirmation.accepte) {
+                ServeurApi.reprise-lancer(root.sauvegarde, root.mot-de-passe);
+            }
+        }
+    }
+}
+
 export component PageServeur inherits ScrollView {
     property <Retour> retour-validation;
 
@@ -338,6 +568,8 @@ export component PageServeur inherits ScrollView {
                 retour: root.retour-validation;
             }
         }
+
+        if ServeurApi.relie && Droits.gerer-parametres: RepriseV1 { }
 
         if !ServeurApi.relie: InscriptionPoste { }
 

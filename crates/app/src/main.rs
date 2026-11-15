@@ -16,6 +16,7 @@ mod pdf;
 mod pilotage;
 mod referentiels;
 mod relie;
+mod reprise;
 mod sauvegardes;
 mod serveur;
 mod suspendues;
@@ -55,7 +56,7 @@ pub(crate) fn dossier_donnees() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("."))
 }
 
-fn chemin_base() -> PathBuf {
+pub(crate) fn chemin_base() -> PathBuf {
     if let Some(chemin) = std::env::var_os("KADENZ_BASE") {
         return PathBuf::from(chemin);
     }
@@ -347,6 +348,10 @@ fn afficher_session(fenetre: &FenetrePrincipale, etat: &Etat) {
 /// session vidé, langue de démarrage, retour à l'écran de connexion.
 pub(crate) fn fermer_session(f: &FenetrePrincipale, etat: &mut Etat) {
     etat.utilisateur = None;
+    // Bandeau des sauvegardes et assistant de reprise : propres au compte.
+    let serveur = f.global::<ServeurApi>();
+    serveur.set_avertissement_sauvegarde(SharedString::new());
+    serveur.set_reprise_etat(0);
     etat.tiers = Vue::default();
     etat.produits = Vue::default();
     etat.comptes = Vue::default();
@@ -407,6 +412,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     licence::brancher(fenetre, &etat);
     sauvegardes::brancher(fenetre, &etat);
     serveur::brancher(fenetre, &etat);
+    reprise::brancher(fenetre, &etat);
     relie::brancher(fenetre, &etat);
     suspendues::brancher(fenetre, &etat);
     maj::brancher(fenetre);

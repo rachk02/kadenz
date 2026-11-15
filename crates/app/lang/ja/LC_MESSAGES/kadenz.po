@@ -3626,3 +3626,80 @@ msgstr "保留中"
 
 msgid "Examiner"
 msgstr "確認"
+
+# Phase 2, F7c : reprise d'une base V1, avertissement des sauvegardes.
+
+msgid "Reprise d'une base V1"
+msgstr "V1データベースの引き継ぎ"
+
+msgid "Un serveur neuf peut reprendre une base de la version 1 : celle de ce poste ou une sauvegarde .kzs. La reprise se fait une seule fois ; la base d'origine n'est jamais effacée et la numérotation continue après ses numéros."
+msgstr "新しいサーバーはバージョン1のデータベースを引き継げます。この端末のデータベース、または.kzsバックアップです。引き継ぎは一度だけ行われ、元のデータベースは消去されず、番号はその番号の続きから振られます。"
+
+msgid "Vérifier que le serveur est neuf"
+msgstr "サーバーが新しいことを確認"
+
+msgid "Le serveur a déjà des données (tiers, produits, documents ou règlements) : une base V1 ne peut être reprise que sur un serveur neuf. Les autres installations V1 restent consultables à part."
+msgstr "サーバーには既にデータ（取引先、商品、書類、支払い）があります。V1データベースは新しいサーバーにのみ引き継げます。他のV1環境は別途参照できます。"
+
+msgid "Base V1 de ce poste"
+msgstr "この端末のV1データベース"
+
+msgid "Sauvegarde .kzs"
+msgstr ".kzsバックアップ"
+
+msgid "Aucune sauvegarde choisie."
+msgstr "バックアップが選択されていません。"
+
+msgid "Voir le résumé"
+msgstr "概要を表示"
+
+msgid "Comptes non repris, parce que le serveur a déjà un compte du même identifiant :"
+msgstr "サーバーに同じIDのアカウントが既にあるため、引き継がれないアカウント："
+
+msgid "Reprendre cette base"
+msgstr "このデータベースを引き継ぐ"
+
+msgid "Reprendre cette base dans le serveur ? La reprise ne se fait qu'une fois. La fiche de l'entreprise et les paramètres de la base V1 remplacent ceux du serveur ; la base V1 d'origine n'est pas effacée."
+msgstr "このデータベースをサーバーに引き継ぎますか？引き継ぎは一度だけです。V1データベースの会社情報と設定がサーバーのものを置き換えます。元のV1データベースは消去されません。"
+
+msgid "Reprendre"
+msgstr "引き継ぐ"
+
+msgid "Reprise en cours : le serveur reçoit la base, cela peut prendre une ou deux minutes..."
+msgstr "引き継ぎ中：サーバーがデータベースを受信しています。1、2分かかることがあります..."
+
+msgid "Le serveur ne fait aucune sauvegarde : leur mot de passe n'est pas réglé. Réglez-le dans la fenêtre du serveur, sur sa machine."
+msgstr "サーバーはバックアップを行っていません。パスワードが設定されていません。サーバーのマシンで、サーバーのウィンドウから設定してください。"
+
+msgid "Les sauvegardes du serveur sont sur le même disque que sa base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans la fenêtre du serveur."
+msgstr "サーバーのバックアップがデータベースと同じディスクにあります。このディスクが故障するとすべて失われます。サーバーのウィンドウで別のフォルダーを選んでください。"
+
+msgid "aucun"
+msgstr "なし"
+
+msgid "Comptes repris"
+msgstr "引き継がれるアカウント"
+
+msgid "Base V1 reprise dans le serveur. Ses données arrivent sur les postes avec la synchronisation."
+msgstr "V1データベースをサーバーに引き継ぎました。データは同期により各端末に届きます。"
+
+msgid "Le serveur a répondu après le délai : la base V1 est reprise. Ses données arrivent sur les postes avec la synchronisation."
+msgstr "サーバーは時間切れの後に応答しました。V1データベースは引き継がれています。データは同期により各端末に届きます。"
+
+msgid "La reprise n'a pas abouti : le serveur est toujours neuf. Vous pouvez la relancer."
+msgstr "引き継ぎは完了しませんでした。サーバーはまだ新しい状態です。もう一度実行できます。"
+
+msgid "Le serveur n'a pas encore répondu : la reprise est peut-être en cours. Vérifiez plus tard que le serveur est neuf avant de la relancer."
+msgstr "サーバーはまだ応答していません。引き継ぎが進行中の可能性があります。もう一度実行する前に、後でサーバーが新しいことを確認してください。"
+
+msgid "{} (dernier numéro {})"
+msgstr "{}（最終番号 {}）"
+
+msgid "le serveur a déjà des données : une base V1 ne peut être reprise que sur un serveur neuf"
+msgstr "サーバーには既にデータがあります。V1データベースは新しいサーバーにのみ引き継げます"
+
+msgid "la base V1 dépasse la taille permise pour la reprise ({} Mo)"
+msgstr "V1データベースが引き継ぎに許可されたサイズ（{} MB）を超えています"
+
+msgid "base V1 introuvable : {}"
+msgstr "V1データベースが見つかりません：{}"

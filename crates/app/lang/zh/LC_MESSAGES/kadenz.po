@@ -3626,3 +3626,80 @@ msgstr "待处理"
 
 msgid "Examiner"
 msgstr "查看"
+
+# Phase 2, F7c : reprise d'une base V1, avertissement des sauvegardes.
+
+msgid "Reprise d'une base V1"
+msgstr "导入 V1 数据库"
+
+msgid "Un serveur neuf peut reprendre une base de la version 1 : celle de ce poste ou une sauvegarde .kzs. La reprise se fait une seule fois ; la base d'origine n'est jamais effacée et la numérotation continue après ses numéros."
+msgstr "新服务器可以导入第 1 版的数据库：本工作站的数据库或 .kzs 备份。导入只进行一次；原数据库永不删除，编号在其编号之后继续。"
+
+msgid "Vérifier que le serveur est neuf"
+msgstr "检查服务器是否为新服务器"
+
+msgid "Le serveur a déjà des données (tiers, produits, documents ou règlements) : une base V1 ne peut être reprise que sur un serveur neuf. Les autres installations V1 restent consultables à part."
+msgstr "服务器已有数据（往来单位、产品、单据或付款）：V1 数据库只能导入新服务器。其他 V1 安装仍可单独查看。"
+
+msgid "Base V1 de ce poste"
+msgstr "本工作站的 V1 数据库"
+
+msgid "Sauvegarde .kzs"
+msgstr ".kzs 备份"
+
+msgid "Aucune sauvegarde choisie."
+msgstr "未选择备份。"
+
+msgid "Voir le résumé"
+msgstr "查看摘要"
+
+msgid "Comptes non repris, parce que le serveur a déjà un compte du même identifiant :"
+msgstr "未导入的账户，因为服务器已有相同用户名的账户："
+
+msgid "Reprendre cette base"
+msgstr "导入此数据库"
+
+msgid "Reprendre cette base dans le serveur ? La reprise ne se fait qu'une fois. La fiche de l'entreprise et les paramètres de la base V1 remplacent ceux du serveur ; la base V1 d'origine n'est pas effacée."
+msgstr "将此数据库导入服务器？导入只进行一次。V1 数据库的公司资料和设置将替换服务器的资料和设置；原 V1 数据库不会被删除。"
+
+msgid "Reprendre"
+msgstr "导入"
+
+msgid "Reprise en cours : le serveur reçoit la base, cela peut prendre une ou deux minutes..."
+msgstr "正在导入：服务器正在接收数据库，可能需要一两分钟..."
+
+msgid "Le serveur ne fait aucune sauvegarde : leur mot de passe n'est pas réglé. Réglez-le dans la fenêtre du serveur, sur sa machine."
+msgstr "服务器未进行任何备份：备份密码尚未设置。请在服务器所在机器上的服务器窗口中设置。"
+
+msgid "Les sauvegardes du serveur sont sur le même disque que sa base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans la fenêtre du serveur."
+msgstr "服务器的备份与其数据库位于同一磁盘：该磁盘故障将导致全部备份丢失。请在服务器窗口中选择其他文件夹。"
+
+msgid "aucun"
+msgstr "无"
+
+msgid "Comptes repris"
+msgstr "导入的账户"
+
+msgid "Base V1 reprise dans le serveur. Ses données arrivent sur les postes avec la synchronisation."
+msgstr "V1 数据库已导入服务器。其数据将随同步到达各工作站。"
+
+msgid "Le serveur a répondu après le délai : la base V1 est reprise. Ses données arrivent sur les postes avec la synchronisation."
+msgstr "服务器在超时后作出响应：V1 数据库已导入。其数据将随同步到达各工作站。"
+
+msgid "La reprise n'a pas abouti : le serveur est toujours neuf. Vous pouvez la relancer."
+msgstr "导入未完成：服务器仍为新服务器。您可以重新开始。"
+
+msgid "Le serveur n'a pas encore répondu : la reprise est peut-être en cours. Vérifiez plus tard que le serveur est neuf avant de la relancer."
+msgstr "服务器尚未响应：导入可能仍在进行。重新开始前，请稍后检查服务器是否为新服务器。"
+
+msgid "{} (dernier numéro {})"
+msgstr "{}（最后编号 {}）"
+
+msgid "le serveur a déjà des données : une base V1 ne peut être reprise que sur un serveur neuf"
+msgstr "服务器已有数据：V1 数据库只能导入新服务器"
+
+msgid "la base V1 dépasse la taille permise pour la reprise ({} Mo)"
+msgstr "V1 数据库超出导入允许的大小（{} MB）"
+
+msgid "base V1 introuvable : {}"
+msgstr "未找到 V1 数据库：{}"

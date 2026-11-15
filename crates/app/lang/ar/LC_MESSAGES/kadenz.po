@@ -3626,3 +3626,80 @@ msgstr "قيد الانتظار"
 
 msgid "Examiner"
 msgstr "فحص"
+
+# Phase 2, F7c : reprise d'une base V1, avertissement des sauvegardes.
+
+msgid "Reprise d'une base V1"
+msgstr "استيراد قاعدة بيانات الإصدار 1"
+
+msgid "Un serveur neuf peut reprendre une base de la version 1 : celle de ce poste ou une sauvegarde .kzs. La reprise se fait une seule fois ; la base d'origine n'est jamais effacée et la numérotation continue après ses numéros."
+msgstr "يمكن لخادم جديد استيراد قاعدة بيانات الإصدار 1: قاعدة هذا الجهاز أو نسخة احتياطية ‎.kzs. يتم الاستيراد مرة واحدة فقط؛ لا تُحذف القاعدة الأصلية أبدًا ويستمر الترقيم بعد أرقامها."
+
+msgid "Vérifier que le serveur est neuf"
+msgstr "التحقق من أن الخادم جديد"
+
+msgid "Le serveur a déjà des données (tiers, produits, documents ou règlements) : une base V1 ne peut être reprise que sur un serveur neuf. Les autres installations V1 restent consultables à part."
+msgstr "يحتوي الخادم على بيانات بالفعل (أطراف أو منتجات أو مستندات أو مدفوعات): لا يمكن استيراد قاعدة الإصدار 1 إلا إلى خادم جديد. تبقى تثبيتات الإصدار 1 الأخرى متاحة للاطلاع بشكل منفصل."
+
+msgid "Base V1 de ce poste"
+msgstr "قاعدة الإصدار 1 لهذا الجهاز"
+
+msgid "Sauvegarde .kzs"
+msgstr "نسخة احتياطية ‎.kzs"
+
+msgid "Aucune sauvegarde choisie."
+msgstr "لم يتم اختيار أي نسخة احتياطية."
+
+msgid "Voir le résumé"
+msgstr "عرض الملخص"
+
+msgid "Comptes non repris, parce que le serveur a déjà un compte du même identifiant :"
+msgstr "حسابات لم تُستورد، لأن الخادم يحتوي بالفعل على حساب بالمعرّف نفسه:"
+
+msgid "Reprendre cette base"
+msgstr "استيراد هذه القاعدة"
+
+msgid "Reprendre cette base dans le serveur ? La reprise ne se fait qu'une fois. La fiche de l'entreprise et les paramètres de la base V1 remplacent ceux du serveur ; la base V1 d'origine n'est pas effacée."
+msgstr "استيراد هذه القاعدة إلى الخادم؟ يتم الاستيراد مرة واحدة فقط. تحل بطاقة الشركة وإعدادات قاعدة الإصدار 1 محل بطاقة الخادم وإعداداته؛ ولا تُحذف قاعدة الإصدار 1 الأصلية."
+
+msgid "Reprendre"
+msgstr "استيراد"
+
+msgid "Reprise en cours : le serveur reçoit la base, cela peut prendre une ou deux minutes..."
+msgstr "الاستيراد جارٍ: يستقبل الخادم القاعدة، وقد يستغرق ذلك دقيقة أو دقيقتين..."
+
+msgid "Le serveur ne fait aucune sauvegarde : leur mot de passe n'est pas réglé. Réglez-le dans la fenêtre du serveur, sur sa machine."
+msgstr "لا يقوم الخادم بأي نسخ احتياطي: لم تُضبط كلمة مرورها. اضبطها في نافذة الخادم، على جهازه."
+
+msgid "Les sauvegardes du serveur sont sur le même disque que sa base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans la fenêtre du serveur."
+msgstr "النسخ الاحتياطية للخادم موجودة على القرص نفسه الذي توجد عليه قاعدته: عطل هذا القرص سيفقدها جميعًا. اختر مجلدًا آخر في نافذة الخادم."
+
+msgid "aucun"
+msgstr "لا شيء"
+
+msgid "Comptes repris"
+msgstr "الحسابات المستوردة"
+
+msgid "Base V1 reprise dans le serveur. Ses données arrivent sur les postes avec la synchronisation."
+msgstr "تم استيراد قاعدة الإصدار 1 إلى الخادم. تصل بياناتها إلى الأجهزة مع المزامنة."
+
+msgid "Le serveur a répondu après le délai : la base V1 est reprise. Ses données arrivent sur les postes avec la synchronisation."
+msgstr "ردّ الخادم بعد انقضاء المهلة: تم استيراد قاعدة الإصدار 1. تصل بياناتها إلى الأجهزة مع المزامنة."
+
+msgid "La reprise n'a pas abouti : le serveur est toujours neuf. Vous pouvez la relancer."
+msgstr "لم يكتمل الاستيراد: لا يزال الخادم جديدًا. يمكنك إعادة تشغيله."
+
+msgid "Le serveur n'a pas encore répondu : la reprise est peut-être en cours. Vérifiez plus tard que le serveur est neuf avant de la relancer."
+msgstr "لم يردّ الخادم بعد: ربما لا يزال الاستيراد جاريًا. تحقق لاحقًا من أن الخادم جديد قبل إعادة تشغيله."
+
+msgid "{} (dernier numéro {})"
+msgstr "{} (آخر رقم {})"
+
+msgid "le serveur a déjà des données : une base V1 ne peut être reprise que sur un serveur neuf"
+msgstr "يحتوي الخادم على بيانات بالفعل: لا يمكن استيراد قاعدة الإصدار 1 إلا إلى خادم جديد"
+
+msgid "la base V1 dépasse la taille permise pour la reprise ({} Mo)"
+msgstr "تتجاوز قاعدة الإصدار 1 الحجم المسموح به للاستيراد ({} ميغابايت)"
+
+msgid "base V1 introuvable : {}"
+msgstr "قاعدة الإصدار 1 غير موجودة: {}"

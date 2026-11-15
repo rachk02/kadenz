@@ -14,7 +14,7 @@ import { PageTableauDeBord, PilotageApi } from "pilotage.slint";
 import { ImpressionApi } from "impression.slint";
 import { LicenceApi } from "licence.slint";
 import { AbonnementApi, BandeauAbonnement } from "abonnement.slint";
-import { DocumentAValiderUi, ServeurApi } from "serveur.slint";
+import { BandeauSauvegarde, DocumentAValiderUi, LigneResumeUi, ServeurApi } from "serveur.slint";
 import { ConnexionApi } from "etat-connexion.slint";
 import { InviteMiseAJour, MiseAJourApi } from "maj.slint";
 import { BandeauHaut, BoutonIcone, ContenuBarre, Infobulle, InfobulleFenetre, Menu, Page, PanneauFlottant } from "navigation.slint";
@@ -22,7 +22,7 @@ import { PageReglages, ReglagesApi, Rubrique } from "reglages.slint";
 import { ChampSuspenduUi, SuspendueUi, SuspenduesApi } from "suspendues.slint";
 import { EcranDemarrageImpossible, SauvegardesApi } from "sauvegardes.slint";
 
-export { AbonnementApi, ChampSuspenduUi, ConnexionApi, DocumentAValiderUi, ServeurApi, SuspendueUi, SuspenduesApi, Affichage, Alerte, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, TiersApi, UtilisateursApi }
+export { AbonnementApi, ChampSuspenduUi, ConnexionApi, DocumentAValiderUi, LigneResumeUi, ServeurApi, SuspendueUi, SuspenduesApi, Affichage, Alerte, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, presentation, inscription, connexion, application }
@@ -170,6 +170,15 @@ export component FenetrePrincipale inherits Window {
                         ReglagesApi.rubrique = Rubrique.abonnement;
                     }
                 }
+            }
+
+            // Sauvegardes du serveur en défaut (décision 56), comptes Admin.
+            if ServeurApi.avertissement-sauvegarde != "": VerticalLayout {
+                padding-left: 16px;
+                padding-right: 16px;
+                padding-top: 10px;
+
+                BandeauSauvegarde { }
             }
 
             Rangee {

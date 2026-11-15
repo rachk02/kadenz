@@ -3626,3 +3626,80 @@ msgstr "BEKLEMEDE"
 
 msgid "Examiner"
 msgstr "İncele"
+
+# Phase 2, F7c : reprise d'une base V1, avertissement des sauvegardes.
+
+msgid "Reprise d'une base V1"
+msgstr "V1 veritabanının aktarılması"
+
+msgid "Un serveur neuf peut reprendre une base de la version 1 : celle de ce poste ou une sauvegarde .kzs. La reprise se fait une seule fois ; la base d'origine n'est jamais effacée et la numérotation continue après ses numéros."
+msgstr "Yeni bir sunucu, sürüm 1 veritabanını devralabilir: bu iş istasyonundakini veya bir .kzs yedeğini. Aktarım yalnızca bir kez yapılır; özgün veritabanı asla silinmez ve numaralandırma onun numaralarından sonra devam eder."
+
+msgid "Vérifier que le serveur est neuf"
+msgstr "Sunucunun yeni olduğunu doğrula"
+
+msgid "Le serveur a déjà des données (tiers, produits, documents ou règlements) : une base V1 ne peut être reprise que sur un serveur neuf. Les autres installations V1 restent consultables à part."
+msgstr "Sunucuda zaten veri var (cariler, ürünler, belgeler veya ödemeler): bir V1 veritabanı yalnızca yeni bir sunucuya aktarılabilir. Diğer V1 kurulumları ayrıca görüntülenebilir."
+
+msgid "Base V1 de ce poste"
+msgstr "Bu iş istasyonunun V1 veritabanı"
+
+msgid "Sauvegarde .kzs"
+msgstr ".kzs yedeği"
+
+msgid "Aucune sauvegarde choisie."
+msgstr "Yedek seçilmedi."
+
+msgid "Voir le résumé"
+msgstr "Özeti gör"
+
+msgid "Comptes non repris, parce que le serveur a déjà un compte du même identifiant :"
+msgstr "Sunucuda aynı kullanıcı adına sahip bir hesap bulunduğu için aktarılmayan hesaplar:"
+
+msgid "Reprendre cette base"
+msgstr "Bu veritabanını aktar"
+
+msgid "Reprendre cette base dans le serveur ? La reprise ne se fait qu'une fois. La fiche de l'entreprise et les paramètres de la base V1 remplacent ceux du serveur ; la base V1 d'origine n'est pas effacée."
+msgstr "Bu veritabanı sunucuya aktarılsın mı? Aktarım yalnızca bir kez yapılır. V1 veritabanının şirket bilgileri ve ayarları sunucununkilerin yerini alır; özgün V1 veritabanı silinmez."
+
+msgid "Reprendre"
+msgstr "Aktar"
+
+msgid "Reprise en cours : le serveur reçoit la base, cela peut prendre une ou deux minutes..."
+msgstr "Aktarım sürüyor: sunucu veritabanını alıyor, bu bir iki dakika sürebilir..."
+
+msgid "Le serveur ne fait aucune sauvegarde : leur mot de passe n'est pas réglé. Réglez-le dans la fenêtre du serveur, sur sa machine."
+msgstr "Sunucu hiç yedek almıyor: yedek parolası ayarlanmamış. Sunucu makinesindeki sunucu penceresinden ayarlayın."
+
+msgid "Les sauvegardes du serveur sont sur le même disque que sa base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans la fenêtre du serveur."
+msgstr "Sunucunun yedekleri veritabanıyla aynı diskte: bu diskin arızalanması hepsini kaybettirir. Sunucu penceresinden başka bir klasör seçin."
+
+msgid "aucun"
+msgstr "yok"
+
+msgid "Comptes repris"
+msgstr "Aktarılan hesaplar"
+
+msgid "Base V1 reprise dans le serveur. Ses données arrivent sur les postes avec la synchronisation."
+msgstr "V1 veritabanı sunucuya aktarıldı. Verileri eşitleme ile iş istasyonlarına ulaşır."
+
+msgid "Le serveur a répondu après le délai : la base V1 est reprise. Ses données arrivent sur les postes avec la synchronisation."
+msgstr "Sunucu süre dolduktan sonra yanıt verdi: V1 veritabanı aktarıldı. Verileri eşitleme ile iş istasyonlarına ulaşır."
+
+msgid "La reprise n'a pas abouti : le serveur est toujours neuf. Vous pouvez la relancer."
+msgstr "Aktarım tamamlanmadı: sunucu hâlâ yeni. Yeniden başlatabilirsiniz."
+
+msgid "Le serveur n'a pas encore répondu : la reprise est peut-être en cours. Vérifiez plus tard que le serveur est neuf avant de la relancer."
+msgstr "Sunucu henüz yanıt vermedi: aktarım sürüyor olabilir. Yeniden başlatmadan önce sunucunun yeni olduğunu daha sonra doğrulayın."
+
+msgid "{} (dernier numéro {})"
+msgstr "{} (son numara {})"
+
+msgid "le serveur a déjà des données : une base V1 ne peut être reprise que sur un serveur neuf"
+msgstr "sunucuda zaten veri var: bir V1 veritabanı yalnızca yeni bir sunucuya aktarılabilir"
+
+msgid "la base V1 dépasse la taille permise pour la reprise ({} Mo)"
+msgstr "V1 veritabanı aktarım için izin verilen boyutu aşıyor ({} MB)"
+
+msgid "base V1 introuvable : {}"
+msgstr "V1 veritabanı bulunamadı: {}"

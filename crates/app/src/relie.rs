@@ -8,7 +8,7 @@ use std::cell::RefCell;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-use kadenz_poste::{ErreurPoste, EtatConnexion, Evenement, Synchroniseur};
+use kadenz_poste::{AvertissementSauvegarde, ErreurPoste, EtatConnexion, Evenement, Synchroniseur};
 use kadenz_protocole::{Action, EnCoupure, Entite, Issue};
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 
@@ -149,6 +149,19 @@ pub(crate) fn appliquer_modules(f: &FenetrePrincipale, conn: &kadenz_stockage::C
         crate::consigner_erreur(&format!("Modules de l'abonnement non appliqués : {e}"));
     }
     crate::licence::afficher_modules(f, conn);
+}
+
+/// Bandeau des sauvegardes du serveur (décision 56) ; vide si tout va bien.
+pub(crate) fn texte_sauvegarde(avertissement: Option<AvertissementSauvegarde>) -> String {
+    match avertissement {
+        None => String::new(),
+        Some(AvertissementSauvegarde::SansMotDePasse) => tr(
+            "Le serveur ne fait aucune sauvegarde : leur mot de passe n'est pas réglé. Réglez-le dans la fenêtre du serveur, sur sa machine.",
+        ),
+        Some(AvertissementSauvegarde::MemeDisque) => tr(
+            "Les sauvegardes du serveur sont sur le même disque que sa base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans la fenêtre du serveur.",
+        ),
+    }
 }
 
 /// Écriture partie sans réponse à temps : ni réussie ni refusée, elle ne doit
@@ -758,6 +771,10 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
         Evenement::ListeSuspendues(liste) => {
             crate::suspendues::recevoir_liste(f, &etat, liste);
         }
+        Evenement::Sauvegarde(avertissement) => {
+            f.global::<ServeurApi>()
+                .set_avertissement_sauvegarde(texte_sauvegarde(avertissement).into());
+        }
         Evenement::Compte(resultat) => {
             let refuse = matches!(resultat, Err(ErreurPoste::CompteRefuse { .. }));
             let session = etat.borrow().utilisateur.is_some();
@@ -789,8 +806,6 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
                 crate::appliquer_droits(f, &e);
             }
         }
-        // Bandeau des sauvegardes du serveur (décision 56) : écran du jalon F7c.
-        Evenement::Sauvegarde(_) => {}
     }
 }
 

@@ -3626,3 +3626,80 @@ msgstr "PENDING"
 
 msgid "Examiner"
 msgstr "Review"
+
+# Phase 2, F7c : reprise d'une base V1, avertissement des sauvegardes.
+
+msgid "Reprise d'une base V1"
+msgstr "Import a V1 database"
+
+msgid "Un serveur neuf peut reprendre une base de la version 1 : celle de ce poste ou une sauvegarde .kzs. La reprise se fait une seule fois ; la base d'origine n'est jamais effacée et la numérotation continue après ses numéros."
+msgstr "A new server can take over a version 1 database: the one on this workstation or a .kzs backup. The import is done only once; the original database is never erased and numbering continues after its numbers."
+
+msgid "Vérifier que le serveur est neuf"
+msgstr "Check that the server is new"
+
+msgid "Le serveur a déjà des données (tiers, produits, documents ou règlements) : une base V1 ne peut être reprise que sur un serveur neuf. Les autres installations V1 restent consultables à part."
+msgstr "The server already has data (contacts, products, documents or payments): a V1 database can only be imported into a new server. Other V1 installations remain available separately."
+
+msgid "Base V1 de ce poste"
+msgstr "This workstation's V1 database"
+
+msgid "Sauvegarde .kzs"
+msgstr ".kzs backup"
+
+msgid "Aucune sauvegarde choisie."
+msgstr "No backup selected."
+
+msgid "Voir le résumé"
+msgstr "View summary"
+
+msgid "Comptes non repris, parce que le serveur a déjà un compte du même identifiant :"
+msgstr "Accounts not imported, because the server already has an account with the same username:"
+
+msgid "Reprendre cette base"
+msgstr "Import this database"
+
+msgid "Reprendre cette base dans le serveur ? La reprise ne se fait qu'une fois. La fiche de l'entreprise et les paramètres de la base V1 remplacent ceux du serveur ; la base V1 d'origine n'est pas effacée."
+msgstr "Import this database into the server? The import is done only once. The company details and settings of the V1 database replace those of the server; the original V1 database is not erased."
+
+msgid "Reprendre"
+msgstr "Import"
+
+msgid "Reprise en cours : le serveur reçoit la base, cela peut prendre une ou deux minutes..."
+msgstr "Import in progress: the server is receiving the database, this may take a minute or two..."
+
+msgid "Le serveur ne fait aucune sauvegarde : leur mot de passe n'est pas réglé. Réglez-le dans la fenêtre du serveur, sur sa machine."
+msgstr "The server makes no backups: their password is not set. Set it in the server window, on its machine."
+
+msgid "Les sauvegardes du serveur sont sur le même disque que sa base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans la fenêtre du serveur."
+msgstr "The server's backups are on the same disk as its database: a failure of this disk would lose them all. Choose another folder in the server window."
+
+msgid "aucun"
+msgstr "none"
+
+msgid "Comptes repris"
+msgstr "Imported accounts"
+
+msgid "Base V1 reprise dans le serveur. Ses données arrivent sur les postes avec la synchronisation."
+msgstr "V1 database imported into the server. Its data reaches the workstations with synchronization."
+
+msgid "Le serveur a répondu après le délai : la base V1 est reprise. Ses données arrivent sur les postes avec la synchronisation."
+msgstr "The server replied after the time limit: the V1 database is imported. Its data reaches the workstations with synchronization."
+
+msgid "La reprise n'a pas abouti : le serveur est toujours neuf. Vous pouvez la relancer."
+msgstr "The import did not complete: the server is still new. You can start it again."
+
+msgid "Le serveur n'a pas encore répondu : la reprise est peut-être en cours. Vérifiez plus tard que le serveur est neuf avant de la relancer."
+msgstr "The server has not replied yet: the import may still be in progress. Check later that the server is new before starting it again."
+
+msgid "{} (dernier numéro {})"
+msgstr "{} (last number {})"
+
+msgid "le serveur a déjà des données : une base V1 ne peut être reprise que sur un serveur neuf"
+msgstr "the server already has data: a V1 database can only be imported into a new server"
+
+msgid "la base V1 dépasse la taille permise pour la reprise ({} Mo)"
+msgstr "the V1 database exceeds the size allowed for import ({} MB)"
+
+msgid "base V1 introuvable : {}"
+msgstr "V1 database not found: {}"

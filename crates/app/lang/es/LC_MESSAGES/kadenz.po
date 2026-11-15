@@ -3626,3 +3626,80 @@ msgstr "EN ESPERA"
 
 msgid "Examiner"
 msgstr "Examinar"
+
+# Phase 2, F7c : reprise d'une base V1, avertissement des sauvegardes.
+
+msgid "Reprise d'une base V1"
+msgstr "Recuperación de una base V1"
+
+msgid "Un serveur neuf peut reprendre une base de la version 1 : celle de ce poste ou une sauvegarde .kzs. La reprise se fait une seule fois ; la base d'origine n'est jamais effacée et la numérotation continue après ses numéros."
+msgstr "Un servidor nuevo puede recuperar una base de la versión 1: la de este puesto o una copia de seguridad .kzs. La recuperación se hace una sola vez; la base de origen nunca se borra y la numeración continúa después de sus números."
+
+msgid "Vérifier que le serveur est neuf"
+msgstr "Comprobar que el servidor es nuevo"
+
+msgid "Le serveur a déjà des données (tiers, produits, documents ou règlements) : une base V1 ne peut être reprise que sur un serveur neuf. Les autres installations V1 restent consultables à part."
+msgstr "El servidor ya tiene datos (terceros, productos, documentos o pagos): una base V1 solo puede recuperarse en un servidor nuevo. Las demás instalaciones V1 siguen consultables aparte."
+
+msgid "Base V1 de ce poste"
+msgstr "Base V1 de este puesto"
+
+msgid "Sauvegarde .kzs"
+msgstr "Copia de seguridad .kzs"
+
+msgid "Aucune sauvegarde choisie."
+msgstr "Ninguna copia de seguridad elegida."
+
+msgid "Voir le résumé"
+msgstr "Ver el resumen"
+
+msgid "Comptes non repris, parce que le serveur a déjà un compte du même identifiant :"
+msgstr "Cuentas no recuperadas, porque el servidor ya tiene una cuenta con el mismo identificador:"
+
+msgid "Reprendre cette base"
+msgstr "Recuperar esta base"
+
+msgid "Reprendre cette base dans le serveur ? La reprise ne se fait qu'une fois. La fiche de l'entreprise et les paramètres de la base V1 remplacent ceux du serveur ; la base V1 d'origine n'est pas effacée."
+msgstr "¿Recuperar esta base en el servidor? La recuperación solo se hace una vez. La ficha de la empresa y los parámetros de la base V1 sustituyen a los del servidor; la base V1 de origen no se borra."
+
+msgid "Reprendre"
+msgstr "Recuperar"
+
+msgid "Reprise en cours : le serveur reçoit la base, cela peut prendre une ou deux minutes..."
+msgstr "Recuperación en curso: el servidor recibe la base, puede tardar uno o dos minutos..."
+
+msgid "Le serveur ne fait aucune sauvegarde : leur mot de passe n'est pas réglé. Réglez-le dans la fenêtre du serveur, sur sa machine."
+msgstr "El servidor no hace ninguna copia de seguridad: su contraseña no está configurada. Configúrela en la ventana del servidor, en su equipo."
+
+msgid "Les sauvegardes du serveur sont sur le même disque que sa base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans la fenêtre du serveur."
+msgstr "Las copias de seguridad del servidor están en el mismo disco que su base: una avería de ese disco las perdería todas. Elija otra carpeta en la ventana del servidor."
+
+msgid "aucun"
+msgstr "ninguna"
+
+msgid "Comptes repris"
+msgstr "Cuentas recuperadas"
+
+msgid "Base V1 reprise dans le serveur. Ses données arrivent sur les postes avec la synchronisation."
+msgstr "Base V1 recuperada en el servidor. Sus datos llegan a los puestos con la sincronización."
+
+msgid "Le serveur a répondu après le délai : la base V1 est reprise. Ses données arrivent sur les postes avec la synchronisation."
+msgstr "El servidor respondió después del plazo: la base V1 está recuperada. Sus datos llegan a los puestos con la sincronización."
+
+msgid "La reprise n'a pas abouti : le serveur est toujours neuf. Vous pouvez la relancer."
+msgstr "La recuperación no se completó: el servidor sigue siendo nuevo. Puede volver a lanzarla."
+
+msgid "Le serveur n'a pas encore répondu : la reprise est peut-être en cours. Vérifiez plus tard que le serveur est neuf avant de la relancer."
+msgstr "El servidor aún no ha respondido: la recuperación quizá sigue en curso. Compruebe más tarde que el servidor es nuevo antes de volver a lanzarla."
+
+msgid "{} (dernier numéro {})"
+msgstr "{} (último número {})"
+
+msgid "le serveur a déjà des données : une base V1 ne peut être reprise que sur un serveur neuf"
+msgstr "el servidor ya tiene datos: una base V1 solo puede recuperarse en un servidor nuevo"
+
+msgid "la base V1 dépasse la taille permise pour la reprise ({} Mo)"
+msgstr "la base V1 supera el tamaño permitido para la recuperación ({} MB)"
+
+msgid "base V1 introuvable : {}"
+msgstr "base V1 no encontrada: {}"
