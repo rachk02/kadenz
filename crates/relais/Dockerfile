@@ -12,6 +12,12 @@
 #
 # Données (identité TLS, traces) dans /donnees, à garder dans un volume.
 #
+# Lancer avec --init : le relais ne traite pas SIGTERM, et sans processus
+# d'initialisation « docker stop » attend 10 secondes avant de le tuer
+# (constaté à l'essai F8c). Le relais ne garde rien en mémoire qui doive être
+# écrit à l'arrêt :
+#   docker run -d --init -p 47381:47381 -v kadenz-relais:/donnees kadenz-relais
+#
 # Images épinglées par empreinte (Docker Hub, vérifiées le 2026-11-15) :
 # rust:1.99.1-slim-trixie et debian:trixie-slim.
 
