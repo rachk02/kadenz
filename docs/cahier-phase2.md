@@ -22,6 +22,7 @@
 | 0.18 | 2026-11-13 | Décision 48 (F5) : connexion locale d'un compte quand le poste relié démarre sans serveur. |
 | 0.19 | 2026-11-13 | Décisions 49 à 51 (F5 et F6) : premier lancement d'un poste par code d'inscription seulement ; écritures permises hors connexion ; saisie par un compte connecté en local, qui complète la décision 48. |
 | 0.20 | 2026-11-13 | Décision 52 (F6) : écritures hors connexion d'un compte désactivé ou dont le mot de passe a changé pendant la coupure, apportées par la session d'un autre compte et toujours mises en attente pour l'Admin. |
+| 0.21 | 2026-11-15 | Décisions 53 à 56 (F7) : comptes et fiche de l'entreprise à la reprise d'une base V1, serveur neuf, mot de passe des sauvegardes du serveur. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -92,6 +93,10 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 50. **Écritures hors connexion (F6)** : quand le serveur est injoignable, restent permises, à titre provisoire et mises en file d'envoi, les écritures sur les tiers, les produits, les documents (sauf la validation) et les règlements, ainsi que la langue et l'affichage du compte. La validation reste inactive (décision 9). Les écritures sur les comptes (création, activation, rôle, mots de passe) et les réglages (paramètres, fiche et logo de l'entreprise, droits, textes de relance, mise en page, bas de document) restent inactives jusqu'au retour du serveur.
 51. **Saisie par un compte connecté en local (F6)** : un compte connecté en local au démarrage sans serveur (décision 48) peut faire les écritures permises par la décision 50 ; le serveur juge chaque opération au retour, et celles d'un compte désactivé entre-temps vont en attente pour l'Admin (décisions 18 et 32). Elle complète la décision 48, dont la dernière phrase (écritures inactives jusqu'au retour du serveur) ne vaut plus qu'en F5.
 52. **Compte coupé pendant une coupure (F6)** : les écritures faites hors connexion par un compte que le serveur refuse ensuite (compte désactivé, mot de passe changé) partent du poste sous la session du compte suivant qui s'y connecte ; le serveur les met toujours en attente, sans les appliquer, et l'Admin les accepte ou les rejette (décisions 18 et 32). Personne n'agit ainsi au nom d'un autre sans l'accord de l'Admin.
+53. **Comptes à la reprise d'une base V1 (F7)** : les comptes de la base V1 sont repris avec leurs mots de passe et leurs rôles ; le compte Admin créé à l'installation du serveur reste. Un compte V1 dont l'identifiant existe déjà sur le serveur n'est pas repris, et le résumé de l'assistant l'annonce ; ses documents gardent son nom dans l'historique.
+54. **Fiche de l'entreprise à la reprise (F7)** : la fiche de l'entreprise de la base V1 (avec ses logos) et ses paramètres (TVA, numérotation, mise en page, textes de relance) remplacent ceux du serveur neuf. L'identifiant d'entreprise du serveur, lié à la licence d'abonnement, est gardé.
+55. **Serveur neuf (F7)** : la reprise est refusée dès que le serveur a un tiers, un produit, un document ou un règlement ; des comptes créés après l'installation ne l'empêchent pas.
+56. **Mot de passe des sauvegardes du serveur (F7)** : le mot de passe, le dossier et l'heure des sauvegardes se règlent dans la fenêtre d'administration du serveur, et son assistant d'installation les demande. Sans mot de passe, aucune sauvegarde n'est faite et un avertissement permanent s'affiche dans la fenêtre et sur les postes connectés avec un compte Admin.
 
 ## 3. Candidats
 
