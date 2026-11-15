@@ -3,7 +3,9 @@
 // Tous les calculs et les contrôles sont faits par l'application, qui fournit aussi
 // les textes propres au type : cet écran ne fait qu'afficher et transmettre la saisie.
 
-import { CheckBox, ComboBox, LineEdit, ScrollView, StandardTableView } from "std-widgets.slint";
+import { CheckBox, LineEdit, ScrollView } from "std-widgets.slint";
+import { ListeDeroulante } from "liste-deroulante.slint";
+import { TableauDonnees } from "tableau.slint";
 import { ConnexionApi } from "etat-connexion.slint";
 import { Alerte, Bouton, Champ, Confirmation, Droits, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
@@ -325,7 +327,7 @@ component Registre inherits VerticalLayout {
             }
         }
 
-        statut := ComboBox {
+        statut := ListeDeroulante {
             width: 150px;
             model: FacturesApi.statuts;
             selected => {
@@ -333,7 +335,7 @@ component Registre inherits VerticalLayout {
             }
         }
 
-        paiement := ComboBox {
+        paiement := ListeDeroulante {
             visible: FacturesApi.avec-paiement;
             width: FacturesApi.avec-paiement ? 160px : 0px;
             model: [@tr("Tout paiement"), @tr("Impayé"), @tr("Partiel"), @tr("Payé")];
@@ -369,7 +371,7 @@ component Registre inherits VerticalLayout {
         color: Theme.erreur;
     }
 
-    StandardTableView {
+    TableauDonnees {
         // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
         // Le bordereau n'a que cinq colonnes : ni montant, ni paiement, ni échéance.
         columns: !FacturesApi.avec-montants ? (Theme.rtl ? [
@@ -786,7 +788,7 @@ component Fiche inherits ScrollView {
                         }
                     }
 
-                    client := ComboBox {
+                    client := ListeDeroulante {
                         model: FacturesApi.clients;
                         enabled: root.fiche.client-modifiable;
                         selected => {
@@ -1264,7 +1266,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            produit := ComboBox {
+            produit := ListeDeroulante {
                 horizontal-stretch: 1;
                 model: FacturesApi.produits;
             }
@@ -1319,7 +1321,7 @@ component Fiche inherits ScrollView {
                             text: @tr("Remise");
                         }
 
-                        ComboBox {
+                        ListeDeroulante {
                             model: FacturesApi.taux-remise;
                             enabled: root.fiche.taux-modifiables;
                             current-index <=> root.remise-index;
@@ -1336,7 +1338,7 @@ component Fiche inherits ScrollView {
                             text: @tr("TVA");
                         }
 
-                        ComboBox {
+                        ListeDeroulante {
                             model: FacturesApi.taux-tva;
                             enabled: root.fiche.taux-modifiables;
                             current-index <=> root.tva-index;
@@ -1353,7 +1355,7 @@ component Fiche inherits ScrollView {
                             text: @tr("Retenue");
                         }
 
-                        ComboBox {
+                        ListeDeroulante {
                             model: FacturesApi.taux-retenue;
                             enabled: root.fiche.taux-modifiables;
                             current-index <=> root.retenue-index;
@@ -1371,7 +1373,7 @@ component Fiche inherits ScrollView {
                         text: @tr("Mode de paiement");
                     }
 
-                    ComboBox {
+                    ListeDeroulante {
                         model: FacturesApi.modes-paiement;
                         enabled: root.fiche.modifiable || root.fiche.admin-modifiable;
                         current-index <=> root.mode-index;
@@ -1737,7 +1739,7 @@ component Fiche inherits ScrollView {
                     text: @tr("Mode de paiement");
                 }
 
-                ComboBox {
+                ListeDeroulante {
                     model: FacturesApi.modes-reglement;
                     current-index <=> root.reglement-mode;
                 }

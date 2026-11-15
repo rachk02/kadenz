@@ -1,7 +1,9 @@
 // Écrans des référentiels Tiers et Produits (cahier des charges, sections 5.2 et 5.3).
 // Une liste filtrable et triable à gauche, la fiche sélectionnée à droite.
 
-import { CheckBox, ComboBox, LineEdit, StandardTableView } from "std-widgets.slint";
+import { CheckBox, LineEdit } from "std-widgets.slint";
+import { ListeDeroulante } from "liste-deroulante.slint";
+import { TableauDonnees } from "tableau.slint";
 import { Alerte, Bouton, Champ, Confirmation, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 import { ImportApi } from "import.slint";
 import { ConnexionApi } from "etat-connexion.slint";
@@ -197,7 +199,7 @@ export component PageTiers inherits VerticalLayout {
             }
         }
 
-        filtre-type := ComboBox {
+        filtre-type := ListeDeroulante {
             width: 200px;
             model: [@tr("Tous les tiers"), @tr("Clients"), @tr("Fournisseurs"), @tr("Clients et fournisseurs")];
             selected => {
@@ -242,22 +244,22 @@ export component PageTiers inherits VerticalLayout {
         VerticalLayout {
             spacing: 4px;
 
-            StandardTableView {
+            TableauDonnees {
                 // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
                 columns: Theme.rtl ? [
-                    { title: @tr("État"), min-width: 70px, horizontal-stretch: 1 },
-                    { title: @tr("IFU"), min-width: 70px, horizontal-stretch: 1 },
-                    { title: @tr("Localisation"), min-width: 90px, horizontal-stretch: 1 },
-                    { title: @tr("Téléphone"), min-width: 90px, horizontal-stretch: 1 },
-                    { title: @tr("Type"), min-width: 80px, horizontal-stretch: 1 },
-                    { title: @tr("Nom"), min-width: 140px, horizontal-stretch: 3 },
+                    { title: @tr("État"), min-width: 60px, horizontal-stretch: 1 },
+                    { title: @tr("IFU"), min-width: 60px, horizontal-stretch: 1 },
+                    { title: @tr("Localisation"), min-width: 80px, horizontal-stretch: 1 },
+                    { title: @tr("Téléphone"), min-width: 100px, horizontal-stretch: 1 },
+                    { title: @tr("Type"), min-width: 70px, horizontal-stretch: 1 },
+                    { title: @tr("Nom"), min-width: 130px, horizontal-stretch: 3 },
                 ] : [
-                    { title: @tr("Nom"), min-width: 140px, horizontal-stretch: 3 },
-                    { title: @tr("Type"), min-width: 80px, horizontal-stretch: 1 },
-                    { title: @tr("Téléphone"), min-width: 90px, horizontal-stretch: 1 },
-                    { title: @tr("Localisation"), min-width: 90px, horizontal-stretch: 1 },
-                    { title: @tr("IFU"), min-width: 70px, horizontal-stretch: 1 },
-                    { title: @tr("État"), min-width: 70px, horizontal-stretch: 1 },
+                    { title: @tr("Nom"), min-width: 130px, horizontal-stretch: 3 },
+                    { title: @tr("Type"), min-width: 70px, horizontal-stretch: 1 },
+                    { title: @tr("Téléphone"), min-width: 100px, horizontal-stretch: 1 },
+                    { title: @tr("Localisation"), min-width: 80px, horizontal-stretch: 1 },
+                    { title: @tr("IFU"), min-width: 60px, horizontal-stretch: 1 },
+                    { title: @tr("État"), min-width: 60px, horizontal-stretch: 1 },
                 ];
                 rows: TiersApi.lignes;
                 current-row <=> TiersApi.ligne-courante;
@@ -342,7 +344,7 @@ export component PageTiers inherits VerticalLayout {
                             color: Theme.texte-secondaire;
                         }
 
-                        type-tiers := ComboBox {
+                        type-tiers := ListeDeroulante {
                             model: [@tr("Client"), @tr("Fournisseur"), @tr("Client et fournisseur")];
                             enabled: root.modifiable;
                         }
@@ -443,7 +445,7 @@ export component PageProduits inherits VerticalLayout {
             }
         }
 
-        filtre-sens := ComboBox {
+        filtre-sens := ListeDeroulante {
             width: 200px;
             model: [@tr("Tous les produits"), @tr("Vente"), @tr("Achat"), @tr("Vente et achat")];
             selected => {
@@ -488,7 +490,7 @@ export component PageProduits inherits VerticalLayout {
         VerticalLayout {
             spacing: 4px;
 
-            StandardTableView {
+            TableauDonnees {
                 // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
                 columns: Theme.rtl ? [
                     { title: @tr("État"), min-width: 90px, horizontal-stretch: 1 },
@@ -564,7 +566,7 @@ export component PageProduits inherits VerticalLayout {
                     color: Theme.texte-secondaire;
                 }
 
-                sens := ComboBox {
+                sens := ListeDeroulante {
                     model: [@tr("Vente"), @tr("Achat"), @tr("Vente et achat")];
                     enabled: root.modifiable;
                 }

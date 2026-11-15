@@ -1,0 +1,229 @@
+// Liste déroulante de Kadenz, à la place du ComboBox du style Fluent (choix de
+// l'utilisateur du 2026-11-15 ; planche : docs/marque/propositions-2026-11-15-
+// selection). Même interface que ComboBox (model, current-index, current-value,
+// enabled, has-focus, selected) : le remplacer ne change que le nom du composant.
+//
+// - Champ de 32 px, cadre de 1 px Theme.bordure, angles de 4 px, chevron.
+// - Liste sous le champ : cadre de 1 px, angles de 4 px, 4 px de marge, ombre
+//   légère ; entrées de 32 px aux mêmes états que les lignes des tableaux
+//   (survol Theme.fond-lateral ; entrée choisie Theme.accent-survol et cadre de
+//   1 px Theme.accent ; choisie et survolée, Theme.accent.mix(Theme.accent-survol, 0.06)).
+// - Focus clavier : bord de 2 px Theme.accent par-dessus le cadre ; flèches haut
+//   et bas pour changer d'entrée, Entrée ou Espace pour ouvrir la liste.
+
+import { ScrollView } from "std-widgets.slint";
+import { Theme } from "composants.slint";
+
+component Chevron inherits Path {
+    width: 8px;
+    height: 8px;
+    viewbox-width: 8;
+    viewbox-height: 8;
+    stroke-width: 1.5px;
+    commands: "M 1 2.5 L 4 5.5 L 7 2.5";
+}
+
+component EntreeListe inherits Rectangle {
+    in property <string> texte;
+    in property <bool> choisie;
+    callback clicked <=> zone.clicked;
+
+    height: 32px;
+    border-radius: 4px;
+    border-width: root.choisie ? 1px : 0px;
+    border-color: Theme.accent;
+    background: root.choisie
+        ? ((zone.has-hover || zone.pressed) ? Theme.accent.mix(Theme.accent-survol, 0.06) : Theme.accent-survol)
+        : (zone.has-hover || zone.pressed) ? Theme.fond-lateral : transparent;
+
+    zone := TouchArea { }
+
+    Text {
+        x: 10px;
+        width: parent.width - 20px;
+        height: 100%;
+        vertical-alignment: center;
+        horizontal-alignment: Theme.debut;
+        text: root.texte;
+        color: Theme.texte;
+        overflow: elide;
+    }
+}
+
+export component ListeDeroulante {
+    in property <[string]> model;
+    in property <bool> enabled: true;
+    out property <bool> has-focus: (clavier.has-focus || root.liste-ouverte) && root.enabled;
+    in-out property <int> current-index: 0;
+    out property <string> current-value: root.current-index >= 0 && root.current-index < root.model.length ? root.model[root.current-index] : "";
+
+    callback selected(current-value: string);
+
+    property <bool> liste-ouverte;
+    property <length> hauteur-entree: 32px;
+    property <int> entrees-visibles: min(8, root.model.length);
+
+    // Choisit une entrée et prévient l'écran, comme ComboBox.
+    public function select(index: int) {
+        if (!root.enabled || index < 0 || index >= root.model.length) {
+            return;
+        }
+        root.current-index = index;
+        root.selected(root.current-value);
+    }
+
+    function ouvrir() {
+        if (root.enabled && root.model.length > 0) {
+            liste.show();
+        }
+    }
+
+    // Un nouveau modèle garde l'indice dans ses bornes, comme ComboBox.
+    changed model => {
+        if (root.model.length == 0) {
+            root.current-index = 0;
+        } else {
+            root.current-index = root.current-index.clamp(0, root.model.length - 1);
+        }
+    }
+
+    min-width: max(160px, disposition.min-width);
+    min-height: 32px;
+    horizontal-stretch: 1;
+    vertical-stretch: 0;
+    forward-focus: clavier;
+    accessible-role: combobox;
+    accessible-enabled: root.enabled;
+    accessible-expandable: true;
+    accessible-expanded: root.liste-ouverte;
+    accessible-value: root.current-value;
+    accessible-action-expand => {
+        root.ouvrir();
+    }
+
+    fond := Rectangle {
+        background: !root.enabled ? Theme.fond-lateral : zone.has-hover || zone.pressed ? Theme.fond-lateral : white;
+        border-width: 1px;
+        border-color: Theme.bordure;
+        border-radius: 4px;
+
+        disposition := HorizontalLayout {
+            padding-left: 12px;
+            padding-right: 12px;
+            spacing: 8px;
+
+            Text {
+                horizontal-stretch: 1;
+                vertical-alignment: center;
+                horizontal-alignment: Theme.debut;
+                text: root.current-value;
+                color: root.enabled ? Theme.texte : Theme.texte-secondaire;
+                overflow: elide;
+                accessible-role: none;
+            }
+
+            VerticalLayout {
+                alignment: center;
+
+                Chevron {
+                    stroke: Theme.texte-secondaire;
+                }
+            }
+        }
+    }
+
+    // Bord de focus : 2 px par-dessus le cadre, mêmes angles, sans décalage.
+    Rectangle {
+        border-width: 2px;
+        border-color: Theme.accent;
+        border-radius: 4px;
+        visible: clavier.has-focus && root.enabled;
+    }
+
+    clavier := FocusScope {
+        enabled: root.enabled;
+
+        key-pressed(event) => {
+            if (event.text == Key.UpArrow) {
+                root.select(max(root.current-index - 1, 0));
+                return accept;
+            } else if (event.text == Key.DownArrow) {
+                root.select(min(root.current-index + 1, root.model.length - 1));
+                return accept;
+            } else if (event.text == Key.Return || event.text == " ") {
+                root.ouvrir();
+                return accept;
+            }
+            reject
+        }
+
+        zone := TouchArea {
+            enabled: root.enabled;
+            clicked => {
+                clavier.focus();
+                root.ouvrir();
+            }
+        }
+    }
+
+    liste := PopupWindow {
+        x: 0;
+        y: root.height + 4px;
+        width: root.width;
+        height: root.entrees-visibles * root.hauteur-entree + 10px;
+        close-policy: close-on-click-outside;
+        forward-focus: clavier-liste;
+
+        clavier-liste := FocusScope {
+            focus-changed-event => {
+                root.liste-ouverte = self.has-focus;
+            }
+
+            key-pressed(event) => {
+                if (event.text == Key.UpArrow) {
+                    root.select(max(root.current-index - 1, 0));
+                    return accept;
+                } else if (event.text == Key.DownArrow) {
+                    root.select(min(root.current-index + 1, root.model.length - 1));
+                    return accept;
+                } else if (event.text == Key.Return || event.text == Key.Escape) {
+                    liste.close();
+                    return accept;
+                }
+                reject
+            }
+
+            Rectangle {
+                background: white;
+                border-width: 1px;
+                border-color: Theme.bordure;
+                border-radius: 4px;
+                drop-shadow-offset-y: 4px;
+                drop-shadow-blur: 12px;
+                drop-shadow-color: Theme.nuit.with-alpha(0.12);
+
+                ScrollView {
+                    x: 1px;
+                    y: 1px;
+                    width: parent.width - 2px;
+                    height: parent.height - 2px;
+                    content-y: -max(0, root.current-index - root.entrees-visibles + 1) * root.hauteur-entree;
+
+                    VerticalLayout {
+                        alignment: start;
+                        padding: 4px;
+
+                        for valeur[index] in root.model: EntreeListe {
+                            texte: valeur;
+                            choisie: index == root.current-index;
+                            clicked => {
+                                root.select(index);
+                                liste.close();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,7 +1,9 @@
 // Écran Utilisateurs : comptes et matrice des droits par rôle
 // (cahier des charges, sections 10.1 et 10.2).
 
-import { CheckBox, ComboBox, ScrollView, StandardTableView, TabWidget } from "std-widgets.slint";
+import { CheckBox, ScrollView, TabWidget } from "std-widgets.slint";
+import { ListeDeroulante } from "liste-deroulante.slint";
+import { TableauDonnees } from "tableau.slint";
 import { Alerte, Bouton, Confirmation, Champ, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct CompteUi {
@@ -91,7 +93,7 @@ component OngletComptes inherits ScrollView {
             col: root.etroit ? 0 : (Theme.rtl ? 1 : 0);
             spacing: 8px;
 
-            StandardTableView {
+            TableauDonnees {
                 min-height: root.etroit ? 220px : 120px;
                 // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
                 columns: Theme.rtl ? [
@@ -157,7 +159,7 @@ component OngletComptes inherits ScrollView {
                     color: Theme.texte-secondaire;
                 }
 
-                role := ComboBox {
+                role := ListeDeroulante {
                     model: UtilisateursApi.roles;
                     enabled: !root.compte.soi-meme;
                 }

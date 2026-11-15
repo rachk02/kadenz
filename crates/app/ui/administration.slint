@@ -1,7 +1,8 @@
 // Écrans d'administration : fiche entreprise et logos, paramètres système
 // (cahier des charges, sections 5.1 et 5.4).
 
-import { ComboBox, ScrollView, TextEdit } from "std-widgets.slint";
+import { ScrollView, TextEdit } from "std-widgets.slint";
+import { ListeDeroulante } from "liste-deroulante.slint";
 import { Alerte, Bouton, Champ, Confirmation, Ecriture, MessageRetour, Modules, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct FicheEntrepriseUi {
@@ -618,7 +619,7 @@ export component PageParametres inherits ScrollView {
                             color: Theme.texte-secondaire;
                         }
 
-                        compteur := ComboBox {
+                        compteur := ListeDeroulante {
                             model: [@tr("Chaque mois"), @tr("Chaque année")];
                         }
                     }
@@ -648,7 +649,7 @@ export component PageParametres inherits ScrollView {
                     text: @tr("Montant en lettres");
                 }
 
-                orthographe := ComboBox {
+                orthographe := ListeDeroulante {
                     model: [@tr("Orthographe rectifiée (1990)"), @tr("Orthographe traditionnelle")];
                 }
 
@@ -684,7 +685,7 @@ export component PageParametres inherits ScrollView {
                         horizontal-alignment: Theme.debut;
                     }
 
-                    ComboBox {
+                    ListeDeroulante {
                         model: [@tr("Devis"), @tr("Proforma"), @tr("Bon de commande"), @tr("Bordereau de livraison"), @tr("Facture"), @tr("Avoir")];
                         current-index: root.rang-texte;
                         selected => {

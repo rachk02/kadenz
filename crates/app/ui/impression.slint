@@ -1,7 +1,8 @@
 // Réglages d'impression (jalon J8b) : gabarit A4, marges, en-tête et pied de
 // page en contenu libre avec variables de l'entreprise, aperçu en direct sur une
 // facture d'exemple, feuille de calibrage. Au droit « Gérer les paramètres ».
-import { CheckBox, ComboBox, ScrollView, TextEdit } from "std-widgets.slint";
+import { CheckBox, ScrollView, TextEdit } from "std-widgets.slint";
+import { ListeDeroulante } from "liste-deroulante.slint";
 import { Alerte, Bouton, Confirmation, Champ, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct MiseEnPageUi {
@@ -88,7 +89,7 @@ component ZoneLibre inherits VerticalLayout {
     Rangee {
         spacing: 8px;
 
-        variable := ComboBox {
+        variable := ListeDeroulante {
             horizontal-stretch: 1;
             model: ImpressionApi.variables;
         }
@@ -270,7 +271,7 @@ export component PageImpression inherits Rectangle {
                     text: @tr("Gabarit");
                 }
 
-                gabarit := ComboBox {
+                gabarit := ListeDeroulante {
                     model: ImpressionApi.gabarits;
                     selected => {
                         root.actualiser();
@@ -356,7 +357,7 @@ export component PageImpression inherits Rectangle {
                         color: Theme.texte-secondaire;
                     }
 
-                    style-pied := ComboBox {
+                    style-pied := ListeDeroulante {
                         model: [@tr("Trait fin gris"), @tr("Trait épais de la couleur principale, mentions en gras")];
                         selected => {
                             root.actualiser();
@@ -375,7 +376,7 @@ export component PageImpression inherits Rectangle {
                     wrap: word-wrap;
                 }
 
-                ComboBox {
+                ListeDeroulante {
                     model: ImpressionApi.types-bas;
                     current-index: 0;
                     selected => {

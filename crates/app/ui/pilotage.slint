@@ -2,7 +2,8 @@
 // période choisie, repris de la page « Tableau de bord » de l'Excel. Les
 // graphiques sont des chemins dont la géométrie est calculée en Rust
 // (graphiques.rs), dans un repère fixe ajusté ici à la taille de l'élément.
-import { ComboBox, LineEdit, ScrollView } from "std-widgets.slint";
+import { LineEdit, ScrollView } from "std-widgets.slint";
+import { ListeDeroulante } from "liste-deroulante.slint";
 import { MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 // Secteur d'un anneau, avec sa ligne de légende.
@@ -620,7 +621,7 @@ export component PageTableauDeBord inherits ScrollView {
 
             Rectangle { }
 
-            annee := ComboBox {
+            annee := ListeDeroulante {
                 width: 150px;
                 model: PilotageApi.annees;
                 selected => {

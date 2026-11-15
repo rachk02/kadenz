@@ -1,7 +1,8 @@
 // Paramètres en rubriques (révision 2.34 du cahier), comme sur un téléphone : une
 // liste de rubriques, chacune ouvrant sa page. La liste ne montre que les rubriques
 // que les droits du compte et la licence ouvrent (construite par l'application).
-import { CheckBox, ComboBox, ScrollView } from "std-widgets.slint";
+import { CheckBox, ScrollView } from "std-widgets.slint";
+import { ListeDeroulante } from "liste-deroulante.slint";
 import { Affichage, Alerte, Bouton, Champ, Confirmation, ElementNavigation, Ecriture, MessageErreur, Section, Theme, Titre } from "composants.slint";
 import { PageEntreprise, PageParametres } from "administration.slint";
 import { PageUtilisateurs } from "utilisateurs.slint";
@@ -151,7 +152,7 @@ component PageMonCompte inherits VerticalLayout {
 
         // Chaque langue est écrite dans sa propre langue, pour être reconnue
         // quelle que soit celle de l'interface.
-        ComboBox {
+        ListeDeroulante {
             width: 220px;
             model: ["Français", "English", "العربية", "日本語", "中文", "Türkçe", "Español"];
             current-index <=> root.langue;

@@ -1,6 +1,8 @@
 // Pages du module Paiements (section 8) : registre des règlements, suivi des
 // bons de commande non payés et relances des factures échues.
-import { ComboBox, LineEdit, StandardTableView } from "std-widgets.slint";
+import { LineEdit } from "std-widgets.slint";
+import { ListeDeroulante } from "liste-deroulante.slint";
+import { TableauDonnees } from "tableau.slint";
 import { Bouton, MessageRetour, Rangee, Retour, Theme, Titre } from "composants.slint";
 import { ConnexionApi } from "etat-connexion.slint";
 
@@ -87,7 +89,7 @@ export component PageReglements inherits VerticalLayout {
     Rangee {
         spacing: 8px;
 
-        sens := ComboBox {
+        sens := ListeDeroulante {
             width: 190px;
             model: [@tr("Tous les règlements"), @tr("Encaissements"), @tr("Décaissements")];
             selected => {
@@ -95,7 +97,7 @@ export component PageReglements inherits VerticalLayout {
             }
         }
 
-        mode := ComboBox {
+        mode := ListeDeroulante {
             width: 190px;
             model: PaiementsApi.modes;
             selected => {
@@ -130,7 +132,7 @@ export component PageReglements inherits VerticalLayout {
         retour: root.retour;
     }
 
-    StandardTableView {
+    TableauDonnees {
         // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
         columns: Theme.rtl ? [
             { title: @tr("Montant"), min-width: 100px, horizontal-stretch: 0 },
@@ -225,7 +227,7 @@ export component PageSuiviFournisseurs inherits VerticalLayout {
         retour: root.retour;
     }
 
-    StandardTableView {
+    TableauDonnees {
         columns: Theme.rtl ? [
             { title: @tr("Statut"), min-width: 120px, horizontal-stretch: 0 },
             { title: @tr("Reste à payer"), min-width: 120px, horizontal-stretch: 0 },
@@ -324,7 +326,7 @@ export component PageRelances inherits VerticalLayout {
         retour: root.retour;
     }
 
-    StandardTableView {
+    TableauDonnees {
         columns: Theme.rtl ? [
             { title: @tr("Jours de retard"), min-width: 130px, horizontal-stretch: 0 },
             { title: @tr("Reste dû"), min-width: 110px, horizontal-stretch: 0 },

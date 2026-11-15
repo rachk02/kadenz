@@ -1,0 +1,250 @@
+// Tableau de données de Kadenz, à la place du StandardTableView du style Fluent
+// (choix de l'utilisateur du 2026-11-15, proposition 2 ; planche :
+// docs/marque/propositions-2026-11-15-selection). Même interface que
+// StandardTableView (columns, rows, current-row, current-row-changed,
+// sort-ascending, sort-descending, set-current-row) : le remplacer ne change
+// que le nom du composant.
+//
+// - Ligne de 34 px, angles de 4 px, en retrait de 4 px dans le cadre du tableau,
+//   sans alternance de fond ; texte en Theme.texte dans tous les états.
+// - Survol : fond Theme.fond-lateral, sans cadre.
+// - Ligne choisie : fond Theme.accent-survol et cadre égal de 1 px Theme.accent ;
+//   survolée ou pressée, fond Theme.accent.mix(Theme.accent-survol, 0.06).
+// - Focus clavier : le bord du tableau passe à 2 px Theme.accent, par-dessus,
+//   sans décaler le contenu ; flèches haut et bas, début et fin.
+
+import { ListView } from "std-widgets.slint";
+import { Theme } from "composants.slint";
+
+// Chevron du tri : vers le haut pour l'ordre croissant, vers le bas sinon.
+component ChevronTri inherits Path {
+    in property <bool> croissant;
+    width: 8px;
+    height: 8px;
+    viewbox-width: 8;
+    viewbox-height: 8;
+    stroke: Theme.texte-secondaire;
+    stroke-width: 1.5px;
+    commands: root.croissant ? "M 1 5.5 L 4 2.5 L 7 5.5" : "M 1 2.5 L 4 5.5 L 7 2.5";
+}
+
+component ColonneEntete inherits Rectangle {
+    in property <string> titre;
+    in property <SortOrder> ordre: SortOrder.unsorted;
+    callback clicked <=> zone.clicked;
+
+    zone := TouchArea { }
+
+    HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 12px;
+        spacing: 8px;
+
+        Text {
+            vertical-alignment: center;
+            horizontal-alignment: Theme.debut;
+            text: root.titre;
+            color: Theme.texte-secondaire;
+            font-weight: 600;
+            overflow: elide;
+        }
+
+        if root.ordre != SortOrder.unsorted: VerticalLayout {
+            alignment: center;
+
+            ChevronTri {
+                croissant: root.ordre == SortOrder.ascending;
+            }
+        }
+    }
+}
+
+component LigneTableau inherits Rectangle {
+    in property <bool> choisie;
+    callback clicked <=> zone.clicked;
+
+    min-width: disposition.min-width;
+    height: 34px;
+    border-radius: 4px;
+    border-width: root.choisie ? 1px : 0px;
+    border-color: Theme.accent;
+    background: root.choisie
+        ? ((zone.has-hover || zone.pressed) ? Theme.accent.mix(Theme.accent-survol, 0.06) : Theme.accent-survol)
+        : (zone.has-hover || zone.pressed) ? Theme.fond-lateral : transparent;
+
+    zone := TouchArea { }
+
+    disposition := HorizontalLayout {
+        @children
+    }
+}
+
+export component TableauDonnees {
+    in property <[[StandardListViewItem]]> rows;
+    out property <int> current-sort-column: -1;
+    in-out property <[TableColumn]> columns;
+    in-out property <int> current-row: -1;
+    out property <bool> has-focus: clavier.has-focus;
+
+    callback sort-ascending(column: int);
+    callback sort-descending(column: int);
+    callback current-row-changed(current-row: int);
+
+    // Choisit une ligne, la montre dans la liste et prévient l'écran.
+    public function set-current-row(index: int) {
+        if (index < 0 || index >= root.rows.length) {
+            return;
+        }
+        root.current-row = index;
+        root.current-row-changed(root.current-row);
+        if (root.y-ligne-courante < 0) {
+            liste.content-y += 0 - root.y-ligne-courante;
+        }
+        if (root.y-ligne-courante + root.hauteur-ligne > liste.visible-height) {
+            liste.content-y -= root.y-ligne-courante + root.hauteur-ligne - liste.visible-height;
+        }
+    }
+
+    // Une ligne et l'espace qui la sépare de la suivante.
+    private property <length> hauteur-ligne: liste.content-height / max(1, root.rows.length);
+    private property <length> y-ligne-courante: liste.content-y + root.current-row * root.hauteur-ligne;
+    private property <int> lignes-par-page: max(1, floor(liste.visible-height / max(1px, root.hauteur-ligne)));
+
+    function trier(index: int) {
+        if (root.current-sort-column >= 0 && root.current-sort-column != index) {
+            root.columns[root.current-sort-column].sort-order = SortOrder.unsorted;
+        }
+        if (root.columns[index].sort-order == SortOrder.ascending) {
+            root.columns[index].sort-order = SortOrder.descending;
+            root.sort-descending(index);
+        } else {
+            root.columns[index].sort-order = SortOrder.ascending;
+            root.sort-ascending(index);
+        }
+        root.current-sort-column = index;
+    }
+
+    // Comme StandardTableView : 400 px au moins ; des colonnes plus larges que
+    // le tableau défilent avec la liste, l'en-tête suit.
+    min-width: 400px;
+    min-height: 200px;
+    horizontal-stretch: 1;
+    vertical-stretch: 1;
+    forward-focus: clavier;
+    accessible-role: table;
+
+    Rectangle {
+        background: white;
+        border-width: 1px;
+        border-color: Theme.bordure;
+        border-radius: 4px;
+    }
+
+    // Cadre de 1 px, puis 4 px sous l'en-tête et sous la dernière ligne :
+    // toutes les lignes ont la même hauteur, ce que set-current-row suppose.
+    VerticalLayout {
+        padding: 1px;
+        padding-bottom: 4px;
+        spacing: 4px;
+
+        Rectangle {
+            vertical-stretch: 0;
+            height: 36px;
+            clip: true;
+
+            entete := HorizontalLayout {
+                x: liste.content-x;
+                width: max(self.preferred-width, parent.width);
+                height: parent.height;
+                padding-left: 3px;
+                padding-right: 3px;
+
+                for colonne[index] in root.columns: ColonneEntete {
+                    titre: colonne.title;
+                    ordre: colonne.sort-order;
+                    horizontal-stretch: colonne.horizontal-stretch;
+                    min-width: max(colonne.min-width, colonne.width);
+                    preferred-width: self.min-width;
+                    clicked => {
+                        root.trier(index);
+                    }
+                }
+            }
+
+            Rectangle {
+                y: parent.height - 1px;
+                height: 1px;
+                background: Theme.bordure;
+            }
+        }
+
+        liste := ListView {
+            for ligne[idx] in root.rows: HorizontalLayout {
+                padding-left: 3px;
+                padding-right: 3px;
+
+                LigneTableau {
+                    choisie: idx == root.current-row;
+                    clicked => {
+                        clavier.focus();
+                        root.set-current-row(idx);
+                    }
+
+                    for cellule[index] in ligne: Rectangle {
+                        clip: true;
+                        horizontal-stretch: root.columns[index].horizontal-stretch;
+                        min-width: max(root.columns[index].min-width, root.columns[index].width);
+                        preferred-width: self.min-width;
+
+                        Text {
+                            x: 12px;
+                            width: parent.width - 24px;
+                            height: 100%;
+                            vertical-alignment: center;
+                            horizontal-alignment: Theme.debut;
+                            text: cellule.text;
+                            color: Theme.texte;
+                            overflow: elide;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Bord de focus : 2 px par-dessus le cadre, mêmes angles, sans décalage.
+    Rectangle {
+        border-width: 2px;
+        border-color: Theme.accent;
+        border-radius: 4px;
+        visible: clavier.has-focus;
+    }
+
+    clavier := FocusScope {
+        x: 0;
+        width: 0;
+
+        key-pressed(event) => {
+            if (event.text == Key.UpArrow) {
+                root.set-current-row(max(0, root.current-row - 1));
+                return accept;
+            } else if (event.text == Key.DownArrow) {
+                root.set-current-row(root.current-row + 1);
+                return accept;
+            } else if (event.text == Key.Home) {
+                root.set-current-row(0);
+                return accept;
+            } else if (event.text == Key.End) {
+                root.set-current-row(root.rows.length - 1);
+                return accept;
+            } else if (event.text == Key.PageUp) {
+                root.set-current-row(max(0, root.current-row - root.lignes-par-page));
+                return accept;
+            } else if (event.text == Key.PageDown) {
+                root.set-current-row(min(root.rows.length - 1, root.current-row + root.lignes-par-page));
+                return accept;
+            }
+            reject
+        }
+    }
+}

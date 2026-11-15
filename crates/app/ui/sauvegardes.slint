@@ -6,7 +6,8 @@
 // gardé sur ce poste (protégé par Windows) pour la sauvegarde automatique à la
 // fermeture. Restaurer remplace la base : la base en place est d'abord sauvegardée.
 
-import { ScrollView, StandardTableView } from "std-widgets.slint";
+import { ScrollView } from "std-widgets.slint";
+import { TableauDonnees } from "tableau.slint";
 import { Alerte, Bouton, Champ, Confirmation, MessageErreur, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
 
 export global SauvegardesApi {
@@ -260,7 +261,7 @@ export component PageSauvegardes inherits ScrollView {
             color: Theme.texte-secondaire;
         }
 
-        if SauvegardesApi.lignes.length > 0: StandardTableView {
+        if SauvegardesApi.lignes.length > 0: TableauDonnees {
             height: 240px;
             // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
             columns: Theme.rtl ? [
