@@ -1,2 +1,3 @@
-# Fichier lu sous Linux (image du relais) : fins de ligne LF.
+# Fichiers lus sous Linux (images du relais et du portail) : fins de ligne LF.
 crates/relais/Dockerfile text eol=lf
+crates/portail/Dockerfile text eol=lf
