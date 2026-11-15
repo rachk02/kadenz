@@ -13,6 +13,7 @@ members = [
     "crates/client",
     "crates/poste",
     "crates/serveur",
+    "crates/relais",
     "crates/app",
     "crates/admin",
 ]
@@ -41,6 +42,7 @@ kadenz-protocole = { path = "crates/protocole" }
 kadenz-client = { path = "crates/client" }
 kadenz-poste = { path = "crates/poste" }
 kadenz-serveur = { path = "crates/serveur" }
+kadenz-relais = { path = "crates/relais" }
 rusqlite = { version = "0.41.1", features = ["bundled", "backup"] }
 slint = { version = "1.18.1", features = ["raw-window-handle-06"] }
 slint-build = "1.18.1"
@@ -76,6 +78,9 @@ uuid = { version = "1.29.2", features = ["v7"] }
 # avec MSVC, sans CMake ni NASM), certificats auto-signés, service Windows.
 rustls = { version = "0.23.46", default-features = false, features = ["ring", "std"] }
 rcgen = { version = "0.14.10", default-features = false, features = ["ring"] }
+# Phase 2 (F8) : vérification par le relais de la signature d'un défi avec la
+# clé d'un certificat (déjà tirée par rustls).
+rustls-webpki = { version = "0.103.16", default-features = false, features = ["ring", "std"] }
 windows-service = "0.8.1"
 ureq = { version = "3.5.1", default-features = false, features = ["native-tls-no-default"] }
 

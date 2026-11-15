@@ -484,3 +484,5 @@
 [2026-11-15 07:22:02] Suivi - Tableau maison relu sur Tiers avec de vraies valeurs (7c7a335) : conforme à la planche, colonnes entières sauf Localisation abrégée fiche ouverte.
 [2026-11-15 07:29:22] Instruction - Décisions 57 à 59 de l utilisateur pour F8 : poste autorisé à distance par une case, licence valide exigée par le relais, traces du relais sans contenu gardées 30 jours.
 [2026-11-15 07:29:22] Suivi - Forme du relais écrite (spec. synchronisation 0.19, section 7, proposé), F8 découpé en F8a, F8b et F8c (jalons 0.14), écrans section 9 alignée sur la décision 57.
+[2026-11-15 07:32:10] Suivi - F8 : avis envoyé à kadenz-a8 sur l API proposée pour les écrans F8b (erreur en modèle et valeurs, horodatage brut, hors connexion et lecture seule, relais absent, rafraîchissement 15 s, section Relais de la fenêtre du serveur avec validation dans regler_relais)
+[2026-11-15 07:38:09] Suivi - F8a : crate kadenz-relais (trames, preuve par défi signé, relais, côtés poste et serveur, traces 30 jours) avec essais en processus ; API F8b convenue avec kadenz-22 (MessageRelais, horodatage brut, lecture seule permise, Synchroniseur::distant).
