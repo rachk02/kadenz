@@ -1,0 +1,11 @@
+# Contexte de construction de l'image du relais (crates/relais/Dockerfile) :
+# seuls les manifestes et les sources de l'espace de travail sont utiles.
+target
+.git
+.idea
+.claude
+docs
+docs_of_interest
+installateur
+**/*.sqlite
+**/*.kzs
