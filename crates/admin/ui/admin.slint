@@ -5,7 +5,8 @@
 // l'application), crée et annule les codes d'inscription des postes, et retire un
 // poste. Tout le reste se fait depuis un poste connecté avec un compte Admin.
 // Jalon F7 (décision 56) : réglage des sauvegardes du serveur, liste, sauvegarde
-// immédiate et avertissement permanent ; la restauration vient ensuite.
+// immédiate, avertissement permanent et restauration (service arrêté, base
+// précédente sauvegardée et mise de côté, service redémarré).
 import { LineEdit, ScrollView, TextEdit } from "std-widgets.slint";
 import { Alerte, Bouton, Champ, Confirmation, FenetreAlerte, FenetreConfirmation, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "../../app/ui/composants.slint";
 import { DonneesAssistant, EcranAssistant } from "../../app/ui/assistant.slint";
@@ -27,6 +28,7 @@ export struct PosteUi {
 }
 
 export struct SauvegardeUi {
+    chemin: string,
     date: string,
     genre: string,
     taille: string,
@@ -66,6 +68,49 @@ export global AdminApi {
     callback choisir-dossier(actuel: string) -> string;
     callback enregistrer-sauvegardes(mot-de-passe: string, confirmation: string) -> Retour;
     callback sauvegarder-maintenant();
+
+    // Restauration d'une sauvegarde (décision 35). restauration-etat : 0 aucune,
+    // 1 sauvegarde choisie, 2 sauvegarde vérifiée, 3 restauration en cours,
+    // 4 terminée (bilan ou erreur).
+    in property <int> restauration-etat;
+    in property <string> restauration-fichier;
+    in property <bool> restauration-occupee;
+    in property <string> restauration-resume;
+    in property <string> restauration-alerte;
+    in property <string> restauration-etape;
+    in property <[string]> restauration-bilan;
+    in property <Retour> restauration-retour;
+    // chemin vide : boîte de choix d'un fichier .kzs.
+    callback restauration-choisir(chemin: string);
+    callback restauration-verifier(mot-de-passe: string);
+    callback restauration-lancer();
+    callback restauration-abandonner();
+    // Interne : rouvre la base de la fenêtre après la restauration.
+    callback restauration-rouvrir();
+}
+
+// Encadré ambre d'un avertissement.
+component Avertissement inherits Rectangle {
+    in property <string> texte;
+    background: #fff8eb;
+    border-width: 1px;
+    border-color: Theme.ambre;
+    border-radius: 4px;
+
+    HorizontalLayout {
+        padding-left: 14px;
+        padding-right: 14px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: root.texte;
+            color: Theme.texte;
+            font-weight: 600;
+            wrap: word-wrap;
+        }
+    }
 }
 
 export enum EcranAdmin { erreur, assistant, tableau }
@@ -151,6 +196,8 @@ component Tableau inherits ScrollView {
     property <Retour> retour;
     property <string> mot-de-passe-sauvegardes;
     property <string> confirmation-sauvegardes;
+    property <string> mot-de-passe-restauration;
+    property <bool> restauration-a-confirmer;
     // Action en attente de la fenêtre de confirmation.
     property <int> code-a-annuler: -1;
     property <string> poste-a-retirer;
@@ -164,8 +211,13 @@ component Tableau inherits ScrollView {
             self.retour = AdminApi.retirer-poste(self.poste-a-retirer);
             Alerte.retour(self.retour);
         }
+        if (Confirmation.accepte && self.restauration-a-confirmer) {
+            self.mot-de-passe-restauration = "";
+            AdminApi.restauration-lancer();
+        }
         self.code-a-annuler = -1;
         self.poste-a-retirer = "";
+        self.restauration-a-confirmer = false;
     }
 
     // Colonne de 880 px au plus, au début du sens de lecture : en plein écran,
@@ -192,26 +244,8 @@ component Tableau inherits ScrollView {
             }
 
             // Sauvegardes en défaut (décision 56) : bandeau permanent.
-            if AdminApi.avertissement-sauvegarde != "": Rectangle {
-                background: #fff8eb;
-                border-width: 1px;
-                border-color: Theme.ambre;
-                border-radius: 4px;
-
-                HorizontalLayout {
-                    padding-left: 14px;
-                    padding-right: 14px;
-                    padding-top: 8px;
-                    padding-bottom: 8px;
-
-                    Text {
-                        horizontal-alignment: Theme.debut;
-                        text: AdminApi.avertissement-sauvegarde;
-                        color: Theme.texte;
-                        font-weight: 600;
-                        wrap: word-wrap;
-                    }
-                }
+            if AdminApi.avertissement-sauvegarde != "": Avertissement {
+                texte: AdminApi.avertissement-sauvegarde;
             }
 
             Section {
@@ -318,9 +352,17 @@ component Tableau inherits ScrollView {
 
                 Bouton {
                     text: @tr("Sauvegarder maintenant");
-                    enabled: AdminApi.sauvegarde-mot-de-passe-choisi && !AdminApi.sauvegarde-en-cours;
+                    enabled: AdminApi.sauvegarde-mot-de-passe-choisi && !AdminApi.sauvegarde-en-cours && AdminApi.restauration-etat != 3;
                     clicked => {
                         AdminApi.sauvegarder-maintenant();
+                    }
+                }
+
+                Bouton {
+                    text: @tr("Restaurer depuis un fichier");
+                    enabled: AdminApi.restauration-etat != 3 && !AdminApi.restauration-occupee;
+                    clicked => {
+                        AdminApi.restauration-choisir("");
                     }
                 }
             }
@@ -359,9 +401,134 @@ component Tableau inherits ScrollView {
                 }
 
                 Text {
+                    vertical-alignment: center;
                     horizontal-alignment: Theme.fin;
                     text: sauvegarde.taille;
                     color: Theme.texte-secondaire;
+                }
+
+                Bouton {
+                    text: @tr("Restaurer");
+                    enabled: AdminApi.restauration-etat != 3 && !AdminApi.restauration-occupee;
+                    clicked => {
+                        AdminApi.restauration-choisir(sauvegarde.chemin);
+                    }
+                }
+            }
+
+            // Restauration : vérification, confirmation, étapes, bilan.
+            if AdminApi.restauration-etat > 0: Rectangle {
+                border-width: 1px;
+                border-color: Theme.bordure;
+                border-radius: 4px;
+                background: Theme.fond-lateral;
+
+                VerticalLayout {
+                    padding: 14px;
+                    spacing: 10px;
+
+                    Text {
+                        horizontal-alignment: Theme.debut;
+                        text: @tr("Restaurer une sauvegarde");
+                        color: Theme.texte;
+                        font-weight: 600;
+                    }
+
+                    Ligne {
+                        libelle: @tr("Fichier");
+                        valeur: AdminApi.restauration-fichier;
+                    }
+
+                    if AdminApi.restauration-etat == 1: HorizontalLayout {
+                        spacing: 8px;
+
+                        Champ {
+                            horizontal-stretch: 1;
+                            libelle: @tr("Mot de passe de la sauvegarde");
+                            secret: true;
+                            valeur <=> root.mot-de-passe-restauration;
+                        }
+
+                        VerticalLayout {
+                            alignment: end;
+
+                            Bouton {
+                                text: @tr("Vérifier la sauvegarde");
+                                primary: true;
+                                enabled: !AdminApi.restauration-occupee && root.mot-de-passe-restauration != "";
+                                clicked => {
+                                    AdminApi.restauration-verifier(root.mot-de-passe-restauration);
+                                }
+                            }
+                        }
+                    }
+
+                    if AdminApi.restauration-etat == 2: Text {
+                        horizontal-alignment: Theme.debut;
+                        text: AdminApi.restauration-resume;
+                        color: Theme.texte;
+                        wrap: word-wrap;
+                    }
+
+                    if AdminApi.restauration-etat == 2 && AdminApi.restauration-alerte != "": Avertissement {
+                        texte: AdminApi.restauration-alerte;
+                    }
+
+                    if AdminApi.restauration-etat == 2: Text {
+                        horizontal-alignment: Theme.debut;
+                        text: @tr("La restauration arrête le service : les postes sont déconnectés quelques instants. La base actuelle est d'abord sauvegardée, puis mise de côté sans être effacée. Chaque poste refait ensuite sa copie de la base.");
+                        color: Theme.texte-secondaire;
+                        wrap: word-wrap;
+                    }
+
+                    if AdminApi.restauration-occupee || AdminApi.restauration-etat == 3: Text {
+                        horizontal-alignment: Theme.debut;
+                        text: AdminApi.restauration-etape;
+                        color: Theme.texte-secondaire;
+                        wrap: word-wrap;
+                    }
+
+                    if AdminApi.restauration-etat == 4: VerticalLayout {
+                        spacing: 6px;
+
+                        for ligne in AdminApi.restauration-bilan: Text {
+                            horizontal-alignment: Theme.debut;
+                            text: ligne;
+                            color: Theme.texte;
+                            wrap: word-wrap;
+                        }
+                    }
+
+                    if AdminApi.restauration-etat == 4 && AdminApi.restauration-alerte != "": Avertissement {
+                        texte: AdminApi.restauration-alerte;
+                    }
+
+                    MessageRetour {
+                        retour: AdminApi.restauration-retour;
+                    }
+
+                    HorizontalLayout {
+                        spacing: 8px;
+                        alignment: Theme.rangee-debut;
+
+                        if AdminApi.restauration-etat == 2: Bouton {
+                            text: @tr("Restaurer");
+                            danger: true;
+                            clicked => {
+                                root.restauration-a-confirmer = true;
+                                Confirmation.demander(@tr("Restaurer cette sauvegarde ? Le service s'arrête le temps de la restauration ; la base actuelle est sauvegardée puis mise de côté, et les postes refont leur copie."), @tr("Restaurer"), true);
+                            }
+                        }
+
+                        if AdminApi.restauration-etat != 3: Bouton {
+                            text: AdminApi.restauration-etat == 4 ? @tr("Fermer") : @tr("Abandonner");
+                            enabled: !AdminApi.restauration-occupee;
+                            clicked => {
+                                root.mot-de-passe-restauration = "";
+                                AdminApi.restauration-abandonner();
+                            }
+                        }
+                    }
                 }
             }
 

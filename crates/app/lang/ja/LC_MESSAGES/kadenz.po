@@ -3762,3 +3762,71 @@ msgstr "バックアップしました：{}"
 
 msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données du serveur"
 msgstr "バックアップのフォルダーはサーバーのデータフォルダー内には置けません"
+
+# Phase 2, F7c : restauration dans la fenêtre du serveur.
+
+msgid "Restaurer depuis un fichier"
+msgstr "ファイルから復元"
+
+msgid "Fichier"
+msgstr "ファイル"
+
+msgid "Vérifier la sauvegarde"
+msgstr "バックアップを確認"
+
+msgid "Abandonner"
+msgstr "中止"
+
+msgid "La restauration arrête le service : les postes sont déconnectés quelques instants. La base actuelle est d'abord sauvegardée, puis mise de côté sans être effacée. Chaque poste refait ensuite sa copie de la base."
+msgstr "復元中はサービスが停止し、端末は少しの間切断されます。現在のデータベースはまずバックアップされ、消去されずに退避されます。その後、各端末はデータベースのコピーを作り直します。"
+
+msgid "Restaurer cette sauvegarde ? Le service s'arrête le temps de la restauration ; la base actuelle est sauvegardée puis mise de côté, et les postes refont leur copie."
+msgstr "このバックアップを復元しますか？復元中はサービスが停止します。現在のデータベースはバックアップされてから退避され、端末はコピーを作り直します。"
+
+msgid "Vérification de la sauvegarde..."
+msgstr "バックアップを確認中..."
+
+msgid "Sauvegarde de l'entreprise « {} »."
+msgstr "会社「{}」のバックアップです。"
+
+msgid "Cette sauvegarde est celle d'une autre entreprise : l'entreprise du serveur, « {} », sera remplacée par « {} »."
+msgstr "このバックアップは別の会社のものです。サーバーの会社「{}」は「{}」に置き換えられます。"
+
+msgid "Arrêt du service ; il fait une dernière sauvegarde en s'arrêtant..."
+msgstr "サービスを停止中です。停止時に最後のバックアップを行います..."
+
+msgid "Restauration de la base..."
+msgstr "データベースを復元中..."
+
+msgid "Démarrage du service..."
+msgstr "サービスを開始中..."
+
+msgid "Le service n'a pas redémarré : {}. Démarrez le service KadenzServeur depuis les services de Windows."
+msgstr "サービスが再開しませんでした：{}。Windows のサービスから KadenzServeur サービスを開始してください。"
+
+msgid "Le certificat du serveur est revenu à celui de la sauvegarde : les postes inscrits avant elle se reconnectent sans rien faire ; un poste inscrit depuis doit être inscrit de nouveau, avec un nouveau code."
+msgstr "サーバーの証明書はバックアップのものに戻りました。バックアップ以前に登録された端末はそのまま再接続できます。それ以降に登録された端末は新しいコードで登録し直す必要があります。"
+
+msgid "Sauvegarde restaurée ; le service a redémarré."
+msgstr "バックアップを復元しました。サービスは再開しました。"
+
+msgid "Sauvegarde restaurée."
+msgstr "バックアップを復元しました。"
+
+msgid "Le service ne s'est pas arrêté : {}. Rien n'a été restauré."
+msgstr "サービスが停止しませんでした：{}。何も復元されていません。"
+
+msgid "La restauration n'a pas abouti : {}. La base du serveur est restée telle quelle."
+msgstr "復元できませんでした：{}。サーバーのデータベースは変更されていません。"
+
+msgid "Base précédente sauvegardée : {}"
+msgstr "以前のデータベースのバックアップ：{}"
+
+msgid "Base précédente mise de côté, non effacée : {}"
+msgstr "以前のデータベースは消去せず退避：{}"
+
+msgid "Entreprise du serveur : {}"
+msgstr "サーバーの会社：{}"
+
+msgid "Chaque poste refait sa copie de la base à sa prochaine connexion."
+msgstr "各端末は次回の接続時にデータベースのコピーを作り直します。"

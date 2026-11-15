@@ -3762,3 +3762,71 @@ msgstr "Copia de seguridad hecha: {}"
 
 msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données du serveur"
 msgstr "la carpeta de las copias de seguridad no puede estar dentro de la carpeta de datos del servidor"
+
+# Phase 2, F7c : restauration dans la fenêtre du serveur.
+
+msgid "Restaurer depuis un fichier"
+msgstr "Restaurar desde un archivo"
+
+msgid "Fichier"
+msgstr "Archivo"
+
+msgid "Vérifier la sauvegarde"
+msgstr "Comprobar la copia de seguridad"
+
+msgid "Abandonner"
+msgstr "Cancelar"
+
+msgid "La restauration arrête le service : les postes sont déconnectés quelques instants. La base actuelle est d'abord sauvegardée, puis mise de côté sans être effacée. Chaque poste refait ensuite sa copie de la base."
+msgstr "La restauración detiene el servicio: los puestos se desconectan unos instantes. La base actual se guarda primero y luego se aparta sin borrarse. Después, cada puesto rehace su copia de la base."
+
+msgid "Restaurer cette sauvegarde ? Le service s'arrête le temps de la restauration ; la base actuelle est sauvegardée puis mise de côté, et les postes refont leur copie."
+msgstr "¿Restaurar esta copia de seguridad? El servicio se detiene durante la restauración; la base actual se guarda y luego se aparta, y los puestos rehacen su copia."
+
+msgid "Vérification de la sauvegarde..."
+msgstr "Comprobando la copia de seguridad..."
+
+msgid "Sauvegarde de l'entreprise « {} »."
+msgstr "Copia de seguridad de la empresa «{}»."
+
+msgid "Cette sauvegarde est celle d'une autre entreprise : l'entreprise du serveur, « {} », sera remplacée par « {} »."
+msgstr "Esta copia de seguridad es de otra empresa: la empresa del servidor, «{}», será sustituida por «{}»."
+
+msgid "Arrêt du service ; il fait une dernière sauvegarde en s'arrêtant..."
+msgstr "Deteniendo el servicio; hace una última copia de seguridad al detenerse..."
+
+msgid "Restauration de la base..."
+msgstr "Restaurando la base..."
+
+msgid "Démarrage du service..."
+msgstr "Iniciando el servicio..."
+
+msgid "Le service n'a pas redémarré : {}. Démarrez le service KadenzServeur depuis les services de Windows."
+msgstr "El servicio no se ha reiniciado: {}. Inicie el servicio KadenzServeur desde los servicios de Windows."
+
+msgid "Le certificat du serveur est revenu à celui de la sauvegarde : les postes inscrits avant elle se reconnectent sans rien faire ; un poste inscrit depuis doit être inscrit de nouveau, avec un nouveau code."
+msgstr "El certificado del servidor ha vuelto al de la copia de seguridad: los puestos inscritos antes de ella se reconectan sin hacer nada; un puesto inscrito después debe inscribirse de nuevo, con un código nuevo."
+
+msgid "Sauvegarde restaurée ; le service a redémarré."
+msgstr "Copia de seguridad restaurada; el servicio se ha reiniciado."
+
+msgid "Sauvegarde restaurée."
+msgstr "Copia de seguridad restaurada."
+
+msgid "Le service ne s'est pas arrêté : {}. Rien n'a été restauré."
+msgstr "El servicio no se ha detenido: {}. No se ha restaurado nada."
+
+msgid "La restauration n'a pas abouti : {}. La base du serveur est restée telle quelle."
+msgstr "La restauración no ha terminado: {}. La base del servidor sigue igual."
+
+msgid "Base précédente sauvegardée : {}"
+msgstr "Base anterior guardada: {}"
+
+msgid "Base précédente mise de côté, non effacée : {}"
+msgstr "Base anterior apartada, no borrada: {}"
+
+msgid "Entreprise du serveur : {}"
+msgstr "Empresa del servidor: {}"
+
+msgid "Chaque poste refait sa copie de la base à sa prochaine connexion."
+msgstr "Cada puesto rehace su copia de la base en su próxima conexión."

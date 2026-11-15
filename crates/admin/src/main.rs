@@ -15,6 +15,7 @@ mod traduction;
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use chrono::{DateTime, Local, NaiveDateTime, NaiveTime, Utc};
@@ -23,7 +24,7 @@ use kadenz_domaine::role::Role;
 use kadenz_domaine::saisie;
 use kadenz_protocole::inscription::presenter_secret;
 use kadenz_protocole::sauvegarde::AvertissementSauvegarde;
-use kadenz_serveur::admin::{self, EtatService};
+use kadenz_serveur::admin::{self, BilanRestauration, EtatService, Restauration};
 use kadenz_serveur::sauvegardes;
 use kadenz_stockage::Erreur;
 use kadenz_stockage::comptes::{self, EtatInstallation, NouvelUtilisateur};
@@ -221,6 +222,263 @@ fn montrer_reglage_sauvegardes(f: &FenetreAdmin, dossier: &Path) {
     api.set_sauvegarde_heure(reglage.heure.format("%H:%M").to_string().into());
 }
 
+/// Délai de l'arrêt du service : il fait une sauvegarde en s'arrêtant.
+const DELAI_ARRET: Duration = Duration::from_secs(300);
+const DELAI_DEMARRAGE: Duration = Duration::from_secs(120);
+
+/// Échec d'une restauration, selon l'étape.
+enum EchecRestauration {
+    /// Le service ne s'est pas arrêté : rien n'a été touché.
+    Arret(String),
+    /// La restauration a échoué ; la base d'origine est en place, sauf si le
+    /// message commence par RESTAURATION_INTERROMPUE.
+    Restauration(String),
+}
+
+/// Lignes du bilan d'une restauration réussie.
+fn lignes_bilan(bilan: &BilanRestauration, entreprise: &str) -> Vec<SharedString> {
+    let mut lignes = Vec::new();
+    if let Some(avant) = &bilan.avant {
+        lignes.push(trf("Base précédente sauvegardée : {}", &[&avant.display()]).into());
+    }
+    if let Some(cote) = &bilan.mise_de_cote {
+        lignes.push(
+            trf(
+                "Base précédente mise de côté, non effacée : {}",
+                &[&cote.display()],
+            )
+            .into(),
+        );
+    }
+    if bilan.entreprise_changee {
+        lignes.push(trf("Entreprise du serveur : {}", &[&entreprise]).into());
+    }
+    lignes.push(tr("Chaque poste refait sa copie de la base à sa prochaine connexion.").into());
+    lignes
+}
+
+/// Restauration (décision 35) : vérification dans un fil, puis arrêt du
+/// service, restauration et redémarrage dans un autre. La connexion de la
+/// fenêtre est fermée pendant la restauration (Windows refuse de renommer un
+/// fichier ouvert), puis rouverte.
+fn brancher_restauration(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossier: Rc<PathBuf>) {
+    let api = f.global::<AdminApi>();
+    // Sauvegarde vérifiée, gardée jusqu'à la fin de la restauration : son
+    // fichier de travail disparaît avec elle.
+    let preparee: Arc<Mutex<Option<Restauration>>> = Arc::new(Mutex::new(None));
+
+    let (fa, p, d) = (f.as_weak(), preparee.clone(), dossier.clone());
+    api.on_restauration_choisir(move |chemin| {
+        let Some(f) = fa.upgrade() else { return };
+        let chemin = if chemin.is_empty() {
+            let mut boite = rfd::FileDialog::new()
+                .set_title(tr("Choisir une sauvegarde"))
+                .add_filter(tr("Sauvegardes Kadenz"), &["kzs"])
+                .set_parent(&f.window().window_handle());
+            let dossier_sauvegardes = sauvegardes::lire_reglage(&d).dossier;
+            if dossier_sauvegardes.is_dir() {
+                boite = boite.set_directory(dossier_sauvegardes);
+            }
+            match boite.pick_file() {
+                Some(c) => c.display().to_string(),
+                None => return,
+            }
+        } else {
+            chemin.to_string()
+        };
+        if let Ok(mut p) = p.lock() {
+            *p = None;
+        }
+        let api = f.global::<AdminApi>();
+        api.set_restauration_fichier(chemin.into());
+        api.set_restauration_resume(SharedString::new());
+        api.set_restauration_alerte(SharedString::new());
+        api.set_restauration_bilan(ModelRc::default());
+        api.set_restauration_retour(retour_ok(String::new()));
+        api.set_restauration_etat(1);
+    });
+
+    let (fa, p) = (f.as_weak(), preparee.clone());
+    api.on_restauration_abandonner(move || {
+        let Some(f) = fa.upgrade() else { return };
+        if let Ok(mut p) = p.lock() {
+            *p = None;
+        }
+        let api = f.global::<AdminApi>();
+        api.set_restauration_etat(0);
+        api.set_restauration_fichier(SharedString::new());
+        api.set_restauration_retour(retour_ok(String::new()));
+    });
+
+    let (fa, p, d) = (f.as_weak(), preparee.clone(), dossier.clone());
+    api.on_restauration_verifier(move |mot_de_passe| {
+        let Some(f) = fa.upgrade() else { return };
+        let api = f.global::<AdminApi>();
+        let chemin = PathBuf::from(api.get_restauration_fichier().as_str());
+        api.set_restauration_occupee(true);
+        api.set_restauration_etape(tr("Vérification de la sauvegarde...").into());
+        api.set_restauration_retour(retour_ok(String::new()));
+        let (fa, p, d) = (f.as_weak(), p.clone(), (*d).clone());
+        std::thread::spawn(move || {
+            let resultat = admin::preparer_restauration(&d, &chemin, &mot_de_passe);
+            let _ = fa.upgrade_in_event_loop(move |f| {
+                let api = f.global::<AdminApi>();
+                api.set_restauration_occupee(false);
+                match resultat {
+                    Ok(r) => {
+                        api.set_restauration_resume(
+                            trf("Sauvegarde de l'entreprise « {} ».", &[&r.entreprise]).into(),
+                        );
+                        let alerte = match &r.entreprise_serveur {
+                            Some(serveur) if !r.meme_entreprise && !serveur.is_empty() => trf(
+                                "Cette sauvegarde est celle d'une autre entreprise : l'entreprise du serveur, « {} », sera remplacée par « {} ».",
+                                &[serveur, &r.entreprise],
+                            ),
+                            _ => String::new(),
+                        };
+                        api.set_restauration_alerte(alerte.into());
+                        if let Ok(mut p) = p.lock() {
+                            *p = Some(r);
+                        }
+                        api.set_restauration_etat(2);
+                    }
+                    Err(e) => api.set_restauration_retour(retour_erreur(tr(&e))),
+                }
+            });
+        });
+    });
+
+    // Fin de la restauration, sur le fil de l'interface : rouvre la base.
+    let (fa, c, d) = (f.as_weak(), conn.clone(), dossier.clone());
+    api.on_restauration_rouvrir(move || {
+        let Some(f) = fa.upgrade() else { return };
+        match ouvrir(&d) {
+            Ok(nouvelle) => {
+                *c.borrow_mut() = nouvelle;
+                // L'empreinte et le code complet changent avec l'identité :
+                // le dernier code affiché ne vaut plus.
+                let api = f.global::<AdminApi>();
+                api.set_nouveau_secret(SharedString::new());
+                api.set_nouveau_complet(SharedString::new());
+                actualiser(&f, &c.borrow(), &d);
+            }
+            Err(message) => f
+                .global::<AdminApi>()
+                .set_restauration_retour(retour_erreur(message)),
+        }
+    });
+
+    let (fa, p, c, d) = (f.as_weak(), preparee, conn, dossier);
+    api.on_restauration_lancer(move || {
+        let Some(f) = fa.upgrade() else { return };
+        let Some(r) = p.lock().ok().and_then(|mut p| p.take()) else {
+            return;
+        };
+        let api = f.global::<AdminApi>();
+        api.set_restauration_etat(3);
+        api.set_restauration_alerte(SharedString::new());
+        api.set_restauration_retour(retour_ok(String::new()));
+        api.set_restauration_etape(
+            tr("Arrêt du service ; il fait une dernière sauvegarde en s'arrêtant...").into(),
+        );
+        // La connexion de la fenêtre est fermée jusqu'à la fin.
+        match Connection::open_in_memory() {
+            Ok(vide) => drop(std::mem::replace(&mut *c.borrow_mut(), vide)),
+            Err(e) => {
+                api.set_restauration_etat(2);
+                api.set_restauration_retour(retour_erreur(e.to_string()));
+                if let Ok(mut p) = p.lock() {
+                    *p = Some(r);
+                }
+                return;
+            }
+        }
+        let (fa, d) = (f.as_weak(), (*d).clone());
+        std::thread::spawn(move || {
+            let etape = |texte: String| {
+                let _ = fa.upgrade_in_event_loop(move |f| {
+                    f.global::<AdminApi>()
+                        .set_restauration_etape(texte.into());
+                });
+            };
+            let entreprise = r.entreprise.clone();
+            let resultat = admin::arreter_service(DELAI_ARRET)
+                .map_err(EchecRestauration::Arret)
+                .and_then(|()| {
+                    etape(tr("Restauration de la base..."));
+                    admin::restaurer(&d, &r).map_err(EchecRestauration::Restauration)
+                });
+            drop(r);
+            let redemarrage = match &resultat {
+                Err(EchecRestauration::Arret(_)) => None,
+                Err(EchecRestauration::Restauration(m))
+                    if m.starts_with(admin::RESTAURATION_INTERROMPUE) =>
+                {
+                    None
+                }
+                _ => {
+                    etape(tr("Démarrage du service..."));
+                    Some(admin::demarrer_service(DELAI_DEMARRAGE))
+                }
+            };
+            let _ = fa.upgrade_in_event_loop(move |f| {
+                let api = f.global::<AdminApi>();
+                let service = match &redemarrage {
+                    Some(Err(e)) => trf(
+                        "Le service n'a pas redémarré : {}. Démarrez le service KadenzServeur depuis les services de Windows.",
+                        &[&tr(e)],
+                    ),
+                    _ => String::new(),
+                };
+                match resultat {
+                    Ok(bilan) => {
+                        api.set_restauration_bilan(ModelRc::new(VecModel::from(lignes_bilan(
+                            &bilan,
+                            &entreprise,
+                        ))));
+                        if bilan.identite_remplacee {
+                            api.set_restauration_alerte(tr(
+                                "Le certificat du serveur est revenu à celui de la sauvegarde : les postes inscrits avant elle se reconnectent sans rien faire ; un poste inscrit depuis doit être inscrit de nouveau, avec un nouveau code.",
+                            ).into());
+                        }
+                        api.set_restauration_retour(if service.is_empty() {
+                            retour_ok(tr("Sauvegarde restaurée ; le service a redémarré."))
+                        } else {
+                            retour_erreur(format!("{} {service}", tr("Sauvegarde restaurée.")))
+                        });
+                        api.set_restauration_etat(4);
+                    }
+                    Err(EchecRestauration::Arret(e)) => {
+                        api.set_restauration_retour(retour_erreur(trf(
+                            "Le service ne s'est pas arrêté : {}. Rien n'a été restauré.",
+                            &[&tr(&e)],
+                        )));
+                        api.set_restauration_etat(1);
+                    }
+                    Err(EchecRestauration::Restauration(e)) => {
+                        let message = if redemarrage.is_none() {
+                            // Message du stockage tel quel : il nomme les
+                            // fichiers à remettre en place.
+                            e
+                        } else {
+                            format!(
+                                "{} {service}",
+                                trf(
+                                    "La restauration n'a pas abouti : {}. La base du serveur est restée telle quelle.",
+                                    &[&tr(&e)],
+                                )
+                            )
+                        };
+                        api.set_restauration_retour(retour_erreur(message));
+                        api.set_restauration_etat(4);
+                    }
+                }
+                api.invoke_restauration_rouvrir();
+            });
+        });
+    });
+}
+
 fn installation_depuis_assistant(d: &DonneesAssistant) -> Result<InstallationInitiale, String> {
     let taux = |libelle: &str, texte: &SharedString| {
         saisie::liste_pourcentages_depuis_texte(texte).ok_or_else(|| {
@@ -324,6 +582,7 @@ fn actualiser(f: &FenetreAdmin, conn: &Connection, dossier: &Path) {
             .unwrap_or_default()
             .into_iter()
             .map(|s| SauvegardeUi {
+                chemin: s.chemin.display().to_string().into(),
                 date: s.date.format("%d/%m/%Y %H:%M").to_string().into(),
                 genre: genre_sauvegarde(s.genre).into(),
                 taille: trf("{} Ko", &[&s.taille.div_ceil(1024)]).into(),
@@ -403,10 +662,14 @@ fn brancher_tableau(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossier: Rc
 
     let (fa, c, d) = (f.as_weak(), conn.clone(), dossier.clone());
     api.on_actualiser(move || {
-        if let Some(f) = fa.upgrade() {
+        if let Some(f) = fa.upgrade()
+            && f.global::<AdminApi>().get_restauration_etat() != 3
+        {
             actualiser(&f, &c.borrow(), &d);
         }
     });
+
+    brancher_restauration(f, conn.clone(), dossier.clone());
 
     let (fa, c, d) = (f.as_weak(), conn.clone(), dossier.clone());
     api.on_creer_code(move |nom| {

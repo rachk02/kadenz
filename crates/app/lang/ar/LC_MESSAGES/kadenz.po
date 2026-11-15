@@ -3762,3 +3762,71 @@ msgstr "تم النسخ الاحتياطي: {}"
 
 msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données du serveur"
 msgstr "لا يمكن أن يكون مجلد النسخ الاحتياطية داخل مجلد بيانات الخادم"
+
+# Phase 2, F7c : restauration dans la fenêtre du serveur.
+
+msgid "Restaurer depuis un fichier"
+msgstr "الاستعادة من ملف"
+
+msgid "Fichier"
+msgstr "الملف"
+
+msgid "Vérifier la sauvegarde"
+msgstr "التحقق من النسخة الاحتياطية"
+
+msgid "Abandonner"
+msgstr "إلغاء"
+
+msgid "La restauration arrête le service : les postes sont déconnectés quelques instants. La base actuelle est d'abord sauvegardée, puis mise de côté sans être effacée. Chaque poste refait ensuite sa copie de la base."
+msgstr "توقف الاستعادة الخدمة: تنقطع الأجهزة لبضع لحظات. تُحفظ القاعدة الحالية أولًا ثم تُنحّى جانبًا دون حذفها. بعد ذلك يعيد كل جهاز إنشاء نسخته من القاعدة."
+
+msgid "Restaurer cette sauvegarde ? Le service s'arrête le temps de la restauration ; la base actuelle est sauvegardée puis mise de côté, et les postes refont leur copie."
+msgstr "استعادة هذه النسخة الاحتياطية؟ تتوقف الخدمة أثناء الاستعادة؛ تُحفظ القاعدة الحالية ثم تُنحّى جانبًا، وتعيد الأجهزة إنشاء نسختها."
+
+msgid "Vérification de la sauvegarde..."
+msgstr "جارٍ التحقق من النسخة الاحتياطية..."
+
+msgid "Sauvegarde de l'entreprise « {} »."
+msgstr "نسخة احتياطية للمؤسسة «{}»."
+
+msgid "Cette sauvegarde est celle d'une autre entreprise : l'entreprise du serveur, « {} », sera remplacée par « {} »."
+msgstr "هذه النسخة الاحتياطية لمؤسسة أخرى: ستُستبدل مؤسسة الخادم «{}» بـ«{}»."
+
+msgid "Arrêt du service ; il fait une dernière sauvegarde en s'arrêtant..."
+msgstr "جارٍ إيقاف الخدمة؛ تحفظ نسخة احتياطية أخيرة عند توقفها..."
+
+msgid "Restauration de la base..."
+msgstr "جارٍ استعادة القاعدة..."
+
+msgid "Démarrage du service..."
+msgstr "جارٍ تشغيل الخدمة..."
+
+msgid "Le service n'a pas redémarré : {}. Démarrez le service KadenzServeur depuis les services de Windows."
+msgstr "لم تُعد الخدمة التشغيل: {}. شغّل خدمة KadenzServeur من خدمات Windows."
+
+msgid "Le certificat du serveur est revenu à celui de la sauvegarde : les postes inscrits avant elle se reconnectent sans rien faire ; un poste inscrit depuis doit être inscrit de nouveau, avec un nouveau code."
+msgstr "عادت شهادة الخادم إلى شهادة النسخة الاحتياطية: تعيد الأجهزة المسجلة قبلها الاتصال دون أي إجراء؛ أما الجهاز المسجل بعدها فيجب تسجيله من جديد برمز جديد."
+
+msgid "Sauvegarde restaurée ; le service a redémarré."
+msgstr "تمت استعادة النسخة الاحتياطية؛ أُعيد تشغيل الخدمة."
+
+msgid "Sauvegarde restaurée."
+msgstr "تمت استعادة النسخة الاحتياطية."
+
+msgid "Le service ne s'est pas arrêté : {}. Rien n'a été restauré."
+msgstr "لم تتوقف الخدمة: {}. لم تتم استعادة أي شيء."
+
+msgid "La restauration n'a pas abouti : {}. La base du serveur est restée telle quelle."
+msgstr "لم تنجح الاستعادة: {}. بقيت قاعدة الخادم كما هي."
+
+msgid "Base précédente sauvegardée : {}"
+msgstr "حُفظت القاعدة السابقة: {}"
+
+msgid "Base précédente mise de côté, non effacée : {}"
+msgstr "نُحّيت القاعدة السابقة جانبًا دون حذف: {}"
+
+msgid "Entreprise du serveur : {}"
+msgstr "مؤسسة الخادم: {}"
+
+msgid "Chaque poste refait sa copie de la base à sa prochaine connexion."
+msgstr "يعيد كل جهاز إنشاء نسخته من القاعدة عند اتصاله التالي."

@@ -3762,3 +3762,71 @@ msgstr "备份完成：{}"
 
 msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données du serveur"
 msgstr "备份文件夹不能位于服务器数据文件夹内"
+
+# Phase 2, F7c : restauration dans la fenêtre du serveur.
+
+msgid "Restaurer depuis un fichier"
+msgstr "从文件恢复"
+
+msgid "Fichier"
+msgstr "文件"
+
+msgid "Vérifier la sauvegarde"
+msgstr "检查备份"
+
+msgid "Abandonner"
+msgstr "放弃"
+
+msgid "La restauration arrête le service : les postes sont déconnectés quelques instants. La base actuelle est d'abord sauvegardée, puis mise de côté sans être effacée. Chaque poste refait ensuite sa copie de la base."
+msgstr "恢复会停止服务：工作站会断开片刻。当前数据库先被备份，然后移到一旁而不删除。之后每个工作站会重建其数据库副本。"
+
+msgid "Restaurer cette sauvegarde ? Le service s'arrête le temps de la restauration ; la base actuelle est sauvegardée puis mise de côté, et les postes refont leur copie."
+msgstr "恢复此备份？恢复期间服务会停止；当前数据库先备份再移到一旁，工作站会重建其副本。"
+
+msgid "Vérification de la sauvegarde..."
+msgstr "正在检查备份..."
+
+msgid "Sauvegarde de l'entreprise « {} »."
+msgstr "企业“{}”的备份。"
+
+msgid "Cette sauvegarde est celle d'une autre entreprise : l'entreprise du serveur, « {} », sera remplacée par « {} »."
+msgstr "此备份属于另一家企业：服务器的企业“{}”将被“{}”取代。"
+
+msgid "Arrêt du service ; il fait une dernière sauvegarde en s'arrêtant..."
+msgstr "正在停止服务；服务停止时会进行最后一次备份..."
+
+msgid "Restauration de la base..."
+msgstr "正在恢复数据库..."
+
+msgid "Démarrage du service..."
+msgstr "正在启动服务..."
+
+msgid "Le service n'a pas redémarré : {}. Démarrez le service KadenzServeur depuis les services de Windows."
+msgstr "服务未重新启动：{}。请从 Windows 服务中启动 KadenzServeur 服务。"
+
+msgid "Le certificat du serveur est revenu à celui de la sauvegarde : les postes inscrits avant elle se reconnectent sans rien faire ; un poste inscrit depuis doit être inscrit de nouveau, avec un nouveau code."
+msgstr "服务器证书已恢复为备份中的证书：备份之前登记的工作站无需任何操作即可重新连接；之后登记的工作站必须使用新代码重新登记。"
+
+msgid "Sauvegarde restaurée ; le service a redémarré."
+msgstr "备份已恢复；服务已重新启动。"
+
+msgid "Sauvegarde restaurée."
+msgstr "备份已恢复。"
+
+msgid "Le service ne s'est pas arrêté : {}. Rien n'a été restauré."
+msgstr "服务未停止：{}。未恢复任何内容。"
+
+msgid "La restauration n'a pas abouti : {}. La base du serveur est restée telle quelle."
+msgstr "恢复未成功：{}。服务器数据库保持不变。"
+
+msgid "Base précédente sauvegardée : {}"
+msgstr "之前的数据库已备份：{}"
+
+msgid "Base précédente mise de côté, non effacée : {}"
+msgstr "之前的数据库已移到一旁，未删除：{}"
+
+msgid "Entreprise du serveur : {}"
+msgstr "服务器企业：{}"
+
+msgid "Chaque poste refait sa copie de la base à sa prochaine connexion."
+msgstr "每个工作站在下次连接时重建其数据库副本。"

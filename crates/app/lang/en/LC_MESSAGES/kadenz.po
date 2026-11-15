@@ -3762,3 +3762,71 @@ msgstr "Backup made: {}"
 
 msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données du serveur"
 msgstr "the backup folder cannot be inside the server data folder"
+
+# Phase 2, F7c : restauration dans la fenêtre du serveur.
+
+msgid "Restaurer depuis un fichier"
+msgstr "Restore from a file"
+
+msgid "Fichier"
+msgstr "File"
+
+msgid "Vérifier la sauvegarde"
+msgstr "Check the backup"
+
+msgid "Abandonner"
+msgstr "Cancel"
+
+msgid "La restauration arrête le service : les postes sont déconnectés quelques instants. La base actuelle est d'abord sauvegardée, puis mise de côté sans être effacée. Chaque poste refait ensuite sa copie de la base."
+msgstr "Restoring stops the service: workstations are disconnected for a few moments. The current database is first backed up, then set aside without being erased. Each workstation then rebuilds its copy of the database."
+
+msgid "Restaurer cette sauvegarde ? Le service s'arrête le temps de la restauration ; la base actuelle est sauvegardée puis mise de côté, et les postes refont leur copie."
+msgstr "Restore this backup? The service stops during the restore; the current database is backed up then set aside, and workstations rebuild their copy."
+
+msgid "Vérification de la sauvegarde..."
+msgstr "Checking the backup..."
+
+msgid "Sauvegarde de l'entreprise « {} »."
+msgstr "Backup of the company “{}”."
+
+msgid "Cette sauvegarde est celle d'une autre entreprise : l'entreprise du serveur, « {} », sera remplacée par « {} »."
+msgstr "This backup belongs to another company: the server's company, “{}”, will be replaced by “{}”."
+
+msgid "Arrêt du service ; il fait une dernière sauvegarde en s'arrêtant..."
+msgstr "Stopping the service; it makes a last backup as it stops..."
+
+msgid "Restauration de la base..."
+msgstr "Restoring the database..."
+
+msgid "Démarrage du service..."
+msgstr "Starting the service..."
+
+msgid "Le service n'a pas redémarré : {}. Démarrez le service KadenzServeur depuis les services de Windows."
+msgstr "The service did not restart: {}. Start the KadenzServeur service from Windows services."
+
+msgid "Le certificat du serveur est revenu à celui de la sauvegarde : les postes inscrits avant elle se reconnectent sans rien faire ; un poste inscrit depuis doit être inscrit de nouveau, avec un nouveau code."
+msgstr "The server certificate is back to the one in the backup: workstations registered before it reconnect without doing anything; a workstation registered since must be registered again, with a new code."
+
+msgid "Sauvegarde restaurée ; le service a redémarré."
+msgstr "Backup restored; the service has restarted."
+
+msgid "Sauvegarde restaurée."
+msgstr "Backup restored."
+
+msgid "Le service ne s'est pas arrêté : {}. Rien n'a été restauré."
+msgstr "The service did not stop: {}. Nothing was restored."
+
+msgid "La restauration n'a pas abouti : {}. La base du serveur est restée telle quelle."
+msgstr "The restore did not succeed: {}. The server database is unchanged."
+
+msgid "Base précédente sauvegardée : {}"
+msgstr "Previous database backed up: {}"
+
+msgid "Base précédente mise de côté, non effacée : {}"
+msgstr "Previous database set aside, not erased: {}"
+
+msgid "Entreprise du serveur : {}"
+msgstr "Server company: {}"
+
+msgid "Chaque poste refait sa copie de la base à sa prochaine connexion."
+msgstr "Each workstation rebuilds its copy of the database at its next connection."

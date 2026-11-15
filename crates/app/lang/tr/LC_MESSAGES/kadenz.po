@@ -3762,3 +3762,71 @@ msgstr "Yedek alındı: {}"
 
 msgid "le dossier des sauvegardes ne peut pas être dans le dossier des données du serveur"
 msgstr "yedekleme klasörü sunucunun veri klasörünün içinde olamaz"
+
+# Phase 2, F7c : restauration dans la fenêtre du serveur.
+
+msgid "Restaurer depuis un fichier"
+msgstr "Dosyadan geri yükle"
+
+msgid "Fichier"
+msgstr "Dosya"
+
+msgid "Vérifier la sauvegarde"
+msgstr "Yedeği doğrula"
+
+msgid "Abandonner"
+msgstr "Vazgeç"
+
+msgid "La restauration arrête le service : les postes sont déconnectés quelques instants. La base actuelle est d'abord sauvegardée, puis mise de côté sans être effacée. Chaque poste refait ensuite sa copie de la base."
+msgstr "Geri yükleme hizmeti durdurur: iş istasyonlarının bağlantısı birkaç an kesilir. Mevcut veritabanı önce yedeklenir, sonra silinmeden kenara alınır. Ardından her iş istasyonu veritabanı kopyasını yeniden oluşturur."
+
+msgid "Restaurer cette sauvegarde ? Le service s'arrête le temps de la restauration ; la base actuelle est sauvegardée puis mise de côté, et les postes refont leur copie."
+msgstr "Bu yedek geri yüklensin mi? Geri yükleme süresince hizmet durur; mevcut veritabanı yedeklenip kenara alınır ve iş istasyonları kopyalarını yeniden oluşturur."
+
+msgid "Vérification de la sauvegarde..."
+msgstr "Yedek doğrulanıyor..."
+
+msgid "Sauvegarde de l'entreprise « {} »."
+msgstr "“{}” şirketinin yedeği."
+
+msgid "Cette sauvegarde est celle d'une autre entreprise : l'entreprise du serveur, « {} », sera remplacée par « {} »."
+msgstr "Bu yedek başka bir şirkete ait: sunucunun şirketi “{}”, “{}” ile değiştirilecek."
+
+msgid "Arrêt du service ; il fait une dernière sauvegarde en s'arrêtant..."
+msgstr "Hizmet durduruluyor; dururken son bir yedek alıyor..."
+
+msgid "Restauration de la base..."
+msgstr "Veritabanı geri yükleniyor..."
+
+msgid "Démarrage du service..."
+msgstr "Hizmet başlatılıyor..."
+
+msgid "Le service n'a pas redémarré : {}. Démarrez le service KadenzServeur depuis les services de Windows."
+msgstr "Hizmet yeniden başlamadı: {}. KadenzServeur hizmetini Windows hizmetlerinden başlatın."
+
+msgid "Le certificat du serveur est revenu à celui de la sauvegarde : les postes inscrits avant elle se reconnectent sans rien faire ; un poste inscrit depuis doit être inscrit de nouveau, avec un nouveau code."
+msgstr "Sunucu sertifikası yedektekine döndü: yedekten önce kaydedilen iş istasyonları hiçbir şey yapmadan yeniden bağlanır; sonradan kaydedilen bir iş istasyonu yeni bir kodla yeniden kaydedilmelidir."
+
+msgid "Sauvegarde restaurée ; le service a redémarré."
+msgstr "Yedek geri yüklendi; hizmet yeniden başladı."
+
+msgid "Sauvegarde restaurée."
+msgstr "Yedek geri yüklendi."
+
+msgid "Le service ne s'est pas arrêté : {}. Rien n'a été restauré."
+msgstr "Hizmet durmadı: {}. Hiçbir şey geri yüklenmedi."
+
+msgid "La restauration n'a pas abouti : {}. La base du serveur est restée telle quelle."
+msgstr "Geri yükleme başarılı olmadı: {}. Sunucu veritabanı olduğu gibi kaldı."
+
+msgid "Base précédente sauvegardée : {}"
+msgstr "Önceki veritabanı yedeklendi: {}"
+
+msgid "Base précédente mise de côté, non effacée : {}"
+msgstr "Önceki veritabanı kenara alındı, silinmedi: {}"
+
+msgid "Entreprise du serveur : {}"
+msgstr "Sunucunun şirketi: {}"
+
+msgid "Chaque poste refait sa copie de la base à sa prochaine connexion."
+msgstr "Her iş istasyonu bir sonraki bağlantısında veritabanı kopyasını yeniden oluşturur."
