@@ -136,6 +136,13 @@ fn texte_etat_service(etat: Result<EtatService, String>, port: u16) -> (String, 
 /// d'environnement de son parent) ; une version publiée ne lit ni l'une ni
 /// l'autre.
 fn dossier() -> PathBuf {
+    dossier_essai().unwrap_or_else(kadenz_serveur::dossier_par_defaut)
+}
+
+/// Dossier d'essai donné en développement. La fenêtre ne pilote alors
+/// jamais le service du serveur : une restauration d'essai se fait serveur
+/// d'essai arrêté, puis relancé à la main.
+fn dossier_essai() -> Option<PathBuf> {
     #[cfg(debug_assertions)]
     {
         let arguments: Vec<String> = std::env::args().collect();
@@ -144,13 +151,13 @@ fn dossier() -> PathBuf {
             .position(|a| a == "--dossier")
             .and_then(|i| arguments.get(i + 1))
         {
-            return PathBuf::from(d);
+            return Some(PathBuf::from(d));
         }
         if let Some(d) = std::env::var_os("KADENZ_SERVEUR_DOSSIER") {
-            return PathBuf::from(d);
+            return Some(PathBuf::from(d));
         }
     }
-    kadenz_serveur::dossier_par_defaut()
+    None
 }
 
 /// Ouvre la base du serveur, sans jamais la créer : c'est le service qui crée
@@ -394,6 +401,7 @@ fn brancher_restauration(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossie
             }
         }
         let (fa, d) = (f.as_weak(), (*d).clone());
+        let essai = dossier_essai().is_some();
         std::thread::spawn(move || {
             let etape = |texte: String| {
                 let _ = fa.upgrade_in_event_loop(move |f| {
@@ -402,14 +410,21 @@ fn brancher_restauration(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossie
                 });
             };
             let entreprise = r.entreprise.clone();
-            let resultat = admin::arreter_service(DELAI_ARRET)
-                .map_err(EchecRestauration::Arret)
-                .and_then(|()| {
-                    etape(tr("Restauration de la base..."));
-                    admin::restaurer(&d, &r).map_err(EchecRestauration::Restauration)
-                });
+            let resultat = if essai {
+                etape(tr("Restauration de la base..."));
+                admin::restaurer_si(&d, &r, EtatService::Arrete)
+                    .map_err(EchecRestauration::Restauration)
+            } else {
+                admin::arreter_service(DELAI_ARRET)
+                    .map_err(EchecRestauration::Arret)
+                    .and_then(|()| {
+                        etape(tr("Restauration de la base..."));
+                        admin::restaurer(&d, &r).map_err(EchecRestauration::Restauration)
+                    })
+            };
             drop(r);
             let redemarrage = match &resultat {
+                _ if essai => None,
                 Err(EchecRestauration::Arret(_)) => None,
                 Err(EchecRestauration::Restauration(m))
                     if m.starts_with(admin::RESTAURATION_INTERROMPUE) =>
@@ -441,7 +456,13 @@ fn brancher_restauration(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossie
                                 "Le certificat du serveur est revenu à celui de la sauvegarde : les postes inscrits avant elle se reconnectent sans rien faire ; un poste inscrit depuis doit être inscrit de nouveau, avec un nouveau code.",
                             ).into());
                         }
-                        api.set_restauration_retour(if service.is_empty() {
+                        api.set_restauration_retour(if essai {
+                            // Développement seulement, d'où le texte non traduit.
+                            retour_ok(format!(
+                                "{} Dossier d'essai : relancez le serveur d'essai sur ce dossier.",
+                                tr("Sauvegarde restaurée.")
+                            ))
+                        } else if service.is_empty() {
                             retour_ok(tr("Sauvegarde restaurée ; le service a redémarré."))
                         } else {
                             retour_erreur(format!("{} {service}", tr("Sauvegarde restaurée.")))
@@ -456,7 +477,7 @@ fn brancher_restauration(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossie
                         api.set_restauration_etat(1);
                     }
                     Err(EchecRestauration::Restauration(e)) => {
-                        let message = if redemarrage.is_none() {
+                        let message = if e.starts_with(admin::RESTAURATION_INTERROMPUE) {
                             // Message du stockage tel quel : il nomme les
                             // fichiers à remettre en place.
                             e
