@@ -246,8 +246,19 @@ pub(crate) fn afficher(
         .unwrap_or_default();
     api.set_disponible(recu.is_some());
     api.set_lecture_seule(v.lecture_seule);
+    let mut lignes = v.lignes;
+    // Identifiant de l'entreprise, juste après l'état : l'éditeur ou le
+    // revendeur en a besoin pour émettre la licence sur son portail (F9).
+    if recu.is_some()
+        && let Ok(Some(p)) = kadenz_stockage::poste_relie::lire(conn)
+    {
+        lignes.insert(
+            1.min(lignes.len()),
+            (tr("Identifiant de l'entreprise"), p.entreprise),
+        );
+    }
     api.set_lignes(ModelRc::new(VecModel::from(
-        v.lignes
+        lignes
             .into_iter()
             .map(|(libelle, valeur)| LigneAbonnementUi {
                 libelle: libelle.into(),
