@@ -7,7 +7,9 @@
 //! - `banc_essai <dossier> <port> [--codes N]` : installe le serveur si le
 //!   dossier est neuf (entreprise, comptes admin, compta et vente, licence de
 //!   5 postes avec tous les modules), le lance et affiche N codes complets
-//!   d'inscription (« Poste 1 » à « Poste N »). Arrêt : fermer le processus.
+//!   d'inscription (« Poste 1 » à « Poste N »). Arrêt propre : touche Entrée
+//!   (sauvegarde d'arrêt si un mot de passe est réglé) ; Ctrl+C ou la croix
+//!   arrêtent sans elle.
 //! - `banc_essai <dossier> desactiver <identifiant>` : désactive un compte
 //!   directement dans la base, serveur arrêté (coupure du F6d).
 //! - `banc_essai <dossier> etat` : opérations reçues, suspendues, changements
@@ -252,8 +254,23 @@ fn lancer(dossier: PathBuf, port: u16, codes: u32) -> Result<(), String> {
             );
         }
     }
-    loop {
-        std::thread::park();
+    println!(
+        "Arrêt propre, avec la sauvegarde d'arrêt si un mot de passe est réglé : touche Entrée.\n\
+         Ctrl+C ou la croix de la fenêtre arrêtent sans cette sauvegarde."
+    );
+    let mut ligne = String::new();
+    match std::io::stdin().read_line(&mut ligne) {
+        // Entrée standard fermée (lancement sans console) : pas d'arrêt par
+        // Entrée, le serveur tourne jusqu'à la fin du processus.
+        Ok(0) | Err(_) => loop {
+            std::thread::park();
+        },
+        Ok(_) => {
+            println!("Arrêt en cours...");
+            serveur.arreter();
+            println!("Serveur arrêté.");
+            Ok(())
+        }
     }
 }
 
