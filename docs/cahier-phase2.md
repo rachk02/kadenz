@@ -27,6 +27,7 @@
 | 0.23 | 2026-11-15 | Décisions 60 et 61 (F9), reçues par kadenz-8e : portail local sans carte, paiement saisi par l'éditeur ou un revendeur ; un seul programme Rust qui sert des pages HTML simples. Forme proposée dans `spec-portail.md`. |
 | 0.24 | 2026-11-15 | Décisions 62 et 63 (F10), reçues par kadenz-8e : première version de la phase 2 en 1.0.0 ; essai F10c en simulation, sans installer. |
 | 0.25 | 2026-11-16 | Décisions 64 à 67 (stock, question ouverte 4) : l'utilisateur a demandé de retenir les choix recommandés par kadenz-34 ; forme du chantier dans `docs/spec-stock.md`. Décision 68, reçue par kadenz-8e : tout finir avant de publier la 1.0.0. Décision 69, reçue par kadenz-8e : les sessions décident ensemble pendant l'absence de l'utilisateur. |
+| 0.26 | 2026-11-16 | Décisions 70 à 73 (site web, question ouverte 9), reçues par kadenz-a8 : contenu de la première version, français d'abord, nom de domaine plus tard, pas de tarifs tant qu'ils ne sont pas fixés. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -114,6 +115,10 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 67. **Sorties de stock** (idem) : seule la confirmation d'un bordereau de livraison sort le stock, la réception d'un bon de commande l'entre ; une facture ne bouge jamais le stock.
 68. **Avant la 1.0.0** (reçue par kadenz-8e le 2026-11-16 : « ok on finit tout avant de publier ») : d'abord les chantiers métier de l'étape 2 (stock 3.3, export SYSCOHADA 3.2), puis le vrai certificat de signature, puis une installation réelle sur une machine, puis la publication de la 1.0.0 avec l'accord explicite de l'utilisateur. Aucune release avant.
 69. **Décisions pendant l'absence de l'utilisateur** (reçue par kadenz-8e le 2026-11-16) : les sessions tranchent ensemble les choix de conception, les numérotent et les consignent ; dans le doute, le choix le plus prudent. Restent à l'accord explicite de l'utilisateur : release, production et VPS, argent, clés privées, comptes externes, Docker et la prise de l'écran.
+70. **Contenu du site public** (reçue par kadenz-a8 le 2026-11-16) : présentation de Kadenz, téléchargements, espace client, contact et demande de démonstration, « tout le nécessaire » ; les pages obligatoires ou utiles (mentions légales, confidentialité, page introuvable) en font donc partie, avec des contenus fournis par l'utilisateur, jamais inventés.
+71. **Langues du site** (idem) : français d'abord ; le site est prévu multilingue dès le départ (adresses et balises de langue), les autres langues viennent ensuite.
+72. **Nom de domaine** (idem) : choisi plus tard ; le site se prépare en local, et les adresses absolues (balises canoniques, plan du site, Open Graph) attendent le nom.
+73. **Tarifs** (idem) : pas de page de tarifs tant que la grille de prix n'est pas fixée (question ouverte 2) ; aucun prix n'est inventé.
 
 ## 3. Candidats
 
@@ -279,7 +284,7 @@ Règles retenues (décisions 14 et 15) :
 6. **Multi-devise** : en plus de la devise de l'entreprise (décision 22), quelles devises étrangères, et comment le taux est-il fixé ?
 7. **Signature électronique** : image ou cachet, certificat numérique, ou signature du client à distance ?
 8. **Fiscalité par pays** : pour chaque pays visé (décision 22), quelle source fait foi pour la TVA, les mentions obligatoires des factures et la numérotation ?
-9. **Site web** : objet (présentation de Kadenz, espace client, abonnement), langues, nom de domaine, contenus disponibles ?
+9. **Site web** : objet, langues, domaine et tarifs réglés le 2026-11-16 (décisions 70 à 73). Restent : contenus (textes, captures, identité de l'éditeur pour les mentions légales), réception des messages du formulaire de contact, prestataire du VPS.
 
 ## 9. Hors de ce document
 
