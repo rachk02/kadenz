@@ -76,6 +76,10 @@ export global PilotageApi {
     in property <string> achats-reste;
 
     // Renvoie le message d'une période illisible, vide sinon.
+    // Stock (docs/spec-stock.md, 3.6) : nombre de produits en stock négatif, vide
+    // quand aucun produit n'est suivi ; le clic ouvre l'état du stock filtré.
+    in property <string> stock-negatifs;
+    callback ouvrir-stock-negatif();
     callback filtrer(annee: int, du: string, au: string) -> string;
     callback ouvrir-facture(ligne: int) -> Retour;
 }
@@ -771,6 +775,30 @@ export component PageTableauDeBord inherits ScrollView {
                 valeur: PilotageApi.achats-reste;
                 couleur-valeur: Theme.erreur;
             }
+        }
+
+        if PilotageApi.stock-negatifs != "": Section {
+            text: @tr("Stock");
+        }
+
+        if PilotageApi.stock-negatifs != "": Rangee {
+            spacing: 12px;
+
+            Indicateur {
+                libelle: @tr("Produits en stock négatif (cliquer pour les voir)");
+                valeur: PilotageApi.stock-negatifs;
+                couleur-valeur: PilotageApi.stock-negatifs == "0" ? Theme.succes : Theme.erreur;
+                max-width: 320px;
+
+                TouchArea {
+                    mouse-cursor: pointer;
+                    clicked => {
+                        PilotageApi.ouvrir-stock-negatif();
+                    }
+                }
+            }
+
+            Rectangle { }
         }
     }
 

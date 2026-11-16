@@ -381,6 +381,117 @@ pub(crate) fn liste_relances(conn: &Connection) -> Result<(Vec<u8>, String), Str
     Ok((octets, format!("Relances-{}.pdf", jour.format("%Y-%m-%d"))))
 }
 
+/// État du stock tel qu'affiché (filtre et tri compris), au jour ou à une date
+/// passée (docs/spec-stock.md) ; les colonnes de valeur seulement avec le droit
+/// de la voir.
+pub(crate) fn etat_stock(
+    conn: &Connection,
+    lignes: &[kadenz_stockage::stock::LigneEtat],
+    au: Option<chrono::NaiveDate>,
+    valeur: bool,
+) -> Result<(Vec<u8>, String), String> {
+    let jour = au.unwrap_or_else(aujourd_hui);
+    let (entreprise, couleur, mep) = entete_du_moment(conn)?;
+    let mut colonnes = vec![
+        colonne("Référence", 80.0, false),
+        colonne("Désignation", 0.0, false),
+        colonne("Quantité", 64.0, true),
+    ];
+    if valeur {
+        colonnes.push(colonne("Coût moyen", 74.0, true));
+        colonnes.push(colonne("Valeur", 82.0, true));
+    }
+    let valeur_totale: Montant = lignes.iter().map(|l| l.stock.valeur).sum();
+    let liste = ListePdf {
+        entreprise,
+        couleur,
+        titre: "ÉTAT DU STOCK".into(),
+        date: date(aujourd_hui()),
+        criteres: vec![
+            format!("Stock au {}", date(jour)),
+            match lignes.len() {
+                1 => "1 produit suivi".to_string(),
+                n => format!("{n} produits suivis"),
+            },
+        ],
+        colonnes,
+        lignes: lignes
+            .iter()
+            .map(|l| {
+                let mut cellules = vec![
+                    l.reference.clone(),
+                    l.designation.clone(),
+                    crate::stock::texte_quantite(l.stock.quantite),
+                ];
+                if valeur {
+                    cellules.push(montant_en_texte(l.stock.dernier_cout));
+                    cellules.push(montant_en_texte(l.stock.valeur));
+                }
+                cellules
+            })
+            .collect(),
+        totaux: if valeur {
+            vec![total("Valeur du stock".into(), valeur_totale, true)]
+        } else {
+            Vec::new()
+        },
+        mise_en_page: mep,
+    };
+    let octets = kadenz_pdf::generer_liste(&liste, &Polices::embarquees())?;
+    Ok((
+        octets,
+        format!("Etat-du-stock-{}.pdf", jour.format("%Y-%m-%d")),
+    ))
+}
+
+/// Feuille de comptage d'un inventaire : produits suivis, quantité théorique
+/// (masquable pour un comptage à l'aveugle) et colonne vide à remplir à la main.
+pub(crate) fn feuille_comptage(
+    conn: &Connection,
+    lignes: &[crate::stock::LigneFeuille],
+    masquer_theorique: bool,
+) -> Result<(Vec<u8>, String), String> {
+    let jour = aujourd_hui();
+    let (entreprise, couleur, mep) = entete_du_moment(conn)?;
+    let mut colonnes = vec![
+        colonne("Référence", 80.0, false),
+        colonne("Désignation", 0.0, false),
+    ];
+    if !masquer_theorique {
+        colonnes.push(colonne("Théorique", 64.0, true));
+    }
+    colonnes.push(colonne("Quantité comptée", 96.0, false));
+    let liste = ListePdf {
+        entreprise,
+        couleur,
+        titre: "FEUILLE DE COMPTAGE".into(),
+        date: date(jour),
+        criteres: vec![
+            format!("Inventaire du {}", date(jour)),
+            "Compté par : ............................................".into(),
+        ],
+        colonnes,
+        lignes: lignes
+            .iter()
+            .map(|l| {
+                let mut cellules = vec![l.reference.clone(), l.designation.clone()];
+                if !masquer_theorique {
+                    cellules.push(crate::stock::texte_quantite(l.theorique));
+                }
+                cellules.push(String::new());
+                cellules
+            })
+            .collect(),
+        totaux: Vec::new(),
+        mise_en_page: mep,
+    };
+    let octets = kadenz_pdf::generer_liste(&liste, &Polices::embarquees())?;
+    Ok((
+        octets,
+        format!("Feuille-de-comptage-{}.pdf", jour.format("%Y-%m-%d")),
+    ))
+}
+
 /// Document d'exemple de l'aperçu des réglages d'impression, du type demandé :
 /// données de l'entreprise, textes et couleur du moment, lignes génériques.
 fn document_exemple(

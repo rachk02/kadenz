@@ -784,8 +784,12 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
                         api.set_changements_documents(api.get_changements_documents() + 1)
                     }
                     Entite::Utilisateur | Entite::Entreprise | Entite::Parametres => droits = true,
-                    // Écrans du stock : S2.
-                    Entite::Mouvement => {}
+                    // Stock (S2) : l'écran du stock, et les colonnes du stock
+                    // dans la liste des produits.
+                    Entite::Mouvement => {
+                        api.set_changements_stock(api.get_changements_stock() + 1);
+                        api.set_changements_produits(api.get_changements_produits() + 1);
+                    }
                 }
             }
             // Comptes, matrice des droits, entreprise ou réglages : la session

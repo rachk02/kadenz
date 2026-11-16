@@ -259,6 +259,8 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         if !autorise {
             return tr("Votre compte n'a pas le droit de consulter le tableau de bord.").into();
         }
+        // Stock : indépendant de la période (état du jour sur la copie).
+        crate::stock::indicateur(&f, &etat);
         let annees = match pilotage::annees(&etat.conn) {
             Ok(a) => annees_du_filtre(a, Local::now().year()),
             Err(erreur) => return texte_erreur(erreur).into(),

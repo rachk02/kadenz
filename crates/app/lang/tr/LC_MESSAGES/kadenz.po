@@ -4005,3 +4005,288 @@ msgstr "sunucu bu iş istasyonundan daha yeni: bu iş istasyonunu güncelleyin (
 
 msgid "le serveur est plus ancien que ce poste : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration"
 msgstr "sunucu bu iş istasyonundan daha eski: önce sunucuyu yönetim penceresinden güncelleyin"
+
+msgid "Stock"
+msgstr "Stok"
+
+msgid "Produits en stock négatif (cliquer pour les voir)"
+msgstr "Stoku eksi olan ürünler (görmek için tıklayın)"
+
+msgid "Stock négatif"
+msgstr "Eksi stok"
+
+msgid "Valeur du stock"
+msgstr "Stok değeri"
+
+msgid "Suivi en stock"
+msgstr "Stokta izlenir"
+
+msgid "Stock négatif seulement"
+msgstr "Yalnızca eksi stok"
+
+msgid "Valeur (FCFA)"
+msgstr "Değer (FCFA)"
+
+msgid "Coût moyen (FCFA)"
+msgstr "Ortalama maliyet (FCFA)"
+
+msgid "Ajuster le stock"
+msgstr "Stoku düzelt"
+
+msgid "Sélectionner un produit dans la liste pour voir son stock et ses mouvements."
+msgstr "Stokunu ve hareketlerini görmek için listeden bir ürün seçin."
+
+msgid "Quantité : {}   Coût moyen : {} FCFA"
+msgstr "Miktar: {}   Ortalama maliyet: {} FCFA"
+
+msgid "Quantité : {}"
+msgstr "Miktar: {}"
+
+msgid "Stock négatif : des livraisons ont dépassé la quantité connue. Corrigez-le par un ajustement ou un inventaire."
+msgstr "Eksi stok: teslimatlar bilinen miktarı aştı. Bir düzeltme veya sayımla düzeltin."
+
+msgid "{} ajustement(s) en attente d'envoi au serveur : la quantité affichée ne les compte pas encore."
+msgstr "Sunucuya gönderilmeyi bekleyen {} düzeltme var: gösterilen miktar bunları henüz içermiyor."
+
+msgid "Voir les mouvements"
+msgstr "Hareketleri gör"
+
+msgid "Ajustement"
+msgstr "Düzeltme"
+
+msgid "Quantité (+ entrée, - sortie)"
+msgstr "Miktar (+ giriş, - çıkış)"
+
+msgid "Coût unitaire d'entrée (FCFA)"
+msgstr "Giriş birim maliyeti (FCFA)"
+
+msgid "Motif (obligatoire)"
+msgstr "Gerekçe (zorunlu)"
+
+msgid "Enregistrer l'ajustement"
+msgstr "Düzeltmeyi kaydet"
+
+msgid "Toutes les natures"
+msgstr "Tüm türler"
+
+msgid "Réceptions"
+msgstr "Kabuller"
+
+msgid "Ajustements"
+msgstr "Düzeltmeler"
+
+msgid "Inventaires"
+msgstr "Sayımlar"
+
+msgid "Ouvrir le document"
+msgstr "Belgeyi aç"
+
+msgid "Motif"
+msgstr "Gerekçe"
+
+msgid "Valeur après"
+msgstr "Sonraki değer"
+
+msgid "Stock après"
+msgstr "Sonraki stok"
+
+msgid "Nature"
+msgstr "Tür"
+
+msgid "1. Imprimez la feuille de comptage et comptez les produits. 2. Saisissez les quantités comptées : elles restent sur ce poste tant que l'inventaire n'est pas validé. 3. Validez : le serveur enregistre un écart pour chaque produit dont la quantité diffère de la sienne."
+msgstr "1. Sayım föyünü yazdırın ve ürünleri sayın. 2. Sayılan miktarları girin: sayım onaylanana kadar bu iş istasyonunda kalırlar. 3. Onaylayın: sunucu, miktarı kendi miktarından farklı olan her ürün için bir fark kaydeder."
+
+msgid "Masquer la quantité théorique"
+msgstr "Beklenen miktarı gizle"
+
+msgid "Feuille de comptage (PDF)"
+msgstr "Sayım föyü (PDF)"
+
+msgid "Abandonner la saisie"
+msgstr "Girişten vazgeç"
+
+msgid "Abandonner l'inventaire en cours ? Les quantités saisies sur ce poste sont effacées ; rien n'a été envoyé au serveur."
+msgstr "Devam eden sayımdan vazgeçilsin mi? Bu iş istasyonunda girilen miktarlar silinir; sunucuya hiçbir şey gönderilmedi."
+
+msgid "Théorique"
+msgstr "Beklenen"
+
+msgid "Comptée"
+msgstr "Sayılan"
+
+msgid "Écart"
+msgstr "Fark"
+
+msgid "Coût unitaire"
+msgstr "Birim maliyet"
+
+msgid "FCFA"
+msgstr "FCFA"
+
+msgid "Motif de l'inventaire (obligatoire)"
+msgstr "Sayımın gerekçesi (zorunlu)"
+
+msgid "Valider l'inventaire"
+msgstr "Sayımı onayla"
+
+msgid "Valider l'inventaire ? Le serveur enregistre un mouvement d'écart pour chaque produit compté dont la quantité diffère de la sienne. Cette opération ne s'annule pas."
+msgstr "Sayım onaylansın mı? Sunucu, sayılan ve miktarı kendi miktarından farklı olan her ürün için bir fark hareketi kaydeder. Bu işlem geri alınamaz."
+
+msgid "Serveur injoignable : l'inventaire se valide quand le serveur répond, la saisie reste gardée sur ce poste."
+msgstr "Sunucuya ulaşılamıyor: sayım sunucu yanıt verdiğinde onaylanır; giriş bu iş istasyonunda saklanır."
+
+msgid "État du stock"
+msgstr "Stok durumu"
+
+msgid "Mouvements"
+msgstr "Hareketler"
+
+msgid "Inventaire"
+msgstr "Sayım"
+
+msgid "Mouvements de stock"
+msgstr "Stok hareketleri"
+
+msgid "Serveur injoignable : aucune synchronisation encore reçue."
+msgstr "Sunucuya ulaşılamıyor: henüz eşitleme alınmadı."
+
+msgid "Serveur injoignable : quantités au {}, dernière synchronisation."
+msgstr "Sunucuya ulaşılamıyor: miktarlar {} tarihli son eşitlemeye göre."
+
+msgid "brouillon"
+msgstr "taslak"
+
+msgid "Aucun produit suivi en stock"
+msgstr "Stokta izlenen ürün yok"
+
+msgid "1 produit suivi"
+msgstr "İzlenen 1 ürün"
+
+msgid "{} produits suivis"
+msgstr "İzlenen {} ürün"
+
+msgid "Aucun mouvement"
+msgstr "Hareket yok"
+
+msgid "1 mouvement"
+msgstr "1 hareket"
+
+msgid "{} mouvements"
+msgstr "{} hareket"
+
+msgid "Stock insuffisant d'après la dernière synchronisation ; la livraison reste possible, ces produits passeront en stock négatif :"
+msgstr "Son eşitlemeye göre stok yetersiz; teslimat yine de mümkün, bu ürünler eksi stoka düşecek:"
+
+msgid "{} : stock {}, livré {}"
+msgstr "{}: stok {}, teslim edilen {}"
+
+msgid "Date illisible (JJ/MM/AAAA) : état du jour affiché."
+msgstr "Okunamayan tarih (GG/AA/YYYY): bugünün durumu gösteriliyor."
+
+msgid "Date illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "Okunamayan tarih (GG/AA/YYYY): uygulanmadı."
+
+msgid "Tous les produits suivis"
+msgstr "İzlenen tüm ürünler"
+
+msgid "votre compte n'a pas le droit d'ajuster le stock"
+msgstr "hesabınızın stoku düzeltme yetkisi yok"
+
+msgid "quantité invalide : saisir une quantité non nulle, positive pour une entrée, négative pour une sortie (par exemple 5 ou -2,5)"
+msgstr "geçersiz miktar: sıfırdan farklı bir miktar girin, giriş için pozitif, çıkış için negatif (örneğin 5 veya -2,5)"
+
+msgid "le motif de l'ajustement est obligatoire"
+msgstr "düzeltmenin gerekçesi zorunludur"
+
+msgid "coût unitaire invalide : saisir un montant entier en FCFA, ou laisser vide pour le coût moyen"
+msgstr "geçersiz birim maliyet: FCFA cinsinden tam bir tutar girin veya ortalama maliyet için boş bırakın"
+
+msgid "votre compte n'a pas le droit de saisir un inventaire"
+msgstr "hesabınızın sayım girme yetkisi yok"
+
+msgid "le motif de l'inventaire est obligatoire"
+msgstr "sayımın gerekçesi zorunludur"
+
+msgid "aucune quantité comptée : rien à valider"
+msgstr "sayılan miktar yok: onaylanacak bir şey yok"
+
+msgid "inventaire non appliqué : le serveur ne répond pas, la saisie reste gardée sur ce poste"
+msgstr "sayım uygulanmadı: sunucu yanıt vermiyor, giriş bu iş istasyonunda saklanıyor"
+
+msgid "choisir un produit dans la liste"
+msgstr "listeden bir ürün seçin"
+
+msgid "ce mouvement n'a pas de document d'origine"
+msgstr "bu hareketin kaynak belgesi yok"
+
+msgid "Valeur du stock affiché : {} FCFA"
+msgstr "Gösterilen stokun değeri: {} FCFA"
+
+msgid "{} produit(s) compté(s) sur {}"
+msgstr "{} ürün sayıldı (toplam {})"
+
+msgid "En stock : {}   Coût moyen : {} FCFA   Valeur : {} FCFA"
+msgstr "Stokta: {}   Ortalama maliyet: {} FCFA   Değer: {} FCFA"
+
+msgid "En stock : {}"
+msgstr "Stokta: {}"
+
+msgid "Quantité comptée illisible : {} (saisir par exemple 12 ou 2,5)."
+msgstr "Okunamayan sayılan miktar: {} (örneğin 12 veya 2,5 girin)."
+
+msgid "Coût unitaire illisible : {} (montant entier en FCFA)."
+msgstr "Okunamayan birim maliyet: {} (FCFA cinsinden tam tutar)."
+
+msgid "Réception"
+msgstr "Kabul"
+
+msgid "Livraison"
+msgstr "Teslimat"
+
+msgid "ajustement mis en file d'envoi : il sera appliqué au retour du serveur"
+msgstr "düzeltme gönderim kuyruğuna alındı: sunucu geri geldiğinde uygulanacak"
+
+msgid "ajustement enregistré"
+msgstr "düzeltme kaydedildi"
+
+msgid "inventaire validé"
+msgstr "sayım onaylandı"
+
+msgid "Stock au"
+msgstr "Stok tarihi"
+
+msgid "Coût moyen"
+msgstr "Ortalama maliyet"
+
+msgid "Valeur"
+msgstr "Değer"
+
+msgid "Voir la valeur du stock"
+msgstr "Stok değerini görme"
+
+msgid "Ajuster le stock et saisir un inventaire"
+msgstr "Stoku düzeltme ve sayım girme"
+
+msgid "le produit « {} » n'est pas suivi en stock"
+msgstr "«{}» ürünü stokta izlenmiyor"
+
+msgid "le motif est obligatoire"
+msgstr "gerekçe zorunludur"
+
+msgid "la quantité de l'ajustement ne peut pas être nulle"
+msgstr "düzeltme miktarı sıfır olamaz"
+
+msgid "le coût unitaire ne peut pas être négatif"
+msgstr "birim maliyet negatif olamaz"
+
+msgid "la quantité comptée de « {} » ne peut pas être négative"
+msgstr "«{}» için sayılan miktar negatif olamaz"
+
+msgid "l'inventaire ne compte aucun produit"
+msgstr "sayım hiçbir ürün içermiyor"
+
+msgid "le produit « {} » est compté deux fois"
+msgstr "«{}» ürünü iki kez sayılmış"
+
+msgid "le stock de « {} » n'est pas nul : le ramener à zéro par un ajustement avant d'arrêter son suivi"
+msgstr "«{}» stoku sıfır değil: izlemeyi durdurmadan önce bir düzeltmeyle sıfıra indirin"

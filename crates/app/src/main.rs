@@ -20,6 +20,7 @@ mod relie;
 mod reprise;
 mod sauvegardes;
 mod serveur;
+mod stock;
 mod suspendues;
 mod traduction;
 mod utilisateurs;
@@ -171,6 +172,8 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     d.set_modifier_referentiel(ecrire && possede(Droit::ModifierReferentiel));
     d.set_gerer_parametres(possede(Droit::GererParametres));
     d.set_gerer_utilisateurs(possede(Droit::GererUtilisateurs));
+    d.set_ajuster_stock(possede(Droit::AjusterStock));
+    d.set_voir_valeur_stock(possede(Droit::VoirValeurStock));
 
     // Les libellés et les icônes du menu sont dans navigation.slint.
     // Les pages des modules que la licence n'active pas sont retirées du menu.
@@ -190,6 +193,11 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
             Page::Tiers,
             Page::Produits,
         ]);
+        // Stock (docs/spec-stock.md) : calculé par le serveur seulement, donc
+        // montré sur un poste relié.
+        if serveur::inscrit(&etat.conn) {
+            menu.push(Page::Stock);
+        }
         menu.retain(|p| licence::page_active(&etat.conn, *p));
     }
     // Les Paramètres sont ouverts à tous : Mon compte, la navigation et À propos
@@ -215,7 +223,7 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
         Page::SuiviFournisseurs,
         Page::Relances,
     ]));
-    m.set_referentiels(groupe(&[Page::Tiers, Page::Produits]));
+    m.set_referentiels(groupe(&[Page::Tiers, Page::Produits, Page::Stock]));
 
     // La page en cours reste affichée si le menu la contient encore ; sinon les
     // Factures (socle), ou à défaut la première page du menu.
@@ -416,6 +424,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     });
 
     referentiels::brancher(fenetre, &etat);
+    stock::brancher(fenetre, &etat);
     administration::brancher(fenetre, &etat);
     utilisateurs::brancher(fenetre, &etat);
     import_ecran::brancher(fenetre, &etat);

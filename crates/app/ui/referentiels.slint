@@ -29,6 +29,11 @@ export struct FicheProduitUi {
     prix: string,
     // Rang dans « Vente, Achat, Vente et achat ».
     sens: int,
+    // Stock (docs/spec-stock.md) : case de la fiche, puis quantité, coût moyen et
+    // valeur du produit suivi, mis en phrase par l'application selon les droits.
+    suivi-stock: bool,
+    stock: string,
+    stock-negatif: bool,
     actif: bool,
     existe: bool,
 }
@@ -62,8 +67,9 @@ export global ProduitsApi {
     callback ouvrir();
     // Comme TiersApi.actualiser.
     callback actualiser() -> bool;
-    // Sens : 0 tous, 1 vente, 2 achat, 3 les deux seulement.
-    callback filtrer(texte: string, sens: int, inactifs: bool);
+    // Sens : 0 tous, 1 vente, 2 achat, 3 les deux seulement ; négatifs : produits
+    // suivis en stock négatif seulement.
+    callback filtrer(texte: string, sens: int, inactifs: bool, negatifs: bool);
     callback trier(colonne: int, croissant: bool);
     callback selectionner(ligne: int) -> FicheProduitUi;
     callback nouvelle() -> FicheProduitUi;
@@ -407,6 +413,7 @@ export component PageProduits inherits VerticalLayout {
         reference.valeur = f.reference;
         prix.valeur = f.prix;
         sens.current-index = f.sens;
+        suivi.checked = f.suivi-stock;
     }
 
     function saisie() -> FicheProduitUi {
@@ -415,13 +422,16 @@ export component PageProduits inherits VerticalLayout {
             reference: reference.valeur,
             prix: prix.valeur,
             sens: sens.current-index,
+            suivi-stock: suivi.checked,
+            stock: root.fiche.stock,
+            stock-negatif: root.fiche.stock-negatif,
             actif: root.fiche.actif,
             existe: root.fiche.existe,
         }
     }
 
     function filtrer() {
-        ProduitsApi.filtrer(recherche.text, filtre-sens.current-index, inactifs.checked);
+        ProduitsApi.filtrer(recherche.text, filtre-sens.current-index, inactifs.checked, negatifs.checked);
     }
 
     init => {
@@ -469,6 +479,13 @@ export component PageProduits inherits VerticalLayout {
             }
         }
 
+        negatifs := CheckBox {
+            text: @tr("Stock négatif");
+            toggled => {
+                root.filtrer();
+            }
+        }
+
         Bouton {
             text: @tr("Exporter en Excel");
             clicked => {
@@ -501,8 +518,12 @@ export component PageProduits inherits VerticalLayout {
 
             TableauDonnees {
                 // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
-                columns: Theme.rtl ? [
+                // Colonnes du stock : quantité, puis valeur avec le droit de la voir ;
+                // vides pour un produit non suivi.
+                columns: Droits.voir-valeur-stock ? (Theme.rtl ? [
                     { title: @tr("État"), min-width: 90px, horizontal-stretch: 1 },
+                    { title: @tr("Valeur du stock"), min-width: 110px, horizontal-stretch: 1 },
+                    { title: @tr("Stock"), min-width: 80px, horizontal-stretch: 1 },
                     { title: @tr("Sens"), min-width: 120px, horizontal-stretch: 1 },
                     { title: @tr("Prix (FCFA)"), min-width: 110px, horizontal-stretch: 1 },
                     { title: @tr("Désignation"), min-width: 180px, horizontal-stretch: 3 },
@@ -512,19 +533,37 @@ export component PageProduits inherits VerticalLayout {
                     { title: @tr("Désignation"), min-width: 180px, horizontal-stretch: 3 },
                     { title: @tr("Prix (FCFA)"), min-width: 110px, horizontal-stretch: 1 },
                     { title: @tr("Sens"), min-width: 120px, horizontal-stretch: 1 },
+                    { title: @tr("Stock"), min-width: 80px, horizontal-stretch: 1 },
+                    { title: @tr("Valeur du stock"), min-width: 110px, horizontal-stretch: 1 },
                     { title: @tr("État"), min-width: 90px, horizontal-stretch: 1 },
-                ];
+                ]) : (Theme.rtl ? [
+                    { title: @tr("État"), min-width: 90px, horizontal-stretch: 1 },
+                    { title: @tr("Stock"), min-width: 80px, horizontal-stretch: 1 },
+                    { title: @tr("Sens"), min-width: 120px, horizontal-stretch: 1 },
+                    { title: @tr("Prix (FCFA)"), min-width: 110px, horizontal-stretch: 1 },
+                    { title: @tr("Désignation"), min-width: 180px, horizontal-stretch: 3 },
+                    { title: @tr("Référence"), min-width: 110px, horizontal-stretch: 1 },
+                ] : [
+                    { title: @tr("Référence"), min-width: 110px, horizontal-stretch: 1 },
+                    { title: @tr("Désignation"), min-width: 180px, horizontal-stretch: 3 },
+                    { title: @tr("Prix (FCFA)"), min-width: 110px, horizontal-stretch: 1 },
+                    { title: @tr("Sens"), min-width: 120px, horizontal-stretch: 1 },
+                    { title: @tr("Stock"), min-width: 80px, horizontal-stretch: 1 },
+                    { title: @tr("État"), min-width: 90px, horizontal-stretch: 1 },
+                ]);
                 rows: ProduitsApi.lignes;
                 current-row <=> ProduitsApi.ligne-courante;
                 current-row-changed(ligne) => {
                     root.retour = { };
                     root.charger(ProduitsApi.selectionner(ligne));
                 }
+                // Rang dans l'ordre de gauche à droite (sens de lecture latin) ;
+                // l'application le rapporte aux colonnes selon le droit de voir la valeur.
                 sort-ascending(colonne) => {
-                    ProduitsApi.trier(Theme.rtl ? 4 - colonne : colonne, true);
+                    ProduitsApi.trier(Theme.rtl ? (Droits.voir-valeur-stock ? 6 : 5) - colonne : colonne, true);
                 }
                 sort-descending(colonne) => {
-                    ProduitsApi.trier(Theme.rtl ? 4 - colonne : colonne, false);
+                    ProduitsApi.trier(Theme.rtl ? (Droits.voir-valeur-stock ? 6 : 5) - colonne : colonne, false);
                 }
             }
 
@@ -579,6 +618,20 @@ export component PageProduits inherits VerticalLayout {
                     model: [@tr("Vente"), @tr("Achat"), @tr("Vente et achat")];
                     enabled: root.modifiable;
                 }
+            }
+
+            // Stock (docs/spec-stock.md, 3.1) : un service reste décoché ; décocher un
+            // produit dont la quantité n'est pas nulle est refusé à l'enregistrement.
+            suivi := CheckBox {
+                text: @tr("Suivi en stock");
+                enabled: root.modifiable;
+            }
+
+            if root.fiche.suivi-stock && root.fiche.stock != "": Text {
+                horizontal-alignment: Theme.debut;
+                text: root.fiche.stock;
+                color: root.fiche.stock-negatif ? Theme.erreur : Theme.texte-secondaire;
+                wrap: word-wrap;
             }
 
             ActionsFiche {

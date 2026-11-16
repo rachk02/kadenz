@@ -16,6 +16,7 @@ use kadenz_stockage::entreprise;
 use kadenz_stockage::licence;
 use kadenz_stockage::produits::Produit;
 use kadenz_stockage::reglements::{DocumentDu, FiltreRegistre, Registre, Sens, TotalSens};
+use kadenz_stockage::stock::{LigneEtat, Mouvement};
 use kadenz_stockage::tiers::Tiers;
 
 use crate::referentiels::texte_erreur;
@@ -207,6 +208,115 @@ pub(crate) fn tiers(conn: &Connection, lignes: &[Tiers]) -> Export {
                         f.regime_imposition.clone().into(),
                         tr(if t.actif { "Oui" } else { "Non" }).into(),
                     ]
+                })
+                .collect(),
+            totaux: Vec::new(),
+        },
+        &nom_sur(&titre),
+    )
+}
+
+/// État du stock tel qu'affiché, au jour ou à une date passée
+/// (docs/spec-stock.md) ; valeurs seulement avec le droit de les voir.
+pub(crate) fn etat_stock(
+    conn: &Connection,
+    lignes: &[LigneEtat],
+    au: Option<chrono::NaiveDate>,
+    valeur: bool,
+) -> Export {
+    let titre = tr("État du stock");
+    let mut entete = entete_registre(conn)?;
+    entete.push(info("Stock au", Some(au.unwrap_or_else(aujourd_hui))));
+    let mut colonnes = vec![
+        col("Référence", 16.0),
+        col("Désignation", 40.0),
+        col("Quantité", 12.0),
+    ];
+    if valeur {
+        colonnes.push(col("Coût moyen", 14.0));
+        colonnes.push(col("Valeur", 16.0));
+    }
+    exporter(
+        Feuille {
+            nom: titre.clone(),
+            titre: titre.clone(),
+            entete,
+            colonnes,
+            lignes: lignes
+                .iter()
+                .map(|l| {
+                    let mut cellules = vec![
+                        l.reference.clone().into(),
+                        l.designation.clone().into(),
+                        Valeur::Quantite(l.stock.quantite),
+                    ];
+                    if valeur {
+                        cellules.push(Valeur::Montant(l.stock.dernier_cout));
+                        cellules.push(Valeur::Montant(l.stock.valeur));
+                    }
+                    cellules
+                })
+                .collect(),
+            totaux: if valeur {
+                vec![info(
+                    "Valeur du stock",
+                    Valeur::Montant(lignes.iter().map(|l| l.stock.valeur).sum()),
+                )]
+            } else {
+                Vec::new()
+            },
+        },
+        &nom_sur(&titre),
+    )
+}
+
+/// Mouvements de stock affichés (filtres compris).
+pub(crate) fn mouvements_stock(conn: &Connection, lignes: &[Mouvement], valeur: bool) -> Export {
+    let titre = tr("Mouvements de stock");
+    let mut colonnes = vec![
+        col("Date", 12.0),
+        col("Nature", 14.0),
+        col("Quantité", 12.0),
+    ];
+    if valeur {
+        colonnes.push(col("Valeur", 14.0));
+    }
+    colonnes.push(col("Stock après", 12.0));
+    if valeur {
+        colonnes.push(col("Valeur après", 14.0));
+    }
+    colonnes.extend([
+        col("Document", 20.0),
+        col("Motif", 30.0),
+        col("Compte", 16.0),
+    ]);
+    exporter(
+        Feuille {
+            nom: titre.clone(),
+            titre: titre.clone(),
+            entete: entete_registre(conn)?,
+            colonnes,
+            lignes: lignes
+                .iter()
+                .map(|m| {
+                    let mut cellules = vec![
+                        Valeur::from(Some(m.date)),
+                        tr(crate::stock::libelle_nature(m.nature)).into(),
+                        Valeur::Quantite(m.quantite),
+                    ];
+                    if valeur {
+                        cellules.push(Valeur::Montant(m.valeur));
+                    }
+                    cellules.push(Valeur::Quantite(m.quantite_apres));
+                    if valeur {
+                        cellules.push(Valeur::Montant(m.valeur_apres));
+                    }
+                    cellules.extend([
+                        crate::stock::texte_document(m).into(),
+                        m.motif.clone().into(),
+                        m.compte.clone().into(),
+                    ]);
+                    cellules
                 })
                 .collect(),
             totaux: Vec::new(),

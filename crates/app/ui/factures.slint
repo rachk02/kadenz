@@ -239,6 +239,9 @@ export global FacturesApi {
     callback creer-bordereau() -> Retour;
     callback enregistrer-livraison(visa-client: string, visa-fournisseur: string, date-livraison: string, date-reception: string, observations: string) -> Retour;
     callback confirmer-livraison(visa-client: string, visa-fournisseur: string, date-livraison: string, date-reception: string) -> Retour;
+    // Stock (docs/spec-stock.md, 3.6) : produits que la confirmation rendrait
+    // négatifs d'après la copie du poste, en phrase ; vide sinon. Ne bloque rien.
+    callback avertissement-stock() -> string;
     callback annuler-document() -> Retour;
     callback supprimer() -> Retour;
     callback enregistrer-administratif(mode: int, observations: string) -> Retour;
@@ -533,7 +536,7 @@ component Fiche inherits ScrollView {
     changed confirmation => {
         if (self.confirmation != 0) {
             Confirmation.demander(
-                self.confirmation == 1 ? FacturesApi.textes.confirmer-validation : (self.confirmation == 2 ? FacturesApi.textes.confirmer-annulation : (self.confirmation == 4 ? @tr("Corriger ce document ? Il est annulé, son numéro conservé, et une copie modifiable est créée en brouillon.") : self.confirmation == 5 ? @tr("Confirmer la livraison ? Le statut passe en livraison partielle ou complète selon les quantités livrées ; le bordereau ne pourra plus être annulé.") : @tr("Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit."))),
+                self.confirmation == 1 ? FacturesApi.textes.confirmer-validation : (self.confirmation == 2 ? FacturesApi.textes.confirmer-annulation : (self.confirmation == 4 ? @tr("Corriger ce document ? Il est annulé, son numéro conservé, et une copie modifiable est créée en brouillon.") : self.confirmation == 5 ? @tr("Confirmer la livraison ? Le statut passe en livraison partielle ou complète selon les quantités livrées ; le bordereau ne pourra plus être annulé.") + FacturesApi.avertissement-stock() :@tr("Supprimer ce brouillon ? Il disparaît du registre ; la suppression reste tracée dans le journal d'audit."))),
                 self.confirmation == 1 ? @tr("Confirmer la validation") : (self.confirmation == 2 ? @tr("Confirmer l'annulation") : (self.confirmation == 4 ? @tr("Confirmer la correction") : self.confirmation == 5 ? @tr("Confirmer la livraison") : @tr("Confirmer la suppression"))),
                 self.confirmation == 2 || self.confirmation == 3 || self.confirmation == 4);
         }

@@ -1,0 +1,725 @@
+// Gestion de stock (docs/spec-stock.md, jalon S2) : état du stock à une date,
+// mouvements d'un produit, inventaire en deux temps (feuille de comptage, puis
+// saisie gardée sur le poste jusqu'à la validation). Le stock est calculé par le
+// serveur ; ce poste montre celui de sa copie, à la dernière synchronisation.
+// Sans le droit « Voir la valeur du stock », les colonnes de valeur sont absentes.
+
+import { CheckBox, LineEdit, ListView, TabWidget } from "std-widgets.slint";
+import { ListeDeroulante } from "liste-deroulante.slint";
+import { TableauDonnees } from "tableau.slint";
+import { Alerte, Bouton, Champ, Confirmation, Droits, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { ConnexionApi } from "etat-connexion.slint";
+
+// Produit choisi dans l'état du stock, pour l'ajustement.
+export struct ProduitStockUi {
+    libelle: string,
+    quantite: string,
+    cout-moyen: string,
+    // Coût unitaire proposé pour une entrée (coût moyen du moment).
+    cout-propose: string,
+    negatif: bool,
+    // Ajustements partis en file d'envoi, pas encore appliqués par le serveur.
+    en-attente: int,
+    existe: bool,
+}
+
+// Ligne de l'inventaire en cours ; `comptee` vide : produit pas encore compté.
+export struct LigneInventaireUi {
+    reference: string,
+    designation: string,
+    theorique: string,
+    comptee: string,
+    ecart: string,
+    // Coût unitaire, demandé quand la quantité part de zéro (inventaire d'ouverture).
+    cout: string,
+    demande-cout: bool,
+}
+
+export global StockApi {
+    // Demande du tableau de bord : ouvrir l'état sur les produits en stock négatif.
+    in-out property <bool> demande-negatifs;
+    // Sur une copie de poste hors connexion : « Quantités au JJ/MM/AAAA HH:MM », sinon vide.
+    in property <string> synchro;
+
+    // État du stock.
+    in property <[[StandardListViewItem]]> etat-lignes;
+    in property <string> etat-resume;
+    in property <string> etat-total;
+    in-out property <int> etat-ligne-courante: -1;
+    callback ouvrir();
+    // Après un changement venu du serveur : filtre, tri et sélection gardés.
+    callback actualiser();
+    // Date vide : aujourd'hui. Rend le message d'erreur de la date, vide sinon.
+    callback filtrer-etat(texte: string, negatifs: bool, au: string) -> string;
+    callback trier-etat(colonne: int, croissant: bool);
+    callback selectionner(ligne: int) -> ProduitStockUi;
+    callback exporter-etat-pdf() -> Retour;
+    callback exporter-etat-excel() -> Retour;
+    // Quantité signée, coût unitaire (entrée seulement), motif obligatoire.
+    callback ajuster(quantite: string, cout: string, motif: string) -> Retour;
+
+    // Mouvements.
+    in property <[string]> produits;
+    in-out property <int> produit-mouvements: 0;
+    in property <[[StandardListViewItem]]> mouvements-lignes;
+    in property <string> mouvements-resume;
+    in-out property <int> mouvement-courant: -1;
+    in property <bool> mouvement-a-document;
+    // Nature : 0 toutes, 1 réceptions, 2 livraisons, 3 ajustements, 4 inventaires.
+    callback filtrer-mouvements(produit: int, du: string, au: string, nature: int) -> string;
+    // Produit choisi dans l'état : rang dans `produits`.
+    callback produit-de-la-selection() -> int;
+    callback choisir-mouvement(ligne: int);
+    callback ouvrir-document() -> Retour;
+    callback exporter-mouvements() -> Retour;
+
+    // Inventaire.
+    in property <[LigneInventaireUi]> inventaire;
+    in property <string> inventaire-resume;
+    in property <bool> inventaire-en-cours;
+    callback ouvrir-inventaire();
+    callback feuille-comptage(masquer-theorique: bool) -> Retour;
+    callback compter(ligne: int, quantite: string) -> string;
+    callback noter-cout(ligne: int, cout: string) -> string;
+    callback valider-inventaire(motif: string) -> Retour;
+    callback abandonner-inventaire();
+}
+
+// Mention de la dernière synchronisation, hors connexion seulement.
+component MentionSynchro inherits Text {
+    horizontal-alignment: Theme.debut;
+    text: StockApi.synchro;
+    visible: StockApi.synchro != "";
+    height: self.visible ? self.preferred-height : 0px;
+    font-size: 12px;
+    color: Theme.attente;
+}
+
+component OngletEtat inherits VerticalLayout {
+    callback voir-mouvements();
+
+    property <ProduitStockUi> produit;
+    property <Retour> retour;
+    // Saisie de l'ajustement (champs dans un bloc conditionnel, liés ici).
+    property <string> saisie-quantite;
+    property <string> saisie-cout;
+    property <string> saisie-motif;
+    property <string> erreur-date;
+    property <bool> valeur: Droits.voir-valeur-stock;
+    // Ajustement : seulement sur l'état du jour (pas sur un état passé).
+    property <bool> du-jour: au.text == "";
+
+    function filtrer() {
+        root.erreur-date = StockApi.filtrer-etat(recherche.text, negatifs.checked, au.text);
+    }
+
+    function charger(p: ProduitStockUi) {
+        root.produit = p;
+        root.saisie-quantite = "";
+        root.saisie-cout = p.cout-propose;
+        root.saisie-motif = "";
+    }
+
+    init => {
+        // Ouvert depuis l'indicateur du tableau de bord : produits négatifs seulement.
+        if (StockApi.demande-negatifs) {
+            negatifs.checked = true;
+            StockApi.demande-negatifs = false;
+        }
+        root.filtrer();
+    }
+
+    padding-top: 12px;
+    spacing: 10px;
+
+    Rangee {
+        spacing: 8px;
+
+        recherche := LineEdit {
+            placeholder-text: @tr("Rechercher : désignation ou référence");
+            edited => {
+                root.filtrer();
+            }
+        }
+
+        negatifs := CheckBox {
+            text: @tr("Stock négatif seulement");
+            toggled => {
+                root.filtrer();
+            }
+        }
+
+        au := LineEdit {
+            width: 150px;
+            placeholder-text: @tr("Au JJ/MM/AAAA");
+            edited => {
+                root.filtrer();
+            }
+        }
+
+        Bouton {
+            text: @tr("Exporter en PDF");
+            clicked => {
+                root.retour = Alerte.relayer(StockApi.exporter-etat-pdf());
+            }
+        }
+
+        Bouton {
+            text: @tr("Exporter en Excel");
+            clicked => {
+                root.retour = Alerte.relayer(StockApi.exporter-etat-excel());
+            }
+        }
+    }
+
+    if root.erreur-date != "": Text {
+        horizontal-alignment: Theme.debut;
+        text: root.erreur-date;
+        font-size: 12px;
+        color: Theme.erreur;
+    }
+
+    MentionSynchro { }
+
+    Rangee {
+        remplit: true;
+        spacing: 16px;
+
+        VerticalLayout {
+            spacing: 4px;
+
+            TableauDonnees {
+                // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
+                columns: root.valeur ? (Theme.rtl ? [
+                    { title: @tr("Valeur (FCFA)"), min-width: 110px, horizontal-stretch: 1 },
+                    { title: @tr("Coût moyen (FCFA)"), min-width: 110px, horizontal-stretch: 1 },
+                    { title: @tr("Quantité"), min-width: 90px, horizontal-stretch: 1 },
+                    { title: @tr("Désignation"), min-width: 180px, horizontal-stretch: 3 },
+                    { title: @tr("Référence"), min-width: 110px, horizontal-stretch: 1 },
+                ] : [
+                    { title: @tr("Référence"), min-width: 110px, horizontal-stretch: 1 },
+                    { title: @tr("Désignation"), min-width: 180px, horizontal-stretch: 3 },
+                    { title: @tr("Quantité"), min-width: 90px, horizontal-stretch: 1 },
+                    { title: @tr("Coût moyen (FCFA)"), min-width: 110px, horizontal-stretch: 1 },
+                    { title: @tr("Valeur (FCFA)"), min-width: 110px, horizontal-stretch: 1 },
+                ]) : (Theme.rtl ? [
+                    { title: @tr("Quantité"), min-width: 90px, horizontal-stretch: 1 },
+                    { title: @tr("Désignation"), min-width: 180px, horizontal-stretch: 3 },
+                    { title: @tr("Référence"), min-width: 110px, horizontal-stretch: 1 },
+                ] : [
+                    { title: @tr("Référence"), min-width: 110px, horizontal-stretch: 1 },
+                    { title: @tr("Désignation"), min-width: 180px, horizontal-stretch: 3 },
+                    { title: @tr("Quantité"), min-width: 90px, horizontal-stretch: 1 },
+                ]);
+                rows: StockApi.etat-lignes;
+                current-row <=> StockApi.etat-ligne-courante;
+                current-row-changed(ligne) => {
+                    root.retour = { };
+                    root.charger(StockApi.selectionner(ligne));
+                }
+                sort-ascending(colonne) => {
+                    StockApi.trier-etat(Theme.rtl ? (root.valeur ? 4 : 2) - colonne : colonne, true);
+                }
+                sort-descending(colonne) => {
+                    StockApi.trier-etat(Theme.rtl ? (root.valeur ? 4 : 2) - colonne : colonne, false);
+                }
+            }
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: StockApi.etat-resume;
+                font-size: 12px;
+                color: Theme.texte-secondaire;
+            }
+
+            if root.valeur && StockApi.etat-total != "": Text {
+                horizontal-alignment: Theme.debut;
+                text: StockApi.etat-total;
+                font-weight: 700;
+                color: Theme.texte;
+            }
+        }
+
+        VerticalLayout {
+            width: 340px;
+            spacing: 10px;
+
+            Section {
+                text: root.produit.existe ? root.produit.libelle : @tr("Ajuster le stock");
+            }
+
+            if !root.produit.existe: Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Sélectionner un produit dans la liste pour voir son stock et ses mouvements.");
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+
+            if root.produit.existe: Text {
+                horizontal-alignment: Theme.debut;
+                text: root.valeur ? @tr("Quantité : {}   Coût moyen : {} FCFA", root.produit.quantite, root.produit.cout-moyen) : @tr("Quantité : {}", root.produit.quantite);
+                color: root.produit.negatif ? Theme.erreur : Theme.texte;
+                wrap: word-wrap;
+            }
+
+            if root.produit.existe && root.produit.negatif: Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Stock négatif : des livraisons ont dépassé la quantité connue. Corrigez-le par un ajustement ou un inventaire.");
+                color: Theme.erreur;
+                wrap: word-wrap;
+            }
+
+            if root.produit.existe && root.produit.en-attente > 0: Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("{} ajustement(s) en attente d'envoi au serveur : la quantité affichée ne les compte pas encore.", root.produit.en-attente);
+                color: Theme.attente;
+                wrap: word-wrap;
+            }
+
+            if root.produit.existe: Bouton {
+                text: @tr("Voir les mouvements");
+                clicked => {
+                    root.voir-mouvements();
+                }
+            }
+
+            if root.produit.existe && Droits.ajuster-stock && root.du-jour: VerticalLayout {
+                spacing: 10px;
+
+                Section {
+                    text: @tr("Ajustement");
+                }
+
+                GridLayout {
+                    spacing: 10px;
+
+                    Row {
+                        Champ {
+                            libelle: @tr("Quantité (+ entrée, - sortie)");
+                            valeur <=> root.saisie-quantite;
+                        }
+
+                        Champ {
+                            valeur <=> root.saisie-cout;
+                            libelle: @tr("Coût unitaire d'entrée (FCFA)");
+                            // Sans le droit de voir la valeur, l'entrée prend le coût moyen.
+                            visible: root.valeur;
+                        }
+                    }
+                }
+
+                Champ {
+                    libelle: @tr("Motif (obligatoire)");
+                    valeur <=> root.saisie-motif;
+                }
+
+                Bouton {
+                    text: @tr("Enregistrer l'ajustement");
+                    primary: true;
+                    enabled: Ecriture.permise;
+                    clicked => {
+                        root.retour = Alerte.relayer(StockApi.ajuster(root.saisie-quantite, root.saisie-cout, root.saisie-motif));
+                        if (root.retour.ok) {
+                            root.charger(StockApi.selectionner(StockApi.etat-ligne-courante));
+                        }
+                    }
+                }
+            }
+
+            MessageRetour {
+                retour: root.retour;
+            }
+
+            Rectangle { }
+        }
+    }
+}
+
+component OngletMouvements inherits VerticalLayout {
+    property <Retour> retour;
+    property <string> erreur;
+    property <bool> valeur: Droits.voir-valeur-stock;
+
+    public function filtrer() {
+        root.erreur = StockApi.filtrer-mouvements(StockApi.produit-mouvements, du.text, au.text, nature.current-index);
+    }
+
+    init => {
+        root.filtrer();
+    }
+
+    padding-top: 12px;
+    spacing: 10px;
+
+    Rangee {
+        spacing: 8px;
+
+        ListeDeroulante {
+            width: 280px;
+            model: StockApi.produits;
+            current-index <=> StockApi.produit-mouvements;
+            selected => {
+                root.filtrer();
+            }
+        }
+
+        du := LineEdit {
+            width: 130px;
+            placeholder-text: @tr("Du JJ/MM/AAAA");
+            edited => {
+                root.filtrer();
+            }
+        }
+
+        au := LineEdit {
+            width: 130px;
+            placeholder-text: @tr("Au JJ/MM/AAAA");
+            edited => {
+                root.filtrer();
+            }
+        }
+
+        nature := ListeDeroulante {
+            width: 170px;
+            model: [@tr("Toutes les natures"), @tr("Réceptions"), @tr("Livraisons"), @tr("Ajustements"), @tr("Inventaires")];
+            selected => {
+                root.filtrer();
+            }
+        }
+
+        Bouton {
+            text: @tr("Exporter en Excel");
+            clicked => {
+                root.retour = Alerte.relayer(StockApi.exporter-mouvements());
+            }
+        }
+
+        Bouton {
+            text: @tr("Ouvrir le document");
+            enabled: StockApi.mouvement-a-document;
+            clicked => {
+                root.retour = StockApi.ouvrir-document();
+            }
+        }
+    }
+
+    if root.erreur != "": Text {
+        horizontal-alignment: Theme.debut;
+        text: root.erreur;
+        font-size: 12px;
+        color: Theme.erreur;
+    }
+
+    MentionSynchro { }
+
+    TableauDonnees {
+        vertical-stretch: 1;
+        columns: root.valeur ? (Theme.rtl ? [
+            { title: @tr("Compte"), min-width: 90px, horizontal-stretch: 1 },
+            { title: @tr("Motif"), min-width: 140px, horizontal-stretch: 2 },
+            { title: @tr("Document"), min-width: 120px, horizontal-stretch: 1 },
+            { title: @tr("Valeur après"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Stock après"), min-width: 90px, horizontal-stretch: 1 },
+            { title: @tr("Valeur (FCFA)"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Quantité"), min-width: 80px, horizontal-stretch: 1 },
+            { title: @tr("Nature"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Date"), min-width: 90px, horizontal-stretch: 1 },
+        ] : [
+            { title: @tr("Date"), min-width: 90px, horizontal-stretch: 1 },
+            { title: @tr("Nature"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Quantité"), min-width: 80px, horizontal-stretch: 1 },
+            { title: @tr("Valeur (FCFA)"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Stock après"), min-width: 90px, horizontal-stretch: 1 },
+            { title: @tr("Valeur après"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Document"), min-width: 120px, horizontal-stretch: 1 },
+            { title: @tr("Motif"), min-width: 140px, horizontal-stretch: 2 },
+            { title: @tr("Compte"), min-width: 90px, horizontal-stretch: 1 },
+        ]) : (Theme.rtl ? [
+            { title: @tr("Compte"), min-width: 90px, horizontal-stretch: 1 },
+            { title: @tr("Motif"), min-width: 140px, horizontal-stretch: 2 },
+            { title: @tr("Document"), min-width: 120px, horizontal-stretch: 1 },
+            { title: @tr("Stock après"), min-width: 90px, horizontal-stretch: 1 },
+            { title: @tr("Quantité"), min-width: 80px, horizontal-stretch: 1 },
+            { title: @tr("Nature"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Date"), min-width: 90px, horizontal-stretch: 1 },
+        ] : [
+            { title: @tr("Date"), min-width: 90px, horizontal-stretch: 1 },
+            { title: @tr("Nature"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Quantité"), min-width: 80px, horizontal-stretch: 1 },
+            { title: @tr("Stock après"), min-width: 90px, horizontal-stretch: 1 },
+            { title: @tr("Document"), min-width: 120px, horizontal-stretch: 1 },
+            { title: @tr("Motif"), min-width: 140px, horizontal-stretch: 2 },
+            { title: @tr("Compte"), min-width: 90px, horizontal-stretch: 1 },
+        ]);
+        rows: StockApi.mouvements-lignes;
+        current-row <=> StockApi.mouvement-courant;
+        current-row-changed(ligne) => {
+            root.retour = { };
+            StockApi.choisir-mouvement(ligne);
+        }
+    }
+
+    Text {
+        horizontal-alignment: Theme.debut;
+        text: StockApi.mouvements-resume;
+        font-size: 12px;
+        color: Theme.texte-secondaire;
+    }
+
+    MessageRetour {
+        retour: root.retour;
+    }
+}
+
+// Cellule d'en-tête ou de texte d'une ligne d'inventaire.
+component CelluleInventaire inherits Text {
+    vertical-alignment: center;
+    horizontal-alignment: Theme.debut;
+    overflow: elide;
+}
+
+component OngletInventaire inherits VerticalLayout {
+    property <Retour> retour;
+    property <string> saisie-motif;
+    // Validation demandée, en attente de la fenêtre de confirmation commune.
+    property <bool> confirmer-validation;
+    property <bool> confirmer-abandon;
+    property <int> reponses: Confirmation.reponses;
+    changed reponses => {
+        if (self.confirmer-validation) {
+            self.confirmer-validation = false;
+            if (Confirmation.accepte) {
+                root.retour = Alerte.relayer(StockApi.valider-inventaire(root.saisie-motif));
+                if (root.retour.ok) {
+                    root.saisie-motif = "";
+                }
+            }
+        } else if (self.confirmer-abandon) {
+            self.confirmer-abandon = false;
+            if (Confirmation.accepte) {
+                StockApi.abandonner-inventaire();
+                root.retour = { };
+            }
+        }
+    }
+    property <length> col-ref: 110px;
+    property <length> col-nombre: 110px;
+
+    init => {
+        StockApi.ouvrir-inventaire();
+    }
+
+    padding-top: 12px;
+    spacing: 10px;
+
+    Text {
+        horizontal-alignment: Theme.debut;
+        text: @tr("1. Imprimez la feuille de comptage et comptez les produits. 2. Saisissez les quantités comptées : elles restent sur ce poste tant que l'inventaire n'est pas validé. 3. Validez : le serveur enregistre un écart pour chaque produit dont la quantité diffère de la sienne.");
+        color: Theme.texte-secondaire;
+        wrap: word-wrap;
+    }
+
+    Rangee {
+        spacing: 8px;
+
+        masquer := CheckBox {
+            text: @tr("Masquer la quantité théorique");
+        }
+
+        Bouton {
+            text: @tr("Feuille de comptage (PDF)");
+            clicked => {
+                root.retour = Alerte.relayer(StockApi.feuille-comptage(masquer.checked));
+            }
+        }
+
+        if StockApi.inventaire-en-cours: Bouton {
+            text: @tr("Abandonner la saisie");
+            enabled: Droits.ajuster-stock;
+            clicked => {
+                root.confirmer-abandon = true;
+                Confirmation.demander(@tr("Abandonner l'inventaire en cours ? Les quantités saisies sur ce poste sont effacées ; rien n'a été envoyé au serveur."), @tr("Abandonner"), true);
+            }
+        }
+    }
+
+    MentionSynchro { }
+
+    // En-tête des colonnes.
+    Rangee {
+        spacing: 8px;
+        padding-left: 12px;
+        padding-right: 12px;
+
+        CelluleInventaire {
+            width: root.col-ref;
+            text: @tr("Référence");
+            font-weight: 700;
+        }
+
+        CelluleInventaire {
+            horizontal-stretch: 1;
+            text: @tr("Désignation");
+            font-weight: 700;
+        }
+
+        if !masquer.checked: CelluleInventaire {
+            width: root.col-nombre;
+            text: @tr("Théorique");
+            font-weight: 700;
+        }
+
+        CelluleInventaire {
+            width: root.col-nombre;
+            text: @tr("Comptée");
+            font-weight: 700;
+        }
+
+        if !masquer.checked: CelluleInventaire {
+            width: root.col-nombre;
+            text: @tr("Écart");
+            font-weight: 700;
+        }
+
+        if Droits.voir-valeur-stock: CelluleInventaire {
+            width: root.col-nombre;
+            text: @tr("Coût unitaire");
+            font-weight: 700;
+        }
+    }
+
+    ListView {
+        vertical-stretch: 1;
+
+        for ligne[i] in StockApi.inventaire: Rangee {
+            spacing: 8px;
+            padding-left: 12px;
+            padding-right: 12px;
+            padding-top: 2px;
+            padding-bottom: 2px;
+            height: 40px;
+
+            CelluleInventaire {
+                width: root.col-ref;
+                text: ligne.reference;
+            }
+
+            CelluleInventaire {
+                horizontal-stretch: 1;
+                text: ligne.designation;
+            }
+
+            if !masquer.checked: CelluleInventaire {
+                width: root.col-nombre;
+                text: ligne.theorique;
+                color: Theme.texte-secondaire;
+            }
+
+            LineEdit {
+                width: root.col-nombre;
+                text: ligne.comptee;
+                enabled: Droits.ajuster-stock;
+                edited(texte) => {
+                    root.retour = { ok: false, message: StockApi.compter(i, texte) };
+                }
+            }
+
+            if !masquer.checked: CelluleInventaire {
+                width: root.col-nombre;
+                text: ligne.ecart;
+            }
+
+            if Droits.voir-valeur-stock: LineEdit {
+                width: root.col-nombre;
+                text: ligne.cout;
+                enabled: Droits.ajuster-stock && ligne.demande-cout;
+                placeholder-text: ligne.demande-cout ? @tr("FCFA") : "";
+                edited(texte) => {
+                    root.retour = { ok: false, message: StockApi.noter-cout(i, texte) };
+                }
+            }
+        }
+    }
+
+    Text {
+        horizontal-alignment: Theme.debut;
+        text: StockApi.inventaire-resume;
+        font-size: 12px;
+        color: Theme.texte-secondaire;
+    }
+
+    if Droits.ajuster-stock: Rangee {
+        spacing: 8px;
+
+        Champ {
+            libelle: @tr("Motif de l'inventaire (obligatoire)");
+            valeur <=> root.saisie-motif;
+        }
+
+        VerticalLayout {
+            alignment: end;
+
+            Bouton {
+                text: @tr("Valider l'inventaire");
+                primary: true;
+                enabled: StockApi.inventaire-en-cours && Ecriture.validation;
+                clicked => {
+                    root.confirmer-validation = true;
+                    Confirmation.demander(@tr("Valider l'inventaire ? Le serveur enregistre un mouvement d'écart pour chaque produit compté dont la quantité diffère de la sienne. Cette opération ne s'annule pas."), @tr("Valider l'inventaire"), false);
+                }
+            }
+        }
+    }
+
+    if Droits.ajuster-stock && StockApi.inventaire-en-cours && !Ecriture.validation: Text {
+        horizontal-alignment: Theme.debut;
+        text: @tr("Serveur injoignable : l'inventaire se valide quand le serveur répond, la saisie reste gardée sur ce poste.");
+        color: Theme.attente;
+        wrap: word-wrap;
+    }
+
+    MessageRetour {
+        retour: root.retour;
+    }
+}
+
+export component PageStock inherits VerticalLayout {
+    // Poste relié : état et mouvements relus quand des mouvements arrivent du serveur.
+    property <int> changements: ConnexionApi.changements-stock;
+    changed changements => {
+        StockApi.actualiser();
+    }
+
+    init => {
+        StockApi.ouvrir();
+    }
+
+    padding: 24px;
+    spacing: 8px;
+
+    Titre {
+        text: @tr("Stock");
+    }
+
+    onglets := TabWidget {
+        Tab {
+            title: @tr("État du stock");
+            OngletEtat {
+                voir-mouvements => {
+                    StockApi.produit-mouvements = StockApi.produit-de-la-selection();
+                    onglets.current-index = 1;
+                }
+            }
+        }
+
+        Tab {
+            title: @tr("Mouvements");
+            mouvements := OngletMouvements { }
+        }
+
+        Tab {
+            title: @tr("Inventaire");
+            OngletInventaire { }
+        }
+    }
+}

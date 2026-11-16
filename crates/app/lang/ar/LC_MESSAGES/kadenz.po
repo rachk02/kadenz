@@ -4005,3 +4005,288 @@ msgstr "الخادم أحدث من محطة العمل هذه: حدّث محطة
 
 msgid "le serveur est plus ancien que ce poste : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration"
 msgstr "الخادم أقدم من محطة العمل هذه: حدّث الخادم أولاً من نافذة إدارته"
+
+msgid "Stock"
+msgstr "المخزون"
+
+msgid "Produits en stock négatif (cliquer pour les voir)"
+msgstr "منتجات بمخزون سالب (انقر لعرضها)"
+
+msgid "Stock négatif"
+msgstr "مخزون سالب"
+
+msgid "Valeur du stock"
+msgstr "قيمة المخزون"
+
+msgid "Suivi en stock"
+msgstr "متابعة في المخزون"
+
+msgid "Stock négatif seulement"
+msgstr "المخزون السالب فقط"
+
+msgid "Valeur (FCFA)"
+msgstr "القيمة (FCFA)"
+
+msgid "Coût moyen (FCFA)"
+msgstr "متوسط التكلفة (FCFA)"
+
+msgid "Ajuster le stock"
+msgstr "تعديل المخزون"
+
+msgid "Sélectionner un produit dans la liste pour voir son stock et ses mouvements."
+msgstr "اختر منتجاً من القائمة لعرض مخزونه وحركاته."
+
+msgid "Quantité : {}   Coût moyen : {} FCFA"
+msgstr "الكمية: {}   متوسط التكلفة: {} FCFA"
+
+msgid "Quantité : {}"
+msgstr "الكمية: {}"
+
+msgid "Stock négatif : des livraisons ont dépassé la quantité connue. Corrigez-le par un ajustement ou un inventaire."
+msgstr "مخزون سالب: تجاوزت عمليات التسليم الكمية المعروفة. صحّحه بتعديل أو بجرد."
+
+msgid "{} ajustement(s) en attente d'envoi au serveur : la quantité affichée ne les compte pas encore."
+msgstr "{} تعديل (تعديلات) في انتظار الإرسال إلى الخادم: الكمية المعروضة لا تحتسبها بعد."
+
+msgid "Voir les mouvements"
+msgstr "عرض الحركات"
+
+msgid "Ajustement"
+msgstr "تعديل"
+
+msgid "Quantité (+ entrée, - sortie)"
+msgstr "الكمية (+ إدخال، - إخراج)"
+
+msgid "Coût unitaire d'entrée (FCFA)"
+msgstr "تكلفة الوحدة عند الإدخال (FCFA)"
+
+msgid "Motif (obligatoire)"
+msgstr "السبب (إلزامي)"
+
+msgid "Enregistrer l'ajustement"
+msgstr "حفظ التعديل"
+
+msgid "Toutes les natures"
+msgstr "كل الأنواع"
+
+msgid "Réceptions"
+msgstr "الاستلامات"
+
+msgid "Ajustements"
+msgstr "التعديلات"
+
+msgid "Inventaires"
+msgstr "عمليات الجرد"
+
+msgid "Ouvrir le document"
+msgstr "فتح المستند"
+
+msgid "Motif"
+msgstr "السبب"
+
+msgid "Valeur après"
+msgstr "القيمة بعد"
+
+msgid "Stock après"
+msgstr "المخزون بعد"
+
+msgid "Nature"
+msgstr "النوع"
+
+msgid "1. Imprimez la feuille de comptage et comptez les produits. 2. Saisissez les quantités comptées : elles restent sur ce poste tant que l'inventaire n'est pas validé. 3. Validez : le serveur enregistre un écart pour chaque produit dont la quantité diffère de la sienne."
+msgstr "1. اطبع ورقة العدّ واعدد المنتجات. 2. أدخل الكميات المعدودة: تبقى على محطة العمل هذه حتى اعتماد الجرد. 3. اعتمد: يسجّل الخادم فرقاً لكل منتج تختلف كميته عن كميته لديه."
+
+msgid "Masquer la quantité théorique"
+msgstr "إخفاء الكمية النظرية"
+
+msgid "Feuille de comptage (PDF)"
+msgstr "ورقة العدّ (PDF)"
+
+msgid "Abandonner la saisie"
+msgstr "التخلي عن الإدخال"
+
+msgid "Abandonner l'inventaire en cours ? Les quantités saisies sur ce poste sont effacées ; rien n'a été envoyé au serveur."
+msgstr "التخلي عن الجرد الجاري؟ تُمحى الكميات المُدخلة على محطة العمل هذه؛ لم يُرسَل شيء إلى الخادم."
+
+msgid "Théorique"
+msgstr "النظرية"
+
+msgid "Comptée"
+msgstr "المعدودة"
+
+msgid "Écart"
+msgstr "الفرق"
+
+msgid "Coût unitaire"
+msgstr "تكلفة الوحدة"
+
+msgid "FCFA"
+msgstr "FCFA"
+
+msgid "Motif de l'inventaire (obligatoire)"
+msgstr "سبب الجرد (إلزامي)"
+
+msgid "Valider l'inventaire"
+msgstr "اعتماد الجرد"
+
+msgid "Valider l'inventaire ? Le serveur enregistre un mouvement d'écart pour chaque produit compté dont la quantité diffère de la sienne. Cette opération ne s'annule pas."
+msgstr "اعتماد الجرد؟ يسجّل الخادم حركة فرق لكل منتج معدود تختلف كميته عن كميته لديه. لا يمكن التراجع عن هذه العملية."
+
+msgid "Serveur injoignable : l'inventaire se valide quand le serveur répond, la saisie reste gardée sur ce poste."
+msgstr "الخادم غير متاح: يُعتمد الجرد عندما يستجيب الخادم، ويبقى الإدخال محفوظاً على محطة العمل هذه."
+
+msgid "État du stock"
+msgstr "حالة المخزون"
+
+msgid "Mouvements"
+msgstr "الحركات"
+
+msgid "Inventaire"
+msgstr "الجرد"
+
+msgid "Mouvements de stock"
+msgstr "حركات المخزون"
+
+msgid "Serveur injoignable : aucune synchronisation encore reçue."
+msgstr "الخادم غير متاح: لم تُستلم أي مزامنة بعد."
+
+msgid "Serveur injoignable : quantités au {}, dernière synchronisation."
+msgstr "الخادم غير متاح: الكميات في {}، آخر مزامنة."
+
+msgid "brouillon"
+msgstr "مسودة"
+
+msgid "Aucun produit suivi en stock"
+msgstr "لا يوجد منتج متابَع في المخزون"
+
+msgid "1 produit suivi"
+msgstr "منتج متابَع واحد"
+
+msgid "{} produits suivis"
+msgstr "{} منتجات متابَعة"
+
+msgid "Aucun mouvement"
+msgstr "لا توجد حركة"
+
+msgid "1 mouvement"
+msgstr "حركة واحدة"
+
+msgid "{} mouvements"
+msgstr "{} حركات"
+
+msgid "Stock insuffisant d'après la dernière synchronisation ; la livraison reste possible, ces produits passeront en stock négatif :"
+msgstr "المخزون غير كافٍ وفق آخر مزامنة؛ يبقى التسليم ممكناً، وستصبح هذه المنتجات بمخزون سالب:"
+
+msgid "{} : stock {}, livré {}"
+msgstr "{}: المخزون {}، المُسلَّم {}"
+
+msgid "Date illisible (JJ/MM/AAAA) : état du jour affiché."
+msgstr "تاريخ غير مقروء (يوم/شهر/سنة): تُعرض حالة اليوم."
+
+msgid "Date illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "تاريخ غير مقروء (يوم/شهر/سنة): لم يُطبَّق."
+
+msgid "Tous les produits suivis"
+msgstr "كل المنتجات المتابَعة"
+
+msgid "votre compte n'a pas le droit d'ajuster le stock"
+msgstr "لا يملك حسابك صلاحية تعديل المخزون"
+
+msgid "quantité invalide : saisir une quantité non nulle, positive pour une entrée, négative pour une sortie (par exemple 5 ou -2,5)"
+msgstr "كمية غير صالحة: أدخل كمية غير صفرية، موجبة للإدخال وسالبة للإخراج (مثلاً 5 أو -2,5)"
+
+msgid "le motif de l'ajustement est obligatoire"
+msgstr "سبب التعديل إلزامي"
+
+msgid "coût unitaire invalide : saisir un montant entier en FCFA, ou laisser vide pour le coût moyen"
+msgstr "تكلفة وحدة غير صالحة: أدخل مبلغاً صحيحاً بالفرنك (FCFA)، أو اتركه فارغاً لاعتماد متوسط التكلفة"
+
+msgid "votre compte n'a pas le droit de saisir un inventaire"
+msgstr "لا يملك حسابك صلاحية إدخال جرد"
+
+msgid "le motif de l'inventaire est obligatoire"
+msgstr "سبب الجرد إلزامي"
+
+msgid "aucune quantité comptée : rien à valider"
+msgstr "لا توجد كمية معدودة: لا شيء للاعتماد"
+
+msgid "inventaire non appliqué : le serveur ne répond pas, la saisie reste gardée sur ce poste"
+msgstr "لم يُطبَّق الجرد: الخادم لا يستجيب، ويبقى الإدخال محفوظاً على محطة العمل هذه"
+
+msgid "choisir un produit dans la liste"
+msgstr "اختر منتجاً من القائمة"
+
+msgid "ce mouvement n'a pas de document d'origine"
+msgstr "ليس لهذه الحركة مستند أصلي"
+
+msgid "Valeur du stock affiché : {} FCFA"
+msgstr "قيمة المخزون المعروض: {} FCFA"
+
+msgid "{} produit(s) compté(s) sur {}"
+msgstr "{} منتج (منتجات) معدود من أصل {}"
+
+msgid "En stock : {}   Coût moyen : {} FCFA   Valeur : {} FCFA"
+msgstr "في المخزون: {}   متوسط التكلفة: {} FCFA   القيمة: {} FCFA"
+
+msgid "En stock : {}"
+msgstr "في المخزون: {}"
+
+msgid "Quantité comptée illisible : {} (saisir par exemple 12 ou 2,5)."
+msgstr "كمية معدودة غير مقروءة: {} (أدخل مثلاً 12 أو 2,5)."
+
+msgid "Coût unitaire illisible : {} (montant entier en FCFA)."
+msgstr "تكلفة وحدة غير مقروءة: {} (مبلغ صحيح بالفرنك FCFA)."
+
+msgid "Réception"
+msgstr "استلام"
+
+msgid "Livraison"
+msgstr "تسليم"
+
+msgid "ajustement mis en file d'envoi : il sera appliqué au retour du serveur"
+msgstr "وُضع التعديل في قائمة الإرسال: سيُطبَّق عند عودة الخادم"
+
+msgid "ajustement enregistré"
+msgstr "حُفظ التعديل"
+
+msgid "inventaire validé"
+msgstr "اعتُمد الجرد"
+
+msgid "Stock au"
+msgstr "المخزون في"
+
+msgid "Coût moyen"
+msgstr "متوسط التكلفة"
+
+msgid "Valeur"
+msgstr "القيمة"
+
+msgid "Voir la valeur du stock"
+msgstr "عرض قيمة المخزون"
+
+msgid "Ajuster le stock et saisir un inventaire"
+msgstr "تعديل المخزون وإدخال جرد"
+
+msgid "le produit « {} » n'est pas suivi en stock"
+msgstr "المنتج «{}» غير متابَع في المخزون"
+
+msgid "le motif est obligatoire"
+msgstr "السبب إلزامي"
+
+msgid "la quantité de l'ajustement ne peut pas être nulle"
+msgstr "لا يمكن أن تكون كمية التعديل صفراً"
+
+msgid "le coût unitaire ne peut pas être négatif"
+msgstr "لا يمكن أن تكون تكلفة الوحدة سالبة"
+
+msgid "la quantité comptée de « {} » ne peut pas être négative"
+msgstr "لا يمكن أن تكون الكمية المعدودة من «{}» سالبة"
+
+msgid "l'inventaire ne compte aucun produit"
+msgstr "لا يتضمن الجرد أي منتج"
+
+msgid "le produit « {} » est compté deux fois"
+msgstr "المنتج «{}» معدود مرتين"
+
+msgid "le stock de « {} » n'est pas nul : le ramener à zéro par un ajustement avant d'arrêter son suivi"
+msgstr "مخزون «{}» ليس صفراً: أعده إلى الصفر بتعديل قبل إيقاف متابعته"

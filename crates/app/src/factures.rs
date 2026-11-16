@@ -2101,6 +2101,16 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         })
     });
 
+    // Avertissement de stock avant la confirmation (docs/spec-stock.md, 3.6).
+    let e = etat.clone();
+    api.on_avertissement_stock(move || {
+        let etat = e.borrow();
+        match etat.facture.as_ref().and_then(|ed| ed.id) {
+            Some(id) => crate::stock::avertissement_livraison(&etat, id).into(),
+            None => SharedString::new(),
+        }
+    });
+
     let (f, e) = (fenetre.as_weak(), etat.clone());
     api.on_confirmer_livraison(move |vc, vf, dl, dr| {
         let Some(f) = f.upgrade() else {

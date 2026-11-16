@@ -4005,3 +4005,288 @@ msgstr "el servidor es más reciente que este puesto: actualice este puesto (Con
 
 msgid "le serveur est plus ancien que ce poste : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration"
 msgstr "el servidor es más antiguo que este puesto: actualice primero el servidor desde su ventana de administración"
+
+msgid "Stock"
+msgstr "Existencias"
+
+msgid "Produits en stock négatif (cliquer pour les voir)"
+msgstr "Productos con existencias negativas (haga clic para verlos)"
+
+msgid "Stock négatif"
+msgstr "Existencias negativas"
+
+msgid "Valeur du stock"
+msgstr "Valor de las existencias"
+
+msgid "Suivi en stock"
+msgstr "Control de existencias"
+
+msgid "Stock négatif seulement"
+msgstr "Solo existencias negativas"
+
+msgid "Valeur (FCFA)"
+msgstr "Valor (FCFA)"
+
+msgid "Coût moyen (FCFA)"
+msgstr "Coste medio (FCFA)"
+
+msgid "Ajuster le stock"
+msgstr "Ajustar existencias"
+
+msgid "Sélectionner un produit dans la liste pour voir son stock et ses mouvements."
+msgstr "Seleccione un producto de la lista para ver sus existencias y movimientos."
+
+msgid "Quantité : {}   Coût moyen : {} FCFA"
+msgstr "Cantidad: {}   Coste medio: {} FCFA"
+
+msgid "Quantité : {}"
+msgstr "Cantidad: {}"
+
+msgid "Stock négatif : des livraisons ont dépassé la quantité connue. Corrigez-le par un ajustement ou un inventaire."
+msgstr "Existencias negativas: las entregas superaron la cantidad conocida. Corríjalo con un ajuste o un inventario."
+
+msgid "{} ajustement(s) en attente d'envoi au serveur : la quantité affichée ne les compte pas encore."
+msgstr "{} ajuste(s) pendiente(s) de envío al servidor: la cantidad mostrada aún no los incluye."
+
+msgid "Voir les mouvements"
+msgstr "Ver movimientos"
+
+msgid "Ajustement"
+msgstr "Ajuste"
+
+msgid "Quantité (+ entrée, - sortie)"
+msgstr "Cantidad (+ entrada, - salida)"
+
+msgid "Coût unitaire d'entrée (FCFA)"
+msgstr "Coste unitario de entrada (FCFA)"
+
+msgid "Motif (obligatoire)"
+msgstr "Motivo (obligatorio)"
+
+msgid "Enregistrer l'ajustement"
+msgstr "Guardar el ajuste"
+
+msgid "Toutes les natures"
+msgstr "Todos los tipos"
+
+msgid "Réceptions"
+msgstr "Recepciones"
+
+msgid "Ajustements"
+msgstr "Ajustes"
+
+msgid "Inventaires"
+msgstr "Inventarios"
+
+msgid "Ouvrir le document"
+msgstr "Abrir el documento"
+
+msgid "Motif"
+msgstr "Motivo"
+
+msgid "Valeur après"
+msgstr "Valor después"
+
+msgid "Stock après"
+msgstr "Existencias después"
+
+msgid "Nature"
+msgstr "Tipo"
+
+msgid "1. Imprimez la feuille de comptage et comptez les produits. 2. Saisissez les quantités comptées : elles restent sur ce poste tant que l'inventaire n'est pas validé. 3. Validez : le serveur enregistre un écart pour chaque produit dont la quantité diffère de la sienne."
+msgstr "1. Imprima la hoja de recuento y cuente los productos. 2. Introduzca las cantidades contadas: permanecen en este puesto hasta que se valide el inventario. 3. Valide: el servidor registra una diferencia para cada producto cuya cantidad difiera de la suya."
+
+msgid "Masquer la quantité théorique"
+msgstr "Ocultar la cantidad teórica"
+
+msgid "Feuille de comptage (PDF)"
+msgstr "Hoja de recuento (PDF)"
+
+msgid "Abandonner la saisie"
+msgstr "Abandonar la introducción"
+
+msgid "Abandonner l'inventaire en cours ? Les quantités saisies sur ce poste sont effacées ; rien n'a été envoyé au serveur."
+msgstr "¿Abandonar el inventario en curso? Se borran las cantidades introducidas en este puesto; no se ha enviado nada al servidor."
+
+msgid "Théorique"
+msgstr "Teórica"
+
+msgid "Comptée"
+msgstr "Contada"
+
+msgid "Écart"
+msgstr "Diferencia"
+
+msgid "Coût unitaire"
+msgstr "Coste unitario"
+
+msgid "FCFA"
+msgstr "FCFA"
+
+msgid "Motif de l'inventaire (obligatoire)"
+msgstr "Motivo del inventario (obligatorio)"
+
+msgid "Valider l'inventaire"
+msgstr "Validar el inventario"
+
+msgid "Valider l'inventaire ? Le serveur enregistre un mouvement d'écart pour chaque produit compté dont la quantité diffère de la sienne. Cette opération ne s'annule pas."
+msgstr "¿Validar el inventario? El servidor registra un movimiento de diferencia para cada producto contado cuya cantidad difiera de la suya. Esta operación no se puede anular."
+
+msgid "Serveur injoignable : l'inventaire se valide quand le serveur répond, la saisie reste gardée sur ce poste."
+msgstr "Servidor inaccesible: el inventario se valida cuando el servidor responda; la introducción se conserva en este puesto."
+
+msgid "État du stock"
+msgstr "Estado de las existencias"
+
+msgid "Mouvements"
+msgstr "Movimientos"
+
+msgid "Inventaire"
+msgstr "Inventario"
+
+msgid "Mouvements de stock"
+msgstr "Movimientos de existencias"
+
+msgid "Serveur injoignable : aucune synchronisation encore reçue."
+msgstr "Servidor inaccesible: aún no se ha recibido ninguna sincronización."
+
+msgid "Serveur injoignable : quantités au {}, dernière synchronisation."
+msgstr "Servidor inaccesible: cantidades al {}, última sincronización."
+
+msgid "brouillon"
+msgstr "borrador"
+
+msgid "Aucun produit suivi en stock"
+msgstr "Ningún producto con control de existencias"
+
+msgid "1 produit suivi"
+msgstr "1 producto controlado"
+
+msgid "{} produits suivis"
+msgstr "{} productos controlados"
+
+msgid "Aucun mouvement"
+msgstr "Ningún movimiento"
+
+msgid "1 mouvement"
+msgstr "1 movimiento"
+
+msgid "{} mouvements"
+msgstr "{} movimientos"
+
+msgid "Stock insuffisant d'après la dernière synchronisation ; la livraison reste possible, ces produits passeront en stock négatif :"
+msgstr "Existencias insuficientes según la última sincronización; la entrega sigue siendo posible, estos productos pasarán a existencias negativas:"
+
+msgid "{} : stock {}, livré {}"
+msgstr "{}: existencias {}, entregado {}"
+
+msgid "Date illisible (JJ/MM/AAAA) : état du jour affiché."
+msgstr "Fecha ilegible (DD/MM/AAAA): se muestra el estado del día."
+
+msgid "Date illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "Fecha ilegible (DD/MM/AAAA): no aplicada."
+
+msgid "Tous les produits suivis"
+msgstr "Todos los productos controlados"
+
+msgid "votre compte n'a pas le droit d'ajuster le stock"
+msgstr "su cuenta no tiene derecho a ajustar existencias"
+
+msgid "quantité invalide : saisir une quantité non nulle, positive pour une entrée, négative pour une sortie (par exemple 5 ou -2,5)"
+msgstr "cantidad no válida: introduzca una cantidad distinta de cero, positiva para una entrada, negativa para una salida (por ejemplo 5 o -2,5)"
+
+msgid "le motif de l'ajustement est obligatoire"
+msgstr "el motivo del ajuste es obligatorio"
+
+msgid "coût unitaire invalide : saisir un montant entier en FCFA, ou laisser vide pour le coût moyen"
+msgstr "coste unitario no válido: introduzca un importe entero en FCFA, o déjelo vacío para el coste medio"
+
+msgid "votre compte n'a pas le droit de saisir un inventaire"
+msgstr "su cuenta no tiene derecho a introducir un inventario"
+
+msgid "le motif de l'inventaire est obligatoire"
+msgstr "el motivo del inventario es obligatorio"
+
+msgid "aucune quantité comptée : rien à valider"
+msgstr "ninguna cantidad contada: nada que validar"
+
+msgid "inventaire non appliqué : le serveur ne répond pas, la saisie reste gardée sur ce poste"
+msgstr "inventario no aplicado: el servidor no responde, la introducción se conserva en este puesto"
+
+msgid "choisir un produit dans la liste"
+msgstr "elija un producto de la lista"
+
+msgid "ce mouvement n'a pas de document d'origine"
+msgstr "este movimiento no tiene documento de origen"
+
+msgid "Valeur du stock affiché : {} FCFA"
+msgstr "Valor de las existencias mostradas: {} FCFA"
+
+msgid "{} produit(s) compté(s) sur {}"
+msgstr "{} producto(s) contado(s) de {}"
+
+msgid "En stock : {}   Coût moyen : {} FCFA   Valeur : {} FCFA"
+msgstr "En existencias: {}   Coste medio: {} FCFA   Valor: {} FCFA"
+
+msgid "En stock : {}"
+msgstr "En existencias: {}"
+
+msgid "Quantité comptée illisible : {} (saisir par exemple 12 ou 2,5)."
+msgstr "Cantidad contada ilegible: {} (introduzca por ejemplo 12 o 2,5)."
+
+msgid "Coût unitaire illisible : {} (montant entier en FCFA)."
+msgstr "Coste unitario ilegible: {} (importe entero en FCFA)."
+
+msgid "Réception"
+msgstr "Recepción"
+
+msgid "Livraison"
+msgstr "Entrega"
+
+msgid "ajustement mis en file d'envoi : il sera appliqué au retour du serveur"
+msgstr "ajuste puesto en la cola de envío: se aplicará cuando vuelva el servidor"
+
+msgid "ajustement enregistré"
+msgstr "ajuste guardado"
+
+msgid "inventaire validé"
+msgstr "inventario validado"
+
+msgid "Stock au"
+msgstr "Existencias al"
+
+msgid "Coût moyen"
+msgstr "Coste medio"
+
+msgid "Valeur"
+msgstr "Valor"
+
+msgid "Voir la valeur du stock"
+msgstr "Ver el valor de las existencias"
+
+msgid "Ajuster le stock et saisir un inventaire"
+msgstr "Ajustar existencias e introducir un inventario"
+
+msgid "le produit « {} » n'est pas suivi en stock"
+msgstr "el producto «{}» no tiene control de existencias"
+
+msgid "le motif est obligatoire"
+msgstr "el motivo es obligatorio"
+
+msgid "la quantité de l'ajustement ne peut pas être nulle"
+msgstr "la cantidad del ajuste no puede ser cero"
+
+msgid "le coût unitaire ne peut pas être négatif"
+msgstr "el coste unitario no puede ser negativo"
+
+msgid "la quantité comptée de « {} » ne peut pas être négative"
+msgstr "la cantidad contada de «{}» no puede ser negativa"
+
+msgid "l'inventaire ne compte aucun produit"
+msgstr "el inventario no incluye ningún producto"
+
+msgid "le produit « {} » est compté deux fois"
+msgstr "el producto «{}» se cuenta dos veces"
+
+msgid "le stock de « {} » n'est pas nul : le ramener à zéro par un ajustement avant d'arrêter son suivi"
+msgstr "las existencias de «{}» no son cero: llévelas a cero con un ajuste antes de detener su control"

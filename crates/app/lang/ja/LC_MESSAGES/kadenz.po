@@ -4005,3 +4005,288 @@ msgstr "サーバーがこの端末より新しいです。この端末を更新
 
 msgid "le serveur est plus ancien que ce poste : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration"
 msgstr "サーバーがこの端末より古いです。まず管理ウィンドウからサーバーを更新してください"
+
+msgid "Stock"
+msgstr "在庫"
+
+msgid "Produits en stock négatif (cliquer pour les voir)"
+msgstr "在庫がマイナスの商品（クリックで表示）"
+
+msgid "Stock négatif"
+msgstr "マイナス在庫"
+
+msgid "Valeur du stock"
+msgstr "在庫金額"
+
+msgid "Suivi en stock"
+msgstr "在庫管理する"
+
+msgid "Stock négatif seulement"
+msgstr "マイナス在庫のみ"
+
+msgid "Valeur (FCFA)"
+msgstr "金額（FCFA）"
+
+msgid "Coût moyen (FCFA)"
+msgstr "平均原価（FCFA）"
+
+msgid "Ajuster le stock"
+msgstr "在庫を調整"
+
+msgid "Sélectionner un produit dans la liste pour voir son stock et ses mouvements."
+msgstr "一覧から商品を選択すると、在庫と入出庫を表示します。"
+
+msgid "Quantité : {}   Coût moyen : {} FCFA"
+msgstr "数量：{}　平均原価：{} FCFA"
+
+msgid "Quantité : {}"
+msgstr "数量：{}"
+
+msgid "Stock négatif : des livraisons ont dépassé la quantité connue. Corrigez-le par un ajustement ou un inventaire."
+msgstr "マイナス在庫：出荷が把握済みの数量を超えました。調整または棚卸で修正してください。"
+
+msgid "{} ajustement(s) en attente d'envoi au serveur : la quantité affichée ne les compte pas encore."
+msgstr "サーバーへの送信待ちの調整が {} 件あります。表示中の数量にはまだ含まれていません。"
+
+msgid "Voir les mouvements"
+msgstr "入出庫を表示"
+
+msgid "Ajustement"
+msgstr "調整"
+
+msgid "Quantité (+ entrée, - sortie)"
+msgstr "数量（+ 入庫、- 出庫）"
+
+msgid "Coût unitaire d'entrée (FCFA)"
+msgstr "入庫単価（FCFA）"
+
+msgid "Motif (obligatoire)"
+msgstr "理由（必須）"
+
+msgid "Enregistrer l'ajustement"
+msgstr "調整を保存"
+
+msgid "Toutes les natures"
+msgstr "すべての種類"
+
+msgid "Réceptions"
+msgstr "入荷"
+
+msgid "Ajustements"
+msgstr "調整"
+
+msgid "Inventaires"
+msgstr "棚卸"
+
+msgid "Ouvrir le document"
+msgstr "伝票を開く"
+
+msgid "Motif"
+msgstr "理由"
+
+msgid "Valeur après"
+msgstr "処理後の金額"
+
+msgid "Stock après"
+msgstr "処理後の在庫"
+
+msgid "Nature"
+msgstr "種類"
+
+msgid "1. Imprimez la feuille de comptage et comptez les produits. 2. Saisissez les quantités comptées : elles restent sur ce poste tant que l'inventaire n'est pas validé. 3. Validez : le serveur enregistre un écart pour chaque produit dont la quantité diffère de la sienne."
+msgstr "1. 棚卸表を印刷して商品を数えます。2. 数えた数量を入力します。棚卸を確定するまでこの端末に保存されます。3. 確定します。サーバーは自身の数量と異なる商品ごとに差異を記録します。"
+
+msgid "Masquer la quantité théorique"
+msgstr "理論数量を隠す"
+
+msgid "Feuille de comptage (PDF)"
+msgstr "棚卸表（PDF）"
+
+msgid "Abandonner la saisie"
+msgstr "入力を破棄"
+
+msgid "Abandonner l'inventaire en cours ? Les quantités saisies sur ce poste sont effacées ; rien n'a été envoyé au serveur."
+msgstr "進行中の棚卸を破棄しますか？この端末で入力した数量は消去されます。サーバーには何も送信されていません。"
+
+msgid "Théorique"
+msgstr "理論"
+
+msgid "Comptée"
+msgstr "実数"
+
+msgid "Écart"
+msgstr "差異"
+
+msgid "Coût unitaire"
+msgstr "単価"
+
+msgid "FCFA"
+msgstr "FCFA"
+
+msgid "Motif de l'inventaire (obligatoire)"
+msgstr "棚卸の理由（必須）"
+
+msgid "Valider l'inventaire"
+msgstr "棚卸を確定"
+
+msgid "Valider l'inventaire ? Le serveur enregistre un mouvement d'écart pour chaque produit compté dont la quantité diffère de la sienne. Cette opération ne s'annule pas."
+msgstr "棚卸を確定しますか？サーバーは、数えた商品のうち自身の数量と異なるものごとに差異の入出庫を記録します。この操作は取り消せません。"
+
+msgid "Serveur injoignable : l'inventaire se valide quand le serveur répond, la saisie reste gardée sur ce poste."
+msgstr "サーバーに接続できません。棚卸はサーバーが応答したときに確定できます。入力はこの端末に保存されたままです。"
+
+msgid "État du stock"
+msgstr "在庫状況"
+
+msgid "Mouvements"
+msgstr "入出庫"
+
+msgid "Inventaire"
+msgstr "棚卸"
+
+msgid "Mouvements de stock"
+msgstr "在庫の入出庫"
+
+msgid "Serveur injoignable : aucune synchronisation encore reçue."
+msgstr "サーバーに接続できません。まだ同期を受信していません。"
+
+msgid "Serveur injoignable : quantités au {}, dernière synchronisation."
+msgstr "サーバーに接続できません。数量は最終同期時点（{}）のものです。"
+
+msgid "brouillon"
+msgstr "下書き"
+
+msgid "Aucun produit suivi en stock"
+msgstr "在庫管理する商品はありません"
+
+msgid "1 produit suivi"
+msgstr "在庫管理する商品 1 件"
+
+msgid "{} produits suivis"
+msgstr "在庫管理する商品 {} 件"
+
+msgid "Aucun mouvement"
+msgstr "入出庫はありません"
+
+msgid "1 mouvement"
+msgstr "入出庫 1 件"
+
+msgid "{} mouvements"
+msgstr "入出庫 {} 件"
+
+msgid "Stock insuffisant d'après la dernière synchronisation ; la livraison reste possible, ces produits passeront en stock négatif :"
+msgstr "最終同期によると在庫が不足しています。出荷は可能ですが、次の商品はマイナス在庫になります："
+
+msgid "{} : stock {}, livré {}"
+msgstr "{}：在庫 {}、出荷 {}"
+
+msgid "Date illisible (JJ/MM/AAAA) : état du jour affiché."
+msgstr "日付を読み取れません（日/月/年）。本日の状況を表示しています。"
+
+msgid "Date illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "日付を読み取れません（日/月/年）。適用されていません。"
+
+msgid "Tous les produits suivis"
+msgstr "在庫管理するすべての商品"
+
+msgid "votre compte n'a pas le droit d'ajuster le stock"
+msgstr "このアカウントには在庫を調整する権限がありません"
+
+msgid "quantité invalide : saisir une quantité non nulle, positive pour une entrée, négative pour une sortie (par exemple 5 ou -2,5)"
+msgstr "数量が無効です。0 以外の数量を入力してください。入庫は正、出庫は負です（例：5 または -2,5）"
+
+msgid "le motif de l'ajustement est obligatoire"
+msgstr "調整の理由は必須です"
+
+msgid "coût unitaire invalide : saisir un montant entier en FCFA, ou laisser vide pour le coût moyen"
+msgstr "単価が無効です。FCFA の整数金額を入力するか、平均原価を使う場合は空欄のままにしてください"
+
+msgid "votre compte n'a pas le droit de saisir un inventaire"
+msgstr "このアカウントには棚卸を入力する権限がありません"
+
+msgid "le motif de l'inventaire est obligatoire"
+msgstr "棚卸の理由は必須です"
+
+msgid "aucune quantité comptée : rien à valider"
+msgstr "数えた数量がありません。確定するものはありません"
+
+msgid "inventaire non appliqué : le serveur ne répond pas, la saisie reste gardée sur ce poste"
+msgstr "棚卸は適用されませんでした。サーバーが応答しません。入力はこの端末に保存されたままです"
+
+msgid "choisir un produit dans la liste"
+msgstr "一覧から商品を選んでください"
+
+msgid "ce mouvement n'a pas de document d'origine"
+msgstr "この入出庫には元の伝票がありません"
+
+msgid "Valeur du stock affiché : {} FCFA"
+msgstr "表示中の在庫金額：{} FCFA"
+
+msgid "{} produit(s) compté(s) sur {}"
+msgstr "{} 件を計数済み（全 {} 件）"
+
+msgid "En stock : {}   Coût moyen : {} FCFA   Valeur : {} FCFA"
+msgstr "在庫：{}　平均原価：{} FCFA　金額：{} FCFA"
+
+msgid "En stock : {}"
+msgstr "在庫：{}"
+
+msgid "Quantité comptée illisible : {} (saisir par exemple 12 ou 2,5)."
+msgstr "計数数量を読み取れません：{}（例：12 または 2,5 と入力）。"
+
+msgid "Coût unitaire illisible : {} (montant entier en FCFA)."
+msgstr "単価を読み取れません：{}（FCFA の整数金額）。"
+
+msgid "Réception"
+msgstr "入荷"
+
+msgid "Livraison"
+msgstr "出荷"
+
+msgid "ajustement mis en file d'envoi : il sera appliqué au retour du serveur"
+msgstr "調整を送信待ちに追加しました。サーバーが復帰したときに適用されます"
+
+msgid "ajustement enregistré"
+msgstr "調整を保存しました"
+
+msgid "inventaire validé"
+msgstr "棚卸を確定しました"
+
+msgid "Stock au"
+msgstr "在庫基準日"
+
+msgid "Coût moyen"
+msgstr "平均原価"
+
+msgid "Valeur"
+msgstr "金額"
+
+msgid "Voir la valeur du stock"
+msgstr "在庫金額を見る"
+
+msgid "Ajuster le stock et saisir un inventaire"
+msgstr "在庫の調整と棚卸の入力"
+
+msgid "le produit « {} » n'est pas suivi en stock"
+msgstr "商品「{}」は在庫管理されていません"
+
+msgid "le motif est obligatoire"
+msgstr "理由は必須です"
+
+msgid "la quantité de l'ajustement ne peut pas être nulle"
+msgstr "調整の数量を 0 にすることはできません"
+
+msgid "le coût unitaire ne peut pas être négatif"
+msgstr "単価を負の値にすることはできません"
+
+msgid "la quantité comptée de « {} » ne peut pas être négative"
+msgstr "「{}」の計数数量を負の値にすることはできません"
+
+msgid "l'inventaire ne compte aucun produit"
+msgstr "棚卸に商品が含まれていません"
+
+msgid "le produit « {} » est compté deux fois"
+msgstr "商品「{}」が二重に計数されています"
+
+msgid "le stock de « {} » n'est pas nul : le ramener à zéro par un ajustement avant d'arrêter son suivi"
+msgstr "「{}」の在庫が 0 ではありません。在庫管理をやめる前に調整で 0 にしてください"

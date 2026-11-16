@@ -4005,3 +4005,288 @@ msgstr "服务器比此工作站新：请更新此工作站（设置中的“更
 
 msgid "le serveur est plus ancien que ce poste : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration"
 msgstr "服务器比此工作站旧：请先在服务器的管理窗口中更新服务器"
+
+msgid "Stock"
+msgstr "库存"
+
+msgid "Produits en stock négatif (cliquer pour les voir)"
+msgstr "库存为负的产品（点击查看）"
+
+msgid "Stock négatif"
+msgstr "负库存"
+
+msgid "Valeur du stock"
+msgstr "库存价值"
+
+msgid "Suivi en stock"
+msgstr "库存跟踪"
+
+msgid "Stock négatif seulement"
+msgstr "仅负库存"
+
+msgid "Valeur (FCFA)"
+msgstr "价值（FCFA）"
+
+msgid "Coût moyen (FCFA)"
+msgstr "平均成本（FCFA）"
+
+msgid "Ajuster le stock"
+msgstr "调整库存"
+
+msgid "Sélectionner un produit dans la liste pour voir son stock et ses mouvements."
+msgstr "在列表中选择一个产品以查看其库存和出入库记录。"
+
+msgid "Quantité : {}   Coût moyen : {} FCFA"
+msgstr "数量：{}　平均成本：{} FCFA"
+
+msgid "Quantité : {}"
+msgstr "数量：{}"
+
+msgid "Stock négatif : des livraisons ont dépassé la quantité connue. Corrigez-le par un ajustement ou un inventaire."
+msgstr "负库存：发货超过了已知数量。请通过调整或盘点进行更正。"
+
+msgid "{} ajustement(s) en attente d'envoi au serveur : la quantité affichée ne les compte pas encore."
+msgstr "有 {} 项调整等待发送到服务器：显示的数量尚未计入。"
+
+msgid "Voir les mouvements"
+msgstr "查看出入库"
+
+msgid "Ajustement"
+msgstr "调整"
+
+msgid "Quantité (+ entrée, - sortie)"
+msgstr "数量（+ 入库，- 出库）"
+
+msgid "Coût unitaire d'entrée (FCFA)"
+msgstr "入库单位成本（FCFA）"
+
+msgid "Motif (obligatoire)"
+msgstr "原因（必填）"
+
+msgid "Enregistrer l'ajustement"
+msgstr "保存调整"
+
+msgid "Toutes les natures"
+msgstr "所有类型"
+
+msgid "Réceptions"
+msgstr "收货"
+
+msgid "Ajustements"
+msgstr "调整"
+
+msgid "Inventaires"
+msgstr "盘点"
+
+msgid "Ouvrir le document"
+msgstr "打开单据"
+
+msgid "Motif"
+msgstr "原因"
+
+msgid "Valeur après"
+msgstr "变动后价值"
+
+msgid "Stock après"
+msgstr "变动后库存"
+
+msgid "Nature"
+msgstr "类型"
+
+msgid "1. Imprimez la feuille de comptage et comptez les produits. 2. Saisissez les quantités comptées : elles restent sur ce poste tant que l'inventaire n'est pas validé. 3. Validez : le serveur enregistre un écart pour chaque produit dont la quantité diffère de la sienne."
+msgstr "1. 打印盘点表并清点产品。2. 录入清点数量：在盘点确认前，它们保存在此工作站上。3. 确认：服务器为数量与其记录不同的每个产品记录差异。"
+
+msgid "Masquer la quantité théorique"
+msgstr "隐藏账面数量"
+
+msgid "Feuille de comptage (PDF)"
+msgstr "盘点表（PDF）"
+
+msgid "Abandonner la saisie"
+msgstr "放弃录入"
+
+msgid "Abandonner l'inventaire en cours ? Les quantités saisies sur ce poste sont effacées ; rien n'a été envoyé au serveur."
+msgstr "放弃进行中的盘点？此工作站上录入的数量将被清除；尚未向服务器发送任何内容。"
+
+msgid "Théorique"
+msgstr "账面"
+
+msgid "Comptée"
+msgstr "实盘"
+
+msgid "Écart"
+msgstr "差异"
+
+msgid "Coût unitaire"
+msgstr "单位成本"
+
+msgid "FCFA"
+msgstr "FCFA"
+
+msgid "Motif de l'inventaire (obligatoire)"
+msgstr "盘点原因（必填）"
+
+msgid "Valider l'inventaire"
+msgstr "确认盘点"
+
+msgid "Valider l'inventaire ? Le serveur enregistre un mouvement d'écart pour chaque produit compté dont la quantité diffère de la sienne. Cette opération ne s'annule pas."
+msgstr "确认盘点？服务器为每个清点数量与其记录不同的产品记录一笔差异出入库。此操作无法撤销。"
+
+msgid "Serveur injoignable : l'inventaire se valide quand le serveur répond, la saisie reste gardée sur ce poste."
+msgstr "服务器无法连接：服务器响应后即可确认盘点，录入内容保留在此工作站上。"
+
+msgid "État du stock"
+msgstr "库存状况"
+
+msgid "Mouvements"
+msgstr "出入库"
+
+msgid "Inventaire"
+msgstr "盘点"
+
+msgid "Mouvements de stock"
+msgstr "库存出入库"
+
+msgid "Serveur injoignable : aucune synchronisation encore reçue."
+msgstr "服务器无法连接：尚未收到任何同步。"
+
+msgid "Serveur injoignable : quantités au {}, dernière synchronisation."
+msgstr "服务器无法连接：数量为最后一次同步时（{}）的数据。"
+
+msgid "brouillon"
+msgstr "草稿"
+
+msgid "Aucun produit suivi en stock"
+msgstr "没有库存跟踪的产品"
+
+msgid "1 produit suivi"
+msgstr "1 个跟踪产品"
+
+msgid "{} produits suivis"
+msgstr "{} 个跟踪产品"
+
+msgid "Aucun mouvement"
+msgstr "没有出入库记录"
+
+msgid "1 mouvement"
+msgstr "1 条出入库记录"
+
+msgid "{} mouvements"
+msgstr "{} 条出入库记录"
+
+msgid "Stock insuffisant d'après la dernière synchronisation ; la livraison reste possible, ces produits passeront en stock négatif :"
+msgstr "根据最后一次同步，库存不足；仍可发货，以下产品将变为负库存："
+
+msgid "{} : stock {}, livré {}"
+msgstr "{}：库存 {}，发货 {}"
+
+msgid "Date illisible (JJ/MM/AAAA) : état du jour affiché."
+msgstr "日期无法识别（日/月/年）：显示当天的状况。"
+
+msgid "Date illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "日期无法识别（日/月/年）：未应用。"
+
+msgid "Tous les produits suivis"
+msgstr "所有跟踪产品"
+
+msgid "votre compte n'a pas le droit d'ajuster le stock"
+msgstr "您的账户无权调整库存"
+
+msgid "quantité invalide : saisir une quantité non nulle, positive pour une entrée, négative pour une sortie (par exemple 5 ou -2,5)"
+msgstr "数量无效：请输入非零数量，入库为正，出库为负（例如 5 或 -2,5）"
+
+msgid "le motif de l'ajustement est obligatoire"
+msgstr "调整原因为必填项"
+
+msgid "coût unitaire invalide : saisir un montant entier en FCFA, ou laisser vide pour le coût moyen"
+msgstr "单位成本无效：请输入以 FCFA 为单位的整数金额，或留空以使用平均成本"
+
+msgid "votre compte n'a pas le droit de saisir un inventaire"
+msgstr "您的账户无权录入盘点"
+
+msgid "le motif de l'inventaire est obligatoire"
+msgstr "盘点原因为必填项"
+
+msgid "aucune quantité comptée : rien à valider"
+msgstr "没有清点数量：无可确认的内容"
+
+msgid "inventaire non appliqué : le serveur ne répond pas, la saisie reste gardée sur ce poste"
+msgstr "盘点未应用：服务器无响应，录入内容保留在此工作站上"
+
+msgid "choisir un produit dans la liste"
+msgstr "请在列表中选择一个产品"
+
+msgid "ce mouvement n'a pas de document d'origine"
+msgstr "此出入库记录没有来源单据"
+
+msgid "Valeur du stock affiché : {} FCFA"
+msgstr "所示库存价值：{} FCFA"
+
+msgid "{} produit(s) compté(s) sur {}"
+msgstr "已清点 {} 个产品，共 {} 个"
+
+msgid "En stock : {}   Coût moyen : {} FCFA   Valeur : {} FCFA"
+msgstr "库存：{}　平均成本：{} FCFA　价值：{} FCFA"
+
+msgid "En stock : {}"
+msgstr "库存：{}"
+
+msgid "Quantité comptée illisible : {} (saisir par exemple 12 ou 2,5)."
+msgstr "清点数量无法识别：{}（请输入例如 12 或 2,5）。"
+
+msgid "Coût unitaire illisible : {} (montant entier en FCFA)."
+msgstr "单位成本无法识别：{}（以 FCFA 为单位的整数金额）。"
+
+msgid "Réception"
+msgstr "收货"
+
+msgid "Livraison"
+msgstr "发货"
+
+msgid "ajustement mis en file d'envoi : il sera appliqué au retour du serveur"
+msgstr "调整已加入发送队列：服务器恢复后将应用"
+
+msgid "ajustement enregistré"
+msgstr "调整已保存"
+
+msgid "inventaire validé"
+msgstr "盘点已确认"
+
+msgid "Stock au"
+msgstr "库存截至"
+
+msgid "Coût moyen"
+msgstr "平均成本"
+
+msgid "Valeur"
+msgstr "价值"
+
+msgid "Voir la valeur du stock"
+msgstr "查看库存价值"
+
+msgid "Ajuster le stock et saisir un inventaire"
+msgstr "调整库存并录入盘点"
+
+msgid "le produit « {} » n'est pas suivi en stock"
+msgstr "产品“{}”未进行库存跟踪"
+
+msgid "le motif est obligatoire"
+msgstr "原因为必填项"
+
+msgid "la quantité de l'ajustement ne peut pas être nulle"
+msgstr "调整数量不能为零"
+
+msgid "le coût unitaire ne peut pas être négatif"
+msgstr "单位成本不能为负"
+
+msgid "la quantité comptée de « {} » ne peut pas être négative"
+msgstr "“{}”的清点数量不能为负"
+
+msgid "l'inventaire ne compte aucun produit"
+msgstr "盘点中没有任何产品"
+
+msgid "le produit « {} » est compté deux fois"
+msgstr "产品“{}”被清点了两次"
+
+msgid "le stock de « {} » n'est pas nul : le ramener à zéro par un ajustement avant d'arrêter son suivi"
+msgstr "“{}”的库存不为零：停止跟踪前请通过调整将其归零"

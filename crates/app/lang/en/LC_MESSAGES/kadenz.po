@@ -4005,3 +4005,288 @@ msgstr "the server is newer than this workstation: update this workstation (Sett
 
 msgid "le serveur est plus ancien que ce poste : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration"
 msgstr "the server is older than this workstation: update the server first, from its administration window"
+
+msgid "Stock"
+msgstr "Stock"
+
+msgid "Produits en stock négatif (cliquer pour les voir)"
+msgstr "Products with negative stock (click to see them)"
+
+msgid "Stock négatif"
+msgstr "Negative stock"
+
+msgid "Valeur du stock"
+msgstr "Stock value"
+
+msgid "Suivi en stock"
+msgstr "Stock tracked"
+
+msgid "Stock négatif seulement"
+msgstr "Negative stock only"
+
+msgid "Valeur (FCFA)"
+msgstr "Value (FCFA)"
+
+msgid "Coût moyen (FCFA)"
+msgstr "Average cost (FCFA)"
+
+msgid "Ajuster le stock"
+msgstr "Adjust stock"
+
+msgid "Sélectionner un produit dans la liste pour voir son stock et ses mouvements."
+msgstr "Select a product in the list to see its stock and movements."
+
+msgid "Quantité : {}   Coût moyen : {} FCFA"
+msgstr "Quantity: {}   Average cost: {} FCFA"
+
+msgid "Quantité : {}"
+msgstr "Quantity: {}"
+
+msgid "Stock négatif : des livraisons ont dépassé la quantité connue. Corrigez-le par un ajustement ou un inventaire."
+msgstr "Negative stock: deliveries exceeded the known quantity. Correct it with an adjustment or a stock count."
+
+msgid "{} ajustement(s) en attente d'envoi au serveur : la quantité affichée ne les compte pas encore."
+msgstr "{} adjustment(s) waiting to be sent to the server: the quantity shown does not include them yet."
+
+msgid "Voir les mouvements"
+msgstr "See movements"
+
+msgid "Ajustement"
+msgstr "Adjustment"
+
+msgid "Quantité (+ entrée, - sortie)"
+msgstr "Quantity (+ in, - out)"
+
+msgid "Coût unitaire d'entrée (FCFA)"
+msgstr "Unit cost of the entry (FCFA)"
+
+msgid "Motif (obligatoire)"
+msgstr "Reason (required)"
+
+msgid "Enregistrer l'ajustement"
+msgstr "Save the adjustment"
+
+msgid "Toutes les natures"
+msgstr "All types"
+
+msgid "Réceptions"
+msgstr "Receipts"
+
+msgid "Ajustements"
+msgstr "Adjustments"
+
+msgid "Inventaires"
+msgstr "Stock counts"
+
+msgid "Ouvrir le document"
+msgstr "Open the document"
+
+msgid "Motif"
+msgstr "Reason"
+
+msgid "Valeur après"
+msgstr "Value after"
+
+msgid "Stock après"
+msgstr "Stock after"
+
+msgid "Nature"
+msgstr "Type"
+
+msgid "1. Imprimez la feuille de comptage et comptez les produits. 2. Saisissez les quantités comptées : elles restent sur ce poste tant que l'inventaire n'est pas validé. 3. Validez : le serveur enregistre un écart pour chaque produit dont la quantité diffère de la sienne."
+msgstr "1. Print the count sheet and count the products. 2. Enter the counted quantities: they stay on this workstation until the stock count is validated. 3. Validate: the server records a difference for each product whose quantity differs from its own."
+
+msgid "Masquer la quantité théorique"
+msgstr "Hide the expected quantity"
+
+msgid "Feuille de comptage (PDF)"
+msgstr "Count sheet (PDF)"
+
+msgid "Abandonner la saisie"
+msgstr "Discard the entry"
+
+msgid "Abandonner l'inventaire en cours ? Les quantités saisies sur ce poste sont effacées ; rien n'a été envoyé au serveur."
+msgstr "Discard the stock count in progress? The quantities entered on this workstation are erased; nothing has been sent to the server."
+
+msgid "Théorique"
+msgstr "Expected"
+
+msgid "Comptée"
+msgstr "Counted"
+
+msgid "Écart"
+msgstr "Difference"
+
+msgid "Coût unitaire"
+msgstr "Unit cost"
+
+msgid "FCFA"
+msgstr "FCFA"
+
+msgid "Motif de l'inventaire (obligatoire)"
+msgstr "Reason for the stock count (required)"
+
+msgid "Valider l'inventaire"
+msgstr "Validate the stock count"
+
+msgid "Valider l'inventaire ? Le serveur enregistre un mouvement d'écart pour chaque produit compté dont la quantité diffère de la sienne. Cette opération ne s'annule pas."
+msgstr "Validate the stock count? The server records a difference movement for each counted product whose quantity differs from its own. This operation cannot be undone."
+
+msgid "Serveur injoignable : l'inventaire se valide quand le serveur répond, la saisie reste gardée sur ce poste."
+msgstr "Server unreachable: the stock count is validated when the server responds; the entry stays on this workstation."
+
+msgid "État du stock"
+msgstr "Stock status"
+
+msgid "Mouvements"
+msgstr "Movements"
+
+msgid "Inventaire"
+msgstr "Stock count"
+
+msgid "Mouvements de stock"
+msgstr "Stock movements"
+
+msgid "Serveur injoignable : aucune synchronisation encore reçue."
+msgstr "Server unreachable: no synchronization received yet."
+
+msgid "Serveur injoignable : quantités au {}, dernière synchronisation."
+msgstr "Server unreachable: quantities as of {}, last synchronization."
+
+msgid "brouillon"
+msgstr "draft"
+
+msgid "Aucun produit suivi en stock"
+msgstr "No product tracked in stock"
+
+msgid "1 produit suivi"
+msgstr "1 tracked product"
+
+msgid "{} produits suivis"
+msgstr "{} tracked products"
+
+msgid "Aucun mouvement"
+msgstr "No movement"
+
+msgid "1 mouvement"
+msgstr "1 movement"
+
+msgid "{} mouvements"
+msgstr "{} movements"
+
+msgid "Stock insuffisant d'après la dernière synchronisation ; la livraison reste possible, ces produits passeront en stock négatif :"
+msgstr "Insufficient stock according to the last synchronization; the delivery is still possible, these products will go into negative stock:"
+
+msgid "{} : stock {}, livré {}"
+msgstr "{}: stock {}, delivered {}"
+
+msgid "Date illisible (JJ/MM/AAAA) : état du jour affiché."
+msgstr "Unreadable date (DD/MM/YYYY): today's status shown."
+
+msgid "Date illisible (JJ/MM/AAAA) : non appliquée."
+msgstr "Unreadable date (DD/MM/YYYY): not applied."
+
+msgid "Tous les produits suivis"
+msgstr "All tracked products"
+
+msgid "votre compte n'a pas le droit d'ajuster le stock"
+msgstr "your account is not allowed to adjust stock"
+
+msgid "quantité invalide : saisir une quantité non nulle, positive pour une entrée, négative pour une sortie (par exemple 5 ou -2,5)"
+msgstr "invalid quantity: enter a non-zero quantity, positive for an entry, negative for a removal (for example 5 or -2.5)"
+
+msgid "le motif de l'ajustement est obligatoire"
+msgstr "the reason for the adjustment is required"
+
+msgid "coût unitaire invalide : saisir un montant entier en FCFA, ou laisser vide pour le coût moyen"
+msgstr "invalid unit cost: enter a whole amount in FCFA, or leave empty for the average cost"
+
+msgid "votre compte n'a pas le droit de saisir un inventaire"
+msgstr "your account is not allowed to enter a stock count"
+
+msgid "le motif de l'inventaire est obligatoire"
+msgstr "the reason for the stock count is required"
+
+msgid "aucune quantité comptée : rien à valider"
+msgstr "no quantity counted: nothing to validate"
+
+msgid "inventaire non appliqué : le serveur ne répond pas, la saisie reste gardée sur ce poste"
+msgstr "stock count not applied: the server is not responding, the entry stays on this workstation"
+
+msgid "choisir un produit dans la liste"
+msgstr "choose a product in the list"
+
+msgid "ce mouvement n'a pas de document d'origine"
+msgstr "this movement has no source document"
+
+msgid "Valeur du stock affiché : {} FCFA"
+msgstr "Value of the stock shown: {} FCFA"
+
+msgid "{} produit(s) compté(s) sur {}"
+msgstr "{} product(s) counted out of {}"
+
+msgid "En stock : {}   Coût moyen : {} FCFA   Valeur : {} FCFA"
+msgstr "In stock: {}   Average cost: {} FCFA   Value: {} FCFA"
+
+msgid "En stock : {}"
+msgstr "In stock: {}"
+
+msgid "Quantité comptée illisible : {} (saisir par exemple 12 ou 2,5)."
+msgstr "Unreadable counted quantity: {} (enter for example 12 or 2.5)."
+
+msgid "Coût unitaire illisible : {} (montant entier en FCFA)."
+msgstr "Unreadable unit cost: {} (whole amount in FCFA)."
+
+msgid "Réception"
+msgstr "Receipt"
+
+msgid "Livraison"
+msgstr "Delivery"
+
+msgid "ajustement mis en file d'envoi : il sera appliqué au retour du serveur"
+msgstr "adjustment queued for sending: it will be applied when the server is back"
+
+msgid "ajustement enregistré"
+msgstr "adjustment saved"
+
+msgid "inventaire validé"
+msgstr "stock count validated"
+
+msgid "Stock au"
+msgstr "Stock as of"
+
+msgid "Coût moyen"
+msgstr "Average cost"
+
+msgid "Valeur"
+msgstr "Value"
+
+msgid "Voir la valeur du stock"
+msgstr "See the stock value"
+
+msgid "Ajuster le stock et saisir un inventaire"
+msgstr "Adjust stock and enter a stock count"
+
+msgid "le produit « {} » n'est pas suivi en stock"
+msgstr "the product “{}” is not tracked in stock"
+
+msgid "le motif est obligatoire"
+msgstr "the reason is required"
+
+msgid "la quantité de l'ajustement ne peut pas être nulle"
+msgstr "the adjustment quantity cannot be zero"
+
+msgid "le coût unitaire ne peut pas être négatif"
+msgstr "the unit cost cannot be negative"
+
+msgid "la quantité comptée de « {} » ne peut pas être négative"
+msgstr "the counted quantity of “{}” cannot be negative"
+
+msgid "l'inventaire ne compte aucun produit"
+msgstr "the stock count includes no product"
+
+msgid "le produit « {} » est compté deux fois"
+msgstr "the product “{}” is counted twice"
+
+msgid "le stock de « {} » n'est pas nul : le ramener à zéro par un ajustement avant d'arrêter son suivi"
+msgstr "the stock of “{}” is not zero: bring it to zero with an adjustment before stopping its tracking"

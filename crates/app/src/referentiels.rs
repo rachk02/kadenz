@@ -5,11 +5,13 @@
 //! enregistrement porte sur cet identifiant, jamais sur un rang de ligne.
 
 use std::cmp::Ordering;
+use std::collections::HashMap;
 
 use kadenz_domaine::saisie;
 use kadenz_domaine::texte::cle_comparaison;
 use kadenz_protocole::{Action, Bilan, Entite, Issue};
 use kadenz_stockage::produits::{self, FicheProduit, FiltreProduits, Produit, Sens};
+use kadenz_stockage::stock::{self, Stock};
 use kadenz_stockage::tiers::{self, FicheTiers, FiltreTiers, Tiers, TypeTiers};
 use kadenz_stockage::{Erreur, Retrait, synchro};
 use slint::{ComponentHandle, ModelRc, SharedString, StandardListViewItem, VecModel};
@@ -464,40 +466,81 @@ fn retour_retrait(resultat: Result<Retrait, String>) -> Retour {
 
 // ---------------------------------------------------------------- Produits
 
-fn cellules_produit(p: &Produit) -> Vec<String> {
+/// Stock des produits suivis (docs/spec-stock.md), lu une fois par affichage.
+type Stocks = HashMap<i64, Stock>;
+
+/// Colonnes : référence, désignation, prix, sens, stock, valeur (avec le droit
+/// de la voir), état. Stock et valeur sont vides pour un produit non suivi.
+fn cellules_produit(p: &Produit, stocks: &Stocks, valeur: bool) -> Vec<String> {
     let f = &p.fiche;
-    vec![
+    let stock = stocks.get(&p.id);
+    let mut cellules = vec![
         f.reference.clone(),
         f.designation.clone(),
         saisie::montant_en_texte(f.prix),
         tr(&f.sens.to_string()),
-        etat_fiche(p.actif),
-    ]
+        stock
+            .map(|s| crate::stock::texte_quantite(s.quantite))
+            .unwrap_or_default(),
+    ];
+    if valeur {
+        cellules.push(
+            stock
+                .map(|s| saisie::montant_en_texte(s.valeur))
+                .unwrap_or_default(),
+        );
+    }
+    cellules.push(etat_fiche(p.actif));
+    cellules
 }
 
-fn trier_produits(lignes: &mut [Produit], colonne: i32, croissant: bool) {
+/// `colonne` : rang affiché de gauche à droite ; sans la valeur, l'état est en 5.
+fn trier_produits(
+    lignes: &mut [Produit],
+    colonne: i32,
+    croissant: bool,
+    stocks: &Stocks,
+    valeur: bool,
+) {
+    let colonne = if !valeur && colonne == 5 { 6 } else { colonne };
+    let quantite = |p: &Produit| stocks.get(&p.id).map(|s| s.quantite);
+    let valeur_de = |p: &Produit| stocks.get(&p.id).map(|s| s.valeur);
     lignes.sort_by(|a, b| {
         let (fa, fb) = (&a.fiche, &b.fiche);
         let ordre = match colonne {
             0 => cle_comparaison(&fa.reference).cmp(&cle_comparaison(&fb.reference)),
             2 => fa.prix.cmp(&fb.prix),
             3 => fa.sens.to_string().cmp(&fb.sens.to_string()),
-            4 => a.actif.cmp(&b.actif),
+            4 => quantite(a).cmp(&quantite(b)),
+            5 => valeur_de(a).cmp(&valeur_de(b)),
+            6 => a.actif.cmp(&b.actif),
             _ => cle_comparaison(&fa.designation).cmp(&cle_comparaison(&fb.designation)),
         };
         dans_l_ordre(ordre, croissant)
     });
 }
 
-fn fiche_produit_ui(p: Option<&Produit>, sens_par_defaut: Sens) -> FicheProduitUi {
+fn fiche_produit_ui(
+    etat: &crate::Etat,
+    p: Option<&Produit>,
+    sens_par_defaut: Sens,
+) -> FicheProduitUi {
     match p {
         Some(p) => {
             let f = &p.fiche;
+            let (stock, stock_negatif) = if f.suivi_stock {
+                crate::stock::texte_fiche(etat, p.id)
+            } else {
+                (String::new(), false)
+            };
             FicheProduitUi {
                 designation: f.designation.as_str().into(),
                 reference: f.reference.as_str().into(),
                 prix: saisie::montant_en_texte(f.prix).into(),
                 sens: rang(&Sens::TOUS, f.sens),
+                suivi_stock: f.suivi_stock,
+                stock: stock.into(),
+                stock_negatif,
                 actif: p.actif,
                 existe: true,
             }
@@ -519,18 +562,25 @@ fn fiche_produit_depuis_ui(u: &FicheProduitUi) -> Result<FicheProduit, String> {
         reference: u.reference.to_string(),
         prix,
         sens: depuis_rang(&Sens::TOUS, u.sens),
-        suivi_stock: false,
+        suivi_stock: u.suivi_stock,
     })
 }
 
 pub(crate) fn afficher_produits(fenetre: &FenetrePrincipale, etat: &mut crate::Etat) {
     let api = fenetre.global::<ProduitsApi>();
+    let stocks = stock::tous(&etat.conn).unwrap_or_default();
+    let valeur = crate::stock::voit_valeur(etat);
     match produits::lister(&etat.conn, &etat.produits.filtre) {
         Ok(mut lignes) => {
             if let Some((colonne, croissant)) = etat.produits.tri {
-                trier_produits(&mut lignes, colonne, croissant);
+                trier_produits(&mut lignes, colonne, croissant, &stocks, valeur);
             }
-            api.set_lignes(modele_lignes(lignes.iter().map(cellules_produit).collect()));
+            api.set_lignes(modele_lignes(
+                lignes
+                    .iter()
+                    .map(|p| cellules_produit(p, &stocks, valeur))
+                    .collect(),
+            ));
             api.set_resume(resume(lignes.len()));
             api.set_ligne_courante(ligne_de(
                 etat.produits.selection,
@@ -576,7 +626,7 @@ fn brancher_produits(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
     });
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
-    api.on_filtrer(move |texte, sens, inactifs| {
+    api.on_filtrer(move |texte, sens, inactifs, negatifs| {
         let mut etat = e.borrow_mut();
         etat.produits.filtre = FiltreProduits {
             texte: texte.to_string(),
@@ -587,7 +637,7 @@ fn brancher_produits(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 _ => None,
             },
             inclure_inactifs: inactifs,
-            negatifs: false,
+            negatifs,
         };
         if let Some(f) = f.upgrade() {
             afficher_produits(&f, &mut etat);
@@ -611,7 +661,11 @@ fn brancher_produits(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             .and_then(|i| etat.produits.lignes.get(i))
             .cloned();
         etat.produits.selection = choisi.as_ref().map(|p| p.id);
-        fiche_produit_ui(choisi.as_ref(), sens_par_defaut(&etat.produits.filtre))
+        fiche_produit_ui(
+            &etat,
+            choisi.as_ref(),
+            sens_par_defaut(&etat.produits.filtre),
+        )
     });
 
     // Export Excel des fiches affichées (jalon J10).
@@ -628,7 +682,7 @@ fn brancher_produits(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         if let Some(f) = f.upgrade() {
             f.global::<ProduitsApi>().set_ligne_courante(-1);
         }
-        fiche_produit_ui(None, sens_par_defaut(&etat.produits.filtre))
+        fiche_produit_ui(&etat, None, sens_par_defaut(&etat.produits.filtre))
     });
 
     let e = etat.clone();
@@ -641,7 +695,11 @@ fn brancher_produits(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         if fiche.is_none() {
             etat.produits.selection = None;
         }
-        fiche_produit_ui(fiche.as_ref(), sens_par_defaut(&etat.produits.filtre))
+        fiche_produit_ui(
+            &etat,
+            fiche.as_ref(),
+            sens_par_defaut(&etat.produits.filtre),
+        )
     });
 
     let (f, e) = (fenetre.as_weak(), etat.clone());
