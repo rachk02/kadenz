@@ -4569,3 +4569,39 @@ msgstr "Önizleme yapılamıyor: {}"
 
 msgid "document sans page"
 msgstr "sayfası olmayan belge"
+
+msgid "Imprimer"
+msgstr "Yazdır"
+
+msgid "une impression est déjà en cours"
+msgstr "zaten devam eden bir yazdırma var"
+
+msgid "Impression impossible : {}"
+msgstr "Yazdırılamıyor: {}"
+
+msgid "Impression en préparation"
+msgstr "Yazdırma hazırlanıyor"
+
+msgid "Impression : page {} sur {}"
+msgstr "Yazdırılıyor: sayfa {} / {}"
+
+msgid "Envoyé à l'imprimante {}"
+msgstr "{} yazıcısına gönderildi"
+
+msgid "Envoyé à l'imprimante {}, page réduite pour tenir sur le papier"
+msgstr "{} yazıcısına gönderildi, sayfa kâğıda sığması için küçültüldü"
+
+msgid "document illisible"
+msgstr "okunamayan belge"
+
+msgid "imprimante introuvable : {} (code {})"
+msgstr "yazıcı bulunamadı: {} (kod {})"
+
+msgid "l'imprimante a refusé le document (code {})"
+msgstr "yazıcı belgeyi reddetti (kod {})"
+
+msgid "l'imprimante a refusé la page {}"
+msgstr "yazıcı {}. sayfayı reddetti"
+
+msgid "fenêtre d'impression indisponible (code {})"
+msgstr "yazdırma penceresi kullanılamıyor (kod {})"

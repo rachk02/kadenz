@@ -3,7 +3,8 @@
 //! Le PDF généré une fois par `crate::pdf::generer` est rendu page par page par
 //! `hayro`. Seules les pages visibles et leurs voisines sont gardées en image ;
 //! les autres sont libérées et rendues de nouveau quand elles reviennent à
-//! l'écran. « Enregistrer en PDF » écrit les mêmes octets.
+//! l'écran. « Enregistrer en PDF » écrit les mêmes octets ; « Imprimer » (jalon
+//! A2, `crate::imprimante`) les envoie à l'imprimante.
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -16,7 +17,9 @@ use slint::{ComponentHandle, Image, Model, ModelRc, Rgba8Pixel, SharedPixelBuffe
 
 use crate::referentiels::{retour_erreur, retour_ok};
 use crate::traduction::{tr, trf};
-use crate::{ApercuApi, EtatPartage, FacturesApi, FenetrePrincipale, PageApercuUi, Retour};
+use kadenz_domaine::mise_en_page::Marges;
+
+use crate::{Alerte, ApercuApi, EtatPartage, FacturesApi, FenetrePrincipale, PageApercuUi, Retour};
 
 /// Largeur d'affichage maximale d'une page, en pixels logiques (apercu.slint).
 const LARGEUR_AFFICHEE: f32 = 820.0;
@@ -39,6 +42,8 @@ struct Apercu {
     octets: Vec<u8>,
     nom: String,
     dossier: Option<String>,
+    // Marges de la mise en page, pour décider à l'impression si la page tient.
+    marges: Marges,
     modele: Rc<VecModel<PageApercuUi>>,
     rendues: Vec<bool>,
     // Largeur de rendu en pixels, d'après l'échelle de l'écran à l'ouverture.
@@ -50,12 +55,13 @@ thread_local! {
 }
 
 /// Ouvre l'aperçu d'un PDF, avec le nom de fichier et le dossier proposés à
-/// l'enregistrement.
+/// l'enregistrement et les marges de sa mise en page.
 pub(crate) fn ouvrir(
     fenetre: &FenetrePrincipale,
     octets: Vec<u8>,
     nom: String,
     dossier: Option<String>,
+    marges: Marges,
 ) -> Result<(), String> {
     let pdf = Pdf::new(octets.clone()).map_err(|e| format!("{e:?}"))?;
     let ratios: Vec<f32> = pdf
@@ -88,6 +94,7 @@ pub(crate) fn ouvrir(
             octets,
             nom,
             dossier,
+            marges,
             modele,
             rendues: vec![false; ratios.len()],
             largeur_rendu: largeur_rendu(fenetre.window().scale_factor()),
@@ -198,6 +205,112 @@ pub(crate) fn enregistrer_pdf(octets: &[u8], nom: &str, dossier: Option<&str>) -
     retour_ok(trf("PDF enregistré : {}", &[&chemin.display()]))
 }
 
+/// « Imprimer » : fenêtre d'impression de Windows, puis envoi dans un fil de
+/// travail ; l'avancement et le résultat reviennent par la boucle des événements.
+#[cfg(windows)]
+fn imprimer(fenetre: &FenetrePrincipale) -> Retour {
+    use crate::imprimante::{self, Choix};
+
+    let api = fenetre.global::<ApercuApi>();
+    if api.get_impression_en_cours() {
+        return retour_erreur(tr("une impression est déjà en cours"));
+    }
+    // Copie avant la fenêtre d'impression, qui fait tourner la boucle des événements.
+    let copie = APERCU.with(|a| {
+        a.borrow().as_ref().map(|apercu| {
+            (
+                apercu.octets.clone(),
+                apercu.nom.trim_end_matches(".pdf").to_string(),
+                apercu.marges,
+                apercu.rendues.len(),
+            )
+        })
+    });
+    let Some((octets, titre, marges, nombre)) = copie else {
+        return Retour::default();
+    };
+    let travail = match imprimante::choisir(poignee(fenetre), nombre) {
+        Ok(Choix::Imprimer(travail)) => travail,
+        Ok(Choix::Rien) => return Retour::default(),
+        Err(message) => return retour_erreur(trf("Impression impossible : {}", &[&message])),
+    };
+    api.set_impression_en_cours(true);
+    api.set_avancement(tr("Impression en préparation").into());
+    let faible = fenetre.as_weak();
+    std::thread::spawn(move || {
+        let suivi = faible.clone();
+        let resultat = imprimante::envoyer(octets, &titre, &travail, &marges, None, |n, total| {
+            let _ = suivi.upgrade_in_event_loop(move |f| {
+                f.global::<ApercuApi>()
+                    .set_avancement(trf("Impression : page {} sur {}", &[&n, &total]).into());
+            });
+        });
+        let nom = travail.nom_imprimante();
+        let _ = faible.upgrade_in_event_loop(move |f| fin_impression(&f, resultat, &nom));
+    });
+    Retour::default()
+}
+
+#[cfg(not(windows))]
+fn imprimer(_fenetre: &FenetrePrincipale) -> Retour {
+    Retour::default()
+}
+
+#[cfg(windows)]
+fn fin_impression(
+    fenetre: &FenetrePrincipale,
+    resultat: Result<bool, crate::imprimante::Echec>,
+    imprimante: &str,
+) {
+    use crate::imprimante::Echec;
+
+    let api = fenetre.global::<ApercuApi>();
+    api.set_impression_en_cours(false);
+    api.set_avancement("".into());
+    let alerte = fenetre.global::<Alerte>();
+    match resultat {
+        Ok(false) => alerte.invoke_montrer(trf("Envoyé à l'imprimante {}", &[&imprimante]).into()),
+        Ok(true) => alerte.invoke_montrer(
+            trf(
+                "Envoyé à l'imprimante {}, page réduite pour tenir sur le papier",
+                &[&imprimante],
+            )
+            .into(),
+        ),
+        Err(echec) => {
+            let raison = match echec {
+                Echec::Lecture => tr("document illisible"),
+                Echec::Imprimante(code) => trf(
+                    "imprimante introuvable : {} (code {})",
+                    &[&imprimante, &code],
+                ),
+                Echec::Document(code) => {
+                    trf("l'imprimante a refusé le document (code {})", &[&code])
+                }
+                Echec::Page(n) => trf("l'imprimante a refusé la page {}", &[&n]),
+            };
+            // Durable : l'aperçu a pu être fermé pendant l'envoi.
+            alerte.invoke_signaler(trf("Impression impossible : {}", &[&raison]).into());
+        }
+    }
+}
+
+/// Poignée Windows de la fenêtre de Kadenz, propriétaire de la fenêtre d'impression.
+#[cfg(windows)]
+fn poignee(fenetre: &FenetrePrincipale) -> windows_sys::Win32::Foundation::HWND {
+    use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+
+    match fenetre
+        .window()
+        .window_handle()
+        .window_handle()
+        .map(|h| h.as_raw())
+    {
+        Ok(RawWindowHandle::Win32(h)) => h.hwnd.get() as windows_sys::Win32::Foundation::HWND,
+        _ => std::ptr::null_mut(),
+    }
+}
+
 fn fermer(fenetre: &FenetrePrincipale) {
     let api = fenetre.global::<ApercuApi>();
     api.set_ouvert(false);
@@ -235,6 +348,12 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, _etat: &EtatPartage) {
     });
 
     let f = fenetre.as_weak();
+    api.on_imprimer(move || match f.upgrade() {
+        Some(f) => imprimer(&f),
+        None => Retour::default(),
+    });
+
+    let f = fenetre.as_weak();
     api.on_fermer(move || {
         if let Some(f) = f.upgrade() {
             fermer(&f);
@@ -262,14 +381,8 @@ mod tests {
         assert_eq!(largeur_rendu(4.0), LARGEUR_RENDU_MAX);
     }
 
-    /// Essai A1 sans écran : un brouillon de devis et un devis de plusieurs pages
-    /// sont produits comme pour l'aperçu, puis chaque page est rendue comme à
-    /// l'écran. Avec la variable KADENZ_ESSAI_APERCU (un dossier), les pages y
-    /// sont écrites en RGBA brut (nom-page-largeurxhauteur.rgba) pour un contrôle
-    /// à l'oeil. Le temps de rendu seul est affiché (`--nocapture`) à la largeur
-    /// d'un écran à 100 % et à 200 % ; `hayro` est optimisé même en développement.
-    #[test]
-    fn pages_de_l_apercu() {
+    /// Devis d'essai, en brouillon : (libellé, nombre de pages minimal, PDF, nom).
+    fn devis_d_essai() -> Vec<(&'static str, usize, Vec<u8>, String)> {
         let mut conn = kadenz_stockage::ouvrir_en_memoire().unwrap();
         let admin = installation::installer(
             &mut conn,
@@ -310,18 +423,32 @@ mod tests {
             lignes: (1..=lignes).map(ligne).collect(),
             ..Saisie::vide(chrono::Local::now().date_naive())
         };
+        [("Essai aperçu A1", 1, 1), ("Essai aperçu A1 long", 80, 2)]
+            .into_iter()
+            .map(|(libelle, lignes, pages_minimum)| {
+                let id = documents::creer_brouillon(
+                    &mut conn,
+                    &admin,
+                    TypeDocument::Devis,
+                    &saisie(libelle, lignes),
+                )
+                .unwrap();
+                let (octets, nom) = crate::pdf::generer(&conn, id).unwrap();
+                (libelle, pages_minimum, octets, nom)
+            })
+            .collect()
+    }
+
+    /// Essai A1 sans écran : un brouillon de devis et un devis de plusieurs pages
+    /// sont produits comme pour l'aperçu, puis chaque page est rendue comme à
+    /// l'écran. Avec la variable KADENZ_ESSAI_APERCU (un dossier), les pages y
+    /// sont écrites en RGBA brut (nom-page-largeurxhauteur.rgba) pour un contrôle
+    /// à l'oeil. Le temps de rendu seul est affiché (`--nocapture`) à la largeur
+    /// d'un écran à 100 % et à 200 % ; `hayro` est optimisé même en développement.
+    #[test]
+    fn pages_de_l_apercu() {
         let dossier = std::env::var("KADENZ_ESSAI_APERCU").ok();
-        for (libelle, lignes, pages_minimum) in
-            [("Essai aperçu A1", 1, 1), ("Essai aperçu A1 long", 80, 2)]
-        {
-            let id = documents::creer_brouillon(
-                &mut conn,
-                &admin,
-                TypeDocument::Devis,
-                &saisie(libelle, lignes),
-            )
-            .unwrap();
-            let (octets, nom) = crate::pdf::generer(&conn, id).unwrap();
+        for (libelle, pages_minimum, octets, nom) in devis_d_essai() {
             assert!(nom.starts_with("Apercu-"), "nom d'un brouillon : {nom}");
             let pdf = Pdf::new(octets).unwrap();
             let nombre = pdf.pages().len();
@@ -344,12 +471,120 @@ mod tests {
                         std::fs::write(std::path::Path::new(dossier).join(fichier), pixels)
                             .unwrap();
                     }
-                    (l, h, pixels.chunks(4).filter(|p| p[0] < 128).count())
+                    (l, h, sombres(pixels))
                 })
                 .unwrap();
                 assert_eq!(l, LARGEUR_RENDU_MIN as u32);
                 assert!((1740..=1760).contains(&h), "proportions A4 : {h}");
                 assert!(sombres > 1000, "{libelle}, page {} blanche", rang + 1);
+            }
+        }
+    }
+
+    fn sombres(pixels: &[u8]) -> usize {
+        pixels.chunks(4).filter(|p| p[0] < 128).count()
+    }
+
+    /// Essai A2 sans écran, sur demande seulement : avec la variable
+    /// KADENZ_ESSAI_IMPRESSION (un dossier), les deux devis d'essai sont envoyés à
+    /// l'imprimante virtuelle « Microsoft Print to PDF », ou à celle que nomme
+    /// KADENZ_ESSAI_IMPRIMANTE, désignée par son nom exact (jamais l'imprimante
+    /// par défaut), qui les écrit dans ce dossier si son pilote suit le fichier
+    /// de sortie demandé ; le
+    /// devis long part en deux copies assemblées faites par Kadenz. Les PDF
+    /// imprimés sont relus : nombre de pages, pages non blanches, première page
+    /// écrite en RGBA brut pour un contrôle à l'oeil.
+    #[cfg(windows)]
+    #[test]
+    fn impression_sur_print_to_pdf() {
+        use crate::imprimante::{Echec, Travail, envoyer};
+
+        let Ok(dossier) = std::env::var("KADENZ_ESSAI_IMPRESSION") else {
+            return;
+        };
+        let dossier = std::path::Path::new(&dossier);
+        let nom_imprimante = std::env::var("KADENZ_ESSAI_IMPRIMANTE")
+            .unwrap_or_else(|_| "Microsoft Print to PDF".to_string());
+        for (libelle, _, octets, nom) in devis_d_essai() {
+            let nombre = Pdf::new(octets.clone()).unwrap().pages().len();
+            let copies = if nombre > 1 { 2 } else { 1 };
+            let pages: Vec<usize> = (0..copies).flat_map(|_| 0..nombre).collect();
+            let attendues = pages.len();
+            let travail = Travail {
+                imprimante: nom_imprimante
+                    .encode_utf16()
+                    .chain(std::iter::once(0))
+                    .collect(),
+                devmode: None,
+                pages,
+            };
+            let sortie = dossier.join(nom.replace(".pdf", "-imprime.pdf"));
+            let _ = std::fs::remove_file(&sortie);
+            let mut feuilles = Vec::new();
+            let resultat = envoyer(
+                octets,
+                libelle,
+                &travail,
+                &Marges::default(),
+                // KADENZ_ESSAI_SANS_SORTIE : le pilote choisit lui-même où écrire.
+                std::env::var_os("KADENZ_ESSAI_SANS_SORTIE")
+                    .is_none()
+                    .then_some(sortie.as_path()),
+                |n, total| feuilles.push((n, total)),
+            );
+            let reduite = match resultat {
+                Ok(reduite) => reduite,
+                Err(Echec::Imprimante(code)) => {
+                    eprintln!("{nom_imprimante} ne s'ouvre pas (code {code}) : essai sauté");
+                    return;
+                }
+                Err(echec) => panic!("{libelle} : {echec:?}"),
+            };
+            assert_eq!(feuilles.last(), Some(&(attendues, attendues)));
+            // Le spouleur écrit le fichier après EndDoc : on attend qu'il soit lisible.
+            let mut imprime = None;
+            for _ in 0..60 {
+                std::thread::sleep(std::time::Duration::from_millis(500));
+                if let Ok(lu) = std::fs::read(&sortie)
+                    && let Ok(pdf) = Pdf::new(lu)
+                    && pdf.pages().len() == attendues
+                {
+                    imprime = Some(pdf);
+                    break;
+                }
+            }
+            // Un pilote tiers peut ignorer le fichier demandé et ouvrir sa propre
+            // boîte d'enregistrement : l'envoi a réussi, le fichier est ailleurs.
+            let Some(imprime) = imprime else {
+                assert_ne!(
+                    nom_imprimante,
+                    "Microsoft Print to PDF",
+                    "{libelle} : {} absent",
+                    sortie.display()
+                );
+                eprintln!(
+                    "{libelle} : envoyé à {nom_imprimante} ({attendues} feuille(s), réduite : {reduite}), fichier non écrit dans {}",
+                    sortie.display()
+                );
+                continue;
+            };
+            eprintln!(
+                "{} : {attendues} page(s), réduite : {reduite}",
+                sortie.display()
+            );
+            for rang in 0..attendues {
+                let noirs = rendre_page(&imprime, rang, LARGEUR_RENDU_MIN, |pixels, l, h| {
+                    if rang == 0 {
+                        let fichier = sortie.with_file_name(format!(
+                            "{}-p1-{l}x{h}.rgba",
+                            nom.trim_end_matches(".pdf")
+                        ));
+                        std::fs::write(fichier, pixels).unwrap();
+                    }
+                    sombres(pixels)
+                })
+                .unwrap();
+                assert!(noirs > 1000, "{libelle}, feuille {} blanche", rang + 1);
             }
         }
     }

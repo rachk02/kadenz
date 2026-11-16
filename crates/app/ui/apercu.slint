@@ -19,9 +19,14 @@ export global ApercuApi {
     in property <string> titre;
     in property <string> resume;
     in property <[PageApercuUi]> pages;
+    // Impression envoyée dans un fil de travail (jalon A2) : « Imprimer » est
+    // grisé et l'avancement remplace le nombre de pages.
+    in property <bool> impression-en-cours;
+    in property <string> avancement;
     // Rangs de la première et de la dernière page visibles.
     callback visibles(premiere: int, derniere: int);
     callback enregistrer() -> Retour;
+    callback imprimer() -> Retour;
     callback fermer();
 }
 
@@ -56,6 +61,12 @@ export component FenetreApercu inherits Rectangle {
         key-pressed(e) => {
             if (e.text == Key.Escape) {
                 ApercuApi.fermer();
+                return accept;
+            }
+            if (e.modifiers.control && (e.text == "p" || e.text == "P")) {
+                if (!ApercuApi.impression-en-cours) {
+                    root.retour = Alerte.relayer(ApercuApi.imprimer());
+                }
                 return accept;
             }
             return reject;
@@ -94,14 +105,22 @@ export component FenetreApercu inherits Rectangle {
 
                     Text {
                         vertical-alignment: center;
-                        text: ApercuApi.resume;
+                        text: ApercuApi.avancement != "" ? ApercuApi.avancement : ApercuApi.resume;
                         font-size: 12px;
                         color: Theme.texte-secondaire;
                     }
 
                     Bouton {
-                        text: @tr("Enregistrer en PDF");
+                        text: @tr("Imprimer");
                         primary: true;
+                        enabled: !ApercuApi.impression-en-cours;
+                        clicked => {
+                            root.retour = Alerte.relayer(ApercuApi.imprimer());
+                        }
+                    }
+
+                    Bouton {
+                        text: @tr("Enregistrer en PDF");
                         clicked => {
                             root.retour = Alerte.relayer(ApercuApi.enregistrer());
                         }

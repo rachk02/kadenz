@@ -4569,3 +4569,39 @@ msgstr "Vista previa imposible: {}"
 
 msgid "document sans page"
 msgstr "documento sin páginas"
+
+msgid "Imprimer"
+msgstr "Imprimir"
+
+msgid "une impression est déjà en cours"
+msgstr "ya hay una impresión en curso"
+
+msgid "Impression impossible : {}"
+msgstr "Impresión imposible: {}"
+
+msgid "Impression en préparation"
+msgstr "Preparando la impresión"
+
+msgid "Impression : page {} sur {}"
+msgstr "Imprimiendo: página {} de {}"
+
+msgid "Envoyé à l'imprimante {}"
+msgstr "Enviado a la impresora {}"
+
+msgid "Envoyé à l'imprimante {}, page réduite pour tenir sur le papier"
+msgstr "Enviado a la impresora {}, página reducida para caber en el papel"
+
+msgid "document illisible"
+msgstr "documento ilegible"
+
+msgid "imprimante introuvable : {} (code {})"
+msgstr "impresora no encontrada: {} (código {})"
+
+msgid "l'imprimante a refusé le document (code {})"
+msgstr "la impresora rechazó el documento (código {})"
+
+msgid "l'imprimante a refusé la page {}"
+msgstr "la impresora rechazó la página {}"
+
+msgid "fenêtre d'impression indisponible (code {})"
+msgstr "ventana de impresión no disponible (código {})"

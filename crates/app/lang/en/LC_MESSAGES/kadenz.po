@@ -4569,3 +4569,39 @@ msgstr "Preview unavailable: {}"
 
 msgid "document sans page"
 msgstr "document without pages"
+
+msgid "Imprimer"
+msgstr "Print"
+
+msgid "une impression est déjà en cours"
+msgstr "a print job is already in progress"
+
+msgid "Impression impossible : {}"
+msgstr "Printing impossible: {}"
+
+msgid "Impression en préparation"
+msgstr "Preparing to print"
+
+msgid "Impression : page {} sur {}"
+msgstr "Printing: page {} of {}"
+
+msgid "Envoyé à l'imprimante {}"
+msgstr "Sent to printer {}"
+
+msgid "Envoyé à l'imprimante {}, page réduite pour tenir sur le papier"
+msgstr "Sent to printer {}, page reduced to fit the paper"
+
+msgid "document illisible"
+msgstr "unreadable document"
+
+msgid "imprimante introuvable : {} (code {})"
+msgstr "printer not found: {} (code {})"
+
+msgid "l'imprimante a refusé le document (code {})"
+msgstr "the printer refused the document (code {})"
+
+msgid "l'imprimante a refusé la page {}"
+msgstr "the printer refused page {}"
+
+msgid "fenêtre d'impression indisponible (code {})"
+msgstr "print dialog unavailable (code {})"

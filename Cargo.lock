@@ -3161,6 +3161,7 @@ dependencies = [
  "kadenz-poste",
  "kadenz-protocole",
  "kadenz-stockage",
+ "raw-window-handle",
  "rfd",
  "serde_json",
  "slint",

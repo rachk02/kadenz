@@ -4569,3 +4569,39 @@ msgstr "プレビューできません：{}"
 
 msgid "document sans page"
 msgstr "ページのない文書"
+
+msgid "Imprimer"
+msgstr "印刷"
+
+msgid "une impression est déjà en cours"
+msgstr "すでに印刷中です"
+
+msgid "Impression impossible : {}"
+msgstr "印刷できません：{}"
+
+msgid "Impression en préparation"
+msgstr "印刷の準備中"
+
+msgid "Impression : page {} sur {}"
+msgstr "印刷中：{} / {} ページ"
+
+msgid "Envoyé à l'imprimante {}"
+msgstr "プリンター {} に送信しました"
+
+msgid "Envoyé à l'imprimante {}, page réduite pour tenir sur le papier"
+msgstr "プリンター {} に送信しました（用紙に合わせてページを縮小）"
+
+msgid "document illisible"
+msgstr "読み取れない文書"
+
+msgid "imprimante introuvable : {} (code {})"
+msgstr "プリンターが見つかりません：{}（コード {}）"
+
+msgid "l'imprimante a refusé le document (code {})"
+msgstr "プリンターが文書を拒否しました（コード {}）"
+
+msgid "l'imprimante a refusé la page {}"
+msgstr "プリンターが {} ページを拒否しました"
+
+msgid "fenêtre d'impression indisponible (code {})"
+msgstr "印刷ダイアログを使用できません（コード {}）"

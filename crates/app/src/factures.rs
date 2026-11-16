@@ -2189,12 +2189,21 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let Some(f) = f.upgrade() else {
             return Retour::default();
         };
-        let resultat = pdf_du_document(&e.borrow());
+        let (resultat, marges) = {
+            let etat = e.borrow();
+            // Marges de la mise en page, pour l'impression (spec A2, section 3).
+            let marges = kadenz_stockage::mise_en_page::lire(&etat.conn)
+                .map(|m| m.marges)
+                .unwrap_or_default();
+            (pdf_du_document(&etat), marges)
+        };
         match resultat {
-            Ok((octets, nom, dossier)) => match crate::apercu::ouvrir(&f, octets, nom, dossier) {
-                Ok(()) => Retour::default(),
-                Err(message) => retour_erreur(trf("Aperçu impossible : {}", &[&message])),
-            },
+            Ok((octets, nom, dossier)) => {
+                match crate::apercu::ouvrir(&f, octets, nom, dossier, marges) {
+                    Ok(()) => Retour::default(),
+                    Err(message) => retour_erreur(trf("Aperçu impossible : {}", &[&message])),
+                }
+            }
             Err(retour) => retour,
         }
     });

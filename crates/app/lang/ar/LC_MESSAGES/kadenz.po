@@ -4569,3 +4569,39 @@ msgstr "تعذرت المعاينة: {}"
 
 msgid "document sans page"
 msgstr "مستند بلا صفحات"
+
+msgid "Imprimer"
+msgstr "طباعة"
+
+msgid "une impression est déjà en cours"
+msgstr "توجد عملية طباعة جارية بالفعل"
+
+msgid "Impression impossible : {}"
+msgstr "تعذرت الطباعة: {}"
+
+msgid "Impression en préparation"
+msgstr "جارٍ التحضير للطباعة"
+
+msgid "Impression : page {} sur {}"
+msgstr "جارٍ الطباعة: الصفحة {} من {}"
+
+msgid "Envoyé à l'imprimante {}"
+msgstr "أُرسل إلى الطابعة {}"
+
+msgid "Envoyé à l'imprimante {}, page réduite pour tenir sur le papier"
+msgstr "أُرسل إلى الطابعة {}، مع تصغير الصفحة لتلائم الورق"
+
+msgid "document illisible"
+msgstr "مستند غير مقروء"
+
+msgid "imprimante introuvable : {} (code {})"
+msgstr "الطابعة غير موجودة: {} (الرمز {})"
+
+msgid "l'imprimante a refusé le document (code {})"
+msgstr "رفضت الطابعة المستند (الرمز {})"
+
+msgid "l'imprimante a refusé la page {}"
+msgstr "رفضت الطابعة الصفحة {}"
+
+msgid "fenêtre d'impression indisponible (code {})"
+msgstr "نافذة الطباعة غير متاحة (الرمز {})"

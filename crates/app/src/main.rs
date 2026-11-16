@@ -11,6 +11,8 @@ mod factures;
 mod graphiques;
 mod import_ecran;
 mod impression;
+#[cfg(windows)]
+mod imprimante;
 mod instance;
 mod licence;
 mod maj;

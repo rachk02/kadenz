@@ -4569,3 +4569,39 @@ msgstr "无法预览：{}"
 
 msgid "document sans page"
 msgstr "没有页面的文档"
+
+msgid "Imprimer"
+msgstr "打印"
+
+msgid "une impression est déjà en cours"
+msgstr "已有打印任务正在进行"
+
+msgid "Impression impossible : {}"
+msgstr "无法打印：{}"
+
+msgid "Impression en préparation"
+msgstr "正在准备打印"
+
+msgid "Impression : page {} sur {}"
+msgstr "正在打印：第 {} 页，共 {} 页"
+
+msgid "Envoyé à l'imprimante {}"
+msgstr "已发送到打印机 {}"
+
+msgid "Envoyé à l'imprimante {}, page réduite pour tenir sur le papier"
+msgstr "已发送到打印机 {}，页面已缩小以适合纸张"
+
+msgid "document illisible"
+msgstr "无法读取的文档"
+
+msgid "imprimante introuvable : {} (code {})"
+msgstr "找不到打印机：{}（代码 {}）"
+
+msgid "l'imprimante a refusé le document (code {})"
+msgstr "打印机拒绝了文档（代码 {}）"
+
+msgid "l'imprimante a refusé la page {}"
+msgstr "打印机拒绝了第 {} 页"
+
+msgid "fenêtre d'impression indisponible (code {})"
+msgstr "打印窗口不可用（代码 {}）"
