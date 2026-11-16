@@ -563,6 +563,7 @@ fn fiche_produit_depuis_ui(u: &FicheProduitUi) -> Result<FicheProduit, String> {
         prix,
         sens: depuis_rang(&Sens::TOUS, u.sens),
         suivi_stock: u.suivi_stock,
+        nature_comptable: Default::default(),
     })
 }
 

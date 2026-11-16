@@ -668,6 +668,7 @@ mod tests {
             prix: 1_500,
             sens: Sens::LesDeux,
             suivi_stock: suivi,
+            nature_comptable: Default::default(),
         };
         produits::creer(&c.conn, &c.admin, &f).unwrap().id
     }

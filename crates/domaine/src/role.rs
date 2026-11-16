@@ -73,10 +73,13 @@ pub enum Droit {
     /// Voir la valeur du stock : coût moyen, valeurs des mouvements et de
     /// l'état du stock. Sans lui, les quantités seules.
     VoirValeurStock,
+    /// Exporter la comptabilité, régler ses comptes et clore une période
+    /// (`docs/spec-export-syscohada.md`, 4.7).
+    ExporterComptabilite,
 }
 
 impl Droit {
-    pub const TOUS: [Droit; 13] = [
+    pub const TOUS: [Droit; 14] = [
         Droit::BrouillonDocuments,
         Droit::BrouillonFacture,
         Droit::ValiderDocument,
@@ -90,6 +93,7 @@ impl Droit {
         Droit::SauvegarderBase,
         Droit::AjusterStock,
         Droit::VoirValeurStock,
+        Droit::ExporterComptabilite,
     ];
 
     /// Droit nécessaire pour modifier un brouillon du type donné.
@@ -115,6 +119,7 @@ impl Droit {
             Droit::SauvegarderBase => "sauvegarder_base",
             Droit::AjusterStock => "ajuster_stock",
             Droit::VoirValeurStock => "voir_valeur_stock",
+            Droit::ExporterComptabilite => "exporter_comptabilite",
         }
     }
 
@@ -143,6 +148,7 @@ impl fmt::Display for Droit {
             Droit::SauvegarderBase => "Sauvegarder / exporter la base",
             Droit::AjusterStock => "Ajuster le stock et saisir un inventaire",
             Droit::VoirValeurStock => "Voir la valeur du stock",
+            Droit::ExporterComptabilite => "Exporter la comptabilité et clore une période",
         })
     }
 }
@@ -173,6 +179,7 @@ impl Default for MatriceDroits {
             Consulter,
             AjusterStock,
             VoirValeurStock,
+            ExporterComptabilite,
         ] {
             autorisations.insert((Comptable, droit));
         }
@@ -236,6 +243,10 @@ mod tests {
         assert!(m.autorise(Admin, AjusterStock) && m.autorise(Admin, VoirValeurStock));
         assert!(m.autorise(Comptable, AjusterStock) && m.autorise(Comptable, VoirValeurStock));
         assert!(!m.autorise(Commercial, AjusterStock) && !m.autorise(Commercial, VoirValeurStock));
+        assert!(
+            m.autorise(Admin, ExporterComptabilite) && m.autorise(Comptable, ExporterComptabilite)
+        );
+        assert!(!m.autorise(Commercial, ExporterComptabilite));
 
         assert!(m.autorise(Commercial, devis));
         assert!(!m.autorise(Commercial, facture));

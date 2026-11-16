@@ -150,6 +150,9 @@ pub struct FicheProduit {
     pub sens: Sens,
     /// Suivi en stock (`docs/spec-stock.md`, 3.1) : faux pour un service.
     pub suivi_stock: bool,
+    /// Nature comptable (`docs/spec-export-syscohada.md`, 4.4) : choisit les
+    /// comptes de ventes et de TVA ; indépendante du suivi en stock.
+    pub nature_comptable: crate::comptabilite::NatureComptable,
 }
 
 impl FicheProduit {
@@ -161,6 +164,7 @@ impl FicheProduit {
             prix: self.prix,
             sens: self.sens,
             suivi_stock: self.suivi_stock,
+            nature_comptable: self.nature_comptable,
         };
         if f.designation.is_empty() {
             return Err("la désignation est obligatoire".into());
@@ -205,6 +209,7 @@ mod tests {
             prix: 10,
             sens: Sens::Vente,
             suivi_stock: false,
+            nature_comptable: Default::default(),
         };
         assert!(p.nettoyee().is_err());
     }

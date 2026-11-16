@@ -4,6 +4,7 @@
 //! sur lui pour tout calcul et toute décision de statut (cahier des charges, section 3.1).
 
 pub mod calcul;
+pub mod comptabilite;
 pub mod document;
 pub mod langue;
 pub mod lettres;

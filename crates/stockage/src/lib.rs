@@ -3,6 +3,7 @@
 pub mod abonnement;
 pub mod audit;
 pub mod chiffrement;
+pub mod comptabilite;
 pub mod comptes;
 pub mod distance;
 pub mod documents;
@@ -87,6 +88,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0014_lignes_a_revoir.sql"),
     include_str!("migrations/0015_postes_distance.sql"),
     include_str!("migrations/0016_stock.sql"),
+    include_str!("migrations/0017_comptabilite.sql"),
 ];
 
 #[derive(Debug)]
@@ -484,6 +486,29 @@ fn uri_immuable(chemin: &Path) -> Option<String> {
     }
     uri.push_str("?immutable=1");
     Some(uri)
+}
+
+/// Validation par le code d'aujourd'hui d'un document d'une base restée au
+/// schéma de la V1 (essais de reprise) : les deux colonnes de la nature
+/// comptable (migration 0017) le temps de valider, puis retirées.
+#[cfg(test)]
+pub(crate) fn valider_au_schema_v1(
+    conn: &mut rusqlite::Connection,
+    acteur: &comptes::Utilisateur,
+    id: i64,
+) -> String {
+    conn.execute_batch(
+        "ALTER TABLE produit ADD COLUMN nature_comptable TEXT NOT NULL DEFAULT 'marchandise';
+         ALTER TABLE ligne_document ADD COLUMN nature_snapshot TEXT NOT NULL DEFAULT 'marchandise';",
+    )
+    .unwrap();
+    let numero = documents::valider(conn, acteur, id).unwrap();
+    conn.execute_batch(
+        "ALTER TABLE ligne_document DROP COLUMN nature_snapshot;
+         ALTER TABLE produit DROP COLUMN nature_comptable;",
+    )
+    .unwrap();
+    numero
 }
 
 #[cfg(test)]

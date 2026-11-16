@@ -625,7 +625,7 @@ mod tests {
             ..LigneSaisie::default()
         }];
         let id = documents::creer_brouillon(&mut conn, &admin, TypeDocument::Facture, &s).unwrap();
-        let numero = documents::valider(&mut conn, &admin, id).unwrap();
+        let numero = crate::valider_au_schema_v1(&mut conn, &admin, id);
         reglements::ajouter(
             &mut conn,
             &admin,

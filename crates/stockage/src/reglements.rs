@@ -273,6 +273,9 @@ pub fn ajouter(
             "un règlement se saisit sur un document validé et non annulé".into(),
         ));
     }
+    if d.type_document == TypeDocument::Facture {
+        crate::comptabilite::exiger_reglement_ouvert(&tx, saisie.date)?;
+    }
     if saisie.date < d.saisie.date {
         return Err(refus(
             "la date du règlement ne peut pas précéder celle du document ({})",
@@ -342,6 +345,9 @@ pub fn supprimer(conn: &mut Connection, acteur: &Utilisateur, reglement_id: i64)
         )
         .optional()?
         .ok_or_else(|| Erreur::Validation("ce règlement n'existe plus".into()))?;
+    if lire_existant(&tx, r.document_id)?.type_document == TypeDocument::Facture {
+        crate::comptabilite::exiger_reglement_ouvert(&tx, r.date)?;
+    }
     tx.execute("DELETE FROM reglement WHERE id = ?1", [reglement_id])?;
     journaliser(
         &tx,

@@ -351,6 +351,7 @@ fn base_v1(fichier: &Path) -> Result<(), String> {
         prix,
         sens: Sens::Vente,
         suivi_stock: false,
+        nature_comptable: Default::default(),
     };
     let ciment = produits::creer(&conn, &admin, &produit("CIM50", "Ciment 50 kg", 6_500))
         .map_err(e)?

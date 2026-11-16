@@ -30,7 +30,7 @@ use crate::{Erreur, Resultat};
 
 /// Clés de `parametre_systeme` partagées par tous les postes. La même liste est
 /// dans la migration 0011 (déclencheurs du suivi).
-pub const CLES_PARTAGEES: [&str; 19] = [
+pub const CLES_PARTAGEES: [&str; 21] = [
     "taux.tva",
     "taux.remise",
     "taux.retenue",
@@ -50,6 +50,8 @@ pub const CLES_PARTAGEES: [&str; 19] = [
     "impression.bas.livraison",
     "impression.bas.facture",
     "impression.bas.avoir",
+    "comptabilite.comptes",
+    "comptabilite.clotures",
 ];
 
 /// Clés propres à chaque base, jamais transmises ni écrasées : identité de
@@ -149,6 +151,7 @@ pub(crate) const TABLES: [Table; 8] = [
             "sens",
             "actif",
             "suivi_stock",
+            "nature_comptable",
         ],
         binaires: &[],
         references: &[],
@@ -286,6 +289,7 @@ pub(crate) const LIGNES: Table = Table {
         "total",
         "observations",
         "ordre",
+        "nature_snapshot",
     ],
     binaires: &[],
     references: &[("produit_id", Entite::Produit)],
@@ -1104,7 +1108,10 @@ pub(crate) mod tests {
     #[test]
     fn chaque_cle_est_classee() {
         // Les déclencheurs de la migration portent la même liste.
-        let migration = include_str!("migrations/0011_parametres_bas.sql");
+        let migration = include_str!("migrations/0017_comptabilite.sql")
+            .split("-- Droit nouveau")
+            .next()
+            .unwrap();
         for cle in CLES_PARTAGEES {
             assert_eq!(migration.matches(&format!("'{cle}'")).count(), 3, "{cle}");
             assert!(!CLES_LOCALES.contains(&cle), "{cle}");
@@ -1161,6 +1168,7 @@ pub(crate) mod tests {
             prix: 5000,
             sens: Sens::Vente,
             suivi_stock: false,
+            nature_comptable: Default::default(),
         }
     }
 

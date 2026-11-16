@@ -1362,6 +1362,9 @@ pub fn valider(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
     exiger(&tx, acteur, Droit::ValiderDocument)?;
     verifier_transition(d.type_document, d.statut, Statut::Valide).map_err(transition_refusee)?;
     let mut s = nettoyer(d.type_document, &d.saisie)?;
+    if matches!(d.type_document, TypeDocument::Facture | TypeDocument::Avoir) {
+        crate::comptabilite::exiger_document_ouvert(&tx, s.date)?;
+    }
     if s.tiers_id.is_none() {
         return Err(invalide("choisir le tiers avant de valider"));
     }
@@ -1429,6 +1432,15 @@ pub fn valider(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
     // est rafraîchi une dernière fois puis figé.
     let tiers = snapshot_tiers(&tx, d.type_document, s.tiers_id, d.saisie.tiers_id)?;
     ecrire_contenu(&tx, id, d.type_document, &s, &tiers)?;
+    // Nature comptable figée sur chaque ligne (export SYSCOHADA, 4.4) : une
+    // ligne libre compte comme marchandise.
+    tx.execute(
+        "UPDATE ligne_document SET nature_snapshot = COALESCE(
+             (SELECT nature_comptable FROM produit WHERE produit.id = ligne_document.produit_id),
+             'marchandise')
+         WHERE document_id = ?1",
+        [id],
+    )?;
 
     use chrono::Datelike;
     let annee = u16::try_from(s.date.year())
@@ -1529,6 +1541,11 @@ pub fn annuler(conn: &mut Connection, acteur: &Utilisateur, id: i64) -> Resultat
     };
     exiger(&tx, acteur, droit)?;
     verifier_transition(d.type_document, d.statut, Statut::Annule).map_err(transition_refusee)?;
+    if matches!(d.type_document, TypeDocument::Facture | TypeDocument::Avoir)
+        && d.statut != Statut::Brouillon
+    {
+        crate::comptabilite::exiger_document_ouvert(&tx, d.saisie.date)?;
+    }
     if d.type_document.convertible_en_facture() && facture_en_preparation(&tx, id)?.is_some() {
         return Err(invalide(
             "une facture est en préparation pour ce document : supprimer d'abord ce brouillon",

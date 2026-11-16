@@ -30,8 +30,8 @@ use crate::documents::{self, ChampsLivraison, LigneSaisie, Saisie};
 use crate::entreprise::{self, Entreprise, Logo};
 use crate::reglements::{self, SaisieReglement};
 use crate::{
-    BilanImport, Erreur, Resultat, Retrait, droits, maintenant, mise_en_page, parametres, produits,
-    relances, replique, stock, tiers,
+    BilanImport, Erreur, Resultat, Retrait, comptabilite, droits, maintenant, mise_en_page,
+    parametres, produits, relances, replique, stock, tiers,
 };
 
 /// Tables dont les lignes portent un identifiant global.
@@ -751,6 +751,18 @@ fn executer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
             Ok(acceptee)
         }
 
+        // Comptabilité.
+        Action::EnregistrerComptes { contenu } => {
+            let c = comptabilite::comptes_depuis_json(contenu);
+            comptabilite::enregistrer_comptes(conn, &qui, &c)?;
+            Ok(acceptee)
+        }
+        Action::ClorePeriode { mois, empreinte } => {
+            let m = comptabilite::Mois::depuis_code(mois).ok_or_else(illisible)?;
+            comptabilite::clore(conn, &qui, m, empreinte)?;
+            Ok(acceptee)
+        }
+
         // Comptes.
         Action::CreerCompte {
             uid,
@@ -1191,6 +1203,12 @@ pub fn produit_depuis_serveur(f: &proto::Produit) -> Resultat<FicheProduit> {
         prix: f.prix,
         sens: Sens::depuis_code(&f.sens).ok_or_else(illisible)?,
         suivi_stock: f.suivi_stock,
+        nature_comptable: if f.nature_comptable.is_empty() {
+            Default::default()
+        } else {
+            kadenz_domaine::comptabilite::NatureComptable::depuis_code(&f.nature_comptable)
+                .ok_or_else(illisible)?
+        },
     })
 }
 
@@ -1218,6 +1236,7 @@ pub fn produit_pour_serveur(f: &FicheProduit) -> proto::Produit {
         prix: f.prix,
         sens: f.sens.code().to_string(),
         suivi_stock: f.suivi_stock,
+        nature_comptable: f.nature_comptable.code().to_string(),
     }
 }
 
@@ -2208,7 +2227,7 @@ mod tests {
             }];
             let id =
                 documents::creer_brouillon(&mut conn, &admin, TypeDocument::Facture, &s).unwrap();
-            documents::valider(&mut conn, &admin, id).unwrap()
+            crate::valider_au_schema_v1(&mut conn, &admin, id)
         };
 
         let mut conn = crate::ouvrir(&chemin).unwrap();
@@ -2413,6 +2432,7 @@ mod essais_actions {
             prix: 2500,
             sens: "vente".into(),
             suivi_stock: false,
+            nature_comptable: Default::default(),
         }
     }
 
@@ -2455,6 +2475,7 @@ mod essais_actions {
                 prix: 5000,
                 sens,
                 suivi_stock: false,
+                nature_comptable: Default::default(),
             };
             assert_eq!(
                 produit_depuis_serveur(&produit_pour_serveur(&f)).unwrap(),
@@ -2887,6 +2908,55 @@ mod essais_actions {
     /// Stock (`docs/spec-stock.md`) : ajustement et inventaire appliqués par
     /// le serveur avec l'identifiant choisi par le poste, inventaire refusé
     /// hors connexion, ajustement accepté ; le poste reçoit le même stock.
+    /// Export SYSCOHADA : comptes réglés par un poste, clôture contrôlée par
+    /// l'empreinte du serveur et refusée hors connexion, puis reçue par la copie.
+    #[test]
+    fn comptabilite_reglee_close_et_repliquee() {
+        use crate::comptabilite::{self, ComptesComptables, Mois};
+        let mut b = Banc::nouveau();
+        let c = ComptesComptables {
+            clients: "411".into(),
+            ..ComptesComptables::default()
+        };
+        b.ok(Action::EnregistrerComptes {
+            contenu: comptabilite::comptes_en_json(&c),
+        });
+        let courant = Mois::de_date(crate::documents::aujourd_hui());
+        let m = if courant.mois == 1 {
+            Mois {
+                annee: courant.annee - 1,
+                mois: 12,
+            }
+        } else {
+            Mois {
+                annee: courant.annee,
+                mois: courant.mois - 1,
+            }
+        };
+        let empreinte = comptabilite::empreinte(&b.serveur, m).unwrap();
+        let cloture = |empreinte: &str| Action::ClorePeriode {
+            mois: m.code(),
+            empreinte: empreinte.into(),
+        };
+        let admin = b.admin.clone();
+        let mut op = b.op(&admin, cloture(&empreinte));
+        op.hors_connexion = true;
+        assert!(appliquer(&mut b.serveur, &op).is_err());
+        let op = b.op(&admin, cloture("autre"));
+        assert!(!matches!(
+            appliquer(&mut b.serveur, &op),
+            Ok(Issue::Acceptee { .. })
+        ));
+        b.ok(cloture(&empreinte));
+        assert!(comptabilite::est_clos(&b.serveur, m.premier_jour()).unwrap());
+
+        synchroniser(&b.serveur, &mut b.poste, 500);
+        let clos = comptabilite::clotures(&b.poste).unwrap();
+        assert_eq!(clos.len(), 1);
+        assert_eq!((clos[0].mois, clos[0].comptes.clients.as_str()), (m, "411"));
+        assert_eq!(comptabilite::comptes(&b.poste).unwrap(), c);
+    }
+
     #[test]
     fn stock_ajuste_inventorie_et_replique() {
         let mut b = Banc::nouveau();
@@ -2896,6 +2966,7 @@ mod essais_actions {
             fiche: proto::Produit {
                 sens: "les_deux".into(),
                 suivi_stock: true,
+                nature_comptable: Default::default(),
                 ..produit_proto("STK")
             },
         });

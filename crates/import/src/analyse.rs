@@ -344,6 +344,7 @@ pub fn analyser_produits(
                     prix,
                     sens,
                     suivi_stock: false,
+                    nature_comptable: Default::default(),
                 }
                 .nettoyee()
             });

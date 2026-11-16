@@ -24,7 +24,7 @@ pub use abonnement::Abonnement;
 
 /// Version du protocole, annoncée à la connexion (F2) : un poste d'une autre
 /// version est refusé.
-pub const VERSION: u32 = 6;
+pub const VERSION: u32 = 7;
 
 /// Variable des versions de développement : version logicielle simulée
 /// (« 1.2.3 »), annoncée à la place de la vraie, pour essayer l'ordre des
@@ -275,6 +275,19 @@ pub enum Action {
         lignes: Vec<LigneInventaire>,
     },
 
+    // Comptabilité (`docs/spec-export-syscohada.md`).
+    /// Comptes de l'export : forme JSON gardée par le stockage, relue et
+    /// contrôlée par le serveur.
+    EnregistrerComptes {
+        contenu: serde_json::Value,
+    },
+    /// Clôture du mois `mois` (`AAAA-MM`) : `empreinte` est celle des
+    /// écritures du mois vues par le poste, que le serveur recalcule.
+    ClorePeriode {
+        mois: String,
+        empreinte: String,
+    },
+
     // Comptes.
     CreerCompte {
         uid: String,
@@ -475,7 +488,8 @@ impl Action {
             | EnregistrerMatrice { .. }
             | EnregistrerTextesRelance { .. }
             | EnregistrerMiseEnPage { .. }
-            | EnregistrerBas { .. } => (Entite::Parametres, "parametres"),
+            | EnregistrerBas { .. }
+            | EnregistrerComptes { .. } => (Entite::Parametres, "parametres"),
             ImporterTiers { .. }
             | ImporterProduits { .. }
             | ChangerMotDePasse { .. }
@@ -483,7 +497,8 @@ impl Action {
             | ChangerAffichage { .. }
             | TrancherConflit { .. }
             | DeciderAttente { .. }
-            | SaisirInventaire { .. } => return None,
+            | SaisirInventaire { .. }
+            | ClorePeriode { .. } => return None,
         })
     }
 
@@ -538,7 +553,8 @@ impl Action {
             | EnregistrerMatrice { .. }
             | EnregistrerTextesRelance { .. }
             | EnregistrerMiseEnPage { .. }
-            | EnregistrerBas { .. } => SiChangee::Depassee,
+            | EnregistrerBas { .. }
+            | EnregistrerComptes { .. } => SiChangee::Depassee,
             _ => SiChangee::Appliquer,
         }
     }
@@ -581,7 +597,9 @@ impl Action {
             | ChangerAffichage { .. } => EnCoupure::Permise,
             // L'écart se calcule sur la quantité du serveur au moment du
             // comptage (`docs/spec-stock.md`, 3.5).
-            Valider { .. } | SaisirInventaire { .. } => EnCoupure::Validation,
+            // La clôture compare l'empreinte du poste à celle du serveur
+            // (`docs/spec-export-syscohada.md`, 4.6).
+            Valider { .. } | SaisirInventaire { .. } | ClorePeriode { .. } => EnCoupure::Validation,
             CreerCompte { .. }
             | DefinirActifCompte { .. }
             | ChangerRole { .. }
@@ -594,6 +612,7 @@ impl Action {
             | EnregistrerTextesRelance { .. }
             | EnregistrerMiseEnPage { .. }
             | EnregistrerBas { .. }
+            | EnregistrerComptes { .. }
             | TrancherConflit { .. }
             | DeciderAttente { .. } => EnCoupure::Refusee,
         }
@@ -635,6 +654,10 @@ pub struct Produit {
     /// Suivi en stock (`docs/spec-stock.md`, 3.1).
     #[serde(default)]
     pub suivi_stock: bool,
+    /// Code de la nature comptable (`marchandise`, `service`) ; vide vaut
+    /// marchandise (`docs/spec-export-syscohada.md`, 4.4).
+    #[serde(default)]
+    pub nature_comptable: String,
 }
 
 /// Ligne d'un inventaire validé.
@@ -906,6 +929,17 @@ mod tests {
             .en_coupure(),
             EnCoupure::Refusee
         );
+        let comptes = Action::EnregistrerComptes {
+            contenu: serde_json::Value::Null,
+        };
+        assert_eq!(comptes.en_coupure(), EnCoupure::Refusee);
+        assert_eq!(comptes.cible(), Some((Entite::Parametres, "parametres")));
+        let cloture = Action::ClorePeriode {
+            mois: "2026-10".into(),
+            empreinte: "e".into(),
+        };
+        assert_eq!(cloture.en_coupure(), EnCoupure::Validation);
+        assert_eq!(cloture.cible(), None);
     }
 
     #[test]

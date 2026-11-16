@@ -887,6 +887,7 @@ fn composer(action: &Action, serveur: &FicheServeur, choix: &[bool]) -> Option<B
                 // Pas encore de choix champ par champ pour le suivi en stock
                 // (S2) : celui du serveur est gardé.
                 suivi_stock: s.suivi_stock,
+                nature_comptable: s.nature_comptable.clone(),
             };
             if &fiche == s {
                 return None;
@@ -959,6 +960,7 @@ mod essais {
             prix: 5000,
             sens: "vente".into(),
             suivi_stock: false,
+            nature_comptable: Default::default(),
         };
         let poste = proto::Produit {
             prix: 5500,

@@ -3,6 +3,7 @@
 //! La référence est unique sans tenir compte de la casse. Mêmes droits que les
 //! tiers : « ajouter » pour créer et importer, « modifier » pour le reste.
 
+use kadenz_domaine::comptabilite::NatureComptable;
 pub use kadenz_domaine::referentiel::{FicheProduit, Sens};
 use kadenz_domaine::role::Droit;
 use kadenz_domaine::texte;
@@ -21,6 +22,7 @@ fn en_json(f: &FicheProduit) -> Value {
         "prix": f.prix,
         "sens": f.sens.code(),
         "suivi_stock": f.suivi_stock,
+        "nature_comptable": f.nature_comptable.code(),
     })
 }
 
@@ -62,7 +64,8 @@ impl FiltreProduits {
     }
 }
 
-const COLONNES: &str = "id, designation, reference, prix, sens, actif, suivi_stock";
+const COLONNES: &str =
+    "id, designation, reference, prix, sens, actif, suivi_stock, nature_comptable";
 
 fn ligne_vers_produit(r: &rusqlite::Row<'_>) -> rusqlite::Result<Produit> {
     let code: String = r.get(4)?;
@@ -81,6 +84,16 @@ fn ligne_vers_produit(r: &rusqlite::Row<'_>) -> rusqlite::Result<Produit> {
             prix: r.get(3)?,
             sens,
             suivi_stock: r.get(6)?,
+            nature_comptable: {
+                let code: String = r.get(7)?;
+                NatureComptable::depuis_code(&code).ok_or_else(|| {
+                    rusqlite::Error::FromSqlConversionFailure(
+                        7,
+                        rusqlite::types::Type::Text,
+                        format!("nature comptable inconnue : {code}").into(),
+                    )
+                })?
+            },
         },
         actif: r.get(5)?,
     })
@@ -149,14 +162,15 @@ fn reference_prise(conn: &Connection, reference: &str, sauf: Option<i64>) -> Res
 
 fn inserer(conn: &Connection, f: &FicheProduit, auteur: i64) -> Resultat<Produit> {
     conn.execute(
-        "INSERT INTO produit (designation, reference, prix, sens, suivi_stock)
-         VALUES (?1, ?2, ?3, ?4, ?5)",
+        "INSERT INTO produit (designation, reference, prix, sens, suivi_stock, nature_comptable)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
         params![
             f.designation,
             f.reference,
             f.prix,
             f.sens.code(),
-            f.suivi_stock
+            f.suivi_stock,
+            f.nature_comptable.code()
         ],
     )?;
     let id = conn.last_insert_rowid();
@@ -200,13 +214,14 @@ pub fn modifier(
     }
     conn.execute(
         "UPDATE produit SET designation = ?1, reference = ?2, prix = ?3, sens = ?4,
-             suivi_stock = ?5 WHERE id = ?6",
+             suivi_stock = ?5, nature_comptable = ?6 WHERE id = ?7",
         params![
             f.designation,
             f.reference,
             f.prix,
             f.sens.code(),
             f.suivi_stock,
+            f.nature_comptable.code(),
             id
         ],
     )?;
@@ -330,6 +345,7 @@ mod tests {
             prix: 1_500,
             sens,
             suivi_stock: false,
+            nature_comptable: Default::default(),
         }
     }
 

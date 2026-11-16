@@ -998,6 +998,7 @@ fn stock_hors_connexion_calcule_par_le_serveur() {
                 prix: 6_500,
                 sens: "les_deux".into(),
                 suivi_stock: true,
+                nature_comptable: Default::default(),
             },
         });
         let t = synchro::nouvel_uid();
