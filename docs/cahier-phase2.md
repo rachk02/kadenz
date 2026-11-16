@@ -26,6 +26,7 @@
 | 0.22 | 2026-11-15 | Décisions 57 à 59 (F8) : poste autorisé à distance par une case, licence valide exigée par le relais, traces du relais sans contenu gardées 30 jours. |
 | 0.23 | 2026-11-15 | Décisions 60 et 61 (F9), reçues par kadenz-8e : portail local sans carte, paiement saisi par l'éditeur ou un revendeur ; un seul programme Rust qui sert des pages HTML simples. Forme proposée dans `spec-portail.md`. |
 | 0.24 | 2026-11-15 | Décisions 62 et 63 (F10), reçues par kadenz-8e : première version de la phase 2 en 1.0.0 ; essai F10c en simulation, sans installer. |
+| 0.25 | 2026-11-16 | Décisions 64 à 67 (stock, question ouverte 4) : l'utilisateur a demandé de retenir les choix recommandés par kadenz-34 ; forme du chantier dans `docs/spec-stock.md`. Décision 68, reçue par kadenz-8e : tout finir avant de publier la 1.0.0. Décision 69, reçue par kadenz-8e : les sessions décident ensemble pendant l'absence de l'utilisateur. |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -107,6 +108,12 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 61. **Forme du portail (F9)** : un seul programme Rust qui sert des pages HTML simples, sans JavaScript lourd.
 62. **Numéro de la phase 2 (F10)** : la première version de la phase 2 est la 1.0.0. Elle dépasse la 0.2.2 du pont, ce qui permet aux postes du pont de la voir et de la signaler comme une nouvelle génération.
 63. **Essai de F10 (F10c)** : en simulation, sans installer : recherche, téléchargement, empreinte, signature de l'installateur d'essai et ordre serveur puis postes sont vérifiés, sans jamais lancer le paquet du serveur sur le service de la machine. L'installation réelle viendra plus tard.
+64. **Valorisation du stock** (recommandation de kadenz-34, retenue par l'utilisateur le 2026-11-16) : coût moyen pondéré, recalculé à chaque entrée. Conformité au SYSCOHADA à vérifier avec 3.2.
+65. **Dépôts** (idem) : un seul dépôt par entreprise.
+66. **Stock négatif** (idem) : permis, avec une alerte ; une sortie n'est jamais refusée faute de stock.
+67. **Sorties de stock** (idem) : seule la confirmation d'un bordereau de livraison sort le stock, la réception d'un bon de commande l'entre ; une facture ne bouge jamais le stock.
+68. **Avant la 1.0.0** (reçue par kadenz-8e le 2026-11-16 : « ok on finit tout avant de publier ») : d'abord les chantiers métier de l'étape 2 (stock 3.3, export SYSCOHADA 3.2), puis le vrai certificat de signature, puis une installation réelle sur une machine, puis la publication de la 1.0.0 avec l'accord explicite de l'utilisateur. Aucune release avant.
+69. **Décisions pendant l'absence de l'utilisateur** (reçue par kadenz-8e le 2026-11-16) : les sessions tranchent ensemble les choix de conception, les numérotent et les consignent ; dans le doute, le choix le plus prudent. Restent à l'accord explicite de l'utilisateur : release, production et VPS, argent, clés privées, comptes externes, Docker et la prise de l'écran.
 
 ## 3. Candidats
 
@@ -132,6 +139,7 @@ Chaque candidat décrit ce qu'il recouvrirait, ce qu'il touche dans la V1 et ce 
 ### 3.3 Gestion de stock réelle
 
 - Recouvre, selon la section 17 du cahier V1 : entrées et sorties de stock, valorisation.
+- Réglé par les décisions 64 à 67 ; forme et jalons S1 à S3 dans `docs/spec-stock.md`.
 - Touche : le référentiel Produits, la réception des bons de commande (entrée) et la confirmation des bordereaux de livraison (sortie), déjà présentes en V1 ; le tableau de bord.
 - À savoir : méthode de valorisation, gestion de plusieurs dépôts ou non, inventaire et ajustements, stock négatif permis ou refusé, produits qui ne sont pas stockés (services). Avec le travail hors connexion, deux postes peuvent sortir le même article sans se voir : le stock négatif est alors possible de fait.
 
@@ -266,7 +274,7 @@ Règles retenues (décisions 14 et 15) :
 ### Ouvertes pour les chantiers métier
 
 3. **SYSCOHADA** : quel format de sortie, pour quel logiciel comptable en attendant la comptabilité Kadenz, et quelle source fait foi pour le plan de comptes (comptable, texte de référence) ?
-4. **Stock** : méthode de valorisation, un ou plusieurs dépôts, stock négatif permis ?
+4. **Stock** : réglée le 2026-11-16 (décisions 64 à 67).
 5. **Email** : messagerie de l'entreprise ou service tiers ; relances envoyées automatiquement ou à la main ?
 6. **Multi-devise** : en plus de la devise de l'entreprise (décision 22), quelles devises étrangères, et comment le taux est-il fixé ?
 7. **Signature électronique** : image ou cachet, certificat numérique, ou signature du client à distance ?
