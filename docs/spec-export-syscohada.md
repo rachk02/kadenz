@@ -6,6 +6,7 @@
 | 0.2 | 2026-11-16 | Relecture de kadenz-34 reportée : clôture complétée (validation refusée dans un mois clos, clôture refusée hors connexion, totaux recalculés par le serveur, pas de réouverture en C1), documents annulés hors du journal, voie B de 4.4 retenue et précisée, détails du CSV, migration du droit nouveau. |
 | 0.3 | 2026-11-16 | Interface de C1 fixée par kadenz-34 : mention provisoire hors du CSV (nom du fichier, écran, Excel), nature comptable figée sur la ligne à la validation, mois clos qui garde ses comptes, empreinte du mois envoyée à la clôture. |
 | 0.4 | 2026-11-16 | Essai C3 : pièce partagée par les règlements d'une même facture notée en 4.2, question 7 ajoutée ; règle inchangée. |
+| 0.5 | 2026-11-16 | C3 fait : essai à l'écran conforme de bout en bout le 2026-11-16 (banc neuf, poste relié au banc, build 2187721), étapes 1 à 9 : référentiels et mode Wave sans compte, facture avec remise et avoir d'octobre 2026, règlements Espèce et Wave, journal à 12 écritures équilibré (492 495 FCFA), refus des exports CSV et Excel et de la clôture tant que Wave n'a pas de compte, TVA collectée, compte 552, export provisoire, clôture d'octobre, mois clos figé, compte clients changé sans effet sur octobre, hors connexion. Écarts de consigne seulement : l'onglet TVA collectée filtre par année (vide : l'année en cours), sans choix du mois ; à l'étape 5, l'utilisateur a ouvert l'Excel et non le CSV, dont le contenu (en-tête, dates, montants entiers, accents par l'en-tête UTF-8) reste vérifié par le test `csv_et_nom_de_fichier` de C1. Retouches d'écran confiées à kadenz-22. |
 
 Statut : **proposé**, relu par kadenz-34. Les choix marqués « retenu » sont ceux des sessions, pris pendant l'absence de l'utilisateur (décision du 2026-11-16) et révisables par lui. La question ouverte 3 du cahier de la phase 2 (logiciel comptable cible, format attendu, qui confirme le plan de comptes) reste à l'utilisateur.
 
@@ -163,7 +164,7 @@ Variante écartée pour l'instant : contre-écritures datées de l'annulation, q
 |---|---|---|
 | C1 | Paramètres comptables, nature des produits, calcul des écritures et de la TVA collectée (fonction unique du poste et du serveur), clôture et refus du serveur, format CSV, migration du droit nouveau ; tests d'équilibre | kadenz-34 |
 | C2 | Écrans de la section 5, traductions dans les six langues | kadenz-22 |
-| C3 | Essai à l'écran sur un banc neuf, données fictives exactes (factures avec remise, avoir, règlements par trois modes, mois clos puis annulation refusée) | kadenz-22 et kadenz-34, avec l'accord de l'utilisateur pour l'écran |
+| C3 | Essai à l'écran sur un banc neuf, données fictives exactes (factures avec remise, avoir, règlements par trois modes, mois clos puis annulation refusée). **Fait** le 2026-11-16 (version 0.5) | kadenz-22 et kadenz-34, avec l'accord de l'utilisateur pour l'écran |
 
 ## 7. Questions pour l'utilisateur
 
