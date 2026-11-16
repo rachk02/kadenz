@@ -76,8 +76,12 @@ component OngletJournal inherits VerticalLayout {
     property <bool> libre: ComptabiliteApi.mois-courant == 0;
     property <bool> confirmer-cloture;
 
+    // Dates de la période libre, gardées ici : les champs n'existent qu'en période libre.
+    property <string> du-texte;
+    property <string> au-texte;
+
     function filtrer() {
-        root.erreur-date = ComptabiliteApi.filtrer-journal(ComptabiliteApi.mois-courant, du.text, au.text, ventes.checked, encaissements.checked);
+        root.erreur-date = ComptabiliteApi.filtrer-journal(ComptabiliteApi.mois-courant, root.du-texte, root.au-texte, ventes.checked, encaissements.checked);
     }
 
     property <int> reponses: Confirmation.reponses;
@@ -98,8 +102,11 @@ component OngletJournal inherits VerticalLayout {
     padding-top: 12px;
     spacing: 10px;
 
+    // À la ligne quand la page est étroite ; cases et boutons centrés sur la hauteur.
     Rangee {
         spacing: 8px;
+        flex-wrap: FlexboxLayoutWrap.wrap;
+        cross-axis-alignment: CrossAxisAlignment.center;
 
         ListeDeroulante {
             width: 200px;
@@ -110,18 +117,20 @@ component OngletJournal inherits VerticalLayout {
             }
         }
 
-        du := LineEdit {
+        // Présent en période libre seulement : un champ masqué garderait sa place.
+        if root.libre: LineEdit {
             width: 150px;
-            visible: root.libre;
+            text <=> root.du-texte;
             placeholder-text: @tr("Du JJ/MM/AAAA");
             edited => {
                 root.filtrer();
             }
         }
 
-        au := LineEdit {
+        // Présent en période libre seulement : un champ masqué garderait sa place.
+        if root.libre: LineEdit {
             width: 150px;
-            visible: root.libre;
+            text <=> root.au-texte;
             placeholder-text: @tr("Au JJ/MM/AAAA");
             edited => {
                 root.filtrer();
@@ -186,9 +195,9 @@ component OngletJournal inherits VerticalLayout {
             { title: @tr("Compte"), min-width: 80px, horizontal-stretch: 1 },
             { title: @tr("Pièce"), min-width: 120px, horizontal-stretch: 1 },
             { title: @tr("Date"), min-width: 90px, horizontal-stretch: 1 },
-            { title: @tr("Journal"), min-width: 60px, horizontal-stretch: 0 },
+            { title: @tr("Journal"), min-width: 80px, horizontal-stretch: 0 },
         ] : [
-            { title: @tr("Journal"), min-width: 60px, horizontal-stretch: 0 },
+            { title: @tr("Journal"), min-width: 80px, horizontal-stretch: 0 },
             { title: @tr("Date"), min-width: 90px, horizontal-stretch: 1 },
             { title: @tr("Pièce"), min-width: 120px, horizontal-stretch: 1 },
             { title: @tr("Compte"), min-width: 80px, horizontal-stretch: 1 },

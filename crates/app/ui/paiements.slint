@@ -86,8 +86,11 @@ export component PageReglements inherits VerticalLayout {
         }
     }
 
+    // Outils à la ligne quand la page est étroite, centrés sur la hauteur.
     Rangee {
         spacing: 8px;
+        flex-wrap: FlexboxLayoutWrap.wrap;
+        cross-axis-alignment: CrossAxisAlignment.center;
 
         sens := ListeDeroulante {
             width: 190px;

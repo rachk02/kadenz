@@ -296,6 +296,13 @@ pub(crate) fn journal_comptable(
     if !synchro.is_empty() {
         entete.push(info("Copie du poste", synchro.to_string()));
     }
+    // Libellé à la largeur du plus long (règlement, client, mode), plafonnée.
+    let largeur_libelle = journal
+        .ecritures
+        .iter()
+        .map(|e| e.libelle.chars().count() as f64 + 2.0)
+        .fold(44.0, f64::max)
+        .min(90.0);
     exporter(
         Feuille {
             nom: titre.clone(),
@@ -307,7 +314,7 @@ pub(crate) fn journal_comptable(
                 col("Pièce", 18.0),
                 col("Compte", 12.0),
                 col("Compte tiers", 14.0),
-                col("Libellé", 44.0),
+                col("Libellé", largeur_libelle),
                 col("Débit", 16.0),
                 col("Crédit", 16.0),
             ],

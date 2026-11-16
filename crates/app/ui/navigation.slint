@@ -313,13 +313,62 @@ export component ContenuBarre inherits VerticalLayout {
         }
     }
 
-    ScrollView {
+    // Fenêtre basse : le menu défile, et sa barre de défilement, très fine, passe
+    // inaperçue. Tant que des entrées restent cachées en bas, un fondu et une flèche
+    // le signalent ; un clic sur la flèche descend d'une page.
+    Rectangle {
         vertical-stretch: 1;
 
-        ListeMenu {
-            page: root.page;
-            choisi(p) => {
-                root.choisi(p);
+        // Hauteur du contenu donnée d'après la hauteur voulue du menu, sans compter
+        // sur celle que Slint déduit : la flèche et le défilement s'y fient.
+        defile := ScrollView {
+            width: 100%;
+            height: 100%;
+            content-height: max(self.visible-height, menu.preferred-height);
+
+            menu := ListeMenu {
+                page: root.page;
+                choisi(p) => {
+                    root.choisi(p);
+                }
+            }
+        }
+
+        if menu.preferred-height + defile.content-y > defile.visible-height + 1px: Rectangle {
+            y: parent.height - self.height;
+            height: 44px;
+            background: @linear-gradient(180deg, Theme.fond-lateral.transparentize(100%) 0%, Theme.fond-lateral 60%);
+
+            suite := TouchArea {
+                mouse-cursor: pointer;
+                clicked => {
+                    defile.content-y = max(defile.visible-height - defile.content-height, defile.content-y - defile.visible-height * 0.8);
+                }
+                scroll-event(evenement) => {
+                    defile.content-y = min(0px, max(defile.visible-height - defile.content-height, defile.content-y + evenement.delta-y));
+                    accept
+                }
+            }
+
+            Rectangle {
+                x: (parent.width - self.width) / 2;
+                y: parent.height - self.height - 4px;
+                width: 28px;
+                height: 20px;
+                border-radius: 4px;
+                background: suite.has-hover ? Theme.accent-survol : transparent;
+
+                Path {
+                    x: (parent.width - self.width) / 2;
+                    y: (parent.height - self.height) / 2;
+                    width: 12px;
+                    height: 12px;
+                    viewbox-width: 12;
+                    viewbox-height: 12;
+                    stroke: Theme.texte-secondaire;
+                    stroke-width: 1.5px;
+                    commands: "M 2 4 L 6 8 L 10 4";
+                }
             }
         }
     }

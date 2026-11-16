@@ -7,7 +7,7 @@ import { CheckBox, LineEdit, ScrollView } from "std-widgets.slint";
 import { ListeDeroulante } from "liste-deroulante.slint";
 import { TableauDonnees } from "tableau.slint";
 import { ConnexionApi } from "etat-connexion.slint";
-import { Alerte, Bouton, Champ, Confirmation, Droits, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Champ, ChampNombre, Confirmation, Droits, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct LigneFactureUi {
     // 0 pour une ligne libre, sans produit d'origine.
@@ -320,8 +320,11 @@ component Registre inherits VerticalLayout {
         }
     }
 
+    // Filtres à la ligne quand la page est étroite.
     Rangee {
         spacing: 8px;
+        flex-wrap: FlexboxLayoutWrap.wrap;
+        cross-axis-alignment: CrossAxisAlignment.center;
 
         recherche := LineEdit {
             placeholder-text: FacturesApi.textes.recherche;
@@ -1042,21 +1045,19 @@ component Fiche inherits ScrollView {
                 read-only: !Ecriture.permise || !root.fiche.modifiable;
             }
 
-            LineEdit {
+            ChampNombre {
                 width: 110px;
                 text <=> ligne.prix;
                 read-only: !Ecriture.permise || !root.fiche.modifiable;
-                horizontal-alignment: Theme.fin;
                 edited => {
                     root.recalculer();
                 }
             }
 
-            LineEdit {
+            ChampNombre {
                 width: 80px;
                 text <=> ligne.quantite;
                 read-only: !Ecriture.permise || !root.fiche.modifiable;
-                horizontal-alignment: Theme.fin;
                 edited => {
                     root.recalculer();
                 }
@@ -1070,11 +1071,10 @@ component Fiche inherits ScrollView {
                 color: Theme.texte;
             }
 
-            if root.fiche.avec-reception: LineEdit {
+            if root.fiche.avec-reception: ChampNombre {
                 width: 80px;
                 text <=> ligne.recue;
                 read-only: !root.fiche.reception-modifiable;
-                horizontal-alignment: Theme.fin;
             }
 
             if Ecriture.permise && root.fiche.modifiable: PetitBouton {
@@ -1169,18 +1169,16 @@ component Fiche inherits ScrollView {
                     read-only: !Ecriture.permise || !root.fiche.modifiable || root.fiche.lignes-verrouillees;
                 }
 
-                LineEdit {
+                ChampNombre {
                     width: 80px;
                     text <=> ligne.quantite;
                     read-only: !Ecriture.permise || !root.fiche.modifiable || root.fiche.lignes-verrouillees;
-                    horizontal-alignment: Theme.fin;
                 }
 
-                LineEdit {
+                ChampNombre {
                     width: 80px;
                     text <=> ligne.recue;
                     read-only: !Ecriture.permise || !root.fiche.modifiable;
-                    horizontal-alignment: Theme.fin;
                 }
 
                 if root.fiche.avec-reste: Text {

@@ -205,8 +205,11 @@ export component PageTiers inherits VerticalLayout {
         text: @tr("Tiers");
     }
 
+    // Outils à la ligne quand la page est étroite, centrés sur la hauteur.
     Rangee {
         spacing: 8px;
+        flex-wrap: FlexboxLayoutWrap.wrap;
+        cross-axis-alignment: CrossAxisAlignment.center;
 
         recherche := LineEdit {
             placeholder-text: @tr("Rechercher : nom, téléphone, localisation, adresse, IFU");
@@ -459,8 +462,11 @@ export component PageProduits inherits VerticalLayout {
         text: @tr("Produits et services");
     }
 
+    // Outils à la ligne quand la page est étroite, centrés sur la hauteur.
     Rangee {
         spacing: 8px;
+        flex-wrap: FlexboxLayoutWrap.wrap;
+        cross-axis-alignment: CrossAxisAlignment.center;
 
         recherche := LineEdit {
             placeholder-text: @tr("Rechercher : désignation ou référence");

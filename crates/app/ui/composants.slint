@@ -71,6 +71,92 @@ export component Rangee inherits FlexboxLayout {
     vertical-stretch: root.remplit ? 1 : 0;
 }
 
+// Champ de nombre des tableaux de saisie (prix, quantité) : même aspect qu'un
+// LineEdit, sans sa croix d'effacement, qui mange un champ étroit et efface la
+// valeur au moindre clic à côté du chiffre. À la prise du focus, le contenu est
+// sélectionné : un nombre tapé remplace la valeur proposée.
+export component ChampNombre inherits Rectangle {
+    in-out property <string> text <=> saisie.text;
+    in property <bool> read-only: false;
+    in property <bool> enabled: true;
+    in property <string> placeholder-text;
+    in property <TextHorizontalAlignment> horizontal-alignment: Theme.fin;
+    out property <bool> has-focus: saisie.has-focus;
+    callback edited(string);
+    callback accepted(string);
+
+    min-width: 40px;
+    min-height: 32px;
+    horizontal-stretch: 1;
+    vertical-stretch: 0;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: Theme.bordure;
+    background: root.enabled ? white : Theme.fond-lateral;
+    clip: true;
+    forward-focus: saisie;
+
+    if saisie.text == "": Text {
+        x: 10px;
+        width: parent.width - 20px;
+        height: parent.height;
+        vertical-alignment: center;
+        horizontal-alignment: root.horizontal-alignment;
+        text: root.placeholder-text;
+        color: Theme.texte-secondaire;
+        overflow: elide;
+    }
+
+    saisie := TextInput {
+        x: 10px;
+        width: parent.width - 20px;
+        height: parent.height;
+        vertical-alignment: center;
+        horizontal-alignment: root.horizontal-alignment;
+        single-line: true;
+        read-only: root.read-only;
+        enabled: root.enabled;
+        color: root.enabled ? Theme.texte : Theme.texte-secondaire;
+        selection-background-color: Theme.accent;
+        selection-foreground-color: white;
+        accessible-role: text-input;
+        accessible-value: self.text;
+        accessible-placeholder-text: root.placeholder-text;
+        // Le clic qui donne le focus place ensuite le curseur : la sélection
+        // attend la fin de ce clic.
+        changed has-focus => {
+            if (self.has-focus && !root.read-only) {
+                selection.running = true;
+            }
+        }
+        edited => {
+            root.edited(self.text);
+        }
+        accepted => {
+            root.accepted(self.text);
+        }
+    }
+
+    selection := Timer {
+        interval: 1ms;
+        running: false;
+        triggered => {
+            self.running = false;
+            saisie.select-all();
+        }
+    }
+
+    // Trait d'accent sous le champ actif, comme le LineEdit.
+    if saisie.has-focus && !root.read-only: Rectangle {
+        x: 4px;
+        y: parent.height - 2px;
+        width: parent.width - 8px;
+        height: 2px;
+        border-radius: 1px;
+        background: Theme.accent;
+    }
+}
+
 // Champ de saisie avec son libellé au-dessus.
 export component Champ inherits VerticalLayout {
     in property <string> libelle;

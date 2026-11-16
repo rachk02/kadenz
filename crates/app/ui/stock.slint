@@ -7,7 +7,7 @@
 import { CheckBox, LineEdit, ListView, TabWidget } from "std-widgets.slint";
 import { ListeDeroulante } from "liste-deroulante.slint";
 import { TableauDonnees } from "tableau.slint";
-import { Alerte, Bouton, Champ, Confirmation, Droits, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Champ, ChampNombre, Confirmation, Droits, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 import { ConnexionApi } from "etat-connexion.slint";
 
 // Produit choisi dans l'état du stock, pour l'ajustement.
@@ -132,8 +132,11 @@ component OngletEtat inherits VerticalLayout {
     padding-top: 12px;
     spacing: 10px;
 
+    // Outils à la ligne quand la page est étroite, centrés sur la hauteur.
     Rangee {
         spacing: 8px;
+        flex-wrap: FlexboxLayoutWrap.wrap;
+        cross-axis-alignment: CrossAxisAlignment.center;
 
         recherche := LineEdit {
             placeholder-text: @tr("Rechercher : désignation ou référence");
@@ -351,8 +354,11 @@ component OngletMouvements inherits VerticalLayout {
     padding-top: 12px;
     spacing: 10px;
 
+    // Outils à la ligne quand la page est étroite, centrés sur la hauteur.
     Rangee {
         spacing: 8px;
+        flex-wrap: FlexboxLayoutWrap.wrap;
+        cross-axis-alignment: CrossAxisAlignment.center;
 
         ListeDeroulante {
             width: 280px;
@@ -519,8 +525,11 @@ component OngletInventaire inherits VerticalLayout {
         wrap: word-wrap;
     }
 
+    // Outils à la ligne quand la page est étroite, centrés sur la hauteur.
     Rangee {
         spacing: 8px;
+        flex-wrap: FlexboxLayoutWrap.wrap;
+        cross-axis-alignment: CrossAxisAlignment.center;
 
         masquer := CheckBox {
             text: @tr("Masquer la quantité théorique");
@@ -615,7 +624,7 @@ component OngletInventaire inherits VerticalLayout {
                 color: Theme.texte-secondaire;
             }
 
-            LineEdit {
+            ChampNombre {
                 width: root.col-nombre;
                 text: ligne.comptee;
                 enabled: Droits.ajuster-stock;
@@ -629,7 +638,7 @@ component OngletInventaire inherits VerticalLayout {
                 text: ligne.ecart;
             }
 
-            if Droits.voir-valeur-stock: LineEdit {
+            if Droits.voir-valeur-stock: ChampNombre {
                 width: root.col-nombre;
                 text: ligne.cout;
                 enabled: Droits.ajuster-stock && ligne.demande-cout;
