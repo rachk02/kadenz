@@ -4,8 +4,9 @@
 |---|---|---|
 | 0.1 | 2026-11-16 | Proposition de kadenz-22 après la demande de l'utilisateur pendant l'essai S3 (« permettre pour chaque document d'avoir un aperçu, un bouton, et dans l'aperçu d'autres actions comme imprimer, avec la sélection des imprimantes, ou enregistrer »), avec les points techniques de kadenz-a8. Rien n'est codé. |
 | 0.2 | 2026-11-16 | Relecture de kadenz-a8 : rendu de l'aperçu limité aux pages visibles, réglages d'impression gardés pour la session, réduction dès que la zone imprimable ne contient pas la page, envoi en bandes, filigrane du brouillon, initialisation COM à vérifier. |
+| 0.3 | 2026-11-16 | A1 livré (f17e1ed) et relu par kadenz-a8 : rendu sur fond blanc par `hayro`, largeur de rendu selon l'échelle de l'écran, temps de rendu mesuré, aperçu de l'état enregistré ; pour A2, image DIB et rendu par bandes précisés. |
 
-Statut : **proposé**. Les questions de la section 6 sont à l'utilisateur.
+Statut : **A1 livré**, A2 en cours. Les questions de la section 6 sont à l'utilisateur.
 
 ## 1. Constat
 
@@ -23,6 +24,8 @@ Statut : **proposé**. Les questions de la section 6 sont à l'utilisateur.
   - **Fermer**.
 - **Mémoire de l'aperçu** : une page A4 rendue à 150 ppp occupe environ 8,7 Mo, soit environ 175 Mo pour 20 pages. Seules les pages visibles et leurs voisines sont gardées en image ; les autres sont libérées et rendues de nouveau quand elles reviennent à l'écran.
 - **Brouillon** : il s'affiche et s'imprime avec le filigrane « BROUILLON », comme son PDF (`crates/pdf/src/rendu.rs`, `Filigrane::Brouillon`) ; une facture brouillon imprimée ne peut pas passer pour une facture validée. De même, un document annulé garde son filigrane.
+- **Rendu de l'aperçu** (A1) : sur fond blanc, demandé à `hayro` (`PixmapSettings::bg_color`), sinon la page est transparente et ses pixels en alpha prémultiplié. Largeur de rendu : 820 px logiques multipliés par l'échelle de l'écran, entre 1240 px (environ 150 ppp) et 2480 px (300 ppp). Rendu sur le fil de l'interface, mesuré à environ 80 ms par page à 1240 px (build de développement, `hayro` optimisé) ; un fil de travail ne s'imposera que si une mesure en version optimisée dépasse 100 ms.
+- **État enregistré** : l'aperçu, comme l'export, montre le document tel qu'il est enregistré ; une saisie modifiée et non enregistrée n'y figure pas (Ctrl+S d'abord). La fiche ne suit pas aujourd'hui ses modifications non enregistrées ; prévenir demanderait ce suivi (décision entre kadenz-22 et kadenz-a8, à revoir si l'utilisateur le souhaite).
 - L'aperçu, le fichier enregistré et le papier viennent des mêmes octets : le PDF généré une fois par `crate::pdf::generer`, rendu par `hayro` pour l'écran comme pour l'imprimante.
 
 ## 3. Impression (Windows)
@@ -34,8 +37,9 @@ Statut : **proposé**. Les questions de la section 6 sont à l'utilisateur.
 - **Fenêtre d'impression** : `PrintDlgExW` sur le fil de l'interface, avec la fenêtre de Kadenz comme propriétaire (poignée tirée de Slint par `raw-window-handle`, déjà activé). Pages de 1 au nombre de pages du document, tableau des plages alloué. Résultats distingués : imprimer, appliquer sans imprimer, annuler.
 - **Copies et assemblage** : lus dans le `DEVMODE` rendu (`PD_USEDEVMODECOPIESANDCOLLATE`) ; si le pilote ne gère pas les copies (`DeviceCapabilitiesW`, `DC_COPIES`), Kadenz les envoie lui-même.
 - **Envoi** dans un fil de travail : `CreateDCW` à partir du `DEVMODE` et du `DEVNAMES` du dialogue, `StartDocW`, puis pour chaque page `StartPage`, rendu, `StretchDIBits`, `EndPage`, puis `EndDoc` ; `AbortDoc` en cas d'erreur. L'écran reste utilisable et affiche l'avancement, puis le résultat.
-- **Mémoire** : une page A4 en couleur occupe environ 35 Mo à 300 ppp et 139 Mo à 600. Le rendu est plafonné à 300 ppp, ou à la résolution du pilote si elle est plus basse, une page à la fois, libérée après son envoi.
-- **Position** : impression à 100 %, calée sur l'origine physique de la feuille (`PHYSICALOFFSETX/Y`, `PHYSICALWIDTH/HEIGHT`, `LOGPIXELSX/Y`), pour respecter les marges réglées dans Kadenz. Image 24 bits de haut en bas. Si la zone imprimable ne contient pas la page A4 (papier plus petit comme le Letter, orientation Paysage choisie dans la fenêtre, marges du pilote plus grandes que celles du PDF, qui couperaient le bord), la page est réduite pour tenir dans la zone imprimable, jamais agrandie (`HALFTONE`).
+- **Mémoire** : une page A4 en couleur occupe environ 35 Mo à 300 ppp et 139 Mo à 600. Le rendu est plafonné à 300 ppp, ou à la résolution du pilote si elle est plus basse, une page à la fois, libérée après son envoi. `hayro::render` alloue la page entière et ramène ses dimensions à `u16` ; l'impression rend donc chaque bande par `render_into`, dans un `RenderContext` de la taille de la bande, avec la transformation de la page translatée de la hauteur des bandes déjà envoyées (assemblage de `render`, `hayro` 0.9, `lib.rs`).
+- **Image envoyée** : rendue sur fond blanc (`bg_color`), pixels opaques convertis de RGBA en BGR 24 bits ; lignes du DIB alignées sur 4 octets (`(3 × largeur + 3) & !3`) et `biHeight` négatif pour une image de haut en bas.
+- **Position** : impression à 100 %, calée sur l'origine physique de la feuille (`PHYSICALOFFSETX/Y`, `PHYSICALWIDTH/HEIGHT`, `LOGPIXELSX/Y`), pour respecter les marges réglées dans Kadenz. Si la zone imprimable ne contient pas la page A4 (papier plus petit comme le Letter, orientation Paysage choisie dans la fenêtre, marges du pilote plus grandes que celles du PDF, qui couperaient le bord), la page est réduite pour tenir dans la zone imprimable, jamais agrandie (`HALFTONE`).
 - **Envoi en bandes** : certains pilotes refusent une très grande image d'un coup (`GDI_ERROR`) ; chaque page est envoyée en bandes horizontales (8 au départ) plutôt qu'en une seule image.
 
 ## 4. Hors du périmètre

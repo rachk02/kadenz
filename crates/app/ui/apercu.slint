@@ -39,7 +39,7 @@ export component FenetreApercu inherits Rectangle {
     property <length> largeur-page: max(100px, min(defile.visible-width - 2 * root.marge - 14px, 820px));
     property <length> hauteur-ligne: root.largeur-page * (ApercuApi.pages.length > 0 ? ApercuApi.pages[0].ratio : 1.414) + root.marge;
     property <int> premiere: max(0, floor((-defile.content-y - root.marge) / root.hauteur-ligne));
-    property <int> derniere: max(0, floor((-defile.content-y + defile.visible-height) / root.hauteur-ligne));
+    property <int> derniere: max(0, floor((-defile.content-y + defile.visible-height - root.marge) / root.hauteur-ligne));
     changed premiere => {
         ApercuApi.visibles(root.premiere, root.derniere);
     }
@@ -160,9 +160,12 @@ export component FenetreApercu inherits Rectangle {
                                     drop-shadow-blur: 6px;
                                     drop-shadow-color: #0f172a1f;
 
+                                    // Dans la bordure, qui reste visible.
                                     Image {
-                                        width: 100%;
-                                        height: 100%;
+                                        x: 1px;
+                                        y: 1px;
+                                        width: parent.width - 2px;
+                                        height: parent.height - 2px;
                                         source: page.image;
                                         image-fit: contain;
                                     }

@@ -10,6 +10,7 @@ use std::rc::Rc;
 
 use hayro::hayro_interpret::InterpreterSettings;
 use hayro::hayro_syntax::Pdf;
+use hayro::vello_cpu::color::palette::css::WHITE;
 use hayro::{PixmapSettings, RenderCache, RenderSettings, render};
 use slint::{ComponentHandle, Image, Model, ModelRc, Rgba8Pixel, SharedPixelBuffer, VecModel};
 
@@ -17,9 +18,14 @@ use crate::referentiels::{retour_erreur, retour_ok};
 use crate::traduction::{tr, trf};
 use crate::{ApercuApi, EtatPartage, FacturesApi, FenetrePrincipale, PageApercuUi, Retour};
 
-/// Largeur de rendu d'une page, en pixels : environ 150 ppp pour une page A4,
-/// net sur un écran à 150 % pour la largeur d'affichage maximale (820 px).
-const LARGEUR_RENDU: f32 = 1240.0;
+/// Largeur d'affichage maximale d'une page, en pixels logiques (apercu.slint).
+const LARGEUR_AFFICHEE: f32 = 820.0;
+
+/// Largeur de rendu d'une page, en pixels : au moins environ 150 ppp pour une
+/// page A4, plus sur un écran agrandi (820 px logiques à 200 % en font 1640),
+/// au plus 300 ppp.
+const LARGEUR_RENDU_MIN: f32 = 1240.0;
+const LARGEUR_RENDU_MAX: f32 = 2480.0;
 
 /// Pages gardées en image de part et d'autre de la plage visible.
 const VOISINES: usize = 1;
@@ -35,6 +41,8 @@ struct Apercu {
     dossier: Option<String>,
     modele: Rc<VecModel<PageApercuUi>>,
     rendues: Vec<bool>,
+    // Largeur de rendu en pixels, d'après l'échelle de l'écran à l'ouverture.
+    largeur_rendu: f32,
 }
 
 thread_local! {
@@ -82,6 +90,7 @@ pub(crate) fn ouvrir(
             dossier,
             modele,
             rendues: vec![false; ratios.len()],
+            largeur_rendu: largeur_rendu(fenetre.window().scale_factor()),
         });
     });
     // Premières pages tout de suite : la plage visible ne change pas à l'ouverture.
@@ -122,25 +131,34 @@ fn poser_image(modele: &VecModel<PageApercuUi>, rang: usize, image: Image) {
     }
 }
 
+fn largeur_rendu(echelle_ecran: f32) -> f32 {
+    (LARGEUR_AFFICHEE * echelle_ecran).clamp(LARGEUR_RENDU_MIN, LARGEUR_RENDU_MAX)
+}
+
 fn rendre(apercu: &Apercu, rang: usize) -> Option<Image> {
-    rendre_page(&apercu.pdf, rang, |pixels, l, h| {
-        Image::from_rgba8_premultiplied(SharedPixelBuffer::<Rgba8Pixel>::clone_from_slice(
+    rendre_page(&apercu.pdf, rang, apercu.largeur_rendu, |pixels, l, h| {
+        Image::from_rgba8(SharedPixelBuffer::<Rgba8Pixel>::clone_from_slice(
             pixels, l, h,
         ))
     })
 }
 
-/// Rend la page `rang` à la largeur de l'aperçu et passe ses pixels RGBA, sa
-/// largeur et sa hauteur à `f`.
-fn rendre_page<T>(pdf: &Pdf, rang: usize, f: impl FnOnce(&[u8], u32, u32) -> T) -> Option<T> {
+/// Rend la page `rang` sur fond blanc, à `largeur_px` pixels de large, et passe
+/// ses pixels RGBA, sa largeur et sa hauteur à `f`.
+fn rendre_page<T>(
+    pdf: &Pdf,
+    rang: usize,
+    largeur_px: f32,
+    f: impl FnOnce(&[u8], u32, u32) -> T,
+) -> Option<T> {
     let pages = pdf.pages();
     let page = pages.get(rang)?;
     let (largeur, _) = page.render_dimensions();
-    let echelle = LARGEUR_RENDU / largeur.max(1.0);
+    let echelle = largeur_px / largeur.max(1.0);
     let reglages = PixmapSettings {
         x_scale: echelle,
         y_scale: echelle,
-        ..Default::default()
+        bg_color: WHITE,
     };
     let cache = RenderCache::new();
     let pixmap = render(
@@ -150,8 +168,7 @@ fn rendre_page<T>(pdf: &Pdf, rang: usize, f: impl FnOnce(&[u8], u32, u32) -> T) 
         &RenderSettings::default(),
         &reglages,
     );
-    // Fond transparent, pixels en alpha prémultiplié (posés sur la feuille blanche
-    // de la fenêtre d'aperçu).
+    // Fond blanc opaque : les pixels prémultipliés valent les pixels droits.
     Some(f(
         pixmap.data_as_u8_slice(),
         u32::from(pixmap.width()),
@@ -244,6 +261,13 @@ mod tests {
     /// sont écrites en RGBA brut (nom-page-largeurxhauteur.rgba) pour un contrôle
     /// à l'oeil.
     #[test]
+    fn largeur_de_rendu_selon_l_ecran() {
+        assert_eq!(largeur_rendu(1.0), LARGEUR_RENDU_MIN);
+        assert_eq!(largeur_rendu(2.0), 1640.0);
+        assert_eq!(largeur_rendu(4.0), LARGEUR_RENDU_MAX);
+    }
+
+    #[test]
     fn pages_de_l_apercu() {
         let mut conn = kadenz_stockage::ouvrir_en_memoire().unwrap();
         let admin = installation::installer(
@@ -302,7 +326,8 @@ mod tests {
             let nombre = pdf.pages().len();
             assert!(nombre >= pages_minimum, "{libelle} : {nombre} page(s)");
             for rang in 0..nombre {
-                let (l, h, sombres) = rendre_page(&pdf, rang, |pixels, l, h| {
+                let debut = std::time::Instant::now();
+                let (l, h, sombres) = rendre_page(&pdf, rang, LARGEUR_RENDU_MIN, |pixels, l, h| {
                     if let Some(dossier) = &dossier {
                         let fichier = format!(
                             "{}-p{}-{l}x{h}.rgba",
@@ -315,7 +340,8 @@ mod tests {
                     (l, h, pixels.chunks(4).filter(|p| p[0] < 128).count())
                 })
                 .unwrap();
-                assert_eq!(l, LARGEUR_RENDU as u32);
+                eprintln!("{nom}, page {} : {:?}", rang + 1, debut.elapsed());
+                assert_eq!(l, LARGEUR_RENDU_MIN as u32);
                 assert!((1740..=1760).contains(&h), "proportions A4 : {h}");
                 assert!(sombres > 1000, "{libelle}, page {} blanche", rang + 1);
             }

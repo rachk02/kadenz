@@ -638,7 +638,7 @@ pub(crate) fn apercu_mise_en_page(
     let reglages = PixmapSettings {
         x_scale: echelle,
         y_scale: echelle,
-        ..Default::default()
+        bg_color: hayro::vello_cpu::color::palette::css::WHITE,
     };
     let cache = RenderCache::new();
     let pixmap = render(
@@ -649,7 +649,7 @@ pub(crate) fn apercu_mise_en_page(
         &reglages,
     );
     let (l, h) = (u32::from(pixmap.width()), u32::from(pixmap.height()));
-    // Fond transparent, pixels en alpha prémultiplié.
+    // Fond blanc opaque : les pixels prémultipliés valent les pixels droits.
     Ok((pixmap.data_as_u8_slice().to_vec(), l, h))
 }
 
