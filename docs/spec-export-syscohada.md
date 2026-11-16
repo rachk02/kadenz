@@ -5,6 +5,7 @@
 | 0.1 | 2026-11-16 | Brouillon de kadenz-22 sur le partage convenu avec kadenz-34 (kadenz-22 : brouillon et écrans ; kadenz-34 : stockage, format du fichier, relecture). Comptes et règles relevés sur le texte officiel, page par page ; ce que le texte ne tranche pas reste en question. Rien n'est codé. |
 | 0.2 | 2026-11-16 | Relecture de kadenz-34 reportée : clôture complétée (validation refusée dans un mois clos, clôture refusée hors connexion, totaux recalculés par le serveur, pas de réouverture en C1), documents annulés hors du journal, voie B de 4.4 retenue et précisée, détails du CSV, migration du droit nouveau. |
 | 0.3 | 2026-11-16 | Interface de C1 fixée par kadenz-34 : mention provisoire hors du CSV (nom du fichier, écran, Excel), nature comptable figée sur la ligne à la validation, mois clos qui garde ses comptes, empreinte du mois envoyée à la clôture. |
+| 0.4 | 2026-11-16 | Essai C3 : pièce partagée par les règlements d'une même facture notée en 4.2, question 7 ajoutée ; règle inchangée. |
 
 Statut : **proposé**, relu par kadenz-34. Les choix marqués « retenu » sont ceux des sessions, pris pendant l'absence de l'utilisateur (décision du 2026-11-16) et révisables par lui. La question ouverte 3 du cahier de la phase 2 (logiciel comptable cible, format attendu, qui confirme le plan de comptes) reste à l'utilisateur.
 
@@ -84,7 +85,7 @@ L'article 44 de l'AUDCIF (explnum_id=2061, page 31 du PDF) permet, pour les bien
 - **Règlement d'une facture** : débit du compte de trésorerie de son mode, crédit client. Le fonctionnement des comptes 41 et 5 n'a pas été lu : écriture à confirmer par un comptable.
 - **Documents annulés** : une facture ou un avoir annulé n'entre pas au journal ; son numéro manque alors dans la suite (question 5 de la section 7).
 - **Nature d'une ligne** : figée sur la ligne à la validation, comme la désignation ; une ligne libre (sans produit) compte en marchandise. Changer la nature d'un produit ne change pas les factures déjà validées.
-- **Pièce** : le numéro du document (facture, avoir) ; pour un règlement, le numéro de la facture réglée.
+- **Pièce** : le numéro du document (facture, avoir) ; pour un règlement, le numéro de la facture réglée. Plusieurs règlements d'une même facture partagent donc une pièce, alors que le compteur de l'écran les compte un par un ; un import qui regroupe par pièce les fusionnerait, toujours équilibrés. Gardé jusqu'à la réponse à la question 7 (relevé de l'essai C3).
 - **Libellé** : type, numéro et nom du client figé dans le document.
 
 ### 4.3 Comptes paramétrables (retenu)
@@ -172,3 +173,4 @@ Variante écartée pour l'instant : contre-écritures datées de l'annulation, q
 4. Exigibilité de la TVA (à la facture ou à l'encaissement, notamment pour les services) : règle fiscale du pays, hors SYSCOHADA (question ouverte 8).
 5. Le comptable veut-il voir les numéros des documents annulés (une ligne à zéro, ou une liste à part) ?
 6. Réouverture d'un mois clos : permise ou non ; si oui, par l'Administrateur seul et journalisée ?
+7. Pièce d'un règlement (4.2) : garder le numéro de la facture réglée, qui sert au lettrage du compte client, ou donner à chaque règlement sa propre pièce (par exemple le numéro de la facture suivi de « /R1 », « /R2 ») si le logiciel comptable cible (question 1) exige une pièce par écriture d'encaissement ?
