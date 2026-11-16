@@ -987,4 +987,30 @@ mod tests {
         effacer_comptage(&c.conn).unwrap();
         assert!(comptage(&c.conn).unwrap().is_empty());
     }
+
+    /// Migration 0016 : une matrice enregistrée avant le stock reçoit les deux
+    /// droits nouveaux pour l'Admin et le Comptable, pas pour les autres.
+    #[test]
+    fn migration_des_droits_d_une_matrice_enregistree() {
+        let conn = Connection::open_in_memory().unwrap();
+        for sql in &crate::MIGRATIONS[..15] {
+            conn.execute_batch(sql).unwrap();
+        }
+        conn.execute(
+            "INSERT INTO parametre_systeme (cle, valeur) VALUES ('droits.matrice', ?1)",
+            [r#"{"admin":["gerer_utilisateurs","consulter"],"comptable":["consulter"],"commercial":["consulter"],"consultation":["consulter"]}"#],
+        )
+        .unwrap();
+        conn.execute_batch(crate::MIGRATIONS[15]).unwrap();
+        let m = crate::droits::lire_matrice(&conn).unwrap();
+        for role in [Role::Admin, Role::Comptable] {
+            assert!(m.autorise(role, Droit::AjusterStock), "{role:?}");
+            assert!(m.autorise(role, Droit::VoirValeurStock), "{role:?}");
+            assert!(m.autorise(role, Droit::Consulter), "{role:?}");
+        }
+        for role in [Role::Commercial, Role::Consultation] {
+            assert!(!m.autorise(role, Droit::AjusterStock), "{role:?}");
+            assert!(!m.autorise(role, Droit::VoirValeurStock), "{role:?}");
+        }
+    }
 }

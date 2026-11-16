@@ -964,6 +964,174 @@ fn ecritures_hors_connexion_envoyees_au_retour() {
     serveur.arreter();
 }
 
+/// Stock (S1, `docs/spec-stock.md`) : la copie d'un poste ne crée aucun
+/// mouvement, même hors connexion ; au retour du serveur, l'ajustement (avec
+/// l'identifiant choisi par le poste) et la livraison sont créés par le
+/// serveur seul, et la copie les reçoit une seule fois.
+#[test]
+fn stock_hors_connexion_calcule_par_le_serveur() {
+    use kadenz_stockage::stock::{self, FiltreMouvements, NatureMouvement};
+
+    let b = banc("stock", true);
+    let port = b.serveur.adresse().port();
+    let (p, l, m0) = (
+        synchro::nouvel_uid(),
+        synchro::nouvel_uid(),
+        synchro::nouvel_uid(),
+    );
+    {
+        let (s, _e) = demarrer(&b.copie);
+        attendre("connexion", || s.etat() == EtatConnexion::Connecte);
+        s.connecter("admin", MOT_DE_PASSE).unwrap();
+        let ok = |action: Action| {
+            let issue = s.ecrire(action.clone()).unwrap();
+            assert!(
+                matches!(issue, Issue::Acceptee { .. }),
+                "{action:?} : {issue:?}"
+            );
+        };
+        ok(Action::CreerProduit {
+            uid: p.clone(),
+            fiche: kadenz_protocole::Produit {
+                designation: "Ciment 50 kg".into(),
+                reference: "CIM".into(),
+                prix: 6_500,
+                sens: "les_deux".into(),
+                suivi_stock: true,
+            },
+        });
+        let t = synchro::nouvel_uid();
+        ok(Action::CreerTiers {
+            uid: t.clone(),
+            fiche: fiche("Client Stock"),
+        });
+        // 5 sacs à 100 en stock d'ouverture.
+        ok(Action::AjusterStock {
+            uid: m0.clone(),
+            produit: p.clone(),
+            quantite: 5_000,
+            cout_unitaire: Some(100),
+            motif: "Ouverture".into(),
+        });
+        // Bordereau vierge validé : 2 sacs à livrer.
+        ok(Action::CreerBrouillon {
+            uid: l.clone(),
+            type_document: "livraison".into(),
+            saisie: Saisie {
+                lignes: vec![Ligne {
+                    produit: Some(p.clone()),
+                    reference: "CIM".into(),
+                    designation: "Ciment 50 kg".into(),
+                    prix: 6_500,
+                    quantite: 2_000,
+                    quantite_livree: 2_000,
+                    ..Ligne::default()
+                }],
+                ..saisie(&t)
+            },
+        });
+        ok(Action::Valider { uid: l.clone() });
+        attendre("ouverture dans la copie", || {
+            present(&b.copie, Entite::Mouvement, &m0)
+        });
+        s.arreter();
+    }
+    let dossier_serveur = b.dossier_serveur.clone();
+    b.serveur.arreter();
+
+    // Hors connexion : un sac cassé, puis la livraison confirmée.
+    let (s, _evenements) = demarrer(&b.copie);
+    attendre("serveur injoignable", || injoignable(&s));
+    assert_eq!(
+        s.connecter("admin", MOT_DE_PASSE),
+        Err(ErreurPoste::HorsConnexion)
+    );
+    let m1 = synchro::nouvel_uid();
+    assert_eq!(
+        s.ecrire(Action::AjusterStock {
+            uid: m1.clone(),
+            produit: p.clone(),
+            quantite: -1_000,
+            cout_unitaire: None,
+            motif: "Casse".into(),
+        }),
+        Ok(Issue::EnFile)
+    );
+    assert_eq!(
+        s.ecrire(Action::ConfirmerLivraison { uid: l.clone() }),
+        Ok(Issue::EnFile)
+    );
+    // L'inventaire attend le serveur.
+    assert_eq!(
+        s.ecrire(Action::SaisirInventaire {
+            uid: synchro::nouvel_uid(),
+            motif: "Inventaire".into(),
+            lignes: Vec::new(),
+        }),
+        Err(ErreurPoste::HorsConnexion)
+    );
+    let copie = || poste_relie::ouvrir_copie(&b.copie).unwrap();
+    let produit_copie = synchro::id_de(&copie(), Entite::Produit, &p)
+        .unwrap()
+        .unwrap();
+    let tous = |conn: &rusqlite::Connection| {
+        stock::mouvements(conn, &FiltreMouvements::default()).unwrap()
+    };
+    assert_eq!(tous(&copie()).len(), 1, "aucun mouvement créé par la copie");
+    assert_eq!(
+        stock::lire(&copie(), produit_copie)
+            .unwrap()
+            .unwrap()
+            .quantite,
+        5_000
+    );
+    assert_eq!(
+        stock::ajustements_en_attente(&copie())
+            .unwrap()
+            .get(&produit_copie),
+        Some(&1)
+    );
+
+    // Retour du serveur : un mouvement par écriture, reçu une seule fois.
+    let serveur = relancer(&dossier_serveur, port);
+    attendre("file envoyée", || s.file() == 0);
+    attendre("mouvements reçus", || tous(&copie()).len() == 3);
+    let m1_serveur = m1.clone();
+    let (m1_cree, sur_serveur) = serveur
+        .base(move |c| {
+            (
+                synchro::id_de(c, Entite::Mouvement, &m1_serveur)
+                    .unwrap()
+                    .is_some(),
+                tous(c)
+                    .iter()
+                    .map(|m| (m.nature, m.quantite, m.valeur))
+                    .collect::<Vec<_>>(),
+            )
+        })
+        .unwrap();
+    assert!(m1_cree, "mouvement du serveur avec l'identifiant du poste");
+    assert_eq!(
+        sur_serveur,
+        [
+            (NatureMouvement::Ajustement, 5_000, 500),
+            (NatureMouvement::Ajustement, -1_000, -100),
+            (NatureMouvement::Livraison, -2_000, -200),
+        ]
+    );
+    let recus: Vec<_> = tous(&copie())
+        .iter()
+        .map(|m| (m.nature, m.quantite, m.valeur))
+        .collect();
+    assert_eq!(recus, sur_serveur);
+    assert!(present(&b.copie, Entite::Mouvement, &m1));
+    let s_copie = stock::lire(&copie(), produit_copie).unwrap().unwrap();
+    assert_eq!((s_copie.quantite, s_copie.valeur), (2_000, 200));
+    assert!(stock::ajustements_en_attente(&copie()).unwrap().is_empty());
+    s.arreter();
+    serveur.arreter();
+}
+
 /// Jalon F6b : une fiche modifiée hors connexion et sur le serveur pendant la
 /// coupure ; au retour, la modification du poste est suspendue et la fiche
 /// remise à la version du serveur, puis l'Admin garde la version du poste.
