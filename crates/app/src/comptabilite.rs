@@ -244,24 +244,37 @@ fn afficher_journal(f: &FenetrePrincipale, etat: &Etat, vue: &mut Vue) {
     api.set_cloture(cloture.into());
 }
 
-/// Écrit le CSV du journal là où l'utilisateur le choisit.
-fn exporter_csv(etat: &Etat, vue: &Vue) -> Retour {
+/// Journal prêt à remettre au comptable, quel que soit le format : droit
+/// d'export, écritures présentes et aucun règlement sans compte de trésorerie.
+fn journal_exportable<'a>(
+    etat: &Etat,
+    vue: &'a Vue,
+) -> Result<(&'a JournalComptable, &'a Periode), Retour> {
     if !peut_exporter(etat) {
-        return retour_erreur(tr(
+        return Err(retour_erreur(tr(
             "votre compte n'a pas le droit d'exporter la comptabilité",
-        ));
+        )));
     }
     let (Some(j), Some(p)) = (vue.journal.as_ref(), vue.periode.as_ref()) else {
-        return retour_erreur(tr("aucune écriture à exporter"));
+        return Err(retour_erreur(tr("aucune écriture à exporter")));
     };
     if !j.modes_sans_compte.is_empty() {
-        return retour_erreur(tr(
+        return Err(retour_erreur(tr(
             "des règlements n'ont pas de compte de trésorerie : renseignez leur mode de paiement dans Paramètres, rubrique Comptabilité",
-        ));
+        )));
     }
     if j.ecritures.is_empty() {
-        return retour_erreur(tr("aucune écriture à exporter"));
+        return Err(retour_erreur(tr("aucune écriture à exporter")));
     }
+    Ok((j, p))
+}
+
+/// Écrit le CSV du journal là où l'utilisateur le choisit.
+fn exporter_csv(etat: &Etat, vue: &Vue) -> Retour {
+    let (j, p) = match journal_exportable(etat, vue) {
+        Ok(jp) => jp,
+        Err(retour) => return retour,
+    };
     let nom = comptabilite::nom_fichier(p.du, p.au, !j.mois_non_clos.is_empty());
     let Some(chemin) = rfd::FileDialog::new()
         .set_title(tr("Enregistrer le journal"))
@@ -278,13 +291,9 @@ fn exporter_csv(etat: &Etat, vue: &Vue) -> Retour {
 }
 
 fn exporter_excel(etat: &Etat, vue: &Vue) -> Retour {
-    if !peut_exporter(etat) {
-        return retour_erreur(tr(
-            "votre compte n'a pas le droit d'exporter la comptabilité",
-        ));
-    }
-    let (Some(j), Some(p)) = (vue.journal.as_ref(), vue.periode.as_ref()) else {
-        return retour_erreur(tr("aucune écriture à exporter"));
+    let (j, p) = match journal_exportable(etat, vue) {
+        Ok(jp) => jp,
+        Err(retour) => return retour,
     };
     let nom = comptabilite::nom_fichier(p.du, p.au, !j.mois_non_clos.is_empty());
     let nom = nom.strip_suffix(".csv").unwrap_or(&nom);
