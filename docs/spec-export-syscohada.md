@@ -4,6 +4,7 @@
 |---|---|---|
 | 0.1 | 2026-11-16 | Brouillon de kadenz-22 sur le partage convenu avec kadenz-34 (kadenz-22 : brouillon et écrans ; kadenz-34 : stockage, format du fichier, relecture). Comptes et règles relevés sur le texte officiel, page par page ; ce que le texte ne tranche pas reste en question. Rien n'est codé. |
 | 0.2 | 2026-11-16 | Relecture de kadenz-34 reportée : clôture complétée (validation refusée dans un mois clos, clôture refusée hors connexion, totaux recalculés par le serveur, pas de réouverture en C1), documents annulés hors du journal, voie B de 4.4 retenue et précisée, détails du CSV, migration du droit nouveau. |
+| 0.3 | 2026-11-16 | Interface de C1 fixée par kadenz-34 : mention provisoire hors du CSV (nom du fichier, écran, Excel), nature comptable figée sur la ligne à la validation, mois clos qui garde ses comptes, empreinte du mois envoyée à la clôture. |
 
 Statut : **proposé**, relu par kadenz-34. Les choix marqués « retenu » sont ceux des sessions, pris pendant l'absence de l'utilisateur (décision du 2026-11-16) et révisables par lui. La question ouverte 3 du cahier de la phase 2 (logiciel comptable cible, format attendu, qui confirme le plan de comptes) reste à l'utilisateur.
 
@@ -82,6 +83,7 @@ L'article 44 de l'AUDCIF (explnum_id=2061, page 31 du PDF) permet, pour les bien
 - **Avoir** (règle 2.2, retours et rabais) : écriture inverse à la date de l'avoir : débit ventes de la base, débit TVA facturée, crédit client du TTC. Question pour un comptable : compte de ventes lui-même ou sous-compte 7019 / 7069 « non ventilés ».
 - **Règlement d'une facture** : débit du compte de trésorerie de son mode, crédit client. Le fonctionnement des comptes 41 et 5 n'a pas été lu : écriture à confirmer par un comptable.
 - **Documents annulés** : une facture ou un avoir annulé n'entre pas au journal ; son numéro manque alors dans la suite (question 5 de la section 7).
+- **Nature d'une ligne** : figée sur la ligne à la validation, comme la désignation ; une ligne libre (sans produit) compte en marchandise. Changer la nature d'un produit ne change pas les factures déjà validées.
 - **Pièce** : le numéro du document (facture, avoir) ; pour un règlement, le numéro de la facture réglée.
 - **Libellé** : type, numéro et nom du client figé dans le document.
 
@@ -119,9 +121,10 @@ Un export déjà remis au comptable ne doit plus changer. Or une facture peut ê
 - L'utilisateur clôt un mois après l'avoir exporté ; la clôture part au serveur comme une écriture.
 - Le serveur refuse ensuite, pour un document ou un règlement daté dans un mois clos : la validation d'une facture ou d'un avoir (une facture antidatée changerait l'export remis), leur annulation, l'ajout ou la suppression d'un règlement. La correction passe par un avoir daté du mois ouvert.
 - La clôture se fait en ligne seulement (`EnCoupure::Validation`, comme la validation d'un inventaire). Une écriture faite hors connexion avant la clôture et rejouée après est refusée par le serveur et remonte comme les autres refus.
-- L'action de clôture porte les totaux du mois vus par le poste (débit, crédit, nombre de pièces). Le serveur les recalcule et refuse s'ils diffèrent (« copie pas à jour : synchronisez puis recommencez »). Un mois clos correspond ainsi toujours aux données du serveur.
+- L'action de clôture porte l'empreinte (SHA-256) des écritures du mois calculées par le poste, comptes compris. Le serveur la recalcule et refuse si elle diffère (« Copie pas à jour : synchronisez puis recommencez »). Il refuse aussi un mois pas entièrement passé, un mois déjà clos et un mois dont une écriture n'a pas de compte. Un mois clos correspond ainsi toujours aux données du serveur.
 - Pas de réouverture dans C1 (question 6 de la section 7).
-- Un mois non clos peut être exporté autant de fois qu'on veut, avec la mention « période non close » dans le fichier et à l'écran.
+- Un mois non clos peut être exporté autant de fois qu'on veut ; il est signalé « provisoire » (4.8).
+- Un mois clos garde les comptes en vigueur à sa clôture : changer un compte plus tard ne change pas son export.
 
 Variante écartée pour l'instant : contre-écritures datées de l'annulation, qui demandent une date d'annulation stockée et répliquée.
 
@@ -129,7 +132,7 @@ Variante écartée pour l'instant : contre-écritures datées de l'annulation, q
 
 - Droit nouveau « Exporter la comptabilité et clore une période », donné par défaut aux rôles Administrateur et Comptable.
 - Calcul sur le poste, depuis sa copie, comme les autres rapports : documents et règlements y sont déjà. Le calcul est une fonction unique de `kadenz_stockage`, appelée aussi par le serveur pour contrôler une clôture (4.6).
-- Le droit nouveau est ajouté aux matrices de droits déjà enregistrées par une migration (`json_insert`, comme 0016), avec son test. Hors connexion, l'export reste possible, avec la date de la dernière synchronisation à l'écran et dans le fichier ; la clôture, elle, attend le serveur.
+- Le droit nouveau est ajouté aux matrices de droits déjà enregistrées par une migration (`json_insert`, comme 0016), avec son test. Hors connexion, l'export reste possible, avec la date de la dernière synchronisation à l'écran et dans l'Excel ; la clôture, elle, attend le serveur.
 
 ### 4.8 Format (retenu en attendant la question 3)
 
@@ -140,7 +143,8 @@ Variante écartée pour l'instant : contre-écritures datées de l'annulation, q
   - une ligne d'en-tête : `Journal;Date;Pièce;Compte;Compte tiers;Libellé;Débit;Crédit` ;
   - date JJ/MM/AAAA ; montants en FCFA entiers, sans séparateur de milliers ni décimale, 0 dans la colonne vide ;
   - champ entre guillemets s'il contient un point-virgule, un guillemet ou un retour à la ligne, guillemet doublé (RFC 4180) ;
-  - nom : `journal-AAAA-MM.csv`, ou `journal-AAAA-MM-JJ_AAAA-MM-JJ.csv` pour une période libre ;
+  - nom : `journal-AAAA-MM.csv`, ou `journal-AAAA-MM-JJ_AAAA-MM-JJ.csv` pour une période libre, avec le suffixe `-provisoire` quand la période contient un mois non clos ;
+  - aucune mention dans les lignes du CSV : « provisoire » et la date de synchronisation sont dans le nom du fichier, à l'écran et dans l'Excel ;
   - pas de ligne de total, que beaucoup d'imports prendraient pour une écriture : les totaux restent à l'écran et dans l'Excel.
 - État de la TVA collectée : par mois et par taux, base et TVA des factures, moins celles des avoirs du mois, à l'écran, en PDF et en Excel.
 
