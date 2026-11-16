@@ -1268,6 +1268,7 @@ pub fn confirmer_livraison(conn: &mut Connection, acteur: &Utilisateur, id: i64)
         "UPDATE document SET statut = ?1 WHERE id = ?2",
         params![nouveau.code(), id],
     )?;
+    crate::stock::sur_livraison(&tx, acteur, &d)?;
     journaliser_statut(
         &tx,
         id,
@@ -1773,6 +1774,7 @@ pub fn enregistrer_reception(
         "UPDATE document SET statut = ?1 WHERE id = ?2",
         params![nouveau.code(), id],
     )?;
+    crate::stock::sur_reception(&tx, acteur, &d, recues)?;
     journaliser_statut(
         &tx,
         id,

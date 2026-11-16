@@ -343,6 +343,7 @@ pub fn analyser_produits(
                     reference: c(ChampProduit::Reference),
                     prix,
                     sens,
+                    suivi_stock: false,
                 }
                 .nettoyee()
             });

@@ -55,7 +55,7 @@ pub const CLES_PARTAGEES: [&str; 19] = [
 /// Clés propres à chaque base, jamais transmises ni écrasées : identité de
 /// l'entreprise et du poste, licence V1, abonnement, port du service, dossiers
 /// d'export de la machine, suivi de la réplique, génération de la base.
-pub const CLES_LOCALES: [&str; 16] = [
+pub const CLES_LOCALES: [&str; 17] = [
     "identifiant_entreprise",
     "poste_relie",
     "licence.cle",
@@ -66,6 +66,7 @@ pub const CLES_LOCALES: [&str; 16] = [
     "port_serveur",
     "documents.dossiers",
     CLE_DERNIER_RANG,
+    CLE_DERNIERE_SYNCHRO,
     CLE_EN_COURS,
     crate::synchro::CLE_GENERATION,
     crate::distance::CLE_ACTIF,
@@ -76,6 +77,8 @@ pub const CLES_LOCALES: [&str; 16] = [
 
 /// Dernier rang de la suite des changements reçu du serveur (sur un poste).
 const CLE_DERNIER_RANG: &str = "synchro.dernier_rang";
+/// Heure du poste à la dernière page de changements reçue du serveur.
+const CLE_DERNIERE_SYNCHRO: &str = "synchro.derniere";
 /// Opération envoyée au serveur sans réponse reçue (sur un poste).
 const CLE_EN_COURS: &str = "synchro.operation_en_cours";
 
@@ -97,7 +100,7 @@ pub(crate) struct Table {
     pub uniques: &'static [&'static str],
 }
 
-pub(crate) const TABLES: [Table; 7] = [
+pub(crate) const TABLES: [Table; 8] = [
     Table {
         entite: Entite::Utilisateur,
         nom: "utilisateur",
@@ -139,7 +142,14 @@ pub(crate) const TABLES: [Table; 7] = [
     Table {
         entite: Entite::Produit,
         nom: "produit",
-        colonnes: &["designation", "reference", "prix", "sens", "actif"],
+        colonnes: &[
+            "designation",
+            "reference",
+            "prix",
+            "sens",
+            "actif",
+            "suivi_stock",
+        ],
         binaires: &[],
         references: &[],
         locales: &[],
@@ -230,6 +240,31 @@ pub(crate) const TABLES: [Table; 7] = [
         colonnes: &["date", "montant", "mode_paiement", "reference"],
         binaires: &[],
         references: &[
+            ("document_id", Entite::Document),
+            ("utilisateur_id", Entite::Utilisateur),
+        ],
+        locales: &[],
+        uniques: &[],
+    },
+    Table {
+        entite: Entite::Mouvement,
+        nom: "mouvement_stock",
+        colonnes: &[
+            "rang",
+            "nature",
+            "date",
+            "heure",
+            "quantite",
+            "valeur",
+            "quantite_apres",
+            "valeur_apres",
+            "cout_apres",
+            "ligne",
+            "motif",
+        ],
+        binaires: &[],
+        references: &[
+            ("produit_id", Entite::Produit),
             ("document_id", Entite::Document),
             ("utilisateur_id", Entite::Utilisateur),
         ],
@@ -551,10 +586,11 @@ fn rang(ch: &Changement) -> (u8, u8, u64) {
         Entite::Parametres => 5,
         Entite::Document => 6,
         Entite::Reglement => 7,
+        Entite::Mouvement => 8,
     };
     match ch.etat {
         Etat::Ligne { .. } => (0, ordre, ch.seq),
-        Etat::Supprime => (1, 7 - ordre, ch.seq),
+        Etat::Supprime => (1, 8 - ordre, ch.seq),
     }
 }
 
@@ -625,7 +661,30 @@ fn lire_attente(tx: &Transaction<'_>) -> Resultat<BTreeMap<(Entite, String), Cha
 /// Écrit une page de changements reçue du serveur dans la copie du poste, avec
 /// ceux qui attendaient, et garde le dernier rang reçu : tout ou rien.
 pub fn recevoir(conn: &mut Connection, page: &[Changement]) -> Resultat<Reception> {
-    integrer(conn, page, true)
+    let bilan = integrer(conn, page, true)?;
+    conn.execute(
+        "INSERT INTO parametre_systeme (cle, valeur) VALUES (?1, json_quote(?2))
+         ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur",
+        params![CLE_DERNIERE_SYNCHRO, chrono::Local::now().to_rfc3339()],
+    )?;
+    Ok(bilan)
+}
+
+/// Heure du poste à la dernière page de changements reçue du serveur, même
+/// vide ; `None` avant la première (quantités affichées hors connexion).
+pub fn derniere_synchro(
+    conn: &Connection,
+) -> Resultat<Option<chrono::DateTime<chrono::FixedOffset>>> {
+    let texte: Option<String> = conn
+        .query_row(
+            "SELECT valeur FROM parametre_systeme WHERE cle = ?1",
+            [CLE_DERNIERE_SYNCHRO],
+            |r| r.get(0),
+        )
+        .optional()?;
+    Ok(texte
+        .and_then(|t| serde_json::from_str::<String>(&t).ok())
+        .and_then(|t| chrono::DateTime::parse_from_rfc3339(&t).ok()))
 }
 
 /// Remet des lignes de la copie à l'état présent du serveur (réponse à
@@ -1101,6 +1160,7 @@ pub(crate) mod tests {
             reference: reference.into(),
             prix: 5000,
             sens: Sens::Vente,
+            suivi_stock: false,
         }
     }
 

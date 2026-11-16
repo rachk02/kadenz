@@ -20,6 +20,7 @@ fn en_json(f: &FicheProduit) -> Value {
         "reference": f.reference,
         "prix": f.prix,
         "sens": f.sens.code(),
+        "suivi_stock": f.suivi_stock,
     })
 }
 
@@ -40,6 +41,8 @@ pub struct FiltreProduits {
     /// `LesDeux` ne retient que les produits « les deux ».
     pub sens: Option<Sens>,
     pub inclure_inactifs: bool,
+    /// Seulement les produits suivis en stock négatif (décision 66).
+    pub negatifs: bool,
 }
 
 impl FiltreProduits {
@@ -59,7 +62,7 @@ impl FiltreProduits {
     }
 }
 
-const COLONNES: &str = "id, designation, reference, prix, sens, actif";
+const COLONNES: &str = "id, designation, reference, prix, sens, actif, suivi_stock";
 
 fn ligne_vers_produit(r: &rusqlite::Row<'_>) -> rusqlite::Result<Produit> {
     let code: String = r.get(4)?;
@@ -77,6 +80,7 @@ fn ligne_vers_produit(r: &rusqlite::Row<'_>) -> rusqlite::Result<Produit> {
             reference: r.get(2)?,
             prix: r.get(3)?,
             sens,
+            suivi_stock: r.get(6)?,
         },
         actif: r.get(5)?,
     })
@@ -115,7 +119,22 @@ pub fn lister(conn: &Connection, filtre: &FiltreProduits) -> Resultat<Vec<Produi
     let tous = requete
         .query_map([], ligne_vers_produit)?
         .collect::<rusqlite::Result<Vec<_>>>()?;
-    Ok(tous.into_iter().filter(|p| filtre.retient(p)).collect())
+    let negatifs: Option<std::collections::HashSet<i64>> = if filtre.negatifs {
+        Some(
+            crate::stock::tous(conn)?
+                .into_iter()
+                .filter(|(_, s)| s.quantite < 0)
+                .map(|(id, _)| id)
+                .collect(),
+        )
+    } else {
+        None
+    };
+    Ok(tous
+        .into_iter()
+        .filter(|p| filtre.retient(p))
+        .filter(|p| negatifs.as_ref().is_none_or(|n| n.contains(&p.id)))
+        .collect())
 }
 
 fn reference_prise(conn: &Connection, reference: &str, sauf: Option<i64>) -> Resultat<()> {
@@ -130,8 +149,15 @@ fn reference_prise(conn: &Connection, reference: &str, sauf: Option<i64>) -> Res
 
 fn inserer(conn: &Connection, f: &FicheProduit, auteur: i64) -> Resultat<Produit> {
     conn.execute(
-        "INSERT INTO produit (designation, reference, prix, sens) VALUES (?1, ?2, ?3, ?4)",
-        params![f.designation, f.reference, f.prix, f.sens.code()],
+        "INSERT INTO produit (designation, reference, prix, sens, suivi_stock)
+         VALUES (?1, ?2, ?3, ?4, ?5)",
+        params![
+            f.designation,
+            f.reference,
+            f.prix,
+            f.sens.code(),
+            f.suivi_stock
+        ],
     )?;
     let id = conn.last_insert_rowid();
     audit::journaliser(
@@ -169,9 +195,20 @@ pub fn modifier(
     let f = fiche.nettoyee().map_err(Erreur::Validation)?;
     let ancien = lire_existant(conn, id)?;
     reference_prise(conn, &f.reference, Some(id))?;
+    if ancien.fiche.suivi_stock && !f.suivi_stock {
+        crate::stock::exiger_arret_possible(conn, id)?;
+    }
     conn.execute(
-        "UPDATE produit SET designation = ?1, reference = ?2, prix = ?3, sens = ?4 WHERE id = ?5",
-        params![f.designation, f.reference, f.prix, f.sens.code(), id],
+        "UPDATE produit SET designation = ?1, reference = ?2, prix = ?3, sens = ?4,
+             suivi_stock = ?5 WHERE id = ?6",
+        params![
+            f.designation,
+            f.reference,
+            f.prix,
+            f.sens.code(),
+            f.suivi_stock,
+            id
+        ],
     )?;
     audit::journaliser(
         conn,
@@ -215,14 +252,16 @@ pub fn definir_actif(
 }
 
 fn est_utilise(conn: &Connection, id: i64) -> Resultat<bool> {
-    Ok(conn.query_row(
+    let ligne: bool = conn.query_row(
         "SELECT EXISTS (SELECT 1 FROM ligne_document WHERE produit_id = ?1)",
         [id],
         |r| r.get(0),
-    )?)
+    )?;
+    Ok(ligne || crate::stock::a_des_mouvements(conn, id)?)
 }
 
-/// Supprime le produit si aucune ligne de document ne le cite, sinon le désactive.
+/// Supprime le produit si aucune ligne de document ni aucun mouvement de stock
+/// ne le cite, sinon le désactive.
 pub fn retirer(conn: &Connection, acteur: &Utilisateur, id: i64) -> Resultat<Retrait> {
     exiger(conn, acteur, Droit::ModifierReferentiel)?;
     let ancien = lire_existant(conn, id)?;
@@ -290,6 +329,7 @@ mod tests {
             reference: reference.into(),
             prix: 1_500,
             sens,
+            suivi_stock: false,
         }
     }
 

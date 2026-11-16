@@ -519,6 +519,7 @@ fn fiche_produit_depuis_ui(u: &FicheProduitUi) -> Result<FicheProduit, String> {
         reference: u.reference.to_string(),
         prix,
         sens: depuis_rang(&Sens::TOUS, u.sens),
+        suivi_stock: false,
     })
 }
 
@@ -586,6 +587,7 @@ fn brancher_produits(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 _ => None,
             },
             inclure_inactifs: inactifs,
+            negatifs: false,
         };
         if let Some(f) = f.upgrade() {
             afficher_produits(&f, &mut etat);

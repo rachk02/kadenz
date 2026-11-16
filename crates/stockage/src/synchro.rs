@@ -31,17 +31,18 @@ use crate::entreprise::{self, Entreprise, Logo};
 use crate::reglements::{self, SaisieReglement};
 use crate::{
     BilanImport, Erreur, Resultat, Retrait, droits, maintenant, mise_en_page, parametres, produits,
-    relances, replique, tiers,
+    relances, replique, stock, tiers,
 };
 
 /// Tables dont les lignes portent un identifiant global.
-const TABLES: [&str; 6] = [
+const TABLES: [&str; 7] = [
     "utilisateur",
     "tiers",
     "produit",
     "document",
     "reglement",
     "instantane_entreprise",
+    "mouvement_stock",
 ];
 
 const CLE_ENTREPRISE: &str = "identifiant_entreprise";
@@ -716,6 +717,40 @@ fn executer(conn: &mut Connection, op: &Operation) -> Resultat<Issue> {
             Ok(acceptee)
         }
 
+        // Stock.
+        Action::AjusterStock {
+            uid,
+            produit,
+            quantite,
+            cout_unitaire,
+            motif,
+        } => {
+            let id = exiger_id(conn, Entite::Produit, produit)?;
+            if let Some(m) = stock::ajuster(conn, &qui, id, *quantite, *cout_unitaire, motif)? {
+                poser_uid(conn, Entite::Mouvement, m, uid)?;
+            }
+            Ok(acceptee)
+        }
+        Action::SaisirInventaire { motif, lignes, .. } => {
+            let mut uids = std::collections::HashMap::new();
+            let mut saisies = Vec::with_capacity(lignes.len());
+            for l in lignes {
+                let id = exiger_id(conn, Entite::Produit, &l.produit)?;
+                uids.insert(id, l.uid.clone());
+                saisies.push(stock::LigneInventaire {
+                    produit_id: id,
+                    quantite_comptee: l.quantite_comptee,
+                    cout_unitaire: l.cout_unitaire,
+                });
+            }
+            for (produit, mouvement) in stock::saisir_inventaire(conn, &qui, motif, &saisies)? {
+                if let Some(uid) = uids.get(&produit) {
+                    poser_uid(conn, Entite::Mouvement, mouvement, uid)?;
+                }
+            }
+            Ok(acceptee)
+        }
+
         // Comptes.
         Action::CreerCompte {
             uid,
@@ -1155,6 +1190,7 @@ pub fn produit_depuis_serveur(f: &proto::Produit) -> Resultat<FicheProduit> {
         reference: f.reference.clone(),
         prix: f.prix,
         sens: Sens::depuis_code(&f.sens).ok_or_else(illisible)?,
+        suivi_stock: f.suivi_stock,
     })
 }
 
@@ -1181,6 +1217,7 @@ pub fn produit_pour_serveur(f: &FicheProduit) -> proto::Produit {
         reference: f.reference.clone(),
         prix: f.prix,
         sens: f.sens.code().to_string(),
+        suivi_stock: f.suivi_stock,
     }
 }
 
@@ -2375,6 +2412,7 @@ mod essais_actions {
             reference: reference.into(),
             prix: 2500,
             sens: "vente".into(),
+            suivi_stock: false,
         }
     }
 
@@ -2416,6 +2454,7 @@ mod essais_actions {
                 reference: "C1".into(),
                 prix: 5000,
                 sens,
+                suivi_stock: false,
             };
             assert_eq!(
                 produit_depuis_serveur(&produit_pour_serveur(&f)).unwrap(),
@@ -2843,5 +2882,79 @@ mod essais_actions {
         b.ok(Action::EnregistrerParametres {
             contenu: parametres::en_json(&parametres::lire(&b.serveur).unwrap()),
         });
+    }
+
+    /// Stock (`docs/spec-stock.md`) : ajustement et inventaire appliqués par
+    /// le serveur avec l'identifiant choisi par le poste, inventaire refusé
+    /// hors connexion, ajustement accepté ; le poste reçoit le même stock.
+    #[test]
+    fn stock_ajuste_inventorie_et_replique() {
+        let mut b = Banc::nouveau();
+        let p = nouvel_uid();
+        b.ok(Action::CreerProduit {
+            uid: p.clone(),
+            fiche: proto::Produit {
+                sens: "les_deux".into(),
+                suivi_stock: true,
+                ..produit_proto("STK")
+            },
+        });
+        let m = nouvel_uid();
+        b.ok(Action::AjusterStock {
+            uid: m.clone(),
+            produit: p.clone(),
+            quantite: 4_000,
+            cout_unitaire: Some(250),
+            motif: "Ouverture".into(),
+        });
+        assert!(id_de(&b.serveur, Entite::Mouvement, &m).unwrap().is_some());
+        let e = nouvel_uid();
+        let inventaire = |e: &str, quantite_comptee| Action::SaisirInventaire {
+            uid: nouvel_uid(),
+            motif: "Inventaire".into(),
+            lignes: vec![proto::LigneInventaire {
+                uid: e.into(),
+                produit: p.clone(),
+                quantite_comptee,
+                cout_unitaire: None,
+            }],
+        };
+        b.ok(inventaire(&e, 3_000));
+        assert!(id_de(&b.serveur, Entite::Mouvement, &e).unwrap().is_some());
+
+        let admin = b.admin.clone();
+        let mut op = b.op(&admin, inventaire(&nouvel_uid(), 1_000));
+        op.hors_connexion = true;
+        assert!(appliquer(&mut b.serveur, &op).is_err());
+        let mut op = b.op(
+            &admin,
+            Action::AjusterStock {
+                uid: nouvel_uid(),
+                produit: p.clone(),
+                quantite: -1_000,
+                cout_unitaire: None,
+                motif: "Casse".into(),
+            },
+        );
+        op.hors_connexion = true;
+        assert!(matches!(
+            appliquer(&mut b.serveur, &op).unwrap(),
+            Issue::Acceptee { .. }
+        ));
+
+        synchroniser(&b.serveur, &mut b.poste, 500);
+        assert!(
+            crate::replique::derniere_synchro(&b.poste)
+                .unwrap()
+                .is_some()
+        );
+        let sur_serveur = id_de(&b.serveur, Entite::Produit, &p).unwrap().unwrap();
+        let sur_poste = id_de(&b.poste, Entite::Produit, &p).unwrap().unwrap();
+        let s = stock::lire(&b.serveur, sur_serveur).unwrap().unwrap();
+        assert_eq!((s.quantite, s.valeur), (2_000, 500));
+        assert_eq!(stock::lire(&b.poste, sur_poste).unwrap(), Some(s));
+        let recus = stock::mouvements(&b.poste, &Default::default()).unwrap();
+        assert_eq!(recus.len(), 3);
+        assert_eq!(recus[2].motif, "Casse");
     }
 }

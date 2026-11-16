@@ -15,4 +15,5 @@ pub mod paiement;
 pub mod referentiel;
 pub mod role;
 pub mod saisie;
+pub mod stock;
 pub mod texte;

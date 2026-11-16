@@ -23,6 +23,7 @@ pub mod relances;
 pub mod replique;
 pub mod reprise;
 pub mod sauvegarde;
+pub mod stock;
 pub mod synchro;
 pub mod tiers;
 
@@ -85,6 +86,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0013_comptes_refuses.sql"),
     include_str!("migrations/0014_lignes_a_revoir.sql"),
     include_str!("migrations/0015_postes_distance.sql"),
+    include_str!("migrations/0016_stock.sql"),
 ];
 
 #[derive(Debug)]

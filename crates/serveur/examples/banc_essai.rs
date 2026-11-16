@@ -350,6 +350,7 @@ fn base_v1(fichier: &Path) -> Result<(), String> {
         reference: reference.into(),
         prix,
         sens: Sens::Vente,
+        suivi_stock: false,
     };
     let ciment = produits::creer(&conn, &admin, &produit("CIM50", "Ciment 50 kg", 6_500))
         .map_err(e)?

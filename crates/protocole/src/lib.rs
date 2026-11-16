@@ -24,7 +24,7 @@ pub use abonnement::Abonnement;
 
 /// Version du protocole, annoncée à la connexion (F2) : un poste d'une autre
 /// version est refusé.
-pub const VERSION: u32 = 5;
+pub const VERSION: u32 = 6;
 
 /// Variable des versions de développement : version logicielle simulée
 /// (« 1.2.3 »), annoncée à la place de la vraie, pour essayer l'ordre des
@@ -89,10 +89,13 @@ pub enum Entite {
     Entreprise,
     /// Paramètres partagés par tous les postes, en un seul bloc (F5).
     Parametres,
+    /// Mouvement de stock, créé par le serveur seul et jamais modifié
+    /// (`docs/spec-stock.md`).
+    Mouvement,
 }
 
 impl Entite {
-    pub const TOUTES: [Entite; 8] = [
+    pub const TOUTES: [Entite; 9] = [
         Entite::Utilisateur,
         Entite::Tiers,
         Entite::Produit,
@@ -101,6 +104,7 @@ impl Entite {
         Entite::Instantane,
         Entite::Entreprise,
         Entite::Parametres,
+        Entite::Mouvement,
     ];
 
     pub fn code(self) -> &'static str {
@@ -113,6 +117,7 @@ impl Entite {
             Entite::Instantane => "instantane",
             Entite::Entreprise => "entreprise",
             Entite::Parametres => "parametres",
+            Entite::Mouvement => "mouvement",
         }
     }
 
@@ -246,6 +251,28 @@ pub enum Action {
     },
     SupprimerReglement {
         uid: String,
+    },
+
+    // Stock (`docs/spec-stock.md`).
+    /// Ajustement d'un produit suivi ; `uid` devient celui du mouvement.
+    AjusterStock {
+        uid: String,
+        /// `uid` du produit.
+        produit: String,
+        /// Quantité signée, en millièmes.
+        quantite: i64,
+        /// Coût unitaire d'une entrée (FCFA par unité) ; à défaut, le coût
+        /// moyen du moment.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        cout_unitaire: Option<i64>,
+        motif: String,
+    },
+    /// Validation d'un inventaire : un mouvement d'écart par produit compté
+    /// dont la quantité diffère de celle du serveur.
+    SaisirInventaire {
+        uid: String,
+        motif: String,
+        lignes: Vec<LigneInventaire>,
     },
 
     // Comptes.
@@ -402,7 +429,9 @@ impl Action {
             | EnregistrerReception { .. }
             | MarquerEnvoye { .. }
             | AjouterReglement { .. }
-            | SupprimerReglement { .. } => Famille::GestionCommerciale,
+            | SupprimerReglement { .. }
+            | AjusterStock { .. }
+            | SaisirInventaire { .. } => Famille::GestionCommerciale,
             _ => Famille::Socle,
         }
     }
@@ -421,6 +450,7 @@ impl Action {
             | ModifierProduit { uid, .. }
             | RetirerProduit { uid }
             | DefinirActifProduit { uid, .. } => (Entite::Produit, uid),
+            AjusterStock { produit, .. } => (Entite::Produit, produit),
             CreerBrouillon { uid, .. }
             | ModifierBrouillon { uid, .. }
             | ModifierLivraison { uid, .. }
@@ -452,7 +482,8 @@ impl Action {
             | ChangerLangue { .. }
             | ChangerAffichage { .. }
             | TrancherConflit { .. }
-            | DeciderAttente { .. } => return None,
+            | DeciderAttente { .. }
+            | SaisirInventaire { .. } => return None,
         })
     }
 
@@ -470,6 +501,7 @@ impl Action {
             | ConvertirEnFacture { nouveau, .. }
             | CreerBordereau { nouveau, .. } => (Entite::Document, nouveau),
             AjouterReglement { uid, .. } => (Entite::Reglement, uid),
+            AjusterStock { uid, .. } => (Entite::Mouvement, uid),
             CreerCompte { uid, .. } => (Entite::Utilisateur, uid),
             _ => return None,
         })
@@ -544,9 +576,12 @@ impl Action {
             | MarquerEnvoye { .. }
             | AjouterReglement { .. }
             | SupprimerReglement { .. }
+            | AjusterStock { .. }
             | ChangerLangue { .. }
             | ChangerAffichage { .. } => EnCoupure::Permise,
-            Valider { .. } => EnCoupure::Validation,
+            // L'écart se calcule sur la quantité du serveur au moment du
+            // comptage (`docs/spec-stock.md`, 3.5).
+            Valider { .. } | SaisirInventaire { .. } => EnCoupure::Validation,
             CreerCompte { .. }
             | DefinirActifCompte { .. }
             | ChangerRole { .. }
@@ -597,6 +632,24 @@ pub struct Produit {
     pub prix: i64,
     /// Code du sens de la V1 (`vente`, `achat`).
     pub sens: String,
+    /// Suivi en stock (`docs/spec-stock.md`, 3.1).
+    #[serde(default)]
+    pub suivi_stock: bool,
+}
+
+/// Ligne d'un inventaire validé.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LigneInventaire {
+    /// `uid` du mouvement d'écart, s'il y en a un.
+    pub uid: String,
+    /// `uid` du produit.
+    pub produit: String,
+    /// Quantité comptée, en millièmes.
+    pub quantite_comptee: i64,
+    /// Coût unitaire d'un écart positif (FCFA par unité) ; à défaut, le coût
+    /// moyen du moment.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cout_unitaire: Option<i64>,
 }
 
 /// Fiche d'un tiers.

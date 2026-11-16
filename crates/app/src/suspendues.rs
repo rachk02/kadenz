@@ -884,6 +884,9 @@ fn composer(action: &Action, serveur: &FicheServeur, choix: &[bool]) -> Option<B
                 reference: pris(1, &s.reference, &p.reference),
                 prix: if poste(2) { p.prix } else { s.prix },
                 sens: pris(3, &s.sens, &p.sens),
+                // Pas encore de choix champ par champ pour le suivi en stock
+                // (S2) : celui du serveur est gardé.
+                suivi_stock: s.suivi_stock,
             };
             if &fiche == s {
                 return None;
@@ -955,6 +958,7 @@ mod essais {
             reference: "C1".into(),
             prix: 5000,
             sens: "vente".into(),
+            suivi_stock: false,
         };
         let poste = proto::Produit {
             prix: 5500,

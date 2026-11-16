@@ -3,6 +3,7 @@
 | Version | Date | Changement |
 |---|---|---|
 | 0.1 | 2026-11-16 | Forme proposée par kadenz-34 après les décisions 64 à 67 de l'utilisateur (question ouverte 4 du cahier de la phase 2) : règles, valorisation en entiers, données, synchronisation, droits, écrans, découpage en jalons S1 à S3, avec les ajouts de kadenz-22 (droit de voir la valeur, avertissement avant une confirmation qui rend le stock négatif, inventaire en deux temps, date de la dernière synchronisation). Rien n'est codé. |
+| 0.2 | 2026-11-16 | S1 codé (kadenz-34, forme convenue avec kadenz-22) : pas de table `stock` répliquée, le stock d'un produit est celui que garde son dernier mouvement ; aucun mouvement sur la copie d'un poste, même pour une écriture faite hors connexion ; heure de la dernière synchronisation gardée par le poste ; inventaire en cours dans une table locale. |
 
 Statut : **proposé**. Les décisions 64 à 67 sont prises (l'utilisateur a demandé de retenir les choix recommandés). Les choix de la section 3 sont ceux de kadenz-34, retenus pour avancer et révisables par l'utilisateur ; ils sont marqués « retenu ». Rien ici ne s'appuie sur une règle comptable : la conformité de la valorisation au SYSCOHADA est à vérifier avec le chantier 3.2, sur une source.
 
@@ -66,7 +67,8 @@ Chaque produit suivi garde sa quantité `Q` (millièmes) et sa valeur `V` (FCFA)
 ### 3.5 Hors connexion (décision 50)
 
 - Réception et confirmation d'un bordereau suivent les règles de F6 telles qu'elles sont : le stock bouge quand le serveur applique l'opération.
-- Ajustement : permis hors connexion, mis en file d'envoi comme les autres écritures ; le serveur le juge au retour.
+- Ajustement : permis hors connexion, mis en file d'envoi comme les autres écritures ; la copie le contrôle (droit, produit suivi, motif) sans créer de mouvement, et le serveur le juge au retour.
+- Aucun mouvement n'est créé sur la copie d'un poste, même par une réception ou une confirmation faite hors connexion : la copie reçoit les mouvements du serveur avec leur identifiant global, sans risque de mouvement en double.
 - Inventaire : refusé hors connexion (bouton inactif, raison « Serveur injoignable »), parce que l'écart se calcule sur la quantité du serveur au moment du comptage.
 - La quantité affichée sur un poste est celle de sa copie, donc celle du serveur à la dernière synchronisation, dont la date et l'heure sont affichées hors connexion ; un ajustement en attente est montré comme tel, sans changer la quantité affichée.
 - Pas de calcul du stock sur un poste seul : la phase 2 n'a pas de mode « poste seul » (décision 31), le stock est toujours calculé par le serveur.
@@ -96,10 +98,11 @@ Chaque produit suivi garde sa quantité `Q` (millièmes) et sa valeur `V` (FCFA)
 
 ## 4. Données et synchronisation
 
-- Produit : colonne `suivi_stock` (0 ou 1), synchronisée avec la fiche produit.
-- Table `stock` : une ligne par produit suivi (`uid` du produit, quantité, valeur, dernier coût). Elle n'est écrite que par le serveur, comme effet d'une opération, et se réplique comme une entité à part (`stock`). Elle n'est pas dans la ligne du produit : sinon chaque mouvement changerait la version de la fiche, et une fiche modifiée hors connexion serait vue en conflit à tort (décision 17).
-- Table `mouvement_stock` : `uid`, produit, nature, date, quantité, valeur, quantité et valeur après, document et ligne d'origine, motif, compte, rang dans la suite des changements. Ajout seul, répliquée comme entité `mouvement`.
-- Protocole : nouvelles actions `AjusterStock { uid, produit, quantite, cout_unitaire, motif }` et `SaisirInventaire { uid, motif, lignes: [{ produit, quantite_comptee, cout_unitaire }] }`, famille de la gestion commerciale ; `ModifierProduit` et `CreerProduit` portent `suivi_stock`. La version du protocole augmente, avec la règle de F10 (serveur mis à jour avant les postes).
+- Produit : colonne `suivi_stock` (0 ou 1), dans la fiche produit (`FicheProduit.suivi_stock`), portée par `CreerProduit` et `ModifierProduit` ; décocher un produit dont la quantité n'est pas nulle est refusé.
+- Table `mouvement_stock` : `uid`, rang sur le serveur, produit, nature, date, heure, quantité, valeur, quantité, valeur et dernier coût après le mouvement, document et rang de la ligne d'origine, motif, compte. Ajout seul, répliquée comme entité `mouvement`. Le stock d'un produit est celui de son dernier mouvement (rang le plus grand), le stock à une date celui du dernier mouvement de ce jour ou d'avant : pas de table de totaux, donc rien dans la ligne du produit, dont la version ne bouge pas à chaque mouvement (une fiche modifiée hors connexion n'est pas vue en conflit à tort, décision 17).
+- Table `comptage_stock` : inventaire en cours d'une base, jamais répliqué.
+- Protocole (version 6) : nouvelles actions `AjusterStock { uid, produit, quantite, cout_unitaire, motif }` et `SaisirInventaire { uid, motif, lignes: [{ uid, produit, quantite_comptee, cout_unitaire }] }`, famille de la gestion commerciale ; l'`uid` de l'ajustement et celui de chaque ligne d'inventaire deviennent ceux des mouvements créés. La version du protocole augmente, avec la règle de F10 (serveur mis à jour avant les postes).
+- Poste : heure de la dernière page de changements reçue (`replique::derniere_synchro`), affichée hors connexion à côté des quantités.
 - Migration du schéma à la suite des existantes, sans perte ; une base reprise ou ancienne n'a aucun produit suivi.
 
 ## 5. Écrans (kadenz-22)

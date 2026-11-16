@@ -68,10 +68,15 @@ pub enum Droit {
     GererParametres,
     Consulter,
     SauvegarderBase,
+    /// Ajuster le stock et saisir un inventaire (`docs/spec-stock.md`, 3.7).
+    AjusterStock,
+    /// Voir la valeur du stock : coût moyen, valeurs des mouvements et de
+    /// l'état du stock. Sans lui, les quantités seules.
+    VoirValeurStock,
 }
 
 impl Droit {
-    pub const TOUS: [Droit; 11] = [
+    pub const TOUS: [Droit; 13] = [
         Droit::BrouillonDocuments,
         Droit::BrouillonFacture,
         Droit::ValiderDocument,
@@ -83,6 +88,8 @@ impl Droit {
         Droit::GererParametres,
         Droit::Consulter,
         Droit::SauvegarderBase,
+        Droit::AjusterStock,
+        Droit::VoirValeurStock,
     ];
 
     /// Droit nécessaire pour modifier un brouillon du type donné.
@@ -106,6 +113,8 @@ impl Droit {
             Droit::GererParametres => "gerer_parametres",
             Droit::Consulter => "consulter",
             Droit::SauvegarderBase => "sauvegarder_base",
+            Droit::AjusterStock => "ajuster_stock",
+            Droit::VoirValeurStock => "voir_valeur_stock",
         }
     }
 
@@ -132,6 +141,8 @@ impl fmt::Display for Droit {
             Droit::GererParametres => "Gérer la fiche entreprise et les paramètres",
             Droit::Consulter => "Consulter tableau de bord et registres",
             Droit::SauvegarderBase => "Sauvegarder / exporter la base",
+            Droit::AjusterStock => "Ajuster le stock et saisir un inventaire",
+            Droit::VoirValeurStock => "Voir la valeur du stock",
         })
     }
 }
@@ -160,6 +171,8 @@ impl Default for MatriceDroits {
             AjouterReferentiel,
             ModifierReferentiel,
             Consulter,
+            AjusterStock,
+            VoirValeurStock,
         ] {
             autorisations.insert((Comptable, droit));
         }
@@ -220,6 +233,9 @@ mod tests {
         assert!(!m.autorise(Comptable, GererUtilisateurs));
         assert!(!m.autorise(Comptable, GererParametres));
         assert!(!m.autorise(Comptable, SauvegarderBase));
+        assert!(m.autorise(Admin, AjusterStock) && m.autorise(Admin, VoirValeurStock));
+        assert!(m.autorise(Comptable, AjusterStock) && m.autorise(Comptable, VoirValeurStock));
+        assert!(!m.autorise(Commercial, AjusterStock) && !m.autorise(Commercial, VoirValeurStock));
 
         assert!(m.autorise(Commercial, devis));
         assert!(!m.autorise(Commercial, facture));

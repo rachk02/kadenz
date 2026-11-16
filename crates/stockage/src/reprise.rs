@@ -548,10 +548,10 @@ mod tests {
     use crate::parametres::Parametres;
     use crate::reglements::SaisieReglement;
     use crate::relances::TextesRelance;
-    use crate::{documents, installation, produits, reglements, relances, synchro, tiers};
+    use crate::{documents, installation, reglements, relances, synchro, tiers};
     use chrono::NaiveDate;
     use kadenz_domaine::calcul::UNE_UNITE;
-    use kadenz_domaine::referentiel::{FicheProduit, FicheTiers, Sens, TypeTiers};
+    use kadenz_domaine::referentiel::{FicheTiers, TypeTiers};
 
     const MOT_DE_PASSE: &str = "unique-pour-la-reprise";
 
@@ -597,17 +597,14 @@ mod tests {
         let mut fournisseur = FicheTiers::vide(TypeTiers::Fournisseur);
         fournisseur.nom = "Fournisseur V1".into();
         tiers::creer(&conn, &admin, &fournisseur).unwrap();
-        let produit = produits::creer(
-            &conn,
-            &admin,
-            &FicheProduit {
-                designation: "Sable".into(),
-                reference: "SAB".into(),
-                prix: 1000,
-                sens: Sens::Vente,
-            },
+        // Au schéma de la V1, sans la colonne du suivi en stock : écrit à la
+        // main plutôt que par `produits::creer`.
+        conn.execute(
+            "INSERT INTO produit (designation, reference, prix, sens) VALUES ('Sable', 'SAB', 1000, 'vente')",
+            [],
         )
         .unwrap();
+        let produit_id = conn.last_insert_rowid();
         relances::enregistrer_textes(
             &conn,
             &admin,
@@ -621,7 +618,7 @@ mod tests {
         let mut s = Saisie::vide(NaiveDate::from_ymd_opt(2026, 11, 2).unwrap());
         s.tiers_id = Some(client.id);
         s.lignes = vec![LigneSaisie {
-            produit_id: Some(produit.id),
+            produit_id: Some(produit_id),
             designation: "Sable".into(),
             prix: 1000,
             quantite: UNE_UNITE,

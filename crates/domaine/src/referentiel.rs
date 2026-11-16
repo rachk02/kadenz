@@ -148,6 +148,8 @@ pub struct FicheProduit {
     /// Prix unitaire en FCFA.
     pub prix: Montant,
     pub sens: Sens,
+    /// Suivi en stock (`docs/spec-stock.md`, 3.1) : faux pour un service.
+    pub suivi_stock: bool,
 }
 
 impl FicheProduit {
@@ -158,6 +160,7 @@ impl FicheProduit {
             reference: self.reference.trim().to_string(),
             prix: self.prix,
             sens: self.sens,
+            suivi_stock: self.suivi_stock,
         };
         if f.designation.is_empty() {
             return Err("la désignation est obligatoire".into());
@@ -201,6 +204,7 @@ mod tests {
             reference: " ".into(),
             prix: 10,
             sens: Sens::Vente,
+            suivi_stock: false,
         };
         assert!(p.nettoyee().is_err());
     }
