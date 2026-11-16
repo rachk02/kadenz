@@ -11,6 +11,7 @@ use kadenz_domaine::module::Module;
 use kadenz_domaine::referentiel::TypeTiers;
 use kadenz_export::{Colonne, Feuille, Valeur, classeur};
 use kadenz_stockage::Connexion as Connection;
+use kadenz_stockage::comptabilite::{JournalComptable, LigneTva, Periode};
 use kadenz_stockage::documents::{self, ResumeDocument};
 use kadenz_stockage::entreprise;
 use kadenz_stockage::licence;
@@ -265,6 +266,112 @@ pub(crate) fn etat_stock(
             } else {
                 Vec::new()
             },
+        },
+        &nom_sur(&titre),
+    )
+}
+
+/// Journal comptable d'une période (docs/spec-export-syscohada.md, 4.8) : les
+/// mentions « provisoire » et de synchronisation vont dans l'en-tête, jamais
+/// dans les lignes.
+pub(crate) fn journal_comptable(
+    conn: &Connection,
+    journal: &JournalComptable,
+    periode: &Periode,
+    nom: &str,
+    synchro: &str,
+) -> Export {
+    let titre = tr("Journal comptable");
+    let mut entete = entete_registre(conn)?;
+    entete.push(info("Du", Some(periode.du)));
+    entete.push(info("Au", Some(periode.au)));
+    if !journal.mois_non_clos.is_empty() {
+        let mois: Vec<String> = journal
+            .mois_non_clos
+            .iter()
+            .map(|m| m.to_string())
+            .collect();
+        entete.push(info("Provisoire, mois non clos", mois.join(", ")));
+    }
+    if !synchro.is_empty() {
+        entete.push(info("Copie du poste", synchro.to_string()));
+    }
+    exporter(
+        Feuille {
+            nom: titre.clone(),
+            titre: titre.clone(),
+            entete,
+            colonnes: vec![
+                col("Journal", 9.0),
+                col("Date", 12.0),
+                col("Pièce", 18.0),
+                col("Compte", 12.0),
+                col("Compte tiers", 14.0),
+                col("Libellé", 44.0),
+                col("Débit", 16.0),
+                col("Crédit", 16.0),
+            ],
+            lignes: journal
+                .ecritures
+                .iter()
+                .map(|e| {
+                    vec![
+                        e.code_journal.clone().into(),
+                        Some(e.date).into(),
+                        e.piece.clone().into(),
+                        e.compte.clone().into(),
+                        e.compte_tiers.clone().into(),
+                        e.libelle.clone().into(),
+                        Valeur::Montant(e.debit),
+                        Valeur::Montant(e.credit),
+                    ]
+                })
+                .collect(),
+            totaux: vec![
+                info("Total débit", Valeur::Montant(journal.total_debit)),
+                info("Total crédit", Valeur::Montant(journal.total_credit)),
+                info("Pièces", Valeur::Entier(journal.pieces as i64)),
+            ],
+        },
+        nom,
+    )
+}
+
+/// TVA collectée par mois et par taux : factures moins avoirs.
+pub(crate) fn tva_collectee(conn: &Connection, lignes: &[LigneTva], periode: &Periode) -> Export {
+    let titre = tr("TVA collectée");
+    let mut entete = entete_registre(conn)?;
+    entete.push(info("Du", Some(periode.du)));
+    entete.push(info("Au", Some(periode.au)));
+    exporter(
+        Feuille {
+            nom: titre.clone(),
+            titre: titre.clone(),
+            entete,
+            colonnes: vec![
+                col("Mois", 12.0),
+                col("Taux", 10.0),
+                col("Base", 18.0),
+                col("TVA collectée", 18.0),
+            ],
+            lignes: lignes
+                .iter()
+                .map(|l| {
+                    vec![
+                        l.mois.to_string().into(),
+                        Valeur::Pourcentage(l.taux),
+                        Valeur::Montant(l.base),
+                        Valeur::Montant(l.tva),
+                    ]
+                })
+                .collect(),
+            totaux: vec![
+                info("Base", Valeur::Montant(lignes.iter().map(|l| l.base).sum())),
+                info(
+                    "TVA collectée",
+                    Valeur::Montant(lignes.iter().map(|l| l.tva).sum()),
+                ),
+            ],
         },
         &nom_sur(&titre),
     )

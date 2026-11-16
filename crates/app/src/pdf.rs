@@ -444,6 +444,58 @@ pub(crate) fn etat_stock(
     ))
 }
 
+/// TVA collectée par mois et par taux (docs/spec-export-syscohada.md, 4.8) :
+/// factures moins avoirs, chaque avoir dans le mois de sa propre date.
+pub(crate) fn tva_collectee(
+    conn: &Connection,
+    lignes: &[kadenz_stockage::comptabilite::LigneTva],
+    periode: &kadenz_stockage::comptabilite::Periode,
+) -> Result<(Vec<u8>, String), String> {
+    let (entreprise, couleur, mep) = entete_du_moment(conn)?;
+    let liste = ListePdf {
+        entreprise,
+        couleur,
+        titre: "TVA COLLECTÉE".into(),
+        date: date(aujourd_hui()),
+        criteres: vec![format!("Du {} au {}", date(periode.du), date(periode.au))],
+        colonnes: vec![
+            colonne("Mois", 70.0, false),
+            colonne("Taux", 60.0, true),
+            colonne("Base", 0.0, true),
+            colonne("TVA collectée", 110.0, true),
+        ],
+        lignes: lignes
+            .iter()
+            .map(|l| {
+                vec![
+                    l.mois.to_string(),
+                    format!("{} %", kadenz_domaine::saisie::pourcentage_en_texte(l.taux)),
+                    montant_en_texte(l.base),
+                    montant_en_texte(l.tva),
+                ]
+            })
+            .collect(),
+        totaux: vec![
+            total("Base".into(), lignes.iter().map(|l| l.base).sum(), false),
+            total(
+                "TVA collectée".into(),
+                lignes.iter().map(|l| l.tva).sum(),
+                true,
+            ),
+        ],
+        mise_en_page: mep,
+    };
+    let octets = kadenz_pdf::generer_liste(&liste, &Polices::embarquees())?;
+    Ok((
+        octets,
+        format!(
+            "TVA-collectee-{}_{}.pdf",
+            periode.du.format("%Y-%m-%d"),
+            periode.au.format("%Y-%m-%d")
+        ),
+    ))
+}
+
 /// Feuille de comptage d'un inventaire : produits suivis, quantité théorique
 /// (masquable pour un comptage à l'aveugle) et colonne vide à remplir à la main.
 pub(crate) fn feuille_comptage(

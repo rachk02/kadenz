@@ -4290,3 +4290,267 @@ msgstr "the product “{}” is counted twice"
 
 msgid "le stock de « {} » n'est pas nul : le ramener à zéro par un ajustement avant d'arrêter son suivi"
 msgstr "the stock of “{}” is not zero: bring it to zero with an adjustment before stopping its tracking"
+
+msgid "Exporter en CSV"
+msgstr "Export to CSV"
+
+msgid "Crédit"
+msgstr "Credit"
+
+msgid "Débit"
+msgstr "Debit"
+
+msgid "Compte tiers"
+msgstr "Third-party account"
+
+msgid "Pièce"
+msgstr "Voucher"
+
+msgid "Journal"
+msgstr "Journal"
+
+msgid "Clore le mois"
+msgstr "Close the month"
+
+msgid "Clore ce mois ? Ensuite, aucune facture ni aucun avoir daté de ce mois ne peut être validé ou annulé, et aucun règlement de ce mois ne peut être ajouté ou supprimé. Une correction passe par un avoir daté d'un mois ouvert. La clôture ne s'annule pas."
+msgstr "Close this month? Afterwards, no invoice or credit note dated in this month can be validated or cancelled, and no payment of this month can be added or deleted. A correction goes through a credit note dated in an open month. Closing cannot be undone."
+
+msgid "Serveur injoignable : la clôture se fait quand le serveur répond."
+msgstr "Server unreachable: closing happens when the server responds."
+
+msgid "Année AAAA"
+msgstr "Year YYYY"
+
+msgid "TVA collectée (FCFA)"
+msgstr "VAT collected (FCFA)"
+
+msgid "Base (FCFA)"
+msgstr "Base (FCFA)"
+
+msgid "Taux"
+msgstr "Rate"
+
+msgid "Mois"
+msgstr "Month"
+
+msgid "Comptabilité"
+msgstr "Accounting"
+
+msgid "Écritures selon le plan de comptes SYSCOHADA, avec les comptes choisis dans Paramètres, rubrique Comptabilité. Faites-les confirmer par votre comptable."
+msgstr "Entries follow the SYSCOHADA chart of accounts, with the accounts chosen in Settings, Accounting section. Have them confirmed by your accountant."
+
+msgid "TVA collectée"
+msgstr "VAT collected"
+
+msgid "Comptes proposés d'après le plan de comptes SYSCOHADA (Journal officiel de l'OHADA du 15 février 2017). Ils sont à confirmer par votre comptable avant le premier export."
+msgstr "Accounts suggested from the SYSCOHADA chart of accounts (OHADA Official Journal of 15 February 2017). Have your accountant confirm them before the first export."
+
+msgid "{} (proposé : {})"
+msgstr "{} (suggested: {})"
+
+msgid "Trésorerie par mode de paiement"
+msgstr "Cash accounts by payment method"
+
+msgid "Un mode sans compte va au compte d'attente ; l'export le signale avant d'écrire le fichier."
+msgstr "A method without an account goes to the suspense account; the export reports it before writing the file."
+
+msgid "Codes des journaux"
+msgstr "Journal codes"
+
+msgid "Revenir aux comptes proposés"
+msgstr "Restore the suggested accounts"
+
+msgid "Remettre tous les comptes proposés ? Les comptes saisis à la place sont oubliés tant que vous n'enregistrez pas."
+msgstr "Restore all the suggested accounts? The accounts entered instead are discarded unless you save."
+
+msgid "Nature comptable"
+msgstr "Accounting type"
+
+msgid "Marchandise"
+msgstr "Goods"
+
+msgid "année invalide : saisir quatre chiffres, par exemple 2026"
+msgstr "invalid year: enter four digits, for example 2026"
+
+msgid "saisir les dates du et au au format JJ/MM/AAAA"
+msgstr "enter the from and to dates as DD/MM/YYYY"
+
+msgid "la date de fin précède la date de début"
+msgstr "the end date is before the start date"
+
+msgid "votre compte n'a pas le droit d'exporter la comptabilité"
+msgstr "your account is not allowed to export the accounting"
+
+msgid "aucune écriture à exporter"
+msgstr "no entry to export"
+
+msgid "des règlements n'ont pas de compte de trésorerie : renseignez leur mode de paiement dans Paramètres, rubrique Comptabilité"
+msgstr "some payments have no cash account: fill in their payment method in Settings, Accounting section"
+
+msgid "Enregistrer le journal"
+msgstr "Save the journal"
+
+msgid "votre compte n'a pas le droit de clore une période"
+msgstr "your account is not allowed to close a period"
+
+msgid "choisir un mois dans la liste pour le clore"
+msgstr "choose a month in the list to close it"
+
+msgid "aucun compte connecté"
+msgstr "no account signed in"
+
+msgid "votre compte n'a pas le droit de modifier les comptes"
+msgstr "your account is not allowed to change the accounts"
+
+msgid "Période libre"
+msgstr "Custom period"
+
+msgid "saisir une année"
+msgstr "enter a year"
+
+msgid "Serveur injoignable : données au {}, dernière synchronisation."
+msgstr "Server unreachable: data as of {}, last synchronisation."
+
+msgid "Mois clos le {} par {}."
+msgstr "Month closed on {} by {}."
+
+msgid "{} écriture(s), {} pièce(s)."
+msgstr "{} entry(ies), {} voucher(s)."
+
+msgid "Total débit : {} FCFA   Total crédit : {} FCFA"
+msgstr "Total debit: {} FCFA   Total credit: {} FCFA"
+
+msgid "Total de la période : base {} FCFA, TVA collectée {} FCFA. Les avoirs sont déduits dans le mois de leur propre date."
+msgstr "Period total: base {} FCFA, VAT collected {} FCFA. Credit notes are deducted in the month of their own date."
+
+msgid "Modes de paiement sans compte de trésorerie : {}. Renseignez-les dans Paramètres, rubrique Comptabilité, avant d'exporter."
+msgstr "Payment methods without a cash account: {}. Fill them in under Settings, Accounting section, before exporting."
+
+msgid "Export provisoire : mois non clos {}."
+msgstr "Provisional export: months not closed {}."
+
+msgid "Journal enregistré : {}"
+msgstr "Journal saved: {}"
+
+msgid "écriture du fichier impossible : {}"
+msgstr "cannot write the file: {}"
+
+msgid "Mois {} clos."
+msgstr "Month {} closed."
+
+msgid "Journal comptable"
+msgstr "Accounting journal"
+
+msgid "comptes enregistrés"
+msgstr "accounts saved"
+
+msgid "Janvier"
+msgstr "January"
+
+msgid "Février"
+msgstr "February"
+
+msgid "Mars"
+msgstr "March"
+
+msgid "Avril"
+msgstr "April"
+
+msgid "Mai"
+msgstr "May"
+
+msgid "Juin"
+msgstr "June"
+
+msgid "Juillet"
+msgstr "July"
+
+msgid "Août"
+msgstr "August"
+
+msgid "Septembre"
+msgstr "September"
+
+msgid "Octobre"
+msgstr "October"
+
+msgid "Novembre"
+msgstr "November"
+
+msgid "Décembre"
+msgstr "December"
+
+msgid "Ventes de marchandises"
+msgstr "Sales of goods"
+
+msgid "Services vendus"
+msgstr "Services sold"
+
+msgid "TVA facturée sur ventes"
+msgstr "VAT invoiced on sales"
+
+msgid "TVA facturée sur prestations de services"
+msgstr "VAT invoiced on services"
+
+msgid "Compte d'attente"
+msgstr "Suspense account"
+
+msgid "Journal des ventes"
+msgstr "Sales journal"
+
+msgid "Journal des encaissements"
+msgstr "Receipts journal"
+
+msgid "Provisoire, mois non clos"
+msgstr "Provisional, months not closed"
+
+msgid "Copie du poste"
+msgstr "Workstation copy"
+
+msgid "Total débit"
+msgstr "Total debit"
+
+msgid "Total crédit"
+msgstr "Total credit"
+
+msgid "Pièces"
+msgstr "Vouchers"
+
+msgid "Base"
+msgstr "Base"
+
+msgid "Exporter la comptabilité et clore une période"
+msgstr "Export the accounting and close a period"
+
+msgid "le mois {} est clos : une facture ou un avoir daté de ce mois ne peut plus être validé ni annulé"
+msgstr "month {} is closed: an invoice or credit note dated in this month can no longer be validated or cancelled"
+
+msgid "le mois {} est clos : un règlement daté de ce mois ne peut plus être ajouté ni supprimé"
+msgstr "month {} is closed: a payment dated in this month can no longer be added or deleted"
+
+msgid "le mois {} n'est pas terminé : il peut être clos à partir du {}"
+msgstr "month {} is not over: it can be closed from {}"
+
+msgid "le mois {} est déjà clos"
+msgstr "month {} is already closed"
+
+msgid "copie pas à jour : synchronisez puis recommencez"
+msgstr "copy not up to date: synchronise, then try again"
+
+msgid "le compte « {} » est obligatoire"
+msgstr "the “{}” account is required"
+
+msgid "le mode de paiement « {} » n'a pas de compte et le compte d'attente est vide : renseigner l'un ou l'autre avant de clore"
+msgstr "the “{}” payment method has no account and the suspense account is empty: fill in one or the other before closing"
+
+msgid "la pièce {} est déséquilibrée : son TTC n'est pas la base plus la TVA"
+msgstr "voucher {} is unbalanced: its total including tax is not the base plus VAT"
+
+msgid "mois illisible : {}"
+msgstr "unreadable month: {}"
+
+msgid "le mode de paiement « {} » a deux comptes"
+msgstr "the “{}” payment method has two accounts"
+
+msgid "Compte clients"
+msgstr "Customers account"

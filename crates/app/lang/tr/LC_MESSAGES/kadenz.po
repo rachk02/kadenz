@@ -4290,3 +4290,267 @@ msgstr "«{}» ürünü iki kez sayılmış"
 
 msgid "le stock de « {} » n'est pas nul : le ramener à zéro par un ajustement avant d'arrêter son suivi"
 msgstr "«{}» stoku sıfır değil: izlemeyi durdurmadan önce bir düzeltmeyle sıfıra indirin"
+
+msgid "Exporter en CSV"
+msgstr "CSV olarak dışa aktar"
+
+msgid "Crédit"
+msgstr "Alacak"
+
+msgid "Débit"
+msgstr "Borç"
+
+msgid "Compte tiers"
+msgstr "Cari hesap"
+
+msgid "Pièce"
+msgstr "Belge"
+
+msgid "Journal"
+msgstr "Yevmiye"
+
+msgid "Clore le mois"
+msgstr "Ayı kapat"
+
+msgid "Clore ce mois ? Ensuite, aucune facture ni aucun avoir daté de ce mois ne peut être validé ou annulé, et aucun règlement de ce mois ne peut être ajouté ou supprimé. Une correction passe par un avoir daté d'un mois ouvert. La clôture ne s'annule pas."
+msgstr "Bu ay kapatılsın mı? Sonrasında bu ay tarihli hiçbir fatura veya alacak dekontu onaylanamaz ya da iptal edilemez, bu ayın hiçbir ödemesi eklenemez veya silinemez. Düzeltme, açık bir ay tarihli alacak dekontuyla yapılır. Kapanış geri alınamaz."
+
+msgid "Serveur injoignable : la clôture se fait quand le serveur répond."
+msgstr "Sunucuya ulaşılamıyor: kapanış sunucu yanıt verdiğinde yapılır."
+
+msgid "Année AAAA"
+msgstr "Yıl YYYY"
+
+msgid "TVA collectée (FCFA)"
+msgstr "Tahsil edilen KDV (FCFA)"
+
+msgid "Base (FCFA)"
+msgstr "Matrah (FCFA)"
+
+msgid "Taux"
+msgstr "Oran"
+
+msgid "Mois"
+msgstr "Ay"
+
+msgid "Comptabilité"
+msgstr "Muhasebe"
+
+msgid "Écritures selon le plan de comptes SYSCOHADA, avec les comptes choisis dans Paramètres, rubrique Comptabilité. Faites-les confirmer par votre comptable."
+msgstr "Kayıtlar SYSCOHADA hesap planına göre, Ayarlar'ın Muhasebe bölümünde seçilen hesaplarla oluşturulur. Muhasebecinize onaylatın."
+
+msgid "TVA collectée"
+msgstr "Tahsil edilen KDV"
+
+msgid "Comptes proposés d'après le plan de comptes SYSCOHADA (Journal officiel de l'OHADA du 15 février 2017). Ils sont à confirmer par votre comptable avant le premier export."
+msgstr "SYSCOHADA hesap planına göre önerilen hesaplar (OHADA Resmî Gazetesi, 15 Şubat 2017). İlk dışa aktarımdan önce muhasebecinize onaylatın."
+
+msgid "{} (proposé : {})"
+msgstr "{} (önerilen: {})"
+
+msgid "Trésorerie par mode de paiement"
+msgstr "Ödeme yöntemine göre hazine"
+
+msgid "Un mode sans compte va au compte d'attente ; l'export le signale avant d'écrire le fichier."
+msgstr "Hesabı olmayan yöntem bekleyen hesaba gider; dışa aktarım dosyayı yazmadan önce bunu bildirir."
+
+msgid "Codes des journaux"
+msgstr "Yevmiye kodları"
+
+msgid "Revenir aux comptes proposés"
+msgstr "Önerilen hesaplara dön"
+
+msgid "Remettre tous les comptes proposés ? Les comptes saisis à la place sont oubliés tant que vous n'enregistrez pas."
+msgstr "Tüm önerilen hesaplar geri yüklensin mi? Yerine girilen hesaplar kaydetmediğiniz sürece atılır."
+
+msgid "Nature comptable"
+msgstr "Muhasebe türü"
+
+msgid "Marchandise"
+msgstr "Ticari mal"
+
+msgid "année invalide : saisir quatre chiffres, par exemple 2026"
+msgstr "geçersiz yıl: dört rakam girin, örneğin 2026"
+
+msgid "saisir les dates du et au au format JJ/MM/AAAA"
+msgstr "başlangıç ve bitiş tarihlerini GG/AA/YYYY biçiminde girin"
+
+msgid "la date de fin précède la date de début"
+msgstr "bitiş tarihi başlangıç tarihinden önce"
+
+msgid "votre compte n'a pas le droit d'exporter la comptabilité"
+msgstr "hesabınızın muhasebeyi dışa aktarma yetkisi yok"
+
+msgid "aucune écriture à exporter"
+msgstr "dışa aktarılacak kayıt yok"
+
+msgid "des règlements n'ont pas de compte de trésorerie : renseignez leur mode de paiement dans Paramètres, rubrique Comptabilité"
+msgstr "bazı ödemelerin hazine hesabı yok: ödeme yöntemlerini Ayarlar'ın Muhasebe bölümünde doldurun"
+
+msgid "Enregistrer le journal"
+msgstr "Yevmiyeyi kaydet"
+
+msgid "votre compte n'a pas le droit de clore une période"
+msgstr "hesabınızın dönem kapatma yetkisi yok"
+
+msgid "choisir un mois dans la liste pour le clore"
+msgstr "kapatmak için listeden bir ay seçin"
+
+msgid "aucun compte connecté"
+msgstr "oturum açmış hesap yok"
+
+msgid "votre compte n'a pas le droit de modifier les comptes"
+msgstr "hesabınızın hesapları değiştirme yetkisi yok"
+
+msgid "Période libre"
+msgstr "Serbest dönem"
+
+msgid "saisir une année"
+msgstr "bir yıl girin"
+
+msgid "Serveur injoignable : données au {}, dernière synchronisation."
+msgstr "Sunucuya ulaşılamıyor: veriler {} itibarıyla, son eşitleme."
+
+msgid "Mois clos le {} par {}."
+msgstr "Ay {} tarihinde {} tarafından kapatıldı."
+
+msgid "{} écriture(s), {} pièce(s)."
+msgstr "{} kayıt, {} belge."
+
+msgid "Total débit : {} FCFA   Total crédit : {} FCFA"
+msgstr "Borç toplamı: {} FCFA   Alacak toplamı: {} FCFA"
+
+msgid "Total de la période : base {} FCFA, TVA collectée {} FCFA. Les avoirs sont déduits dans le mois de leur propre date."
+msgstr "Dönem toplamı: matrah {} FCFA, tahsil edilen KDV {} FCFA. Alacak dekontları kendi tarihlerinin ayında düşülür."
+
+msgid "Modes de paiement sans compte de trésorerie : {}. Renseignez-les dans Paramètres, rubrique Comptabilité, avant d'exporter."
+msgstr "Hazine hesabı olmayan ödeme yöntemleri: {}. Dışa aktarmadan önce Ayarlar'ın Muhasebe bölümünde doldurun."
+
+msgid "Export provisoire : mois non clos {}."
+msgstr "Geçici dışa aktarım: kapatılmamış aylar {}."
+
+msgid "Journal enregistré : {}"
+msgstr "Yevmiye kaydedildi: {}"
+
+msgid "écriture du fichier impossible : {}"
+msgstr "dosya yazılamıyor: {}"
+
+msgid "Mois {} clos."
+msgstr "{} ayı kapatıldı."
+
+msgid "Journal comptable"
+msgstr "Muhasebe yevmiyesi"
+
+msgid "comptes enregistrés"
+msgstr "hesaplar kaydedildi"
+
+msgid "Janvier"
+msgstr "Ocak"
+
+msgid "Février"
+msgstr "Şubat"
+
+msgid "Mars"
+msgstr "Mart"
+
+msgid "Avril"
+msgstr "Nisan"
+
+msgid "Mai"
+msgstr "Mayıs"
+
+msgid "Juin"
+msgstr "Haziran"
+
+msgid "Juillet"
+msgstr "Temmuz"
+
+msgid "Août"
+msgstr "Ağustos"
+
+msgid "Septembre"
+msgstr "Eylül"
+
+msgid "Octobre"
+msgstr "Ekim"
+
+msgid "Novembre"
+msgstr "Kasım"
+
+msgid "Décembre"
+msgstr "Aralık"
+
+msgid "Ventes de marchandises"
+msgstr "Ticari mal satışları"
+
+msgid "Services vendus"
+msgstr "Satılan hizmetler"
+
+msgid "TVA facturée sur ventes"
+msgstr "Satışlarda faturalanan KDV"
+
+msgid "TVA facturée sur prestations de services"
+msgstr "Hizmetlerde faturalanan KDV"
+
+msgid "Compte d'attente"
+msgstr "Bekleyen hesap"
+
+msgid "Journal des ventes"
+msgstr "Satış yevmiyesi"
+
+msgid "Journal des encaissements"
+msgstr "Tahsilat yevmiyesi"
+
+msgid "Provisoire, mois non clos"
+msgstr "Geçici, kapatılmamış aylar"
+
+msgid "Copie du poste"
+msgstr "İş istasyonu kopyası"
+
+msgid "Total débit"
+msgstr "Borç toplamı"
+
+msgid "Total crédit"
+msgstr "Alacak toplamı"
+
+msgid "Pièces"
+msgstr "Belgeler"
+
+msgid "Base"
+msgstr "Matrah"
+
+msgid "Exporter la comptabilité et clore une période"
+msgstr "Muhasebeyi dışa aktar ve dönem kapat"
+
+msgid "le mois {} est clos : une facture ou un avoir daté de ce mois ne peut plus être validé ni annulé"
+msgstr "{} ayı kapalı: bu ay tarihli bir fatura veya alacak dekontu artık onaylanamaz ya da iptal edilemez"
+
+msgid "le mois {} est clos : un règlement daté de ce mois ne peut plus être ajouté ni supprimé"
+msgstr "{} ayı kapalı: bu ay tarihli bir ödeme artık eklenemez ya da silinemez"
+
+msgid "le mois {} n'est pas terminé : il peut être clos à partir du {}"
+msgstr "{} ayı bitmedi: {} tarihinden itibaren kapatılabilir"
+
+msgid "le mois {} est déjà clos"
+msgstr "{} ayı zaten kapalı"
+
+msgid "copie pas à jour : synchronisez puis recommencez"
+msgstr "kopya güncel değil: eşitleyin, sonra yeniden deneyin"
+
+msgid "le compte « {} » est obligatoire"
+msgstr "«{}» hesabı zorunludur"
+
+msgid "le mode de paiement « {} » n'a pas de compte et le compte d'attente est vide : renseigner l'un ou l'autre avant de clore"
+msgstr "«{}» ödeme yönteminin hesabı yok ve bekleyen hesap boş: kapatmadan önce birini doldurun"
+
+msgid "la pièce {} est déséquilibrée : son TTC n'est pas la base plus la TVA"
+msgstr "{} belgesi dengesiz: KDV dahil toplamı matrah artı KDV değil"
+
+msgid "mois illisible : {}"
+msgstr "okunamayan ay: {}"
+
+msgid "le mode de paiement « {} » a deux comptes"
+msgstr "«{}» ödeme yönteminin iki hesabı var"
+
+msgid "Compte clients"
+msgstr "Müşteriler hesabı"

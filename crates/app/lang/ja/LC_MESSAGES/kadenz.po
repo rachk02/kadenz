@@ -4290,3 +4290,267 @@ msgstr "商品「{}」が二重に計数されています"
 
 msgid "le stock de « {} » n'est pas nul : le ramener à zéro par un ajustement avant d'arrêter son suivi"
 msgstr "「{}」の在庫が 0 ではありません。在庫管理をやめる前に調整で 0 にしてください"
+
+msgid "Exporter en CSV"
+msgstr "CSV に出力"
+
+msgid "Crédit"
+msgstr "貸方"
+
+msgid "Débit"
+msgstr "借方"
+
+msgid "Compte tiers"
+msgstr "取引先勘定"
+
+msgid "Pièce"
+msgstr "伝票"
+
+msgid "Journal"
+msgstr "仕訳帳"
+
+msgid "Clore le mois"
+msgstr "月を締める"
+
+msgid "Clore ce mois ? Ensuite, aucune facture ni aucun avoir daté de ce mois ne peut être validé ou annulé, et aucun règlement de ce mois ne peut être ajouté ou supprimé. Une correction passe par un avoir daté d'un mois ouvert. La clôture ne s'annule pas."
+msgstr "この月を締めますか？締めた後は、この月の日付の請求書や返金伝票を確定・取消できず、この月の入金を追加・削除できません。訂正は、締めていない月の日付の返金伝票で行います。締めは取り消せません。"
+
+msgid "Serveur injoignable : la clôture se fait quand le serveur répond."
+msgstr "サーバーに接続できません。締めはサーバーが応答してから行います。"
+
+msgid "Année AAAA"
+msgstr "年 YYYY"
+
+msgid "TVA collectée (FCFA)"
+msgstr "受取消費税（FCFA）"
+
+msgid "Base (FCFA)"
+msgstr "課税標準（FCFA）"
+
+msgid "Taux"
+msgstr "税率"
+
+msgid "Mois"
+msgstr "月"
+
+msgid "Comptabilité"
+msgstr "会計"
+
+msgid "Écritures selon le plan de comptes SYSCOHADA, avec les comptes choisis dans Paramètres, rubrique Comptabilité. Faites-les confirmer par votre comptable."
+msgstr "仕訳は SYSCOHADA の勘定科目表に従い、設定の「会計」で選んだ勘定を使います。会計士に確認してもらってください。"
+
+msgid "TVA collectée"
+msgstr "受取消費税"
+
+msgid "Comptes proposés d'après le plan de comptes SYSCOHADA (Journal officiel de l'OHADA du 15 février 2017). Ils sont à confirmer par votre comptable avant le premier export."
+msgstr "SYSCOHADA の勘定科目表（OHADA 官報 2017 年 2 月 15 日）に基づく提案勘定です。最初の出力の前に会計士に確認してもらってください。"
+
+msgid "{} (proposé : {})"
+msgstr "{}（提案：{}）"
+
+msgid "Trésorerie par mode de paiement"
+msgstr "支払方法別の資金勘定"
+
+msgid "Un mode sans compte va au compte d'attente ; l'export le signale avant d'écrire le fichier."
+msgstr "勘定のない支払方法は仮勘定に入り、出力時にファイルを書く前に知らせます。"
+
+msgid "Codes des journaux"
+msgstr "仕訳帳コード"
+
+msgid "Revenir aux comptes proposés"
+msgstr "提案勘定に戻す"
+
+msgid "Remettre tous les comptes proposés ? Les comptes saisis à la place sont oubliés tant que vous n'enregistrez pas."
+msgstr "すべての提案勘定に戻しますか？保存しない限り、代わりに入力した勘定は破棄されます。"
+
+msgid "Nature comptable"
+msgstr "会計区分"
+
+msgid "Marchandise"
+msgstr "商品"
+
+msgid "année invalide : saisir quatre chiffres, par exemple 2026"
+msgstr "年が正しくありません。4 桁で入力してください（例：2026）"
+
+msgid "saisir les dates du et au au format JJ/MM/AAAA"
+msgstr "開始日と終了日を DD/MM/YYYY の形式で入力してください"
+
+msgid "la date de fin précède la date de début"
+msgstr "終了日が開始日より前です"
+
+msgid "votre compte n'a pas le droit d'exporter la comptabilité"
+msgstr "このアカウントには会計を出力する権限がありません"
+
+msgid "aucune écriture à exporter"
+msgstr "出力する仕訳がありません"
+
+msgid "des règlements n'ont pas de compte de trésorerie : renseignez leur mode de paiement dans Paramètres, rubrique Comptabilité"
+msgstr "資金勘定のない入金があります。設定の「会計」でその支払方法の勘定を入力してください"
+
+msgid "Enregistrer le journal"
+msgstr "仕訳帳を保存"
+
+msgid "votre compte n'a pas le droit de clore une période"
+msgstr "このアカウントには期間を締める権限がありません"
+
+msgid "choisir un mois dans la liste pour le clore"
+msgstr "締める月を一覧から選んでください"
+
+msgid "aucun compte connecté"
+msgstr "ログイン中のアカウントがありません"
+
+msgid "votre compte n'a pas le droit de modifier les comptes"
+msgstr "このアカウントには勘定を変更する権限がありません"
+
+msgid "Période libre"
+msgstr "任意の期間"
+
+msgid "saisir une année"
+msgstr "年を入力してください"
+
+msgid "Serveur injoignable : données au {}, dernière synchronisation."
+msgstr "サーバーに接続できません。データは {} 時点（最終同期）です。"
+
+msgid "Mois clos le {} par {}."
+msgstr "{} に {} が締めました。"
+
+msgid "{} écriture(s), {} pièce(s)."
+msgstr "仕訳 {} 件、伝票 {} 件。"
+
+msgid "Total débit : {} FCFA   Total crédit : {} FCFA"
+msgstr "借方合計：{} FCFA　貸方合計：{} FCFA"
+
+msgid "Total de la période : base {} FCFA, TVA collectée {} FCFA. Les avoirs sont déduits dans le mois de leur propre date."
+msgstr "期間合計：課税標準 {} FCFA、受取消費税 {} FCFA。返金伝票はその日付の月に差し引かれます。"
+
+msgid "Modes de paiement sans compte de trésorerie : {}. Renseignez-les dans Paramètres, rubrique Comptabilité, avant d'exporter."
+msgstr "資金勘定のない支払方法：{}。出力の前に設定の「会計」で入力してください。"
+
+msgid "Export provisoire : mois non clos {}."
+msgstr "暫定の出力：締めていない月 {}。"
+
+msgid "Journal enregistré : {}"
+msgstr "仕訳帳を保存しました：{}"
+
+msgid "écriture du fichier impossible : {}"
+msgstr "ファイルを書き込めません：{}"
+
+msgid "Mois {} clos."
+msgstr "{} を締めました。"
+
+msgid "Journal comptable"
+msgstr "会計仕訳帳"
+
+msgid "comptes enregistrés"
+msgstr "勘定を保存しました"
+
+msgid "Janvier"
+msgstr "1月"
+
+msgid "Février"
+msgstr "2月"
+
+msgid "Mars"
+msgstr "3月"
+
+msgid "Avril"
+msgstr "4月"
+
+msgid "Mai"
+msgstr "5月"
+
+msgid "Juin"
+msgstr "6月"
+
+msgid "Juillet"
+msgstr "7月"
+
+msgid "Août"
+msgstr "8月"
+
+msgid "Septembre"
+msgstr "9月"
+
+msgid "Octobre"
+msgstr "10月"
+
+msgid "Novembre"
+msgstr "11月"
+
+msgid "Décembre"
+msgstr "12月"
+
+msgid "Ventes de marchandises"
+msgstr "商品売上"
+
+msgid "Services vendus"
+msgstr "役務売上"
+
+msgid "TVA facturée sur ventes"
+msgstr "売上に係る請求消費税"
+
+msgid "TVA facturée sur prestations de services"
+msgstr "役務提供に係る請求消費税"
+
+msgid "Compte d'attente"
+msgstr "仮勘定"
+
+msgid "Journal des ventes"
+msgstr "売上仕訳帳"
+
+msgid "Journal des encaissements"
+msgstr "入金仕訳帳"
+
+msgid "Provisoire, mois non clos"
+msgstr "暫定、締めていない月"
+
+msgid "Copie du poste"
+msgstr "端末のコピー"
+
+msgid "Total débit"
+msgstr "借方合計"
+
+msgid "Total crédit"
+msgstr "貸方合計"
+
+msgid "Pièces"
+msgstr "伝票"
+
+msgid "Base"
+msgstr "課税標準"
+
+msgid "Exporter la comptabilité et clore une période"
+msgstr "会計を出力し、期間を締める"
+
+msgid "le mois {} est clos : une facture ou un avoir daté de ce mois ne peut plus être validé ni annulé"
+msgstr "{} は締め済みです。この月の日付の請求書や返金伝票は、もう確定も取消もできません"
+
+msgid "le mois {} est clos : un règlement daté de ce mois ne peut plus être ajouté ni supprimé"
+msgstr "{} は締め済みです。この月の日付の入金は、もう追加も削除もできません"
+
+msgid "le mois {} n'est pas terminé : il peut être clos à partir du {}"
+msgstr "{} はまだ終わっていません。締められるのは {} からです"
+
+msgid "le mois {} est déjà clos"
+msgstr "{} はすでに締め済みです"
+
+msgid "copie pas à jour : synchronisez puis recommencez"
+msgstr "コピーが最新ではありません。同期してからやり直してください"
+
+msgid "le compte « {} » est obligatoire"
+msgstr "「{}」の勘定は必須です"
+
+msgid "le mode de paiement « {} » n'a pas de compte et le compte d'attente est vide : renseigner l'un ou l'autre avant de clore"
+msgstr "支払方法「{}」に勘定がなく、仮勘定も空です。締める前にどちらかを入力してください"
+
+msgid "la pièce {} est déséquilibrée : son TTC n'est pas la base plus la TVA"
+msgstr "伝票 {} の貸借が一致しません。税込合計が課税標準と消費税の和になっていません"
+
+msgid "mois illisible : {}"
+msgstr "月を読み取れません：{}"
+
+msgid "le mode de paiement « {} » a deux comptes"
+msgstr "支払方法「{}」に勘定が 2 つあります"
+
+msgid "Compte clients"
+msgstr "得意先勘定"

@@ -24,6 +24,7 @@ export enum Page {
     tiers,
     produits,
     stock,
+    comptabilite,
     parametres,
 }
 
@@ -53,6 +54,7 @@ export global Pages {
         if (p == Page.tiers) { return @tr("Tiers"); }
         if (p == Page.produits) { return @tr("Produits"); }
         if (p == Page.stock) { return @tr("Stock"); }
+        if (p == Page.comptabilite) { return @tr("Comptabilité"); }
         return @tr("Paramètres");
     }
 
@@ -70,6 +72,7 @@ export global Pages {
         if (p == Page.tiers) { return @image-url("icones/menu/tiers.svg"); }
         if (p == Page.produits) { return @image-url("icones/menu/produits.svg"); }
         if (p == Page.stock) { return @image-url("icones/menu/stock.svg"); }
+        if (p == Page.comptabilite) { return @image-url("icones/menu/comptabilite.svg"); }
         return @image-url("icones/menu/parametres.svg");
     }
 
@@ -88,13 +91,14 @@ export global Pages {
         if (p == Page.tiers) { return @image-url("icones/menu/tiers-actif.svg"); }
         if (p == Page.produits) { return @image-url("icones/menu/produits-actif.svg"); }
         if (p == Page.stock) { return @image-url("icones/menu/stock-actif.svg"); }
+        if (p == Page.comptabilite) { return @image-url("icones/menu/comptabilite-actif.svg"); }
         return @image-url("icones/menu/parametres-actif.svg");
     }
 
     // Groupe d'une page : 1 documents, 2 paiements, 3 référentiels, 0 hors groupe.
     public pure function groupe(p: Page) -> int {
         if (p == Page.devis || p == Page.proforma || p == Page.bons-commande || p == Page.livraisons || p == Page.factures || p == Page.avoirs) { return 1; }
-        if (p == Page.reglements || p == Page.suivi-fournisseurs || p == Page.relances) { return 2; }
+        if (p == Page.reglements || p == Page.suivi-fournisseurs || p == Page.relances || p == Page.comptabilite) { return 2; }
         if (p == Page.tiers || p == Page.produits || p == Page.stock) { return 3; }
         return 0;
     }

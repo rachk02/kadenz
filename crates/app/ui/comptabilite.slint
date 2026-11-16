@@ -1,0 +1,482 @@
+// Export comptable SYSCOHADA (docs/spec-export-syscohada.md, jalon C2) : journal
+// des ventes et des encaissements d'une période, exporté en CSV ou en Excel,
+// clôture d'un mois, état de la TVA collectée. Les écritures sont calculées sur la
+// copie de ce poste ; la clôture se fait en ligne et le serveur recompte le mois.
+
+import { CheckBox, LineEdit, ScrollView, TabWidget } from "std-widgets.slint";
+import { ListeDeroulante } from "liste-deroulante.slint";
+import { TableauDonnees } from "tableau.slint";
+import { Alerte, Bouton, Champ, Confirmation, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { ConnexionApi } from "etat-connexion.slint";
+
+// Compte choisi pour un usage : libellé de l'usage, compte saisi, compte proposé par
+// défaut (relevé sur le plan de comptes SYSCOHADA, à confirmer par un comptable).
+export struct CompteComptableUi {
+    libelle: string,
+    compte: string,
+    defaut: string,
+}
+
+export global ComptabiliteApi {
+    // Sur une copie de poste hors connexion : « Données au JJ/MM/AAAA HH:MM », sinon vide.
+    in property <string> synchro;
+    // Mois proposés, du plus récent au plus ancien (« Novembre 2026 ») ; le premier
+    // rang est « Période libre ».
+    in property <[string]> mois;
+    in-out property <int> mois-courant: 1;
+
+    // Journal.
+    in property <[[StandardListViewItem]]> journal-lignes;
+    in property <string> journal-resume;
+    in property <string> journal-totaux;
+    // Mois choisi déjà clos : « Mois clos le JJ/MM/AAAA », vide sinon.
+    in property <string> cloture;
+    // Alertes avant export (modes sans compte, période non close), une par ligne.
+    in property <string> alertes;
+    in property <bool> clos;
+    callback ouvrir();
+    callback actualiser();
+    // Période libre : dates du et au ; rend le message d'erreur des dates, vide sinon.
+    callback filtrer-journal(mois: int, du: string, au: string, ventes: bool, encaissements: bool) -> string;
+    callback exporter-csv() -> Retour;
+    callback exporter-excel() -> Retour;
+    callback clore() -> Retour;
+
+    // TVA collectée.
+    in property <[[StandardListViewItem]]> tva-lignes;
+    in property <string> tva-resume;
+    callback filtrer-tva(annee: string) -> string;
+    callback exporter-tva-pdf() -> Retour;
+    callback exporter-tva-excel() -> Retour;
+
+    // Paramètres, rubrique Comptabilité. Liste 0 : comptes ; 1 : trésorerie par mode
+    // de paiement ; 2 : codes des journaux.
+    callback ouvrir-comptes();
+    in property <[CompteComptableUi]> comptes;
+    in property <[CompteComptableUi]> comptes-modes;
+    in property <[CompteComptableUi]> journaux;
+    callback noter-compte(liste: int, ligne: int, compte: string);
+    callback enregistrer-comptes() -> Retour;
+    callback comptes-par-defaut();
+}
+
+// Mention de la dernière synchronisation, hors connexion seulement.
+component MentionSynchro inherits Text {
+    horizontal-alignment: Theme.debut;
+    text: ComptabiliteApi.synchro;
+    visible: ComptabiliteApi.synchro != "";
+    height: self.visible ? self.preferred-height : 0px;
+    font-size: 12px;
+    color: Theme.attente;
+}
+
+component OngletJournal inherits VerticalLayout {
+    property <Retour> retour;
+    property <string> erreur-date;
+    property <bool> libre: ComptabiliteApi.mois-courant == 0;
+    property <bool> confirmer-cloture;
+
+    function filtrer() {
+        root.erreur-date = ComptabiliteApi.filtrer-journal(ComptabiliteApi.mois-courant, du.text, au.text, ventes.checked, encaissements.checked);
+    }
+
+    property <int> reponses: Confirmation.reponses;
+    changed reponses => {
+        if (self.confirmer-cloture) {
+            self.confirmer-cloture = false;
+            if (Confirmation.accepte) {
+                root.retour = Alerte.relayer(ComptabiliteApi.clore());
+                root.filtrer();
+            }
+        }
+    }
+
+    init => {
+        root.filtrer();
+    }
+
+    padding-top: 12px;
+    spacing: 10px;
+
+    Rangee {
+        spacing: 8px;
+
+        ListeDeroulante {
+            width: 200px;
+            model: ComptabiliteApi.mois;
+            current-index <=> ComptabiliteApi.mois-courant;
+            selected => {
+                root.filtrer();
+            }
+        }
+
+        du := LineEdit {
+            width: 150px;
+            visible: root.libre;
+            placeholder-text: @tr("Du JJ/MM/AAAA");
+            edited => {
+                root.filtrer();
+            }
+        }
+
+        au := LineEdit {
+            width: 150px;
+            visible: root.libre;
+            placeholder-text: @tr("Au JJ/MM/AAAA");
+            edited => {
+                root.filtrer();
+            }
+        }
+
+        ventes := CheckBox {
+            text: @tr("Ventes");
+            checked: true;
+            toggled => {
+                root.filtrer();
+            }
+        }
+
+        encaissements := CheckBox {
+            text: @tr("Encaissements");
+            checked: true;
+            toggled => {
+                root.filtrer();
+            }
+        }
+
+        Bouton {
+            text: @tr("Exporter en CSV");
+            clicked => {
+                root.retour = Alerte.relayer(ComptabiliteApi.exporter-csv());
+            }
+        }
+
+        Bouton {
+            text: @tr("Exporter en Excel");
+            clicked => {
+                root.retour = Alerte.relayer(ComptabiliteApi.exporter-excel());
+            }
+        }
+    }
+
+    if root.erreur-date != "": Text {
+        horizontal-alignment: Theme.debut;
+        text: root.erreur-date;
+        font-size: 12px;
+        color: Theme.erreur;
+    }
+
+    MentionSynchro { }
+
+    if ComptabiliteApi.alertes != "": Text {
+        horizontal-alignment: Theme.debut;
+        text: ComptabiliteApi.alertes;
+        color: Theme.attente;
+        wrap: word-wrap;
+    }
+
+    TableauDonnees {
+        vertical-stretch: 1;
+        // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
+        columns: Theme.rtl ? [
+            { title: @tr("Crédit"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Débit"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Libellé"), min-width: 200px, horizontal-stretch: 3 },
+            { title: @tr("Compte tiers"), min-width: 90px, horizontal-stretch: 1 },
+            { title: @tr("Compte"), min-width: 80px, horizontal-stretch: 1 },
+            { title: @tr("Pièce"), min-width: 120px, horizontal-stretch: 1 },
+            { title: @tr("Date"), min-width: 90px, horizontal-stretch: 1 },
+            { title: @tr("Journal"), min-width: 60px, horizontal-stretch: 0 },
+        ] : [
+            { title: @tr("Journal"), min-width: 60px, horizontal-stretch: 0 },
+            { title: @tr("Date"), min-width: 90px, horizontal-stretch: 1 },
+            { title: @tr("Pièce"), min-width: 120px, horizontal-stretch: 1 },
+            { title: @tr("Compte"), min-width: 80px, horizontal-stretch: 1 },
+            { title: @tr("Compte tiers"), min-width: 90px, horizontal-stretch: 1 },
+            { title: @tr("Libellé"), min-width: 200px, horizontal-stretch: 3 },
+            { title: @tr("Débit"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Crédit"), min-width: 100px, horizontal-stretch: 1 },
+        ];
+        rows: ComptabiliteApi.journal-lignes;
+    }
+
+    Text {
+        horizontal-alignment: Theme.debut;
+        text: ComptabiliteApi.journal-resume;
+        font-size: 12px;
+        color: Theme.texte-secondaire;
+    }
+
+    if ComptabiliteApi.journal-totaux != "": Text {
+        horizontal-alignment: Theme.debut;
+        text: ComptabiliteApi.journal-totaux;
+        font-weight: 700;
+        color: Theme.texte;
+    }
+
+    // Clôture : un mois entier seulement, en ligne, une seule fois.
+    if !root.libre: Rangee {
+        spacing: 8px;
+
+        if ComptabiliteApi.clos: Text {
+            vertical-alignment: center;
+            text: ComptabiliteApi.cloture;
+            color: Theme.texte-secondaire;
+        }
+
+        if !ComptabiliteApi.clos: Bouton {
+            text: @tr("Clore le mois");
+            enabled: Ecriture.validation;
+            clicked => {
+                root.confirmer-cloture = true;
+                Confirmation.demander(@tr("Clore ce mois ? Ensuite, aucune facture ni aucun avoir daté de ce mois ne peut être validé ou annulé, et aucun règlement de ce mois ne peut être ajouté ou supprimé. Une correction passe par un avoir daté d'un mois ouvert. La clôture ne s'annule pas."), @tr("Clore le mois"), true);
+            }
+        }
+    }
+
+    if !root.libre && !ComptabiliteApi.clos && !Ecriture.validation: Text {
+        horizontal-alignment: Theme.debut;
+        text: @tr("Serveur injoignable : la clôture se fait quand le serveur répond.");
+        color: Theme.attente;
+        wrap: word-wrap;
+    }
+
+    MessageRetour {
+        retour: root.retour;
+    }
+}
+
+component OngletTva inherits VerticalLayout {
+    property <Retour> retour;
+    property <string> erreur;
+
+    function filtrer() {
+        root.erreur = ComptabiliteApi.filtrer-tva(annee.text);
+    }
+
+    init => {
+        root.filtrer();
+    }
+
+    padding-top: 12px;
+    spacing: 10px;
+
+    Rangee {
+        spacing: 8px;
+
+        annee := LineEdit {
+            width: 120px;
+            placeholder-text: @tr("Année AAAA");
+            edited => {
+                root.filtrer();
+            }
+        }
+
+        Bouton {
+            text: @tr("Exporter en PDF");
+            clicked => {
+                root.retour = Alerte.relayer(ComptabiliteApi.exporter-tva-pdf());
+            }
+        }
+
+        Bouton {
+            text: @tr("Exporter en Excel");
+            clicked => {
+                root.retour = Alerte.relayer(ComptabiliteApi.exporter-tva-excel());
+            }
+        }
+    }
+
+    if root.erreur != "": Text {
+        horizontal-alignment: Theme.debut;
+        text: root.erreur;
+        font-size: 12px;
+        color: Theme.erreur;
+    }
+
+    MentionSynchro { }
+
+    TableauDonnees {
+        vertical-stretch: 1;
+        // Factures moins avoirs, chaque avoir dans le mois de sa propre date.
+        columns: Theme.rtl ? [
+            { title: @tr("TVA collectée (FCFA)"), min-width: 130px, horizontal-stretch: 1 },
+            { title: @tr("Base (FCFA)"), min-width: 130px, horizontal-stretch: 1 },
+            { title: @tr("Taux"), min-width: 60px, horizontal-stretch: 0 },
+            { title: @tr("Mois"), min-width: 90px, horizontal-stretch: 1 },
+        ] : [
+            { title: @tr("Mois"), min-width: 90px, horizontal-stretch: 1 },
+            { title: @tr("Taux"), min-width: 60px, horizontal-stretch: 0 },
+            { title: @tr("Base (FCFA)"), min-width: 130px, horizontal-stretch: 1 },
+            { title: @tr("TVA collectée (FCFA)"), min-width: 130px, horizontal-stretch: 1 },
+        ];
+        rows: ComptabiliteApi.tva-lignes;
+    }
+
+    Text {
+        horizontal-alignment: Theme.debut;
+        text: ComptabiliteApi.tva-resume;
+        font-size: 12px;
+        color: Theme.texte-secondaire;
+        wrap: word-wrap;
+    }
+
+    MessageRetour {
+        retour: root.retour;
+    }
+}
+
+export component PageComptabilite inherits VerticalLayout {
+    // Poste relié : journal relu quand des documents, des règlements, des comptes
+    // ou une clôture arrivent du serveur.
+    property <int> changements: ConnexionApi.changements-documents + ConnexionApi.changements-parametres;
+    changed changements => {
+        ComptabiliteApi.actualiser();
+    }
+
+    init => {
+        ComptabiliteApi.ouvrir();
+    }
+
+    padding: 24px;
+    spacing: 8px;
+
+    Titre {
+        text: @tr("Comptabilité");
+    }
+
+    Text {
+        horizontal-alignment: Theme.debut;
+        text: @tr("Écritures selon le plan de comptes SYSCOHADA, avec les comptes choisis dans Paramètres, rubrique Comptabilité. Faites-les confirmer par votre comptable.");
+        font-size: 12px;
+        color: Theme.texte-secondaire;
+        wrap: word-wrap;
+    }
+
+    TabWidget {
+        Tab {
+            title: @tr("Journal");
+            OngletJournal { }
+        }
+
+        Tab {
+            title: @tr("TVA collectée");
+            OngletTva { }
+        }
+    }
+}
+
+// Paramètres, rubrique Comptabilité : comptes employés par l'export.
+export component PageComptesComptables inherits ScrollView {
+    property <Retour> retour;
+    property <bool> defaut-demande;
+    property <int> reponses: Confirmation.reponses;
+    changed reponses => {
+        if (self.defaut-demande) {
+            self.defaut-demande = false;
+            if (Confirmation.accepte) {
+                ComptabiliteApi.comptes-par-defaut();
+            }
+        }
+    }
+
+    init => {
+        ComptabiliteApi.ouvrir-comptes();
+    }
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 12px;
+        alignment: start;
+
+        Titre {
+            text: @tr("Comptabilité");
+        }
+
+        HorizontalLayout {
+            alignment: Theme.rangee-debut;
+
+            VerticalLayout {
+                max-width: 560px;
+                horizontal-stretch: 1;
+                spacing: 12px;
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("Comptes proposés d'après le plan de comptes SYSCOHADA (Journal officiel de l'OHADA du 15 février 2017). Ils sont à confirmer par votre comptable avant le premier export.");
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+
+                Section {
+                    text: @tr("Comptes");
+                }
+
+                for c[i] in ComptabiliteApi.comptes: Champ {
+                    libelle: c.defaut == "" ? c.libelle : @tr("{} (proposé : {})", c.libelle, c.defaut);
+                    valeur: c.compte;
+                    modifie(texte) => {
+                        ComptabiliteApi.noter-compte(0, i, texte);
+                    }
+                }
+
+                Section {
+                    text: @tr("Trésorerie par mode de paiement");
+                }
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("Un mode sans compte va au compte d'attente ; l'export le signale avant d'écrire le fichier.");
+                    font-size: 12px;
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+
+                for c[i] in ComptabiliteApi.comptes-modes: Champ {
+                    libelle: c.defaut == "" ? c.libelle : @tr("{} (proposé : {})", c.libelle, c.defaut);
+                    valeur: c.compte;
+                    modifie(texte) => {
+                        ComptabiliteApi.noter-compte(1, i, texte);
+                    }
+                }
+
+                Section {
+                    text: @tr("Codes des journaux");
+                }
+
+                for c[i] in ComptabiliteApi.journaux: Champ {
+                    libelle: c.libelle;
+                    valeur: c.compte;
+                    modifie(texte) => {
+                        ComptabiliteApi.noter-compte(2, i, texte);
+                    }
+                }
+
+                Rangee {
+                    spacing: 8px;
+
+                    Bouton {
+                        text: @tr("Enregistrer");
+                        primary: true;
+                        enabled: Ecriture.permise;
+                        clicked => {
+                            root.retour = Alerte.relayer(ComptabiliteApi.enregistrer-comptes());
+                        }
+                    }
+
+                    Bouton {
+                        text: @tr("Revenir aux comptes proposés");
+                        clicked => {
+                            root.defaut-demande = true;
+                            Confirmation.demander(@tr("Remettre tous les comptes proposés ? Les comptes saisis à la place sont oubliés tant que vous n'enregistrez pas."), @tr("Revenir aux comptes proposés"), false);
+                        }
+                    }
+                }
+
+                MessageRetour {
+                    retour: root.retour;
+                }
+            }
+        }
+    }
+}

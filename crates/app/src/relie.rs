@@ -783,7 +783,13 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
                     Entite::Document | Entite::Reglement | Entite::Instantane => {
                         api.set_changements_documents(api.get_changements_documents() + 1)
                     }
-                    Entite::Utilisateur | Entite::Entreprise | Entite::Parametres => droits = true,
+                    Entite::Utilisateur | Entite::Entreprise => droits = true,
+                    // Réglages partagés, dont les comptes et les clôtures de la
+                    // comptabilité (docs/spec-export-syscohada.md).
+                    Entite::Parametres => {
+                        droits = true;
+                        api.set_changements_parametres(api.get_changements_parametres() + 1);
+                    }
                     // Stock (S2) : l'écran du stock, et les colonnes du stock
                     // dans la liste des produits.
                     Entite::Mouvement => {

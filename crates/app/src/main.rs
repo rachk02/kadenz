@@ -4,6 +4,7 @@
 mod abonnement;
 mod acces_distant;
 mod administration;
+mod comptabilite;
 mod excel;
 mod factures;
 mod graphiques;
@@ -174,6 +175,7 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     d.set_gerer_utilisateurs(possede(Droit::GererUtilisateurs));
     d.set_ajuster_stock(possede(Droit::AjusterStock));
     d.set_voir_valeur_stock(possede(Droit::VoirValeurStock));
+    d.set_exporter_comptabilite(possede(Droit::ExporterComptabilite));
 
     // Les libellés et les icônes du menu sont dans navigation.slint.
     // Les pages des modules que la licence n'active pas sont retirées du menu.
@@ -197,6 +199,10 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
         // montré sur un poste relié.
         if serveur::inscrit(&etat.conn) {
             menu.push(Page::Stock);
+        }
+        // Export comptable (docs/spec-export-syscohada.md) : droit propre.
+        if possede(Droit::ExporterComptabilite) {
+            menu.push(Page::Comptabilite);
         }
         menu.retain(|p| licence::page_active(&etat.conn, *p));
     }
@@ -222,6 +228,7 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
         Page::Reglements,
         Page::SuiviFournisseurs,
         Page::Relances,
+        Page::Comptabilite,
     ]));
     m.set_referentiels(groupe(&[Page::Tiers, Page::Produits, Page::Stock]));
 
@@ -244,6 +251,11 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
         if licence::actif(&etat.conn, Module::Paiements) {
             rubriques.push(Rubrique::Paiements);
         }
+    }
+    if possede(Droit::ExporterComptabilite) {
+        rubriques.push(Rubrique::Comptabilite);
+    }
+    if gere {
         rubriques.extend([Rubrique::Textes, Rubrique::Impression]);
     }
     if possede(Droit::GererUtilisateurs) {
@@ -425,6 +437,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
 
     referentiels::brancher(fenetre, &etat);
     stock::brancher(fenetre, &etat);
+    comptabilite::brancher(fenetre, &etat);
     administration::brancher(fenetre, &etat);
     utilisateurs::brancher(fenetre, &etat);
     import_ecran::brancher(fenetre, &etat);

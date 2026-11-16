@@ -7,6 +7,7 @@
 use std::cmp::Ordering;
 use std::collections::HashMap;
 
+use kadenz_domaine::comptabilite::NatureComptable;
 use kadenz_domaine::saisie;
 use kadenz_domaine::texte::cle_comparaison;
 use kadenz_protocole::{Action, Bilan, Entite, Issue};
@@ -541,6 +542,7 @@ fn fiche_produit_ui(
                 suivi_stock: f.suivi_stock,
                 stock: stock.into(),
                 stock_negatif,
+                nature: rang(&NatureComptable::TOUTES, f.nature_comptable),
                 actif: p.actif,
                 existe: true,
             }
@@ -563,7 +565,7 @@ fn fiche_produit_depuis_ui(u: &FicheProduitUi) -> Result<FicheProduit, String> {
         prix,
         sens: depuis_rang(&Sens::TOUS, u.sens),
         suivi_stock: u.suivi_stock,
-        nature_comptable: Default::default(),
+        nature_comptable: depuis_rang(&NatureComptable::TOUTES, u.nature),
     })
 }
 

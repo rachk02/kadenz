@@ -4290,3 +4290,267 @@ msgstr "el producto «{}» se cuenta dos veces"
 
 msgid "le stock de « {} » n'est pas nul : le ramener à zéro par un ajustement avant d'arrêter son suivi"
 msgstr "las existencias de «{}» no son cero: llévelas a cero con un ajuste antes de detener su control"
+
+msgid "Exporter en CSV"
+msgstr "Exportar a CSV"
+
+msgid "Crédit"
+msgstr "Haber"
+
+msgid "Débit"
+msgstr "Debe"
+
+msgid "Compte tiers"
+msgstr "Cuenta de tercero"
+
+msgid "Pièce"
+msgstr "Comprobante"
+
+msgid "Journal"
+msgstr "Diario"
+
+msgid "Clore le mois"
+msgstr "Cerrar el mes"
+
+msgid "Clore ce mois ? Ensuite, aucune facture ni aucun avoir daté de ce mois ne peut être validé ou annulé, et aucun règlement de ce mois ne peut être ajouté ou supprimé. Une correction passe par un avoir daté d'un mois ouvert. La clôture ne s'annule pas."
+msgstr "¿Cerrar este mes? Después, ninguna factura ni nota de crédito con fecha de este mes podrá validarse ni anularse, y ningún pago de este mes podrá añadirse ni eliminarse. Una corrección se hace con una nota de crédito fechada en un mes abierto. El cierre no se puede deshacer."
+
+msgid "Serveur injoignable : la clôture se fait quand le serveur répond."
+msgstr "Servidor inaccesible: el cierre se hace cuando el servidor responda."
+
+msgid "Année AAAA"
+msgstr "Año AAAA"
+
+msgid "TVA collectée (FCFA)"
+msgstr "IVA repercutido (FCFA)"
+
+msgid "Base (FCFA)"
+msgstr "Base (FCFA)"
+
+msgid "Taux"
+msgstr "Tipo"
+
+msgid "Mois"
+msgstr "Mes"
+
+msgid "Comptabilité"
+msgstr "Contabilidad"
+
+msgid "Écritures selon le plan de comptes SYSCOHADA, avec les comptes choisis dans Paramètres, rubrique Comptabilité. Faites-les confirmer par votre comptable."
+msgstr "Asientos según el plan de cuentas SYSCOHADA, con las cuentas elegidas en Parámetros, apartado Contabilidad. Hágalos confirmar por su contador."
+
+msgid "TVA collectée"
+msgstr "IVA repercutido"
+
+msgid "Comptes proposés d'après le plan de comptes SYSCOHADA (Journal officiel de l'OHADA du 15 février 2017). Ils sont à confirmer par votre comptable avant le premier export."
+msgstr "Cuentas propuestas según el plan de cuentas SYSCOHADA (Diario Oficial de la OHADA del 15 de febrero de 2017). Su contador debe confirmarlas antes de la primera exportación."
+
+msgid "{} (proposé : {})"
+msgstr "{} (propuesta: {})"
+
+msgid "Trésorerie par mode de paiement"
+msgstr "Tesorería por medio de pago"
+
+msgid "Un mode sans compte va au compte d'attente ; l'export le signale avant d'écrire le fichier."
+msgstr "Un medio sin cuenta va a la cuenta de espera; la exportación lo señala antes de escribir el archivo."
+
+msgid "Codes des journaux"
+msgstr "Códigos de los diarios"
+
+msgid "Revenir aux comptes proposés"
+msgstr "Volver a las cuentas propuestas"
+
+msgid "Remettre tous les comptes proposés ? Les comptes saisis à la place sont oubliés tant que vous n'enregistrez pas."
+msgstr "¿Restablecer todas las cuentas propuestas? Las cuentas introducidas en su lugar se descartan mientras no guarde."
+
+msgid "Nature comptable"
+msgstr "Naturaleza contable"
+
+msgid "Marchandise"
+msgstr "Mercancía"
+
+msgid "année invalide : saisir quatre chiffres, par exemple 2026"
+msgstr "año no válido: introduzca cuatro cifras, por ejemplo 2026"
+
+msgid "saisir les dates du et au au format JJ/MM/AAAA"
+msgstr "introduzca las fechas desde y hasta con el formato DD/MM/AAAA"
+
+msgid "la date de fin précède la date de début"
+msgstr "la fecha de fin es anterior a la de inicio"
+
+msgid "votre compte n'a pas le droit d'exporter la comptabilité"
+msgstr "su cuenta no tiene derecho a exportar la contabilidad"
+
+msgid "aucune écriture à exporter"
+msgstr "ningún asiento que exportar"
+
+msgid "des règlements n'ont pas de compte de trésorerie : renseignez leur mode de paiement dans Paramètres, rubrique Comptabilité"
+msgstr "algunos pagos no tienen cuenta de tesorería: complete su medio de pago en Parámetros, apartado Contabilidad"
+
+msgid "Enregistrer le journal"
+msgstr "Guardar el diario"
+
+msgid "votre compte n'a pas le droit de clore une période"
+msgstr "su cuenta no tiene derecho a cerrar un período"
+
+msgid "choisir un mois dans la liste pour le clore"
+msgstr "elija un mes de la lista para cerrarlo"
+
+msgid "aucun compte connecté"
+msgstr "ninguna cuenta conectada"
+
+msgid "votre compte n'a pas le droit de modifier les comptes"
+msgstr "su cuenta no tiene derecho a modificar las cuentas"
+
+msgid "Période libre"
+msgstr "Período libre"
+
+msgid "saisir une année"
+msgstr "introduzca un año"
+
+msgid "Serveur injoignable : données au {}, dernière synchronisation."
+msgstr "Servidor inaccesible: datos al {}, última sincronización."
+
+msgid "Mois clos le {} par {}."
+msgstr "Mes cerrado el {} por {}."
+
+msgid "{} écriture(s), {} pièce(s)."
+msgstr "{} asiento(s), {} comprobante(s)."
+
+msgid "Total débit : {} FCFA   Total crédit : {} FCFA"
+msgstr "Total debe: {} FCFA   Total haber: {} FCFA"
+
+msgid "Total de la période : base {} FCFA, TVA collectée {} FCFA. Les avoirs sont déduits dans le mois de leur propre date."
+msgstr "Total del período: base {} FCFA, IVA repercutido {} FCFA. Las notas de crédito se deducen en el mes de su propia fecha."
+
+msgid "Modes de paiement sans compte de trésorerie : {}. Renseignez-les dans Paramètres, rubrique Comptabilité, avant d'exporter."
+msgstr "Medios de pago sin cuenta de tesorería: {}. Complételos en Parámetros, apartado Contabilidad, antes de exportar."
+
+msgid "Export provisoire : mois non clos {}."
+msgstr "Exportación provisional: meses no cerrados {}."
+
+msgid "Journal enregistré : {}"
+msgstr "Diario guardado: {}"
+
+msgid "écriture du fichier impossible : {}"
+msgstr "no se puede escribir el archivo: {}"
+
+msgid "Mois {} clos."
+msgstr "Mes {} cerrado."
+
+msgid "Journal comptable"
+msgstr "Diario contable"
+
+msgid "comptes enregistrés"
+msgstr "cuentas guardadas"
+
+msgid "Janvier"
+msgstr "Enero"
+
+msgid "Février"
+msgstr "Febrero"
+
+msgid "Mars"
+msgstr "Marzo"
+
+msgid "Avril"
+msgstr "Abril"
+
+msgid "Mai"
+msgstr "Mayo"
+
+msgid "Juin"
+msgstr "Junio"
+
+msgid "Juillet"
+msgstr "Julio"
+
+msgid "Août"
+msgstr "Agosto"
+
+msgid "Septembre"
+msgstr "Septiembre"
+
+msgid "Octobre"
+msgstr "Octubre"
+
+msgid "Novembre"
+msgstr "Noviembre"
+
+msgid "Décembre"
+msgstr "Diciembre"
+
+msgid "Ventes de marchandises"
+msgstr "Ventas de mercancías"
+
+msgid "Services vendus"
+msgstr "Servicios vendidos"
+
+msgid "TVA facturée sur ventes"
+msgstr "IVA facturado sobre ventas"
+
+msgid "TVA facturée sur prestations de services"
+msgstr "IVA facturado sobre prestaciones de servicios"
+
+msgid "Compte d'attente"
+msgstr "Cuenta de espera"
+
+msgid "Journal des ventes"
+msgstr "Diario de ventas"
+
+msgid "Journal des encaissements"
+msgstr "Diario de cobros"
+
+msgid "Provisoire, mois non clos"
+msgstr "Provisional, meses no cerrados"
+
+msgid "Copie du poste"
+msgstr "Copia del puesto"
+
+msgid "Total débit"
+msgstr "Total debe"
+
+msgid "Total crédit"
+msgstr "Total haber"
+
+msgid "Pièces"
+msgstr "Comprobantes"
+
+msgid "Base"
+msgstr "Base"
+
+msgid "Exporter la comptabilité et clore une période"
+msgstr "Exportar la contabilidad y cerrar un período"
+
+msgid "le mois {} est clos : une facture ou un avoir daté de ce mois ne peut plus être validé ni annulé"
+msgstr "el mes {} está cerrado: una factura o nota de crédito con fecha de este mes ya no puede validarse ni anularse"
+
+msgid "le mois {} est clos : un règlement daté de ce mois ne peut plus être ajouté ni supprimé"
+msgstr "el mes {} está cerrado: un pago con fecha de este mes ya no puede añadirse ni eliminarse"
+
+msgid "le mois {} n'est pas terminé : il peut être clos à partir du {}"
+msgstr "el mes {} no ha terminado: puede cerrarse a partir del {}"
+
+msgid "le mois {} est déjà clos"
+msgstr "el mes {} ya está cerrado"
+
+msgid "copie pas à jour : synchronisez puis recommencez"
+msgstr "copia no actualizada: sincronice y vuelva a intentarlo"
+
+msgid "le compte « {} » est obligatoire"
+msgstr "la cuenta «{}» es obligatoria"
+
+msgid "le mode de paiement « {} » n'a pas de compte et le compte d'attente est vide : renseigner l'un ou l'autre avant de clore"
+msgstr "el medio de pago «{}» no tiene cuenta y la cuenta de espera está vacía: complete una u otra antes de cerrar"
+
+msgid "la pièce {} est déséquilibrée : son TTC n'est pas la base plus la TVA"
+msgstr "el comprobante {} está descuadrado: su total con IVA no es la base más el IVA"
+
+msgid "mois illisible : {}"
+msgstr "mes ilegible: {}"
+
+msgid "le mode de paiement « {} » a deux comptes"
+msgstr "el medio de pago «{}» tiene dos cuentas"
+
+msgid "Compte clients"
+msgstr "Cuenta de clientes"

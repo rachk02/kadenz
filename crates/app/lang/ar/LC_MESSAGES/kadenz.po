@@ -4290,3 +4290,267 @@ msgstr "المنتج «{}» معدود مرتين"
 
 msgid "le stock de « {} » n'est pas nul : le ramener à zéro par un ajustement avant d'arrêter son suivi"
 msgstr "مخزون «{}» ليس صفراً: أعده إلى الصفر بتعديل قبل إيقاف متابعته"
+
+msgid "Exporter en CSV"
+msgstr "تصدير إلى CSV"
+
+msgid "Crédit"
+msgstr "دائن"
+
+msgid "Débit"
+msgstr "مدين"
+
+msgid "Compte tiers"
+msgstr "حساب الطرف"
+
+msgid "Pièce"
+msgstr "المستند"
+
+msgid "Journal"
+msgstr "اليومية"
+
+msgid "Clore le mois"
+msgstr "إقفال الشهر"
+
+msgid "Clore ce mois ? Ensuite, aucune facture ni aucun avoir daté de ce mois ne peut être validé ou annulé, et aucun règlement de ce mois ne peut être ajouté ou supprimé. Une correction passe par un avoir daté d'un mois ouvert. La clôture ne s'annule pas."
+msgstr "إقفال هذا الشهر؟ بعد ذلك لا يمكن اعتماد أو إلغاء أي فاتورة أو إشعار دائن مؤرخ في هذا الشهر، ولا إضافة أو حذف أي دفعة من هذا الشهر. يتم التصحيح بإشعار دائن مؤرخ في شهر مفتوح. لا يمكن التراجع عن الإقفال."
+
+msgid "Serveur injoignable : la clôture se fait quand le serveur répond."
+msgstr "الخادم غير متاح: يتم الإقفال عندما يستجيب الخادم."
+
+msgid "Année AAAA"
+msgstr "السنة YYYY"
+
+msgid "TVA collectée (FCFA)"
+msgstr "الضريبة المحصلة (FCFA)"
+
+msgid "Base (FCFA)"
+msgstr "الأساس (FCFA)"
+
+msgid "Taux"
+msgstr "النسبة"
+
+msgid "Mois"
+msgstr "الشهر"
+
+msgid "Comptabilité"
+msgstr "المحاسبة"
+
+msgid "Écritures selon le plan de comptes SYSCOHADA, avec les comptes choisis dans Paramètres, rubrique Comptabilité. Faites-les confirmer par votre comptable."
+msgstr "قيود وفق دليل حسابات SYSCOHADA، بالحسابات المختارة في الإعدادات، قسم المحاسبة. اطلب من محاسبك تأكيدها."
+
+msgid "TVA collectée"
+msgstr "الضريبة المحصلة"
+
+msgid "Comptes proposés d'après le plan de comptes SYSCOHADA (Journal officiel de l'OHADA du 15 février 2017). Ils sont à confirmer par votre comptable avant le premier export."
+msgstr "حسابات مقترحة وفق دليل حسابات SYSCOHADA (الجريدة الرسمية لمنظمة OHADA بتاريخ 15 فبراير 2017). يجب أن يؤكدها محاسبك قبل أول تصدير."
+
+msgid "{} (proposé : {})"
+msgstr "{} (المقترح: {})"
+
+msgid "Trésorerie par mode de paiement"
+msgstr "الخزينة حسب طريقة الدفع"
+
+msgid "Un mode sans compte va au compte d'attente ; l'export le signale avant d'écrire le fichier."
+msgstr "تذهب الطريقة التي ليس لها حساب إلى حساب الانتظار، ويُنبّه التصدير إلى ذلك قبل كتابة الملف."
+
+msgid "Codes des journaux"
+msgstr "رموز اليوميات"
+
+msgid "Revenir aux comptes proposés"
+msgstr "العودة إلى الحسابات المقترحة"
+
+msgid "Remettre tous les comptes proposés ? Les comptes saisis à la place sont oubliés tant que vous n'enregistrez pas."
+msgstr "إعادة جميع الحسابات المقترحة؟ تُهمل الحسابات المدخلة بدلاً منها ما لم تحفظ."
+
+msgid "Nature comptable"
+msgstr "الطبيعة المحاسبية"
+
+msgid "Marchandise"
+msgstr "بضاعة"
+
+msgid "année invalide : saisir quatre chiffres, par exemple 2026"
+msgstr "سنة غير صالحة: أدخل أربعة أرقام، مثل 2026"
+
+msgid "saisir les dates du et au au format JJ/MM/AAAA"
+msgstr "أدخل تاريخي البداية والنهاية بصيغة DD/MM/YYYY"
+
+msgid "la date de fin précède la date de début"
+msgstr "تاريخ النهاية يسبق تاريخ البداية"
+
+msgid "votre compte n'a pas le droit d'exporter la comptabilité"
+msgstr "ليس لحسابك حق تصدير المحاسبة"
+
+msgid "aucune écriture à exporter"
+msgstr "لا قيود للتصدير"
+
+msgid "des règlements n'ont pas de compte de trésorerie : renseignez leur mode de paiement dans Paramètres, rubrique Comptabilité"
+msgstr "بعض الدفعات ليس لها حساب خزينة: املأ طريقة دفعها في الإعدادات، قسم المحاسبة"
+
+msgid "Enregistrer le journal"
+msgstr "حفظ اليومية"
+
+msgid "votre compte n'a pas le droit de clore une période"
+msgstr "ليس لحسابك حق إقفال فترة"
+
+msgid "choisir un mois dans la liste pour le clore"
+msgstr "اختر شهراً من القائمة لإقفاله"
+
+msgid "aucun compte connecté"
+msgstr "لا يوجد حساب متصل"
+
+msgid "votre compte n'a pas le droit de modifier les comptes"
+msgstr "ليس لحسابك حق تعديل الحسابات"
+
+msgid "Période libre"
+msgstr "فترة حرة"
+
+msgid "saisir une année"
+msgstr "أدخل سنة"
+
+msgid "Serveur injoignable : données au {}, dernière synchronisation."
+msgstr "الخادم غير متاح: البيانات بتاريخ {}، آخر مزامنة."
+
+msgid "Mois clos le {} par {}."
+msgstr "أُقفل الشهر في {} بواسطة {}."
+
+msgid "{} écriture(s), {} pièce(s)."
+msgstr "{} قيد، {} مستند."
+
+msgid "Total débit : {} FCFA   Total crédit : {} FCFA"
+msgstr "مجموع المدين: {} FCFA   مجموع الدائن: {} FCFA"
+
+msgid "Total de la période : base {} FCFA, TVA collectée {} FCFA. Les avoirs sont déduits dans le mois de leur propre date."
+msgstr "مجموع الفترة: الأساس {} FCFA، الضريبة المحصلة {} FCFA. تُخصم إشعارات الدائن في شهر تاريخها."
+
+msgid "Modes de paiement sans compte de trésorerie : {}. Renseignez-les dans Paramètres, rubrique Comptabilité, avant d'exporter."
+msgstr "طرق دفع بلا حساب خزينة: {}. املأها في الإعدادات، قسم المحاسبة، قبل التصدير."
+
+msgid "Export provisoire : mois non clos {}."
+msgstr "تصدير مؤقت: أشهر غير مقفلة {}."
+
+msgid "Journal enregistré : {}"
+msgstr "حُفظت اليومية: {}"
+
+msgid "écriture du fichier impossible : {}"
+msgstr "تعذرت كتابة الملف: {}"
+
+msgid "Mois {} clos."
+msgstr "أُقفل الشهر {}."
+
+msgid "Journal comptable"
+msgstr "اليومية المحاسبية"
+
+msgid "comptes enregistrés"
+msgstr "حُفظت الحسابات"
+
+msgid "Janvier"
+msgstr "يناير"
+
+msgid "Février"
+msgstr "فبراير"
+
+msgid "Mars"
+msgstr "مارس"
+
+msgid "Avril"
+msgstr "أبريل"
+
+msgid "Mai"
+msgstr "مايو"
+
+msgid "Juin"
+msgstr "يونيو"
+
+msgid "Juillet"
+msgstr "يوليو"
+
+msgid "Août"
+msgstr "أغسطس"
+
+msgid "Septembre"
+msgstr "سبتمبر"
+
+msgid "Octobre"
+msgstr "أكتوبر"
+
+msgid "Novembre"
+msgstr "نوفمبر"
+
+msgid "Décembre"
+msgstr "ديسمبر"
+
+msgid "Ventes de marchandises"
+msgstr "مبيعات البضائع"
+
+msgid "Services vendus"
+msgstr "الخدمات المبيعة"
+
+msgid "TVA facturée sur ventes"
+msgstr "الضريبة المفوترة على المبيعات"
+
+msgid "TVA facturée sur prestations de services"
+msgstr "الضريبة المفوترة على تقديم الخدمات"
+
+msgid "Compte d'attente"
+msgstr "حساب الانتظار"
+
+msgid "Journal des ventes"
+msgstr "يومية المبيعات"
+
+msgid "Journal des encaissements"
+msgstr "يومية المقبوضات"
+
+msgid "Provisoire, mois non clos"
+msgstr "مؤقت، أشهر غير مقفلة"
+
+msgid "Copie du poste"
+msgstr "نسخة الجهاز"
+
+msgid "Total débit"
+msgstr "مجموع المدين"
+
+msgid "Total crédit"
+msgstr "مجموع الدائن"
+
+msgid "Pièces"
+msgstr "المستندات"
+
+msgid "Base"
+msgstr "الأساس"
+
+msgid "Exporter la comptabilité et clore une période"
+msgstr "تصدير المحاسبة وإقفال فترة"
+
+msgid "le mois {} est clos : une facture ou un avoir daté de ce mois ne peut plus être validé ni annulé"
+msgstr "الشهر {} مقفل: لا يمكن بعد الآن اعتماد أو إلغاء فاتورة أو إشعار دائن مؤرخ في هذا الشهر"
+
+msgid "le mois {} est clos : un règlement daté de ce mois ne peut plus être ajouté ni supprimé"
+msgstr "الشهر {} مقفل: لا يمكن بعد الآن إضافة أو حذف دفعة مؤرخة في هذا الشهر"
+
+msgid "le mois {} n'est pas terminé : il peut être clos à partir du {}"
+msgstr "الشهر {} لم ينته: يمكن إقفاله ابتداءً من {}"
+
+msgid "le mois {} est déjà clos"
+msgstr "الشهر {} مقفل بالفعل"
+
+msgid "copie pas à jour : synchronisez puis recommencez"
+msgstr "النسخة غير محدّثة: زامِن ثم أعد المحاولة"
+
+msgid "le compte « {} » est obligatoire"
+msgstr "الحساب «{}» إلزامي"
+
+msgid "le mode de paiement « {} » n'a pas de compte et le compte d'attente est vide : renseigner l'un ou l'autre avant de clore"
+msgstr "طريقة الدفع «{}» ليس لها حساب وحساب الانتظار فارغ: املأ أحدهما قبل الإقفال"
+
+msgid "la pièce {} est déséquilibrée : son TTC n'est pas la base plus la TVA"
+msgstr "المستند {} غير متوازن: إجماليه شاملاً الضريبة لا يساوي الأساس زائد الضريبة"
+
+msgid "mois illisible : {}"
+msgstr "شهر غير مقروء: {}"
+
+msgid "le mode de paiement « {} » a deux comptes"
+msgstr "طريقة الدفع «{}» لها حسابان"
+
+msgid "Compte clients"
+msgstr "حساب العملاء"

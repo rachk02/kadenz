@@ -13,6 +13,7 @@ import { PageServeur } from "serveur.slint";
 import { PageSuspendues, SuspenduesApi } from "suspendues.slint";
 import { PageSauvegardes } from "sauvegardes.slint";
 import { PageAccesDistant } from "acces-distant.slint";
+import { PageComptesComptables } from "comptabilite.slint";
 import { Infobulle } from "navigation.slint";
 
 export enum Rubrique {
@@ -21,6 +22,7 @@ export enum Rubrique {
     entreprise,
     documents,
     paiements,
+    comptabilite,
     textes,
     impression,
     utilisateurs,
@@ -59,6 +61,7 @@ public pure function libelle(r: Rubrique) -> string {
     if (r == Rubrique.entreprise) { return @tr("Entreprise"); }
     if (r == Rubrique.documents) { return @tr("Documents"); }
     if (r == Rubrique.paiements) { return @tr("Paiements"); }
+    if (r == Rubrique.comptabilite) { return @tr("Comptabilité"); }
     if (r == Rubrique.textes) { return @tr("Textes imprimés et exports"); }
     if (r == Rubrique.impression) { return @tr("Impression"); }
     if (r == Rubrique.utilisateurs) { return @tr("Utilisateurs"); }
@@ -84,6 +87,7 @@ public pure function icone(r: Rubrique) -> image {
     if (r == Rubrique.entreprise) { return @image-url("icones/menu/entreprise.svg"); }
     if (r == Rubrique.documents) { return @image-url("icones/menu/documents.svg"); }
     if (r == Rubrique.paiements) { return @image-url("icones/menu/paiements.svg"); }
+    if (r == Rubrique.comptabilite) { return @image-url("icones/menu/comptabilite.svg"); }
     if (r == Rubrique.textes) { return @image-url("icones/menu/exports.svg"); }
     if (r == Rubrique.impression) { return @image-url("icones/menu/impression.svg"); }
     if (r == Rubrique.utilisateurs) { return @image-url("icones/menu/utilisateurs.svg"); }
@@ -104,6 +108,7 @@ public pure function icone-active(r: Rubrique) -> image {
     if (r == Rubrique.entreprise) { return @image-url("icones/menu/entreprise-actif.svg"); }
     if (r == Rubrique.documents) { return @image-url("icones/menu/documents-actif.svg"); }
     if (r == Rubrique.paiements) { return @image-url("icones/menu/paiements-actif.svg"); }
+    if (r == Rubrique.comptabilite) { return @image-url("icones/menu/comptabilite-actif.svg"); }
     if (r == Rubrique.textes) { return @image-url("icones/menu/exports-actif.svg"); }
     if (r == Rubrique.impression) { return @image-url("icones/menu/impression-actif.svg"); }
     if (r == Rubrique.utilisateurs) { return @image-url("icones/menu/utilisateurs-actif.svg"); }
@@ -833,6 +838,8 @@ export component PageReglages inherits Rectangle {
             partie: 1;
             titre: @tr("Paiements");
         }
+
+        if ReglagesApi.rubrique == Rubrique.comptabilite: PageComptesComptables { }
 
         if ReglagesApi.rubrique == Rubrique.textes: PageParametres {
             partie: 2;
