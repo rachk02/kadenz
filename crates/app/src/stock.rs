@@ -692,14 +692,15 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         produit_ui(&e.borrow(), &vue)
     });
 
-    let (e, v) = (etat.clone(), vue.clone());
+    let (f, e, v) = (fenetre.as_weak(), etat.clone(), vue.clone());
     api.on_exporter_etat_pdf(move || {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
         let etat = e.borrow();
         let vue = v.borrow();
-        match crate::pdf::etat_stock(&etat.conn, &vue.etat, vue.au, voit_valeur(&etat)) {
-            Ok((octets, nom)) => crate::paiements::enregistrer_pdf(&octets, &nom, None),
-            Err(message) => retour_erreur(tr(&message)),
-        }
+        let pdf = crate::pdf::etat_stock(&etat.conn, &vue.etat, vue.au, voit_valeur(&etat));
+        crate::apercu::montrer(&f, &etat, pdf, None)
     });
 
     let (e, v) = (etat.clone(), vue.clone());
@@ -820,14 +821,15 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         afficher_inventaire(&f, &e.borrow(), &mut v.borrow_mut());
     });
 
-    let (e, v) = (etat.clone(), vue.clone());
+    let (f, e, v) = (fenetre.as_weak(), etat.clone(), vue.clone());
     api.on_feuille_comptage(move |masquer| {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
         let etat = e.borrow();
         let vue = v.borrow();
-        match crate::pdf::feuille_comptage(&etat.conn, &vue.inventaire_pour_feuille(), masquer) {
-            Ok((octets, nom)) => crate::paiements::enregistrer_pdf(&octets, &nom, None),
-            Err(message) => retour_erreur(tr(&message)),
-        }
+        let pdf = crate::pdf::feuille_comptage(&etat.conn, &vue.inventaire_pour_feuille(), masquer);
+        crate::apercu::montrer(&f, &etat, pdf, None)
     });
 
     let (f, e, v) = (fenetre.as_weak(), etat.clone(), vue.clone());

@@ -15,7 +15,7 @@ use hayro::vello_cpu::color::palette::css::WHITE;
 use hayro::{PixmapSettings, RenderCache, RenderSettings, render};
 use slint::{ComponentHandle, Image, Model, ModelRc, Rgba8Pixel, SharedPixelBuffer, VecModel};
 
-use crate::referentiels::{retour_erreur, retour_ok};
+use crate::referentiels::retour_erreur;
 use crate::traduction::{tr, trf};
 use kadenz_domaine::mise_en_page::Marges;
 
@@ -183,26 +183,26 @@ fn rendre_page<T>(
     ))
 }
 
-/// Enregistre un PDF par la boîte de dialogue de Windows, dans le dossier
-/// proposé s'il existe, puis l'ouvre dans la visionneuse par défaut.
-pub(crate) fn enregistrer_pdf(octets: &[u8], nom: &str, dossier: Option<&str>) -> Retour {
-    let mut boite = rfd::FileDialog::new();
-    if let Some(dossier) = dossier.filter(|d| !d.is_empty() && std::path::Path::new(d).is_dir()) {
-        boite = boite.set_directory(dossier);
-    }
-    let Some(chemin) = boite
-        .set_title(tr("Enregistrer le PDF"))
-        .set_file_name(nom)
-        .add_filter("PDF", &["pdf"])
-        .save_file()
-    else {
-        return Retour::default();
+/// Aperçu d'un état produit par `crate::pdf` (état du stock, TVA collectée,
+/// registre des règlements, relances, feuille de comptage), à la place de son
+/// enregistrement direct ; l'aperçu l'enregistre ou l'imprime.
+pub(crate) fn montrer(
+    fenetre: &FenetrePrincipale,
+    etat: &crate::Etat,
+    resultat: Result<(Vec<u8>, String), String>,
+    dossier: Option<String>,
+) -> Retour {
+    let (octets, nom) = match resultat {
+        Ok(pdf) => pdf,
+        Err(message) => return retour_erreur(tr(&message)),
     };
-    if let Err(erreur) = std::fs::write(&chemin, octets) {
-        return retour_erreur(trf("écriture du PDF impossible : {}", &[&erreur]));
+    let marges = kadenz_stockage::mise_en_page::lire(&etat.conn)
+        .map(|m| m.marges)
+        .unwrap_or_default();
+    match ouvrir(fenetre, octets, nom, dossier, marges) {
+        Ok(()) => Retour::default(),
+        Err(message) => retour_erreur(trf("Aperçu impossible : {}", &[&message])),
     }
-    let _ = std::process::Command::new("explorer").arg(&chemin).spawn();
-    retour_ok(trf("PDF enregistré : {}", &[&chemin.display()]))
 }
 
 /// « Imprimer » : fenêtre d'impression de Windows, puis envoi dans un fil de
@@ -342,7 +342,9 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, _etat: &EtatPartage) {
             })
         });
         match copie {
-            Some((octets, nom, dossier)) => enregistrer_pdf(&octets, &nom, dossier.as_deref()),
+            Some((octets, nom, dossier)) => {
+                crate::paiements::enregistrer_pdf(&octets, &nom, dossier)
+            }
             None => Retour::default(),
         }
     });

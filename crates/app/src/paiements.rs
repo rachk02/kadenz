@@ -292,13 +292,14 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         ouvrir(&f, &e, id, t)
     });
 
-    let (e, l) = (etat.clone(), listes.clone());
+    let (f, e, l) = (fenetre.as_weak(), etat.clone(), listes.clone());
     api.on_imprimer_registre(move || {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
         let etat = e.borrow();
-        match crate::pdf::registre_reglements(&etat.conn, &l.borrow().filtre) {
-            Ok((octets, nom)) => enregistrer_pdf(&octets, &nom, None),
-            Err(message) => retour_erreur(tr(&message)),
-        }
+        let pdf = crate::pdf::registre_reglements(&etat.conn, &l.borrow().filtre);
+        crate::apercu::montrer(&f, &etat, pdf, None)
     });
 
     // Suivi fournisseurs.
@@ -362,8 +363,11 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         ouvrir(&f, &e, id, TypeDocument::Facture)
     });
 
-    let (e, l) = (etat.clone(), listes.clone());
+    let (f, e, l) = (fenetre.as_weak(), etat.clone(), listes.clone());
     api.on_lettre_relance(move |ligne| {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
         let Some(id) = au_rang(&l.borrow().relances, ligne).map(|d| d.id) else {
             return retour_erreur(tr("choisir une facture dans la liste"));
         };
@@ -371,19 +375,18 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let dossier = parametres::lire(&etat.conn)
             .ok()
             .map(|p| p.dossier_export(TypeDocument::Facture).to_string());
-        match crate::pdf::lettre_relance(&etat.conn, id) {
-            Ok((octets, nom)) => enregistrer_pdf(&octets, &nom, dossier),
-            Err(message) => retour_erreur(tr(&message)),
-        }
+        let pdf = crate::pdf::lettre_relance(&etat.conn, id);
+        crate::apercu::montrer(&f, &etat, pdf, dossier)
     });
 
-    let e = etat.clone();
+    let (f, e) = (fenetre.as_weak(), etat.clone());
     api.on_imprimer_relances(move || {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
         let etat = e.borrow();
-        match crate::pdf::liste_relances(&etat.conn) {
-            Ok((octets, nom)) => enregistrer_pdf(&octets, &nom, None),
-            Err(message) => retour_erreur(tr(&message)),
-        }
+        let pdf = crate::pdf::liste_relances(&etat.conn);
+        crate::apercu::montrer(&f, &etat, pdf, None)
     });
 
     // Exports Excel des lignes affichées (jalon J10).

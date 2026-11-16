@@ -20,7 +20,6 @@ use kadenz_stockage::{droits, parametres, replique};
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 
 use crate::factures::{date_depuis_texte, date_en_texte};
-use crate::paiements::enregistrer_pdf;
 use crate::referentiels::{modele_lignes, retour_erreur, retour_ok, texte_erreur};
 use crate::traduction::{tr, trf};
 use crate::{
@@ -623,17 +622,18 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         SharedString::new()
     });
 
-    let (e, v) = (etat.clone(), vue.clone());
+    let (f, e, v) = (fenetre.as_weak(), etat.clone(), vue.clone());
     api.on_exporter_tva_pdf(move || {
+        let Some(f) = f.upgrade() else {
+            return Retour::default();
+        };
         let etat = e.borrow();
         let vue = v.borrow();
         let Some(p) = vue.periode_tva.as_ref() else {
             return retour_erreur(tr("saisir une année"));
         };
-        match crate::pdf::tva_collectee(&etat.conn, &vue.tva, p) {
-            Ok((octets, nom)) => enregistrer_pdf(&octets, &nom, None),
-            Err(e) => retour_erreur(e),
-        }
+        let pdf = crate::pdf::tva_collectee(&etat.conn, &vue.tva, p);
+        crate::apercu::montrer(&f, &etat, pdf, None)
     });
 
     let (e, v) = (etat.clone(), vue.clone());

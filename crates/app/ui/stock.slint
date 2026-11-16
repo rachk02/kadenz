@@ -161,7 +161,7 @@ component OngletEtat inherits VerticalLayout {
         }
 
         Bouton {
-            text: @tr("Exporter en PDF");
+            text: @tr("Aperçu");
             clicked => {
                 root.retour = Alerte.relayer(StockApi.exporter-etat-pdf());
             }

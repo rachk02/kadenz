@@ -2177,9 +2177,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         // événements pendant qu'elle est ouverte.
         let resultat = pdf_du_document(&e.borrow());
         match resultat {
-            Ok((octets, nom, dossier)) => {
-                crate::apercu::enregistrer_pdf(&octets, &nom, dossier.as_deref())
-            }
+            Ok((octets, nom, dossier)) => crate::paiements::enregistrer_pdf(&octets, &nom, dossier),
             Err(retour) => retour,
         }
     });

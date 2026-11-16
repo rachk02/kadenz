@@ -6,8 +6,9 @@
 | 0.2 | 2026-11-16 | Relecture de kadenz-a8 : rendu de l'aperçu limité aux pages visibles, réglages d'impression gardés pour la session, réduction dès que la zone imprimable ne contient pas la page, envoi en bandes, filigrane du brouillon, initialisation COM à vérifier. |
 | 0.3 | 2026-11-16 | A1 livré (f17e1ed) et relu par kadenz-a8 : rendu sur fond blanc par `hayro`, largeur de rendu selon l'échelle de l'écran, temps de rendu mesuré, aperçu de l'état enregistré ; pour A2, image DIB et rendu par bandes précisés. |
 | 0.4 | 2026-11-16 | A2 codé et relu par kadenz-a8 : copies non gardées d'une impression à l'autre, rôle réel du drapeau des copies, fenêtre propriétaire obligatoire, code d'erreur de Windows dans le message, fermeture pendant un envoi notée. « Microsoft Print to PDF » ne s'ouvre pas sur le poste de développement (erreur Windows 3, hors de Kadenz aussi) ; l'imprimante PDF de Sage ne s'active que dans Sage ; essai d'envoi reporté à A3 sur décision de l'utilisateur. |
+| 0.5 | 2026-11-16 | Décisions de l'utilisateur sur les trois questions (aucune trace d'impression, documents puis états, page réduite avec message) ; jalon A4 : aperçu des six états qui ont un export PDF. |
 
-Statut : **A1 livré**, **A2 livré** (codé, relu par kadenz-a8, tests du placement, des copies et de l'image). Essai d'envoi laissé de côté sur décision de l'utilisateur (2026-11-16) : aucune imprimante utilisable sur le poste de développement (« Microsoft Print to PDF » en panne, erreur Windows 3 ; « Imprimante PDF Sage v4 » refuse tout logiciel autre que Sage, « Printer not activated, error code -30 », erreur Windows 21 ; pas d'imprimante physique branchée). L'envoi sera vérifié à l'essai A3, sur une imprimante disponible. Les questions de la section 6 sont à l'utilisateur.
+Statut : **A1 livré**, **A2 livré** (codé, relu par kadenz-a8, tests du placement, des copies et de l'image). Essai d'envoi laissé de côté sur décision de l'utilisateur (2026-11-16) : aucune imprimante utilisable sur le poste de développement (« Microsoft Print to PDF » en panne, erreur Windows 3 ; « Imprimante PDF Sage v4 » refuse tout logiciel autre que Sage, « Printer not activated, error code -30 », erreur Windows 21 ; pas d'imprimante physique branchée). L'envoi sera vérifié à l'essai A3, sur une imprimante disponible. Les questions de la section 6 sont tranchées. **A4** (aperçu des états) codé, en relecture.
 
 ## 1. Constat
 
@@ -47,7 +48,7 @@ Statut : **A1 livré**, **A2 livré** (codé, relu par kadenz-a8, tests du place
 
 ## 4. Hors du périmètre
 
-- Les états et listes qui ont déjà un export PDF (état du stock, TVA collectée, journal, relances, feuille de comptage) gardent leur export ; l'aperçu pourra leur être étendu ensuite, sur la même fenêtre (question 2).
+- Le journal comptable n'a pas d'export PDF (CSV et Excel seulement) : il n'a pas d'aperçu.
 - Aucune modification du contenu ni de la mise en page du PDF.
 
 ## 5. Jalons
@@ -56,10 +57,11 @@ Statut : **A1 livré**, **A2 livré** (codé, relu par kadenz-a8, tests du place
 |---|---|---|
 | A1 | Fenêtre d'aperçu (rendu `hayro` de toutes les pages), bouton « Aperçu » sur les six types de documents, « Enregistrer en PDF » depuis l'aperçu ; textes traduits dans les six langues | kadenz-22 |
 | A2 | Impression : fenêtre d'impression de Windows, copies, plage de pages, envoi dans un fil de travail, réduction hors A4 | kadenz-22, relecture kadenz-a8 |
-| A3 | Essai à l'écran sur un banc d'essai, d'abord avec l'imprimante virtuelle « Microsoft Print to PDF » (pages, copies, plage, annulation) ; l'imprimante réelle de l'utilisateur seulement à la fin, avec son accord | l'utilisateur |
+| A3 | Essai à l'écran sur un banc d'essai, d'abord avec une imprimante virtuelle qui fonctionne (pages, copies, plage, annulation) ; l'imprimante réelle de l'utilisateur seulement à la fin, avec son accord | l'utilisateur |
+| A4 | Aperçu étendu aux six états qui ont un export PDF : état du stock et feuille de comptage (Stock), TVA collectée (Comptabilité), registre des règlements, liste des relances et lettre de relance (Paiements). Leur bouton ouvre l'aperçu, d'où l'état s'imprime ou s'enregistre ; « Exporter en PDF » de l'état du stock et de la TVA devient « Aperçu », les autres boutons gardent leur texte | kadenz-22, relecture kadenz-a8 |
 
-## 6. Questions pour l'utilisateur
+## 6. Décisions de l'utilisateur (2026-11-16)
 
-1. **Trace de l'impression** : l'impression d'un document validé doit-elle laisser une trace (journal des actions, mention « duplicata » à partir de la seconde impression) ? Aucune source n'a été trouvée sur une obligation OHADA en ce sens ; rien n'est ajouté sans la décision de l'utilisateur.
-2. **Portée** : l'aperçu et l'impression pour les six types de documents d'abord (proposé), ou aussi tout de suite pour les états et listes (stock, TVA, journal, relances) ?
-3. **Page réduite** (papier plus petit, paysage, marges du pilote) : réduire la page pour qu'elle tienne (proposé), avec ou sans message à l'écran ?
+1. **Trace de l'impression** : aucune ; ni journal des actions, ni mention « duplicata ». Aucune source n'a été trouvée sur une obligation OHADA en ce sens.
+2. **Portée** : les six types de documents d'abord (A1, A2), puis les états qui ont un export PDF (A4, demandé par l'utilisateur après la livraison de A2 : « étends l'aperçu aux états »).
+3. **Page réduite** : réduite pour tenir sur le papier, avec le message « Envoyé à l'imprimante X, page réduite pour tenir sur le papier » (« garde le message »).

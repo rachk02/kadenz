@@ -282,7 +282,7 @@ component OngletTva inherits VerticalLayout {
         }
 
         Bouton {
-            text: @tr("Exporter en PDF");
+            text: @tr("Aperçu");
             clicked => {
                 root.retour = Alerte.relayer(ComptabiliteApi.exporter-tva-pdf());
             }
