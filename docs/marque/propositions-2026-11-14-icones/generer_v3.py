@@ -1,4 +1,4 @@
-"""Troisième tour des icônes (2026-11-14) : le jeu complet, 49 icônes, dans le style retenu (50 avec Accès à distance, ajoutée le 2026-11-15).
+"""Troisième tour des icônes (2026-11-14) : le jeu complet, 49 icônes, dans le style retenu (50 avec Accès à distance, ajoutée le 2026-11-15 ; 51 avec Stock, ajoutée le 2026-11-16).
 
 Choix de l'utilisateur : trait fin de A au repos, duo de B à l'état actif ; Livraisons en L1
 (colis livré), Produits en étiquette. Ce tour dessine les 34 icônes restantes et range le jeu
@@ -87,6 +87,12 @@ NOUVELLES = {
         ("trait", chemin("M11.5 16.5h11")),
         ("trait", chemin("M17 11c-1.6 1.5-2.4 3.3-2.4 5.5s.8 4 2.4 5.5c1.6-1.5 2.4-3.3 2.4-5.5s-.8-4-2.4-5.5Z")),
     ],
+    # Stock (2026-11-16) : entrepôt à porte roulante, distinct de l'étiquette de Produits, sa voisine
+    "stock": [
+        ("corps", chemin("M3 21V9.5L12 4l9 5.5V21")),
+        ("trait", chemin("M1.5 21h21")),
+        ("detail", chemin("M7.5 21v-8.5h9V21M7.5 15.5h9M7.5 18.25h9")),
+    ],
     # --- actions ---
     "annuler": [("trait", chemin("M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11"))],
     "apercu": [
@@ -147,10 +153,10 @@ v2.TOUTES.update(NOUVELLES)
 
 # Nom dans l'application -> dessin
 MENU = {n: n for n in ["tableau-de-bord", "devis", "proforma", "bons-commande", "factures", "avoirs",
-                       "reglements", "suivi-fournisseurs", "relances", "tiers", "parametres"]}
+                       "reglements", "suivi-fournisseurs", "relances", "tiers", "stock", "parametres"]}
 MENU.update({"livraisons": "livraisons-colis-livre", "produits": "produits-etiquette"})
 ORDRE_MENU = ["tableau-de-bord", "devis", "proforma", "bons-commande", "livraisons", "factures", "avoirs",
-              "reglements", "suivi-fournisseurs", "relances", "tiers", "produits", "parametres"]
+              "reglements", "suivi-fournisseurs", "relances", "tiers", "produits", "stock", "parametres"]
 RUBRIQUES = ["mon-compte", "navigation", "entreprise", "documents", "paiements", "exports", "impression",
              "utilisateurs", "sauvegardes", "acces-distant", "licence", "mises-a-jour", "a-propos"]
 for r in RUBRIQUES:
@@ -164,7 +170,7 @@ LIB = {
     "tableau-de-bord": "Tableau de bord", "devis": "Devis", "proforma": "Proforma",
     "bons-commande": "Bons de commande", "livraisons": "Livraisons", "factures": "Factures",
     "avoirs": "Avoirs", "reglements": "Règlements", "suivi-fournisseurs": "Suivi fournisseurs",
-    "relances": "Relances", "tiers": "Tiers", "produits": "Produits", "parametres": "Paramètres",
+    "relances": "Relances", "tiers": "Tiers", "produits": "Produits", "stock": "Stock", "parametres": "Paramètres",
     "mon-compte": "Mon compte", "navigation": "Navigation et affichage", "entreprise": "Entreprise",
     "documents": "Documents", "paiements": "Paiements", "exports": "Textes imprimés et exports",
     "impression": "Impression", "utilisateurs": "Utilisateurs", "sauvegardes": "Sauvegardes",
@@ -256,7 +262,7 @@ img.rouge {{ filter: invert(27%) sepia(68%) saturate(2400%) hue-rotate(347deg) b
 </style></head><body>
 <header><h1>Jeu d'icônes de Kadenz : les {len(ORDRE_MENU) + len(RUBRIQUES) + len(ACTIONS) + len(ETAT)} icônes</h1>
 <p>Trait fin au repos, duo à l'état actif. Livraisons : colis livré ; Produits : étiquette. 48 px en haut, taille de l'application dessous (18 px, 16 px pour l'état de la connexion).</p></header>
-<section><div class="tete"><h2>Menu</h2><p>13 entrées, au repos et actives</p></div>
+<section><div class="tete"><h2>Menu</h2><p>{len(ORDRE_MENU)} entrées, au repos et actives</p></div>
 <div class="grille">{''.join(case_menu(n) for n in ORDRE_MENU)}</div></section>
 <section><div class="tete"><h2>Rubriques des Paramètres</h2><p>{len(RUBRIQUES)} rubriques, au repos et actives</p></div>
 <div class="grille">{''.join(case_menu(n) for n in RUBRIQUES)}</div></section>
