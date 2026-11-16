@@ -156,6 +156,31 @@ Huit mises en situation retenues par l'utilisateur le 2026-11-13 parmi neuf prop
 | Onglet et écran d'accueil | Favicon dans l'onglet du navigateur ; téléphone au fond Tournant, icône sur l'écran d'accueil |
 | Profil de réseau social | Bannière Nuit au motif Tournant, avatar : symbole blanc sur Indigo |
 
+## Micrographies
+
+Dix petites compositions typographiques (M1 à M10), validées par l'utilisateur le 2026-11-16 : étiquettes, fiches et écussons à poser sur les supports de la marque. Fichiers et générateur dans `propositions-2026-11-16-micrographies/` : planche `propositions-micrographies.png`, images séparées `micrographies/M1-nuit.png` à `M10-une-couleur.png` (double taille), regénération par `py -3.14 generer_micrographies.py` (fontTools, Chrome).
+
+| Code | Nom | Usages |
+|---|---|---|
+| M1 | Fiche technique | Couverture de présentation, page « À propos » du futur site, affiche |
+| M2 | Pièces et mot | Bandeau du site, en-tête de diapositive, page de garde du manuel |
+| M3 | Écusson | Autocollant, tee-shirt d'équipe, comptoir du stand |
+| M4 | Bloc version | Pied de diapositive, notes de version, aperçu social du dépôt |
+| M5 | Chaîne en colonnes | Verso de carte, fond d'écran, intérieur de la chemise |
+| M6 | FCFA | Page Factures du futur site, diapositive sur les montants |
+| M7 | Matrice de points | Bandeau de section, étui du support d'installation, écran d'attente |
+| M8 | Ligne des pièces | Pied de page du futur site, fin de vidéo, signature de courriel |
+| M9 | Colonnes | Affiche A3, dos du carnet, mur du stand |
+| M10 | Sept langues | Page Langues du futur site, diapositive, encart du manuel |
+
+Règles :
+- Format de tampon : chaque micrographie est rognée sur son contenu, avec la même marge sur les quatre côtés.
+- Deux versions : fond Nuit à l'encre blanche (Ambre pour le troisième temps seulement), et une couleur, encre Nuit sur fond transparent.
+- Les textes viennent du logiciel et de ses documents ; ni R cerclé ni TM (aucune recherche de marque faite), ni lieu ni date de fondation.
+- Le mot et le symbole sont les tracés de la charte, jamais retapés ni traités en points ou en rayures ; ces effets ne touchent que les chiffres.
+- Exception au motif ton sur ton : dans les micrographies, la frise des quatre pièces peut être en blanc plein (M1, M2, M7).
+- Les chiffres à mettre à jour avec le logiciel : version (0.2.2) et nombre de langues ; regénérer après chaque changement.
+
 ## Modules (proposition)
 
 La pièce du module est pleine, les trois autres sont au trait : Ventes (carré : devis, proforma, factures), Commandes (quart de disque : bons de commande), Livraisons (triangle : bons de livraison), Paiements (disque : règlements, relances). Cette répartition est une proposition à valider ; elle ne change rien au découpage réel des licences.
