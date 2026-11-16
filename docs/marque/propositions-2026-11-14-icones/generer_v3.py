@@ -1,4 +1,4 @@
-"""Troisième tour des icônes (2026-11-14) : le jeu complet, 49 icônes, dans le style retenu (50 avec Accès à distance, ajoutée le 2026-11-15 ; 51 avec Stock, ajoutée le 2026-11-16).
+"""Troisième tour des icônes (2026-11-14) : le jeu complet, 49 icônes, dans le style retenu (50 avec Accès à distance, ajoutée le 2026-11-15 ; 51 avec Stock, ajoutée le 2026-11-16 ; 52 avec Comptabilité, ajoutée le même jour).
 
 Choix de l'utilisateur : trait fin de A au repos, duo de B à l'état actif ; Livraisons en L1
 (colis livré), Produits en étiquette. Ce tour dessine les 34 icônes restantes et range le jeu
@@ -93,6 +93,12 @@ NOUVELLES = {
         ("trait", chemin("M1.5 21h21")),
         ("detail", chemin("M7.5 21v-8.5h9V21M7.5 15.5h9M7.5 18.25h9")),
     ],
+    # Comptabilité (C2, 2026-11-16) : livre-journal ouvert, une page au débit, une au crédit ;
+    # sert à la rubrique des Paramètres et à la page Comptabilité du groupe Paiements
+    "comptabilite": [
+        ("corps", chemin("M12 6.5C10 5 7 4.5 2.5 4.5v14c4.5 0 7.5.5 9.5 2 2-1.5 5-2 9.5-2v-14c-4.5 0-7.5.5-9.5 2Z")),
+        ("detail", chemin("M12 6.5v14M5.5 9h3.5M5.5 12.5h3.5M15 9h3.5M15 12.5h3.5")),
+    ],
     # --- actions ---
     "annuler": [("trait", chemin("M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11"))],
     "apercu": [
@@ -157,7 +163,7 @@ MENU = {n: n for n in ["tableau-de-bord", "devis", "proforma", "bons-commande", 
 MENU.update({"livraisons": "livraisons-colis-livre", "produits": "produits-etiquette"})
 ORDRE_MENU = ["tableau-de-bord", "devis", "proforma", "bons-commande", "livraisons", "factures", "avoirs",
               "reglements", "suivi-fournisseurs", "relances", "tiers", "produits", "stock", "parametres"]
-RUBRIQUES = ["mon-compte", "navigation", "entreprise", "documents", "paiements", "exports", "impression",
+RUBRIQUES = ["mon-compte", "navigation", "entreprise", "documents", "paiements", "comptabilite", "exports", "impression",
              "utilisateurs", "sauvegardes", "acces-distant", "licence", "mises-a-jour", "a-propos"]
 for r in RUBRIQUES:
     MENU[r] = "imprimer" if r == "impression" else r
@@ -172,7 +178,7 @@ LIB = {
     "avoirs": "Avoirs", "reglements": "Règlements", "suivi-fournisseurs": "Suivi fournisseurs",
     "relances": "Relances", "tiers": "Tiers", "produits": "Produits", "stock": "Stock", "parametres": "Paramètres",
     "mon-compte": "Mon compte", "navigation": "Navigation et affichage", "entreprise": "Entreprise",
-    "documents": "Documents", "paiements": "Paiements", "exports": "Textes imprimés et exports",
+    "documents": "Documents", "paiements": "Paiements", "comptabilite": "Comptabilité", "exports": "Textes imprimés et exports",
     "impression": "Impression", "utilisateurs": "Utilisateurs", "sauvegardes": "Sauvegardes",
     "licence": "Licence", "acces-distant": "Accès à distance", "mises-a-jour": "Mises à jour", "a-propos": "À propos",
     "annuler": "Annuler", "apercu": "Aperçu", "bandeau": "Bandeau", "barre": "Barre latérale",
