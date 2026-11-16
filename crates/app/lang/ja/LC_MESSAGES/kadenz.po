@@ -4554,3 +4554,18 @@ msgstr "支払方法「{}」に勘定が 2 つあります"
 
 msgid "Compte clients"
 msgstr "得意先勘定"
+
+msgid "Aperçu"
+msgstr "プレビュー"
+
+msgid "Enregistrer en PDF"
+msgstr "PDFとして保存"
+
+msgid "{} page(s)"
+msgstr "{} ページ"
+
+msgid "Aperçu impossible : {}"
+msgstr "プレビューできません：{}"
+
+msgid "document sans page"
+msgstr "ページのない文書"

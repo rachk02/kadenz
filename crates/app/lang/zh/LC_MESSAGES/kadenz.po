@@ -4554,3 +4554,18 @@ msgstr "付款方式“{}”有两个科目"
 
 msgid "Compte clients"
 msgstr "客户科目"
+
+msgid "Aperçu"
+msgstr "预览"
+
+msgid "Enregistrer en PDF"
+msgstr "另存为 PDF"
+
+msgid "{} page(s)"
+msgstr "{} 页"
+
+msgid "Aperçu impossible : {}"
+msgstr "无法预览：{}"
+
+msgid "document sans page"
+msgstr "没有页面的文档"

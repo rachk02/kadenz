@@ -649,7 +649,7 @@ pub(crate) fn apercu_mise_en_page(
         &reglages,
     );
     let (l, h) = (u32::from(pixmap.width()), u32::from(pixmap.height()));
-    // Fond blanc opaque : les pixels prémultipliés valent les pixels droits.
+    // Fond transparent, pixels en alpha prémultiplié.
     Ok((pixmap.data_as_u8_slice().to_vec(), l, h))
 }
 

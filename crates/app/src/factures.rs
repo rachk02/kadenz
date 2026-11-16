@@ -1519,6 +1519,19 @@ fn echeance_apres_date(
     documents::echeance_par_defaut(nouvelle, delai).map(date_en_texte)
 }
 
+/// PDF du document ouvert, avec le nom de fichier et le dossier d'export de son
+/// type, s'il est réglé : le même pour l'aperçu et l'export.
+fn pdf_du_document(etat: &Etat) -> Result<(Vec<u8>, String, Option<String>), Retour> {
+    let Some(id) = etat.facture.as_ref().and_then(|ed| ed.id) else {
+        return Err(retour_erreur("enregistrer d'abord le document"));
+    };
+    let (octets, nom) = crate::pdf::generer(&etat.conn, id).map_err(retour_erreur)?;
+    let dossier = parametres::lire(&etat.conn)
+        .ok()
+        .map(|p| p.dossier_export(etat.type_document).to_string());
+    Ok((octets, nom, dossier))
+}
+
 pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
     let api = fenetre.global::<FacturesApi>();
 
@@ -2160,43 +2173,30 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
 
     let e = etat.clone();
     api.on_exporter_pdf(move || {
-        let etat = e.borrow();
-        let Some(id) = etat.facture.as_ref().and_then(|ed| ed.id) else {
-            return retour_erreur("enregistrer d'abord le document");
-        };
-        let (octets, nom) = match crate::pdf::generer(&etat.conn, id) {
-            Ok(resultat) => resultat,
-            Err(message) => return retour_erreur(message),
-        };
-        // Dossier d'export du type de document s'il est réglé et existe encore.
-        let dossier = parametres::lire(&etat.conn)
-            .ok()
-            .map(|p| p.dossier_export(etat.type_document).to_string())
-            .filter(|d| !d.is_empty() && std::path::Path::new(d).is_dir());
-        let mut boite = rfd::FileDialog::new();
-        if let Some(dossier) = dossier {
-            boite = boite.set_directory(dossier);
+        // État relâché avant la boîte de dialogue, qui fait tourner la boucle des
+        // événements pendant qu'elle est ouverte.
+        let resultat = pdf_du_document(&e.borrow());
+        match resultat {
+            Ok((octets, nom, dossier)) => {
+                crate::apercu::enregistrer_pdf(&octets, &nom, dossier.as_deref())
+            }
+            Err(retour) => retour,
         }
-        let Some(chemin) = boite
-            .set_title(crate::traduction::tr("Enregistrer le PDF"))
-            .set_file_name(&nom)
-            .add_filter("PDF", &["pdf"])
-            .save_file()
-        else {
+    });
+
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_apercu(move || {
+        let Some(f) = f.upgrade() else {
             return Retour::default();
         };
-        if let Err(erreur) = std::fs::write(&chemin, &octets) {
-            return retour_erreur(crate::traduction::trf(
-                "écriture du PDF impossible : {}",
-                &[&erreur],
-            ));
+        let resultat = pdf_du_document(&e.borrow());
+        match resultat {
+            Ok((octets, nom, dossier)) => match crate::apercu::ouvrir(&f, octets, nom, dossier) {
+                Ok(()) => Retour::default(),
+                Err(message) => retour_erreur(trf("Aperçu impossible : {}", &[&message])),
+            },
+            Err(retour) => retour,
         }
-        // Ouvre le PDF dans la visionneuse par défaut de Windows.
-        let _ = std::process::Command::new("explorer").arg(&chemin).spawn();
-        retour_ok(crate::traduction::trf(
-            "PDF enregistré : {}",
-            &[&chemin.display()],
-        ))
     });
 
     let (f, e) = (fenetre.as_weak(), etat.clone());

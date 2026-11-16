@@ -4554,3 +4554,18 @@ msgstr "el medio de pago «{}» tiene dos cuentas"
 
 msgid "Compte clients"
 msgstr "Cuenta de clientes"
+
+msgid "Aperçu"
+msgstr "Vista previa"
+
+msgid "Enregistrer en PDF"
+msgstr "Guardar como PDF"
+
+msgid "{} page(s)"
+msgstr "{} página(s)"
+
+msgid "Aperçu impossible : {}"
+msgstr "Vista previa imposible: {}"
+
+msgid "document sans page"
+msgstr "documento sin páginas"

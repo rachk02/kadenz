@@ -188,7 +188,7 @@ fn actualiser(
     ) {
         Ok((rgba, largeur, hauteur)) => {
             let image = SharedPixelBuffer::<Rgba8Pixel>::clone_from_slice(&rgba, largeur, hauteur);
-            api.set_apercu(Image::from_rgba8(image));
+            api.set_apercu(Image::from_rgba8_premultiplied(image));
         }
         Err(erreur) => api.set_erreur_marges(erreur.into()),
     }

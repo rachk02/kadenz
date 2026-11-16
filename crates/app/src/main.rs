@@ -4,6 +4,7 @@
 mod abonnement;
 mod acces_distant;
 mod administration;
+mod apercu;
 mod comptabilite;
 mod excel;
 mod factures;
@@ -442,6 +443,7 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     utilisateurs::brancher(fenetre, &etat);
     import_ecran::brancher(fenetre, &etat);
     factures::brancher(fenetre, &etat);
+    apercu::brancher(fenetre, &etat);
     paiements::brancher(fenetre, &etat);
     pilotage::brancher(fenetre, &etat);
     impression::brancher(fenetre, &etat);

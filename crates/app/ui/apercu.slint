@@ -1,0 +1,177 @@
+// Aperçu d'un document (docs/spec-apercu-impression.md, jalon A1) : les pages du
+// PDF généré, rendues par l'application, par-dessus l'écran courant. Seules les
+// pages visibles et leurs voisines sont gardées en image (mémoire) ; l'application
+// les rend quand la plage visible change. « Enregistrer en PDF » écrit les mêmes
+// octets que l'aperçu.
+
+import { ScrollView } from "std-widgets.slint";
+import { Alerte, Bouton, MessageRetour, Retour, Theme } from "composants.slint";
+
+// Page du document : image rendue (vide tant qu'elle n'est pas visible) et
+// rapport hauteur sur largeur, connu sans rendre la page.
+export struct PageApercuUi {
+    image: image,
+    ratio: float,
+}
+
+export global ApercuApi {
+    in property <bool> ouvert;
+    in property <string> titre;
+    in property <string> resume;
+    in property <[PageApercuUi]> pages;
+    // Rangs de la première et de la dernière page visibles.
+    callback visibles(premiere: int, derniere: int);
+    callback enregistrer() -> Retour;
+    callback fermer();
+}
+
+export component FenetreApercu inherits Rectangle {
+    // Créée à l'ouverture de l'aperçu (fenetre-principale.slint), détruite à sa
+    // fermeture : message et défilement repartent à zéro.
+    property <Retour> retour;
+    init => {
+        clavier.focus();
+        ApercuApi.visibles(root.premiere, root.derniere);
+    }
+
+    // Plage visible, d'après la hauteur d'une page (les documents sont en A4).
+    property <length> marge: 16px;
+    property <length> largeur-page: max(100px, min(defile.visible-width - 2 * root.marge - 14px, 820px));
+    property <length> hauteur-ligne: root.largeur-page * (ApercuApi.pages.length > 0 ? ApercuApi.pages[0].ratio : 1.414) + root.marge;
+    property <int> premiere: max(0, floor((-defile.content-y - root.marge) / root.hauteur-ligne));
+    property <int> derniere: max(0, floor((-defile.content-y + defile.visible-height) / root.hauteur-ligne));
+    changed premiere => {
+        ApercuApi.visibles(root.premiere, root.derniere);
+    }
+    changed derniere => {
+        ApercuApi.visibles(root.premiere, root.derniere);
+    }
+
+    background: #0f172a80;
+
+    // Les clics ne doivent pas atteindre l'écran recouvert.
+    TouchArea { }
+
+    clavier := FocusScope {
+        key-pressed(e) => {
+            if (e.text == Key.Escape) {
+                ApercuApi.fermer();
+                return accept;
+            }
+            return reject;
+        }
+
+        Rectangle {
+            x: 24px;
+            y: 24px;
+            width: root.width - 48px;
+            height: root.height - 48px;
+            background: white;
+            border-radius: 4px;
+            border-width: 1px;
+            border-color: Theme.bordure;
+            drop-shadow-blur: 24px;
+            drop-shadow-offset-y: 8px;
+            drop-shadow-color: #0f172a33;
+
+            VerticalLayout {
+                padding: 16px;
+                spacing: 12px;
+
+                HorizontalLayout {
+                    spacing: 8px;
+
+                    if !Theme.rtl: Text {
+                        horizontal-stretch: 1;
+                        vertical-alignment: center;
+                        text: ApercuApi.titre;
+                        font-family: Theme.police-titre;
+                        font-size: 18px;
+                        font-weight: 700;
+                        color: Theme.texte;
+                        overflow: elide;
+                    }
+
+                    Text {
+                        vertical-alignment: center;
+                        text: ApercuApi.resume;
+                        font-size: 12px;
+                        color: Theme.texte-secondaire;
+                    }
+
+                    Bouton {
+                        text: @tr("Enregistrer en PDF");
+                        primary: true;
+                        clicked => {
+                            root.retour = Alerte.relayer(ApercuApi.enregistrer());
+                        }
+                    }
+
+                    Bouton {
+                        text: @tr("Fermer");
+                        clicked => {
+                            ApercuApi.fermer();
+                        }
+                    }
+
+                    if Theme.rtl: Text {
+                        horizontal-stretch: 1;
+                        horizontal-alignment: right;
+                        vertical-alignment: center;
+                        text: ApercuApi.titre;
+                        font-family: Theme.police-titre;
+                        font-size: 18px;
+                        font-weight: 700;
+                        color: Theme.texte;
+                        overflow: elide;
+                    }
+                }
+
+                MessageRetour {
+                    retour: root.retour;
+                }
+
+                Rectangle {
+                    vertical-stretch: 1;
+                    background: Theme.fond-lateral;
+                    border-radius: 4px;
+                    clip: true;
+
+                    // Hauteur du contenu donnée d'après les pages, sans compter sur
+                    // celle que Slint déduit.
+                    defile := ScrollView {
+                        width: 100%;
+                        height: 100%;
+                        content-height: max(self.visible-height, feuilles.preferred-height);
+
+                        feuilles := VerticalLayout {
+                            padding: root.marge;
+                            spacing: root.marge;
+
+                            for page in ApercuApi.pages: HorizontalLayout {
+                                alignment: center;
+
+                                Rectangle {
+                                    width: root.largeur-page;
+                                    height: root.largeur-page * page.ratio;
+                                    background: white;
+                                    border-width: 1px;
+                                    border-color: Theme.bordure;
+                                    drop-shadow-blur: 6px;
+                                    drop-shadow-color: #0f172a1f;
+
+                                    Image {
+                                        width: 100%;
+                                        height: 100%;
+                                        source: page.image;
+                                        image-fit: contain;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -4554,3 +4554,18 @@ msgstr "the “{}” payment method has two accounts"
 
 msgid "Compte clients"
 msgstr "Customers account"
+
+msgid "Aperçu"
+msgstr "Preview"
+
+msgid "Enregistrer en PDF"
+msgstr "Save as PDF"
+
+msgid "{} page(s)"
+msgstr "{} page(s)"
+
+msgid "Aperçu impossible : {}"
+msgstr "Preview unavailable: {}"
+
+msgid "document sans page"
+msgstr "document without pages"

@@ -4554,3 +4554,18 @@ msgstr "طريقة الدفع «{}» لها حسابان"
 
 msgid "Compte clients"
 msgstr "حساب العملاء"
+
+msgid "Aperçu"
+msgstr "معاينة"
+
+msgid "Enregistrer en PDF"
+msgstr "حفظ بصيغة PDF"
+
+msgid "{} page(s)"
+msgstr "{} صفحة (صفحات)"
+
+msgid "Aperçu impossible : {}"
+msgstr "تعذرت المعاينة: {}"
+
+msgid "document sans page"
+msgstr "مستند بلا صفحات"

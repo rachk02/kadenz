@@ -248,6 +248,8 @@ export global FacturesApi {
     // PDF du document enregistré : aperçu filigrané pour un brouillon, document
     // définitif une fois validé, filigrane « ANNULÉ » s'il est annulé.
     callback exporter-pdf() -> Retour;
+    // Aperçu du même PDF dans Kadenz (jalon A1) : rien n'est écrit sur le disque.
+    callback apercu() -> Retour;
     // Exports Excel (jalon J10) : lignes affichées du registre, ou le document ouvert.
     callback exporter-registre() -> Retour;
     callback exporter-excel() -> Retour;
@@ -672,12 +674,12 @@ component Fiche inherits ScrollView {
         }
     }
 
-    // Ctrl+P : comme le bouton PDF, une fois le document enregistré.
+    // Ctrl+P : aperçu du document enregistré, d'où il s'enregistre en PDF.
     property <int> demande-pdf: FacturesApi.demande-pdf;
     changed demande-pdf => {
         if (root.fiche.existe && FacturesApi.avec-pdf) {
             root.confirmation = 0;
-            root.retour = FacturesApi.exporter-pdf();
+            root.retour = FacturesApi.apercu();
         }
     }
 
@@ -1505,7 +1507,16 @@ component Fiche inherits ScrollView {
             }
 
             if root.fiche.existe && FacturesApi.avec-pdf: Bouton {
-                text: root.fiche.brouillon ? @tr("Aperçu PDF") : @tr("Exporter en PDF");
+                text: @tr("Aperçu");
+                clicked => {
+                    root.confirmation = 0;
+                    root.retour = FacturesApi.apercu();
+                }
+            }
+
+            // Le brouillon s'enregistre en PDF depuis son aperçu, filigrane compris.
+            if root.fiche.existe && !root.fiche.brouillon && FacturesApi.avec-pdf: Bouton {
+                text: @tr("Exporter en PDF");
                 clicked => {
                     root.confirmation = 0;
                     root.retour = FacturesApi.exporter-pdf();

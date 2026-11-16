@@ -4554,3 +4554,18 @@ msgstr "«{}» ödeme yönteminin iki hesabı var"
 
 msgid "Compte clients"
 msgstr "Müşteriler hesabı"
+
+msgid "Aperçu"
+msgstr "Önizleme"
+
+msgid "Enregistrer en PDF"
+msgstr "PDF olarak kaydet"
+
+msgid "{} page(s)"
+msgstr "{} sayfa"
+
+msgid "Aperçu impossible : {}"
+msgstr "Önizleme yapılamıyor: {}"
+
+msgid "document sans page"
+msgstr "sayfası olmayan belge"

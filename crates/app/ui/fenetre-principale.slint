@@ -24,8 +24,9 @@ import { PageReglages, ReglagesApi, Rubrique } from "reglages.slint";
 import { ChampSuspenduUi, SuspendueUi, SuspenduesApi } from "suspendues.slint";
 import { AccesDistantApi, PosteDistantUi } from "acces-distant.slint";
 import { EcranDemarrageImpossible, SauvegardesApi } from "sauvegardes.slint";
+import { ApercuApi, FenetreApercu, PageApercuUi } from "apercu.slint";
 
-export { AbonnementApi, AccesDistantApi, PosteDistantUi, ChampSuspenduUi, ConnexionApi, DocumentAValiderUi, LigneResumeUi, ServeurApi, SuspendueUi, SuspenduesApi, Affichage, Alerte, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, StockApi, LigneInventaireUi, ProduitStockUi, ComptabiliteApi, CompteComptableUi, TiersApi, UtilisateursApi }
+export { AbonnementApi, AccesDistantApi, ApercuApi, PageApercuUi, PosteDistantUi, ChampSuspenduUi, ConnexionApi, DocumentAValiderUi, LigneResumeUi, ServeurApi, SuspendueUi, SuspenduesApi, Affichage, Alerte, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, StockApi, LigneInventaireUi, ProduitStockUi, ComptabiliteApi, CompteComptableUi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, presentation, inscription, connexion, application }
@@ -124,6 +125,10 @@ export component FenetrePrincipale inherits Window {
         }
     }
 
+    property <bool> page-documents: root.page == Page.devis || root.page == Page.proforma
+        || root.page == Page.bons-commande || root.page == Page.livraisons
+        || root.page == Page.factures || root.page == Page.avoirs;
+
     // Ctrl+B replie ou déplie la barre latérale (mode barre seulement).
     if root.ecran == Ecran.application: FocusScope {
         init => {
@@ -143,6 +148,29 @@ export component FenetrePrincipale inherits Window {
                 // L'infobulle du bouton de bascule ne correspond plus à son état.
                 Infobulle.texte = "";
                 return accept;
+            }
+            // Raccourcis des documents, quand le focus est hors de leur page (clic dans
+            // la barre latérale ou le bandeau, confirmation refermée) : la page ne les
+            // recevait plus (essai A1).
+            if (root.page-documents && !Confirmation.ouverte && !ApercuApi.ouvert && e.modifiers.control) {
+                if (e.text == "p" || e.text == "P") {
+                    FacturesApi.demande-pdf += 1;
+                    return accept;
+                }
+                if (e.text == "s" || e.text == "S") {
+                    FacturesApi.demande-enregistrer += 1;
+                    return accept;
+                }
+                if (e.text == "f" || e.text == "F") {
+                    FacturesApi.demande-recherche += 1;
+                    return accept;
+                }
+                if (e.text == "n" || e.text == "N") {
+                    if (FacturesApi.peut-creer && !FacturesApi.fiche-ouverte) {
+                        FacturesApi.nouvelle();
+                    }
+                    return accept;
+                }
             }
             return reject;
         }
@@ -355,6 +383,12 @@ export component FenetrePrincipale inherits Window {
 
     // Invite de mise à jour (jalon J10), par-dessus l'application.
     if root.ecran == Ecran.application && MiseAJourApi.visible: InviteMiseAJour {
+        width: root.width;
+        height: root.height;
+    }
+
+    // Aperçu d'un document (jalon A1), par-dessus l'application.
+    if root.ecran == Ecran.application && ApercuApi.ouvert: FenetreApercu {
         width: root.width;
         height: root.height;
     }
