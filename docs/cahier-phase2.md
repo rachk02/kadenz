@@ -168,6 +168,7 @@ Chaque candidat décrit ce qu'il recouvrirait, ce qu'il touche dans la V1 et ce 
 
 ### 3.7 Site web
 
+- Forme proposée dans `docs/spec-site.md` (décisions 70 à 73 ; pile technique et calendrier à discuter avec l'utilisateur).
 - Recouvre au minimum un site public. Son objet reste à préciser : site de présentation de Kadenz (le produit), espace client relié au serveur (3.1), espace d'abonnement (4.1).
 - Pour tout site public, la liste de contrôle SEO de l'utilisateur s'applique (plan du site, robots, balises canoniques et langues, titres et descriptions uniques, données structurées tirées du contenu réel, images, performances mobiles, Search Console préparée pour l'utilisateur).
 - À savoir : objet, langues, nom de domaine, hébergement, contenus disponibles (textes, captures, tarifs) ; rien ne sera inventé pour remplir une page.
