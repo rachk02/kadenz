@@ -57,6 +57,8 @@ struct Vue {
     filtre: FiltreMouvements,
     mouvements: Vec<Mouvement>,
     mouvement: Option<usize>,
+    // Référence de chaque produit suivi, pour la colonne des mouvements.
+    references: HashMap<i64, String>,
     // Inventaire.
     inventaire: Vec<LigneCompte>,
     modele_inventaire: Option<Rc<VecModel<LigneInventaireUi>>>,
@@ -81,6 +83,18 @@ fn quantite_signee(texte: &str) -> Option<Quantite> {
         Some(reste) => quantite_depuis_texte(reste.trim()).map(|q| -q),
         None => quantite_depuis_texte(t.strip_prefix('+').unwrap_or(t).trim()),
     }
+}
+
+/// Quantité comptée à l'inventaire : comme une quantité de ligne, mais zéro
+/// (« 0 », « 0,0 ») est permis, pour un produit absent du rayon.
+fn quantite_comptee(texte: &str) -> Option<Quantite> {
+    quantite_depuis_texte(texte).or_else(|| {
+        let t = texte.trim();
+        let (entier, decimales) = t.split_once([',', '.']).unwrap_or((t, ""));
+        let zeros = |s: &str| s.chars().all(|c| c == '0');
+        (!entier.is_empty() && zeros(entier) && zeros(decimales) && decimales.len() <= 3)
+            .then_some(0)
+    })
 }
 
 fn possede(etat: &Etat, droit: Droit) -> bool {
@@ -189,8 +203,10 @@ fn afficher_etat(f: &FenetrePrincipale, etat: &Etat, vue: &mut Vue) {
     // Produits proposés dans l'onglet des mouvements : tous les suivis.
     let mut noms = vec![SharedString::from(tr("Tous les produits suivis"))];
     vue.produits = vec![0];
+    vue.references.clear();
     for l in &lignes {
         vue.produits.push(l.produit_id);
+        vue.references.insert(l.produit_id, l.reference.clone());
         noms.push(format!("{} - {}", l.reference, l.designation).into());
     }
     api.set_produits(ModelRc::new(VecModel::from(noms)));
@@ -305,9 +321,20 @@ fn ajuster(etat: &Etat, produit_id: i64, quantite: &str, cout: &str, motif: &str
 
 // ---------------------------------------------------------------- Mouvements
 
-fn cellules_mouvement(m: &Mouvement, valeur: bool) -> Vec<String> {
+/// Numéro du document d'un mouvement, pour l'écran : la nature dit déjà s'il
+/// s'agit d'un bon de commande ou d'un bordereau, et le nom du type coupait le
+/// numéro dans une colonne étroite.
+fn numero_document(m: &Mouvement) -> String {
+    match &m.document {
+        Some(d) => d.numero.clone().unwrap_or_else(|| tr("brouillon")),
+        None => String::new(),
+    }
+}
+
+fn cellules_mouvement(m: &Mouvement, valeur: bool, reference: &str) -> Vec<String> {
     let mut cellules = vec![
         date_en_texte(m.date),
+        reference.to_string(),
         tr(libelle_nature(m.nature)),
         texte_quantite(m.quantite),
     ];
@@ -318,7 +345,7 @@ fn cellules_mouvement(m: &Mouvement, valeur: bool) -> Vec<String> {
     if valeur {
         cellules.push(montant_en_texte(m.valeur_apres));
     }
-    cellules.extend([texte_document(m), m.motif.clone(), m.compte.clone()]);
+    cellules.extend([numero_document(m), m.motif.clone(), m.compte.clone()]);
     cellules
 }
 
@@ -336,7 +363,12 @@ fn afficher_mouvements(f: &FenetrePrincipale, etat: &Etat, vue: &mut Vue) {
     match stock::mouvements(&etat.conn, &vue.filtre) {
         Ok(m) => {
             api.set_mouvements_lignes(modele_lignes(
-                m.iter().map(|m| cellules_mouvement(m, valeur)).collect(),
+                m.iter()
+                    .map(|m| {
+                        let reference = vue.references.get(&m.produit_id).map_or("", |r| r);
+                        cellules_mouvement(m, valeur, reference)
+                    })
+                    .collect(),
             ));
             api.set_mouvements_resume(resume_mouvements(m.len()).into());
             vue.mouvements = m;
@@ -595,9 +627,16 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
     let (f, e, v) = (fenetre.as_weak(), etat.clone(), vue.clone());
     api.on_ouvrir(move || {
         let Some(f) = f.upgrade() else { return };
+        let etat = e.borrow();
         let mut vue = v.borrow_mut();
-        *vue = Vue::default();
-        afficher_etat(&f, &e.borrow(), &mut vue);
+        // Les onglets se chargent avant la page (ordre des init de Slint) et ont
+        // déjà posé leurs filtres et leurs listes : seules les sélections d'une
+        // visite précédente sont oubliées. Une remise à zéro complète laissait à
+        // l'écran des lignes que la vue ne connaissait plus (comptage perdu,
+        // filtres des mouvements et des produits négatifs ignorés).
+        vue.selection = None;
+        vue.mouvement = None;
+        afficher_etat(&f, &etat, &mut vue);
     });
 
     let (f, e, v) = (fenetre.as_weak(), etat.clone(), vue.clone());
@@ -803,8 +842,8 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         let comptee = if texte.trim().is_empty() {
             None
         } else {
-            match quantite_depuis_texte(&texte) {
-                Some(q) if q >= 0 => Some(q),
+            match quantite_comptee(&texte) {
+                Some(q) => Some(q),
                 _ => {
                     return trf(
                         "Quantité comptée illisible : {} (saisir par exemple 12 ou 2,5).",
@@ -927,6 +966,20 @@ mod tests {
         assert_eq!(quantite_signee("abc"), None);
         assert_eq!(texte_quantite(-500), "-0,5");
         assert_eq!(texte_quantite(12_000), "12");
+    }
+
+    #[test]
+    fn quantites_comptees() {
+        assert_eq!(quantite_comptee("0"), Some(0));
+        assert_eq!(quantite_comptee(" 0,0 "), Some(0));
+        assert_eq!(quantite_comptee("000"), Some(0));
+        assert_eq!(quantite_comptee("20"), Some(20_000));
+        assert_eq!(quantite_comptee("2,5"), Some(2500));
+        assert_eq!(quantite_comptee(""), None);
+        assert_eq!(quantite_comptee(",0"), None);
+        assert_eq!(quantite_comptee("0,0000"), None);
+        assert_eq!(quantite_comptee("-1"), None);
+        assert_eq!(quantite_comptee("abc"), None);
     }
 
     /// Messages d'erreur du stock : six traductions chacun.

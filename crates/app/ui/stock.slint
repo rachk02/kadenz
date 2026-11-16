@@ -194,8 +194,8 @@ component OngletEtat inherits VerticalLayout {
             TableauDonnees {
                 // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
                 columns: root.valeur ? (Theme.rtl ? [
-                    { title: @tr("Valeur (FCFA)"), min-width: 110px, horizontal-stretch: 1 },
-                    { title: @tr("Coût moyen (FCFA)"), min-width: 110px, horizontal-stretch: 1 },
+                    { title: @tr("Valeur (FCFA)"), min-width: 130px, horizontal-stretch: 1 },
+                    { title: @tr("Coût moyen (FCFA)"), min-width: 150px, horizontal-stretch: 1 },
                     { title: @tr("Quantité"), min-width: 90px, horizontal-stretch: 1 },
                     { title: @tr("Désignation"), min-width: 180px, horizontal-stretch: 3 },
                     { title: @tr("Référence"), min-width: 110px, horizontal-stretch: 1 },
@@ -203,8 +203,8 @@ component OngletEtat inherits VerticalLayout {
                     { title: @tr("Référence"), min-width: 110px, horizontal-stretch: 1 },
                     { title: @tr("Désignation"), min-width: 180px, horizontal-stretch: 3 },
                     { title: @tr("Quantité"), min-width: 90px, horizontal-stretch: 1 },
-                    { title: @tr("Coût moyen (FCFA)"), min-width: 110px, horizontal-stretch: 1 },
-                    { title: @tr("Valeur (FCFA)"), min-width: 110px, horizontal-stretch: 1 },
+                    { title: @tr("Coût moyen (FCFA)"), min-width: 150px, horizontal-stretch: 1 },
+                    { title: @tr("Valeur (FCFA)"), min-width: 130px, horizontal-stretch: 1 },
                 ]) : (Theme.rtl ? [
                     { title: @tr("Quantité"), min-width: 90px, horizontal-stretch: 1 },
                     { title: @tr("Désignation"), min-width: 180px, horizontal-stretch: 3 },
@@ -306,7 +306,10 @@ component OngletEtat inherits VerticalLayout {
                             valeur <=> root.saisie-cout;
                             libelle: @tr("Coût unitaire d'entrée (FCFA)");
                             // Sans le droit de voir la valeur, l'entrée prend le coût moyen.
-                            visible: root.valeur;
+                            // Une sortie prend toujours le coût moyen : champ masqué dès
+                            // qu'un signe moins est tapé (« -2,5 », que to-float ne lit
+                            // pas, le laisse visible, mais son coût est ignoré).
+                            visible: root.valeur && root.saisie-quantite.to-float() >= 0;
                         }
                     }
                 }
@@ -429,9 +432,11 @@ component OngletMouvements inherits VerticalLayout {
             { title: @tr("Valeur (FCFA)"), min-width: 100px, horizontal-stretch: 1 },
             { title: @tr("Quantité"), min-width: 80px, horizontal-stretch: 1 },
             { title: @tr("Nature"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Référence"), min-width: 90px, horizontal-stretch: 1 },
             { title: @tr("Date"), min-width: 90px, horizontal-stretch: 1 },
         ] : [
             { title: @tr("Date"), min-width: 90px, horizontal-stretch: 1 },
+            { title: @tr("Référence"), min-width: 90px, horizontal-stretch: 1 },
             { title: @tr("Nature"), min-width: 100px, horizontal-stretch: 1 },
             { title: @tr("Quantité"), min-width: 80px, horizontal-stretch: 1 },
             { title: @tr("Valeur (FCFA)"), min-width: 100px, horizontal-stretch: 1 },
@@ -447,9 +452,11 @@ component OngletMouvements inherits VerticalLayout {
             { title: @tr("Stock après"), min-width: 90px, horizontal-stretch: 1 },
             { title: @tr("Quantité"), min-width: 80px, horizontal-stretch: 1 },
             { title: @tr("Nature"), min-width: 100px, horizontal-stretch: 1 },
+            { title: @tr("Référence"), min-width: 90px, horizontal-stretch: 1 },
             { title: @tr("Date"), min-width: 90px, horizontal-stretch: 1 },
         ] : [
             { title: @tr("Date"), min-width: 90px, horizontal-stretch: 1 },
+            { title: @tr("Référence"), min-width: 90px, horizontal-stretch: 1 },
             { title: @tr("Nature"), min-width: 100px, horizontal-stretch: 1 },
             { title: @tr("Quantité"), min-width: 80px, horizontal-stretch: 1 },
             { title: @tr("Stock après"), min-width: 90px, horizontal-stretch: 1 },
@@ -714,8 +721,11 @@ export component PageStock inherits VerticalLayout {
         Tab {
             title: @tr("État du stock");
             OngletEtat {
+                // Changer l'index par le code ne déclenche pas « selected » de la
+                // liste : le filtre des mouvements est relancé ici.
                 voir-mouvements => {
                     StockApi.produit-mouvements = StockApi.produit-de-la-selection();
+                    mouvements.filtrer();
                     onglets.current-index = 1;
                 }
             }
