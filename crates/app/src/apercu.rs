@@ -255,11 +255,6 @@ mod tests {
     use kadenz_stockage::parametres::Parametres;
     use kadenz_stockage::tiers::{self, FicheTiers, TypeTiers};
 
-    /// Essai A1 sans écran : un brouillon de devis et un devis de plusieurs pages
-    /// sont produits comme pour l'aperçu, puis chaque page est rendue comme à
-    /// l'écran. Avec la variable KADENZ_ESSAI_APERCU (un dossier), les pages y
-    /// sont écrites en RGBA brut (nom-page-largeurxhauteur.rgba) pour un contrôle
-    /// à l'oeil.
     #[test]
     fn largeur_de_rendu_selon_l_ecran() {
         assert_eq!(largeur_rendu(1.0), LARGEUR_RENDU_MIN);
@@ -267,6 +262,12 @@ mod tests {
         assert_eq!(largeur_rendu(4.0), LARGEUR_RENDU_MAX);
     }
 
+    /// Essai A1 sans écran : un brouillon de devis et un devis de plusieurs pages
+    /// sont produits comme pour l'aperçu, puis chaque page est rendue comme à
+    /// l'écran. Avec la variable KADENZ_ESSAI_APERCU (un dossier), les pages y
+    /// sont écrites en RGBA brut (nom-page-largeurxhauteur.rgba) pour un contrôle
+    /// à l'oeil. Le temps de rendu seul est affiché (`--nocapture`) à la largeur
+    /// d'un écran à 100 % et à 200 % ; `hayro` est optimisé même en développement.
     #[test]
     fn pages_de_l_apercu() {
         let mut conn = kadenz_stockage::ouvrir_en_memoire().unwrap();
@@ -326,7 +327,13 @@ mod tests {
             let nombre = pdf.pages().len();
             assert!(nombre >= pages_minimum, "{libelle} : {nombre} page(s)");
             for rang in 0..nombre {
-                let debut = std::time::Instant::now();
+                for echelle in [1.0, 2.0] {
+                    let debut = std::time::Instant::now();
+                    let (l, h) =
+                        rendre_page(&pdf, rang, largeur_rendu(echelle), |_, l, h| (l, h)).unwrap();
+                    let duree = debut.elapsed();
+                    eprintln!("{nom}, page {}, {l} x {h} px : {duree:?}", rang + 1);
+                }
                 let (l, h, sombres) = rendre_page(&pdf, rang, LARGEUR_RENDU_MIN, |pixels, l, h| {
                     if let Some(dossier) = &dossier {
                         let fichier = format!(
@@ -340,7 +347,6 @@ mod tests {
                     (l, h, pixels.chunks(4).filter(|p| p[0] < 128).count())
                 })
                 .unwrap();
-                eprintln!("{nom}, page {} : {:?}", rang + 1, debut.elapsed());
                 assert_eq!(l, LARGEUR_RENDU_MIN as u32);
                 assert!((1740..=1760).contains(&h), "proportions A4 : {h}");
                 assert!(sombres > 1000, "{libelle}, page {} blanche", rang + 1);
