@@ -13,7 +13,7 @@ Règles suivies :
 - ni italique, ni tiret cadratin, ni barre d'accent sur un seul côté.
 
 Usage : py -3.14 generer_micrographies.py (fontTools requis, pour generer.py)
-Sorties : index.html et propositions-micrographies.png, à côté de ce fichier (Chrome requis).
+Sorties : index.html, propositions-micrographies.png et micrographies/M1-nuit.png à M10-une-couleur.png (Chrome requis).
 """
 
 import importlib.util
@@ -26,7 +26,7 @@ from pathlib import Path
 ICI = Path(__file__).resolve().parent
 MARQUE = ICI.parent
 CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-LARGEUR_PAGE, HAUTEUR_PAGE = 2640, 6120
+LARGEUR_PAGE = 2640
 
 
 def charger(nom, chemin):
@@ -283,7 +283,7 @@ micro("M9", "Colonnes", "Affiche A3, dos du carnet, mur du stand", f"""
 # M10 Sept langues (référence INTERNAL RESEARCH UNIT)
 micro("M10", "Sept langues", "Page Langues du futur site, diapositive, encart du manuel", f"""
 <div class="trame">
-  <div class="pile" style="gap:40px;padding:60px 40px">
+  <div class="pile" style="gap:40px">
     <div class="rang" style="gap:40px;align-items:center">
       <div class="gs" style="font-size:50px;line-height:.98;text-transform:uppercase;white-space:nowrap">Interface<br>en sept<br>langues</div>
       <div class="pile" style="gap:16px">
@@ -291,7 +291,7 @@ micro("M10", "Sept langues", "Page Langues du futur site, diapositive, encart du
         <div class="langues">{''.join(f'<span>{c}</span>' for c in ('ZH', 'TR', 'ES'))}<span class="vide">{piece('disque', 22)}</span></div>
       </div>
     </div>
-    <div class="moyen" style="font-size:32px">Langue choisie par compte, documents clients en français</div>
+    <div class="moyen" style="font-size:32px">Langue choisie par compte,<br>documents clients en français</div>
   </div>
 </div>""")
 
@@ -301,14 +301,19 @@ CSS = """
 @font-face{font-family:Inter;src:url(../planches/polices/Inter.woff2) format("woff2");font-weight:100 900}
 @font-face{font-family:"Space Grotesk";src:url(../planches/polices/SpaceGrotesk.ttf) format("truetype");font-weight:300 700}
 *{box-sizing:border-box;margin:0;padding:0}
+.contenu{width:640px}
+figure{margin:0}
 em,i{font-style:normal}
-html,body{background:#F4F5F9;color:#1F2933;font-family:Inter,sans-serif}
-body{width:2640px;height:6120px;overflow:hidden;padding:80px}
+html,body{color:#1F2933;font-family:Inter,sans-serif}
+body.page{background:#F4F5F9;width:2640px;padding:80px}
+body.seule{background:transparent;display:inline-block}
+body.seule .carte{display:block}
+body.seule .clair{background:transparent;border:none}
 h1{font-family:"Space Grotesk";font-size:56px;font-weight:700;color:#1A2259;letter-spacing:-.01em}
 .intro{font-size:24px;line-height:1.5;color:#52606D;max-width:1700px;margin-top:16px}
 h2{font-family:"Space Grotesk";font-size:36px;font-weight:700;color:#1A2259;margin:70px 0 30px}
-.planche{display:grid;grid-template-columns:repeat(3,800px);gap:60px 40px;margin-top:50px}
-.une-couleur{display:grid;grid-template-columns:repeat(5,400px);gap:30px 20px}
+.planche{display:grid;grid-template-columns:repeat(3,736px);justify-content:space-between;align-items:start;gap:60px 40px;margin-top:50px}
+.une-couleur{display:grid;grid-template-columns:repeat(5,368px);justify-content:space-between;align-items:start;gap:40px 20px}
 .une-couleur .carte{zoom:.5}
 .legende{margin-top:16px;font-size:22px;line-height:1.4}
 .legende b{color:#1A2259;font-weight:700}
@@ -321,8 +326,7 @@ h2{font-family:"Space Grotesk";font-size:36px;font-weight:700;color:#1A2259;marg
 
 /* carte : jetons de couleur, version Nuit par défaut */
 .carte{--fond:#1A2259;--encre:#FFFFFF;--ambre:#E3A23B;--doux:#C5CAE0;
-  width:800px;height:1000px;background:var(--fond);color:var(--encre);padding:0 80px;
-  display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+  display:inline-block;vertical-align:top;background:var(--fond);color:var(--encre);padding:48px;overflow:hidden}
 .clair{--fond:#FFFFFF;--encre:#1A2259;--ambre:#1A2259;--doux:#1A2259;border:1px solid #D9DCE3}
 .carte svg{display:block;flex:none}
 .pile{display:flex;flex-direction:column}
@@ -382,10 +386,7 @@ h2{font-family:"Space Grotesk";font-size:36px;font-weight:700;color:#1A2259;marg
 .grille3 .col2{grid-column:span 2}
 .grille3 .tuile{border:4px solid var(--encre);padding:18px;justify-self:start}
 .grille3 .cadre-motif.grand{justify-self:end}
-.trame{position:relative;margin:0 -30px;padding:30px;
-  background-image:radial-gradient(circle,var(--encre) 4px,transparent 4.5px);
-  background-size:calc(50% - 15px) calc(50% - 15px);background-position:15px 15px}
-.trame>.pile{background:var(--fond)}
+.trame{position:relative}
 .langues{display:flex;gap:10px}
 .langues span{width:62px;height:62px;border:3px solid var(--encre);display:flex;align-items:center;justify-content:center;
   font-family:"Space Grotesk";font-weight:700;font-size:24px;letter-spacing:.02em}
@@ -393,8 +394,23 @@ h2{font-family:"Space Grotesk";font-size:36px;font-weight:700;color:#1A2259;marg
 """
 
 
+MARGE = 48          # marge égale sur les quatre côtés, comme un tampon
+CONTENU = 640       # largeur du contenu de chaque micrographie
+
+
 def carte(corps, classe=""):
-    return f'<div class="carte {classe}">{corps}</div>'
+    libre = ' style="width:auto"' if 'class="trame"' in corps else ""   # M10 : la trame suit son contenu
+    return f'<div class="carte {classe}"><div class="contenu"{libre}>{corps}</div></div>'
+
+
+MESURE = """<script>document.fonts.ready.then(()=>{const c=document.querySelector('body.seule .carte');
+const r=(c||document.body).getBoundingClientRect();
+document.body.setAttribute('data-mesure',Math.ceil(r.height)+'x'+Math.ceil(r.width));});</script>"""
+
+
+def document(corps, classe_body="", titre="Micrographies Kadenz"):
+    return (f'<!doctype html>\n<html lang="fr"><head><meta charset="utf-8"><title>{titre}</title>'
+            f'<style>{CSS}</style></head><body class="{classe_body}">{corps}{MESURE}</body></html>\n')
 
 
 def page():
@@ -403,6 +419,12 @@ def page():
         for code, titre, usages, corps in M)
     notes = """
 <div class="notes">
+  <h3>Format</h3>
+  <ul>
+    <li>Chaque micrographie est rognée sur son contenu, avec la même marge sur les quatre côtés, comme un tampon.</li>
+    <li>Chacune existe aussi en image séparée, dans le dossier micrographies : version Nuit et version une couleur
+        sur fond transparent.</li>
+  </ul>
   <h3>Sources des textes</h3>
   <ul>
     <li>README et cahier des charges : gestion commerciale, Windows 10 | 11 64 bits, SQLite chiffrée,
@@ -420,25 +442,49 @@ def page():
     clairs = "".join(
         f'<figure>{carte(corps, "clair")}<figcaption class="legende"><b>{code}</b> <span>{titre}</span></figcaption></figure>'
         for code, titre, usages, corps in M)
-    return f"""<!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><title>Micrographies Kadenz</title><style>{CSS}</style></head>
-<body>
+    return document(f"""
 <h1>Micrographies Kadenz, propositions du 2026-11-16</h1>
-<p class="intro">Dix compositions dans l'esprit des références fournies : étiquettes, fiches et écussons à poser sur
-les supports de la marque. Fond Nuit, encre blanche, Ambre seulement pour le troisième temps ; en bas, la même
-série en une couleur pour l'impression.</p>
+<p class="intro">Dix compositions dans l'esprit des références fournies, rognées comme des tampons : étiquettes,
+fiches et écussons à poser sur les supports de la marque. Fond Nuit, encre blanche, Ambre seulement pour le
+troisième temps ; en bas, la même série en une couleur pour l'impression.</p>
 <div class="planche">{sombres}{notes}</div>
 <h2>Version une couleur</h2>
-<div class="une-couleur">{clairs}</div>
-</body></html>
-"""
+<div class="une-couleur">{clairs}</div>""", "page")
+
+
+def chrome(*args):
+    return subprocess.run([CHROME, "--headless=new", "--hide-scrollbars", "--virtual-time-budget=4000", *args],
+                          check=True, capture_output=True, text=True, encoding="utf-8").stdout
+
+
+def mesurer(html):
+    m = re.search(r'data-mesure="(\d+)x(\d+)"', chrome("--window-size=2640,1000", "--dump-dom", html.as_uri()))
+    return int(m.group(1)), int(m.group(2))
+
+
+def photographier(html, png, largeur, hauteur, echelle=1, transparent=False):
+    extra = ["--default-background-color=00000000"] if transparent else []
+    chrome(*extra, f"--force-device-scale-factor={echelle}", f"--window-size={largeur},{hauteur}",
+           f"--screenshot={png}", html.as_uri())
 
 
 if __name__ == "__main__":
     html = ICI / "index.html"
     html.write_text(page(), encoding="utf-8")
     png = ICI / "propositions-micrographies.png"
-    subprocess.run([CHROME, "--headless=new", "--hide-scrollbars", "--force-device-scale-factor=1",
-                    f"--window-size={LARGEUR_PAGE},{HAUTEUR_PAGE}", f"--screenshot={png}",
-                    "--virtual-time-budget=3000", html.as_uri()], check=True, capture_output=True)
-    print(html, png, sep="\n")
+    hauteur, _ = mesurer(html)
+    photographier(html, png, LARGEUR_PAGE, hauteur)
+    print(png)
+
+    # une image par micrographie, rognée au bord de la carte (deux fois la taille, pour l'impression)
+    dossier = ICI / "micrographies"
+    dossier.mkdir(exist_ok=True)
+    tmp = ICI / "_seule.html"
+    for code, titre, usages, corps in M:
+        for classe, suffixe, transparent in (("", "nuit", False), ("clair", "une-couleur", True)):
+            tmp.write_text(document(carte(corps, classe), "seule", f"{code} {titre}"), encoding="utf-8")
+            h, w = mesurer(tmp)
+            sortie = dossier / f"{code}-{suffixe}.png"
+            photographier(tmp, sortie, w, h, 2, transparent)
+            print(sortie, f"{w} x {h}")
+    tmp.unlink()
