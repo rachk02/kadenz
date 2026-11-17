@@ -10,3 +10,6 @@ docs_of_interest/
 
 # Clé privée de l'éditeur : jamais dans le dépôt.
 kadenz-cle-privee.hex
+
+# Caches de Python (scripts de la marque)
+__pycache__/

@@ -2,7 +2,9 @@
 
 Format : une section par version, la plus récente en haut. Numérotation [SemVer](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORRECTIF`, tag Git `vMAJEUR.MINEUR.CORRECTIF`.
 
-## [Non publié] - phase 2
+## [1.0.0] - 2026-11-17
+
+Première version de la phase 2 : serveur chez le client, postes reliés, travail hors connexion, accès à distance, stock et export comptable SYSCOHADA. Les installateurs ne sont pas signés : Windows SmartScreen affiche un avertissement à l'installation. Les postes en 0.2.2 (pont V1) ne proposent pas cette version : elle s'installe séparément.
 
 ### Ajouté
 - Jalon F1 des fondations : identifiant global (UUID version 7) sur les comptes, tiers, produits, documents et règlements, et identifiant de l'entreprise, posés aussi sur les bases V1 migrées ; crate `kadenz-protocole` (opérations, résultats, changements) ; application des opérations des postes par les règles habituelles du stockage, une opération renvoyée recevant le même résultat sans être appliquée deux fois (une validation rend toujours le même numéro) ; conflits entre postes, opérations en attente pour un compte ou un droit hors connexion, suite numérotée des changements tenue par la base (migration 0007). Rien n'est encore visible à l'écran.
@@ -16,6 +18,16 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 - Jalon F6, première partie côté serveur (F6a) : seules les écritures permises hors connexion sont reçues comme telles (décision 50) ; trancher un conflit (version du serveur, du poste ou composée champ par champ) et accepter ou rejeter une opération en attente (Admin), avec le journal d'audit ; liste des opérations suspendues et état présent de lignes ; protocole en version 3.
 - Jalon F6, deuxième partie côté poste (F6b) : hors connexion, les écritures permises sont appliquées à titre provisoire dans la copie et mises dans une file d'envoi (migration 0012), même par un compte connecté en local ; au retour du serveur, la file part dans l'ordre, une écriture refusée est défaite par l'état présent du serveur, une écriture en conflit ou en attente est suspendue puis renvoyée pour apprendre la décision ; liste des brouillons à valider au retour ; nombre d'écritures à envoyer signalé à l'écran. Les écritures d'un compte désactivé ou dont le mot de passe a changé pendant la coupure partent sous la session d'un autre compte et sont toujours mises en attente pour l'Admin (décision 52, migration 0013). Un serveur arrêté ferme ses sessions à leur requête suivante. Rien n'est encore visible à l'écran.
 - Jalon F5e : essai de bout en bout à deux postes sur le même serveur ; une fiche créée sur un poste paraît sur l'autre, deux validations simultanées reçoivent deux numéros consécutifs de la même série, et chaque poste reçoit le numéro attribué sur l'autre.
+- Jalon F4, écrans : fenêtre d'administration du serveur (`KadenzAdmin`) et rubrique « Serveur » du poste ; inscription d'un poste par le code complet ou par le code court avec confirmation de l'empreinte, recherche du serveur sur le réseau local.
+- Jalon F5, écrans : poste relié au serveur (écritures par le serveur, licence lue sur le serveur, premier lancement par code d'inscription).
+- Jalon F6, écrans : conflits et opérations en attente tranchés par l'Admin, écritures à envoyer signalées, brouillons à valider au retour du serveur.
+- Jalon F7 : reprise d'une base V1 sur le serveur (assistant de reprise sur le poste) ; sauvegardes et restauration du serveur, réglées dans sa fenêtre (mot de passe obligatoire).
+- Jalon F8 : accès à distance par un relais (rubrique « Accès à distance » du poste, relais réglé dans la fenêtre du serveur), retour en direct au bureau ; image de conteneur du relais.
+- Jalon F9 : portail de l'éditeur et des revendeurs (crate `kadenz-portail`) : entreprises, paiements enregistrés et émission des licences d'abonnement ; outil de l'éditeur, non installé sur les postes.
+- Jalon F10 : manifeste de mise à jour de génération `v2`, qui désigne aussi le paquet du serveur ; le serveur se met à jour avant les postes (indicateurs « Mise à jour de ce poste requise » et « Mise à jour du serveur attendue »), avec la section « Mise à jour du serveur » de sa fenêtre ; empreinte et signature vérifiées avant toute installation.
+- Stock (jalons S1 à S3) : mouvements créés par la réception, la livraison confirmée, l'ajustement et l'inventaire, coût moyen, stock négatif signalé ; rubrique Stock (état à une date, mouvements, inventaire en deux temps, ajustement), case « Suivi en stock » et colonnes Stock et Valeur des produits.
+- Export comptable SYSCOHADA (jalons C1 à C3) : paramètres comptables, écritures des ventes et des encaissements, TVA collectée, clôture d'un mois ; rubrique Comptabilité (journal, TVA collectée), export CSV et Excel.
+- Aperçu et impression (jalons A1 à A4) : bouton « Aperçu » sur les six types de documents (Ctrl+P), pages rendues dans Kadenz ; depuis l'aperçu, « Imprimer » (fenêtre d'impression de Windows : imprimante, copies, plage de pages ; page réduite seulement si elle ne tient pas sur le papier, avec un message) et « Enregistrer en PDF ». Les états qui ont un export PDF (état du stock, feuille de comptage, TVA collectée, registre des règlements, liste et lettre de relance) s'ouvrent aussi dans l'aperçu.
 
 ## [0.2.2] - 2026-11-12
 
