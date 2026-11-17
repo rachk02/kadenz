@@ -369,7 +369,8 @@ pub(crate) fn liste_relances(conn: &Connection) -> Result<(Vec<u8>, String), Str
             .collect(),
         totaux: vec![total(
             match echues.len() {
-                1 => "Reste dû (1 facture)".to_string(),
+                // En français, 0 et 1 sont au singulier.
+                n @ (0 | 1) => format!("Reste dû ({n} facture)"),
                 n => format!("Reste dû ({n} factures)"),
             },
             reste,
