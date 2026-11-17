@@ -642,13 +642,14 @@ mod tests {
     }
 
     /// Nombre de pages annoncé à la fin d'un flux PostScript (`%%Pages: n`),
-    /// une fois le flux complet (`%%EOF`, suivi ou non de la fin de travail
-    /// Ctrl-D).
+    /// une fois le flux complet (`%%EOF` parmi ses 256 derniers octets).
     #[cfg(windows)]
     fn pages_postscript(flux: &[u8]) -> Option<usize> {
         let texte = String::from_utf8_lossy(flux);
-        let fin = texte.trim_end_matches(|c: char| c.is_whitespace() || c == '\u{4}');
-        if !fin.ends_with("%%EOF") {
+        // %%EOF dans les derniers octets : un pilote peut le faire suivre de la
+        // fin de travail (Ctrl-D) ou d'une commande PJL (ESC%-12345X).
+        let queue = &flux[flux.len().saturating_sub(256)..];
+        if !queue.windows(5).any(|f| f == b"%%EOF") {
             return None;
         }
         texte
@@ -656,6 +657,20 @@ mod tests {
             .rev()
             .find_map(|l| l.strip_prefix("%%Pages:"))
             .and_then(|n| n.trim().parse().ok())
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn pages_d_un_flux_postscript() {
+        let entete = "%!PS-Adobe-3.0\r\n%%Pages: (atend)\r\n%%Page: 1 1\r\n";
+        // Flux de Wondershare : trailer puis fin de travail Ctrl-D.
+        let flux = format!("{entete}%%Trailer\r\n%%Pages: 6\r\n%%EOF\r\n\u{4}");
+        assert_eq!(pages_postscript(flux.as_bytes()), Some(6));
+        // Pilote avec PJL après %%EOF.
+        let flux = format!("{entete}%%Pages: 2\r\n%%EOF\r\n\u{1b}%-12345X");
+        assert_eq!(pages_postscript(flux.as_bytes()), Some(2));
+        // Flux encore incomplet : pas de compte.
+        assert_eq!(pages_postscript(entete.as_bytes()), None);
     }
 
     fn sombres(pixels: &[u8]) -> usize {
@@ -748,6 +763,22 @@ mod tests {
                     sortie.display()
                 );
                 continue;
+            }
+            // Un fichier écrit avec un mauvais compte de pages (copies ou plage
+            // fausses) est un échec, jamais un « fichier non écrit ».
+            if imprime.is_none()
+                && let Ok(lu) = std::fs::read(&sortie)
+            {
+                if lu.starts_with(b"%!PS") {
+                    panic!(
+                        "{libelle} : PostScript de {:?} page(s), {attendues} attendues",
+                        pages_postscript(&lu)
+                    );
+                }
+                panic!(
+                    "{libelle} : PDF de {:?} page(s), {attendues} attendues",
+                    Pdf::new(lu).ok().map(|p| p.pages().len())
+                );
             }
             // Un pilote tiers peut ignorer le fichier demandé et ouvrir sa propre
             // boîte d'enregistrement : l'envoi a réussi, le fichier est ailleurs.
