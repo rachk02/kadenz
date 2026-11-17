@@ -775,6 +775,12 @@ mod tests {
                         pages_postscript(&lu)
                     );
                 }
+                if !lu.starts_with(b"%PDF") {
+                    panic!(
+                        "{libelle} : format inconnu (premiers octets : {:?})",
+                        String::from_utf8_lossy(&lu[..lu.len().min(16)])
+                    );
+                }
                 panic!(
                     "{libelle} : PDF de {:?} page(s), {attendues} attendues",
                     Pdf::new(lu).ok().map(|p| p.pages().len())
