@@ -483,6 +483,164 @@ mod tests {
         }
     }
 
+    /// Essai A4 sans écran : les six états qui passent par l'aperçu (état du
+    /// stock, feuille de comptage, TVA collectée, registre des règlements, liste
+    /// et lettre de relance) sont produits sur une base où une facture à 18 % est
+    /// échue depuis dix jours et réglée en partie, puis chaque page est rendue
+    /// comme à l'écran. Avec KADENZ_ESSAI_APERCU (un dossier), les pages y sont
+    /// écrites en RGBA brut pour un contrôle à l'oeil.
+    #[test]
+    fn etats_dans_l_apercu() {
+        use chrono::Days;
+        use kadenz_domaine::stock::Stock;
+        use kadenz_stockage::comptabilite::{self, Periode};
+        use kadenz_stockage::reglements::{self, FiltreRegistre, SaisieReglement};
+        use kadenz_stockage::stock::LigneEtat;
+
+        let mut conn = kadenz_stockage::ouvrir_en_memoire().unwrap();
+        let admin = installation::installer(
+            &mut conn,
+            &InstallationInitiale {
+                entreprise: Entreprise {
+                    nom: "Entreprise Essai".into(),
+                    localisation: "Ville Fictive".into(),
+                    responsable_comptabilite: "Nom Fictif".into(),
+                    ..Default::default()
+                },
+                admin: NouvelUtilisateur {
+                    nom_complet: "Admin Essai".into(),
+                    identifiant: "admin".into(),
+                    mot_de_passe: "motdepasse1".into(),
+                    role: Role::Admin,
+                },
+                parametres: Parametres::default(),
+            },
+        )
+        .unwrap();
+        let mut fiche = FicheTiers::vide(TypeTiers::Client);
+        fiche.nom = "Client Alpha".into();
+        fiche.adresse = "02 BP 1111, Ville Fictive".into();
+        let client = tiers::creer(&conn, &admin, &fiche).unwrap().id;
+        let jour = chrono::Local::now().date_naive();
+        let saisie = Saisie {
+            tiers_id: Some(client),
+            taux: Taux {
+                remise: 0,
+                tva: 1800,
+                retenue: 0,
+            },
+            date_echeance: jour.checked_sub_days(Days::new(10)),
+            lignes: vec![LigneSaisie {
+                designation: "Pelle".into(),
+                prix: 100_000,
+                quantite: UNE_UNITE,
+                ..Default::default()
+            }],
+            ..Saisie::vide(jour.checked_sub_days(Days::new(40)).unwrap())
+        };
+        let facture =
+            documents::creer_brouillon(&mut conn, &admin, TypeDocument::Facture, &saisie).unwrap();
+        documents::valider(&mut conn, &admin, facture).unwrap();
+        let reglement = SaisieReglement {
+            date: jour,
+            montant: 40_000,
+            mode_paiement: "Espèce".into(),
+            reference: String::new(),
+        };
+        reglements::ajouter(&mut conn, &admin, facture, &reglement).unwrap();
+
+        let stock = vec![
+            LigneEtat {
+                produit_id: 1,
+                reference: "PEL-01".into(),
+                designation: "Pelle".into(),
+                stock: Stock {
+                    quantite: 12 * UNE_UNITE,
+                    valeur: 600_000,
+                    dernier_cout: 50_000,
+                },
+            },
+            LigneEtat {
+                produit_id: 2,
+                reference: "SEA-02".into(),
+                designation: "Seau".into(),
+                stock: Stock {
+                    quantite: 30 * UNE_UNITE,
+                    valeur: 90_000,
+                    dernier_cout: 3_000,
+                },
+            },
+        ];
+        let feuille: Vec<_> = stock
+            .iter()
+            .map(|l| crate::stock::LigneFeuille {
+                reference: l.reference.clone(),
+                designation: l.designation.clone(),
+                theorique: l.stock.quantite,
+            })
+            .collect();
+        let periode = Periode {
+            du: jour.checked_sub_days(Days::new(60)).unwrap(),
+            au: jour,
+        };
+        let tva = comptabilite::tva_collectee(&conn, periode).unwrap();
+        assert!(!tva.is_empty(), "TVA collectée vide");
+
+        let etats = [
+            (
+                "état du stock",
+                crate::pdf::etat_stock(&conn, &stock, None, true),
+            ),
+            (
+                "feuille de comptage",
+                crate::pdf::feuille_comptage(&conn, &feuille, false),
+            ),
+            (
+                "TVA collectée",
+                crate::pdf::tva_collectee(&conn, &tva, &periode),
+            ),
+            (
+                "registre des règlements",
+                crate::pdf::registre_reglements(&conn, &FiltreRegistre::default()),
+            ),
+            ("liste des relances", crate::pdf::liste_relances(&conn)),
+            (
+                "lettre de relance",
+                crate::pdf::lettre_relance(&conn, facture),
+            ),
+        ];
+        let dossier = std::env::var("KADENZ_ESSAI_APERCU").ok();
+        for (libelle, resultat) in etats {
+            let (octets, nom) = resultat.unwrap_or_else(|e| panic!("{libelle} : {e}"));
+            let pdf = Pdf::new(octets).unwrap_or_else(|_| panic!("{libelle} illisible"));
+            let nombre = pdf.pages().len();
+            assert!(nombre >= 1, "{libelle} sans page");
+            for rang in 0..nombre {
+                let (l, h, sombres) = rendre_page(&pdf, rang, LARGEUR_RENDU_MIN, |pixels, l, h| {
+                    if let Some(dossier) = &dossier {
+                        let fichier = format!(
+                            "{}-p{}-{l}x{h}.rgba",
+                            nom.trim_end_matches(".pdf"),
+                            rang + 1
+                        );
+                        std::fs::write(std::path::Path::new(dossier).join(fichier), pixels)
+                            .unwrap();
+                    }
+                    (l, h, sombres(pixels))
+                })
+                .unwrap();
+                assert_eq!(l, LARGEUR_RENDU_MIN as u32);
+                // A4 en portrait (1 754) ou en paysage (877).
+                assert!(
+                    (1740..=1760).contains(&h) || (870..=885).contains(&h),
+                    "{libelle}, proportions : {l} x {h}"
+                );
+                assert!(sombres > 1000, "{libelle}, page {} blanche", rang + 1);
+                eprintln!("{libelle} ({nom}), page {} : {l} x {h}", rang + 1);
+            }
+        }
+    }
+
     fn sombres(pixels: &[u8]) -> usize {
         pixels.chunks(4).filter(|p| p[0] < 128).count()
     }
