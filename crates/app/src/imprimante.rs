@@ -37,8 +37,9 @@ use windows_sys::Win32::System::Memory::{
     GMEM_MOVEABLE, GlobalAlloc, GlobalLock, GlobalSize, GlobalUnlock,
 };
 use windows_sys::Win32::UI::Controls::Dialogs::{
-    PD_NOCURRENTPAGE, PD_NOSELECTION, PD_PAGENUMS, PD_RESULT_APPLY, PD_RESULT_PRINT,
-    PD_USEDEVMODECOPIESANDCOLLATE, PRINTDLGEXW, PRINTPAGERANGE, PrintDlgExW, START_PAGE_GENERAL,
+    PD_HIDEPRINTTOFILE, PD_NOCURRENTPAGE, PD_NOSELECTION, PD_PAGENUMS, PD_RESULT_APPLY,
+    PD_RESULT_PRINT, PD_USEDEVMODECOPIESANDCOLLATE, PRINTDLGEXW, PRINTPAGERANGE, PrintDlgExW,
+    START_PAGE_GENERAL,
 };
 
 use crate::traduction::trf;
@@ -129,7 +130,10 @@ pub(crate) fn choisir(proprietaire: HWND, nombre_pages: usize) -> Result<Choix, 
             pd.hDevNames = bloc_global(&r.devnames);
         }
     });
-    pd.Flags = PD_NOSELECTION | PD_NOCURRENTPAGE | PD_USEDEVMODECOPIESANDCOLLATE;
+    // « Imprimer dans un fichier » est masqué : Kadenz enverrait quand même le
+    // document à l'imprimante, et l'aperçu a déjà « Enregistrer en PDF ».
+    pd.Flags =
+        PD_NOSELECTION | PD_NOCURRENTPAGE | PD_USEDEVMODECOPIESANDCOLLATE | PD_HIDEPRINTTOFILE;
     pd.nPageRanges = 0;
     pd.nMaxPageRanges = PLAGES_MAX as u32;
     pd.lpPageRanges = plages.as_mut_ptr();
@@ -189,17 +193,16 @@ pub(crate) fn choisir(proprietaire: HWND, nombre_pages: usize) -> Result<Choix, 
 
     let imprimante = chaine_devnames(&devnames, 1);
     let port = chaine_devnames(&devnames, 2);
-    let mut sequence: Vec<usize> = Vec::new();
-    if pd.Flags & PD_PAGENUMS != 0 {
-        for plage in plages.iter().take(pd.nPageRanges as usize) {
-            let debut = plage.nFromPage.clamp(1, nombre);
-            let fin = plage.nToPage.clamp(debut, nombre);
-            sequence.extend((debut..=fin).map(|p| p as usize - 1));
-        }
-    }
-    if sequence.is_empty() {
-        sequence = (0..nombre as usize).collect();
-    }
+    let choisies: Vec<(u32, u32)> = if pd.Flags & PD_PAGENUMS != 0 {
+        plages
+            .iter()
+            .take(pd.nPageRanges as usize)
+            .map(|p| (p.nFromPage, p.nToPage))
+            .collect()
+    } else {
+        Vec::new()
+    };
+    let sequence = sequence_des_pages(&choisies, nombre);
 
     // Copies : avec PD_USEDEVMODECOPIESANDCOLLATE, la fenêtre grise le nombre
     // de copies quand le pilote ne sait pas les faire ; c'est donc le pilote qui
@@ -235,6 +238,22 @@ pub(crate) fn choisir(proprietaire: HWND, nombre_pages: usize) -> Result<Choix, 
         devmode: Some(devmode),
         pages,
     }))
+}
+
+/// Rangs des pages à envoyer (à partir de 0) pour les plages choisies dans la
+/// fenêtre d'impression (numéros à partir de 1, bornés au document, dans
+/// l'ordre saisi) ; toutes les pages quand aucune plage n'est choisie.
+fn sequence_des_pages(plages: &[(u32, u32)], nombre: u32) -> Vec<usize> {
+    let mut sequence: Vec<usize> = Vec::new();
+    for &(du, au) in plages {
+        let debut = du.clamp(1, nombre);
+        let fin = au.clamp(debut, nombre);
+        sequence.extend((debut..=fin).map(|p| p as usize - 1));
+    }
+    if sequence.is_empty() {
+        sequence = (0..nombre as usize).collect();
+    }
+    sequence
 }
 
 /// Pages dans l'ordre d'envoi pour `copies` copies faites par Kadenz.
@@ -653,6 +672,20 @@ mod tests {
         let place = placer(&paysage, A4_PT.0, A4_PT.1, &Marges::default());
         assert!(place.reduite);
         assert!(place.hauteur <= paysage.zone_hauteur + 1e-6);
+    }
+
+    #[test]
+    fn pages_selon_les_plages_choisies() {
+        // Aucune plage : tout le document.
+        assert_eq!(sequence_des_pages(&[], 3), vec![0, 1, 2]);
+        // « 1-2,5 » sur un document de 5 pages, comme l'exemple de Windows.
+        assert_eq!(sequence_des_pages(&[(1, 2), (5, 5)], 5), vec![0, 1, 4]);
+        // Plage plus longue que le document : bornée à la dernière page.
+        assert_eq!(sequence_des_pages(&[(2, 9)], 3), vec![1, 2]);
+        // Plage saisie à l'envers : seule sa première page.
+        assert_eq!(sequence_des_pages(&[(3, 1)], 3), vec![2]);
+        // Page 1 d'un document d'une page (essai à l'écran du jalon A3).
+        assert_eq!(sequence_des_pages(&[(1, 1)], 1), vec![0]);
     }
 
     #[test]

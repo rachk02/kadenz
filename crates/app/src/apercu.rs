@@ -641,6 +641,23 @@ mod tests {
         }
     }
 
+    /// Nombre de pages annoncé à la fin d'un flux PostScript (`%%Pages: n`),
+    /// une fois le flux complet (`%%EOF`, suivi ou non de la fin de travail
+    /// Ctrl-D).
+    #[cfg(windows)]
+    fn pages_postscript(flux: &[u8]) -> Option<usize> {
+        let texte = String::from_utf8_lossy(flux);
+        let fin = texte.trim_end_matches(|c: char| c.is_whitespace() || c == '\u{4}');
+        if !fin.ends_with("%%EOF") {
+            return None;
+        }
+        texte
+            .lines()
+            .rev()
+            .find_map(|l| l.strip_prefix("%%Pages:"))
+            .and_then(|n| n.trim().parse().ok())
+    }
+
     fn sombres(pixels: &[u8]) -> usize {
         pixels.chunks(4).filter(|p| p[0] < 128).count()
     }
@@ -650,10 +667,12 @@ mod tests {
     /// l'imprimante virtuelle « Microsoft Print to PDF », ou à celle que nomme
     /// KADENZ_ESSAI_IMPRIMANTE, désignée par son nom exact (jamais l'imprimante
     /// par défaut), qui les écrit dans ce dossier si son pilote suit le fichier
-    /// de sortie demandé ; le
-    /// devis long part en deux copies assemblées faites par Kadenz. Les PDF
-    /// imprimés sont relus : nombre de pages, pages non blanches, première page
-    /// écrite en RGBA brut pour un contrôle à l'oeil.
+    /// de sortie demandé ; le devis long part en deux copies assemblées faites
+    /// par Kadenz. Un PDF imprimé est relu : nombre de pages, pages non
+    /// blanches, première page écrite en RGBA brut pour un contrôle à l'oeil.
+    /// Un pilote PostScript (« Wondershare PDFelement ») écrit dans le fichier le
+    /// flux brut destiné à l'imprimante : on y vérifie le nombre de pages
+    /// annoncé (`%%Pages:`).
     #[cfg(windows)]
     #[test]
     fn impression_sur_print_to_pdf() {
@@ -703,15 +722,32 @@ mod tests {
             assert_eq!(feuilles.last(), Some(&(attendues, attendues)));
             // Le spouleur écrit le fichier après EndDoc : on attend qu'il soit lisible.
             let mut imprime = None;
+            let mut postscript = false;
             for _ in 0..60 {
                 std::thread::sleep(std::time::Duration::from_millis(500));
-                if let Ok(lu) = std::fs::read(&sortie)
-                    && let Ok(pdf) = Pdf::new(lu)
+                let Ok(lu) = std::fs::read(&sortie) else {
+                    continue;
+                };
+                if lu.starts_with(b"%!PS") {
+                    if pages_postscript(&lu) == Some(attendues) {
+                        postscript = true;
+                        break;
+                    }
+                    continue;
+                }
+                if let Ok(pdf) = Pdf::new(lu)
                     && pdf.pages().len() == attendues
                 {
                     imprime = Some(pdf);
                     break;
                 }
+            }
+            if postscript {
+                eprintln!(
+                    "{} : PostScript de {attendues} page(s), réduite : {reduite}",
+                    sortie.display()
+                );
+                continue;
             }
             // Un pilote tiers peut ignorer le fichier demandé et ouvrir sa propre
             // boîte d'enregistrement : l'envoi a réussi, le fichier est ailleurs.
