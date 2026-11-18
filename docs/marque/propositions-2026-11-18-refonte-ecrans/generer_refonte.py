@@ -36,7 +36,7 @@ JETONS = [
     ("accent-survol", "#E8EAF6", "#2D3A8C", "charte : Indigo"),
     ("champ (fond des saisies)", "#FFFFFF", "#232C6B", "charte : pièces du motif"),
     ("bordure (séparateurs)", "#D9DCE3", "#3A4795", "écart à valider"),
-    ("bordure-champ (contours des champs, boutons secondaires)", "#8A94A6", "#6E7BC9", "écart à valider, clair compris : 3 : 1 visé (actuel #D9DCE3, 1,4 : 1)"),
+    ("bordure-champ (contours des champs, boutons secondaires)", "#7B8794", "#6E7BC9", "écart accepté le 2026-11-18 : 3 : 1 atteint sur blanc et sur fond-lateral (actuel #D9DCE3, 1,4 : 1)"),
     ("focus (champ actif, 2 px)", "#2D3A8C", "#E3A23B", "charte"),
     ("texte", "#1F2933", "#F4F5F9", "charte : Brume"),
     ("texte-secondaire", "#52606D", "#C5CAE0", "charte"),
@@ -48,7 +48,7 @@ JETONS = [
 T = {
     "clair": dict(fond="#FFFFFF", lateral="#F4F5F9", nuit="#1A2259", accent="#2D3A8C", sur_accent="#FFFFFF",
                   survol="#E8EAF6", champ="#FFFFFF", bordure="#D9DCE3", texte="#1F2933", second="#52606D",
-                  ambre="#E3A23B", secondaire_bouton="#FFFFFF", logo="kadenz-logo-horizontal.svg", contour="#8A94A6", focus="#2D3A8C"),
+                  ambre="#E3A23B", secondaire_bouton="#FFFFFF", logo="kadenz-logo-horizontal.svg", contour="#7B8794", focus="#2D3A8C"),
     "sombre": dict(fond="#1A2259", lateral="#232C6B", nuit="#1A2259", accent="#E3A23B", sur_accent="#1A2259",
                    survol="#2D3A8C", champ="#232C6B", bordure="#3A4795", texte="#F4F5F9", second="#C5CAE0",
                    ambre="#E3A23B", secondaire_bouton="#232C6B", logo="kadenz-logo-horizontal-negatif.svg", contour="#6E7BC9", focus="#E3A23B"),
@@ -498,7 +498,7 @@ def planche(pres, assi):
                 ("erreur sur fond", "#F97066", "#1A2259"), ("attente sur fond", "#FDB022", "#1A2259"),
                 ("succes sur fond", "#47CD89", "#1A2259"), ("bordure-champ sur fond (3 : 1 requis)", "#6E7BC9", "#1A2259"), ("bordure-champ sur champ", "#6E7BC9", "#232C6B"),
                 ("focus ambre sur fond", "#E3A23B", "#1A2259"), ("fond du champ sur fond (ne compense pas)", "#232C6B", "#1A2259"),
-                ("séparateur #3A4795 sur fond (décoratif)", "#3A4795", "#1A2259"), ("bordure-champ claire sur blanc", "#8A94A6", "#FFFFFF"),
+                ("séparateur #3A4795 sur fond (décoratif)", "#3A4795", "#1A2259"), ("bordure-champ claire sur blanc", "#7B8794", "#FFFFFF"), ("bordure-champ claire sur fond-lateral", "#7B8794", "#F4F5F9"),
                 ("rappel clair : bordure actuelle sur blanc", "#D9DCE3", "#FFFFFF"),
                 ("rappel clair : texte-secondaire sur blanc", "#52606D", "#FFFFFF")]
     ctr = "".join(f"<tr><td>{a}</td><td>{contraste(b, c):.1f} : 1</td></tr>" for a, b, c in paires_c)
@@ -585,7 +585,7 @@ def planche(pres, assi):
                  notes("Les textes raccourcis, ligne par ligne (tableaux ci-dessus).",
                        "Adresse / boîte postale : visible ou repliée à l'étape Entreprise.",
                        "Image des écrans : trame générée aux couleurs de la marque, ou photos que vous fourniriez.",
-                       "Les valeurs hors charte : panneaux #151C4C, séparateurs #3A4795, contours de champs #6E7BC9 en sombre et #8A94A6 en clair (l'actuel #D9DCE3 n'atteint que 1,4 : 1), couleurs d'état claires (erreur, attente, succes).",
+                       "Les valeurs hors charte : panneaux #151C4C, séparateurs #3A4795, contours de champs #6E7BC9 en sombre et #7B8794 en clair (accepté) (l'actuel #D9DCE3 n'atteint que 1,4 : 1), couleurs d'état claires (erreur, attente, succes).",
                        "Textes raccourcis : chaque texte changé est une nouvelle chaîne à traduire dans les six autres langues ; en arabe, les écrans sont mis en miroir (panneau image de l'autre côté).",
                        "Bouton final de la présentation selon l'édition : multiposte « Rejoindre l'entreprise », "
                        "monoposte « Commencer l'installation ».",
