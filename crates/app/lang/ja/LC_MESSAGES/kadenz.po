@@ -4692,3 +4692,6 @@ msgstr "スレート"
 
 msgid "Anthracite"
 msgstr "アンスラサイト"
+
+msgid "Aucun document à afficher."
+msgstr "表示する書類はありません。"

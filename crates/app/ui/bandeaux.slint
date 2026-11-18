@@ -1,0 +1,273 @@
+// Bandeaux de marque et pièce des listes vides (écrans animés adoptés le 2026-11-18,
+// docs/marque/README.md, section Identité animée ; maquettes :
+// docs/marque/propositions-2026-11-18-ecrans-animes/, fonctions A2 et A2+ de generer.py).
+//
+// - BandeauTableau : bandeau A2 derrière le titre du tableau de bord ; la pièce vedette se
+//   compose en petites pièces ambre, une fois à l'ouverture, puis le bandeau reste calme.
+// - SymboleLignes : symbole A2+ (pièces pleines et en lignes) du bandeau d'À propos.
+// - ListeVide : petite pièce A2 au-dessus du message d'une liste vide.
+// Couleurs et entrée : celles des motifs des écrans refaits (motifs-ecrans.slint). Sans
+// animation (réglage « Animer les transitions... » coupé), tout est affiché d'emblée.
+import { Theme } from "composants.slint";
+import { CouleursMotif, Entree } from "motifs-ecrans.slint";
+
+// Le symbole dans son carré de 256 : centre de chaque pièce et forme de chaque pièce.
+// piece : 0 carré, 1 quart de disque, 2 triangle, 3 disque.
+global Symbole {
+    public pure function centre-x(piece: int) -> float {
+        return piece == 0 || piece == 2 ? 68 : 188;
+    }
+    public pure function centre-y(piece: int) -> float {
+        return piece < 2 ? 68 : 188;
+    }
+    public pure function dans(piece: int, u: float, v: float) -> bool {
+        return piece == 0 ? (u >= 16 && u <= 120 && v >= 16 && v <= 120)
+            : piece == 1 ? (u >= 136 && v <= 120 && (u - 136) * (u - 136) + (v - 120) * (v - 120) <= 105.56 * 105.56)
+            : piece == 2 ? (u >= 16 && v <= 240 && v >= 136 && u - 16 <= v - 136)
+            : (u - 188) * (u - 188) + (v - 188) * (v - 188) <= 53.56 * 53.56;
+    }
+    // Arrivée avec un léger dépassement (easeOutBack).
+    public pure function rebond(x: float) -> float {
+        return 1 + 2.70158 * (x - 1) * (x - 1) * (x - 1) + 1.70158 * (x - 1) * (x - 1);
+    }
+    // Départ et arrivée adoucis (easeInOutCubic).
+    public pure function douce(x: float) -> float {
+        return x < 0.5 ? 4 * x * x * x : 1 - pow(-2 * x + 2, 3) / 2;
+    }
+}
+
+// Trame de pièces : grille du motif Quatre pièces ton sur ton ; une pièce du symbole s'y
+// compose en petites pièces ambre. Bandeau : 4 rangées, pièce vedette à droite, rien sous
+// le texte (42 % de la largeur, côté début). Vignette : 6 cases, pièce au centre.
+export component TramePieces inherits Rectangle {
+    in property <int> piece: 3;
+    in property <bool> vignette: false;
+    property <length> cote: self.vignette ? self.width / 6 : self.height / 4;
+    property <length> cellule: self.vignette ? 0.72 * self.width : 0.82 * self.height;
+    // Centre de la pièce vedette calé sur un coin de la grille (la hauteur l'est déjà : 2
+    // rangées au-dessus, 2 au-dessous) ; sinon la pièce se compose de travers selon la largeur.
+    property <length> centre-x: self.vignette ? self.width / 2 : round((self.width - 0.75 * self.height) / max(1px, self.cote)) * self.cote;
+    property <length> grand: self.cellule * 256 / 104;
+    property <length> ox: self.centre-x - Symbole.centre-x(self.piece) / 256 * self.grand;
+    property <length> oy: self.height / 2 - Symbole.centre-y(self.piece) / 256 * self.grand;
+    property <int> colonnes: ceil(self.width / max(1px, self.cote));
+    property <int> rangees: ceil(self.height / max(1px, self.cote));
+    property <float> g: clamp((entree.t - 0.2) / 1.4, 0, 1) * 1.25;
+    clip: true;
+    // Taille imposée par l'écran : la trame ne réclame rien à la mise en page (sinon boucle).
+    min-width: 0px;
+    min-height: 0px;
+    preferred-width: 0px;
+    preferred-height: 0px;
+
+    entree := Entree { }
+
+    for n in root.rangees * root.colonnes: Image {
+        property <int> i: mod(n, root.colonnes);
+        property <int> j: floor(n / root.colonnes);
+        property <length> mx: (self.i + 0.5) * root.cote;
+        property <length> my: (self.j + 0.5) * root.cote;
+        property <float> u: (self.mx - root.ox) / root.grand * 256;
+        property <float> v: (self.my - root.oy) / root.grand * 256;
+        property <float> r: clamp((self.u - Symbole.centre-x(root.piece) + self.v - Symbole.centre-y(root.piece)) / 208 + 0.5, 0, 1);
+        property <float> e: Symbole.dans(root.piece, self.u, self.v) ? Symbole.rebond(clamp((root.g - self.r) / 0.25, 0, 1)) : 0;
+        property <bool> vedette: self.e > 0.01;
+        property <int> k: mod(self.i + self.j, 4);
+        // Pièce de 86 % de la case ; l'image a 2 unités de marge sur 104 de chaque côté.
+        property <length> taille: root.cote * 0.86 * 108 / 104;
+        // De droite à gauche, la trame est retournée : le texte reste au début.
+        x: (Theme.rtl ? root.width - self.mx : self.mx) - self.taille / 2;
+        y: self.my - self.taille / 2;
+        width: self.taille;
+        height: self.taille;
+        visible: self.vedette || root.vignette || self.mx >= 0.42 * root.width;
+        colorize: self.vedette ? Theme.ambre : CouleursMotif.motif;
+        source: self.k == 0 ? @image-url("icones/motifs/motif-piece-carre.svg") : self.k == 1 ? @image-url("icones/motifs/motif-piece-quart.svg") : self.k == 2 ? @image-url("icones/motifs/motif-piece-tri.svg") : @image-url("icones/motifs/motif-piece-disque.svg");
+        transform-scale-x: (self.vedette ? self.e : 1) * 100%;
+        transform-scale-y: (self.vedette ? self.e : 1) * 100%;
+        transform-origin: { x: self.width / 2, y: self.height / 2 };
+    }
+}
+
+// Bandeau du tableau de bord : titre et période sur la trame, pièce vedette le disque.
+export component BandeauTableau inherits Rectangle {
+    in property <string> titre;
+    in property <string> sous-titre;
+    property <length> largeur-texte: max(0px, 0.42 * self.width - 24px);
+
+    height: 118px;
+    border-radius: 4px;
+    background: Theme.nuit;
+    clip: true;
+
+    TramePieces {
+        x: 0;
+        y: 0;
+        width: root.width;
+        height: root.height;
+        piece: 3;
+    }
+
+    VerticalLayout {
+        x: Theme.rtl ? root.width - 24px - root.largeur-texte : 24px;
+        y: 28px;
+        width: root.largeur-texte;
+        height: root.height - 28px;
+        spacing: 6px;
+        alignment: start;
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: root.titre;
+            color: Theme.sombre ? Theme.texte : white;
+            font-family: Theme.police-titre;
+            font-size: 28px;
+            font-weight: 800;
+            overflow: elide;
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: root.sous-titre;
+            color: Theme.sombre ? Theme.texte-secondaire : #c5cae0;
+            font-size: 12.5px;
+            overflow: elide;
+        }
+    }
+}
+
+// Symbole A2+ dans un carré : carré en six traits emboîtés, quart de disque plein, triangle
+// en sept traits ambre, disque ambre percé d'un anneau ; les pièces arrivent l'une après
+// l'autre (carré, quart, triangle, disque), une fois à l'ouverture.
+export component SymboleLignes inherits Rectangle {
+    // Une unité du carré de 256.
+    property <length> unite: self.width / 256;
+    property <float> carre: Symbole.douce(self.avance(0));
+    property <float> quart: Symbole.rebond(self.avance(1));
+    property <float> tri: Symbole.douce(self.avance(2));
+    property <float> disque: Symbole.rebond(self.avance(3));
+    min-width: 0px;
+    min-height: 0px;
+    preferred-width: 0px;
+    preferred-height: 0px;
+
+    pure function avance(rang: int) -> float {
+        return clamp((entree.t - 0.3 - rang * 0.5) / 0.9, 0, 1);
+    }
+
+    // Point du quart de disque rapproché de son centre (188, 68) pendant l'arrivée.
+    pure function qx(x: float) -> float {
+        return 188 + root.quart * (x - 188);
+    }
+    pure function qy(y: float) -> float {
+        return 68 + root.quart * (y - 68);
+    }
+
+    entree := Entree { longueur: 2800ms; }
+
+    // Carré : traits de 5 unités, centrés sur les carrés emboîtés de la maquette.
+    for n in 6: Rectangle {
+        property <float> marge: (n + 0.5) * 52 / 6 - 2.5;
+        x: (16 + self.marge) * root.unite;
+        y: (16 + self.marge) * root.unite;
+        width: (104 - 2 * self.marge) * root.unite;
+        height: self.width;
+        border-width: 5 * root.unite;
+        border-color: CouleursMotif.lignes;
+        opacity: clamp(root.carre * 6 - n, 0, 1);
+    }
+
+    if root.quart > 0.01: Path {
+        x: 0;
+        y: 0;
+        width: root.width;
+        height: root.height;
+        viewbox-width: 256;
+        viewbox-height: 256;
+        fill: CouleursMotif.lignes;
+        commands: "M " + root.qx(136) + " " + root.qy(120) + " L " + root.qx(136) + " " + root.qy(14.44)
+            + " A " + (105.56 * root.quart) + " " + (105.56 * root.quart) + " 0 0 1 " + root.qx(241.56) + " " + root.qy(120) + " Z";
+    }
+
+    // Triangle : traits parallèles à l'hypoténuse, de la pointe vers l'angle droit.
+    for n in 7: Path {
+        property <float> d: 224 - (n + 0.5) * 104 / 7;
+        x: 0;
+        y: 0;
+        width: root.width;
+        height: root.height;
+        viewbox-width: 256;
+        viewbox-height: 256;
+        stroke: Theme.ambre;
+        stroke-width: 4 * root.unite;
+        opacity: clamp(root.tri * 7 - n, 0, 1);
+        commands: "M 16 " + (16 + self.d) + " L " + (240 - self.d) + " 240";
+    }
+
+    if root.disque > 0.01: Rectangle {
+        property <length> rayon: 53.56 * root.disque * root.unite;
+        x: 188 * root.unite - self.rayon;
+        y: 188 * root.unite - self.rayon;
+        width: 2 * self.rayon;
+        height: self.width;
+        border-radius: self.rayon;
+        background: Theme.ambre;
+
+        Rectangle {
+            property <length> rayon: 30 * root.disque * root.unite;
+            width: 2 * self.rayon;
+            height: self.width;
+            border-radius: self.rayon;
+            background: Theme.nuit;
+        }
+
+        Rectangle {
+            property <length> rayon: 12 * root.disque * root.unite;
+            width: 2 * self.rayon;
+            height: self.width;
+            border-radius: self.rayon;
+            background: CouleursMotif.lignes;
+        }
+    }
+}
+
+// Petite pièce des listes vides : vignette de la trame, carré composé au centre.
+export component PieceVide inherits Rectangle {
+    width: 96px;
+    height: 96px;
+    border-radius: 4px;
+    background: Theme.nuit;
+    clip: true;
+
+    TramePieces {
+        x: 0;
+        y: 0;
+        width: root.width;
+        height: root.height;
+        piece: 0;
+        vignette: true;
+    }
+}
+
+// Liste vide : la pièce, puis le message, au milieu de la place donnée.
+export component ListeVide inherits Rectangle {
+    in property <string> texte;
+
+    VerticalLayout {
+        alignment: center;
+        spacing: 14px;
+
+        HorizontalLayout {
+            alignment: center;
+
+            PieceVide { }
+        }
+
+        Text {
+            horizontal-alignment: center;
+            text: root.texte;
+            color: Theme.texte-secondaire;
+            font-size: 13px;
+        }
+    }
+}

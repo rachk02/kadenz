@@ -4692,3 +4692,6 @@ msgstr "Arduvaz"
 
 msgid "Anthracite"
 msgstr "Antrasit"
+
+msgid "Aucun document à afficher."
+msgstr "Görüntülenecek belge yok."

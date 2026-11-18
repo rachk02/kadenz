@@ -4692,3 +4692,6 @@ msgstr "板岩"
 
 msgid "Anthracite"
 msgstr "无烟煤"
+
+msgid "Aucun document à afficher."
+msgstr "没有可显示的单据。"

@@ -4692,3 +4692,6 @@ msgstr "أردواز"
 
 msgid "Anthracite"
 msgstr "أنثراسيت"
+
+msgid "Aucun document à afficher."
+msgstr "لا توجد مستندات لعرضها."

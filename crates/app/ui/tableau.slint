@@ -16,6 +16,7 @@
 //   sans décaler le contenu ; flèches haut et bas, début et fin.
 
 import { ListView } from "std-widgets.slint";
+import { ListeVide } from "bandeaux.slint";
 import { Theme } from "composants.slint";
 
 // Chevron du tri : vers le haut pour l'ordre croissant, vers le bas sinon.
@@ -95,6 +96,8 @@ export component TableauDonnees {
     in-out property <[TableColumn]> columns;
     in-out property <int> current-row: -1;
     out property <bool> has-focus: clavier.has-focus;
+    // Message d'une liste vide, sous la petite pièce de la marque ; rien s'il est vide.
+    in property <string> vide;
 
     callback sort-ascending(column: int);
     callback sort-descending(column: int);
@@ -225,6 +228,15 @@ export component TableauDonnees {
                 }
             }
         }
+    }
+
+    // Liste vide : sous l'en-tête (1 px de cadre et 36 px), au-dessus de la marge du bas.
+    if root.rows.length == 0 && root.vide != "": ListeVide {
+        x: 1px;
+        y: 37px;
+        width: root.width - 2px;
+        height: max(0px, root.height - 42px);
+        texte: root.vide;
     }
 
     // Bord de focus : 2 px par-dessus le cadre, mêmes angles, sans décalage.

@@ -380,6 +380,7 @@ component Registre inherits VerticalLayout {
     }
 
     TableauDonnees {
+        vide: @tr("Aucun document à afficher.");
         // De droite à gauche, colonnes en ordre inverse (cellules inversées dans modele_lignes).
         // Le bordereau n'a que cinq colonnes : ni montant, ni paiement, ni échéance.
         columns: !FacturesApi.avec-montants ? (Theme.rtl ? [

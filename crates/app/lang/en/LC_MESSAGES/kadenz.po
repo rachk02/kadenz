@@ -4692,3 +4692,6 @@ msgstr "Slate"
 
 msgid "Anthracite"
 msgstr "Anthracite"
+
+msgid "Aucun document à afficher."
+msgstr "No documents to display."

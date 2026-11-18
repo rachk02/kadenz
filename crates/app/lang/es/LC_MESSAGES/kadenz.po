@@ -4692,3 +4692,6 @@ msgstr "Pizarra"
 
 msgid "Anthracite"
 msgstr "Antracita"
+
+msgid "Aucun document à afficher."
+msgstr "No hay documentos para mostrar."

@@ -3,6 +3,7 @@
 // que les droits du compte et la licence ouvrent (construite par l'application).
 import { ScrollView } from "std-widgets.slint";
 import { ListeDeroulante } from "liste-deroulante.slint";
+import { SymboleLignes } from "bandeaux.slint";
 import { Affichage, Alerte, Bouton, Case, Champ, Confirmation, Ecriture, ElementNavigation, MessageErreur, Section, Theme, Titre } from "composants.slint";
 import { PageEntreprise, PageParametres } from "administration.slint";
 import { PageUtilisateurs } from "utilisateurs.slint";
@@ -739,23 +740,26 @@ component PageAPropos inherits VerticalLayout {
         }
     }
 
-    // Bandeau de marque : logo, motif Quatre pièces, rôle du logiciel.
-    Rectangle {
+    // Bandeau de marque A2+ (design adopté le 2026-11-18) : logo et rôle du logiciel au
+    // début, symbole en pièces et en lignes à la fin.
+    bandeau := Rectangle {
         height: 168px;
         border-radius: 4px;
         background: Theme.nuit;
         clip: true;
 
-        Image {
-            x: Theme.rtl ? 0 : parent.width - self.width;
-            width: min(360px, parent.width / 2);
-            height: parent.height;
-            source: @image-url("icones/motif-quatre-pieces.svg");
-            image-fit: cover;
+        SymboleLignes {
+            width: 0.8 * bandeau.height;
+            height: self.width;
+            x: Theme.rtl ? 0.35 * bandeau.height : bandeau.width - self.width - 0.35 * bandeau.height;
+            y: (bandeau.height - self.height) / 2;
         }
 
+        // Le texte s'arrête avant le symbole.
         VerticalLayout {
             padding: 28px;
+            padding-left: Theme.rtl ? 1.15 * bandeau.height + 16px : 28px;
+            padding-right: Theme.rtl ? 28px : 1.15 * bandeau.height + 16px;
             spacing: 10px;
             alignment: center;
 
@@ -770,7 +774,7 @@ component PageAPropos inherits VerticalLayout {
             Text {
                 horizontal-alignment: Theme.debut;
                 text: @tr("Gestion commerciale");
-                color: white;
+                color: Theme.sombre ? Theme.texte : white;
                 font-family: Theme.police-titre;
                 font-size: 20px;
                 font-weight: 800;
@@ -779,7 +783,7 @@ component PageAPropos inherits VerticalLayout {
             Text {
                 horizontal-alignment: Theme.debut;
                 text: @tr("Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements.");
-                color: #c5cae0;
+                color: Theme.sombre ? Theme.texte-secondaire : #c5cae0;
                 font-size: 13px;
                 wrap: word-wrap;
             }

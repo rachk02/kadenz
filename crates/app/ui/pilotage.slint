@@ -4,7 +4,8 @@
 // (graphiques.rs), dans un repère fixe ajusté ici à la taille de l'élément.
 import { LineEdit, ScrollView } from "std-widgets.slint";
 import { ListeDeroulante } from "liste-deroulante.slint";
-import { MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { BandeauTableau } from "bandeaux.slint";
+import { MessageRetour, Rangee, Retour, Section, Theme } from "composants.slint";
 
 // Secteur d'un anneau, avec sa ligne de légende.
 export struct SecteurUi {
@@ -616,12 +617,14 @@ export component PageTableauDeBord inherits ScrollView {
         spacing: 14px;
         alignment: start;
 
+        // Bandeau de marque A2 derrière le titre et la période (design adopté le 2026-11-18).
+        BandeauTableau {
+            titre: @tr("Tableau de bord");
+            sous-titre: PilotageApi.periode;
+        }
+
         Rangee {
             spacing: 8px;
-
-            Titre {
-                text: @tr("Tableau de bord");
-            }
 
             Rectangle { }
 
@@ -652,11 +655,11 @@ export component PageTableauDeBord inherits ScrollView {
             }
         }
 
-        Text {
+        if root.erreur-filtre != "": Text {
             horizontal-alignment: Theme.debut;
-            text: root.erreur-filtre != "" ? root.erreur-filtre : PilotageApi.periode;
+            text: root.erreur-filtre;
             font-size: 12px;
-            color: root.erreur-filtre != "" ? Theme.erreur : Theme.texte-secondaire;
+            color: Theme.erreur;
         }
 
         if root.retour.message != "": MessageRetour {
