@@ -7,6 +7,7 @@
 | 0.3 | 2026-11-18 | Lots L2a et L3 livrés. L2a : schéma du portail en version 2 avec chemin de migration, code tiré depuis un paiement, route `/api/activation`. Règle des dates alignée sur l'émission existante. Codes à vendre reportés en L2b. Essai de bout en bout revu : l'exécutable du portail n'accepte que la clé embarquée. |
 | 0.4 | 2026-11-18 | Lot L2b livré : schéma en version 3, rubrique « Codes à vendre » du portail (tirage de 1 à 50 codes, liste, codes en clair affichés une seule fois), annulation d'un code libre par l'éditeur ou par celui qui l'a tiré (le paiement d'un code annulé redevient libre). |
 | 0.5 | 2026-11-18 | Lot L5 livré : étape Licence de KadenzAdmin avec `ChampCode`, activation au passage de l'étape Entreprise (global `ActivationUi`, module partagé `activation_ui.rs`), traductions. Variable `KADENZ_PORTAIL_CLE` des versions de développement pour l'essai de bout en bout avec les exécutables ; essai fait à l'écran (section 8). |
+| 0.6 | 2026-11-18 | Section 7 bis : décision 75 (licences de la ligne V1 par codes, abonnement daté, longues clés émises gardées, multiposte V1 sur données partagées) et proposition technique (licence V1 en version 2, gamme du code, branche `release/0.2.x`). |
 
 ## 1. Décisions de l'utilisateur (2026-11-18)
 
@@ -99,7 +100,27 @@ Réponse : `{ "licence": "KADENZ-E-...", "postes", "formule", "debut", "echeance
 
 - Une licence d'abonnement déjà installée reste valable jusqu'à son échéance ; son renouvellement passe par un code. Les écrans n'ont plus de champ pour une longue clé.
 - La licence d'essai « dev-kadenz » (9999 postes, sans échéance) est remplacée par un code émis au portail d'essai.
-- Licences V1 perpétuelles (postes 0.2.2, vérifiées hors ligne) : leur passage aux codes se fait avec la mise à jour de la ligne 0.2.2, à la fin, avec le monoposte.
+- Licences V1 : voir la section 7 bis (décision 75).
+
+## 7 bis. Ligne V1 (0.2.x) : décision 75 et proposition
+
+Décision de l'utilisateur (2026-11-18, cahier de la phase 2, décision 75) :
+- un code activé sur la ligne V1 donne un abonnement daté, renouvelé par un nouveau code ; le perpétuel ne vaut plus que pour les licences V1 déjà émises (décision 7) ;
+- les longues clés V1 déjà remises restent valables, sans rien faire chez les clients ;
+- l'édition multiposte de la ligne V1 veut dire plusieurs postes sur les mêmes données, donc un serveur ; sa forme reste à définir (question ci-dessous).
+
+Constats vérifiés sur le tag `v0.2.2` (`crates/licence/src/lib.rs`) :
+- la 0.2.2 accepte une licence V1 signée par la clé suivante (`cle-publique-suivante.hex`, identique dans `v0.2.2` et sur main), qui est la clé du portail (décision 29). Le portail peut donc signer des licences V1 sans la clé V1, qui reste hors ligne chez l'éditeur ;
+- la 0.2.2 refuse toute licence dont le champ `version` diffère du sien (1). Une licence V1 datée en version 2 n'est donc jamais acceptée par une 0.2.2, où elle deviendrait perpétuelle faute d'y lire l'échéance.
+
+Proposition (kadenz-3a, à relire avec kadenz-74) :
+- Format : licence V1 en version 2, même préfixe `KADENZ-`, mêmes champs plus `echeance` et `postes` (1 en monoposte), signée par la clé du portail avec son identifiant `cle`. Une 0.2.3 lit les versions 1 (perpétuelles, longues clés déjà émises) et 2 (datées).
+- Échéance : même règle que la phase 2 (avertissements à 30 jours, 7 jours et la veille, puis lecture seule ; décisions 25 et la « lecture seule à l'échéance »), les données restant gardées.
+- Portail : un code porte sa gamme (`entreprise` ou `v1`), fixée au tirage. Pour un code V1, la demande d'activation envoie l'identifiant du poste (`XXXX-XXXX-XXXX-XXXX`) à la place de l'identifiant d'entreprise ; la licence renvoyée est une licence V1 version 2 liée à ce poste. Un code d'une gamme présenté par un logiciel de l'autre est refusé avec un message à lui.
+- Client 0.2.3 : branche `release/0.2.x` tirée de `v0.2.2` (décision 39), qui reprend `code_court`, le client d'activation et `ChampCode` ; l'écran de licence perd le champ de la longue clé pour les nouvelles licences et garde la lecture de celle qui est installée.
+- Monoposte V1 : un poste, un code de 1 poste. Multiposte V1 : à trancher avec l'utilisateur, voir la question.
+
+Question ouverte à l'utilisateur : forme du multiposte V1. Pistes : (a) l'édition multiposte de la ligne V1 est le serveur de la phase 2 avec les postes 1.x, ce qui revient à la phase 2 sous un autre nom ou un autre prix ; (b) un serveur propre à la ligne V1, sur la base 0.2.x, ce qui demande d'écrire une synchronisation pour la V1 ; (c) autre.
 
 ## 8. Essais
 
