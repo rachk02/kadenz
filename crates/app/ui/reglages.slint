@@ -43,6 +43,9 @@ export global ReglagesApi {
     // Navigation (0 bandeau, 1 barre) et animations du compte connecté ; renvoie un
     // message d'erreur, ou une chaîne vide.
     callback changer-affichage(int, bool) -> string;
+    // Mode du compte connecté sur ce poste (0 comme Windows, 1 clair, 2 sombre) ;
+    // renvoie un message d'erreur, ou une chaîne vide.
+    callback changer-mode(int) -> string;
 
     // Recherche d'une mise à jour à la demande, sur un fil secondaire.
     callback rechercher-maj();
@@ -250,7 +253,7 @@ component CarteNavigation inherits Rectangle {
     border-radius: 4px;
     border-width: root.choisi ? 2px : 1px;
     border-color: root.choisi ? Theme.accent : Theme.bordure;
-    background: root.choisi ? Theme.accent-survol : zone.has-hover ? Theme.fond-lateral : white;
+    background: root.choisi ? Theme.accent-survol : zone.has-hover ? Theme.fond-lateral : Theme.champ;
     animate background, border-color { duration: Affichage.duree; }
 
     accessible-role: button;
@@ -269,7 +272,7 @@ component CarteNavigation inherits Rectangle {
             border-width: 1px;
             border-color: Theme.bordure;
             border-radius: 2px;
-            background: white;
+            background: Theme.fond;
 
             Rectangle {
                 x: root.barre && Theme.rtl ? parent.width - self.width - 1px : 1px;
@@ -278,6 +281,86 @@ component CarteNavigation inherits Rectangle {
                 height: root.barre ? parent.height - 2px : 16px;
                 background: root.choisi ? Theme.accent : Theme.texte-secondaire;
                 opacity: 0.85;
+            }
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: root.titre;
+            font-weight: 700;
+            color: Theme.texte;
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: root.texte;
+            font-size: 12px;
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+    }
+
+    zone := TouchArea {
+        clicked => {
+            root.clique();
+        }
+    }
+}
+
+// Choix du mode clair ou sombre : carte avec un aperçu de la fenêtre.
+component CarteMode inherits Rectangle {
+    in property <string> titre;
+    in property <string> texte;
+    // Aperçu : 0 moitié claire et moitié sombre (comme Windows), 1 clair, 2 sombre.
+    in property <int> apercu;
+    in property <bool> choisi;
+    callback clique();
+
+    width: 200px;
+    height: contenu.preferred-height;
+    border-radius: 4px;
+    border-width: root.choisi ? 2px : 1px;
+    border-color: root.choisi ? Theme.accent : Theme.bordure-champ;
+    background: root.choisi ? Theme.accent-survol : zone.has-hover ? Theme.fond-lateral : Theme.champ;
+    animate background, border-color { duration: Affichage.duree; }
+
+    accessible-role: button;
+    accessible-label: root.titre;
+    accessible-action-default => {
+        root.clique();
+    }
+
+    contenu := VerticalLayout {
+        padding: 14px;
+        spacing: 8px;
+
+        // Aperçu de la fenêtre, avec les couleurs fixes des deux modes.
+        Rectangle {
+            height: 72px;
+            border-width: 1px;
+            border-color: Theme.bordure-champ;
+            border-radius: 2px;
+            clip: true;
+            background: root.apercu == 2 ? #1a2259 : #ffffff;
+
+            if root.apercu == 0: Rectangle {
+                x: parent.width / 2;
+                width: parent.width / 2;
+                background: #1a2259;
+            }
+            Rectangle {
+                x: 10px;
+                y: 12px;
+                width: parent.width / 2 - 20px;
+                height: 8px;
+                background: root.apercu == 2 ? #e3a23b : #2d3a8c;
+            }
+            Rectangle {
+                x: root.apercu == 0 ? parent.width / 2 + 10px : 10px;
+                y: 30px;
+                width: parent.width / 2 - 20px;
+                height: 8px;
+                background: root.apercu == 1 ? #2d3a8c : #e3a23b;
             }
         }
 
@@ -358,6 +441,52 @@ component PageNavigation inherits ScrollView {
                 choisi: Affichage.navigation == 0;
                 clique => {
                     root.erreur = ReglagesApi.changer-affichage(0, Affichage.animations);
+                }
+            }
+        }
+
+        Section {
+            text: @tr("Mode d'affichage");
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Propre à ce poste : sur un autre poste, votre compte garde le mode qui y a été choisi.");
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        HorizontalLayout {
+            alignment: Theme.rangee-debut;
+            spacing: 16px;
+
+            CarteMode {
+                titre: @tr("Comme Windows");
+                texte: @tr("Clair ou sombre selon le réglage de Windows.");
+                apercu: 0;
+                choisi: Theme.mode == 0;
+                clique => {
+                    root.erreur = ReglagesApi.changer-mode(0);
+                }
+            }
+
+            CarteMode {
+                titre: @tr("Clair");
+                texte: @tr("Fond blanc, toujours.");
+                apercu: 1;
+                choisi: Theme.mode == 1;
+                clique => {
+                    root.erreur = ReglagesApi.changer-mode(1);
+                }
+            }
+
+            CarteMode {
+                titre: @tr("Sombre");
+                texte: @tr("Fond sombre, toujours. Les documents et leur aperçu restent sur fond blanc.");
+                apercu: 2;
+                choisi: Theme.mode == 2;
+                clique => {
+                    root.erreur = ReglagesApi.changer-mode(2);
                 }
             }
         }
@@ -651,7 +780,7 @@ component EntreeCompacte inherits Rectangle {
         width: 18px;
         height: 18px;
         source: root.icone;
-        colorize: root.actif ? white : Theme.texte-secondaire;
+        colorize: root.actif ? Theme.texte-sur-accent : Theme.texte-secondaire;
     }
 
     zone := TouchArea {
@@ -722,7 +851,7 @@ export component PageReglages inherits Rectangle {
         y: root.marge-liste;
         width: root.largeur-liste - root.marge-liste;
         height: parent.height - 2 * root.marge-liste;
-        background: white;
+        background: Theme.fond;
         border-width: 1px;
         border-color: Theme.bordure;
         border-radius: 4px;

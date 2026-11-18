@@ -583,6 +583,9 @@ mod tests {
             conn.pragma_update(None, "user_version", rang as u32 + 1)
                 .unwrap();
         }
+        // Le code actuel lit le mode d'affichage des comptes (migration 0018) :
+        // colonne posée le temps d'écrire, retirée avant la reprise.
+        conn.execute_batch(crate::THEME_TEMPORAIRE_V1).unwrap();
         crate::licence::preparer(&conn, true).unwrap();
         conn.execute(
             "INSERT INTO entreprise (id, nom, ifu, logo) VALUES (1, 'Quincaillerie V1', 'IFU-V1', x'89504E47')",
@@ -638,6 +641,8 @@ mod tests {
             },
         )
         .unwrap();
+        conn.execute_batch("ALTER TABLE utilisateur DROP COLUMN theme")
+            .unwrap();
         V1 {
             dossier,
             base,

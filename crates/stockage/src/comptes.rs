@@ -28,6 +28,8 @@ pub struct Utilisateur {
     pub navigation: Navigation,
     /// Animations de l'interface, coupées si `false`.
     pub animations: bool,
+    /// Mode clair ou sombre choisi par le compte, sur ce poste.
+    pub theme: ModeAffichage,
 }
 
 /// Navigation de l'interface, choisie par compte (décision de l'utilisateur du
@@ -51,6 +53,36 @@ impl Navigation {
         match code {
             "bandeau" => Some(Navigation::Bandeau),
             "barre" => Some(Navigation::Barre),
+            _ => None,
+        }
+    }
+}
+
+/// Mode d'affichage choisi par compte (décision de l'utilisateur du 2026-11-18) :
+/// comme Windows, par défaut, clair ou sombre. Gardé dans la base de chaque
+/// poste, jamais répliqué (migration 0018).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ModeAffichage {
+    #[default]
+    Systeme,
+    Clair,
+    Sombre,
+}
+
+impl ModeAffichage {
+    pub fn code(self) -> &'static str {
+        match self {
+            ModeAffichage::Systeme => "systeme",
+            ModeAffichage::Clair => "clair",
+            ModeAffichage::Sombre => "sombre",
+        }
+    }
+
+    pub fn depuis_code(code: &str) -> Option<Self> {
+        match code {
+            "systeme" => Some(ModeAffichage::Systeme),
+            "clair" => Some(ModeAffichage::Clair),
+            "sombre" => Some(ModeAffichage::Sombre),
             _ => None,
         }
     }
@@ -134,10 +166,12 @@ fn ligne_vers_utilisateur(r: &rusqlite::Row<'_>) -> rusqlite::Result<Utilisateur
         langue: Langue::depuis_code(&r.get::<_, String>(5)?).unwrap_or_default(),
         navigation: Navigation::depuis_code(&r.get::<_, String>(6)?).unwrap_or_default(),
         animations: r.get(7)?,
+        theme: ModeAffichage::depuis_code(&r.get::<_, String>(8)?).unwrap_or_default(),
     })
 }
 
-const COLONNES: &str = "id, nom_complet, identifiant, role, actif, langue, navigation, animations";
+const COLONNES: &str =
+    "id, nom_complet, identifiant, role, actif, langue, navigation, animations, theme";
 
 pub fn lire(conn: &Connection, id: i64) -> Resultat<Option<Utilisateur>> {
     Ok(conn
@@ -235,6 +269,7 @@ pub(crate) fn creer_sans_controle(
         langue: Langue::default(),
         navigation: Navigation::default(),
         animations: true,
+        theme: ModeAffichage::default(),
     })
 }
 
@@ -252,7 +287,7 @@ pub fn connecter(
             ),
             [identifiant.trim()],
             // Le hachage suit les colonnes de COLONNES.
-            |r| Ok((ligne_vers_utilisateur(r)?, r.get(8)?)),
+            |r| Ok((ligne_vers_utilisateur(r)?, r.get(9)?)),
         )
         .optional()?;
     match trouve {
@@ -493,10 +528,46 @@ pub fn changer_affichage(
     )
 }
 
+/// Mode clair ou sombre de son propre compte, sur ce poste. Aucun droit requis,
+/// comme pour l'affichage. Écrit dans la base locale, même sur un poste relié :
+/// la colonne n'est jamais répliquée. Pas d'entrée d'audit : simple préférence
+/// d'écran, et le journal d'un poste relié vient du serveur.
+pub fn changer_mode_affichage(
+    conn: &Connection,
+    acteur: &Utilisateur,
+    mode: ModeAffichage,
+) -> Resultat<()> {
+    let n = conn.execute(
+        "UPDATE utilisateur SET theme = ?1 WHERE id = ?2 AND actif = 1",
+        params![mode.code(), acteur.id],
+    )?;
+    if n == 0 {
+        return Err(Erreur::Validation("compte inconnu ou désactivé".into()));
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::ouvrir_en_memoire;
+
+    #[test]
+    fn mode_affichage_du_compte() {
+        let conn = ouvrir_en_memoire().unwrap();
+        let admin = crate::droits::tests::compte(&conn, "admin", Role::Admin);
+        assert_eq!(admin.theme, ModeAffichage::Systeme);
+        changer_mode_affichage(&conn, &admin, ModeAffichage::Sombre).unwrap();
+        assert_eq!(
+            lire(&conn, admin.id).unwrap().unwrap().theme,
+            ModeAffichage::Sombre
+        );
+        let refus = conn.execute(
+            "UPDATE utilisateur SET theme = 'bleu' WHERE id = ?1",
+            [admin.id],
+        );
+        assert!(refus.is_err(), "mode hors liste refusé");
+    }
 
     #[test]
     fn affichage_du_compte() {

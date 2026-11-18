@@ -85,7 +85,7 @@ export global PilotageApi {
 }
 
 component Carte inherits Rectangle {
-    background: white;
+    background: Theme.fond;
     border-width: 1px;
     border-color: Theme.bordure;
     border-radius: 4px;
@@ -140,7 +140,7 @@ component Anneau inherits Rectangle {
         viewbox-height: 100;
         fit: contain;
         commands: "M 50 0 A 50 50 0 0 1 50 100 A 50 50 0 0 1 50 0";
-        stroke: #eceef3;
+        stroke: Theme.fond-discret;
         stroke-width: 18px;
     }
 
@@ -306,7 +306,7 @@ component Tendance inherits Carte {
                 y: zone.height * i / 2 - 0.5px;
                 width: zone.width;
                 height: 1px;
-                background: i == 2 ? Theme.bordure : #eceef3;
+                background: i == 2 ? Theme.bordure : Theme.fond-discret;
             }
 
             if PilotageApi.aire != "": Path {
@@ -316,7 +316,7 @@ component Tendance inherits Carte {
                 viewbox-height: 100;
                 fit: fill;
                 commands: Theme.rtl ? PilotageApi.aire-miroir : PilotageApi.aire;
-                fill: #2d3a8c1f;
+                fill: Theme.accent.transparentize(88%);
             }
 
             if PilotageApi.trace != "": Path {
@@ -337,7 +337,7 @@ component Tendance inherits Carte {
                 width: survol.has-hover ? 10px : 7px;
                 height: self.width;
                 border-radius: self.width / 2;
-                background: white;
+                background: Theme.fond;
                 border-width: 2px;
                 border-color: Theme.accent;
 
@@ -425,7 +425,7 @@ component TopClients inherits Carte {
 
             piste := Rectangle {
                 height: 8px;
-                background: #eceef3;
+                background: Theme.fond-discret;
 
                 Rectangle {
                     x: Theme.rtl ? piste.width - self.width : 0;
@@ -511,7 +511,7 @@ component DernieresFactures inherits Carte {
             Rectangle {
                 y: 0;
                 height: 1px;
-                background: #eceef3;
+                background: Theme.fond-discret;
             }
 
             clic := TouchArea {

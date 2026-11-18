@@ -32,7 +32,7 @@ export global AbonnementApi {
 // Bandeau en haut des pages, à bordure égale sur ses quatre côtés.
 export component BandeauAbonnement inherits Rectangle {
     callback ouvrir();
-    background: AbonnementApi.bandeau-grave ? #fef3f2 : #fff8eb;
+    background: AbonnementApi.bandeau-grave ? Theme.fond-erreur : Theme.fond-attente;
     border-width: 1px;
     border-color: AbonnementApi.bandeau-grave ? Theme.erreur : Theme.ambre;
     border-radius: 4px;

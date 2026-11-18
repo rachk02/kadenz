@@ -26,6 +26,7 @@ mod sauvegardes;
 mod serveur;
 mod stock;
 mod suspendues;
+mod theme;
 mod traduction;
 mod utilisateurs;
 
@@ -316,8 +317,9 @@ pub(crate) fn gere_parametres(etat: &Etat) -> bool {
         .is_some_and(|u| droits::possede(&etat.conn, u, Droit::GererParametres).unwrap_or(false))
 }
 
-/// Préférences d'affichage du compte : navigation et animations.
+/// Préférences d'affichage du compte : navigation, animations, mode clair ou sombre.
 fn appliquer_affichage(fenetre: &FenetrePrincipale, u: &Utilisateur) {
+    fenetre.global::<Theme>().set_mode(theme::rang(u.theme));
     let a = fenetre.global::<Affichage>();
     a.set_navigation(match u.navigation {
         Navigation::Bandeau => 0,
@@ -381,6 +383,8 @@ fn afficher_session(fenetre: &FenetrePrincipale, etat: &Etat) {
 /// session vidé, langue de démarrage, retour à l'écran de connexion.
 pub(crate) fn fermer_session(f: &FenetrePrincipale, etat: &mut Etat) {
     etat.utilisateur = None;
+    // Écran de connexion : comme Windows, le mode du compte suivant n'est pas connu.
+    f.global::<Theme>().set_mode(0);
     // Bandeau des sauvegardes et assistant de reprise : propres au compte.
     let serveur = f.global::<ServeurApi>();
     serveur.set_avertissement_sauvegarde(SharedString::new());
@@ -530,6 +534,29 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
             resultat.err().unwrap_or_default()
         });
 
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    fenetre
+        .global::<ReglagesApi>()
+        .on_changer_mode(move |rang| {
+            let mode = theme::depuis_rang(rang);
+            let mut etat = e.borrow_mut();
+            let Some(utilisateur) = etat.utilisateur.clone() else {
+                return phrase("aucune session ouverte");
+            };
+            // Toujours dans la base de ce poste, même relié : préférence non répliquée.
+            let resultat = comptes::changer_mode_affichage(&etat.conn, &utilisateur, mode)
+                .map_err(phrase);
+            if resultat.is_ok()
+                && let Some(u) = etat.utilisateur.as_mut()
+            {
+                u.theme = mode;
+            }
+            if let (Some(f), Some(u)) = (f.upgrade(), etat.utilisateur.as_ref()) {
+                appliquer_affichage(&f, u);
+            }
+            resultat.err().unwrap_or_default()
+        });
+
     let e = etat;
     fenetre.on_changer_mot_de_passe(move |ancien, nouveau, confirmation| {
         if nouveau != confirmation {
@@ -625,6 +652,8 @@ fn main() -> Result<(), slint::PlatformError> {
         sauvegardes::brancher_demarrage(&fenetre, demarrer);
     }
 
+    // Mode « comme Windows » : réglage de Windows suivi tant que la fenêtre est ouverte.
+    let _suivi_windows = theme::suivre_windows(&fenetre);
     let resultat = fenetre.run();
     // Fenêtre fermée : sauvegarde automatique de la base ouverte.
     // Poste relié : synchroniseur arrêté, et pas de sauvegarde de la copie, les

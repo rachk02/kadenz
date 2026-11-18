@@ -717,7 +717,7 @@ component Fiche inherits ScrollView {
         Rectangle {
             height: 36px;
             border-radius: 4px;
-            background: root.fiche.annule ? #fdecea : (root.fiche.brouillon ? #fff4e5 : Theme.accent-survol);
+            background: root.fiche.annule ? Theme.fond-erreur : (root.fiche.brouillon ? Theme.fond-attente : Theme.accent-survol);
 
             Rangee {
                 padding-left: 12px;

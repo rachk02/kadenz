@@ -89,6 +89,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0015_postes_distance.sql"),
     include_str!("migrations/0016_stock.sql"),
     include_str!("migrations/0017_comptabilite.sql"),
+    include_str!("migrations/0018_theme.sql"),
 ];
 
 #[derive(Debug)]
@@ -487,6 +488,13 @@ fn uri_immuable(chemin: &Path) -> Option<String> {
     uri.push_str("?immutable=1");
     Some(uri)
 }
+
+/// Colonne du mode d'affichage (migration 0018), posée sur une base au schéma
+/// de la V1 le temps d'y écrire avec le code actuel (essais de reprise), puis
+/// retirée par `ALTER TABLE utilisateur DROP COLUMN theme`.
+#[cfg(test)]
+pub(crate) const THEME_TEMPORAIRE_V1: &str =
+    "ALTER TABLE utilisateur ADD COLUMN theme TEXT NOT NULL DEFAULT 'systeme'";
 
 /// Validation par le code d'aujourd'hui d'un document d'une base restée au
 /// schéma de la V1 (essais de reprise) : les deux colonnes de la nature

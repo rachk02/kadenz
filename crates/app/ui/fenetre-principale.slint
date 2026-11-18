@@ -1,5 +1,6 @@
 // Fenêtre principale : écrans de démarrage, puis application avec sa navigation
 // (bandeau ou barre latérale, navigation.slint) et ses pages.
+import { Palette } from "std-widgets.slint";
 import { Affichage, Alerte, Confirmation, Droits, Ecriture, FenetreAlerte, FenetreConfirmation, Modules, Rangee, Retour, Theme } from "composants.slint";
 import { EcranInscription } from "premier-lancement.slint";
 import { EcranConnexion } from "connexion.slint";
@@ -33,6 +34,15 @@ export enum Ecran { demarrage-impossible, presentation, inscription, connexion, 
 
 export component FenetrePrincipale inherits Window {
     in-out property <Ecran> ecran: Ecran.demarrage-impossible;
+    // Les widgets standard (champs, cases, barres de défilement) suivent le mode de
+    // Theme, et non celui de Windows : sinon un champ resterait clair en mode sombre forcé.
+    property <bool> theme-sombre: Theme.sombre;
+    init => {
+        Palette.color-scheme = Theme.sombre ? ColorScheme.dark : ColorScheme.light;
+    }
+    changed theme-sombre => {
+        Palette.color-scheme = root.theme-sombre ? ColorScheme.dark : ColorScheme.light;
+    }
     // Présentation revue depuis « À propos » : elle ramène à l'application.
     property <bool> presentation-depuis-a-propos;
     in property <string> message-demarrage;
@@ -89,7 +99,7 @@ export component FenetrePrincipale inherits Window {
     preferred-height: 760px;
     min-width: 900px;
     min-height: 640px;
-    background: white;
+    background: Theme.fond;
 
     if root.ecran == Ecran.demarrage-impossible: EcranDemarrageImpossible {
         message: root.message-demarrage;

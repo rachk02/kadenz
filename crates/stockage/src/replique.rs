@@ -119,7 +119,8 @@ pub(crate) const TABLES: [Table; 8] = [
         ],
         binaires: &[],
         references: &[],
-        locales: &[],
+        // Mode clair ou sombre : préférence de chaque poste (migration 0018).
+        locales: &["theme"],
         uniques: &["identifiant"],
     },
     Table {

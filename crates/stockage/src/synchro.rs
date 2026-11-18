@@ -2212,6 +2212,7 @@ mod tests {
                 conn.pragma_update(None, "user_version", rang as u32 + 1)
                     .unwrap();
             }
+            conn.execute_batch(crate::THEME_TEMPORAIRE_V1).unwrap();
             crate::licence::preparer(&conn, true).unwrap();
             let admin = compte(&conn, "admin", Role::Admin);
             let mut f = FicheTiers::vide(TypeTiers::Client);
@@ -2227,7 +2228,10 @@ mod tests {
             }];
             let id =
                 documents::creer_brouillon(&mut conn, &admin, TypeDocument::Facture, &s).unwrap();
-            crate::valider_au_schema_v1(&mut conn, &admin, id)
+            let numero = crate::valider_au_schema_v1(&mut conn, &admin, id);
+            conn.execute_batch("ALTER TABLE utilisateur DROP COLUMN theme")
+                .unwrap();
+            numero
         };
 
         let mut conn = crate::ouvrir(&chemin).unwrap();

@@ -28,8 +28,14 @@ export global Theme {
     out property <LayoutAlignment> rangee-fin: root.rtl ? LayoutAlignment.start : LayoutAlignment.end;
     // Mode sombre (refonte du 2026-11-18, docs/marque/propositions-2026-11-18-refonte-ecrans) :
     // vrai quand le compte a choisi le mode sombre, ou « comme Windows » avec Windows en sombre.
-    // Chaque couleur ci-dessous a sa valeur claire puis sa valeur sombre.
-    in property <bool> sombre: false;
+    // Chaque couleur ci-dessous a sa valeur claire puis sa valeur sombre. Valeurs sombres
+    // PROVISOIRES : l'utilisateur veut un sombre neutre, grisâtre, et non un bleu nuit
+    // (2026-11-18) ; elles seront remplacées par la palette qu'il choisira.
+    // Mode du compte connecté : 0 comme Windows (par défaut, et avant toute connexion),
+    // 1 clair, 2 sombre. Réglage de Windows relu par l'application (theme.rs).
+    in property <int> mode: 0;
+    in property <bool> windows-sombre: false;
+    out property <bool> sombre: root.mode == 2 || (root.mode == 0 && root.windows-sombre);
     // Couleurs de la marque (docs/marque) : Indigo (accent, logo), Nuit pour les panneaux
     // de marque, les bulles et les alertes sombres ; couleurs de l'ancienne identité,
     // reprises le 2026-11-12 à la demande de l'utilisateur.
@@ -62,6 +68,21 @@ export global Theme {
     // Ambre foncé, lisible sur fond blanc : résultat attendu du serveur.
     out property <color> attente: root.sombre ? #fdb022 : #b54708;
     out property <color> succes: root.sombre ? #47cd89 : #067647;
+    // Fonds pâles des bandeaux et fiches en erreur ou en attente.
+    out property <color> fond-erreur: root.sombre ? #42305b : #fef3f2;
+    out property <color> fond-attente: root.sombre ? #433c4f : #fff8eb;
+    // Survol et appui des boutons principaux, normaux et de suppression.
+    out property <color> accent-fonce: root.sombre ? #cf9030 : #25307a;
+    out property <color> accent-presse: root.sombre ? #b87f28 : #1f2866;
+    out property <color> danger-fonce: root.sombre ? #e85d54 : #951c13;
+    out property <color> danger-presse: root.sombre ? #d14a42 : #7a150e;
+    // Appui d'un bouton secondaire.
+    out property <color> secondaire-presse: root.sombre ? #34408a : #dfe2f1;
+    // Bouton principal grisé et texte grisé.
+    out property <color> desactive: root.sombre ? #3a4795 : #9aa3c7;
+    out property <color> texte-desactive: root.sombre ? #8c94c2 : #9aa3b5;
+    // Fond discret : barres de graphiques, grilles.
+    out property <color> fond-discret: root.sombre ? #232c6b : #eceef3;
 }
 
 // Préférences d'affichage du compte connecté (migration 0006) : navigation par
@@ -112,7 +133,7 @@ export component ChampNombre inherits Rectangle {
     border-radius: 4px;
     border-width: 1px;
     border-color: Theme.bordure;
-    background: root.enabled ? white : Theme.fond-lateral;
+    background: root.enabled ? Theme.champ : Theme.fond-lateral;
     clip: true;
     forward-focus: saisie;
 
@@ -138,7 +159,7 @@ export component ChampNombre inherits Rectangle {
         enabled: root.enabled;
         color: root.enabled ? Theme.texte : Theme.texte-secondaire;
         selection-background-color: Theme.accent;
-        selection-foreground-color: white;
+        selection-foreground-color: Theme.texte-sur-accent;
         accessible-role: text-input;
         accessible-value: self.text;
         accessible-placeholder-text: root.placeholder-text;
@@ -546,10 +567,10 @@ export component Bouton inherits Rectangle {
     border-radius: 4px;
     border-width: root.primary ? 0px : 1px;
     border-color: Theme.bordure;
-    background: !root.enabled ? (root.primary ? #9aa3c7 : Theme.fond-lateral)
-        : root.primary && root.danger ? (zone.pressed ? #7a150e : zone.has-hover ? #951c13 : Theme.erreur)
-        : root.primary ? (zone.pressed ? #1f2866 : zone.has-hover ? #25307a : Theme.accent)
-        : (zone.pressed ? #dfe2f1 : zone.has-hover ? Theme.accent-survol : white);
+    background: !root.enabled ? (root.primary ? Theme.desactive : Theme.fond-lateral)
+        : root.primary && root.danger ? (zone.pressed ? Theme.danger-presse : zone.has-hover ? Theme.danger-fonce : Theme.erreur)
+        : root.primary ? (zone.pressed ? Theme.accent-presse : zone.has-hover ? Theme.accent-fonce : Theme.accent)
+        : (zone.pressed ? Theme.secondaire-presse : zone.has-hover ? Theme.accent-survol : Theme.champ);
     animate background { duration: Affichage.duree; }
 
     accessible-role: button;
@@ -577,7 +598,7 @@ export component Bouton inherits Rectangle {
         text: root.text;
         font-size: 13px;
         font-weight: root.primary ? 600 : 500;
-        color: !root.enabled ? (root.primary ? white : #9aa3b5) : root.primary ? white : Theme.texte;
+        color: !root.enabled ? (root.primary ? Theme.texte-sur-accent : Theme.texte-desactive) : root.primary ? Theme.texte-sur-accent : Theme.texte;
         horizontal-alignment: center;
         vertical-alignment: center;
         overflow: elide;
@@ -683,7 +704,7 @@ export component FenetreConfirmation inherits Rectangle {
             height: contenu.preferred-height;
             y: (root.height - self.height) / 2 + (Confirmation.ouverte ? 0px : 12px);
             animate y { duration: Affichage.duree-longue; easing: ease-out; }
-            background: white;
+            background: Theme.fond;
             border-radius: 4px;
             border-width: 1px;
             border-color: Theme.bordure;
@@ -761,7 +782,7 @@ export component ElementNavigation inherits Rectangle {
         width: 18px;
         height: 18px;
         source: root.icone;
-        colorize: root.actif ? white : Theme.texte-secondaire;
+        colorize: root.actif ? Theme.texte-sur-accent : Theme.texte-secondaire;
     }
 
     Text {
@@ -769,7 +790,7 @@ export component ElementNavigation inherits Rectangle {
         width: parent.width - 48px;
         horizontal-alignment: Theme.debut;
         text: root.libelle;
-        color: root.actif ? white : Theme.texte;
+        color: root.actif ? Theme.texte-sur-accent : Theme.texte;
         font-weight: root.actif ? 600 : 400;
         vertical-alignment: center;
         font-size: 14px;

@@ -102,7 +102,7 @@ export component ListeDeroulante {
     }
 
     fond := Rectangle {
-        background: !root.enabled ? Theme.fond-lateral : zone.has-hover || zone.pressed ? Theme.fond-lateral : white;
+        background: !root.enabled ? Theme.fond-lateral : zone.has-hover || zone.pressed ? Theme.fond-lateral : Theme.champ;
         border-width: 1px;
         border-color: Theme.bordure;
         border-radius: 4px;
@@ -194,7 +194,7 @@ export component ListeDeroulante {
             }
 
             Rectangle {
-                background: white;
+                background: Theme.fond;
                 border-width: 1px;
                 border-color: Theme.bordure;
                 border-radius: 4px;

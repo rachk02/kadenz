@@ -142,7 +142,7 @@ export component BoutonIcone inherits Rectangle {
     width: 32px;
     height: 32px;
     border-radius: 4px;
-    background: zone.pressed ? #dfe2f1 : zone.has-hover ? Theme.accent-survol : transparent;
+    background: zone.pressed ? Theme.secondaire-presse : zone.has-hover ? Theme.accent-survol : transparent;
     animate background { duration: Affichage.duree; }
 
     accessible-role: button;
@@ -462,7 +462,7 @@ component GroupeBandeau inherits Rectangle {
     etiquette := Text {
         x: Theme.rtl ? parent.width - 12px - self.width : 12px;
         text: root.libelle;
-        color: root.actif ? white : Theme.texte;
+        color: root.actif ? Theme.texte-sur-accent : Theme.texte;
         font-weight: root.actif ? 600 : 500;
         font-size: 14px;
         vertical-alignment: center;
@@ -474,7 +474,7 @@ component GroupeBandeau inherits Rectangle {
         height: 12px;
         source: @image-url("icones/actions/suivant.svg");
         transform-rotation: 90deg;
-        colorize: root.actif ? white : Theme.texte-secondaire;
+        colorize: root.actif ? Theme.texte-sur-accent : Theme.texte-secondaire;
     }
 
     zone := TouchArea {
@@ -495,7 +495,7 @@ component GroupeBandeau inherits Rectangle {
             }
             opacity: self.montre ? 1 : 0;
             animate opacity { duration: Affichage.duree; }
-            background: white;
+            background: Theme.fond;
             border-radius: 4px;
             border-width: 1px;
             border-color: Theme.bordure;
@@ -545,13 +545,13 @@ component EntreeBandeau inherits Rectangle {
         width: 16px;
         height: 16px;
         source: root.icone;
-        colorize: root.actif ? white : Theme.texte-secondaire;
+        colorize: root.actif ? Theme.texte-sur-accent : Theme.texte-secondaire;
     }
 
     etiquette := Text {
         x: Theme.rtl ? 10px : 32px;
         text: root.libelle;
-        color: root.actif ? white : Theme.texte;
+        color: root.actif ? Theme.texte-sur-accent : Theme.texte;
         font-weight: root.actif ? 600 : 500;
         font-size: 14px;
         vertical-alignment: center;
