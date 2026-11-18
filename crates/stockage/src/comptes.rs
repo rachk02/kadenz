@@ -599,8 +599,13 @@ mod tests {
         assert_eq!(admin.theme, ModeAffichage::Systeme);
         assert_eq!(admin.palette, PaletteSombre::Anthracite);
         assert!(!admin.affichage_personnel);
-        changer_mode_affichage(&conn, &admin, ModeAffichage::Sombre, PaletteSombre::Graphite)
-            .unwrap();
+        changer_mode_affichage(
+            &conn,
+            &admin,
+            ModeAffichage::Sombre,
+            PaletteSombre::Graphite,
+        )
+        .unwrap();
         let relu = lire(&conn, admin.id).unwrap().unwrap();
         assert!(relu.affichage_personnel);
         assert_eq!(

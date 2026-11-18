@@ -65,7 +65,10 @@ fn fixe(modele: &'static str) -> MessageCompose {
 /// Adresse du portail à appeler ; `None` si elle n'est pas configurée.
 pub fn adresse_portail() -> Option<String> {
     #[cfg(debug_assertions)]
-    if let Some(a) = std::env::var(PORTAIL_ESSAI).ok().filter(|v| !v.trim().is_empty()) {
+    if let Some(a) = std::env::var(PORTAIL_ESSAI)
+        .ok()
+        .filter(|v| !v.trim().is_empty())
+    {
         return Some(a.trim().trim_end_matches('/').to_string());
     }
     Some(ADRESSE_PORTAIL.trim().trim_end_matches('/').to_string()).filter(|a| !a.is_empty())
@@ -152,15 +155,25 @@ fn lire_reponse(texte: &str) -> Result<Activation, MessageCompose> {
             .and_then(serde_json::Value::as_array)
             .map(|l| {
                 l.iter()
-                    .map(|x| x.as_str().map(str::to_string).unwrap_or_else(|| x.to_string()))
+                    .map(|x| {
+                        x.as_str()
+                            .map(str::to_string)
+                            .unwrap_or_else(|| x.to_string())
+                    })
                     .collect()
             })
             .unwrap_or_default();
-        let valeurs: Vec<&dyn std::fmt::Display> =
-            valeurs.iter().map(|x| x as &dyn std::fmt::Display).collect();
+        let valeurs: Vec<&dyn std::fmt::Display> = valeurs
+            .iter()
+            .map(|x| x as &dyn std::fmt::Display)
+            .collect();
         return Err(MessageCompose::new(modele, &valeurs));
     }
-    let texte_de = |nom: &str| v.get(nom).and_then(serde_json::Value::as_str).map(str::to_string);
+    let texte_de = |nom: &str| {
+        v.get(nom)
+            .and_then(serde_json::Value::as_str)
+            .map(str::to_string)
+    };
     let licence = texte_de("licence")
         .filter(|l| l.starts_with("KADENZ-E-"))
         .ok_or_else(inattendue)?;
@@ -204,7 +217,11 @@ mod tests {
             r#"{"licence":"KADENZ-abc","postes":3,"formule":"annuelle","debut":"a","echeance":"b"}"#,
             "<html>",
         ] {
-            assert_eq!(lire_reponse(texte).unwrap_err().modele, MODELES_ERREUR[2], "{texte}");
+            assert_eq!(
+                lire_reponse(texte).unwrap_err().modele,
+                MODELES_ERREUR[2],
+                "{texte}"
+            );
         }
     }
 

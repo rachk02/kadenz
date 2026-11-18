@@ -390,7 +390,8 @@ pub(crate) fn fermer_session(f: &FenetrePrincipale, etat: &mut Etat) {
     etat.utilisateur = None;
     // Écran de connexion : réglage du poste, le compte suivant n'est pas connu.
     theme::appliquer(f, theme::du_poste());
-    f.global::<Affichage>().set_animations(theme::animations_du_poste());
+    f.global::<Affichage>()
+        .set_animations(theme::animations_du_poste());
     // Bandeau des sauvegardes et assistant de reprise : propres au compte.
     let serveur = f.global::<ServeurApi>();
     serveur.set_avertissement_sauvegarde(SharedString::new());
@@ -553,9 +554,8 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
                 return phrase("aucune session ouverte");
             };
             // Toujours dans la base de ce poste, même relié : préférence non répliquée.
-            let resultat =
-                comptes::changer_mode_affichage(&etat.conn, &utilisateur, mode, palette)
-                    .map_err(phrase);
+            let resultat = comptes::changer_mode_affichage(&etat.conn, &utilisateur, mode, palette)
+                .map_err(phrase);
             if resultat.is_ok() {
                 // Dernier choix fait sur ce poste : aussi celui de l'écran de connexion.
                 theme::enregistrer_poste(mode, palette);
@@ -576,7 +576,10 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     fenetre
         .global::<Affichage>()
         .on_choisir_poste(move |rang, rang_palette| {
-            let reglage = (theme::depuis_rang(rang), theme::palette_depuis_rang(rang_palette));
+            let reglage = (
+                theme::depuis_rang(rang),
+                theme::palette_depuis_rang(rang_palette),
+            );
             theme::enregistrer_poste(reglage.0, reglage.1);
             if let Some(f) = f.upgrade() {
                 theme::appliquer(&f, reglage);
@@ -681,10 +684,14 @@ fn main() -> Result<(), slint::PlatformError> {
     // Réglage d'affichage du poste avant connexion ; mode « comme Windows » : réglage
     // de Windows suivi tant que la fenêtre est ouverte.
     theme::appliquer(&fenetre, theme::du_poste());
-    fenetre.global::<Affichage>().set_animations(theme::animations_du_poste());
+    fenetre
+        .global::<Affichage>()
+        .set_animations(theme::animations_du_poste());
     let _suivi_windows = theme::suivre_windows(&fenetre);
     // Champ des codes de licence courts (ChampCode).
-    fenetre.global::<CodeCourtUi>().on_formater(|precedent, nouveau| code_saisie::formater(&precedent, &nouveau));
+    fenetre
+        .global::<CodeCourtUi>()
+        .on_formater(|precedent, nouveau| code_saisie::formater(&precedent, &nouveau));
     let resultat = fenetre.run();
     // Fenêtre fermée : sauvegarde automatique de la base ouverte.
     // Poste relié : synchroniseur arrêté, et pas de sauvegarde de la copie, les

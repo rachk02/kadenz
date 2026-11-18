@@ -90,7 +90,10 @@ pub fn ecrire(utiles: &str) -> String {
 
 /// Caractère retiré d'une saisie sans rien signaler : les séparateurs.
 fn separateur(c: char) -> bool {
-    matches!(c, '-' | '_' | ' ' | '\t' | '\r' | '\n' | '\u{a0}' | '\u{2010}' | '\u{2011}' | '\u{2013}')
+    matches!(
+        c,
+        '-' | '_' | ' ' | '\t' | '\r' | '\n' | '\u{a0}' | '\u{2010}' | '\u{2011}' | '\u{2013}'
+    )
 }
 
 /// Ce que la mise en forme a dû retirer d'autre que des séparateurs.
@@ -121,10 +124,18 @@ pub struct MiseEnForme {
 pub fn mettre_en_forme(precedent: &str, nouveau: &str) -> MiseEnForme {
     let avant: Vec<char> = precedent.chars().collect();
     let apres: Vec<char> = nouveau.chars().collect();
-    let commun = avant.iter().rev().zip(apres.iter().rev()).take_while(|(a, b)| a == b).count();
+    let commun = avant
+        .iter()
+        .rev()
+        .zip(apres.iter().rev())
+        .take_while(|(a, b)| a == b)
+        .count();
     let fin = apres.len() - commun.min(apres.len());
     let utiles = normaliser(nouveau);
-    let n = normaliser(&apres[..fin].iter().collect::<String>()).chars().count().min(utiles.chars().count());
+    let n = normaliser(&apres[..fin].iter().collect::<String>())
+        .chars()
+        .count()
+        .min(utiles.chars().count());
     let signal = apres
         .iter()
         .flat_map(|c| c.to_uppercase())
@@ -137,7 +148,11 @@ pub fn mettre_en_forme(precedent: &str, nouveau: &str) -> MiseEnForme {
     // sauf en fin de groupe, où le curseur reste avant le tiret. Le texte écrit
     // n'a que des caractères ASCII : caractères et octets se confondent.
     let tirets = if n == 0 { 0 } else { (n - 1) / GROUPE };
-    MiseEnForme { texte: ecrire(&utiles), curseur: n + tirets, signal }
+    MiseEnForme {
+        texte: ecrire(&utiles),
+        curseur: n + tirets,
+        signal,
+    }
 }
 
 /// Code d'activation contrôlé, sous sa forme écrite (`XXXXX-...`), ou l'erreur
@@ -146,7 +161,10 @@ pub fn verifier(saisie: &str) -> Result<String, MessageCompose> {
     let utiles = normaliser(saisie);
     let n = utiles.chars().count();
     if n < LONGUEUR {
-        let interdits = saisie.chars().flat_map(char::to_uppercase).any(|c| matches!(c, 'O' | 'I' | '0' | '1'));
+        let interdits = saisie
+            .chars()
+            .flat_map(char::to_uppercase)
+            .any(|c| matches!(c, 'O' | 'I' | '0' | '1'));
         if interdits {
             return Err(MessageCompose::new(MODELES_ERREUR[2], &[]));
         }
@@ -208,7 +226,16 @@ mod tests {
             brut.to_lowercase(),
             format!("  {}\r\n", code.replace('-', " ")),
             code.replace('-', "\u{2011}"),
-            format!("{}\n", brut.as_str().chars().collect::<Vec<_>>().chunks(5).map(|g| g.iter().collect::<String>()).collect::<Vec<_>>().join("\n")),
+            format!(
+                "{}\n",
+                brut.as_str()
+                    .chars()
+                    .collect::<Vec<_>>()
+                    .chunks(5)
+                    .map(|g| g.iter().collect::<String>())
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            ),
         ];
         for v in variantes {
             assert_eq!(verifier(&v).unwrap(), code, "variante {v:?}");
@@ -247,7 +274,8 @@ mod tests {
                     let mut corps: Vec<char> = "KADENZKADENZKADENZKADENZ".chars().collect();
                     corps[pos] = *x;
                     corps[pos + 1] = *y;
-                    let mut code: Vec<char> = complet(&corps.iter().collect::<String>()).chars().collect();
+                    let mut code: Vec<char> =
+                        complet(&corps.iter().collect::<String>()).chars().collect();
                     code.swap(pos, pos + 1);
                     let inverse: String = code.into_iter().collect();
                     assert!(verifier(&inverse).is_err(), "{inverse}");
@@ -259,11 +287,19 @@ mod tests {
     #[test]
     fn messages_avant_le_portail() {
         assert_eq!(verifier("ABCDE-FGH").unwrap_err().modele, MODELES_ERREUR[0]);
-        assert_eq!(verifier("ABCDE-FGH").unwrap_err().valeurs, vec!["8".to_string()]);
+        assert_eq!(
+            verifier("ABCDE-FGH").unwrap_err().valeurs,
+            vec!["8".to_string()]
+        );
         assert_eq!(verifier("ABODE").unwrap_err().modele, MODELES_ERREUR[2]);
         let mut code: Vec<char> = complet("ABCDEFGHJKLMNPQRSTUVWXYZ").chars().collect();
         code[3] = if code[3] == 'Z' { 'Y' } else { 'Z' };
-        assert_eq!(verifier(&code.into_iter().collect::<String>()).unwrap_err().modele, MODELES_ERREUR[1]);
+        assert_eq!(
+            verifier(&code.into_iter().collect::<String>())
+                .unwrap_err()
+                .modele,
+            MODELES_ERREUR[1]
+        );
     }
 
     fn forme(precedent: &str, nouveau: &str) -> (String, usize, Signal) {
@@ -279,13 +315,19 @@ mod tests {
         assert_eq!(forme("ABCDE", "ABCDEf"), ("ABCDE-F".into(), 7, Aucun));
         // Insertion au milieu : le curseur reste après le caractère tapé
         // (X tapé après le C de « ABCDE-FGH »).
-        assert_eq!(forme("ABCDE-FGH", "ABCXDE-FGH"), ("ABCXD-EFGH".into(), 4, Aucun));
+        assert_eq!(
+            forme("ABCDE-FGH", "ABCXDE-FGH"),
+            ("ABCXD-EFGH".into(), 4, Aucun)
+        );
         // Collage d'un code entier dans un champ vide, en minuscules et espacé.
         let code = tirer().unwrap();
         let colle = format!("{}\r\n", code.to_lowercase().replace('-', " "));
         assert_eq!(forme("", &colle), (code.clone(), LONGUEUR + 4, Aucun));
         // Collage au milieu d'un texte, avec des caractères accentués (UTF-8).
-        assert_eq!(forme("ABCDE-FGH", "ABCé€ZZDE-FGH"), ("ABCZZ-DEFGH".into(), 5, Autre));
+        assert_eq!(
+            forme("ABCDE-FGH", "ABCé€ZZDE-FGH"),
+            ("ABCZZ-DEFGH".into(), 5, Autre)
+        );
         // Effacement du tiret : rien ne change, le curseur reste avant lui.
         assert_eq!(forme("ABCDE-FG", "ABCDEFG"), ("ABCDE-FG".into(), 5, Aucun));
         // Effacement d'un caractère au milieu.

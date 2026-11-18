@@ -73,7 +73,11 @@ pub fn code_cree(c: &Cadre, cree: &CodeCree) -> Markup {
 }
 
 pub fn code(c: &Cadre, code: &CodeActivation) -> Markup {
-    let rubrique = if code.paiement.is_some() { Rubrique::Entreprises } else { Rubrique::Codes };
+    let rubrique = if code.paiement.is_some() {
+        Rubrique::Entreprises
+    } else {
+        Rubrique::Codes
+    };
     let contenu = html! {
         (titre("Code d'activation", retour(code)))
         div.carte {
@@ -218,4 +222,3 @@ pub fn codes_crees(c: &Cadre, codes: &[CodeCree]) -> Markup {
     };
     page(c, "Codes tirés", Rubrique::Codes, contenu)
 }
-

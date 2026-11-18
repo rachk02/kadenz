@@ -2229,8 +2229,7 @@ mod tests {
             let id =
                 documents::creer_brouillon(&mut conn, &admin, TypeDocument::Facture, &s).unwrap();
             let numero = crate::valider_au_schema_v1(&mut conn, &admin, id);
-            conn.execute_batch(crate::THEME_RETIRE_V1)
-                .unwrap();
+            conn.execute_batch(crate::THEME_RETIRE_V1).unwrap();
             numero
         };
 

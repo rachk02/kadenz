@@ -76,5 +76,10 @@ pub fn emission(
             }
         }
     };
-    page(c, "Tirer le code d'activation", Rubrique::Entreprises, contenu)
+    page(
+        c,
+        "Tirer le code d'activation",
+        Rubrique::Entreprises,
+        contenu,
+    )
 }

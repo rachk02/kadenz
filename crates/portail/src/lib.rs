@@ -667,8 +667,7 @@ fn signer_et_enregistrer(
         emetteur,
         emise_le: jour,
     };
-    let texte =
-        lic::emettre(&licence, cle).map_err(|e| ErreurPortail::Interne(e.to_string()))?;
+    let texte = lic::emettre(&licence, cle).map_err(|e| ErreurPortail::Interne(e.to_string()))?;
     lic::verifier(&texte, &a.entreprise.identifiant, &[cle.verifying_key()])
         .map_err(|e| ErreurPortail::Interne(format!("licence émise illisible : {e}")))?;
     conn.execute(
@@ -697,7 +696,11 @@ fn liste_modules(modules: &[Module]) -> String {
     if modules.is_empty() {
         "aucun".to_string()
     } else {
-        modules.iter().map(|m| m.libelle()).collect::<Vec<_>>().join(", ")
+        modules
+            .iter()
+            .map(|m| m.libelle())
+            .collect::<Vec<_>>()
+            .join(", ")
     }
 }
 
@@ -1257,8 +1260,12 @@ impl Portail {
         let conn = self.conn();
         let acteur = relire(&conn, acteur)?;
         let paiement = paiement_permis(&conn, &acteur, paiement)?;
-        let echeance =
-            echeance_proposee(&conn, &paiement.entreprise, paiement.formule, self.aujourdhui())?;
+        let echeance = echeance_proposee(
+            &conn,
+            &paiement.entreprise,
+            paiement.formule,
+            self.aujourdhui(),
+        )?;
         Ok(Proposition {
             modules: derniere_licence(&conn, &paiement.entreprise)?
                 .map(|l| l.modules)
@@ -1357,7 +1364,13 @@ impl Portail {
             paiement.formule.code(),
             liste_modules(&modules)
         );
-        noter(&conn, Some(acteur.id), "code_cree", Some(&paiement.entreprise), &details)?;
+        noter(
+            &conn,
+            Some(acteur.id),
+            "code_cree",
+            Some(&paiement.entreprise),
+            &details,
+        )?;
         Ok(CodeCree {
             code,
             fiche: code_permis(&conn, &acteur, id)?,
@@ -1443,17 +1456,21 @@ impl Portail {
         let conn = self.conn();
         let acteur = relire(&conn, acteur)?;
         let code = code_permis(&conn, &acteur, id)?;
-        let createur: i64 =
-            conn.query_row("SELECT cree_par FROM code_activation WHERE id = ?1", [id], |r| {
-                r.get(0)
-            })?;
+        let createur: i64 = conn.query_row(
+            "SELECT cree_par FROM code_activation WHERE id = ?1",
+            [id],
+            |r| r.get(0),
+        )?;
         if acteur.role != Role::Editeur && createur != acteur.id {
             return Err(ErreurPortail::Interdit);
         }
         if code.etat != EtatCode::Libre {
             return refus("seul un code pas encore activé peut être annulé");
         }
-        conn.execute("UPDATE code_activation SET etat = 'annule' WHERE id = ?1", [id])?;
+        conn.execute(
+            "UPDATE code_activation SET etat = 'annule' WHERE id = ?1",
+            [id],
+        )?;
         let details = format!(
             "code …{}{}",
             code.fin,
@@ -1461,7 +1478,13 @@ impl Portail {
                 .map(|p| format!(", paiement {p} de nouveau libre"))
                 .unwrap_or_default()
         );
-        noter(&conn, Some(acteur.id), "code_annule", code.entreprise.as_deref(), &details)?;
+        noter(
+            &conn,
+            Some(acteur.id),
+            "code_annule",
+            code.entreprise.as_deref(),
+            &details,
+        )?;
         code_permis(&conn, &acteur, id)
     }
 
@@ -1525,7 +1548,11 @@ impl Portail {
             .optional()?
             .filter(|c| c.etat != EtatCode::Annule)
             .ok_or_else(inconnu)?;
-        if trouve.entreprise.as_deref().is_some_and(|e| e != identifiant) {
+        if trouve
+            .entreprise
+            .as_deref()
+            .is_some_and(|e| e != identifiant)
+        {
             return Err(ErreurPortail::Validation(MODELES_ACTIVATION[1].into()));
         }
         // Déjà activé par cette entreprise : réinstallation, même licence.
@@ -1580,7 +1607,13 @@ impl Portail {
                 "INSERT INTO entreprise (identifiant, client, revendeur, cree_le) VALUES (?1, ?2, ?3, ?4)",
                 params![identifiant, client, revendeur, maintenant()],
             )?;
-            noter(&transaction, None, "entreprise_creee", Some(&identifiant), &client)?;
+            noter(
+                &transaction,
+                None,
+                "entreprise_creee",
+                Some(&identifiant),
+                &client,
+            )?;
         }
         let entreprise = transaction.query_row(
             &format!("{SELECT_ENTREPRISE} WHERE e.identifiant = ?1"),
@@ -1614,7 +1647,13 @@ impl Portail {
             licence.echeance,
             demande.version.trim()
         );
-        noter(&transaction, None, "code_active", Some(&identifiant), &details)?;
+        noter(
+            &transaction,
+            None,
+            "code_active",
+            Some(&identifiant),
+            &details,
+        )?;
         transaction.commit()?;
         Ok(Activation {
             licence: texte,

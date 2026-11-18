@@ -15,8 +15,8 @@ use kadenz_domaine::module::Module;
 use kadenz_domaine::role::Role as RoleKadenz;
 use kadenz_portail::web::{self, ConfigWeb};
 use kadenz_portail::{
-    Activation, Compte, DemandeActivation, ErreurPortail, EtatCode, MODELES_ACTIVATION, NouveauPaiement,
-    Portail,
+    Activation, Compte, DemandeActivation, ErreurPortail, EtatCode, MODELES_ACTIVATION,
+    NouveauPaiement, Portail,
 };
 use kadenz_stockage::comptes::NouvelUtilisateur;
 use kadenz_stockage::entreprise::Entreprise as FicheKadenz;
@@ -682,8 +682,16 @@ fn code_tire_puis_active() {
         .into_iter()
         .map(|a| a.action)
         .collect();
-    for attendu in ["code_cree", "code_active", "code_reactive", "activation_refusee"] {
-        assert!(actions.iter().any(|a| a == attendu), "{attendu} absent du journal");
+    for attendu in [
+        "code_cree",
+        "code_active",
+        "code_reactive",
+        "activation_refusee",
+    ] {
+        assert!(
+            actions.iter().any(|a| a == attendu),
+            "{attendu} absent du journal"
+        );
     }
     let _ = std::fs::remove_dir_all(&d);
 }
@@ -792,7 +800,10 @@ fn client_d_activation_contre_le_portail() {
     let saisi = cree.code.to_lowercase().replace('-', " ");
     let a = activer_aupres(&adresse, &saisi, ENTREPRISE_A, "Boulangerie Wendé").unwrap();
     assert_eq!((a.postes, a.formule.as_str()), (4, "annuelle"));
-    assert_eq!((a.debut.as_str(), a.echeance.as_str()), ("2026-11-15", "2027-11-14"));
+    assert_eq!(
+        (a.debut.as_str(), a.echeance.as_str()),
+        ("2026-11-15", "2027-11-14")
+    );
     let lue = kadenz_licence::entreprise::verifier(&a.licence, ENTREPRISE_A, &[cle]).unwrap();
     assert_eq!(lue.postes, 4);
     lance.arreter();
@@ -804,7 +815,12 @@ fn codes_a_vendre_et_annulation() {
     let (p, d, editeur, a, b) = portail("codes-vente", "2026-11-15");
 
     // Saisies refusées.
-    for (nombre, postes, formule) in [("0", "3", "annuelle"), ("51", "3", "annuelle"), ("2", "0", "annuelle"), ("2", "3", "trimestrielle")] {
+    for (nombre, postes, formule) in [
+        ("0", "3", "annuelle"),
+        ("51", "3", "annuelle"),
+        ("2", "0", "annuelle"),
+        ("2", "3", "trimestrielle"),
+    ] {
         assert!(matches!(
             p.creer_codes(&a, nombre, postes, formule, &Module::TOUS),
             Err(ErreurPortail::Validation(_))
@@ -812,18 +828,26 @@ fn codes_a_vendre_et_annulation() {
     }
 
     // Trois codes de 2 postes tirés par le revendeur A.
-    let codes = p.creer_codes(&a, "3", "2", "annuelle", &Module::TOUS).unwrap();
+    let codes = p
+        .creer_codes(&a, "3", "2", "annuelle", &Module::TOUS)
+        .unwrap();
     assert_eq!(codes.len(), 3);
     for k in &codes {
         assert!(kadenz_licence::code_court::verifier(&k.code).is_ok());
-        assert_eq!((k.fiche.paiement, k.fiche.entreprise.as_deref()), (None, None));
+        assert_eq!(
+            (k.fiche.paiement, k.fiche.entreprise.as_deref()),
+            (None, None)
+        );
         assert_eq!(k.fiche.etat, EtatCode::Libre);
     }
     assert_eq!(p.codes_a_vendre(&a).unwrap().len(), 3);
     assert_eq!(p.codes_a_vendre(&editeur).unwrap().len(), 3);
     // Le revendeur B ne les voit pas et ne peut pas les annuler.
     assert!(p.codes_a_vendre(&b).unwrap().is_empty());
-    assert_eq!(p.code(&b, codes[0].fiche.id), Err(ErreurPortail::Introuvable));
+    assert_eq!(
+        p.code(&b, codes[0].fiche.id),
+        Err(ErreurPortail::Introuvable)
+    );
     assert_eq!(
         p.annuler_code(&b, codes[0].fiche.id),
         Err(ErreurPortail::Introuvable)
@@ -846,7 +870,10 @@ fn codes_a_vendre_et_annulation() {
     let activation = p
         .activer(&demande(&codes[1].code, ENTREPRISE_B), "10.0.0.2")
         .unwrap();
-    assert_eq!((activation.postes, activation.echeance.as_str()), (2, "2027-11-14"));
+    assert_eq!(
+        (activation.postes, activation.echeance.as_str()),
+        (2, "2027-11-14")
+    );
     let fiche = p.fiche(&a, ENTREPRISE_B).unwrap();
     assert_eq!(fiche.entreprise.client, "Boulangerie Wendé");
     assert_eq!(fiche.entreprise.revendeur.as_ref().map(|r| r.0), Some(a.id));
@@ -864,7 +891,8 @@ fn codes_a_vendre_et_annulation() {
     );
 
     // Code d'un paiement annulé : le paiement redevient libre.
-    p.creer_entreprise(&editeur, ENTREPRISE_A, "Client A", None).unwrap();
+    p.creer_entreprise(&editeur, ENTREPRISE_A, "Client A", None)
+        .unwrap();
     let paiement = p
         .enregistrer_paiement(&editeur, ENTREPRISE_A, &saisie("1", "mensuelle"))
         .unwrap();
@@ -881,7 +909,10 @@ fn codes_a_vendre_et_annulation() {
         .map(|a| a.action)
         .collect();
     for attendu in ["codes_crees", "code_annule", "code_active"] {
-        assert!(actions.iter().any(|a| a == attendu), "{attendu} absent du journal");
+        assert!(
+            actions.iter().any(|a| a == attendu),
+            "{attendu} absent du journal"
+        );
     }
     let _ = std::fs::remove_dir_all(&d);
 }

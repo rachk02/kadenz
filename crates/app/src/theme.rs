@@ -78,7 +78,12 @@ fn contenu(chemin: &Path) -> serde_json::Value {
 
 fn lire(chemin: &Path) -> (ModeAffichage, PaletteSombre) {
     let valeur = contenu(chemin);
-    let code = |c: &str| valeur.get(c).and_then(serde_json::Value::as_str).unwrap_or("");
+    let code = |c: &str| {
+        valeur
+            .get(c)
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("")
+    };
     (
         ModeAffichage::depuis_code(code("mode")).unwrap_or_default(),
         PaletteSombre::depuis_code(code("palette")).unwrap_or_default(),
@@ -89,12 +94,20 @@ fn lire(chemin: &Path) -> (ModeAffichage, PaletteSombre) {
 /// choix jusqu'à la fermeture ; il est noté dans erreurs.log.
 pub(crate) fn enregistrer_poste(mode: ModeAffichage, palette: PaletteSombre) {
     if let Err(e) = ecrire(&fichier_du_poste(), mode, palette) {
-        crate::consigner_erreur(&format!("Réglage d'affichage du poste non enregistré : {e}"));
+        crate::consigner_erreur(&format!(
+            "Réglage d'affichage du poste non enregistré : {e}"
+        ));
     }
 }
 
 fn ecrire(chemin: &Path, mode: ModeAffichage, palette: PaletteSombre) -> std::io::Result<()> {
-    fusionner(chemin, &[("mode", json!(mode.code())), ("palette", json!(palette.code()))])
+    fusionner(
+        chemin,
+        &[
+            ("mode", json!(mode.code())),
+            ("palette", json!(palette.code())),
+        ],
+    )
 }
 
 /// Écrit des champs du réglage du poste en gardant les autres.
@@ -116,13 +129,18 @@ pub(crate) fn animations_du_poste() -> bool {
 }
 
 fn lire_animations(chemin: &Path) -> bool {
-    contenu(chemin).get("animations").and_then(serde_json::Value::as_bool).unwrap_or(true)
+    contenu(chemin)
+        .get("animations")
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(true)
 }
 
 /// Garde le choix d'animations d'un compte pour les écrans d'avant connexion.
 pub(crate) fn enregistrer_animations_poste(animations: bool) {
     if let Err(e) = fusionner(&fichier_du_poste(), &[("animations", json!(animations))]) {
-        crate::consigner_erreur(&format!("Réglage des animations du poste non enregistré : {e}"));
+        crate::consigner_erreur(&format!(
+            "Réglage des animations du poste non enregistré : {e}"
+        ));
     }
 }
 
@@ -136,7 +154,10 @@ pub(crate) fn du_compte(u: &Utilisateur) -> (ModeAffichage, PaletteSombre) {
     }
 }
 
-pub(crate) fn appliquer(fenetre: &FenetrePrincipale, (mode, palette): (ModeAffichage, PaletteSombre)) {
+pub(crate) fn appliquer(
+    fenetre: &FenetrePrincipale,
+    (mode, palette): (ModeAffichage, PaletteSombre),
+) {
     let t = fenetre.global::<Theme>();
     t.set_mode(rang(mode));
     t.set_palette(rang_palette(palette));
@@ -171,7 +192,9 @@ fn barre_de_titre(_fenetre: &FenetrePrincipale, _sombre: bool) {}
 /// Lit le réglage de Windows tout de suite, puis toutes les deux secondes. Le
 /// minuteur doit vivre aussi longtemps que la fenêtre : il est rendu à l'appelant.
 pub(crate) fn suivre_windows(fenetre: &FenetrePrincipale) -> Timer {
-    fenetre.global::<Theme>().set_windows_sombre(windows_sombre());
+    fenetre
+        .global::<Theme>()
+        .set_windows_sombre(windows_sombre());
     let minuteur = Timer::default();
     let f = fenetre.as_weak();
     // Barre de titre : dès que la fenêtre existe, puis à chaque changement de Windows.
@@ -231,11 +254,19 @@ mod tests {
 
     #[test]
     fn rangs_des_modes_et_des_palettes() {
-        for mode in [ModeAffichage::Systeme, ModeAffichage::Clair, ModeAffichage::Sombre] {
+        for mode in [
+            ModeAffichage::Systeme,
+            ModeAffichage::Clair,
+            ModeAffichage::Sombre,
+        ] {
             assert_eq!(depuis_rang(rang(mode)), mode);
         }
         assert_eq!(depuis_rang(7), ModeAffichage::Systeme);
-        for palette in [PaletteSombre::Graphite, PaletteSombre::Ardoise, PaletteSombre::Anthracite] {
+        for palette in [
+            PaletteSombre::Graphite,
+            PaletteSombre::Ardoise,
+            PaletteSombre::Anthracite,
+        ] {
             assert_eq!(palette_depuis_rang(rang_palette(palette)), palette);
         }
         assert_eq!(palette_depuis_rang(-1), PaletteSombre::Anthracite);
@@ -247,19 +278,31 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dossier);
         let chemin = dossier.join("affichage.json");
         // Absent : comme Windows, Anthracite.
-        assert_eq!(lire(&chemin), (ModeAffichage::Systeme, PaletteSombre::Anthracite));
+        assert_eq!(
+            lire(&chemin),
+            (ModeAffichage::Systeme, PaletteSombre::Anthracite)
+        );
         ecrire(&chemin, ModeAffichage::Sombre, PaletteSombre::Ardoise).unwrap();
-        assert_eq!(lire(&chemin), (ModeAffichage::Sombre, PaletteSombre::Ardoise));
+        assert_eq!(
+            lire(&chemin),
+            (ModeAffichage::Sombre, PaletteSombre::Ardoise)
+        );
         // Les animations s'ajoutent sans effacer le mode ni la palette, et l'inverse.
         assert!(lire_animations(&chemin));
         fusionner(&chemin, &[("animations", json!(false))]).unwrap();
         assert!(!lire_animations(&chemin));
-        assert_eq!(lire(&chemin), (ModeAffichage::Sombre, PaletteSombre::Ardoise));
+        assert_eq!(
+            lire(&chemin),
+            (ModeAffichage::Sombre, PaletteSombre::Ardoise)
+        );
         ecrire(&chemin, ModeAffichage::Clair, PaletteSombre::Graphite).unwrap();
         assert!(!lire_animations(&chemin));
         // Illisible : valeurs par défaut.
         std::fs::write(&chemin, "{pas du json").unwrap();
-        assert_eq!(lire(&chemin), (ModeAffichage::Systeme, PaletteSombre::Anthracite));
+        assert_eq!(
+            lire(&chemin),
+            (ModeAffichage::Systeme, PaletteSombre::Anthracite)
+        );
         assert!(lire_animations(&chemin));
         let _ = std::fs::remove_dir_all(&dossier);
     }

@@ -17,9 +17,9 @@ pub(crate) fn formater(precedent: &str, nouveau: &str) -> CodeSaisi {
     let complet = code_court::normaliser(&mise.texte).chars().count() == LONGUEUR;
     let message = match (mise.signal, &controle) {
         (Signal::Ambigu, _) => phrase(&tr(MODELES_ERREUR[2])),
-        (Signal::Autre, _) => {
-            phrase(&tr("caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"))
-        }
+        (Signal::Autre, _) => phrase(&tr(
+            "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9",
+        )),
         // Rien pendant la saisie : le message ne vient qu'une fois les 25 caractères tapés.
         (Signal::Aucun, Err(e)) if complet => phrase(&tr(&e.to_string())),
         _ => String::new(),
@@ -91,7 +91,10 @@ mod tests {
         // Code complet au contrôle faux : message ; code juste : aucun.
         let code = code_juste();
         let dernier = code.chars().last().unwrap();
-        let faux_signe = code_court::ALPHABET.chars().find(|c| *c != dernier).unwrap();
+        let faux_signe = code_court::ALPHABET
+            .chars()
+            .find(|c| *c != dernier)
+            .unwrap();
         let faux = format!("{}{faux_signe}", &code[..code.len() - 1]);
         let r = formater("", &faux);
         assert!(!r.valide);

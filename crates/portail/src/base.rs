@@ -193,7 +193,9 @@ fn appliquer_pas(conn: &Connection, pas: &str, suivante: i64) -> rusqlite::Resul
     if violation {
         return Err(rusqlite::Error::SqliteFailure(
             rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_CONSTRAINT),
-            Some(format!("migration vers la version {suivante} : clés étrangères rompues")),
+            Some(format!(
+                "migration vers la version {suivante} : clés étrangères rompues"
+            )),
         ));
     }
     transaction.commit()
@@ -219,7 +221,8 @@ mod tests {
     fn base_en_version_1_migree() {
         let conn = Connection::open_in_memory().unwrap();
         conn.execute_batch("PRAGMA foreign_keys = ON;").unwrap();
-        conn.execute_batch(&format!("BEGIN; {SCHEMA} PRAGMA user_version = 1; COMMIT;")).unwrap();
+        conn.execute_batch(&format!("BEGIN; {SCHEMA} PRAGMA user_version = 1; COMMIT;"))
+            .unwrap();
         conn.execute_batch(
             "INSERT INTO compte (id, identifiant, nom, role, mot_de_passe, actif, cree_le)
                  VALUES (1, 'ed', 'Éditeur', 'editeur', 'x', 1, '2026-11-01');
@@ -232,14 +235,19 @@ mod tests {
         )
         .unwrap();
         migrer(&conn).unwrap();
-        let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0)).unwrap();
+        let version: i64 = conn
+            .query_row("PRAGMA user_version", [], |r| r.get(0))
+            .unwrap();
         assert_eq!(version, VERSION);
         let (texte, paiement, code): (String, Option<i64>, Option<i64>) = conn
             .query_row("SELECT texte, paiement, code FROM licence_emise", [], |r| {
                 Ok((r.get(0)?, r.get(1)?, r.get(2)?))
             })
             .unwrap();
-        assert_eq!((texte.as_str(), paiement, code), ("KADENZ-E-x", Some(1), None));
+        assert_eq!(
+            (texte.as_str(), paiement, code),
+            ("KADENZ-E-x", Some(1), None)
+        );
         // Index recréé, clés étrangères de nouveau actives.
         let index: i64 = conn
             .query_row(
@@ -249,7 +257,9 @@ mod tests {
             )
             .unwrap();
         assert_eq!(index, 1);
-        let cles: i64 = conn.query_row("PRAGMA foreign_keys", [], |r| r.get(0)).unwrap();
+        let cles: i64 = conn
+            .query_row("PRAGMA foreign_keys", [], |r| r.get(0))
+            .unwrap();
         assert_eq!(cles, 1);
         // Une licence sans paiement ni code est refusée.
         assert!(
@@ -268,8 +278,13 @@ mod tests {
     fn base_neuve_en_derniere_version() {
         let conn = Connection::open_in_memory().unwrap();
         migrer(&conn).unwrap();
-        let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0)).unwrap();
+        let version: i64 = conn
+            .query_row("PRAGMA user_version", [], |r| r.get(0))
+            .unwrap();
         assert_eq!(version, VERSION);
-        conn.execute_batch("SELECT empreinte FROM code_activation; SELECT code FROM licence_emise;").unwrap();
+        conn.execute_batch(
+            "SELECT empreinte FROM code_activation; SELECT code FROM licence_emise;",
+        )
+        .unwrap();
     }
 }

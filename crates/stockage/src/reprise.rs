@@ -641,8 +641,7 @@ mod tests {
             },
         )
         .unwrap();
-        conn.execute_batch(crate::THEME_RETIRE_V1)
-            .unwrap();
+        conn.execute_batch(crate::THEME_RETIRE_V1).unwrap();
         V1 {
             dossier,
             base,

@@ -571,7 +571,8 @@ async fn emission(
     match bloquant(move || portail.creer_code(&compte, id, &modules)).await {
         Ok(cree) => {
             let mut r = html(StatusCode::OK, pages::code_cree(&c.cadre(None), &cree));
-            r.headers_mut().insert(CACHE_CONTROL, HeaderValue::from_static("no-store"));
+            r.headers_mut()
+                .insert(CACHE_CONTROL, HeaderValue::from_static("no-store"));
             r
         }
         Err(ErreurPortail::Validation(m)) => {
@@ -651,7 +652,10 @@ async fn codes_page(etat: &Etat, c: &Connecte, erreur: Option<String>) -> Respon
             } else {
                 StatusCode::OK
             };
-            html(statut, pages::codes(&c.cadre(None), &liste, erreur.as_deref()))
+            html(
+                statut,
+                pages::codes(&c.cadre(None), &liste, erreur.as_deref()),
+            )
         }
         Err(e) => page_erreur(Some(c), &e),
     }
@@ -689,7 +693,8 @@ async fn tirer_codes(
     {
         Ok(codes) => {
             let mut r = html(StatusCode::OK, pages::codes_crees(&c.cadre(None), &codes));
-            r.headers_mut().insert(CACHE_CONTROL, HeaderValue::from_static("no-store"));
+            r.headers_mut()
+                .insert(CACHE_CONTROL, HeaderValue::from_static("no-store"));
             r
         }
         Err(ErreurPortail::Validation(m)) => codes_page(&etat, &c, Some(m)).await,
@@ -702,7 +707,10 @@ async fn tirer_codes(
 fn json(statut: StatusCode, valeur: serde_json::Value) -> Response {
     let mut r = (statut, valeur.to_string()).into_response();
     let entetes = r.headers_mut();
-    entetes.insert(CONTENT_TYPE, HeaderValue::from_static("application/json; charset=utf-8"));
+    entetes.insert(
+        CONTENT_TYPE,
+        HeaderValue::from_static("application/json; charset=utf-8"),
+    );
     entetes.insert(CACHE_CONTROL, HeaderValue::from_static("no-store"));
     r
 }
@@ -710,7 +718,10 @@ fn json(statut: StatusCode, valeur: serde_json::Value) -> Response {
 /// Refus en JSON : un modèle fixe, traduit par le programme du client, et ses
 /// valeurs.
 fn refus_json(statut: StatusCode, modele: &str, valeurs: &[String]) -> Response {
-    json(statut, serde_json::json!({ "erreur": modele, "valeurs": valeurs }))
+    json(
+        statut,
+        serde_json::json!({ "erreur": modele, "valeurs": valeurs }),
+    )
 }
 
 async fn activation(
@@ -723,7 +734,11 @@ async fn activation(
         return refus_json(StatusCode::BAD_REQUEST, MODELES_ACTIVATION[4], &[]);
     };
     let texte = |nom: &str| {
-        valeur.get(nom).and_then(serde_json::Value::as_str).unwrap_or("").to_string()
+        valeur
+            .get(nom)
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("")
+            .to_string()
     };
     let demande = DemandeActivation {
         code: texte("code"),
@@ -745,12 +760,18 @@ async fn activation(
             }),
         ),
         Err(ErreurPortail::Validation(m)) => refus_json(StatusCode::UNPROCESSABLE_ENTITY, &m, &[]),
-        Err(ErreurPortail::Freine(s)) => {
-            refus_json(StatusCode::TOO_MANY_REQUESTS, MODELES_ACTIVATION[2], &[s.to_string()])
-        }
+        Err(ErreurPortail::Freine(s)) => refus_json(
+            StatusCode::TOO_MANY_REQUESTS,
+            MODELES_ACTIVATION[2],
+            &[s.to_string()],
+        ),
         Err(e) => {
             eprintln!("activation : {e}");
-            refus_json(StatusCode::INTERNAL_SERVER_ERROR, MODELES_ACTIVATION[3], &[])
+            refus_json(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                MODELES_ACTIVATION[3],
+                &[],
+            )
         }
     }
 }
