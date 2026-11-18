@@ -326,6 +326,8 @@ mod tests {
                 poste: "AAAA-BBBB-CCCC-DDDD".into(),
                 modules: vec![],
                 emise_le: "2026-11-12".into(),
+                echeance: None,
+                postes: 1,
             },
             &cle,
         )

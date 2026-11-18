@@ -303,6 +303,8 @@ mod tests {
                 poste: poste.into(),
                 modules: vec![Module::Devis, Module::Paiements],
                 emise_le: "2026-11-11".into(),
+                echeance: None,
+                postes: 1,
             },
             &privee,
         )
