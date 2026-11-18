@@ -12,7 +12,9 @@
 #[path = "../../app/src/traduction.rs"]
 mod traduction;
 
-// Champ des codes de licence courts, partagé avec l'application.
+// Activation et champ des codes de licence courts, partagés avec l'application.
+#[path = "../../app/src/activation_ui.rs"]
+mod activation_ui;
 #[path = "../../app/src/code_saisie.rs"]
 mod code_saisie;
 
@@ -955,6 +957,52 @@ fn brancher_tableau(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossier: Rc
     });
 }
 
+/// Activation d'un code de licence court (décision 74) : appel au portail dans
+/// un fil à part, résultat rendu à `ActivationUi` dans la boucle de l'interface.
+fn brancher_activation(f: &FenetreAdmin, entreprise: String) {
+    let fa = f.as_weak();
+    f.global::<ActivationUi>().on_activer(move |code, client| {
+        let Some(f) = fa.upgrade() else {
+            return;
+        };
+        let ui = f.global::<ActivationUi>();
+        ui.set_message(SharedString::new());
+        ui.set_etat(1);
+        let (code, client, entreprise, fa) = (
+            code.to_string(),
+            client.to_string(),
+            entreprise.clone(),
+            fa.clone(),
+        );
+        std::thread::spawn(move || {
+            let resultat = activation_ui::activer(&code, &entreprise, &client);
+            let _ = slint::invoke_from_event_loop(move || {
+                let Some(f) = fa.upgrade() else {
+                    return;
+                };
+                let ui = f.global::<ActivationUi>();
+                match resultat {
+                    Ok((texte, l)) => {
+                        ui.set_licence(texte.into());
+                        ui.set_resume(
+                            trf(
+                                "{}, {} postes, jusqu'au {}",
+                                &[&l.client, &l.postes, &date_jour(&l.echeance)],
+                            )
+                            .into(),
+                        );
+                        ui.set_etat(2);
+                    }
+                    Err(m) => {
+                        ui.set_message(activation_ui::message(&m).into());
+                        ui.set_etat(3);
+                    }
+                }
+            });
+        });
+    });
+}
+
 fn brancher_assistant(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossier: Rc<PathBuf>) {
     montrer_reglage_sauvegardes(f, &dossier);
     let defaut = Parametres::default();
@@ -968,6 +1016,7 @@ fn brancher_assistant(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossier: 
     let entreprise = synchro::identifiant_entreprise(&conn.borrow()).unwrap_or_default();
     let licence = f.global::<LicenceApi>();
     licence.set_poste(entreprise.clone().into());
+    brancher_activation(f, entreprise.clone());
     licence.on_verifier(move |cle| {
         match kadenz_licence::entreprise::verifier(
             &cle,
@@ -1037,7 +1086,9 @@ fn brancher_assistant(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossier: 
 fn main() -> Result<(), slint::PlatformError> {
     traduction::choisir_demarrage();
     let fenetre = FenetreAdmin::new()?;
-    fenetre.global::<CodeCourtUi>().on_formater(|precedent, nouveau| code_saisie::formater(&precedent, &nouveau));
+    fenetre
+        .global::<CodeCourtUi>()
+        .on_formater(|precedent, nouveau| code_saisie::formater(&precedent, &nouveau));
     let dossier = Rc::new(dossier());
     let fa = fenetre.as_weak();
     fenetre

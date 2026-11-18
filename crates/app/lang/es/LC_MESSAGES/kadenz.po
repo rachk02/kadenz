@@ -4707,3 +4707,42 @@ msgstr "las letras O e I y las cifras 0 y 1 no existen en un código: revise lo 
 
 msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
 msgstr "carácter eliminado: un código solo tiene letras de la A a la Z y cifras del 2 al 9"
+
+msgid "code d'activation inconnu : vérifiez la saisie"
+msgstr "código de activación desconocido: revise lo que escribió"
+
+msgid "ce code d'activation appartient à une autre entreprise"
+msgstr "este código de activación pertenece a otra empresa"
+
+msgid "trop d'essais d'activation : réessayez dans {} secondes"
+msgstr "demasiados intentos de activación: vuelva a intentarlo en {} segundos"
+
+msgid "activation impossible pour le moment : réessayez plus tard"
+msgstr "la activación no es posible por ahora: vuelva a intentarlo más tarde"
+
+msgid "demande d'activation invalide"
+msgstr "solicitud de activación no válida"
+
+msgid "activation indisponible : adresse du portail non configurée"
+msgstr "activación no disponible: dirección del portal no configurada"
+
+msgid "portail d'activation injoignable : vérifiez la connexion à Internet"
+msgstr "portal de activación inaccesible: compruebe la conexión a Internet"
+
+msgid "réponse inattendue du portail d'activation"
+msgstr "respuesta inesperada del portal de activación"
+
+msgid "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste"
+msgstr "conexión segura con el portal rechazada: compruebe la fecha y la hora del equipo"
+
+msgid "Code de licence"
+msgstr "Código de licencia"
+
+msgid "Activation de la licence…"
+msgstr "Activando la licencia…"
+
+msgid "Le code de licence est incomplet ou erroné : corrigez-le, ou videz le champ pour continuer sans licence."
+msgstr "El código de licencia está incompleto o es incorrecto: corríjalo, o vacíe el campo para continuar sin licencia."
+
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, le serveur reste en lecture seule et un seul poste peut s'inscrire."
+msgstr "Introduzca el código de licencia recibido con la suscripción. Se activa en línea, en el portal de Kadenz, al pasar el paso Empresa: se necesita una conexión a Internet. Sin código, el servidor queda en solo lectura y solo un puesto puede registrarse."

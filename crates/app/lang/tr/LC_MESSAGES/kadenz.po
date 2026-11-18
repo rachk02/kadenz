@@ -4707,3 +4707,42 @@ msgstr "O ve I harfleri ile 0 ve 1 rakamları kodlarda yer almaz: girişi kontro
 
 msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
 msgstr "karakter kaldırıldı: bir kodda yalnızca A-Z harfleri ve 2-9 rakamları bulunur"
+
+msgid "code d'activation inconnu : vérifiez la saisie"
+msgstr "bilinmeyen etkinleştirme kodu: yazdığınızı kontrol edin"
+
+msgid "ce code d'activation appartient à une autre entreprise"
+msgstr "bu etkinleştirme kodu başka bir şirkete ait"
+
+msgid "trop d'essais d'activation : réessayez dans {} secondes"
+msgstr "çok fazla etkinleştirme denemesi: {} saniye sonra yeniden deneyin"
+
+msgid "activation impossible pour le moment : réessayez plus tard"
+msgstr "etkinleştirme şu anda yapılamıyor: daha sonra yeniden deneyin"
+
+msgid "demande d'activation invalide"
+msgstr "geçersiz etkinleştirme isteği"
+
+msgid "activation indisponible : adresse du portail non configurée"
+msgstr "etkinleştirme kullanılamıyor: portal adresi yapılandırılmamış"
+
+msgid "portail d'activation injoignable : vérifiez la connexion à Internet"
+msgstr "etkinleştirme portalına ulaşılamıyor: İnternet bağlantısını kontrol edin"
+
+msgid "réponse inattendue du portail d'activation"
+msgstr "etkinleştirme portalından beklenmeyen yanıt"
+
+msgid "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste"
+msgstr "portala güvenli bağlantı reddedildi: bu bilgisayarın tarih ve saatini kontrol edin"
+
+msgid "Code de licence"
+msgstr "Lisans kodu"
+
+msgid "Activation de la licence…"
+msgstr "Lisans etkinleştiriliyor…"
+
+msgid "Le code de licence est incomplet ou erroné : corrigez-le, ou videz le champ pour continuer sans licence."
+msgstr "Lisans kodu eksik veya hatalı: düzeltin ya da lisanssız devam etmek için alanı boşaltın."
+
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, le serveur reste en lecture seule et un seul poste peut s'inscrire."
+msgstr "Abonelikle birlikte aldığınız lisans kodunu girin. Şirket adımını geçtiğinizde Kadenz portalında çevrimiçi etkinleştirilir: İnternet bağlantısı gerekir. Kod olmadan sunucu salt okunur kalır ve yalnızca bir iş istasyonu kaydolabilir."

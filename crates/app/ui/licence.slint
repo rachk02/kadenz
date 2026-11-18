@@ -30,6 +30,21 @@ export global LicenceApi {
     callback enregistrer(cle: string) -> Retour;
 }
 
+// Activation d'un code de licence court auprès du portail (décision 74,
+// docs/spec-codes-licence.md, section 5) : l'appel part hors du fil de l'interface.
+// etat : 0 rien, 1 en cours, 2 licence reçue et vérifiée sur ce poste, 3 refus.
+export global ActivationUi {
+    in-out property <int> etat;
+    // Licence reçue (KADENZ-E-...), vérifiée avec les clés embarquées et
+    // l'identifiant de l'entreprise avant d'être rendue ici.
+    in-out property <string> licence;
+    // Résumé pour l'écran : client, postes, échéance.
+    in-out property <string> resume;
+    // Refus traduit.
+    in-out property <string> message;
+    callback activer(code: string, client: string);
+}
+
 // Identifiant du poste en lecture seule, avec un bouton qui le copie.
 export component IdentifiantPoste inherits Rangee {
     spacing: 8px;

@@ -4707,3 +4707,42 @@ msgstr "コードには英字のOとI、数字の0と1は使われません：�
 
 msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
 msgstr "文字を削除しました：コードに使われるのはAからZの英字と2から9の数字だけです"
+
+msgid "code d'activation inconnu : vérifiez la saisie"
+msgstr "不明なアクティベーションコードです：入力内容を確認してください"
+
+msgid "ce code d'activation appartient à une autre entreprise"
+msgstr "このアクティベーションコードは別の会社のものです"
+
+msgid "trop d'essais d'activation : réessayez dans {} secondes"
+msgstr "アクティベーションの試行回数が多すぎます：{} 秒後にもう一度お試しください"
+
+msgid "activation impossible pour le moment : réessayez plus tard"
+msgstr "現在アクティベーションできません：後でもう一度お試しください"
+
+msgid "demande d'activation invalide"
+msgstr "無効なアクティベーション要求です"
+
+msgid "activation indisponible : adresse du portail non configurée"
+msgstr "アクティベーションを利用できません：ポータルのアドレスが設定されていません"
+
+msgid "portail d'activation injoignable : vérifiez la connexion à Internet"
+msgstr "アクティベーションポータルに接続できません：インターネット接続を確認してください"
+
+msgid "réponse inattendue du portail d'activation"
+msgstr "アクティベーションポータルから予期しない応答がありました"
+
+msgid "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste"
+msgstr "ポータルへの安全な接続が拒否されました：このコンピューターの日付と時刻を確認してください"
+
+msgid "Code de licence"
+msgstr "ライセンスコード"
+
+msgid "Activation de la licence…"
+msgstr "ライセンスを有効化しています…"
+
+msgid "Le code de licence est incomplet ou erroné : corrigez-le, ou videz le champ pour continuer sans licence."
+msgstr "ライセンスコードが不完全か誤っています。修正するか、欄を空にしてライセンスなしで続行してください。"
+
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, le serveur reste en lecture seule et un seul poste peut s'inscrire."
+msgstr "サブスクリプションと一緒に受け取ったライセンスコードを入力してください。「会社」の手順を終えるときに Kadenz ポータルでオンライン有効化されます。インターネット接続が必要です。コードがない場合、サーバーは読み取り専用のままで、登録できる端末は 1 台だけです。"

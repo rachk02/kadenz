@@ -4707,3 +4707,42 @@ msgstr "the letters O and I and the digits 0 and 1 are not used in codes: check 
 
 msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
 msgstr "character removed: a code only has letters A to Z and digits 2 to 9"
+
+msgid "code d'activation inconnu : vérifiez la saisie"
+msgstr "unknown activation code: check what you typed"
+
+msgid "ce code d'activation appartient à une autre entreprise"
+msgstr "this activation code belongs to another company"
+
+msgid "trop d'essais d'activation : réessayez dans {} secondes"
+msgstr "too many activation attempts: try again in {} seconds"
+
+msgid "activation impossible pour le moment : réessayez plus tard"
+msgstr "activation is not possible right now: try again later"
+
+msgid "demande d'activation invalide"
+msgstr "invalid activation request"
+
+msgid "activation indisponible : adresse du portail non configurée"
+msgstr "activation unavailable: portal address not configured"
+
+msgid "portail d'activation injoignable : vérifiez la connexion à Internet"
+msgstr "activation portal unreachable: check the Internet connection"
+
+msgid "réponse inattendue du portail d'activation"
+msgstr "unexpected response from the activation portal"
+
+msgid "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste"
+msgstr "secure connection to the portal refused: check this computer's date and time"
+
+msgid "Code de licence"
+msgstr "License code"
+
+msgid "Activation de la licence…"
+msgstr "Activating the license…"
+
+msgid "Le code de licence est incomplet ou erroné : corrigez-le, ou videz le champ pour continuer sans licence."
+msgstr "The license code is incomplete or incorrect: correct it, or clear the field to continue without a license."
+
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, le serveur reste en lecture seule et un seul poste peut s'inscrire."
+msgstr "Enter the license code received with the subscription. It is activated online, with the Kadenz portal, when you leave the Company step: an Internet connection is required. Without a code, the server stays read-only and only one workstation can register."

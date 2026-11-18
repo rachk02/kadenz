@@ -6,6 +6,7 @@
 | 0.2 | 2026-11-18 | Relecture de kadenz-6d : séparateurs retirés sans rien dire et autres caractères signalés, résumé dans la réponse du portail, champ sur un `TextInput` avec curseur en octets, lot L5 réparti, question ouverte sur la lecture des postes dans le code. Lot L1 livré. |
 | 0.3 | 2026-11-18 | Lots L2a et L3 livrés. L2a : schéma du portail en version 2 avec chemin de migration, code tiré depuis un paiement, route `/api/activation`. Règle des dates alignée sur l'émission existante. Codes à vendre reportés en L2b. Essai de bout en bout revu : l'exécutable du portail n'accepte que la clé embarquée. |
 | 0.4 | 2026-11-18 | Lot L2b livré : schéma en version 3, rubrique « Codes à vendre » du portail (tirage de 1 à 50 codes, liste, codes en clair affichés une seule fois), annulation d'un code libre par l'éditeur ou par celui qui l'a tiré (le paiement d'un code annulé redevient libre). |
+| 0.5 | 2026-11-18 | Lot L5 livré : étape Licence de KadenzAdmin avec `ChampCode`, activation au passage de l'étape Entreprise (global `ActivationUi`, module partagé `activation_ui.rs`), traductions. Variable `KADENZ_PORTAIL_CLE` des versions de développement pour l'essai de bout en bout avec les exécutables ; essai fait à l'écran (section 8). |
 
 ## 1. Décisions de l'utilisateur (2026-11-18)
 
@@ -82,6 +83,8 @@ Réponse : `{ "licence": "KADENZ-E-...", "postes", "formule", "debut", "echeance
 - Client HTTPS : `ureq` avec les certificats de Windows, comme les mises à jour (`crates/maj`) ; délai de 20 secondes ; aucune donnée de l'entreprise n'est envoyée en dehors de la demande ci-dessus.
 - Adresse du portail : fichier embarqué (`crates/maj/portail-url.txt`), vide tant que le nom de domaine n'est pas choisi (décision 72) ; vide, l'activation répond « Activation indisponible : adresse du portail non configurée ». Variable `KADENZ_PORTAIL` pour les essais, en version de développement seulement, comme `KADENZ_MAJ_CLE`.
 - La licence reçue suit ensuite le chemin actuel : installation dans l'assistant, ou `RenouvelerAbonnement` vers le serveur. Elle n'est enregistrée qu'après `entreprise::verifier` avec `cles_portail()` et l'identifiant de l'entreprise de la base, comme une licence collée : une réponse d'un faux portail n'installe rien (le client d'activation ne contrôle que le préfixe `KADENZ-E-`).
+- Assistant de KadenzAdmin (L5) : l'étape Licence ne fait que contrôler le code sur place ; l'appel au portail part au « Suivant » de l'étape Entreprise, car il a besoin de la raison sociale. Pendant l'appel, le bouton affiche « Activation de la licence… » et les deux boutons sont grisés. Réussite : la licence vérifiée prend la place de l'ancienne clé collée, le récapitulatif montre client, postes et échéance, et l'installation suit le chemin existant. Refus ou portail injoignable : retour à l'étape Licence avec le message, code gardé ; on peut corriger, réessayer, ou vider le champ et installer sans licence. Un code modifié annule la licence déjà reçue.
+- L'appel bloquant (`activation_ui::activer`) tourne dans un fil à part ; le refus est traduit à son retour dans la boucle de l'interface (`activation_ui::message`), la langue étant propre à ce fil. La rubrique « Abonnement » (L5 bis) reprend le même global et le même module.
 - Erreurs de transport : un certificat refusé a son propre message (date et heure du poste, mandataire qui intercepte), le reste donne « portail d'activation injoignable ».
 - L'identifiant de l'entreprise n'a plus à être transmis à la main : le programme l'envoie avec le code. Le texte « Transmettez cet identifiant pour recevoir la licence » disparaît ; l'identifiant reste affiché pour le support.
 
@@ -102,7 +105,8 @@ Réponse : `{ "licence": "KADENZ-E-...", "postes", "formule", "debut", "echeance
 
 - `code_court` : aller-retour normalisation et écriture ; collages variés ; tout code tiré passe le contrôle ; une substitution est toujours détectée, une inversion de deux voisins aussi, sauf A et 9.
 - Portail, dans le processus : code inconnu, code libre activé, réactivation par la même entreprise (même licence), autre entreprise refusée, code annulé, frein après 5 échecs, début calé sur l'échéance précédente.
-- Bout en bout, en local seulement. L'exécutable `kadenz-portail` refuse toute clé autre que la clé embarquée, et les programmes du client ne reconnaissent que les licences signées par elle. L'essai passe donc par le portail lancé dans le processus d'essai (`web::lancer` sur 127.0.0.1, clé d'essai), avec le client d'activation pointé dessus (`activation_par_la_route_json` pour la route). Jamais la clé de production, jamais le VPS : la mise en ligne reste une décision de l'utilisateur.
+- Bout en bout, en local seulement. Dans les essais automatiques, le portail tourne dans le processus d'essai (`web::lancer` sur 127.0.0.1, clé d'essai), avec le client d'activation pointé dessus (`client_d_activation_contre_le_portail`, `activation_par_la_route_json`). À l'écran, une version de développement lit `KADENZ_PORTAIL_CLE` (clé publique d'essai en hexadécimal) à la place de la clé embarquée, dans `cles_portail()` : le portail, le serveur et KadenzAdmin acceptent alors la clé d'essai ; une version optimisée l'ignore. Jamais la clé de production, jamais le VPS : la mise en ligne reste une décision de l'utilisateur.
+- Essai à l'écran de L5 (2026-11-18, dossiers d'essai, portail d'essai sur 127.0.0.1, KadenzAdmin sans élévation, `ProgramData` détourné pour le dossier des sauvegardes) : code tapé en minuscules sans tirets remis en forme ; caractère de contrôle faux signalé et « Suivant » refusé ; code juste activé à l'étape Entreprise, récapitulatif « 3 postes, jusqu'au 17/11/2027 », installation terminée avec la licence ; même code renvoyé par la même entreprise, même licence ; même code depuis une autre base refusé (« Ce code d'activation appartient à une autre entreprise. »), retour à l'étape Licence, code gardé ; portail arrêté : « Portail d'activation injoignable : vérifiez la connexion à Internet. »
 - Chaque texte nouveau dans les six fichiers de traduction.
 
 ## 9. Ce qui bloque la publication
@@ -117,7 +121,7 @@ Avec l'activation en ligne seulement, une version qui contient ces codes ne s'ac
 | L2a | Portail : schéma en version 2 et migration, code tiré depuis un paiement, route d'activation, pages, essais | kadenz-c1, livré |
 | L2b | Portail : codes à vendre (lien au paiement facultatif, reconstruction de `licence_emise`), annulation d'un code | kadenz-c1, livré |
 | L3 | Client d'activation (`kadenz_maj::activation`, qui a déjà le client HTTPS), adresse du portail (`crates/maj/portail-url.txt`) | kadenz-c1, livré |
-| L4 | `ChampCode` dans `composants.slint` | kadenz-6d |
-| L5 | Étape Licence de l'assistant de KadenzAdmin, avec ses traductions | kadenz-c1 |
+| L4 | `ChampCode` dans `composants.slint` | kadenz-6d, livré |
+| L5 | Étape Licence de l'assistant de KadenzAdmin, avec ses traductions | kadenz-c1, livré |
 | L5 bis | Rubrique « Abonnement » du poste, avec ses traductions | kadenz-6d |
-| L6 | Essai de bout en bout local, captures | kadenz-c1 |
+| L6 | Essai de bout en bout local, captures | kadenz-c1 ; fait pour KadenzAdmin, reste la rubrique « Abonnement » après L5 bis |

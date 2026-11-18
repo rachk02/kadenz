@@ -958,6 +958,12 @@ export component ChampCode inherits VerticalLayout {
     callback valide-entree();
     property <CodeSaisi> etat;
 
+    // Reprend un code déjà saisi (champ recréé en revenant à une étape).
+    public function remplir(texte: string) {
+        root.etat = CodeCourtUi.formater("", texte);
+        saisie.text = root.etat.texte;
+    }
+
     // Efface le champ (après une activation réussie, par exemple).
     public function vider() {
         root.etat = { texte: "", curseur: 0, message: "", valide: false };

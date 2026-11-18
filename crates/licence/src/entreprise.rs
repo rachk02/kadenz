@@ -104,9 +104,22 @@ fn date_lisible(texte: &str) -> bool {
     (1..=12).contains(&mois) && (1..=31).contains(&jour)
 }
 
+/// Variable des versions de développement : clé publique d'un portail d'essai
+/// (hexadécimal), qui remplace la clé embarquée, pour essayer l'activation
+/// des codes de bout en bout sans la clé de production. Sans effet dans une
+/// version optimisée.
+pub const CLE_PORTAIL_ESSAI: &str = "KADENZ_PORTAIL_CLE";
+
 /// Clés du portail acceptées : la clé suivante embarquée ; une liste, pour
 /// une rotation future. Vide tant qu'elle n'est pas générée.
 pub fn cles_portail() -> Vec<VerifyingKey> {
+    #[cfg(debug_assertions)]
+    if let Some(cle) = std::env::var(CLE_PORTAIL_ESSAI)
+        .ok()
+        .filter(|v| !v.trim().is_empty())
+    {
+        return cle_publique_depuis_hex(cle.trim()).into_iter().collect();
+    }
     cle_publique_depuis_hex(CLE_PUBLIQUE_SUIVANTE)
         .into_iter()
         .collect()

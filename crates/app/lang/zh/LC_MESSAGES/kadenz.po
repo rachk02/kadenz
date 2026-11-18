@@ -4707,3 +4707,42 @@ msgstr "代码中不含字母 O、I 和数字 0、1：请检查输入"
 
 msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
 msgstr "已删除字符：代码只含字母 A 至 Z 和数字 2 至 9"
+
+msgid "code d'activation inconnu : vérifiez la saisie"
+msgstr "未知的激活码：请检查输入内容"
+
+msgid "ce code d'activation appartient à une autre entreprise"
+msgstr "此激活码属于另一家企业"
+
+msgid "trop d'essais d'activation : réessayez dans {} secondes"
+msgstr "激活尝试次数过多：请在 {} 秒后重试"
+
+msgid "activation impossible pour le moment : réessayez plus tard"
+msgstr "暂时无法激活：请稍后重试"
+
+msgid "demande d'activation invalide"
+msgstr "激活请求无效"
+
+msgid "activation indisponible : adresse du portail non configurée"
+msgstr "无法激活：未配置门户地址"
+
+msgid "portail d'activation injoignable : vérifiez la connexion à Internet"
+msgstr "无法连接激活门户：请检查互联网连接"
+
+msgid "réponse inattendue du portail d'activation"
+msgstr "激活门户返回了意外的响应"
+
+msgid "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste"
+msgstr "与门户的安全连接被拒绝：请检查本机的日期和时间"
+
+msgid "Code de licence"
+msgstr "许可证代码"
+
+msgid "Activation de la licence…"
+msgstr "正在激活许可证…"
+
+msgid "Le code de licence est incomplet ou erroné : corrigez-le, ou videz le champ pour continuer sans licence."
+msgstr "许可证代码不完整或有误：请更正，或清空此栏以在无许可证的情况下继续。"
+
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, le serveur reste en lecture seule et un seul poste peut s'inscrire."
+msgstr "请输入随订阅收到的许可证代码。离开“企业”步骤时，它会通过 Kadenz 门户在线激活：需要互联网连接。没有代码时，服务器保持只读，且只能注册一台工作站。"
