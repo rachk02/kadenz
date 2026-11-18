@@ -42,6 +42,7 @@ pub const MODELES_ERREUR: &[&str] = &[
     "activation indisponible : adresse du portail non configurée",
     "portail d'activation injoignable : vérifiez la connexion à Internet",
     "réponse inattendue du portail d'activation",
+    "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste",
 ];
 
 /// Licence reçue et son résumé, pour l'écran.
@@ -102,7 +103,12 @@ pub fn activer_aupres(
         .post(&format!("{adresse}/api/activation"))
         .header("Content-Type", "application/json")
         .send(corps.as_str())
-        .map_err(|_| fixe(MODELES_ERREUR[1]))?;
+        .map_err(|e| match e {
+            // Certificat refusé : horloge du poste fausse, ou mandataire qui
+            // intercepte la connexion sécurisée.
+            ureq::Error::Tls(_) | ureq::Error::NativeTls(_) => fixe(MODELES_ERREUR[3]),
+            _ => fixe(MODELES_ERREUR[1]),
+        })?;
     let mut texte = String::new();
     reponse
         .into_body()

@@ -97,6 +97,35 @@ CREATE INDEX code_entreprise ON code_activation (entreprise);
 CREATE INDEX code_paiement ON code_activation (paiement);
 ALTER TABLE licence_emise ADD COLUMN code INTEGER REFERENCES code_activation (id);
 ",
+    // 2 vers 3 : codes à vendre, sans paiement. Le lien de la licence au
+    // paiement devient facultatif ; une licence vient d'un paiement ou d'un
+    // code. SQLite ne sait pas changer une contrainte : table reconstruite,
+    // données et colonne `code` gardées, index recréé.
+    "
+CREATE TABLE licence_emise_nouvelle (
+    id INTEGER PRIMARY KEY,
+    entreprise TEXT NOT NULL REFERENCES entreprise (identifiant),
+    paiement INTEGER UNIQUE REFERENCES paiement (id),
+    texte TEXT NOT NULL,
+    debut TEXT NOT NULL,
+    echeance TEXT NOT NULL,
+    postes INTEGER NOT NULL,
+    modules TEXT NOT NULL,
+    formule TEXT NOT NULL,
+    emetteur TEXT NOT NULL,
+    emise_le TEXT NOT NULL,
+    par INTEGER NOT NULL REFERENCES compte (id),
+    code INTEGER REFERENCES code_activation (id),
+    CHECK (paiement IS NOT NULL OR code IS NOT NULL)
+);
+INSERT INTO licence_emise_nouvelle
+    (id, entreprise, paiement, texte, debut, echeance, postes, modules, formule, emetteur, emise_le, par, code)
+    SELECT id, entreprise, paiement, texte, debut, echeance, postes, modules, formule, emetteur, emise_le, par, code
+    FROM licence_emise;
+DROP TABLE licence_emise;
+ALTER TABLE licence_emise_nouvelle RENAME TO licence_emise;
+CREATE INDEX licence_entreprise ON licence_emise (entreprise);
+",
 ];
 
 /// Dernière version du schéma.
@@ -120,7 +149,10 @@ pub(crate) fn ouvrir(dossier: &Path) -> rusqlite::Result<Connection> {
 }
 
 /// Amène la base à la dernière version, un pas par transaction. Une base
-/// plus récente que ce programme est refusée.
+/// plus récente que ce programme est refusée. Les clés étrangères sont
+/// suspendues pendant un pas (une reconstruction de table l'exige, et le
+/// réglage est sans effet dans une transaction), puis contrôlées avant de
+/// valider le pas.
 pub(crate) fn migrer(conn: &Connection) -> rusqlite::Result<()> {
     let mut version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
     if version == 0 {
@@ -140,10 +172,31 @@ pub(crate) fn migrer(conn: &Connection) -> rusqlite::Result<()> {
     while version < VERSION {
         let pas = MIGRATIONS[(version - VERSION_DEPART) as usize];
         let suivante = version + 1;
-        conn.execute_batch(&format!("BEGIN; {pas} PRAGMA user_version = {suivante}; COMMIT;"))?;
+        conn.execute_batch("PRAGMA foreign_keys = OFF;")?;
+        let resultat = appliquer_pas(conn, pas, suivante);
+        conn.execute_batch("PRAGMA foreign_keys = ON;")?;
+        resultat?;
         version = suivante;
     }
     Ok(())
+}
+
+fn appliquer_pas(conn: &Connection, pas: &str, suivante: i64) -> rusqlite::Result<()> {
+    let transaction = conn.unchecked_transaction()?;
+    transaction.execute_batch(pas)?;
+    transaction.pragma_update(None, "user_version", suivante)?;
+    let violation = transaction
+        .prepare("PRAGMA foreign_key_check")?
+        .query([])?
+        .next()?
+        .is_some();
+    if violation {
+        return Err(rusqlite::Error::SqliteFailure(
+            rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_CONSTRAINT),
+            Some(format!("migration vers la version {suivante} : clés étrangères rompues")),
+        ));
+    }
+    transaction.commit()
 }
 
 /// Dossier et fichiers du portail réservés au seul compte du service (Linux).
@@ -181,10 +234,32 @@ mod tests {
         migrer(&conn).unwrap();
         let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0)).unwrap();
         assert_eq!(version, VERSION);
-        let (texte, code): (String, Option<i64>) = conn
-            .query_row("SELECT texte, code FROM licence_emise", [], |r| Ok((r.get(0)?, r.get(1)?)))
+        let (texte, paiement, code): (String, Option<i64>, Option<i64>) = conn
+            .query_row("SELECT texte, paiement, code FROM licence_emise", [], |r| {
+                Ok((r.get(0)?, r.get(1)?, r.get(2)?))
+            })
             .unwrap();
-        assert_eq!((texte.as_str(), code), ("KADENZ-E-x", None));
+        assert_eq!((texte.as_str(), paiement, code), ("KADENZ-E-x", Some(1), None));
+        // Index recréé, clés étrangères de nouveau actives.
+        let index: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = 'licence_entreprise'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(index, 1);
+        let cles: i64 = conn.query_row("PRAGMA foreign_keys", [], |r| r.get(0)).unwrap();
+        assert_eq!(cles, 1);
+        // Une licence sans paiement ni code est refusée.
+        assert!(
+            conn.execute(
+                "INSERT INTO licence_emise (entreprise, texte, debut, echeance, postes, modules, formule, emetteur, emise_le, par)
+                 VALUES ('00000000-0000-4000-8000-000000000001', 'x', 'a', 'b', 1, '', 'annuelle', 'É', 'c', 1)",
+                [],
+            )
+            .is_err()
+        );
         // Une seconde ouverture ne refait rien.
         migrer(&conn).unwrap();
     }

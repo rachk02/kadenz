@@ -80,7 +80,8 @@ Réponse : `{ "licence": "KADENZ-E-...", "postes", "formule", "debut", "echeance
 - L'appel au portail part du programme où le code est tapé : la fenêtre d'administration du serveur (`KadenzAdmin`, étape Licence de l'assistant) et la rubrique « Abonnement » d'un poste Admin (renouvellement). Le service Windows du serveur, qui tourne sous SYSTEM, n'ouvre aucune connexion vers Internet.
 - Client HTTPS : `ureq` avec les certificats de Windows, comme les mises à jour (`crates/maj`) ; délai de 20 secondes ; aucune donnée de l'entreprise n'est envoyée en dehors de la demande ci-dessus.
 - Adresse du portail : fichier embarqué (`crates/maj/portail-url.txt`), vide tant que le nom de domaine n'est pas choisi (décision 72) ; vide, l'activation répond « Activation indisponible : adresse du portail non configurée ». Variable `KADENZ_PORTAIL` pour les essais, en version de développement seulement, comme `KADENZ_MAJ_CLE`.
-- La licence reçue suit ensuite le chemin actuel : installation dans l'assistant, ou `RenouvelerAbonnement` vers le serveur.
+- La licence reçue suit ensuite le chemin actuel : installation dans l'assistant, ou `RenouvelerAbonnement` vers le serveur. Elle n'est enregistrée qu'après `entreprise::verifier` avec `cles_portail()` et l'identifiant de l'entreprise de la base, comme une licence collée : une réponse d'un faux portail n'installe rien (le client d'activation ne contrôle que le préfixe `KADENZ-E-`).
+- Erreurs de transport : un certificat refusé a son propre message (date et heure du poste, mandataire qui intercepte), le reste donne « portail d'activation injoignable ».
 - L'identifiant de l'entreprise n'a plus à être transmis à la main : le programme l'envoie avec le code. Le texte « Transmettez cet identifiant pour recevoir la licence » disparaît ; l'identifiant reste affiché pour le support.
 
 ## 6. Champ de saisie (`composants.slint`, kadenz-6d)
