@@ -256,13 +256,8 @@ pub struct Activation {
 }
 
 /// Modèles des refus d'activation, envoyés tels quels au programme du client
-/// qui les traduit ; `{}` reçoit les valeurs jointes.
-pub const MODELES_ACTIVATION: &[&str] = &[
-    "code d'activation inconnu : vérifiez la saisie",
-    "ce code d'activation appartient à une autre entreprise",
-    "trop d'essais d'activation : réessayez dans {} secondes",
-    "activation impossible pour le moment : réessayez plus tard",
-];
+/// qui les traduit (partagés avec lui par `kadenz-licence`).
+pub use kadenz_licence::code_court::MODELES_ACTIVATION;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Action {
@@ -1403,7 +1398,8 @@ impl Portail {
                     "entreprise {entreprise_demandee}, adresse {adresse}, version {} : {modele}",
                     demande.version.trim()
                 );
-                noter(&conn, None, "activation_refusee", None, &details)?;
+                // Un journal en échec ne change pas la réponse : le refus reste un refus.
+                let _ = noter(&conn, None, "activation_refusee", None, &details);
             }
             Err(_) => {}
         }
@@ -1419,8 +1415,10 @@ impl Portail {
         let inconnu = || ErreurPortail::Validation(MODELES_ACTIVATION[0].into());
         let code = code_court::verifier(&demande.code).map_err(|_| inconnu())?;
         let utiles = code_court::normaliser(&code);
-        let identifiant = valider_uuid(&demande.entreprise)?;
-        let client = valider_texte(&demande.client, "nom du client", 200)?;
+        // Refus du portail traduisibles par le client : un modèle fixe.
+        let invalide = |_| ErreurPortail::Validation(MODELES_ACTIVATION[4].into());
+        let identifiant = valider_uuid(&demande.entreprise).map_err(invalide)?;
+        let client = valider_texte(&demande.client, "nom du client", 200).map_err(invalide)?;
         let trouve = conn
             .query_row(
                 &format!("{SELECT_CODE} WHERE k.empreinte = ?1"),

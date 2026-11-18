@@ -618,6 +618,10 @@ fn code_tire_puis_active() {
         MODELES_ACTIVATION[0]
     );
     assert_eq!(
+        refus(p.activer(&demande(&cree.code, "pas-un-uuid"), "10.0.0.1")),
+        MODELES_ACTIVATION[4]
+    );
+    assert_eq!(
         refus(p.activer(&demande(&cree.code, ENTREPRISE_B), "10.0.0.1")),
         MODELES_ACTIVATION[1]
     );
@@ -725,6 +729,8 @@ fn activation_par_la_route_json() {
 
     let r = requete(a, "POST", "/api/activation", None, "pas du json");
     assert_eq!(r.statut, 400);
+    let v: serde_json::Value = serde_json::from_str(&r.corps).unwrap();
+    assert_eq!(v["erreur"], MODELES_ACTIVATION[4]);
 
     let corps = serde_json::json!({
         "code": cree.code, "entreprise": ENTREPRISE_B, "client": "X", "version": "1.0.1"
@@ -753,6 +759,42 @@ fn activation_par_la_route_json() {
     assert_eq!(v["postes"], 2);
     assert_eq!(v["formule"], "annuelle");
     assert_eq!(v["echeance"], "2027-11-14");
+    lance.arreter();
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+/// Bout en bout : le client d'activation des programmes de Kadenz contre le
+/// portail lancé sur 127.0.0.1 avec une clé d'essai.
+#[test]
+fn client_d_activation_contre_le_portail() {
+    let (p, d, editeur, _, _) = portail("codes-client", "2026-11-15");
+    p.creer_entreprise(&editeur, ENTREPRISE_A, "Boulangerie Wendé", None)
+        .unwrap();
+    let paiement = p
+        .enregistrer_paiement(&editeur, ENTREPRISE_A, &saisie("4", "annuelle"))
+        .unwrap();
+    let cree = p.creer_code(&editeur, paiement.id, &Module::TOUS).unwrap();
+    let cle = p.cle_publique();
+    let lance = web::lancer(
+        p,
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        ConfigWeb::default(),
+    )
+    .unwrap();
+    let adresse = format!("http://{}", lance.adresse());
+    use kadenz_maj::activation::activer_aupres;
+
+    // Refus du portail, rendus avec leur modèle.
+    let e = activer_aupres(&adresse, &cree.code, ENTREPRISE_B, "Autre").unwrap_err();
+    assert_eq!(e.modele, MODELES_ACTIVATION[1]);
+
+    // Code saisi avec des espaces et en minuscules.
+    let saisi = cree.code.to_lowercase().replace('-', " ");
+    let a = activer_aupres(&adresse, &saisi, ENTREPRISE_A, "Boulangerie Wendé").unwrap();
+    assert_eq!((a.postes, a.formule.as_str()), (4, "annuelle"));
+    assert_eq!((a.debut.as_str(), a.echeance.as_str()), ("2026-11-15", "2027-11-14"));
+    let lue = kadenz_licence::entreprise::verifier(&a.licence, ENTREPRISE_A, &[cle]).unwrap();
+    assert_eq!(lue.postes, 4);
     lance.arreter();
     let _ = std::fs::remove_dir_all(&d);
 }

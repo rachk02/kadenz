@@ -30,6 +30,8 @@
 //! la vérification automatique (hors connexion, délai dépassé, réponse
 //! illisible) est silencieuse.
 
+pub mod activation;
+
 use std::fmt;
 use std::io::Read;
 use std::path::{Path, PathBuf};

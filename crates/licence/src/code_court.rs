@@ -24,6 +24,17 @@ pub const MODELES_ERREUR: &[&str] = &[
     "les lettres O et I et les chiffres 0 et 1 n'existent pas dans un code : vérifiez la saisie",
 ];
 
+/// Refus d'activation envoyés par le portail (`{ "erreur", "valeurs" }`),
+/// partagés par le portail et les programmes du client qui les traduisent ;
+/// `{}` reçoit les valeurs jointes.
+pub const MODELES_ACTIVATION: &[&str] = &[
+    "code d'activation inconnu : vérifiez la saisie",
+    "ce code d'activation appartient à une autre entreprise",
+    "trop d'essais d'activation : réessayez dans {} secondes",
+    "activation impossible pour le moment : réessayez plus tard",
+    "demande d'activation invalide",
+];
+
 fn rang(c: char) -> Option<u32> {
     ALPHABET.find(c).map(|i| i as u32)
 }

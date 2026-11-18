@@ -635,7 +635,7 @@ async fn activation(
     corps: Bytes,
 ) -> Response {
     let Ok(valeur) = serde_json::from_slice::<serde_json::Value>(&corps) else {
-        return refus_json(StatusCode::BAD_REQUEST, "demande illisible", &[]);
+        return refus_json(StatusCode::BAD_REQUEST, MODELES_ACTIVATION[4], &[]);
     };
     let texte = |nom: &str| {
         valeur.get(nom).and_then(serde_json::Value::as_str).unwrap_or("").to_string()

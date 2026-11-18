@@ -3255,6 +3255,7 @@ version = "1.0.0"
 dependencies = [
  "ed25519-dalek",
  "kadenz-domaine",
+ "kadenz-licence",
  "serde_json",
  "sha2",
  "ureq",
@@ -3281,6 +3282,7 @@ dependencies = [
  "getrandom 0.3.4",
  "kadenz-domaine",
  "kadenz-licence",
+ "kadenz-maj",
  "kadenz-stockage",
  "maud",
  "rusqlite",

@@ -7,6 +7,7 @@ publish.workspace = true
 
 [dependencies]
 kadenz-domaine.workspace = true
+kadenz-licence.workspace = true
 ureq.workspace = true
 serde_json.workspace = true
 sha2.workspace = true

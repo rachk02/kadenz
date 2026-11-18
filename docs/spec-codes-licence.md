@@ -4,7 +4,7 @@
 |---|---|---|
 | 0.1 | 2026-11-18 | Premier jet par kadenz-c1, d'après les décisions de l'utilisateur du 2026-11-18 (décision 74 du cahier de la phase 2). À valider avec kadenz-6d avant tout code. |
 | 0.2 | 2026-11-18 | Relecture de kadenz-6d : séparateurs retirés sans rien dire et autres caractères signalés, résumé dans la réponse du portail, champ sur un `TextInput` avec curseur en octets, lot L5 réparti, question ouverte sur la lecture des postes dans le code. Lot L1 livré. |
-| 0.3 | 2026-11-18 | Lot L2a livré : schéma du portail en version 2 avec chemin de migration, code tiré depuis un paiement, route `/api/activation`. Règle des dates alignée sur l'émission existante. Codes à vendre reportés en L2b. Essai de bout en bout revu : l'exécutable du portail n'accepte que la clé embarquée. |
+| 0.3 | 2026-11-18 | Lots L2a et L3 livrés. L2a : schéma du portail en version 2 avec chemin de migration, code tiré depuis un paiement, route `/api/activation`. Règle des dates alignée sur l'émission existante. Codes à vendre reportés en L2b. Essai de bout en bout revu : l'exécutable du portail n'accepte que la clé embarquée. |
 
 ## 1. Décisions de l'utilisateur (2026-11-18)
 
@@ -69,7 +69,9 @@ Règles :
 - code activé ou lié d'avance à une autre entreprise : refus ;
 - début : le jour de l'activation ; échéance : celle de la dernière licence de l'entreprise si elle court encore, sinon la veille, plus un mois ou un an selon la formule (même règle que l'émission depuis un paiement, section 5 de la spécification du portail ; un serveur remplace la licence installée dès qu'il en reçoit une nouvelle) ;
 - modules : ceux du code ;
-- frein : 5 échecs par adresse ou par entreprise, puis attente doublée jusqu'à 15 minutes, avec `frein.rs` ; chaque échec noté au journal.
+- frein : 5 échecs par adresse ou par entreprise, puis attente doublée jusqu'à 15 minutes, avec `frein.rs` ; chaque échec noté au journal. Risque accepté : qui connaît l'identifiant d'une entreprise (non public) peut retarder ses activations par de faux codes ;
+- un code tiré par un revendeur désactivé ensuite s'active quand même, avec ce revendeur pour émetteur : le client a payé (proposé, l'utilisateur peut préférer un refus) ;
+- toute demande mal formée (JSON illisible, identifiant d'entreprise ou raison sociale invalide) reçoit le modèle « demande d'activation invalide » : le client ne reçoit que des modèles qu'il sait traduire.
 
 Réponse : `{ "licence": "KADENZ-E-...", "postes", "formule", "debut", "echeance" }` (le résumé sert à l'écran sans relire la licence), ou `{ "erreur": "<modèle>" }` avec un statut 4xx ; le programme traduit le modèle.
 
@@ -77,7 +79,7 @@ Réponse : `{ "licence": "KADENZ-E-...", "postes", "formule", "debut", "echeance
 
 - L'appel au portail part du programme où le code est tapé : la fenêtre d'administration du serveur (`KadenzAdmin`, étape Licence de l'assistant) et la rubrique « Abonnement » d'un poste Admin (renouvellement). Le service Windows du serveur, qui tourne sous SYSTEM, n'ouvre aucune connexion vers Internet.
 - Client HTTPS : `ureq` avec les certificats de Windows, comme les mises à jour (`crates/maj`) ; délai de 20 secondes ; aucune donnée de l'entreprise n'est envoyée en dehors de la demande ci-dessus.
-- Adresse du portail : fichier embarqué (`crates/licence/portail-url.txt`), vide tant que le nom de domaine n'est pas choisi (décision 72) ; vide, l'activation répond « Activation indisponible : adresse du portail non configurée ». Variable `KADENZ_PORTAIL` pour les essais, en version de développement seulement, comme `KADENZ_MAJ_CLE`.
+- Adresse du portail : fichier embarqué (`crates/maj/portail-url.txt`), vide tant que le nom de domaine n'est pas choisi (décision 72) ; vide, l'activation répond « Activation indisponible : adresse du portail non configurée ». Variable `KADENZ_PORTAIL` pour les essais, en version de développement seulement, comme `KADENZ_MAJ_CLE`.
 - La licence reçue suit ensuite le chemin actuel : installation dans l'assistant, ou `RenouvelerAbonnement` vers le serveur.
 - L'identifiant de l'entreprise n'a plus à être transmis à la main : le programme l'envoie avec le code. Le texte « Transmettez cet identifiant pour recevoir la licence » disparaît ; l'identifiant reste affiché pour le support.
 
@@ -112,7 +114,7 @@ Avec l'activation en ligne seulement, une version qui contient ces codes ne s'ac
 | L1 | Module `code_court` (format, contrôle, normalisation, mise en forme du champ) et ses essais | kadenz-c1, livré |
 | L2a | Portail : schéma en version 2 et migration, code tiré depuis un paiement, route d'activation, pages, essais | kadenz-c1, livré |
 | L2b | Portail : codes à vendre (lien au paiement facultatif, reconstruction de `licence_emise`), annulation d'un code | kadenz-c1 |
-| L3 | Client d'activation (`kadenz-licence` ou nouveau module), adresse du portail | kadenz-c1 |
+| L3 | Client d'activation (`kadenz_maj::activation`, qui a déjà le client HTTPS), adresse du portail (`crates/maj/portail-url.txt`) | kadenz-c1, livré |
 | L4 | `ChampCode` dans `composants.slint` | kadenz-6d |
 | L5 | Étape Licence de l'assistant de KadenzAdmin, avec ses traductions | kadenz-c1 |
 | L5 bis | Rubrique « Abonnement » du poste, avec ses traductions | kadenz-6d |
