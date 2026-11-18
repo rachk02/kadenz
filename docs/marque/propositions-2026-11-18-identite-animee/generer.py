@@ -43,6 +43,19 @@ DIRECTIONS = [
         "ecart": "Pièces en Ambre sur la Nuit, déjà pratiqué sur les écrans refaits.",
     },
     {
+        "id": "A2", "nom": "Trame de pièces",
+        "idee": "La composition de A avec le motif de B (demande du 2026-11-18) : le symbole est fait de "
+                "petites pièces ambre, posées sur le motif Quatre pièces ton sur ton. Toutes les pièces gardent "
+                "la même taille, sans fondu ; le texte se pose sur une zone nette, sans motif.",
+        "couleurs": [("Nuit", "#1A2259", "fond"), ("Pièces du motif", "#232C6B", "motif"),
+                     ("Ambre", "#E3A23B", "pièces du symbole"), ("#C5CAE0", "#C5CAE0", "texte secondaire")],
+        "mouvement": ["Les grandes pièces se remplissent l'une après l'autre, case par case, en diagonale.",
+                      "Une bande de lumière ton sur ton traverse le motif, sans changer la taille des pièces.",
+                      "Boucle de 8 s ; affiche : le disque seul, en grand ; motif : une pièce ambre avance d'une case à chaque temps."],
+        "usages": "Écran de démarrage, vidéos, affiches, réseaux sociaux.",
+        "ecart": "Pièces en Ambre sur la Nuit, comme A et les écrans refaits.",
+    },
+    {
         "id": "B", "nom": "Cadence",
         "idee": "Kadenz, c'est la cadence : les quatre pièces entrent sur quatre temps, "
                 "puis les trois temps (blanc, blanc, Ambre) marquent la mesure.",
@@ -221,6 +234,29 @@ function trame(c, w, h, o) {
   }
 }
 
+// Trame de pièces : le motif Quatre pièces (une pièce par case, décalée d'un temps à
+// chaque ligne) ; dans le symbole, les pièces passent en Ambre case par case. Taille
+// constante, aucun fondu ; vide(x, y) laisse des zones nettes pour le logo et le texte.
+function mosaique(c, w, h, o) {
+  const { ox, oy, S, cell, liste, croissance, T, vide } = o;
+  const m = cell / 2;
+  for (let j = 0; j * cell < h; j++) for (let i = 0; i * cell < w; i++) {
+    const cx = i * cell + m, cy = j * cell + m;
+    if (vide && vide(cx, cy)) continue;
+    const k = ORDRE[(i + j) % 4];
+    const u = (cx - ox) / S * 256, v = (cy - oy) / S * 256;
+    let p = null; for (const q of liste) if (dans(q, u, v)) { p = q; break; }
+    if (p) {
+      const g = croissance[ORDRE.indexOf(p)], [pcx, pcy] = CENTRE[p];
+      const r = clamp(((u - pcx) + (v - pcy)) / 208 + 0.5);
+      const e = g >= 1 ? 1 : eBack(clamp((g * 1.25 - r) / 0.25));
+      if (e > 0.01) { unePiece(c, k, cx, cy, cell * 0.86, C.ambre, e); continue; }
+    }
+    const l = 0.5 + 0.5 * Math.sin((i + j) * 0.45 - T * PI / 2);
+    unePiece(c, k, cx, cy, cell * 0.86, l > 0.8 ? "#2A3478" : C.motif);
+  }
+}
+
 // Tournant : quarts de disque qui tournent d'un quart de tour au passage d'une onde.
 function tournant(c, w, h, T, cell, calme) {
   fond(c, w, h, C.nuit);
@@ -329,6 +365,41 @@ const DIR = {
         const d = Math.hypot(x - w * 0.3, y - h * 0.7);
         const o = 0.5 + 0.5 * Math.sin(d * 0.035 - T * 2.2);
         c.fillStyle = C.indigo; c.beginPath(); c.arc(x, y, pas * (0.08 + 0.3 * o * o), 0, 2 * PI); c.fill();
+      }
+    },
+  },
+  A2: {
+    periode: 8, moment: 4.2,
+    scene(c, w, h, T) {
+      fond(c, w, h, C.nuit);
+      const sortie = 1 - lin(T, 7.3, 0.7);
+      const cr = ORDRE.map((k, i) => lin(T, 0.3 + i * 0.45, 0.9) * sortie);
+      const vide = (x, y) => x < 560 && (y < 120 || y > h - 232);
+      mosaique(c, w, h, { ox: w * 0.5, oy: h * 0.12, S: h * 0.76, cell: 32, liste: ORDRE, croissance: cr, T, vide });
+      const a = lin(T, 2.0, 0.6) * sortie;
+      image(c, "logoHN", 64, 56, 32, a);
+      texte(c, "Gestion commerciale", 64, h - 150, { taille: 44, poids: 700, titre: true, couleur: C.blanc, alpha: a });
+      paragraphe(c, "La facturation de votre entreprise, en FCFA et en sept langues.", 64, h - 104, 460, 30, { taille: 20, couleur: C.second, alpha: a });
+    },
+    affiche(c, w, h, T) {
+      fond(c, w, h, C.nuit);
+      const sortie = 1 - lin(T, 7.3, 0.7), g = lin(T, 0.3, 1.4) * sortie;
+      const S = 190 / 53.56 * 256;
+      const vide = (x, y) => y > 600 || (y < 100 && x < 300);
+      mosaique(c, w, h, { ox: 270 - 188 / 256 * S, oy: 330 - 188 / 256 * S, S, cell: 30, liste: ["disque"], croissance: [0, 0, 0, g], T, vide });
+      const a = lin(T, 1.6, 0.6) * sortie;
+      image(c, "logoHN", 48, 48, 28, a);
+      texte(c, "Du devis à l'avoir", 48, 700, { taille: 50, poids: 700, titre: true, couleur: C.blanc, alpha: a });
+      paragraphe(c, "Chaque document validé reçoit son numéro et s'exporte en PDF.", 48, 750, 420, 30, { taille: 21, couleur: C.second, alpha: a });
+      troisTemps(c, 48, 880, 44, 6, 10, null, a);
+    },
+    motif(c, w, h, T) {
+      fond(c, w, h, C.nuit);
+      const cell = 60, m = cell / 2, n = Math.floor(T / 0.5) % 8;
+      for (let j = 0; j < 8; j++) for (let i = 0; i < 8; i++) {
+        const l = 0.5 + 0.5 * Math.sin((i + j) * 0.45 - T * PI / 2);
+        const coul = i === n && j === n ? C.ambre : (l > 0.8 ? "#2A3478" : C.motif);
+        unePiece(c, ORDRE[(i + j) % 4], i * cell + m, j * cell + m, cell * 0.86, coul);
       }
     },
   },
@@ -590,7 +661,7 @@ footer {{ border-top:1px solid var(--trait); padding-top:24px; color:var(--ardoi
 <body>
 <div class="entete">
   <div><h1>Identité animée</h1>
-  <p>Cinq directions autour du logo Quatre pièces, qui ne change pas, ni ses couleurs ni ses polices.
+  <p>Cinq directions et une variante (A2) autour du logo Quatre pièces, qui ne change pas, ni ses couleurs ni ses polices.
   Chacune a son mouvement, son motif, une scène 16:9 et une affiche 9:16. On peut retenir une direction,
   ou en assembler plusieurs.</p></div>
   <button id="pause" type="button">Mettre en pause</button>
@@ -610,7 +681,7 @@ if __name__ == "__main__":
     html.write_text(page(), encoding="utf-8")
     png = ICI / "planche-identite-animee.png"
     subprocess.run([CHROME, "--headless=new", "--hide-scrollbars", "--disable-gpu",
-                    "--window-size=1680,6200", f"--screenshot={png}", "--virtual-time-budget=6000",
+                    "--window-size=1680,7400", f"--screenshot={png}", "--virtual-time-budget=6000",
                     "--allow-file-access-from-files", html.as_uri() + "?fige=1"], check=True,
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     print(html)
