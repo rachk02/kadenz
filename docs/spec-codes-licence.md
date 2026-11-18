@@ -11,6 +11,7 @@
 | 0.7 | 2026-11-18 | Section 7 bis complétée après la relecture de kadenz-74 : multiposte V1 sur le serveur de la phase 2 (ligne 0.2.x monoposte), retour au socle à l'échéance (proposé), longue clé encore saisissable, écrans de la 0.2.3, changement de poste (à trancher), répartition du travail. |
 | 0.8 | 2026-11-18 | Décisions de l'utilisateur sur la ligne V1 : retour au socle à l'échéance, changement de poste par « Libérer le poste » au portail. |
 | 0.9 | 2026-11-18 | Contrat de la ligne V1 figé : champ `poste` de la demande, licence V1 version 2, règle de clé par version, modèles de refus [5] et [6]. |
+| 0.10 | 2026-11-18 | Correction : la 0.2.2 n'active pas les modules d'une licence signée par la clé du portail (son stockage ne vérifie qu'avec la clé V1) ; seule la vérification de son assistant accepte les deux clés. |
 
 ## 1. Décisions de l'utilisateur (2026-11-18)
 
@@ -113,7 +114,7 @@ Décision de l'utilisateur (2026-11-18, cahier de la phase 2, décision 75) :
 - l'édition multiposte de la ligne V1 veut dire plusieurs postes sur les mêmes données : elle réutilise le serveur et les postes de la phase 2 (1.x), présentés comme la gamme des petits commerces ; la ligne 0.2.x reste monoposte (précision du même jour).
 
 Constats vérifiés sur le tag `v0.2.2` (`crates/licence/src/lib.rs`) :
-- la 0.2.2 accepte une licence V1 signée par la clé suivante (`cle-publique-suivante.hex`, identique dans `v0.2.2` et sur main), qui est la clé du portail (décision 29). Le portail peut donc signer des licences V1 sans la clé V1, qui reste hors ligne chez l'éditeur ;
+- la 0.2.2 embarque la clé suivante (`cle-publique-suivante.hex`, identique dans `v0.2.2` et sur main), qui est la clé du portail (décision 29), mais ne s'en sert que dans la vérification de l'assistant (`kadenz_licence::verifier`, `crates/app/src/licence.rs`) : le chemin qui active les modules (`kadenz_stockage::licence`, `etat` et `enregistrer`) vérifie avec la clé V1 seule et refuse donc une licence signée par la clé du portail (correction du 2026-11-18 ; la version 0.6 de ce document disait le contraire). Une 0.2.3 est donc nécessaire pour qu'une licence émise par le portail serve ; le portail signe sans la clé V1, qui reste hors ligne chez l'éditeur ;
 - la 0.2.2 refuse toute licence dont le champ `version` diffère du sien (1). Une licence V1 datée en version 2 n'est donc jamais acceptée par une 0.2.2, où elle deviendrait perpétuelle faute d'y lire l'échéance.
 
 Proposition (kadenz-3a, à relire avec kadenz-74) :
@@ -129,7 +130,7 @@ Contrat figé (kadenz-3a, 2026-11-18), à ne plus changer sans monter les deux c
 - Demande V1 (`POST /api/activation`, JSON) : `{"code", "poste", "client", "version"}`, `poste` au format `XXXX-XXXX-XXXX-XXXX` à la place de `entreprise`. Le portail reconnaît la gamme par le champ présent et la confronte à celle du code.
 - Réponse : la même que pour la phase 2 (`licence`, `postes`, `formule`, `debut`, `echeance`), `licence` étant alors une licence V1 version 2.
 - Licence V1 version 2 : `KADENZ-<données>.<signature>`, données JSON `{"version": 2, "cle", "client", "poste", "modules", "emise_le", "echeance", "postes"}`, `echeance` au format AAAA-MM-JJ (dernier jour valable), `postes` à 1. Émission et vérification dans `kadenz_licence` (une seule définition), vecteur d'essai fixe partagé par main et `release/0.2.x`.
-- Règle de clé par version, dans la 0.2.3 : version 1 acceptée avec la clé V1 seulement (licences perpétuelles déjà émises) ; version 2 avec la clé du portail seulement. La 0.2.2 accepte aujourd'hui une version 1 signée par la clé suivante : un portail compromis pourrait signer du perpétuel ; la 0.2.3 ferme cette porte. Vérifié au journal du dépôt : la seule licence V1 émise (2026-11-11) précède la clé suivante (2026-11-12).
+- Règle de clé par version, dans la 0.2.3 : version 1 acceptée avec la clé V1 seulement (licences perpétuelles déjà émises) ; version 2 avec la clé du portail seulement. C'est déjà ce que fait le stockage de la 0.2.2 pour la version 1 ; la 0.2.3 aligne la vérification de l'assistant, qui accepte aujourd'hui les deux clés, sur cette règle, pour qu'un portail compromis ne puisse jamais signer du perpétuel. Vérifié au journal du dépôt : la seule licence V1 émise (2026-11-11) précède la clé suivante (2026-11-12).
 - Deux modèles de refus ajoutés à `MODELES_ACTIVATION`, à la suite des cinq premiers : [5] « ce code ne sert pas à ce logiciel : vérifiez la gamme indiquée sur votre abonnement » (code `v1` présenté par une 1.x, ou l'inverse), [6] « ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer ».
 - Échéance dans la 0.2.3 : état d'abonnement calculé comme dans `kadenz_stockage::abonnement` (date du poste qui ne recule jamais) ; à l'échéance, retour au socle.
 
