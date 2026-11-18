@@ -10,6 +10,7 @@
 | 0.6 | 2026-11-18 | Section 7 bis : décision 75 (licences de la ligne V1 par codes, abonnement daté, longues clés émises gardées, multiposte V1 sur données partagées) et proposition technique (licence V1 en version 2, gamme du code, branche `release/0.2.x`). |
 | 0.7 | 2026-11-18 | Section 7 bis complétée après la relecture de kadenz-74 : multiposte V1 sur le serveur de la phase 2 (ligne 0.2.x monoposte), retour au socle à l'échéance (proposé), longue clé encore saisissable, écrans de la 0.2.3, changement de poste (à trancher), répartition du travail. |
 | 0.8 | 2026-11-18 | Décisions de l'utilisateur sur la ligne V1 : retour au socle à l'échéance, changement de poste par « Libérer le poste » au portail. |
+| 0.9 | 2026-11-18 | Contrat de la ligne V1 figé : champ `poste` de la demande, licence V1 version 2, règle de clé par version, modèles de refus [5] et [6]. |
 
 ## 1. Décisions de l'utilisateur (2026-11-18)
 
@@ -124,6 +125,14 @@ Proposition (kadenz-3a, à relire avec kadenz-74) :
   - Assistant, étape Licence : code facultatif, socle seul sans code ; `ChampCode` en premier, lien discret « J'ai une clé longue » qui ouvre l'ancienne `SaisieCle`, pour un client qui réinstalle avec une longue clé déjà émise (elles restent valables). Le texte « Transmettez l'identifiant » disparaît ; l'identifiant reste affiché pour le support.
   - Paramètres, Licence : lignes Échéance et Postes, bandeau avant l'échéance, bouton Renouveler qui ouvre `ChampCode` dans la page ; même lien vers la longue clé. Licence version 1 installée : « Perpétuelle », sans bandeau.
 - Changement de poste (décidé par l'utilisateur le 2026-11-18 ; l'identifiant du poste suit le matériel) : un code V1 reste lié au poste qui l'a activé. L'éditeur ou le revendeur libère le poste sur le portail (« Libérer le poste »), puis le même code s'active sur le nouveau poste ; pas de réactivation libre, qui laisserait un code de 1 poste servir sur plusieurs PC jusqu'à l'échéance (une licence ne se retire pas d'un poste hors ligne). Message quand le poste est pris : « ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer ».
+Contrat figé (kadenz-3a, 2026-11-18), à ne plus changer sans monter les deux côtés : une 0.2.3 installée chez un client se met rarement à jour, et un modèle qu'elle ne connaît pas devient « réponse inattendue du portail d'activation ».
+- Demande V1 (`POST /api/activation`, JSON) : `{"code", "poste", "client", "version"}`, `poste` au format `XXXX-XXXX-XXXX-XXXX` à la place de `entreprise`. Le portail reconnaît la gamme par le champ présent et la confronte à celle du code.
+- Réponse : la même que pour la phase 2 (`licence`, `postes`, `formule`, `debut`, `echeance`), `licence` étant alors une licence V1 version 2.
+- Licence V1 version 2 : `KADENZ-<données>.<signature>`, données JSON `{"version": 2, "cle", "client", "poste", "modules", "emise_le", "echeance", "postes"}`, `echeance` au format AAAA-MM-JJ (dernier jour valable), `postes` à 1. Émission et vérification dans `kadenz_licence` (une seule définition), vecteur d'essai fixe partagé par main et `release/0.2.x`.
+- Règle de clé par version, dans la 0.2.3 : version 1 acceptée avec la clé V1 seulement (licences perpétuelles déjà émises) ; version 2 avec la clé du portail seulement. La 0.2.2 accepte aujourd'hui une version 1 signée par la clé suivante : un portail compromis pourrait signer du perpétuel ; la 0.2.3 ferme cette porte. Vérifié au journal du dépôt : la seule licence V1 émise (2026-11-11) précède la clé suivante (2026-11-12).
+- Deux modèles de refus ajoutés à `MODELES_ACTIVATION`, à la suite des cinq premiers : [5] « ce code ne sert pas à ce logiciel : vérifiez la gamme indiquée sur votre abonnement » (code `v1` présenté par une 1.x, ou l'inverse), [6] « ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer ».
+- Échéance dans la 0.2.3 : état d'abonnement calculé comme dans `kadenz_stockage::abonnement` (date du poste qui ne recule jamais) ; à l'échéance, retour au socle.
+
 - Ligne 0.2.x : monoposte seulement, un code de 1 poste. Le multiposte « petits commerces » est un code de gamme `entreprise` (serveur et postes 1.x) ; ce qui le distingue (prix, modules) relève de la grille de prix, encore ouverte (décision 73).
 
 ## 8. Essais
