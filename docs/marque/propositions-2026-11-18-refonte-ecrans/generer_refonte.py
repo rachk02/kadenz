@@ -35,7 +35,9 @@ JETONS = [
     ("texte sur accent", "#FFFFFF", "#1A2259", "charte : Nuit"),
     ("accent-survol", "#E8EAF6", "#2D3A8C", "charte : Indigo"),
     ("champ (fond des saisies)", "#FFFFFF", "#232C6B", "charte : pièces du motif"),
-    ("bordure", "#D9DCE3", "#3A4795", "écart à valider"),
+    ("bordure (séparateurs)", "#D9DCE3", "#3A4795", "écart à valider"),
+    ("bordure-champ (contours des champs, boutons secondaires)", "#8A94A6", "#6E7BC9", "écart à valider, clair compris : 3 : 1 visé (actuel #D9DCE3, 1,4 : 1)"),
+    ("focus (champ actif, 2 px)", "#2D3A8C", "#E3A23B", "charte"),
     ("texte", "#1F2933", "#F4F5F9", "charte : Brume"),
     ("texte-secondaire", "#52606D", "#C5CAE0", "charte"),
     ("ambre", "#E3A23B", "#E3A23B", "inchangé"),
@@ -46,10 +48,10 @@ JETONS = [
 T = {
     "clair": dict(fond="#FFFFFF", lateral="#F4F5F9", nuit="#1A2259", accent="#2D3A8C", sur_accent="#FFFFFF",
                   survol="#E8EAF6", champ="#FFFFFF", bordure="#D9DCE3", texte="#1F2933", second="#52606D",
-                  ambre="#E3A23B", secondaire_bouton="#FFFFFF", logo="kadenz-logo-horizontal.svg"),
+                  ambre="#E3A23B", secondaire_bouton="#FFFFFF", logo="kadenz-logo-horizontal.svg", contour="#8A94A6", focus="#2D3A8C"),
     "sombre": dict(fond="#1A2259", lateral="#232C6B", nuit="#1A2259", accent="#E3A23B", sur_accent="#1A2259",
                    survol="#2D3A8C", champ="#232C6B", bordure="#3A4795", texte="#F4F5F9", second="#C5CAE0",
-                   ambre="#E3A23B", secondaire_bouton="#232C6B", logo="kadenz-logo-horizontal-negatif.svg"),
+                   ambre="#E3A23B", secondaire_bouton="#232C6B", logo="kadenz-logo-horizontal-negatif.svg", contour="#6E7BC9", focus="#E3A23B"),
 }
 NUIT, INDIGO, AMBRE, MOTIF = "#1A2259", "#2D3A8C", "#E3A23B", "#232C6B"
 
@@ -117,11 +119,11 @@ def logo_negatif(hauteur=30):
 
 
 # ---------------------------------------------------------------- composants
-def champ(libelle, valeur="", aide="", haut=40, mdp=False):
+def champ(libelle, valeur="", aide="", haut=40, mdp=False, actif=False):
     v = ("&#8226;" * len(valeur)) if (mdp and valeur) else valeur
     a = f'<div class="aide">{aide}</div>' if aide else ""
     return (f'<label class="champ"><span>{libelle}</span>'
-            f'<div class="saisie" style="height:{haut}px">{v}</div>{a}</label>')
+            f'<div class="saisie{" actif" if actif else ""}" style="height:{haut}px">{v}</div>{a}</label>')
 
 
 def paire(a, b):
@@ -149,7 +151,7 @@ body{{background:{c['fond']};color:{c['texte']};font:15px/1.45 Inter,sans-serif;
 .phrase{{color:{c['second']};font-size:16px}}
 .champ{{display:block}}
 .champ span{{display:block;white-space:nowrap;font-size:13px;color:{c['second']};margin-bottom:6px}}
-.saisie{{background:{c['champ']};border:1px solid {c['bordure']};border-radius:4px;padding:9px 12px;
+.saisie{{background:{c['champ']};border:1px solid {c['contour']};border-radius:4px;padding:9px 12px;
         font-size:15px;color:{c['texte']};overflow:hidden}}
 .aide{{font-size:12.5px;color:{c['second']};margin-top:5px}}
 .paire{{display:grid;grid-template-columns:1fr 1fr;gap:16px}}
@@ -157,7 +159,8 @@ body{{background:{c['fond']};color:{c['texte']};font:15px/1.45 Inter,sans-serif;
 .bouton{{height:40px;padding:0 20px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;
         font:600 14.5px Inter;white-space:nowrap}}
 .principal{{background:{c['accent']};color:{c['sur_accent']}}}
-.second{{background:{c['secondaire_bouton']};color:{c['texte']};border:1px solid {c['bordure']}}}
+.second{{background:{c['secondaire_bouton']};color:{c['texte']};border:1px solid {c['contour']}}}
+.saisie.actif{{border:2px solid {c['focus']};padding:8px 11px}}
 .lien{{color:{c['texte']};padding:0 4px}}
 .plein{{display:flex;width:100%}}
 .barre{{display:flex;gap:8px}}
@@ -205,7 +208,7 @@ def panneau_image(piece, theme, x=IMAGE_X, w=IMAGE_W, pied=True, px=150, py=150,
 def connexion(theme):
     contenu = (f'<div class="sur">Connexion</div>'
                f'<div class="titre" style="margin-top:14px">Quincaillerie Démo</div>'
-               f'<div class="pile" style="margin-top:32px">{champ("Identifiant")}{champ("Mot de passe")}</div>'
+               f'<div class="pile" style="margin-top:32px">{champ("Identifiant", actif=True)}{champ("Mot de passe")}</div>'
                f'<div style="margin-top:24px">{boutons(("Se connecter", "principal plein"))}</div>')
     corps = (f'<div style="position:absolute;left:{TEXTE_X}px;top:56px">{logo(theme)}</div>'
              + bloc(TEXTE_X, TEXTE_Y + 40, 360, contenu) + panneau_image("quart", theme))
@@ -291,7 +294,7 @@ def assistant(theme, n, variante=""):
     titre = ETAPES[n]
     if n == 0:
         corps_etape = (f'<div class="phrase">Transmettez cet identifiant pour recevoir la licence, puis collez-la ici. '
-                       f'Sans licence, le serveur reste en lecture seule.</div>'
+                       f'Sans licence, le serveur reste en lecture seule et un seul poste peut s&#39;inscrire.</div>'
                        f'<div class="pile" style="margin-top:24px">'
                        f'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end">'
                        f'{champ("Identifiant de l&#39;entreprise", "01a1ec2c-5354-76c7-a313-788688…")}{boutons(("Copier", "second"))}</div>'
@@ -329,11 +332,11 @@ def assistant(theme, n, variante=""):
                        f'<div class="case"><b>&#10003;</b>Montant en lettres en orthographe traditionnelle</div></div>')
     elif n == 4:
         corps_etape = (f'<div class="phrase">Sauvegarde chiffrée chaque jour et à l\'arrêt du service. Sans ce mot de passe, '
-                       f'aucune sauvegarde ne peut être restaurée : notez-le en lieu sûr.</div>'
+                       f'aucune sauvegarde ne peut être restaurée, et l&#39;éditeur ne peut pas le retrouver : notez-le en lieu sûr.</div>'
                        f'<div class="pile" style="margin-top:24px">'
                        f'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end">'
                        f'{champ("Dossier des sauvegardes", "C:&#92;ProgramData&#92;Kadenz&#92;Sauvegardes")}{boutons(("Choisir", "second"))}</div>'
-                       f'<div class="aide" style="margin-top:4px">De préférence sur un autre disque que celui du serveur.</div>'
+                       f'<div class="aide" style="margin-top:4px">De préférence sur un autre disque (externe ou partage réseau).</div>'
                        f'{champ("Heure de la sauvegarde quotidienne", "12:00")}'
                        f'{paire(champ("Mot de passe des sauvegardes", "motdepasse123", mdp=True), champ("Confirmation", "motdepasse123", mdp=True))}</div>')
     else:
@@ -358,8 +361,7 @@ def assistant(theme, n, variante=""):
     corps = (colonne_etapes(n, theme)
              + f'<div style="position:absolute;left:{A_X}px;top:{A_Y}px;width:{A_W}px;height:{AH - 100 - A_Y}px;overflow:hidden">'
              + bloc(0, 0, A_W, contenu) + '</div>' + defile
-             + f'<div style="position:absolute;left:232px;right:0;top:{AH - 100}px;height:100px;background:{c["fond"]};'
-             f'border-top:1px solid {c["bordure"]}"></div>'
+             + f'<div style="position:absolute;left:232px;right:0;top:{AH - 100}px;height:100px;background:{c["lateral"]}"></div>'
              + f'<div style="position:absolute;left:{A_X}px;width:{A_W}px;top:{AH - 72}px;display:flex;gap:10px">{bas}</div>')
     return page(theme, AW, AH, corps)
 
@@ -435,6 +437,9 @@ TEXTES_PRESENTATION = [
      "« L'assistant qui suit crée votre entreprise et le compte administrateur. »"),
 ]
 TEXTES_AUTRES = [
+    ("Connexion",
+     "Saisissez votre identifiant et votre mot de passe.",
+     "(supprimé : les deux libellés suffisent)"),
     ("Inscription",
      "Ce poste travaille sur le serveur de l'entreprise. Demandez un code d'inscription à l'Admin : il le crée dans la "
      "fenêtre du serveur, ou depuis un poste déjà inscrit. / Inscription de ce poste / Collez le code complet, ou tapez "
@@ -446,7 +451,8 @@ TEXTES_AUTRES = [
      "collez-la ici. Sans licence, le serveur reste en lecture seule et un seul poste peut s'inscrire, pour installer "
      "la licence plus tard depuis ce poste.",
      "Transmettez cet identifiant pour recevoir la licence, puis collez-la ici. Sans licence, le serveur reste en "
-     "lecture seule. / Aide : Vous pourrez aussi l'installer plus tard."),
+     "lecture seule et un seul poste peut s'inscrire. / Aide : Vous pourrez aussi l'installer plus tard. "
+     "(Perdu : « liée à l'entreprise ».)"),
     ("Assistant, taux",
      "Valeurs séparées par des points-virgules, en pourcentage (ex. 0 ; 18). Modifiables plus tard dans les paramètres.",
      "En pourcentage, séparés par des points-virgules. Modifiables plus tard."),
@@ -456,7 +462,8 @@ TEXTES_AUTRES = [
      "Notez-le en lieu sûr. Choisissez de préférence un dossier sur un autre disque que celui du serveur (disque "
      "externe ou partage réseau).",
      "Sauvegarde chiffrée chaque jour et à l'arrêt du service. Sans ce mot de passe, aucune sauvegarde ne peut être "
-     "restaurée : notez-le en lieu sûr. / Aide sous le dossier : De préférence sur un autre disque que celui du serveur."),
+     "restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr. / Aide sous le dossier : De préférence "
+     "sur un autre disque (externe ou partage réseau)."),
 ]
 
 
@@ -489,7 +496,10 @@ def planche(pres, assi):
     paires_c = [("texte sur fond", "#F4F5F9", "#1A2259"), ("texte-secondaire sur fond", "#C5CAE0", "#1A2259"),
                 ("texte-secondaire sur champ", "#C5CAE0", "#232C6B"), ("texte du bouton principal (Nuit sur Ambre)", "#1A2259", "#E3A23B"),
                 ("erreur sur fond", "#F97066", "#1A2259"), ("attente sur fond", "#FDB022", "#1A2259"),
-                ("succes sur fond", "#47CD89", "#1A2259"), ("bordure sur fond (repère, pas du texte)", "#3A4795", "#1A2259"),
+                ("succes sur fond", "#47CD89", "#1A2259"), ("bordure-champ sur fond (3 : 1 requis)", "#6E7BC9", "#1A2259"), ("bordure-champ sur champ", "#6E7BC9", "#232C6B"),
+                ("focus ambre sur fond", "#E3A23B", "#1A2259"), ("fond du champ sur fond (ne compense pas)", "#232C6B", "#1A2259"),
+                ("séparateur #3A4795 sur fond (décoratif)", "#3A4795", "#1A2259"), ("bordure-champ claire sur blanc", "#8A94A6", "#FFFFFF"),
+                ("rappel clair : bordure actuelle sur blanc", "#D9DCE3", "#FFFFFF"),
                 ("rappel clair : texte-secondaire sur blanc", "#52606D", "#FFFFFF")]
     ctr = "".join(f"<tr><td>{a}</td><td>{contraste(b, c):.1f} : 1</td></tr>" for a, b, c in paires_c)
     jetons = (f'<div class="deux-col"><table class="jetons"><tr><th>Jeton de Theme</th><th>Clair (actuel)</th>'
@@ -551,6 +561,9 @@ def planche(pres, assi):
               [(1, "licence", "licence"), (2, "entreprise", "entreprise"), (3, "administrateur", "administrateur")]) + "</div>"
               + '<div class="rang trois">' + "".join(img(f"assistant-{n}-clair", f"Proposé, {ETAPES[n - 1].lower()}")
                                                        for n in (1, 2, 3)) + "</div>"
+              + '<div class="rang trois">' + "".join(img(f"a{n}-{s}", f"Actuel, {e}", True) for n, s, e in
+              [(4, "taux-et-paiements", "taux et paiements"), (5, "sauvegardes", "sauvegardes"),
+               (6, "recapitulatif", "récapitulatif")]) + "</div>"
               + '<div class="rang trois">' + "".join(img(f"assistant-{n}-clair", f"Proposé, {ETAPES[n - 1].lower()}")
                                                        for n in (4, 5, 6)) + "</div>"
               + '<div class="rang trois">' + img("assistant-2-sombre", "Entreprise, sombre, replié")
@@ -572,7 +585,8 @@ def planche(pres, assi):
                  notes("Les textes raccourcis, ligne par ligne (tableaux ci-dessus).",
                        "Adresse / boîte postale : visible ou repliée à l'étape Entreprise.",
                        "Image des écrans : trame générée aux couleurs de la marque, ou photos que vous fourniriez.",
-                       "Les valeurs sombres hors charte : panneaux #151C4C, bordure #3A4795 et couleurs d'état claires (erreur, attente, succes).",
+                       "Les valeurs hors charte : panneaux #151C4C, séparateurs #3A4795, contours de champs #6E7BC9 en sombre et #8A94A6 en clair (l'actuel #D9DCE3 n'atteint que 1,4 : 1), couleurs d'état claires (erreur, attente, succes).",
+                       "Textes raccourcis : chaque texte changé est une nouvelle chaîne à traduire dans les six autres langues ; en arabe, les écrans sont mis en miroir (panneau image de l'autre côté).",
                        "Bouton final de la présentation selon l'édition : multiposte « Rejoindre l'entreprise », "
                        "monoposte « Commencer l'installation ».",
                        "Choix du mode : suivre Windows, ou réglage par compte dans les Paramètres."))
