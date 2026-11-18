@@ -3,10 +3,10 @@
 // clôture d'un mois, état de la TVA collectée. Les écritures sont calculées sur la
 // copie de ce poste ; la clôture se fait en ligne et le serveur recompte le mois.
 
-import { CheckBox, LineEdit, ScrollView, TabWidget } from "std-widgets.slint";
+import { LineEdit, ScrollView, TabWidget } from "std-widgets.slint";
 import { ListeDeroulante } from "liste-deroulante.slint";
 import { TableauDonnees } from "tableau.slint";
-import { Alerte, Bouton, Champ, Confirmation, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Case, Champ, Confirmation, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 import { ConnexionApi } from "etat-connexion.slint";
 
 // Compte choisi pour un usage : libellé de l'usage, compte saisi, compte proposé par
@@ -137,7 +137,7 @@ component OngletJournal inherits VerticalLayout {
             }
         }
 
-        ventes := CheckBox {
+        ventes := Case {
             text: @tr("Ventes");
             checked: true;
             toggled => {
@@ -145,7 +145,7 @@ component OngletJournal inherits VerticalLayout {
             }
         }
 
-        encaissements := CheckBox {
+        encaissements := Case {
             text: @tr("Encaissements");
             checked: true;
             toggled => {

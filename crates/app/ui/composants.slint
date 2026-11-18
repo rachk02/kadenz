@@ -112,6 +112,13 @@ export global Theme {
     out property <color> texte-desactive: root.choix(#9aa3b5, #6e737d, #6f7d8c, #77716b);
     // Fond discret : barres de graphiques, grilles.
     out property <color> fond-discret: root.choix(#eceef3, #26282d, #27313c, #2b2927);
+
+    // Couleur d'état envoyée par l'application avec ses valeurs claires (pilotage.rs :
+    // impayé, partiel, payé) : rendue par le jeton du thème, pour suivre le mode et la
+    // palette ; toute autre couleur est rendue telle quelle.
+    public pure function etat(c: color) -> color {
+        return c == #b42318 ? root.erreur : c == #a8650f ? root.attente : c == #067647 ? root.succes : c;
+    }
 }
 
 // Préférences d'affichage du compte connecté (migration 0006) : navigation par
@@ -833,6 +840,90 @@ export component ElementNavigation inherits Rectangle {
     zone := TouchArea {
         clicked => {
             root.clique();
+        }
+    }
+}
+
+// Case à cocher aux couleurs du thème : la case standard (style Fluent) garde son bleu
+// et ses gris, quels que soient le mode et la palette. Mêmes propriétés que CheckBox.
+export component Case inherits Rectangle {
+    in property <string> text;
+    in-out property <bool> checked;
+    in property <bool> enabled: true;
+    callback toggled();
+
+    min-height: 24px;
+    accessible-role: checkbox;
+    accessible-checkable: true;
+    accessible-checked: root.checked;
+    accessible-label: root.text;
+    accessible-enabled: root.enabled;
+    accessible-action-default => {
+        root.basculer();
+    }
+    forward-focus: clavier;
+
+    function basculer() {
+        if (root.enabled) {
+            root.checked = !root.checked;
+            root.toggled();
+        }
+    }
+
+    clavier := FocusScope {
+        enabled: root.enabled;
+        key-pressed(e) => {
+            if (e.text == " ") {
+                root.basculer();
+                return accept;
+            }
+            return reject;
+        }
+    }
+
+    Rangee {
+        spacing: 8px;
+
+        VerticalLayout {
+            alignment: center;
+
+            Rectangle {
+                width: 18px;
+                height: 18px;
+                border-radius: 3px;
+                border-width: clavier.has-focus ? 2px : 1px;
+                border-color: !root.enabled ? Theme.bordure
+                    : clavier.has-focus ? Theme.focus
+                    : root.checked ? Theme.accent : Theme.bordure-champ;
+                background: !root.checked ? Theme.champ : root.enabled ? Theme.accent : Theme.desactive;
+                animate background, border-color { duration: Affichage.duree; }
+
+                if root.checked: Path {
+                    width: 12px;
+                    height: 12px;
+                    viewbox-width: 12;
+                    viewbox-height: 12;
+                    commands: "M 1.5 6.5 L 4.5 9.5 L 10.5 2.5";
+                    stroke: root.enabled ? Theme.texte-sur-accent : Theme.texte-desactive;
+                    stroke-width: 2px;
+                }
+            }
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            vertical-alignment: center;
+            text: root.text;
+            color: root.enabled ? Theme.texte : Theme.texte-desactive;
+        }
+    }
+
+    TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: pointer;
+        clicked => {
+            clavier.focus();
+            root.basculer();
         }
     }
 }

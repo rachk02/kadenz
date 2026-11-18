@@ -7,8 +7,8 @@
 // Les appels au serveur tournent hors du fil de l'interface : l'état revient par
 // les propriétés. La page relit l'état à l'ouverture, après chaque action, et
 // toutes les 15 secondes tant qu'elle est ouverte.
-import { CheckBox, ScrollView } from "std-widgets.slint";
-import { MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+import { ScrollView } from "std-widgets.slint";
+import { Case, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct PosteDistantUi {
     empreinte: string,
@@ -105,7 +105,7 @@ component CaseServeur inherits HorizontalLayout {
         case.checked = self.etat;
     }
 
-    case := CheckBox {
+    case := Case {
         text: root.texte;
         checked: root.etat;
         enabled: root.modifiable;

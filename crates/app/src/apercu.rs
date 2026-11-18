@@ -297,7 +297,7 @@ fn fin_impression(
 
 /// Poignée Windows de la fenêtre de Kadenz, propriétaire de la fenêtre d'impression.
 #[cfg(windows)]
-fn poignee(fenetre: &FenetrePrincipale) -> windows_sys::Win32::Foundation::HWND {
+pub(crate) fn poignee(fenetre: &FenetrePrincipale) -> windows_sys::Win32::Foundation::HWND {
     use raw_window_handle::{HasWindowHandle, RawWindowHandle};
 
     match fenetre

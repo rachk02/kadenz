@@ -4,10 +4,10 @@
 // serveur ; ce poste montre celui de sa copie, à la dernière synchronisation.
 // Sans le droit « Voir la valeur du stock », les colonnes de valeur sont absentes.
 
-import { CheckBox, LineEdit, ListView, TabWidget } from "std-widgets.slint";
+import { LineEdit, ListView, TabWidget } from "std-widgets.slint";
 import { ListeDeroulante } from "liste-deroulante.slint";
 import { TableauDonnees } from "tableau.slint";
-import { Alerte, Bouton, Champ, ChampNombre, Confirmation, Droits, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Case, Champ, ChampNombre, Confirmation, Droits, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 import { ConnexionApi } from "etat-connexion.slint";
 
 // Produit choisi dans l'état du stock, pour l'ajustement.
@@ -145,7 +145,7 @@ component OngletEtat inherits VerticalLayout {
             }
         }
 
-        negatifs := CheckBox {
+        negatifs := Case {
             text: @tr("Stock négatif seulement");
             toggled => {
                 root.filtrer();
@@ -538,7 +538,7 @@ component OngletInventaire inherits VerticalLayout {
         flex-wrap: FlexboxLayoutWrap.wrap;
         cross-axis-alignment: CrossAxisAlignment.center;
 
-        masquer := CheckBox {
+        masquer := Case {
             text: @tr("Masquer la quantité théorique");
         }
 

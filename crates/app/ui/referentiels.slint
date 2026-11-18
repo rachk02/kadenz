@@ -1,10 +1,10 @@
 // Écrans des référentiels Tiers et Produits (cahier des charges, sections 5.2 et 5.3).
 // Une liste filtrable et triable à gauche, la fiche sélectionnée à droite.
 
-import { CheckBox, LineEdit } from "std-widgets.slint";
+import { LineEdit } from "std-widgets.slint";
 import { ListeDeroulante } from "liste-deroulante.slint";
 import { TableauDonnees } from "tableau.slint";
-import { Alerte, Bouton, Champ, Confirmation, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Case, Champ, Confirmation, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 import { ImportApi } from "import.slint";
 import { ConnexionApi } from "etat-connexion.slint";
 
@@ -226,7 +226,7 @@ export component PageTiers inherits VerticalLayout {
             }
         }
 
-        inactifs := CheckBox {
+        inactifs := Case {
             text: @tr("Fiches désactivées");
             toggled => {
                 root.filtrer();
@@ -483,14 +483,14 @@ export component PageProduits inherits VerticalLayout {
             }
         }
 
-        inactifs := CheckBox {
+        inactifs := Case {
             text: @tr("Fiches désactivées");
             toggled => {
                 root.filtrer();
             }
         }
 
-        negatifs := CheckBox {
+        negatifs := Case {
             text: @tr("Stock négatif");
             toggled => {
                 root.filtrer();
@@ -650,7 +650,7 @@ export component PageProduits inherits VerticalLayout {
 
             // Stock (docs/spec-stock.md, 3.1) : un service reste décoché ; décocher un
             // produit dont la quantité n'est pas nulle est refusé à l'enregistrement.
-            suivi := CheckBox {
+            suivi := Case {
                 text: @tr("Suivi en stock");
                 enabled: root.modifiable;
             }

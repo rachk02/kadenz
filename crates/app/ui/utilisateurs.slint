@@ -1,10 +1,10 @@
 // Écran Utilisateurs : comptes et matrice des droits par rôle
 // (cahier des charges, sections 10.1 et 10.2).
 
-import { CheckBox, ScrollView, TabWidget } from "std-widgets.slint";
+import { ScrollView, TabWidget } from "std-widgets.slint";
 import { ListeDeroulante } from "liste-deroulante.slint";
 import { TableauDonnees } from "tableau.slint";
-import { Alerte, Bouton, Confirmation, Champ, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Case, Champ, Confirmation, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct CompteUi {
     nom: string,
@@ -337,7 +337,7 @@ component OngletDroits inherits ScrollView {
                     VerticalLayout {
                         alignment: center;
 
-                        CheckBox {
+                        Case {
                             checked: autorise;
                             enabled: !ligne.verrous[j];
                             toggled => {

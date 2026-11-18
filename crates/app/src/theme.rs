@@ -106,7 +106,33 @@ pub(crate) fn appliquer(fenetre: &FenetrePrincipale, (mode, palette): (ModeAffic
     let t = fenetre.global::<Theme>();
     t.set_mode(rang(mode));
     t.set_palette(rang_palette(palette));
+    barre_de_titre(fenetre, t.get_sombre());
 }
+
+/// Barre de titre de Windows sombre en mode sombre (attribut
+/// DWMWA_USE_IMMERSIVE_DARK_MODE, Windows 10 20H1 et suivants ; ignoré avant).
+/// Sans fenêtre encore créée, rien n'est fait : le minuteur la reprend.
+#[cfg(windows)]
+fn barre_de_titre(fenetre: &FenetrePrincipale, sombre: bool) {
+    use windows_sys::Win32::Graphics::Dwm::{DWMWA_USE_IMMERSIVE_DARK_MODE, DwmSetWindowAttribute};
+    let h = crate::apercu::poignee(fenetre);
+    if h.is_null() {
+        return;
+    }
+    let valeur = i32::from(sombre);
+    // SAFETY : poignée de la fenêtre de Kadenz ; attribut d'un BOOL (4 octets).
+    unsafe {
+        DwmSetWindowAttribute(
+            h,
+            DWMWA_USE_IMMERSIVE_DARK_MODE as u32,
+            (&valeur as *const i32).cast(),
+            std::mem::size_of::<i32>() as u32,
+        );
+    }
+}
+
+#[cfg(not(windows))]
+fn barre_de_titre(_fenetre: &FenetrePrincipale, _sombre: bool) {}
 
 /// Lit le réglage de Windows tout de suite, puis toutes les deux secondes. Le
 /// minuteur doit vivre aussi longtemps que la fenêtre : il est rendu à l'appelant.
@@ -114,12 +140,20 @@ pub(crate) fn suivre_windows(fenetre: &FenetrePrincipale) -> Timer {
     fenetre.global::<Theme>().set_windows_sombre(windows_sombre());
     let minuteur = Timer::default();
     let f = fenetre.as_weak();
+    // Barre de titre : dès que la fenêtre existe, puis à chaque changement de Windows.
+    let premiere = fenetre.as_weak();
+    Timer::single_shot(Duration::from_millis(200), move || {
+        if let Some(f) = premiere.upgrade() {
+            barre_de_titre(&f, f.global::<Theme>().get_sombre());
+        }
+    });
     minuteur.start(TimerMode::Repeated, Duration::from_secs(2), move || {
         if let Some(f) = f.upgrade() {
             let t = f.global::<Theme>();
             let sombre = windows_sombre();
             if t.get_windows_sombre() != sombre {
                 t.set_windows_sombre(sombre);
+                barre_de_titre(&f, t.get_sombre());
             }
         }
     });
