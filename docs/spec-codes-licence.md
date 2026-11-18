@@ -107,7 +107,7 @@ Réponse : `{ "licence": "KADENZ-E-...", "postes", "formule", "debut", "echeance
 Décision de l'utilisateur (2026-11-18, cahier de la phase 2, décision 75) :
 - un code activé sur la ligne V1 donne un abonnement daté, renouvelé par un nouveau code ; le perpétuel ne vaut plus que pour les licences V1 déjà émises (décision 7) ;
 - les longues clés V1 déjà remises restent valables, sans rien faire chez les clients ;
-- l'édition multiposte de la ligne V1 veut dire plusieurs postes sur les mêmes données, donc un serveur ; sa forme reste à définir (question ci-dessous).
+- l'édition multiposte de la ligne V1 veut dire plusieurs postes sur les mêmes données : elle réutilise le serveur et les postes de la phase 2 (1.x), présentés comme la gamme des petits commerces ; la ligne 0.2.x reste monoposte (précision du même jour).
 
 Constats vérifiés sur le tag `v0.2.2` (`crates/licence/src/lib.rs`) :
 - la 0.2.2 accepte une licence V1 signée par la clé suivante (`cle-publique-suivante.hex`, identique dans `v0.2.2` et sur main), qui est la clé du portail (décision 29). Le portail peut donc signer des licences V1 sans la clé V1, qui reste hors ligne chez l'éditeur ;
@@ -118,9 +118,7 @@ Proposition (kadenz-3a, à relire avec kadenz-74) :
 - Échéance : même règle que la phase 2 (avertissements à 30 jours, 7 jours et la veille, puis lecture seule ; décisions 25 et la « lecture seule à l'échéance »), les données restant gardées.
 - Portail : un code porte sa gamme (`entreprise` ou `v1`), fixée au tirage. Pour un code V1, la demande d'activation envoie l'identifiant du poste (`XXXX-XXXX-XXXX-XXXX`) à la place de l'identifiant d'entreprise ; la licence renvoyée est une licence V1 version 2 liée à ce poste. Un code d'une gamme présenté par un logiciel de l'autre est refusé avec un message à lui.
 - Client 0.2.3 : branche `release/0.2.x` tirée de `v0.2.2` (décision 39), qui reprend `code_court`, le client d'activation et `ChampCode` ; l'écran de licence perd le champ de la longue clé pour les nouvelles licences et garde la lecture de celle qui est installée.
-- Monoposte V1 : un poste, un code de 1 poste. Multiposte V1 : à trancher avec l'utilisateur, voir la question.
-
-Question ouverte à l'utilisateur : forme du multiposte V1. Pistes : (a) l'édition multiposte de la ligne V1 est le serveur de la phase 2 avec les postes 1.x, ce qui revient à la phase 2 sous un autre nom ou un autre prix ; (b) un serveur propre à la ligne V1, sur la base 0.2.x, ce qui demande d'écrire une synchronisation pour la V1 ; (c) autre.
+- Ligne 0.2.x : monoposte seulement, un code de 1 poste. Le multiposte « petits commerces » est un code de gamme `entreprise` (serveur et postes 1.x) ; ce qui le distingue (prix, modules) relève de la grille de prix, encore ouverte (décision 73).
 
 ## 8. Essais
 
