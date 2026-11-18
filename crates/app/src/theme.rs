@@ -8,6 +8,10 @@
 //! - Choix d'un compte (`comptes::changer_mode_affichage`, migrations 0018 et
 //!   0019) : gardé dans la base de ce poste ; il devient aussi le réglage du
 //!   poste, pour que l'écran de connexion garde le dernier aspect choisi.
+//! - Animations : préférence du compte ; le dernier choix fait sur ce poste est
+//!   aussi gardé dans `affichage.json`, pour que les motifs des écrans d'avant
+//!   connexion (présentation, inscription, connexion) restent immobiles quand
+//!   elles sont coupées.
 //! - « Comme Windows » : réglage « Choisir votre mode d'application » de
 //!   Windows, relu toutes les deux secondes pour suivre un changement fait
 //!   pendant que Kadenz est ouvert.
@@ -64,11 +68,16 @@ pub(crate) fn du_poste() -> (ModeAffichage, PaletteSombre) {
     lire(&fichier_du_poste())
 }
 
-fn lire(chemin: &Path) -> (ModeAffichage, PaletteSombre) {
-    let valeur: serde_json::Value = std::fs::read_to_string(chemin)
+fn contenu(chemin: &Path) -> serde_json::Value {
+    std::fs::read_to_string(chemin)
         .ok()
         .and_then(|t| serde_json::from_str(&t).ok())
-        .unwrap_or_default();
+        .filter(serde_json::Value::is_object)
+        .unwrap_or_else(|| json!({}))
+}
+
+fn lire(chemin: &Path) -> (ModeAffichage, PaletteSombre) {
+    let valeur = contenu(chemin);
     let code = |c: &str| valeur.get(c).and_then(serde_json::Value::as_str).unwrap_or("");
     (
         ModeAffichage::depuis_code(code("mode")).unwrap_or_default(),
@@ -85,11 +94,36 @@ pub(crate) fn enregistrer_poste(mode: ModeAffichage, palette: PaletteSombre) {
 }
 
 fn ecrire(chemin: &Path, mode: ModeAffichage, palette: PaletteSombre) -> std::io::Result<()> {
+    fusionner(chemin, &[("mode", json!(mode.code())), ("palette", json!(palette.code()))])
+}
+
+/// Écrit des champs du réglage du poste en gardant les autres.
+fn fusionner(chemin: &Path, champs: &[(&str, serde_json::Value)]) -> std::io::Result<()> {
     if let Some(dossier) = chemin.parent() {
         std::fs::create_dir_all(dossier)?;
     }
-    let texte = json!({ "mode": mode.code(), "palette": palette.code() }).to_string();
-    std::fs::write(chemin, texte)
+    let mut valeur = contenu(chemin);
+    for (nom, v) in champs {
+        valeur[*nom] = v.clone();
+    }
+    std::fs::write(chemin, valeur.to_string())
+}
+
+/// Animations avant toute connexion : dernier choix d'un compte sur ce poste ;
+/// absent ou illisible : animées.
+pub(crate) fn animations_du_poste() -> bool {
+    lire_animations(&fichier_du_poste())
+}
+
+fn lire_animations(chemin: &Path) -> bool {
+    contenu(chemin).get("animations").and_then(serde_json::Value::as_bool).unwrap_or(true)
+}
+
+/// Garde le choix d'animations d'un compte pour les écrans d'avant connexion.
+pub(crate) fn enregistrer_animations_poste(animations: bool) {
+    if let Err(e) = fusionner(&fichier_du_poste(), &[("animations", json!(animations))]) {
+        crate::consigner_erreur(&format!("Réglage des animations du poste non enregistré : {e}"));
+    }
 }
 
 /// Affichage d'un compte : son propre choix s'il en a fait un, sinon le
@@ -216,9 +250,17 @@ mod tests {
         assert_eq!(lire(&chemin), (ModeAffichage::Systeme, PaletteSombre::Anthracite));
         ecrire(&chemin, ModeAffichage::Sombre, PaletteSombre::Ardoise).unwrap();
         assert_eq!(lire(&chemin), (ModeAffichage::Sombre, PaletteSombre::Ardoise));
+        // Les animations s'ajoutent sans effacer le mode ni la palette, et l'inverse.
+        assert!(lire_animations(&chemin));
+        fusionner(&chemin, &[("animations", json!(false))]).unwrap();
+        assert!(!lire_animations(&chemin));
+        assert_eq!(lire(&chemin), (ModeAffichage::Sombre, PaletteSombre::Ardoise));
+        ecrire(&chemin, ModeAffichage::Clair, PaletteSombre::Graphite).unwrap();
+        assert!(!lire_animations(&chemin));
         // Illisible : valeurs par défaut.
         std::fs::write(&chemin, "{pas du json").unwrap();
         assert_eq!(lire(&chemin), (ModeAffichage::Systeme, PaletteSombre::Anthracite));
+        assert!(lire_animations(&chemin));
         let _ = std::fs::remove_dir_all(&dossier);
     }
 }

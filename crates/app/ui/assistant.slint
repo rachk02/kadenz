@@ -10,8 +10,8 @@
 // attend le jalon F7. Une étape « Sauvegardes » demande le dossier, l'heure et le
 // mot de passe des sauvegardes du serveur (décision 56).
 
-import { CheckBox, ScrollView } from "std-widgets.slint";
-import { Bouton, Champ, MessageErreur, Rangee, Section, Theme } from "composants.slint";
+import { ScrollView } from "std-widgets.slint";
+import { Bouton, Case, Champ, MessageErreur, Rangee, Section, Theme } from "composants.slint";
 import { GrandTitre } from "connexion.slint";
 import { MotifTournant } from "motifs-ecrans.slint";
 import { IdentifiantPoste, LicenceApi, SaisieCle, VerificationUi } from "licence.slint";
@@ -541,7 +541,7 @@ export component EcranAssistant inherits Rectangle {
                             valeur <=> root.modes-paiement;
                         }
 
-                        CheckBox {
+                        Case {
                             text: @tr("Montant en lettres en orthographe traditionnelle (sinon : orthographe rectifiée de 1990)");
                             checked <=> root.orthographe-traditionnelle;
                         }

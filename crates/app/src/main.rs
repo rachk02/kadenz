@@ -385,6 +385,7 @@ pub(crate) fn fermer_session(f: &FenetrePrincipale, etat: &mut Etat) {
     etat.utilisateur = None;
     // Écran de connexion : réglage du poste, le compte suivant n'est pas connu.
     theme::appliquer(f, theme::du_poste());
+    f.global::<Affichage>().set_animations(theme::animations_du_poste());
     // Bandeau des sauvegardes et assistant de reprise : propres au compte.
     let serveur = f.global::<ServeurApi>();
     serveur.set_avertissement_sauvegarde(SharedString::new());
@@ -521,11 +522,13 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
                         .map_err(phrase)
                 }
             };
-            if resultat.is_ok()
-                && let Some(u) = etat.utilisateur.as_mut()
-            {
-                u.navigation = navigation;
-                u.animations = animations;
+            if resultat.is_ok() {
+                // Dernier choix fait sur ce poste : aussi celui des écrans d'avant connexion.
+                theme::enregistrer_animations_poste(animations);
+                if let Some(u) = etat.utilisateur.as_mut() {
+                    u.navigation = navigation;
+                    u.animations = animations;
+                }
             }
             // Dans tous les cas, l'écran reprend les préférences enregistrées du compte.
             if let (Some(f), Some(u)) = (f.upgrade(), etat.utilisateur.as_ref()) {
@@ -673,6 +676,7 @@ fn main() -> Result<(), slint::PlatformError> {
     // Réglage d'affichage du poste avant connexion ; mode « comme Windows » : réglage
     // de Windows suivi tant que la fenêtre est ouverte.
     theme::appliquer(&fenetre, theme::du_poste());
+    fenetre.global::<Affichage>().set_animations(theme::animations_du_poste());
     let _suivi_windows = theme::suivre_windows(&fenetre);
     let resultat = fenetre.run();
     // Fenêtre fermée : sauvegarde automatique de la base ouverte.
