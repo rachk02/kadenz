@@ -13,6 +13,7 @@
 import { CheckBox, ScrollView } from "std-widgets.slint";
 import { Bouton, Champ, MessageErreur, Rangee, Section, Theme } from "composants.slint";
 import { GrandTitre } from "connexion.slint";
+import { MotifTournant } from "motifs-ecrans.slint";
 import { IdentifiantPoste, LicenceApi, SaisieCle, VerificationUi } from "licence.slint";
 import { RestaurationFichier, SauvegardesApi } from "sauvegardes.slint";
 
@@ -146,20 +147,18 @@ export component EcranAssistant inherits Rectangle {
         remplit: true;
 
         // Colonne de marque : logo, étapes (faites cochées, en cours marquée d'un carré
-        // ambre) et triangle tramé, sur Nuit.
+        // ambre) et, en bas, le motif C Tournant qui avance à chaque étape, sur Nuit.
         Rectangle {
             width: 232px;
             background: Theme.nuit;
             clip: true;
 
-            Image {
+            MotifTournant {
                 x: 0;
                 y: 0;
                 width: parent.width;
                 height: parent.height;
-                source: Theme.sombre ? @image-url("icones/trame-etapes-sombre.svg") : @image-url("icones/trame-etapes.svg");
-                image-fit: cover;
-                vertical-alignment: ImageVerticalAlignment.bottom;
+                etape: root.etape;
             }
 
             VerticalLayout {

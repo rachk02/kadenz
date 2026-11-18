@@ -5,6 +5,7 @@
 // bloc à la même hauteur que celui de la présentation.
 import { MessageRetour, Rangee, Theme } from "composants.slint";
 import { GrandTitre, PanneauTrame, SurTitre } from "connexion.slint";
+import { MotifAnneaux } from "motifs-ecrans.slint";
 import { InscriptionPoste, ServeurApi } from "serveur.slint";
 
 export component EcranInscription inherits Rectangle {
@@ -16,10 +17,15 @@ export component EcranInscription inherits Rectangle {
 
         PanneauTrame {
             width: max(360px, min(500px, root.width * 0.42));
-            trame: @image-url("icones/trame-disque.svg");
-            trame-sombre: @image-url("icones/trame-disque-sombre.svg");
             logo: true;
             version-logiciel: root.version-logiciel;
+
+            // A+ Anneaux, disque ambre.
+            MotifAnneaux {
+                width: parent.width;
+                height: parent.height;
+                piece: 3;
+            }
         }
 
         Rectangle {

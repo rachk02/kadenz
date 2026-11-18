@@ -1,30 +1,21 @@
 import { Bouton, Champ, MessageErreur, Rangee, Theme } from "composants.slint";
+import { MotifA2 } from "motifs-ecrans.slint";
 
 // Refonte du 2026-11-18 (docs/marque/propositions-2026-11-18-refonte-ecrans) : les
 // écrans de premier lancement et de connexion posent leur bloc à une place fixe,
 // quelle que soit la longueur des textes, à côté d'un panneau de marque tramé.
 
-// Panneau de marque tramé : une pièce du symbole en points ambre sur un champ de points
-// indigo (icones/trame-*.svg, generer_trames_ecrans.py), sur Nuit ; en bas, « Gestion
-// commerciale » et la version. Le symbole entier n'est jamais tramé (charte).
+// Panneau de marque sur Nuit : le motif animé adopté le 2026-11-18 (motifs-ecrans.slint),
+// placé par l'écran comme enfant du panneau ; en bas, « Gestion commerciale » et la version.
+// Le symbole entier n'est jamais tramé (charte).
 export component PanneauTrame inherits Rectangle {
-    in property <image> trame;
-    // Même trame, points du champ en gris, pour le mode sombre.
-    in property <image> trame-sombre;
     in property <string> version-logiciel;
     // Logo négatif en haut du panneau, quand la colonne voisine n'en porte pas.
     in property <bool> logo: false;
     background: Theme.nuit;
     clip: true;
 
-    Image {
-        x: 0;
-        y: 0;
-        width: parent.width;
-        height: parent.height;
-        source: Theme.sombre ? root.trame-sombre : root.trame;
-        image-fit: cover;
-    }
+    @children
 
     if root.logo: Image {
         x: Theme.rtl ? parent.width - self.width - 48px : 48px;
@@ -182,9 +173,15 @@ export component EcranConnexion inherits Rectangle {
 
         PanneauTrame {
             horizontal-stretch: 1;
-            trame: @image-url("icones/trame-quart.svg");
-            trame-sombre: @image-url("icones/trame-quart-sombre.svg");
             version-logiciel: root.version-logiciel;
+
+            // A2 Trame de pièces, quart de disque, avec le reflet lent.
+            MotifA2 {
+                width: parent.width;
+                height: parent.height;
+                piece: 1;
+                reflet: true;
+            }
         }
     }
 }

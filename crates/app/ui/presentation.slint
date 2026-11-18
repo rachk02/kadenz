@@ -6,6 +6,7 @@
 // l'autre), boutons à place fixe, une pièce du symbole tramée par page.
 import { Affichage, Bouton, Rangee, Theme } from "composants.slint";
 import { GrandTitre, LogoColonne, PanneauTrame, SurTitre } from "connexion.slint";
+import { MotifA2 } from "motifs-ecrans.slint";
 
 // Bouton du choix du mode : Comme Windows, Clair, Sombre.
 component ChoixSegment inherits Rectangle {
@@ -126,20 +127,6 @@ export component EcranPresentation inherits Rectangle {
         if (p == 1) { return @tr("Du devis à l'avoir : chaque document validé reçoit son numéro et s'exporte en PDF."); }
         if (p == 2) { return @tr("Saisissez un règlement sur la facture : l'état Impayé, Partiel ou Payé se calcule seul."); }
         return @tr("Chacun se connecte avec son propre compte ; chaque validation est inscrite dans l'historique.");
-    }
-
-    pure function trame(p: int) -> image {
-        if (p == 0) { return @image-url("icones/trame-carre.svg"); }
-        if (p == 1) { return @image-url("icones/trame-quart.svg"); }
-        if (p == 2) { return @image-url("icones/trame-triangle.svg"); }
-        return @image-url("icones/trame-disque.svg");
-    }
-
-    pure function trame-sombre(p: int) -> image {
-        if (p == 0) { return @image-url("icones/trame-carre-sombre.svg"); }
-        if (p == 1) { return @image-url("icones/trame-quart-sombre.svg"); }
-        if (p == 2) { return @image-url("icones/trame-triangle-sombre.svg"); }
-        return @image-url("icones/trame-disque-sombre.svg");
     }
 
     background: Theme.fond;
@@ -320,9 +307,30 @@ export component EcranPresentation inherits Rectangle {
 
         PanneauTrame {
             horizontal-stretch: 1;
-            trame: root.trame(root.page);
-            trame-sombre: root.trame-sombre(root.page);
             version-logiciel: root.version-logiciel;
+
+            // A2 Trame de pièces : une pièce par page (carré, quart de disque, triangle,
+            // disque) ; chaque page recrée le motif, l'entrée rejoue à chaque page.
+            if root.page == 0: MotifA2 {
+                width: parent.width;
+                height: parent.height;
+                piece: 0;
+            }
+            if root.page == 1: MotifA2 {
+                width: parent.width;
+                height: parent.height;
+                piece: 1;
+            }
+            if root.page == 2: MotifA2 {
+                width: parent.width;
+                height: parent.height;
+                piece: 2;
+            }
+            if root.page == 3: MotifA2 {
+                width: parent.width;
+                height: parent.height;
+                piece: 3;
+            }
         }
     }
 }
