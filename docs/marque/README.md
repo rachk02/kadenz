@@ -191,7 +191,21 @@ Trois directions retenues par l'utilisateur le 2026-11-18 parmi six propositions
 | A2 Trame de pièces | La composition de A, faite du motif Quatre pièces : symbole en petites pièces ambre sur le motif ton sur ton ; taille constante, sans fondu ; le motif s'arrête net sous le texte | Pièces en Ambre, comme A |
 | C Tournant | Le motif Tournant en mouvement : les quarts de disque tournent d'un quart de tour au passage d'une onde ; le logo reste sur une zone calme | Aucun |
 
-Écrans du logiciel avec ces motifs, en clair et en sombre (Graphite, Ardoise, Anthracite) : `propositions-2026-11-18-ecrans-animes/` (présentation, inscription, connexion, assistant KadenzAdmin, tableau de bord, À propos, liste vide ; un motif recommandé par écran, les autres au choix). Proposition en attente d'adoption, rien n'est encore implémenté.
+Écrans du logiciel avec ces motifs, en clair et en sombre (Graphite, Ardoise, Anthracite) : `propositions-2026-11-18-ecrans-animes/` (présentation, inscription, connexion, assistant KadenzAdmin, tableau de bord, À propos, liste vide).
+
+Adopté par l'utilisateur le 2026-11-18, à implémenter :
+
+| Écran | Motif |
+|---|---|
+| Présentation (panneau de droite) | A2 Trame de pièces |
+| Inscription du poste (panneau de gauche) | A+ Anneaux |
+| Connexion | A2 Trame de pièces |
+| Assistant KadenzAdmin (colonne des étapes) | C Tournant |
+| Tableau de bord | bandeau A2 derrière le titre |
+| Paramètres, À propos | bandeau A2+ en tête de la carte |
+| Liste vide | petite pièce A2 au-dessus du message |
+
+Palette sombre par défaut : Anthracite. Les versions du deuxième tour sont toutes gardées à côté de celles du premier : A et A+ Anneaux, A2 et A2+ Pièces et lignes, C Tournant (logiciel) et C+ Carrousel (communication hors logiciel : site, réseaux sociaux, salons) (`propositions-2026-11-18-identite-references/`).
 
 ## Modules (proposition)
 

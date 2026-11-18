@@ -173,8 +173,8 @@ def ecran_vide():
 
 ECRANS = [
     ("presentation", "Présentation, page 1", "Premier lancement. La pièce de la page se compose à l'arrivée, puis le panneau reste calme ; une pièce différente par page (carré, quart de disque, triangle, disque).", "A2", ecran_presentation),
-    ("inscription", "Inscription du poste", "Panneau à gauche avec le logo ; le disque se compose une fois à l'arrivée.", "A", ecran_inscription),
-    ("connexion", "Connexion", "Le seul écran où le mouvement continue : très lent, pour ne pas distraire pendant la saisie.", "A+", ecran_connexion),
+    ("inscription", "Inscription du poste", "Panneau à gauche avec le logo ; le disque ambre arrive, les anneaux de points tournent lentement.", "A+", ecran_inscription),
+    ("connexion", "Connexion", "Le quart de disque se compose en pièces ambre, puis un reflet très lent passe sur le motif, pour ne pas distraire pendant la saisie.", "A2", ecran_connexion),
     ("assistant", "Assistant de création (KadenzAdmin)", "Colonne des étapes : le motif avance d'un temps à chaque étape franchie.", "C", ecran_assistant),
     ("tableau", "Tableau de bord", "Proposition : un bandeau de marque bas, derrière le titre, animé une fois à l'ouverture. Le reste de l'écran ne bouge pas.", "A2", ecran_tableau),
     ("apropos", "Paramètres, À propos", "Proposition : un bandeau de marque en tête de la carte À propos.", "A2+", ecran_apropos),
@@ -573,8 +573,8 @@ def page():
 <title>Kadenz, écrans animés</title><style>{CSS}</style></head>
 <body data-palette="2">
 <div class="entete"><div><h1>Écrans du logiciel, motifs animés</h1>
-<p>Sept écrans de Kadenz en mode clair et en mode sombre, avec les motifs retenus. Chaque écran a un motif
-recommandé (bouton actif) ; les autres boutons montrent le même écran avec un autre motif. La palette du mode
+<p>Sept écrans de Kadenz en mode clair et en mode sombre, avec les motifs retenus. Le bouton actif de chaque
+écran est le motif adopté par l'utilisateur le 2026-11-18 ; les autres boutons montrent le même écran avec un autre motif. La palette du mode
 sombre se change en haut. Dans le logiciel, l'entrée animée joue une fois ; ici elle se répète toutes les 12 s
 pour qu'on la voie.</p></div></div>
 <div class="reglages"><b>Palette sombre</b><span class="choix"><button data-palette-choix="0">Graphite</button><button data-palette-choix="1">Ardoise</button><button data-palette-choix="2" class="on">Anthracite</button></span>
