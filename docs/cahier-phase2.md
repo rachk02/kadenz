@@ -28,6 +28,7 @@
 | 0.24 | 2026-11-15 | Décisions 62 et 63 (F10), reçues par kadenz-8e : première version de la phase 2 en 1.0.0 ; essai F10c en simulation, sans installer. |
 | 0.25 | 2026-11-16 | Décisions 64 à 67 (stock, question ouverte 4) : l'utilisateur a demandé de retenir les choix recommandés par kadenz-34 ; forme du chantier dans `docs/spec-stock.md`. Décision 68, reçue par kadenz-8e : tout finir avant de publier la 1.0.0. Décision 69, reçue par kadenz-8e : les sessions décident ensemble pendant l'absence de l'utilisateur. |
 | 0.26 | 2026-11-16 | Décisions 70 à 73 (site web, question ouverte 9), reçues par kadenz-a8 : contenu de la première version, français d'abord, nom de domaine plus tard, pas de tarifs tant qu'ils ne sont pas fixés. |
+| 0.27 | 2026-11-18 | Décision 74 : codes de licence courts, activation en ligne (spécification `docs/spec-codes-licence.md`). |
 
 Statut : **à l'étude** pour tout le document. Les décisions de la section 2 sont prises ; aucun bloc n'est encore spécifié ni codé. Aucun chiffre, aucune règle comptable ou fiscale et aucun choix technique n'est retenu ici sans source vérifiée : là où il en faut, une question est posée.
 
@@ -119,6 +120,7 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 71. **Langues du site** (idem) : français d'abord ; le site est prévu multilingue dès le départ (adresses et balises de langue), les autres langues viennent ensuite.
 72. **Nom de domaine** (idem) : choisi plus tard ; le site se prépare en local, et les adresses absolues (balises canoniques, plan du site, Open Graph) attendent le nom.
 73. **Tarifs** (idem) : pas de page de tarifs tant que la grille de prix n'est pas fixée (question ouverte 2) ; aucun prix n'est inventé.
+74. **Codes de licence courts** (2026-11-18, reçue par kadenz-c1) : toute licence se saisit par un code d'activation de 25 caractères en 5 groupes (`XXXXX-XXXXX-XXXXX-XXXXX-XXXXX`), sans O, 0, I ni 1, le dernier caractère servant de contrôle, dans un champ qui met en majuscules, place les tirets et accepte le collage ; activation en ligne seulement (le portail renvoie la licence signée) ; le nombre de postes est porté par le code ; les sortes de licences existantes y passent aussi. Les éditions monoposte viennent après (serveur intégré au poste sur 127.0.0.1, retenu pour plus tard). Détail : `docs/spec-codes-licence.md`.
 
 ## 3. Candidats
 

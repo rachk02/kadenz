@@ -23,6 +23,7 @@ use kadenz_domaine::module::Module;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
+pub mod code_court;
 pub mod entreprise;
 
 const PREFIXE: &str = "KADENZ-";
