@@ -72,7 +72,9 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
         )
         .route("/paiements/{id}/licence", get(page_emission).post(emission))
         .route("/licences/{id}", get(licence))
+        .route("/codes", get(page_codes).post(tirer_codes))
         .route("/codes/{id}", get(code))
+        .route("/codes/{id}/annuler", post(annuler_code))
         .route("/api/activation", post(activation))
         .route("/comptes", get(page_comptes).post(nouveau_compte))
         .route("/comptes/{id}/actif", post(regler_actif))
@@ -239,6 +241,7 @@ fn message_de(uri: &Uri) -> Option<Message> {
         "compte" => "Compte revendeur créé.",
         "actif" => "Compte mis à jour.",
         "mot_de_passe" => "Mot de passe changé.",
+        "code_annule" => "Code annulé : il ne peut plus être activé.",
         _ => return None,
     };
     Some(Message {
@@ -599,7 +602,12 @@ async fn licence(
     }
 }
 
-async fn code(State(etat): State<Etat>, entetes: HeaderMap, Path(id): Path<i64>) -> Response {
+async fn code(
+    State(etat): State<Etat>,
+    entetes: HeaderMap,
+    uri: Uri,
+    Path(id): Path<i64>,
+) -> Response {
     let c = match exiger(&etat, &entetes, None).await {
         Ok(c) => c,
         Err(r) => return *r,
@@ -607,7 +615,84 @@ async fn code(State(etat): State<Etat>, entetes: HeaderMap, Path(id): Path<i64>)
     let portail = etat.portail.clone();
     let compte = c.compte.clone();
     match bloquant(move || portail.code(&compte, id)).await {
-        Ok(k) => html(StatusCode::OK, pages::code(&c.cadre(None), &k)),
+        Ok(k) => {
+            let m = message_de(&uri);
+            html(StatusCode::OK, pages::code(&c.cadre(m.as_ref()), &k))
+        }
+        Err(e) => page_erreur(Some(&c), &e),
+    }
+}
+
+async fn annuler_code(
+    State(etat): State<Etat>,
+    entetes: HeaderMap,
+    Path(id): Path<i64>,
+    Form(champs): Form<Champs>,
+) -> Response {
+    let c = match exiger(&etat, &entetes, Some(&champs)).await {
+        Ok(c) => c,
+        Err(r) => return *r,
+    };
+    let portail = etat.portail.clone();
+    let compte = c.compte.clone();
+    match bloquant(move || portail.annuler_code(&compte, id)).await {
+        Ok(k) => rediriger(&format!("/codes/{}?m=code_annule", k.id)),
+        Err(e) => page_erreur(Some(&c), &e),
+    }
+}
+
+async fn codes_page(etat: &Etat, c: &Connecte, erreur: Option<String>) -> Response {
+    let portail = etat.portail.clone();
+    let compte = c.compte.clone();
+    match bloquant(move || portail.codes_a_vendre(&compte)).await {
+        Ok(liste) => {
+            let statut = if erreur.is_some() {
+                StatusCode::UNPROCESSABLE_ENTITY
+            } else {
+                StatusCode::OK
+            };
+            html(statut, pages::codes(&c.cadre(None), &liste, erreur.as_deref()))
+        }
+        Err(e) => page_erreur(Some(c), &e),
+    }
+}
+
+async fn page_codes(State(etat): State<Etat>, entetes: HeaderMap) -> Response {
+    let c = match exiger(&etat, &entetes, None).await {
+        Ok(c) => c,
+        Err(r) => return *r,
+    };
+    codes_page(&etat, &c, None).await
+}
+
+async fn tirer_codes(
+    State(etat): State<Etat>,
+    entetes: HeaderMap,
+    Form(champs): Form<Champs>,
+) -> Response {
+    let c = match exiger(&etat, &entetes, Some(&champs)).await {
+        Ok(c) => c,
+        Err(r) => return *r,
+    };
+    let modules: Vec<Module> = Module::TOUS
+        .into_iter()
+        .filter(|m| champ(&champs, &format!("module_{}", m.code())) == "1")
+        .collect();
+    let (nombre, postes, formule) = (
+        champ(&champs, "nombre").to_string(),
+        champ(&champs, "postes").to_string(),
+        champ(&champs, "formule").to_string(),
+    );
+    let portail = etat.portail.clone();
+    let compte = c.compte.clone();
+    match bloquant(move || portail.creer_codes(&compte, &nombre, &postes, &formule, &modules)).await
+    {
+        Ok(codes) => {
+            let mut r = html(StatusCode::OK, pages::codes_crees(&c.cadre(None), &codes));
+            r.headers_mut().insert(CACHE_CONTROL, HeaderValue::from_static("no-store"));
+            r
+        }
+        Err(ErreurPortail::Validation(m)) => codes_page(&etat, &c, Some(m)).await,
         Err(e) => page_erreur(Some(&c), &e),
     }
 }

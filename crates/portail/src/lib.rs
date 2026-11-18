@@ -154,7 +154,8 @@ impl Paiement {
 pub struct LicenceEmise {
     pub id: i64,
     pub entreprise: String,
-    pub paiement: i64,
+    /// Paiement d'origine ; aucun pour un code à vendre.
+    pub paiement: Option<i64>,
     /// Texte complet de la licence (`KADENZ-E-...`), à copier dans la
     /// rubrique « Abonnement ».
     pub texte: String,
@@ -459,6 +460,23 @@ fn date(texte: &str, champ: &str) -> Resultat<NaiveDate> {
         .map_err(|_| ErreurPortail::Validation(format!("{champ} illisible : AAAA-MM-JJ attendu")))
 }
 
+fn valider_postes(texte: &str) -> Resultat<u32> {
+    texte
+        .trim()
+        .parse()
+        .ok()
+        .filter(|p| (1..=1000).contains(p))
+        .ok_or_else(|| ErreurPortail::Validation("nombre de postes invalide : de 1 à 1000".into()))
+}
+
+fn valider_formule(texte: &str) -> Resultat<Formule> {
+    Formule::depuis_code(texte.trim())
+        .ok_or_else(|| ErreurPortail::Validation("formule invalide : mensuelle ou annuelle".into()))
+}
+
+/// Codes à vendre tirés en une fois, au plus.
+pub const CODES_PAR_TIRAGE: u32 = 50;
+
 fn ajouter_periode(jour: NaiveDate, formule: Formule) -> NaiveDate {
     let mois = match formule {
         Formule::Mensuelle => 1,
@@ -614,7 +632,7 @@ fn echeance_proposee(
 /// Ce qu'une licence à émettre reprend de son paiement ou de son code.
 struct ALicence<'a> {
     entreprise: &'a Entreprise,
-    paiement: i64,
+    paiement: Option<i64>,
     code: Option<i64>,
     formule: Formule,
     postes: u32,
@@ -1183,18 +1201,8 @@ impl Portail {
             "" => None,
             r => Some(valider_texte(r, "référence", 100)?),
         };
-        let postes: u32 = saisie
-            .postes
-            .trim()
-            .parse()
-            .ok()
-            .filter(|p| (1..=1000).contains(p))
-            .ok_or_else(|| {
-                ErreurPortail::Validation("nombre de postes invalide : de 1 à 1000".into())
-            })?;
-        let formule = Formule::depuis_code(saisie.formule.trim()).ok_or_else(|| {
-            ErreurPortail::Validation("formule invalide : mensuelle ou annuelle".into())
-        })?;
+        let postes = valider_postes(&saisie.postes)?;
+        let formule = valider_formule(&saisie.formule)?;
         conn.execute(
             "INSERT INTO paiement (entreprise, recu_le, mode, montant, devise, reference, postes,
                                    formule, saisi_par, saisi_le)
@@ -1286,7 +1294,7 @@ impl Portail {
             aujourdhui,
             ALicence {
                 entreprise: &entreprise,
-                paiement: paiement.id,
+                paiement: Some(paiement.id),
                 code: None,
                 formule: paiement.formule,
                 postes: paiement.postes,
@@ -1334,26 +1342,14 @@ impl Portail {
             .into_iter()
             .filter(|m| modules.contains(m))
             .collect();
-        let code = code_court::tirer().map_err(ErreurPortail::Interne)?;
-        let utiles = code_court::normaliser(&code);
-        let fin: String = utiles.chars().skip(code_court::LONGUEUR - 5).collect();
-        conn.execute(
-            "INSERT INTO code_activation (empreinte, fin, postes, formule, modules, paiement,
-                                          entreprise, cree_par, cree_le)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-            params![
-                empreinte_code(&utiles),
-                fin,
-                paiement.postes,
-                paiement.formule.code(),
-                modules_en_texte(&modules),
-                paiement.id,
-                paiement.entreprise,
-                acteur.id,
-                maintenant(),
-            ],
+        let (id, code, fin) = inserer_code(
+            &conn,
+            &acteur,
+            paiement.postes,
+            paiement.formule,
+            &modules,
+            Some((paiement.id, &paiement.entreprise)),
         )?;
-        let id = conn.last_insert_rowid();
         let details = format!(
             "code …{fin}, paiement {}, {} postes, formule {}, modules : {}",
             paiement.id,
@@ -1366,6 +1362,107 @@ impl Portail {
             code,
             fiche: code_permis(&conn, &acteur, id)?,
         })
+    }
+
+    /// Tire des codes à vendre (décision 74) : sans paiement ni entreprise,
+    /// pour un nombre de postes et une formule ; l'entreprise se lie à
+    /// l'activation, rattachée au revendeur qui a tiré le code. Les codes en
+    /// clair ne sont rendus qu'ici.
+    pub fn creer_codes(
+        &self,
+        acteur: &Compte,
+        nombre: &str,
+        postes: &str,
+        formule: &str,
+        modules: &[Module],
+    ) -> Resultat<Vec<CodeCree>> {
+        let conn = self.conn();
+        let acteur = relire(&conn, acteur)?;
+        let nombre: u32 = nombre
+            .trim()
+            .parse()
+            .ok()
+            .filter(|n| (1..=CODES_PAR_TIRAGE).contains(n))
+            .ok_or_else(|| {
+                ErreurPortail::Validation(format!(
+                    "nombre de codes invalide : de 1 à {CODES_PAR_TIRAGE}"
+                ))
+            })?;
+        let postes = valider_postes(postes)?;
+        let formule = valider_formule(formule)?;
+        let modules: Vec<Module> = Module::TOUS
+            .into_iter()
+            .filter(|m| modules.contains(m))
+            .collect();
+        let transaction = conn.unchecked_transaction()?;
+        let mut tires = Vec::new();
+        for _ in 0..nombre {
+            let (id, code, fin) =
+                inserer_code(&transaction, &acteur, postes, formule, &modules, None)?;
+            tires.push((id, code, fin));
+        }
+        let fins: Vec<&str> = tires.iter().map(|t| t.2.as_str()).collect();
+        let details = format!(
+            "{nombre} codes à vendre (…{}), {postes} postes, formule {}, modules : {}",
+            fins.join(", …"),
+            formule.code(),
+            liste_modules(&modules)
+        );
+        noter(&transaction, Some(acteur.id), "codes_crees", None, &details)?;
+        transaction.commit()?;
+        tires
+            .into_iter()
+            .map(|(id, code, _)| {
+                Ok(CodeCree {
+                    code,
+                    fiche: code_permis(&conn, &acteur, id)?,
+                })
+            })
+            .collect()
+    }
+
+    /// Codes à vendre (sans paiement), du plus récent au plus ancien (500 au
+    /// plus) : tous pour l'éditeur, les siens pour un revendeur.
+    pub fn codes_a_vendre(&self, acteur: &Compte) -> Resultat<Vec<CodeActivation>> {
+        let conn = self.conn();
+        let acteur = relire(&conn, acteur)?;
+        let filtre = match acteur.role {
+            Role::Editeur => String::new(),
+            Role::Revendeur => format!(" AND k.cree_par = {}", acteur.id),
+        };
+        let mut req = conn.prepare(&format!(
+            "{SELECT_CODE} WHERE k.paiement IS NULL{filtre} ORDER BY k.id DESC LIMIT 500"
+        ))?;
+        let codes = req.query_map([], code_depuis)?.collect::<Result<_, _>>()?;
+        Ok(codes)
+    }
+
+    /// Annule un code pas encore activé : l'éditeur, ou le compte qui l'a
+    /// tiré. Le paiement d'un code annulé peut servir de nouveau.
+    pub fn annuler_code(&self, acteur: &Compte, id: i64) -> Resultat<CodeActivation> {
+        let conn = self.conn();
+        let acteur = relire(&conn, acteur)?;
+        let code = code_permis(&conn, &acteur, id)?;
+        let createur: i64 =
+            conn.query_row("SELECT cree_par FROM code_activation WHERE id = ?1", [id], |r| {
+                r.get(0)
+            })?;
+        if acteur.role != Role::Editeur && createur != acteur.id {
+            return Err(ErreurPortail::Interdit);
+        }
+        if code.etat != EtatCode::Libre {
+            return refus("seul un code pas encore activé peut être annulé");
+        }
+        conn.execute("UPDATE code_activation SET etat = 'annule' WHERE id = ?1", [id])?;
+        let details = format!(
+            "code …{}{}",
+            code.fin,
+            code.paiement
+                .map(|p| format!(", paiement {p} de nouveau libre"))
+                .unwrap_or_default()
+        );
+        noter(&conn, Some(acteur.id), "code_annule", code.entreprise.as_deref(), &details)?;
+        code_permis(&conn, &acteur, id)
     }
 
     /// Code d'activation, dans la portée du compte.
@@ -1461,9 +1558,6 @@ impl Portail {
                 echeance: licence.echeance,
             });
         }
-        let paiement = trouve.paiement.ok_or_else(|| {
-            ErreurPortail::Interne("code sans paiement : codes à vendre pas encore pris en charge".into())
-        })?;
         let createur: Compte = conn.query_row(
             &format!(
                 "SELECT {COLONNES_COMPTE} FROM compte WHERE id = (SELECT cree_par FROM code_activation WHERE id = ?1)"
@@ -1500,7 +1594,7 @@ impl Portail {
             aujourdhui,
             ALicence {
                 entreprise: &entreprise,
-                paiement,
+                paiement: trouve.paiement,
                 code: Some(trouve.id),
                 formule: trouve.formule,
                 postes: trouve.postes,
@@ -1611,6 +1705,39 @@ fn paiement_permis(conn: &Connection, acteur: &Compte, id: i64) -> Resultat<Paie
         .ok_or(ErreurPortail::Introuvable)?;
     entreprise_permise(conn, acteur, &paiement.entreprise)?;
     Ok(paiement)
+}
+
+/// Tire un code et l'enregistre ; `lien` : paiement et entreprise d'un code
+/// tiré pour un paiement, aucun pour un code à vendre. Rend l'identifiant, le
+/// code en clair et sa fin.
+fn inserer_code(
+    conn: &Connection,
+    acteur: &Compte,
+    postes: u32,
+    formule: Formule,
+    modules: &[Module],
+    lien: Option<(i64, &str)>,
+) -> Resultat<(i64, String, String)> {
+    let code = code_court::tirer().map_err(ErreurPortail::Interne)?;
+    let utiles = code_court::normaliser(&code);
+    let fin: String = utiles.chars().skip(code_court::LONGUEUR - 5).collect();
+    conn.execute(
+        "INSERT INTO code_activation (empreinte, fin, postes, formule, modules, paiement,
+                                      entreprise, cree_par, cree_le)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+        params![
+            empreinte_code(&utiles),
+            fin,
+            postes,
+            formule.code(),
+            modules_en_texte(modules),
+            lien.map(|l| l.0),
+            lien.map(|l| l.1),
+            acteur.id,
+            maintenant(),
+        ],
+    )?;
+    Ok((conn.last_insert_rowid(), code, fin))
 }
 
 /// Code dans la portée du compte : celui de son entreprise, ou un code qu'il

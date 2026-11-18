@@ -5,6 +5,7 @@
 | 0.1 | 2026-11-18 | Premier jet par kadenz-c1, d'après les décisions de l'utilisateur du 2026-11-18 (décision 74 du cahier de la phase 2). À valider avec kadenz-6d avant tout code. |
 | 0.2 | 2026-11-18 | Relecture de kadenz-6d : séparateurs retirés sans rien dire et autres caractères signalés, résumé dans la réponse du portail, champ sur un `TextInput` avec curseur en octets, lot L5 réparti, question ouverte sur la lecture des postes dans le code. Lot L1 livré. |
 | 0.3 | 2026-11-18 | Lots L2a et L3 livrés. L2a : schéma du portail en version 2 avec chemin de migration, code tiré depuis un paiement, route `/api/activation`. Règle des dates alignée sur l'émission existante. Codes à vendre reportés en L2b. Essai de bout en bout revu : l'exécutable du portail n'accepte que la clé embarquée. |
+| 0.4 | 2026-11-18 | Lot L2b livré : schéma en version 3, rubrique « Codes à vendre » du portail (tirage de 1 à 50 codes, liste, codes en clair affichés une seule fois), annulation d'un code libre par l'éditeur ou par celui qui l'a tiré (le paiement d'un code annulé redevient libre). |
 
 ## 1. Décisions de l'utilisateur (2026-11-18)
 
@@ -114,7 +115,7 @@ Avec l'activation en ligne seulement, une version qui contient ces codes ne s'ac
 |---|---|---|
 | L1 | Module `code_court` (format, contrôle, normalisation, mise en forme du champ) et ses essais | kadenz-c1, livré |
 | L2a | Portail : schéma en version 2 et migration, code tiré depuis un paiement, route d'activation, pages, essais | kadenz-c1, livré |
-| L2b | Portail : codes à vendre (lien au paiement facultatif, reconstruction de `licence_emise`), annulation d'un code | kadenz-c1 |
+| L2b | Portail : codes à vendre (lien au paiement facultatif, reconstruction de `licence_emise`), annulation d'un code | kadenz-c1, livré |
 | L3 | Client d'activation (`kadenz_maj::activation`, qui a déjà le client HTTPS), adresse du portail (`crates/maj/portail-url.txt`) | kadenz-c1, livré |
 | L4 | `ChampCode` dans `composants.slint` | kadenz-6d |
 | L5 | Étape Licence de l'assistant de KadenzAdmin, avec ses traductions | kadenz-c1 |

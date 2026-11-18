@@ -24,7 +24,7 @@ mod nouveau_paiement;
 mod nouvelle_entreprise;
 mod style;
 
-pub use code::{code, code_cree};
+pub use code::{code, code_cree, codes, codes_crees};
 pub use comptes::comptes;
 pub use connexion::connexion;
 pub use emission::emission;
@@ -50,6 +50,7 @@ pub struct Cadre<'a> {
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Rubrique {
     Entreprises,
+    Codes,
     Comptes,
     Journal,
     MotDePasse,
@@ -90,6 +91,7 @@ fn page(c: &Cadre, titre: &str, rubrique: Rubrique, contenu: Markup) -> Markup {
                         }
                         nav.menu aria-label="Menu" {
                             (lien_menu("/", "Entreprises", rubrique == Rubrique::Entreprises))
+                            (lien_menu("/codes", "Codes à vendre", rubrique == Rubrique::Codes))
                             @if editeur {
                                 (lien_menu("/comptes", "Revendeurs", rubrique == Rubrique::Comptes))
                             }

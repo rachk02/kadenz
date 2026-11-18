@@ -138,6 +138,7 @@ legend { padding: 0 6px; }
 .en-ligne { display: inline; margin: 0; }
 
 /* Licence */
+.codes-tires { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; }
 .code-activation { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 20px; letter-spacing: 0.06em; }
 .licence-texte {
   font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 13px;

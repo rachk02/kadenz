@@ -798,3 +798,167 @@ fn client_d_activation_contre_le_portail() {
     lance.arreter();
     let _ = std::fs::remove_dir_all(&d);
 }
+
+#[test]
+fn codes_a_vendre_et_annulation() {
+    let (p, d, editeur, a, b) = portail("codes-vente", "2026-11-15");
+
+    // Saisies refusées.
+    for (nombre, postes, formule) in [("0", "3", "annuelle"), ("51", "3", "annuelle"), ("2", "0", "annuelle"), ("2", "3", "trimestrielle")] {
+        assert!(matches!(
+            p.creer_codes(&a, nombre, postes, formule, &Module::TOUS),
+            Err(ErreurPortail::Validation(_))
+        ));
+    }
+
+    // Trois codes de 2 postes tirés par le revendeur A.
+    let codes = p.creer_codes(&a, "3", "2", "annuelle", &Module::TOUS).unwrap();
+    assert_eq!(codes.len(), 3);
+    for k in &codes {
+        assert!(kadenz_licence::code_court::verifier(&k.code).is_ok());
+        assert_eq!((k.fiche.paiement, k.fiche.entreprise.as_deref()), (None, None));
+        assert_eq!(k.fiche.etat, EtatCode::Libre);
+    }
+    assert_eq!(p.codes_a_vendre(&a).unwrap().len(), 3);
+    assert_eq!(p.codes_a_vendre(&editeur).unwrap().len(), 3);
+    // Le revendeur B ne les voit pas et ne peut pas les annuler.
+    assert!(p.codes_a_vendre(&b).unwrap().is_empty());
+    assert_eq!(p.code(&b, codes[0].fiche.id), Err(ErreurPortail::Introuvable));
+    assert_eq!(
+        p.annuler_code(&b, codes[0].fiche.id),
+        Err(ErreurPortail::Introuvable)
+    );
+
+    // Annulation par celui qui l'a tiré : le code n'est plus reconnu.
+    let annule = p.annuler_code(&a, codes[0].fiche.id).unwrap();
+    assert_eq!(annule.etat, EtatCode::Annule);
+    assert_eq!(
+        refus(p.activer(&demande(&codes[0].code, ENTREPRISE_B), "10.0.0.1")),
+        MODELES_ACTIVATION[0]
+    );
+    assert!(matches!(
+        p.annuler_code(&a, codes[0].fiche.id),
+        Err(ErreurPortail::Validation(_))
+    ));
+
+    // Activation par une entreprise inconnue du portail : créée avec la
+    // raison sociale reçue, rattachée au revendeur A ; licence sans paiement.
+    let activation = p
+        .activer(&demande(&codes[1].code, ENTREPRISE_B), "10.0.0.2")
+        .unwrap();
+    assert_eq!((activation.postes, activation.echeance.as_str()), (2, "2027-11-14"));
+    let fiche = p.fiche(&a, ENTREPRISE_B).unwrap();
+    assert_eq!(fiche.entreprise.client, "Boulangerie Wendé");
+    assert_eq!(fiche.entreprise.revendeur.as_ref().map(|r| r.0), Some(a.id));
+    assert_eq!(fiche.licences.len(), 1);
+    assert_eq!(fiche.licences[0].paiement, None);
+    assert_eq!(fiche.codes.len(), 1);
+    // Un code activé ne s'annule plus, et ne sert pas à une autre entreprise.
+    assert!(matches!(
+        p.annuler_code(&editeur, codes[1].fiche.id),
+        Err(ErreurPortail::Validation(_))
+    ));
+    assert_eq!(
+        refus(p.activer(&demande(&codes[1].code, ENTREPRISE_A), "10.0.0.3")),
+        MODELES_ACTIVATION[1]
+    );
+
+    // Code d'un paiement annulé : le paiement redevient libre.
+    p.creer_entreprise(&editeur, ENTREPRISE_A, "Client A", None).unwrap();
+    let paiement = p
+        .enregistrer_paiement(&editeur, ENTREPRISE_A, &saisie("1", "mensuelle"))
+        .unwrap();
+    let du_paiement = p.creer_code(&editeur, paiement.id, &Module::TOUS).unwrap();
+    assert!(p.paiement(&editeur, paiement.id).unwrap().a_servi());
+    p.annuler_code(&editeur, du_paiement.fiche.id).unwrap();
+    assert!(!p.paiement(&editeur, paiement.id).unwrap().a_servi());
+    assert!(p.creer_code(&editeur, paiement.id, &Module::TOUS).is_ok());
+
+    let actions: Vec<String> = p
+        .journal(&editeur)
+        .unwrap()
+        .into_iter()
+        .map(|a| a.action)
+        .collect();
+    for attendu in ["codes_crees", "code_annule", "code_active"] {
+        assert!(actions.iter().any(|a| a == attendu), "{attendu} absent du journal");
+    }
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+#[test]
+fn pages_des_codes_a_vendre() {
+    let d = dossier("codes-pages");
+    let p = Portail::ouvrir(&d, cle_essai()).unwrap();
+    p.creer_editeur("editeur", "Éditeur", MOT_DE_PASSE).unwrap();
+    let lance = web::lancer(
+        p,
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        ConfigWeb::default(),
+    )
+    .unwrap();
+    let a = lance.adresse();
+    let r = requete(
+        a,
+        "POST",
+        "/connexion",
+        None,
+        &format!("identifiant=editeur&mot_de_passe={MOT_DE_PASSE}"),
+    );
+    let session = r
+        .entete("set-cookie")
+        .unwrap()
+        .split(';')
+        .next()
+        .unwrap()
+        .to_string();
+
+    let page = requete(a, "GET", "/codes", Some(&session), "");
+    assert_eq!(page.statut, 200);
+    assert!(page.corps.contains("Aucun code à vendre"));
+    let jeton = csrf(&page.corps);
+
+    // Saisie refusée : la page revient avec son message.
+    let r = requete(
+        a,
+        "POST",
+        "/codes",
+        Some(&session),
+        &format!("nombre=0&postes=2&formule=annuelle&csrf={jeton}"),
+    );
+    assert_eq!(r.statut, 422);
+
+    let r = requete(
+        a,
+        "POST",
+        "/codes",
+        Some(&session),
+        &format!("nombre=2&postes=2&formule=annuelle&module_devis=1&csrf={jeton}"),
+    );
+    assert_eq!(r.statut, 200);
+    assert_eq!(r.entete("cache-control"), Some("no-store"));
+    assert_eq!(r.corps.matches("class=\"code-activation\"").count(), 2);
+
+    // Liste : les fins seulement ; annulation du premier code.
+    let liste = requete(a, "GET", "/codes", Some(&session), "").corps;
+    assert!(liste.contains("href=\"/codes/1\""));
+    let r = requete(
+        a,
+        "POST",
+        "/codes/1/annuler",
+        Some(&session),
+        &format!("csrf={jeton}"),
+    );
+    assert_eq!(r.statut, 303);
+    assert_eq!(r.entete("location"), Some("/codes/1?m=code_annule"));
+    let fiche = requete(a, "GET", "/codes/1?m=code_annule", Some(&session), "").corps;
+    assert!(fiche.contains("annulé"));
+    assert!(!fiche.contains("Annuler ce code"));
+    // Sans jeton : refusé.
+    assert_eq!(
+        requete(a, "POST", "/codes/2/annuler", Some(&session), "").statut,
+        403
+    );
+    lance.arreter();
+    let _ = std::fs::remove_dir_all(&d);
+}
