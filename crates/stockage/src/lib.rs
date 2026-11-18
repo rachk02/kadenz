@@ -90,6 +90,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0016_stock.sql"),
     include_str!("migrations/0017_comptabilite.sql"),
     include_str!("migrations/0018_theme.sql"),
+    include_str!("migrations/0019_palette.sql"),
 ];
 
 #[derive(Debug)]
@@ -489,12 +490,19 @@ fn uri_immuable(chemin: &Path) -> Option<String> {
     Some(uri)
 }
 
-/// Colonne du mode d'affichage (migration 0018), posée sur une base au schéma
-/// de la V1 le temps d'y écrire avec le code actuel (essais de reprise), puis
-/// retirée par `ALTER TABLE utilisateur DROP COLUMN theme`.
+/// Colonnes de l'affichage (migrations 0018 et 0019), posées sur une base au
+/// schéma de la V1 le temps d'y écrire avec le code actuel (essais de reprise),
+/// puis retirées par [`THEME_RETIRE_V1`].
 #[cfg(test)]
 pub(crate) const THEME_TEMPORAIRE_V1: &str =
-    "ALTER TABLE utilisateur ADD COLUMN theme TEXT NOT NULL DEFAULT 'systeme'";
+    "ALTER TABLE utilisateur ADD COLUMN theme TEXT NOT NULL DEFAULT 'systeme';
+     ALTER TABLE utilisateur ADD COLUMN palette TEXT NOT NULL DEFAULT 'anthracite';
+     ALTER TABLE utilisateur ADD COLUMN affichage_personnel INTEGER NOT NULL DEFAULT 0;";
+
+#[cfg(test)]
+pub(crate) const THEME_RETIRE_V1: &str = "ALTER TABLE utilisateur DROP COLUMN theme;
+     ALTER TABLE utilisateur DROP COLUMN palette;
+     ALTER TABLE utilisateur DROP COLUMN affichage_personnel;";
 
 /// Validation par le code d'aujourd'hui d'un document d'une base restée au
 /// schéma de la V1 (essais de reprise) : les deux colonnes de la nature

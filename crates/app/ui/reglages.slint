@@ -43,9 +43,10 @@ export global ReglagesApi {
     // Navigation (0 bandeau, 1 barre) et animations du compte connecté ; renvoie un
     // message d'erreur, ou une chaîne vide.
     callback changer-affichage(int, bool) -> string;
-    // Mode du compte connecté sur ce poste (0 comme Windows, 1 clair, 2 sombre) ;
-    // renvoie un message d'erreur, ou une chaîne vide.
-    callback changer-mode(int) -> string;
+    // Mode (0 comme Windows, 1 clair, 2 sombre) et palette sombre (0 Graphite, 1 Ardoise,
+    // 2 Anthracite) du compte connecté sur ce poste ; renvoie un message d'erreur, ou une
+    // chaîne vide.
+    callback changer-mode(int, int) -> string;
 
     // Recherche d'une mise à jour à la demande, sur un fil secondaire.
     callback rechercher-maj();
@@ -341,26 +342,26 @@ component CarteMode inherits Rectangle {
             border-color: Theme.bordure-champ;
             border-radius: 2px;
             clip: true;
-            background: root.apercu == 2 ? #1a2259 : #ffffff;
+            background: root.apercu == 2 ? Theme.fond-de(Theme.palette) : Theme.fond-clair;
 
             if root.apercu == 0: Rectangle {
                 x: parent.width / 2;
                 width: parent.width / 2;
-                background: #1a2259;
+                background: Theme.fond-de(Theme.palette);
             }
             Rectangle {
                 x: 10px;
                 y: 12px;
                 width: parent.width / 2 - 20px;
                 height: 8px;
-                background: root.apercu == 2 ? #e3a23b : #2d3a8c;
+                background: root.apercu == 2 ? Theme.accent-de(Theme.palette) : Theme.accent-clair;
             }
             Rectangle {
                 x: root.apercu == 0 ? parent.width / 2 + 10px : 10px;
                 y: 30px;
                 width: parent.width / 2 - 20px;
                 height: 8px;
-                background: root.apercu == 1 ? #2d3a8c : #e3a23b;
+                background: root.apercu == 1 ? Theme.accent-clair : Theme.accent-de(Theme.palette);
             }
         }
 
@@ -381,6 +382,55 @@ component CarteMode inherits Rectangle {
     }
 
     zone := TouchArea {
+        clicked => {
+            root.clique();
+        }
+    }
+}
+
+// Choix d'une palette sombre : pastille avec son fond, son accent et son nom.
+component PastillePalette inherits Rectangle {
+    in property <int> palette;
+    in property <string> nom;
+    in property <bool> choisie;
+    callback clique();
+
+    width: 160px;
+    height: 44px;
+    border-radius: 4px;
+    border-width: root.choisie ? 2px : 1px;
+    border-color: root.choisie ? Theme.accent : Theme.bordure-champ;
+    background: Theme.fond-de(root.palette);
+
+    accessible-role: button;
+    accessible-label: root.nom;
+    accessible-action-default => {
+        root.clique();
+    }
+
+    HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 12px;
+        spacing: 10px;
+        alignment: start;
+
+        Rectangle {
+            y: (parent.height - self.height) / 2;
+            width: 14px;
+            height: 14px;
+            border-radius: 7px;
+            background: Theme.accent-de(root.palette);
+        }
+
+        Text {
+            vertical-alignment: center;
+            text: root.nom;
+            font-weight: 600;
+            color: Theme.texte-de(root.palette);
+        }
+    }
+
+    TouchArea {
         clicked => {
             root.clique();
         }
@@ -466,7 +516,7 @@ component PageNavigation inherits ScrollView {
                 apercu: 0;
                 choisi: Theme.mode == 0;
                 clique => {
-                    root.erreur = ReglagesApi.changer-mode(0);
+                    root.erreur = ReglagesApi.changer-mode(0, Theme.palette);
                 }
             }
 
@@ -476,7 +526,7 @@ component PageNavigation inherits ScrollView {
                 apercu: 1;
                 choisi: Theme.mode == 1;
                 clique => {
-                    root.erreur = ReglagesApi.changer-mode(1);
+                    root.erreur = ReglagesApi.changer-mode(1, Theme.palette);
                 }
             }
 
@@ -486,7 +536,46 @@ component PageNavigation inherits ScrollView {
                 apercu: 2;
                 choisi: Theme.mode == 2;
                 clique => {
-                    root.erreur = ReglagesApi.changer-mode(2);
+                    root.erreur = ReglagesApi.changer-mode(2, Theme.palette);
+                }
+            }
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Palette du mode sombre");
+            font-weight: 600;
+            color: Theme.texte;
+        }
+
+        HorizontalLayout {
+            alignment: Theme.rangee-debut;
+            spacing: 12px;
+
+            PastillePalette {
+                palette: 0;
+                nom: @tr("Graphite");
+                choisie: Theme.palette == 0;
+                clique => {
+                    root.erreur = ReglagesApi.changer-mode(Theme.mode, 0);
+                }
+            }
+
+            PastillePalette {
+                palette: 1;
+                nom: @tr("Ardoise");
+                choisie: Theme.palette == 1;
+                clique => {
+                    root.erreur = ReglagesApi.changer-mode(Theme.mode, 1);
+                }
+            }
+
+            PastillePalette {
+                palette: 2;
+                nom: @tr("Anthracite");
+                choisie: Theme.palette == 2;
+                clique => {
+                    root.erreur = ReglagesApi.changer-mode(Theme.mode, 2);
                 }
             }
         }

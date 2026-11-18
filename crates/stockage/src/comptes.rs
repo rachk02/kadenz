@@ -30,6 +30,10 @@ pub struct Utilisateur {
     pub animations: bool,
     /// Mode clair ou sombre choisi par le compte, sur ce poste.
     pub theme: ModeAffichage,
+    /// Palette du mode sombre choisie par le compte, sur ce poste.
+    pub palette: PaletteSombre,
+    /// Le compte a fait son propre choix ; sinon il suit le réglage du poste.
+    pub affichage_personnel: bool,
 }
 
 /// Navigation de l'interface, choisie par compte (décision de l'utilisateur du
@@ -83,6 +87,35 @@ impl ModeAffichage {
             "systeme" => Some(ModeAffichage::Systeme),
             "clair" => Some(ModeAffichage::Clair),
             "sombre" => Some(ModeAffichage::Sombre),
+            _ => None,
+        }
+    }
+}
+
+/// Palette du mode sombre (décision de l'utilisateur du 2026-11-18) : trois gris
+/// au choix, Anthracite chaud par défaut.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum PaletteSombre {
+    Graphite,
+    Ardoise,
+    #[default]
+    Anthracite,
+}
+
+impl PaletteSombre {
+    pub fn code(self) -> &'static str {
+        match self {
+            PaletteSombre::Graphite => "graphite",
+            PaletteSombre::Ardoise => "ardoise",
+            PaletteSombre::Anthracite => "anthracite",
+        }
+    }
+
+    pub fn depuis_code(code: &str) -> Option<Self> {
+        match code {
+            "graphite" => Some(PaletteSombre::Graphite),
+            "ardoise" => Some(PaletteSombre::Ardoise),
+            "anthracite" => Some(PaletteSombre::Anthracite),
             _ => None,
         }
     }
@@ -167,11 +200,13 @@ fn ligne_vers_utilisateur(r: &rusqlite::Row<'_>) -> rusqlite::Result<Utilisateur
         navigation: Navigation::depuis_code(&r.get::<_, String>(6)?).unwrap_or_default(),
         animations: r.get(7)?,
         theme: ModeAffichage::depuis_code(&r.get::<_, String>(8)?).unwrap_or_default(),
+        palette: PaletteSombre::depuis_code(&r.get::<_, String>(9)?).unwrap_or_default(),
+        affichage_personnel: r.get(10)?,
     })
 }
 
-const COLONNES: &str =
-    "id, nom_complet, identifiant, role, actif, langue, navigation, animations, theme";
+const COLONNES: &str = "id, nom_complet, identifiant, role, actif, langue, navigation, animations, \
+                        theme, palette, affichage_personnel";
 
 pub fn lire(conn: &Connection, id: i64) -> Resultat<Option<Utilisateur>> {
     Ok(conn
@@ -270,6 +305,8 @@ pub(crate) fn creer_sans_controle(
         navigation: Navigation::default(),
         animations: true,
         theme: ModeAffichage::default(),
+        palette: PaletteSombre::default(),
+        affichage_personnel: false,
     })
 }
 
@@ -287,7 +324,7 @@ pub fn connecter(
             ),
             [identifiant.trim()],
             // Le hachage suit les colonnes de COLONNES.
-            |r| Ok((ligne_vers_utilisateur(r)?, r.get(9)?)),
+            |r| Ok((ligne_vers_utilisateur(r)?, r.get(11)?)),
         )
         .optional()?;
     match trouve {
@@ -528,18 +565,21 @@ pub fn changer_affichage(
     )
 }
 
-/// Mode clair ou sombre de son propre compte, sur ce poste. Aucun droit requis,
-/// comme pour l'affichage. Écrit dans la base locale, même sur un poste relié :
-/// la colonne n'est jamais répliquée. Pas d'entrée d'audit : simple préférence
+/// Mode clair ou sombre et palette de son propre compte, sur ce poste : le
+/// compte cesse alors de suivre le réglage du poste. Aucun droit requis, comme
+/// pour l'affichage. Écrit dans la base locale, même sur un poste relié : les
+/// colonnes ne sont jamais répliquées. Pas d'entrée d'audit : simple préférence
 /// d'écran, et le journal d'un poste relié vient du serveur.
 pub fn changer_mode_affichage(
     conn: &Connection,
     acteur: &Utilisateur,
     mode: ModeAffichage,
+    palette: PaletteSombre,
 ) -> Resultat<()> {
     let n = conn.execute(
-        "UPDATE utilisateur SET theme = ?1 WHERE id = ?2 AND actif = 1",
-        params![mode.code(), acteur.id],
+        "UPDATE utilisateur SET theme = ?1, palette = ?2, affichage_personnel = 1
+         WHERE id = ?3 AND actif = 1",
+        params![mode.code(), palette.code(), acteur.id],
     )?;
     if n == 0 {
         return Err(Erreur::Validation("compte inconnu ou désactivé".into()));
@@ -557,11 +597,21 @@ mod tests {
         let conn = ouvrir_en_memoire().unwrap();
         let admin = crate::droits::tests::compte(&conn, "admin", Role::Admin);
         assert_eq!(admin.theme, ModeAffichage::Systeme);
-        changer_mode_affichage(&conn, &admin, ModeAffichage::Sombre).unwrap();
+        assert_eq!(admin.palette, PaletteSombre::Anthracite);
+        assert!(!admin.affichage_personnel);
+        changer_mode_affichage(&conn, &admin, ModeAffichage::Sombre, PaletteSombre::Graphite)
+            .unwrap();
+        let relu = lire(&conn, admin.id).unwrap().unwrap();
+        assert!(relu.affichage_personnel);
         assert_eq!(
-            lire(&conn, admin.id).unwrap().unwrap().theme,
-            ModeAffichage::Sombre
+            (relu.theme, relu.palette),
+            (ModeAffichage::Sombre, PaletteSombre::Graphite)
         );
+        let refus = conn.execute(
+            "UPDATE utilisateur SET palette = 'bleu' WHERE id = ?1",
+            [admin.id],
+        );
+        assert!(refus.is_err(), "palette hors liste refusée");
         let refus = conn.execute(
             "UPDATE utilisateur SET theme = 'bleu' WHERE id = ?1",
             [admin.id],

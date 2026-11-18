@@ -119,8 +119,9 @@ pub(crate) const TABLES: [Table; 8] = [
         ],
         binaires: &[],
         references: &[],
-        // Mode clair ou sombre : préférence de chaque poste (migration 0018).
-        locales: &["theme"],
+        // Mode clair ou sombre et palette : préférences de chaque poste
+        // (migrations 0018 et 0019).
+        locales: &["theme", "palette", "affichage_personnel"],
         uniques: &["identifiant"],
     },
     Table {

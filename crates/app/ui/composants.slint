@@ -26,69 +26,102 @@ export global Theme {
     out property <TextHorizontalAlignment> fin: root.rtl ? TextHorizontalAlignment.left : TextHorizontalAlignment.right;
     out property <LayoutAlignment> rangee-debut: root.rtl ? LayoutAlignment.end : LayoutAlignment.start;
     out property <LayoutAlignment> rangee-fin: root.rtl ? LayoutAlignment.start : LayoutAlignment.end;
-    // Mode sombre (refonte du 2026-11-18, docs/marque/propositions-2026-11-18-refonte-ecrans) :
-    // vrai quand le compte a choisi le mode sombre, ou « comme Windows » avec Windows en sombre.
-    // Chaque couleur ci-dessous a sa valeur claire puis sa valeur sombre. Valeurs sombres
-    // PROVISOIRES : l'utilisateur veut un sombre neutre, grisâtre, et non un bleu nuit
-    // (2026-11-18) ; elles seront remplacées par la palette qu'il choisira.
-    // Mode du compte connecté : 0 comme Windows (par défaut, et avant toute connexion),
-    // 1 clair, 2 sombre. Réglage de Windows relu par l'application (theme.rs).
+    // Mode sombre (refonte du 2026-11-18) : vrai quand le compte a choisi le mode sombre, ou
+    // « comme Windows » avec Windows en sombre. Trois palettes sombres au choix, des gris
+    // (docs/marque/propositions-2026-11-18-mode-sombre, décision de l'utilisateur) :
+    // 0 Graphite, 1 Ardoise, 2 Anthracite chaud (par défaut).
+    // Mode : 0 comme Windows (par défaut), 1 clair, 2 sombre ; réglage de Windows relu par
+    // l'application (theme.rs). Avant connexion, mode et palette du poste.
     in property <int> mode: 0;
+    in property <int> palette: 2;
     in property <bool> windows-sombre: false;
     out property <bool> sombre: root.mode == 2 || (root.mode == 0 && root.windows-sombre);
+
+    // Valeur claire, puis valeurs sombres Graphite, Ardoise, Anthracite.
+    pure function choix(clair: color, graphite: color, ardoise: color, anthracite: color) -> color {
+        if (!root.sombre) {
+            return clair;
+        }
+        if (root.palette == 0) {
+            return graphite;
+        }
+        if (root.palette == 1) {
+            return ardoise;
+        }
+        return anthracite;
+    }
+
+    // Fond et accent d'une palette sombre, quel que soit le mode en cours : aperçus du choix.
+    public pure function fond-de(palette: int) -> color {
+        return palette == 0 ? #17181b : palette == 1 ? #15191e : #1a1918;
+    }
+    public pure function accent-de(palette: int) -> color {
+        return palette == 1 ? #8f9bea : #e3a23b;
+    }
+    public pure function texte-de(palette: int) -> color {
+        return palette == 0 ? #ecedef : palette == 1 ? #f4f5f9 : #eeebe7;
+    }
+    out property <color> fond-clair: #ffffff;
+    out property <color> accent-clair: #2d3a8c;
+
     // Couleurs de la marque (docs/marque) : Indigo (accent, logo), Nuit pour les panneaux
-    // de marque, les bulles et les alertes sombres ; couleurs de l'ancienne identité,
-    // reprises le 2026-11-12 à la demande de l'utilisateur.
-    // Fond des pages et des fenêtres (blanc en clair, Nuit en sombre).
-    out property <color> fond: root.sombre ? #1a2259 : #ffffff;
-    out property <color> fond-lateral: root.sombre ? #232c6b : #f4f5f9;
-    // Panneaux de marque, bulles, alertes sombres : en sombre, un cran sous le fond pour
-    // s'en détacher.
-    out property <color> nuit: root.sombre ? #151c4c : #1a2259;
-    // Bouton principal, liens, éléments actifs : Indigo en clair, Ambre en sombre.
-    out property <color> accent: root.sombre ? #e3a23b : #2d3a8c;
+    // de marque en clair ; couleurs de l'ancienne identité, reprises le 2026-11-12.
+    // Fond des pages et des fenêtres.
+    out property <color> fond: root.choix(#ffffff, #17181b, #15191e, #1a1918);
+    // Navigation, en-têtes de tableaux.
+    out property <color> fond-lateral: root.choix(#f4f5f9, #1e2024, #1c2229, #211f1e);
+    // Cartes et tableaux.
+    out property <color> surface: root.choix(#ffffff, #1e2024, #1f2933, #232120);
+    // Panneaux de marque, bulles, alertes sombres.
+    out property <color> nuit: root.choix(#1a2259, #111214, #101317, #131211);
+    // Bouton principal, liens, éléments actifs : Indigo en clair ; Ambre ou Indigo éclairci.
+    out property <color> accent: root.choix(#2d3a8c, #e3a23b, #8f9bea, #e3a23b);
     // Texte posé sur l'accent (bouton principal).
-    out property <color> texte-sur-accent: root.sombre ? #1a2259 : #ffffff;
-    out property <color> accent-survol: root.sombre ? #2d3a8c : #e8eaf6;
+    out property <color> texte-sur-accent: root.choix(#ffffff, #17181b, #15191e, #1a1918);
+    // Ligne choisie, survol.
+    out property <color> accent-survol: root.choix(#e8eaf6, #2b2e34, #2a3542, #302d2a);
     // Fond des champs de saisie et des boutons secondaires.
-    out property <color> champ: root.sombre ? #232c6b : #ffffff;
+    out property <color> champ: root.choix(#ffffff, #26282d, #27313c, #2b2927);
     // Séparateurs de zones (décoratifs).
-    out property <color> bordure: root.sombre ? #3a4795 : #d9dce3;
-    // Contours des champs et des boutons secondaires : 3 : 1 au moins sur le fond et sur
-    // fond-lateral (WCAG 1.4.11).
-    out property <color> bordure-champ: root.sombre ? #6e7bc9 : #7b8794;
+    out property <color> bordure: root.choix(#d9dce3, #33363c, #334050, #383533);
+    // Contours des champs et des boutons secondaires : 3 : 1 au moins (WCAG 1.4.11).
+    out property <color> bordure-champ: root.choix(#7b8794, #6e737d, #6f7d8c, #77716b);
     // Contour du champ actif, 2 px.
-    out property <color> focus: root.sombre ? #e3a23b : #2d3a8c;
-    out property <color> texte: root.sombre ? #f4f5f9 : #1f2933;
-    out property <color> texte-secondaire: root.sombre ? #c5cae0 : #52606d;
+    out property <color> focus: root.choix(#2d3a8c, #e3a23b, #8f9bea, #e3a23b);
+    out property <color> texte: root.choix(#1f2933, #ecedef, #f4f5f9, #eeebe7);
+    out property <color> texte-secondaire: root.choix(#52606d, #a3a8b0, #a9b4c0, #ada69f);
     // Ambre : touche d'accent sur les fonds sombres (jamais en texte sur blanc).
     out property <color> ambre: #e3a23b;
-    // Couleurs d'état, éclaircies en sombre pour rester lisibles sur Nuit.
-    out property <color> erreur: root.sombre ? #f97066 : #b42318;
+    // Couleurs d'état, éclaircies en sombre ; fonds pâles des bandeaux et étiquettes.
+    out property <color> erreur: root.choix(#b42318, #f97066, #f97066, #f97066);
     // Ambre foncé, lisible sur fond blanc : résultat attendu du serveur.
-    out property <color> attente: root.sombre ? #fdb022 : #b54708;
-    out property <color> succes: root.sombre ? #47cd89 : #067647;
-    // Fonds pâles des bandeaux et fiches en erreur ou en attente.
-    out property <color> fond-erreur: root.sombre ? #42305b : #fef3f2;
-    out property <color> fond-attente: root.sombre ? #433c4f : #fff8eb;
+    out property <color> attente: root.choix(#b54708, #fdb022, #fdb022, #fdb022);
+    out property <color> succes: root.choix(#067647, #47cd89, #47cd89, #47cd89);
+    out property <color> fond-erreur: root.choix(#fef3f2, #3a2224, #3a2226, #3b2322);
+    out property <color> fond-attente: root.choix(#fff8eb, #3a3020, #3a3122, #3b311f);
+    out property <color> fond-succes: root.choix(#ecfdf3, #1e3329, #1d332b, #20322a);
     // Survol et appui des boutons principaux, normaux et de suppression.
-    out property <color> accent-fonce: root.sombre ? #cf9030 : #25307a;
-    out property <color> accent-presse: root.sombre ? #b87f28 : #1f2866;
-    out property <color> danger-fonce: root.sombre ? #e85d54 : #951c13;
-    out property <color> danger-presse: root.sombre ? #d14a42 : #7a150e;
+    out property <color> accent-fonce: root.choix(#25307a, #cf9030, #7a87e0, #cf9030);
+    out property <color> accent-presse: root.choix(#1f2866, #b87f28, #6874d4, #b87f28);
+    out property <color> danger-fonce: root.choix(#951c13, #e85d54, #e85d54, #e85d54);
+    out property <color> danger-presse: root.choix(#7a150e, #d14a42, #d14a42, #d14a42);
     // Appui d'un bouton secondaire.
-    out property <color> secondaire-presse: root.sombre ? #34408a : #dfe2f1;
+    out property <color> secondaire-presse: root.choix(#dfe2f1, #33363c, #334050, #383533);
     // Bouton principal grisé et texte grisé.
-    out property <color> desactive: root.sombre ? #3a4795 : #9aa3c7;
-    out property <color> texte-desactive: root.sombre ? #8c94c2 : #9aa3b5;
+    out property <color> desactive: root.choix(#9aa3c7, #3a3d44, #3a4756, #403c39);
+    out property <color> texte-desactive: root.choix(#9aa3b5, #6e737d, #6f7d8c, #77716b);
     // Fond discret : barres de graphiques, grilles.
-    out property <color> fond-discret: root.sombre ? #232c6b : #eceef3;
+    out property <color> fond-discret: root.choix(#eceef3, #26282d, #27313c, #2b2927);
 }
 
 // Préférences d'affichage du compte connecté (migration 0006) : navigation par
 // bandeau en haut (0, par défaut) ou par barre latérale repliable (1), animations.
 // Animations coupées : toutes les durées tombent à zéro.
 export global Affichage {
+    // Réglage d'affichage du poste, avant toute connexion (premier lancement) : mode
+    // (0 comme Windows, 1 clair, 2 sombre) et palette sombre (0 Graphite, 1 Ardoise,
+    // 2 Anthracite) ; enregistré et appliqué aussitôt par l'application.
+    callback choisir-poste(int, int);
     in-out property <int> navigation: 0;
     in-out property <bool> animations: true;
     out property <duration> duree: root.animations ? 160ms : 0ms;

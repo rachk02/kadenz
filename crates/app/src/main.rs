@@ -319,7 +319,7 @@ pub(crate) fn gere_parametres(etat: &Etat) -> bool {
 
 /// Préférences d'affichage du compte : navigation, animations, mode clair ou sombre.
 fn appliquer_affichage(fenetre: &FenetrePrincipale, u: &Utilisateur) {
-    fenetre.global::<Theme>().set_mode(theme::rang(u.theme));
+    theme::appliquer(fenetre, theme::du_compte(u));
     let a = fenetre.global::<Affichage>();
     a.set_navigation(match u.navigation {
         Navigation::Bandeau => 0,
@@ -383,8 +383,8 @@ fn afficher_session(fenetre: &FenetrePrincipale, etat: &Etat) {
 /// session vidé, langue de démarrage, retour à l'écran de connexion.
 pub(crate) fn fermer_session(f: &FenetrePrincipale, etat: &mut Etat) {
     etat.utilisateur = None;
-    // Écran de connexion : comme Windows, le mode du compte suivant n'est pas connu.
-    f.global::<Theme>().set_mode(0);
+    // Écran de connexion : réglage du poste, le compte suivant n'est pas connu.
+    theme::appliquer(f, theme::du_poste());
     // Bandeau des sauvegardes et assistant de reprise : propres au compte.
     let serveur = f.global::<ServeurApi>();
     serveur.set_avertissement_sauvegarde(SharedString::new());
@@ -537,24 +537,42 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     let (f, e) = (fenetre.as_weak(), etat.clone());
     fenetre
         .global::<ReglagesApi>()
-        .on_changer_mode(move |rang| {
+        .on_changer_mode(move |rang, rang_palette| {
             let mode = theme::depuis_rang(rang);
+            let palette = theme::palette_depuis_rang(rang_palette);
             let mut etat = e.borrow_mut();
             let Some(utilisateur) = etat.utilisateur.clone() else {
                 return phrase("aucune session ouverte");
             };
             // Toujours dans la base de ce poste, même relié : préférence non répliquée.
-            let resultat = comptes::changer_mode_affichage(&etat.conn, &utilisateur, mode)
-                .map_err(phrase);
-            if resultat.is_ok()
-                && let Some(u) = etat.utilisateur.as_mut()
-            {
-                u.theme = mode;
+            let resultat =
+                comptes::changer_mode_affichage(&etat.conn, &utilisateur, mode, palette)
+                    .map_err(phrase);
+            if resultat.is_ok() {
+                // Dernier choix fait sur ce poste : aussi celui de l'écran de connexion.
+                theme::enregistrer_poste(mode, palette);
+                if let Some(u) = etat.utilisateur.as_mut() {
+                    u.theme = mode;
+                    u.palette = palette;
+                    u.affichage_personnel = true;
+                }
             }
             if let (Some(f), Some(u)) = (f.upgrade(), etat.utilisateur.as_ref()) {
                 appliquer_affichage(&f, u);
             }
             resultat.err().unwrap_or_default()
+        });
+
+    // Avant toute connexion (premier lancement) : réglage du poste, appliqué aussitôt.
+    let f = fenetre.as_weak();
+    fenetre
+        .global::<Affichage>()
+        .on_choisir_poste(move |rang, rang_palette| {
+            let reglage = (theme::depuis_rang(rang), theme::palette_depuis_rang(rang_palette));
+            theme::enregistrer_poste(reglage.0, reglage.1);
+            if let Some(f) = f.upgrade() {
+                theme::appliquer(&f, reglage);
+            }
         });
 
     let e = etat;
@@ -652,7 +670,9 @@ fn main() -> Result<(), slint::PlatformError> {
         sauvegardes::brancher_demarrage(&fenetre, demarrer);
     }
 
-    // Mode « comme Windows » : réglage de Windows suivi tant que la fenêtre est ouverte.
+    // Réglage d'affichage du poste avant connexion ; mode « comme Windows » : réglage
+    // de Windows suivi tant que la fenêtre est ouverte.
+    theme::appliquer(&fenetre, theme::du_poste());
     let _suivi_windows = theme::suivre_windows(&fenetre);
     let resultat = fenetre.run();
     // Fenêtre fermée : sauvegarde automatique de la base ouverte.

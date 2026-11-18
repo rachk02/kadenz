@@ -1,12 +1,22 @@
-//! Mode clair ou sombre (refonte des écrans du 2026-11-18). Le mode est choisi
-//! par compte, sur chaque poste (`comptes::ModeAffichage`, migration 0018) ; en
-//! mode « comme Windows », l'écran suit le réglage « Choisir votre mode
-//! d'application » de Windows, relu toutes les deux secondes pour suivre un
-//! changement fait pendant que Kadenz est ouvert.
+//! Mode clair ou sombre et palette sombre (refonte des écrans du 2026-11-18).
+//!
+//! - Réglage du poste : fichier `affichage.json` du dossier des données, choisi
+//!   au premier lancement ; il sert avant toute connexion et pour les comptes
+//!   qui n'ont pas fait leur propre choix. Un fichier plutôt que la base : un
+//!   poste qui rejoint une entreprise ouvre ensuite la copie du serveur, le
+//!   réglage doit y survivre.
+//! - Choix d'un compte (`comptes::changer_mode_affichage`, migrations 0018 et
+//!   0019) : gardé dans la base de ce poste ; il devient aussi le réglage du
+//!   poste, pour que l'écran de connexion garde le dernier aspect choisi.
+//! - « Comme Windows » : réglage « Choisir votre mode d'application » de
+//!   Windows, relu toutes les deux secondes pour suivre un changement fait
+//!   pendant que Kadenz est ouvert.
 
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use kadenz_stockage::comptes::ModeAffichage;
+use kadenz_stockage::comptes::{ModeAffichage, PaletteSombre, Utilisateur};
+use serde_json::json;
 use slint::{ComponentHandle, Timer, TimerMode};
 
 use crate::{FenetrePrincipale, Theme};
@@ -26,6 +36,76 @@ pub(crate) fn depuis_rang(rang: i32) -> ModeAffichage {
         2 => ModeAffichage::Sombre,
         _ => ModeAffichage::Systeme,
     }
+}
+
+/// Rang de la palette dans `Theme.palette` : 0 Graphite, 1 Ardoise, 2 Anthracite.
+pub(crate) fn rang_palette(palette: PaletteSombre) -> i32 {
+    match palette {
+        PaletteSombre::Graphite => 0,
+        PaletteSombre::Ardoise => 1,
+        PaletteSombre::Anthracite => 2,
+    }
+}
+
+pub(crate) fn palette_depuis_rang(rang: i32) -> PaletteSombre {
+    match rang {
+        0 => PaletteSombre::Graphite,
+        1 => PaletteSombre::Ardoise,
+        _ => PaletteSombre::Anthracite,
+    }
+}
+
+fn fichier_du_poste() -> PathBuf {
+    crate::dossier_donnees().join("affichage.json")
+}
+
+/// Réglage du poste ; absent ou illisible : comme Windows, palette Anthracite.
+pub(crate) fn du_poste() -> (ModeAffichage, PaletteSombre) {
+    lire(&fichier_du_poste())
+}
+
+fn lire(chemin: &Path) -> (ModeAffichage, PaletteSombre) {
+    let valeur: serde_json::Value = std::fs::read_to_string(chemin)
+        .ok()
+        .and_then(|t| serde_json::from_str(&t).ok())
+        .unwrap_or_default();
+    let code = |c: &str| valeur.get(c).and_then(serde_json::Value::as_str).unwrap_or("");
+    (
+        ModeAffichage::depuis_code(code("mode")).unwrap_or_default(),
+        PaletteSombre::depuis_code(code("palette")).unwrap_or_default(),
+    )
+}
+
+/// Enregistre le réglage du poste. Un échec n'empêche rien : l'écran garde le
+/// choix jusqu'à la fermeture ; il est noté dans erreurs.log.
+pub(crate) fn enregistrer_poste(mode: ModeAffichage, palette: PaletteSombre) {
+    if let Err(e) = ecrire(&fichier_du_poste(), mode, palette) {
+        crate::consigner_erreur(&format!("Réglage d'affichage du poste non enregistré : {e}"));
+    }
+}
+
+fn ecrire(chemin: &Path, mode: ModeAffichage, palette: PaletteSombre) -> std::io::Result<()> {
+    if let Some(dossier) = chemin.parent() {
+        std::fs::create_dir_all(dossier)?;
+    }
+    let texte = json!({ "mode": mode.code(), "palette": palette.code() }).to_string();
+    std::fs::write(chemin, texte)
+}
+
+/// Affichage d'un compte : son propre choix s'il en a fait un, sinon le
+/// réglage du poste.
+pub(crate) fn du_compte(u: &Utilisateur) -> (ModeAffichage, PaletteSombre) {
+    if u.affichage_personnel {
+        (u.theme, u.palette)
+    } else {
+        du_poste()
+    }
+}
+
+pub(crate) fn appliquer(fenetre: &FenetrePrincipale, (mode, palette): (ModeAffichage, PaletteSombre)) {
+    let t = fenetre.global::<Theme>();
+    t.set_mode(rang(mode));
+    t.set_palette(rang_palette(palette));
 }
 
 /// Lit le réglage de Windows tout de suite, puis toutes les deux secondes. Le
@@ -82,10 +162,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn rangs_des_modes() {
+    fn rangs_des_modes_et_des_palettes() {
         for mode in [ModeAffichage::Systeme, ModeAffichage::Clair, ModeAffichage::Sombre] {
             assert_eq!(depuis_rang(rang(mode)), mode);
         }
         assert_eq!(depuis_rang(7), ModeAffichage::Systeme);
+        for palette in [PaletteSombre::Graphite, PaletteSombre::Ardoise, PaletteSombre::Anthracite] {
+            assert_eq!(palette_depuis_rang(rang_palette(palette)), palette);
+        }
+        assert_eq!(palette_depuis_rang(-1), PaletteSombre::Anthracite);
+    }
+
+    #[test]
+    fn reglage_du_poste_dans_un_fichier() {
+        let dossier = std::env::temp_dir().join(format!("kadenz-affichage-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dossier);
+        let chemin = dossier.join("affichage.json");
+        // Absent : comme Windows, Anthracite.
+        assert_eq!(lire(&chemin), (ModeAffichage::Systeme, PaletteSombre::Anthracite));
+        ecrire(&chemin, ModeAffichage::Sombre, PaletteSombre::Ardoise).unwrap();
+        assert_eq!(lire(&chemin), (ModeAffichage::Sombre, PaletteSombre::Ardoise));
+        // Illisible : valeurs par défaut.
+        std::fs::write(&chemin, "{pas du json").unwrap();
+        assert_eq!(lire(&chemin), (ModeAffichage::Systeme, PaletteSombre::Anthracite));
+        let _ = std::fs::remove_dir_all(&dossier);
     }
 }
