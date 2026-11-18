@@ -1,13 +1,113 @@
 // Pages de présentation (cahier, section 4.1) : affichées au premier lancement,
-// avant l'assistant, et depuis « À propos ». Elles ne décrivent que des fonctions
-// livrées.
-import { Bouton, MotifMarque, Rangee, Theme, TroisTemps } from "composants.slint";
+// avant l'inscription du poste, et depuis « À propos ». Elles ne décrivent que des
+// fonctions livrées.
+// Refonte du 2026-11-18 (docs/marque/propositions-2026-11-18-refonte-ecrans) : une
+// phrase par page, bloc ancré à une place fixe (il ne monte ni ne descend d'une page à
+// l'autre), boutons à place fixe, une pièce du symbole tramée par page.
+import { Affichage, Bouton, Rangee, Theme } from "composants.slint";
+import { GrandTitre, LogoColonne, PanneauTrame, SurTitre } from "connexion.slint";
+
+// Bouton du choix du mode : Comme Windows, Clair, Sombre.
+component ChoixSegment inherits Rectangle {
+    in property <string> text;
+    in property <bool> actif;
+    callback clicked();
+
+    width: etiquette.preferred-width + 28px;
+    height: 34px;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: root.actif ? Theme.accent : Theme.bordure-champ;
+    background: root.actif ? Theme.accent : zone.has-hover ? Theme.accent-survol : Theme.champ;
+
+    accessible-role: button;
+    accessible-label: root.text;
+    accessible-action-default => {
+        root.clicked();
+    }
+
+    etiquette := Text {
+        text: root.text;
+        font-size: 13.5px;
+        font-weight: root.actif ? 600 : 500;
+        color: root.actif ? Theme.texte-sur-accent : Theme.texte;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+
+    zone := TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            root.clicked();
+        }
+    }
+}
+
+// Pastille d'une palette sombre : son fond, une ligne de texte et sa couleur d'accent,
+// quel que soit le mode en cours.
+component Pastille inherits VerticalLayout {
+    in property <int> palette;
+    in property <string> nom;
+    callback clicked();
+    property <bool> actif: Theme.palette == root.palette;
+
+    spacing: 5px;
+
+    Rectangle {
+        width: 64px;
+        height: 40px;
+        border-radius: 4px;
+        background: Theme.fond-de(root.palette);
+        border-width: root.actif ? 2px : 1px;
+        border-color: root.actif ? Theme.accent : Theme.bordure-champ;
+
+        Rectangle {
+            x: 10px;
+            y: 10px;
+            width: 34px;
+            height: 4px;
+            background: Theme.texte-de(root.palette);
+        }
+
+        Rectangle {
+            x: 10px;
+            y: parent.height - 16px;
+            width: 22px;
+            height: 6px;
+            background: Theme.accent-de(root.palette);
+        }
+
+        accessible-role: button;
+        accessible-label: root.nom;
+        accessible-action-default => {
+            root.clicked();
+        }
+
+        TouchArea {
+            mouse-cursor: pointer;
+            clicked => {
+                root.clicked();
+            }
+        }
+    }
+
+    Text {
+        text: root.nom;
+        font-size: 12px;
+        font-weight: root.actif ? 600 : 400;
+        color: root.actif ? Theme.texte : Theme.texte-secondaire;
+        horizontal-alignment: center;
+    }
+}
 
 export component EcranPresentation inherits Rectangle {
     in property <string> version-logiciel;
     // Vrai quand la présentation est revue depuis « À propos » : la dernière page
-    // ramène alors à l'application au lieu d'ouvrir l'assistant.
+    // ramène alors à l'application au lieu de passer à la suite.
     in property <bool> depuis-a-propos;
+    // Édition monoposte : la suite est l'assistant de création, et non l'inscription
+    // du poste sur le serveur (décision de l'utilisateur du 2026-11-18).
+    in property <bool> monoposte: false;
 
     callback terminer();
 
@@ -22,128 +122,168 @@ export component EcranPresentation inherits Rectangle {
     }
 
     pure function texte(p: int) -> string {
-        if (p == 0) {
-            return @tr("Kadenz tient la facturation de votre entreprise sur ce poste : clients, fournisseurs, produits et documents commerciaux, montants en FCFA. L'interface existe en sept langues ; chaque compte choisit la sienne.");
-        }
-        if (p == 1) {
-            return @tr("Devis, proformas, bons de commande, bordereaux de livraison, factures et avoirs se préparent dans le même écran. Un document commence en brouillon et reçoit son numéro à la validation ; ses lignes et ses montants sont alors figés : une facture se corrige par un avoir, un devis ou une proforma par une copie corrigée. Chaque document s'exporte en PDF à l'identité de votre entreprise.");
-        }
-        if (p == 2) {
-            return @tr("Les règlements se saisissent dans la fiche d'une facture ou d'un bon de commande ; l'état Impayé, Partiel ou Payé se calcule tout seul. Le suivi des fournisseurs liste les bons de commande à payer. Le registre des règlements et la liste des factures échues s'impriment en PDF, comme la lettre de relance de chaque facture.");
-        }
-        return @tr("Les données restent sur ce poste, dans une base locale. Chacun se connecte avec son propre compte ; les mots de passe ne sont jamais conservés en clair et les droits dépendent du rôle. Validations, annulations et règlements sont inscrits dans l'historique de chaque document.");
+        if (p == 0) { return @tr("La facturation de votre entreprise, en FCFA et en sept langues."); }
+        if (p == 1) { return @tr("Du devis à l'avoir : chaque document validé reçoit son numéro et s'exporte en PDF."); }
+        if (p == 2) { return @tr("Saisissez un règlement sur la facture : l'état Impayé, Partiel ou Payé se calcule seul."); }
+        return @tr("Chacun se connecte avec son propre compte ; chaque validation est inscrite dans l'historique.");
     }
 
-    background: white;
+    pure function trame(p: int) -> image {
+        if (p == 0) { return @image-url("icones/trame-carre.svg"); }
+        if (p == 1) { return @image-url("icones/trame-quart.svg"); }
+        if (p == 2) { return @image-url("icones/trame-triangle.svg"); }
+        return @image-url("icones/trame-disque.svg");
+    }
+
+    pure function trame-sombre(p: int) -> image {
+        if (p == 0) { return @image-url("icones/trame-carre-sombre.svg"); }
+        if (p == 1) { return @image-url("icones/trame-quart-sombre.svg"); }
+        if (p == 2) { return @image-url("icones/trame-triangle-sombre.svg"); }
+        return @image-url("icones/trame-disque-sombre.svg");
+    }
+
+    background: Theme.fond;
 
     Rangee {
         remplit: true;
 
-        // Bandeau de marque, comme sur l'écran de connexion.
         Rectangle {
-            width: max(300px, min(420px, root.width * 0.35));
-            background: Theme.nuit;
-            clip: true;
+            width: max(420px, min(560px, root.width * 0.47));
 
-            // Motif sur tout le panneau, en pièces serrées, comme le motif de l'ancienne identité.
-            MotifMarque {
-                x: 0;
-                y: 0;
-                width: parent.width;
-                height: parent.height;
-                pas: 40px;
+            LogoColonne {
+                x: Theme.rtl ? parent.width - self.width - 72px : 72px;
+                y: 56px;
             }
 
             VerticalLayout {
-                padding: 40px;
-                spacing: 14px;
+                x: Theme.rtl ? parent.width - self.width - 72px : 72px;
+                y: min(210px, max(110px, parent.height - self.preferred-height - 120px));
+                width: min(416px, parent.width - 144px);
+                height: self.preferred-height;
+                spacing: 0px;
 
-                Image {
-                    width: 150px;
-                    height: 40px;
-                    source: @image-url("icones/kadenz-logo-horizontal-negatif.svg");
-                    image-fit: contain;
-                    horizontal-alignment: Theme.rtl ? ImageHorizontalAlignment.right : ImageHorizontalAlignment.left;
+                // Étapes : la page en cours en couleur d'accent.
+                Rangee {
+                    alignment: start;
+                    spacing: 8px;
+
+                    for i in root.nombre: Rectangle {
+                        width: 44px;
+                        height: 4px;
+                        background: i == root.page ? Theme.accent : Theme.bordure;
+                    }
                 }
 
-                Rectangle { }
+                Rectangle { height: 22px; }
 
-                TroisTemps { }
+                SurTitre {
+                    text: @tr("{} sur {}", root.page + 1, root.nombre);
+                }
+
+                Rectangle { height: 12px; }
+
+                GrandTitre {
+                    text: root.titre(root.page);
+                }
+
+                Rectangle { height: 16px; }
 
                 Text {
                     horizontal-alignment: Theme.debut;
-                    text: @tr("Gestion commerciale");
-                    color: white;
-                    font-family: Theme.police-titre;
-                    font-size: 26px;
-                    font-weight: 800;
+                    text: root.texte(root.page);
+                    font-size: 16px;
+                    color: Theme.texte-secondaire;
                     wrap: word-wrap;
                 }
 
-                Text {
-                    horizontal-alignment: Theme.debut;
-                    text: @tr("Version {}", root.version-logiciel);
-                    color: #9aa3c7;
-                    font-size: 12px;
+                // Choix de l'affichage au premier lancement (décision de l'utilisateur du
+                // 2026-11-18) : réglage du poste, appliqué tout de suite ; il sert de départ
+                // à tous les comptes de ce poste. Pas depuis « À propos » : une fois
+                // connecté, le choix se fait dans les Paramètres.
+                if root.page == 0 && !root.depuis-a-propos: VerticalLayout {
+                    padding-top: 32px;
+                    spacing: 10px;
+
+                    SurTitre {
+                        text: @tr("Mode d'affichage");
+                    }
+
+                    Rangee {
+                        alignment: start;
+                        spacing: 8px;
+
+                        ChoixSegment {
+                            text: @tr("Comme Windows");
+                            actif: Theme.mode == 0;
+                            clicked => {
+                                Affichage.choisir-poste(0, Theme.palette);
+                            }
+                        }
+
+                        ChoixSegment {
+                            text: @tr("Clair");
+                            actif: Theme.mode == 1;
+                            clicked => {
+                                Affichage.choisir-poste(1, Theme.palette);
+                            }
+                        }
+
+                        ChoixSegment {
+                            text: @tr("Sombre");
+                            actif: Theme.mode == 2;
+                            clicked => {
+                                Affichage.choisir-poste(2, Theme.palette);
+                            }
+                        }
+                    }
+
+                    if Theme.mode != 1: VerticalLayout {
+                        padding-top: 6px;
+                        spacing: 10px;
+
+                        SurTitre {
+                            text: @tr("Palette du mode sombre");
+                        }
+
+                        Rangee {
+                            alignment: start;
+                            spacing: 12px;
+
+                            Pastille {
+                                palette: 0;
+                                nom: @tr("Graphite");
+                                clicked => {
+                                    Affichage.choisir-poste(Theme.mode, 0);
+                                }
+                            }
+
+                            Pastille {
+                                palette: 1;
+                                nom: @tr("Ardoise");
+                                clicked => {
+                                    Affichage.choisir-poste(Theme.mode, 1);
+                                }
+                            }
+
+                            Pastille {
+                                palette: 2;
+                                nom: @tr("Anthracite");
+                                clicked => {
+                                    Affichage.choisir-poste(Theme.mode, 2);
+                                }
+                            }
+                        }
+                    }
                 }
             }
-        }
 
-        VerticalLayout {
-            padding: 48px;
-            spacing: 20px;
-
-            Rectangle { }
-
-            // Étapes : la page en cours en Bleu vif.
+            // Boutons à place fixe, en bas de la colonne.
             Rangee {
-                alignment: start;
-                spacing: 8px;
-
-                for i in root.nombre: Rectangle {
-                    width: 40px;
-                    height: 4px;
-                    background: i == root.page ? Theme.accent : Theme.bordure;
-                }
-            }
-
-            Text {
-                horizontal-alignment: Theme.debut;
-                text: @tr("{} sur {}", root.page + 1, root.nombre);
-                font-size: 12px;
-                color: Theme.texte-secondaire;
-            }
-
-            Text {
-                horizontal-alignment: Theme.debut;
-                text: root.titre(root.page);
-                font-family: Theme.police-titre;
-                font-size: 26px;
-                font-weight: 800;
-                color: Theme.texte;
-                wrap: word-wrap;
-            }
-
-            Text {
-                horizontal-alignment: Theme.debut;
-                text: root.texte(root.page);
-                font-size: 15px;
-                color: Theme.texte;
-                wrap: word-wrap;
-            }
-
-            if root.page == root.nombre - 1 && !root.depuis-a-propos: Text {
-                horizontal-alignment: Theme.debut;
-                text: @tr("L'assistant qui suit crée votre entreprise et le compte administrateur.");
-                font-size: 13px;
-                color: Theme.texte-secondaire;
-                wrap: word-wrap;
-            }
-
-            Rectangle { }
-
-            Rangee {
-                spacing: 8px;
+                x: Theme.rtl ? parent.width - self.width - 72px : 72px;
+                y: parent.height - 96px;
+                width: min(416px, parent.width - 144px);
+                height: 40px;
+                spacing: 10px;
 
                 if root.page > 0: Bouton {
                     text: @tr("Précédent");
@@ -163,7 +303,10 @@ export component EcranPresentation inherits Rectangle {
 
                 Bouton {
                     primary: true;
-                    text: root.page < root.nombre - 1 ? @tr("Suivant") : (root.depuis-a-propos ? @tr("Revenir à Kadenz") : @tr("Commencer l'installation"));
+                    text: root.page < root.nombre - 1 ? @tr("Suivant")
+                        : root.depuis-a-propos ? @tr("Revenir à Kadenz")
+                        : root.monoposte ? @tr("Commencer l'installation")
+                        : @tr("Rejoindre l'entreprise");
                     clicked => {
                         if (root.page < root.nombre - 1) {
                             root.page += 1;
@@ -173,6 +316,13 @@ export component EcranPresentation inherits Rectangle {
                     }
                 }
             }
+        }
+
+        PanneauTrame {
+            horizontal-stretch: 1;
+            trame: root.trame(root.page);
+            trame-sombre: root.trame-sombre(root.page);
+            version-logiciel: root.version-logiciel;
         }
     }
 }

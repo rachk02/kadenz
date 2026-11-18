@@ -4605,3 +4605,90 @@ msgstr "打印机拒绝了第 {} 页"
 
 msgid "fenêtre d'impression indisponible (code {})"
 msgstr "打印窗口不可用（代码 {}）"
+
+msgid "La facturation de votre entreprise, en FCFA et en sept langues."
+msgstr "贵公司的开票业务，以 FCFA 计，支持七种语言。"
+
+msgid "Du devis à l'avoir : chaque document validé reçoit son numéro et s'exporte en PDF."
+msgstr "从报价单到贷项通知单：每份确认的单据都会获得编号，并可导出为 PDF。"
+
+msgid "Saisissez un règlement sur la facture : l'état Impayé, Partiel ou Payé se calcule seul."
+msgstr "在发票上录入收付款：未付款、部分付款或已付款状态会自动计算。"
+
+msgid "Chacun se connecte avec son propre compte ; chaque validation est inscrite dans l'historique."
+msgstr "每个人使用自己的账户登录；每次确认都会记入历史记录。"
+
+msgid "Demandez un code d'inscription à l'Admin de l'entreprise."
+msgstr "请向公司管理员索取注册码。"
+
+msgid "PREMIÈRE INSTALLATION"
+msgstr "首次安装"
+
+msgid "Transmettez cet identifiant pour recevoir la licence, puis collez-la ici. Sans licence, le serveur reste en lecture seule et un seul poste peut s'inscrire."
+msgstr "请发送此标识以获取许可证，然后粘贴到此处。没有许可证时，服务器保持只读，且只能注册一个工作站。"
+
+msgid "Vous pourrez aussi l'installer plus tard."
+msgstr "也可以稍后再安装。"
+
+msgid "Plus d'informations"
+msgstr "更多信息"
+
+msgid "Replier"
+msgstr "收起"
+
+msgid "{} champs facultatifs"
+msgstr "{} 个可选字段"
+
+msgid "Tout se modifie plus tard dans les Paramètres."
+msgstr "所有内容以后都可在设置中修改。"
+
+msgid "8 caractères au moins."
+msgstr "至少 8 个字符。"
+
+msgid "En pourcentage, séparés par des points-virgules. Modifiables plus tard."
+msgstr "以百分比表示，用分号分隔。以后可以修改。"
+
+msgid "Sauvegarde chiffrée chaque jour et à l'arrêt du service. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr."
+msgstr "每天以及服务停止时进行加密备份。没有此密码，任何备份都无法恢复，发行方也无法找回密码：请将其记在安全的地方。"
+
+msgid "De préférence sur un autre disque (externe ou partage réseau)."
+msgstr "最好放在另一块磁盘上（外部磁盘或网络共享）。"
+
+msgid "Code complet, ou code court XXXX-XXXX-XXXX avec l'adresse du serveur."
+msgstr "完整代码，或短代码 XXXX-XXXX-XXXX 加服务器地址。"
+
+msgid "Mode d'affichage"
+msgstr "显示模式"
+
+msgid "Propre à ce poste : sur un autre poste, votre compte garde le mode qui y a été choisi."
+msgstr "仅限本工作站：在其他工作站上，您的账户保留在那里选择的模式。"
+
+msgid "Comme Windows"
+msgstr "与 Windows 相同"
+
+msgid "Clair ou sombre selon le réglage de Windows."
+msgstr "根据 Windows 设置显示浅色或深色。"
+
+msgid "Clair"
+msgstr "浅色"
+
+msgid "Fond blanc, toujours."
+msgstr "始终为白色背景。"
+
+msgid "Sombre"
+msgstr "深色"
+
+msgid "Fond sombre, toujours. Les documents et leur aperçu restent sur fond blanc."
+msgstr "始终为深色背景。文档及其预览保持白色背景。"
+
+msgid "Palette du mode sombre"
+msgstr "深色模式配色"
+
+msgid "Graphite"
+msgstr "石墨"
+
+msgid "Ardoise"
+msgstr "板岩"
+
+msgid "Anthracite"
+msgstr "无烟煤"

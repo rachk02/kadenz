@@ -4605,3 +4605,90 @@ msgstr "la impresora rechazó la página {}"
 
 msgid "fenêtre d'impression indisponible (code {})"
 msgstr "ventana de impresión no disponible (código {})"
+
+msgid "La facturation de votre entreprise, en FCFA et en sept langues."
+msgstr "La facturación de su empresa, en FCFA y en siete idiomas."
+
+msgid "Du devis à l'avoir : chaque document validé reçoit son numéro et s'exporte en PDF."
+msgstr "Del presupuesto a la nota de crédito: cada documento validado recibe su número y se exporta en PDF."
+
+msgid "Saisissez un règlement sur la facture : l'état Impayé, Partiel ou Payé se calcule seul."
+msgstr "Registre un pago en la factura: el estado Impagado, Parcial o Pagado se calcula automáticamente."
+
+msgid "Chacun se connecte avec son propre compte ; chaque validation est inscrite dans l'historique."
+msgstr "Cada persona inicia sesión con su propia cuenta; cada validación queda registrada en el historial."
+
+msgid "Demandez un code d'inscription à l'Admin de l'entreprise."
+msgstr "Pida un código de inscripción al administrador de la empresa."
+
+msgid "PREMIÈRE INSTALLATION"
+msgstr "PRIMERA INSTALACIÓN"
+
+msgid "Transmettez cet identifiant pour recevoir la licence, puis collez-la ici. Sans licence, le serveur reste en lecture seule et un seul poste peut s'inscrire."
+msgstr "Envíe este identificador para recibir la licencia y péguela aquí. Sin licencia, el servidor permanece en solo lectura y solo un puesto puede inscribirse."
+
+msgid "Vous pourrez aussi l'installer plus tard."
+msgstr "También podrá instalarla más tarde."
+
+msgid "Plus d'informations"
+msgstr "Más información"
+
+msgid "Replier"
+msgstr "Plegar"
+
+msgid "{} champs facultatifs"
+msgstr "{} campos opcionales"
+
+msgid "Tout se modifie plus tard dans les Paramètres."
+msgstr "Todo se puede modificar más tarde en Configuración."
+
+msgid "8 caractères au moins."
+msgstr "8 caracteres como mínimo."
+
+msgid "En pourcentage, séparés par des points-virgules. Modifiables plus tard."
+msgstr "En porcentaje, separados por punto y coma. Se pueden modificar más tarde."
+
+msgid "Sauvegarde chiffrée chaque jour et à l'arrêt du service. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr."
+msgstr "Copia de seguridad cifrada cada día y al detenerse el servicio. Sin esta contraseña no se puede restaurar ninguna copia, y el editor no puede recuperarla: anótela en un lugar seguro."
+
+msgid "De préférence sur un autre disque (externe ou partage réseau)."
+msgstr "Preferentemente en otro disco (disco externo o recurso compartido de red)."
+
+msgid "Code complet, ou code court XXXX-XXXX-XXXX avec l'adresse du serveur."
+msgstr "Código completo, o código corto XXXX-XXXX-XXXX con la dirección del servidor."
+
+msgid "Mode d'affichage"
+msgstr "Modo de visualización"
+
+msgid "Propre à ce poste : sur un autre poste, votre compte garde le mode qui y a été choisi."
+msgstr "Propio de este puesto: en otro puesto, su cuenta conserva el modo elegido allí."
+
+msgid "Comme Windows"
+msgstr "Como Windows"
+
+msgid "Clair ou sombre selon le réglage de Windows."
+msgstr "Claro u oscuro según la configuración de Windows."
+
+msgid "Clair"
+msgstr "Claro"
+
+msgid "Fond blanc, toujours."
+msgstr "Fondo blanco, siempre."
+
+msgid "Sombre"
+msgstr "Oscuro"
+
+msgid "Fond sombre, toujours. Les documents et leur aperçu restent sur fond blanc."
+msgstr "Fondo oscuro, siempre. Los documentos y su vista previa se mantienen sobre fondo blanco."
+
+msgid "Palette du mode sombre"
+msgstr "Paleta del modo oscuro"
+
+msgid "Graphite"
+msgstr "Grafito"
+
+msgid "Ardoise"
+msgstr "Pizarra"
+
+msgid "Anthracite"
+msgstr "Antracita"

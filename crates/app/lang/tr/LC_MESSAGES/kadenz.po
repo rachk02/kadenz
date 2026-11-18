@@ -4605,3 +4605,90 @@ msgstr "yazıcı {}. sayfayı reddetti"
 
 msgid "fenêtre d'impression indisponible (code {})"
 msgstr "yazdırma penceresi kullanılamıyor (kod {})"
+
+msgid "La facturation de votre entreprise, en FCFA et en sept langues."
+msgstr "Şirketinizin faturalandırması, FCFA cinsinden ve yedi dilde."
+
+msgid "Du devis à l'avoir : chaque document validé reçoit son numéro et s'exporte en PDF."
+msgstr "Tekliften iade faturasına: onaylanan her belge numarasını alır ve PDF olarak dışa aktarılır."
+
+msgid "Saisissez un règlement sur la facture : l'état Impayé, Partiel ou Payé se calcule seul."
+msgstr "Ödemeyi faturaya girin: Ödenmedi, Kısmi veya Ödendi durumu kendiliğinden hesaplanır."
+
+msgid "Chacun se connecte avec son propre compte ; chaque validation est inscrite dans l'historique."
+msgstr "Herkes kendi hesabıyla oturum açar; her onay geçmişe kaydedilir."
+
+msgid "Demandez un code d'inscription à l'Admin de l'entreprise."
+msgstr "Şirket yöneticisinden bir kayıt kodu isteyin."
+
+msgid "PREMIÈRE INSTALLATION"
+msgstr "İLK KURULUM"
+
+msgid "Transmettez cet identifiant pour recevoir la licence, puis collez-la ici. Sans licence, le serveur reste en lecture seule et un seul poste peut s'inscrire."
+msgstr "Lisansı almak için bu kimliği iletin, ardından buraya yapıştırın. Lisans olmadan sunucu salt okunur kalır ve yalnızca bir iş istasyonu kaydolabilir."
+
+msgid "Vous pourrez aussi l'installer plus tard."
+msgstr "Lisansı daha sonra da kurabilirsiniz."
+
+msgid "Plus d'informations"
+msgstr "Daha fazla bilgi"
+
+msgid "Replier"
+msgstr "Daralt"
+
+msgid "{} champs facultatifs"
+msgstr "{} isteğe bağlı alan"
+
+msgid "Tout se modifie plus tard dans les Paramètres."
+msgstr "Hepsi daha sonra Ayarlar'dan değiştirilebilir."
+
+msgid "8 caractères au moins."
+msgstr "En az 8 karakter."
+
+msgid "En pourcentage, séparés par des points-virgules. Modifiables plus tard."
+msgstr "Yüzde olarak, noktalı virgülle ayrılmış. Daha sonra değiştirilebilir."
+
+msgid "Sauvegarde chiffrée chaque jour et à l'arrêt du service. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr."
+msgstr "Her gün ve hizmet durduğunda şifreli yedekleme. Bu parola olmadan hiçbir yedek geri yüklenemez ve yayıncı onu kurtaramaz: güvenli bir yere not edin."
+
+msgid "De préférence sur un autre disque (externe ou partage réseau)."
+msgstr "Tercihen başka bir diskte (harici disk veya ağ paylaşımı)."
+
+msgid "Code complet, ou code court XXXX-XXXX-XXXX avec l'adresse du serveur."
+msgstr "Tam kod veya sunucu adresiyle birlikte kısa kod XXXX-XXXX-XXXX."
+
+msgid "Mode d'affichage"
+msgstr "Görünüm modu"
+
+msgid "Propre à ce poste : sur un autre poste, votre compte garde le mode qui y a été choisi."
+msgstr "Bu iş istasyonuna özgü: başka bir iş istasyonunda hesabınız orada seçilen modu korur."
+
+msgid "Comme Windows"
+msgstr "Windows ile aynı"
+
+msgid "Clair ou sombre selon le réglage de Windows."
+msgstr "Windows ayarına göre açık veya koyu."
+
+msgid "Clair"
+msgstr "Açık"
+
+msgid "Fond blanc, toujours."
+msgstr "Her zaman beyaz arka plan."
+
+msgid "Sombre"
+msgstr "Koyu"
+
+msgid "Fond sombre, toujours. Les documents et leur aperçu restent sur fond blanc."
+msgstr "Her zaman koyu arka plan. Belgeler ve önizlemeleri beyaz arka planda kalır."
+
+msgid "Palette du mode sombre"
+msgstr "Koyu mod paleti"
+
+msgid "Graphite"
+msgstr "Grafit"
+
+msgid "Ardoise"
+msgstr "Arduvaz"
+
+msgid "Anthracite"
+msgstr "Antrasit"

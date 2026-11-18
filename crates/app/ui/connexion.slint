@@ -1,70 +1,96 @@
-import { Bouton, Champ, MessageErreur, MotifMarque, Rangee, Theme, Titre, TroisTemps } from "composants.slint";
+import { Bouton, Champ, MessageErreur, Rangee, Theme } from "composants.slint";
 
-// Panneau de marque Kadenz (logo, motif Quatre pièces), à gauche des écrans de
-// connexion et de premier lancement.
-export component PanneauMarque inherits Rectangle {
+// Refonte du 2026-11-18 (docs/marque/propositions-2026-11-18-refonte-ecrans) : les
+// écrans de premier lancement et de connexion posent leur bloc à une place fixe,
+// quelle que soit la longueur des textes, à côté d'un panneau de marque tramé.
+
+// Panneau de marque tramé : une pièce du symbole en points ambre sur un champ de points
+// indigo (icones/trame-*.svg, generer_trames_ecrans.py), sur Nuit ; en bas, « Gestion
+// commerciale » et la version. Le symbole entier n'est jamais tramé (charte).
+export component PanneauTrame inherits Rectangle {
+    in property <image> trame;
+    // Même trame, points du champ en gris, pour le mode sombre.
+    in property <image> trame-sombre;
     in property <string> version-logiciel;
+    // Logo négatif en haut du panneau, quand la colonne voisine n'en porte pas.
+    in property <bool> logo: false;
     background: Theme.nuit;
     clip: true;
 
-    // Motif sur tout le panneau, en pièces serrées, comme le motif de l'ancienne identité.
-    MotifMarque {
+    Image {
         x: 0;
         y: 0;
         width: parent.width;
         height: parent.height;
-        pas: 40px;
+        source: Theme.sombre ? root.trame-sombre : root.trame;
+        image-fit: cover;
+    }
+
+    if root.logo: Image {
+        x: Theme.rtl ? parent.width - self.width - 48px : 48px;
+        y: 56px;
+        width: 140px;
+        height: 30px;
+        source: @image-url("icones/kadenz-logo-horizontal-negatif.svg");
+        image-fit: contain;
+        horizontal-alignment: Theme.rtl ? ImageHorizontalAlignment.right : ImageHorizontalAlignment.left;
     }
 
     VerticalLayout {
-        padding: 40px;
-        spacing: 14px;
-
-        Image {
-            width: 150px;
-            height: 40px;
-            source: @image-url("icones/kadenz-logo-horizontal-negatif.svg");
-            image-fit: contain;
-            horizontal-alignment: Theme.rtl ? ImageHorizontalAlignment.right : ImageHorizontalAlignment.left;
-        }
-
-        Rectangle { }
-
-        TroisTemps { }
+        padding: 48px;
+        padding-bottom: 44px;
+        spacing: 6px;
+        alignment: end;
 
         Text {
             horizontal-alignment: Theme.debut;
             text: @tr("Gestion commerciale");
             color: white;
             font-family: Theme.police-titre;
-            font-size: 30px;
-            font-weight: 800;
+            font-size: 22px;
+            font-weight: 700;
             wrap: word-wrap;
-        }
-
-        Text {
-            horizontal-alignment: Theme.debut;
-            text: @tr("Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements.");
-            color: #c5cae0;
-            font-size: 14px;
-            wrap: word-wrap;
-        }
-
-        Rectangle {
-            height: 24px;
         }
 
         Text {
             horizontal-alignment: Theme.debut;
             text: @tr("Version {}", root.version-logiciel);
-            color: #9aa3c7;
+            color: #c5cae0;
             font-size: 12px;
         }
     }
 }
 
-// Écran de connexion : panneau de marque Kadenz à gauche (logo, motif Quatre pièces),
-// formulaire à droite sous le nom de l'entreprise qui utilise l'installation.
+// Logo de la colonne claire : couleur en clair, négatif en sombre.
+export component LogoColonne inherits Image {
+    width: 140px;
+    height: 30px;
+    source: Theme.sombre ? @image-url("icones/kadenz-logo-horizontal-negatif.svg") : @image-url("icones/kadenz-logo-horizontal.svg");
+    image-fit: contain;
+    horizontal-alignment: Theme.rtl ? ImageHorizontalAlignment.right : ImageHorizontalAlignment.left;
+}
+
+// Sur-titre des écrans de premier lancement et de connexion.
+export component SurTitre inherits Text {
+    horizontal-alignment: Theme.debut;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.6px;
+    color: Theme.texte-secondaire;
+}
+
+// Grand titre des écrans de premier lancement, de connexion et de l'assistant.
+export component GrandTitre inherits Text {
+    horizontal-alignment: Theme.debut;
+    font-family: Theme.police-titre;
+    font-size: 32px;
+    font-weight: 700;
+    color: Theme.texte;
+    wrap: word-wrap;
+}
+
+// Écran de connexion (modèle 1) : formulaire court à gauche, sous le nom de l'entreprise
+// qui utilise l'installation, grande trame à droite.
 export component EcranConnexion inherits Rectangle {
     in property <string> nom-entreprise;
     in property <string> version-logiciel;
@@ -84,47 +110,41 @@ export component EcranConnexion inherits Rectangle {
         root.erreur = root.connecter(root.identifiant, root.mot-de-passe);
     }
 
-    background: white;
+    background: Theme.fond;
 
     Rangee {
         remplit: true;
-        PanneauMarque {
-            width: max(340px, min(460px, root.width * 0.4));
-            version-logiciel: root.version-logiciel;
-        }
 
-        VerticalLayout {
-            alignment: center;
+        Rectangle {
+            width: max(420px, min(560px, root.width * 0.47));
 
-            Rangee {
-                alignment: center;
+            LogoColonne {
+                x: Theme.rtl ? parent.width - self.width - 72px : 72px;
+                y: 56px;
+            }
+
+            // Bloc à place fixe ; il ne remonte que si la fenêtre est trop basse.
+            VerticalLayout {
+                x: Theme.rtl ? parent.width - self.width - 72px : 72px;
+                y: min(250px, max(110px, parent.height - self.preferred-height - 48px));
+                width: min(360px, parent.width - 144px);
+                height: self.preferred-height;
+                spacing: 0px;
+
+                SurTitre {
+                    text: @tr("CONNEXION");
+                }
+
+                Rectangle { height: 14px; }
+
+                GrandTitre {
+                    text: root.nom-entreprise;
+                }
+
+                Rectangle { height: 32px; }
 
                 VerticalLayout {
-                    width: 360px;
                     spacing: 16px;
-                    padding: 24px;
-
-                    Text {
-                        horizontal-alignment: Theme.debut;
-                        text: @tr("CONNEXION");
-                        font-family: Theme.police-titre;
-                        font-size: 12px;
-                        font-weight: 800;
-                        letter-spacing: 1px;
-                        color: Theme.accent;
-                    }
-
-                    Titre {
-                        text: root.nom-entreprise;
-                        wrap: word-wrap;
-                    }
-
-                    Text {
-                        horizontal-alignment: Theme.debut;
-                        text: @tr("Saisissez votre identifiant et votre mot de passe.");
-                        color: Theme.texte-secondaire;
-                        wrap: word-wrap;
-                    }
 
                     Champ {
                         libelle: @tr("Identifiant");
@@ -146,16 +166,25 @@ export component EcranConnexion inherits Rectangle {
                     if root.erreur != "": MessageErreur {
                         text: root.erreur;
                     }
+                }
 
-                    Bouton {
-                        text: @tr("Se connecter");
-                        primary: true;
-                        clicked => {
-                            root.valider();
-                        }
+                Rectangle { height: 24px; }
+
+                Bouton {
+                    text: @tr("Se connecter");
+                    primary: true;
+                    clicked => {
+                        root.valider();
                     }
                 }
             }
+        }
+
+        PanneauTrame {
+            horizontal-stretch: 1;
+            trame: @image-url("icones/trame-quart.svg");
+            trame-sombre: @image-url("icones/trame-quart-sombre.svg");
+            version-logiciel: root.version-logiciel;
         }
     }
 }

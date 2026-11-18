@@ -1,56 +1,66 @@
 // Premier lancement d'un poste de la phase 2 (écrans, sections 1 et 2) : aucune
 // base locale à créer, le poste rejoint le serveur de l'entreprise avec un code
 // d'inscription, puis passe à l'écran de connexion. Un poste seul reste la V1.
-import { MessageRetour, Rangee, Theme, Titre } from "composants.slint";
-import { PanneauMarque } from "connexion.slint";
+// Refonte du 2026-11-18 (modèle 2) : panneau tramé à gauche, formulaire à droite,
+// bloc à la même hauteur que celui de la présentation.
+import { MessageRetour, Rangee, Theme } from "composants.slint";
+import { GrandTitre, PanneauTrame, SurTitre } from "connexion.slint";
 import { InscriptionPoste, ServeurApi } from "serveur.slint";
 
 export component EcranInscription inherits Rectangle {
     in property <string> version-logiciel;
-    background: white;
+    background: Theme.fond;
 
     Rangee {
         remplit: true;
 
-        PanneauMarque {
-            width: max(340px, min(460px, root.width * 0.4));
+        PanneauTrame {
+            width: max(360px, min(500px, root.width * 0.42));
+            trame: @image-url("icones/trame-disque.svg");
+            trame-sombre: @image-url("icones/trame-disque-sombre.svg");
+            logo: true;
             version-logiciel: root.version-logiciel;
         }
 
-        VerticalLayout {
-            alignment: center;
+        Rectangle {
+            horizontal-stretch: 1;
 
-            Rangee {
-                alignment: center;
+            // Bloc à place fixe ; il ne remonte que si la fenêtre est trop basse.
+            VerticalLayout {
+                x: Theme.rtl ? parent.width - self.width - 80px : 80px;
+                y: min(210px, max(40px, parent.height - self.preferred-height - 40px));
+                width: min(480px, parent.width - 140px);
+                height: self.preferred-height;
+                spacing: 0px;
+
+                SurTitre {
+                    text: @tr("PREMIER LANCEMENT");
+                }
+
+                Rectangle { height: 14px; }
+
+                GrandTitre {
+                    text: @tr("Rejoindre l'entreprise");
+                }
+
+                Rectangle { height: 14px; }
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("Demandez un code d'inscription à l'Admin de l'entreprise.");
+                    font-size: 16px;
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
+                }
+
+                Rectangle { height: 28px; }
 
                 VerticalLayout {
-                    width: 520px;
                     spacing: 16px;
-                    padding: 24px;
 
-                    Text {
-                        horizontal-alignment: Theme.debut;
-                        text: @tr("PREMIER LANCEMENT");
-                        font-family: Theme.police-titre;
-                        font-size: 12px;
-                        font-weight: 800;
-                        letter-spacing: 1px;
-                        color: Theme.accent;
+                    InscriptionPoste {
+                        compact: true;
                     }
-
-                    Titre {
-                        text: @tr("Rejoindre l'entreprise");
-                        wrap: word-wrap;
-                    }
-
-                    Text {
-                        horizontal-alignment: Theme.debut;
-                        text: @tr("Ce poste travaille sur le serveur de l'entreprise. Demandez un code d'inscription à l'Admin : il le crée dans la fenêtre du serveur, ou depuis un poste déjà inscrit.");
-                        color: Theme.texte-secondaire;
-                        wrap: word-wrap;
-                    }
-
-                    InscriptionPoste { }
 
                     if ServeurApi.occupe: Text {
                         horizontal-alignment: Theme.debut;

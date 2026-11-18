@@ -4605,3 +4605,90 @@ msgstr "رفضت الطابعة الصفحة {}"
 
 msgid "fenêtre d'impression indisponible (code {})"
 msgstr "نافذة الطباعة غير متاحة (الرمز {})"
+
+msgid "La facturation de votre entreprise, en FCFA et en sept langues."
+msgstr "فوترة شركتك، بالفرنك الأفريقي FCFA وبسبع لغات."
+
+msgid "Du devis à l'avoir : chaque document validé reçoit son numéro et s'exporte en PDF."
+msgstr "من عرض السعر إلى الإشعار الدائن: يحصل كل مستند معتمد على رقمه ويُصدَّر بصيغة PDF."
+
+msgid "Saisissez un règlement sur la facture : l'état Impayé, Partiel ou Payé se calcule seul."
+msgstr "سجّل الدفعة على الفاتورة: تُحسب الحالة غير مدفوع أو جزئي أو مدفوع تلقائيًا."
+
+msgid "Chacun se connecte avec son propre compte ; chaque validation est inscrite dans l'historique."
+msgstr "يسجّل كل شخص الدخول بحسابه الخاص، وتُقيَّد كل عملية اعتماد في السجل التاريخي."
+
+msgid "Demandez un code d'inscription à l'Admin de l'entreprise."
+msgstr "اطلب رمز تسجيل من مسؤول الشركة."
+
+msgid "PREMIÈRE INSTALLATION"
+msgstr "التثبيت الأول"
+
+msgid "Transmettez cet identifiant pour recevoir la licence, puis collez-la ici. Sans licence, le serveur reste en lecture seule et un seul poste peut s'inscrire."
+msgstr "أرسل هذا المعرّف لتتلقى الترخيص، ثم الصقه هنا. بدون ترخيص، يبقى الخادم في وضع القراءة فقط ولا يمكن تسجيل سوى محطة واحدة."
+
+msgid "Vous pourrez aussi l'installer plus tard."
+msgstr "يمكنك أيضًا تثبيته لاحقًا."
+
+msgid "Plus d'informations"
+msgstr "مزيد من المعلومات"
+
+msgid "Replier"
+msgstr "طيّ"
+
+msgid "{} champs facultatifs"
+msgstr "{} حقول اختيارية"
+
+msgid "Tout se modifie plus tard dans les Paramètres."
+msgstr "يمكن تعديل كل شيء لاحقًا في الإعدادات."
+
+msgid "8 caractères au moins."
+msgstr "8 أحرف على الأقل."
+
+msgid "En pourcentage, séparés par des points-virgules. Modifiables plus tard."
+msgstr "بالنسبة المئوية، مفصولة بفواصل منقوطة. يمكن تعديلها لاحقًا."
+
+msgid "Sauvegarde chiffrée chaque jour et à l'arrêt du service. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr."
+msgstr "نسخة احتياطية مشفرة كل يوم وعند توقف الخدمة. بدون كلمة المرور هذه لا يمكن استعادة أي نسخة، ولا يستطيع الناشر استرجاعها: دوّنها في مكان آمن."
+
+msgid "De préférence sur un autre disque (externe ou partage réseau)."
+msgstr "يُفضل على قرص آخر (قرص خارجي أو مجلد مشترك على الشبكة)."
+
+msgid "Code complet, ou code court XXXX-XXXX-XXXX avec l'adresse du serveur."
+msgstr "الرمز الكامل، أو الرمز القصير XXXX-XXXX-XXXX مع عنوان الخادم."
+
+msgid "Mode d'affichage"
+msgstr "وضع العرض"
+
+msgid "Propre à ce poste : sur un autre poste, votre compte garde le mode qui y a été choisi."
+msgstr "خاص بهذا الجهاز: على جهاز آخر، يحتفظ حسابك بالوضع الذي اختير هناك."
+
+msgid "Comme Windows"
+msgstr "مثل Windows"
+
+msgid "Clair ou sombre selon le réglage de Windows."
+msgstr "فاتح أو داكن حسب إعداد Windows."
+
+msgid "Clair"
+msgstr "فاتح"
+
+msgid "Fond blanc, toujours."
+msgstr "خلفية بيضاء دائمًا."
+
+msgid "Sombre"
+msgstr "داكن"
+
+msgid "Fond sombre, toujours. Les documents et leur aperçu restent sur fond blanc."
+msgstr "خلفية داكنة دائمًا. تبقى المستندات ومعاينتها على خلفية بيضاء."
+
+msgid "Palette du mode sombre"
+msgstr "لوحة ألوان الوضع الداكن"
+
+msgid "Graphite"
+msgstr "غرافيت"
+
+msgid "Ardoise"
+msgstr "أردواز"
+
+msgid "Anthracite"
+msgstr "أنثراسيت"

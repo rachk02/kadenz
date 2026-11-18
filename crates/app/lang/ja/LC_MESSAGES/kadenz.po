@@ -4605,3 +4605,90 @@ msgstr "プリンターが {} ページを拒否しました"
 
 msgid "fenêtre d'impression indisponible (code {})"
 msgstr "印刷ダイアログを使用できません（コード {}）"
+
+msgid "La facturation de votre entreprise, en FCFA et en sept langues."
+msgstr "会社の請求業務を、FCFA で、7 言語で。"
+
+msgid "Du devis à l'avoir : chaque document validé reçoit son numéro et s'exporte en PDF."
+msgstr "見積書からクレジットノートまで、確定した書類には番号が付き、PDF に出力できます。"
+
+msgid "Saisissez un règlement sur la facture : l'état Impayé, Partiel ou Payé se calcule seul."
+msgstr "請求書で入金を入力すると、未払い、一部入金、支払済みの状態は自動で計算されます。"
+
+msgid "Chacun se connecte avec son propre compte ; chaque validation est inscrite dans l'historique."
+msgstr "各自が自分のアカウントでログインし、確定はすべて履歴に記録されます。"
+
+msgid "Demandez un code d'inscription à l'Admin de l'entreprise."
+msgstr "会社の管理者に登録コードを依頼してください。"
+
+msgid "PREMIÈRE INSTALLATION"
+msgstr "初回セットアップ"
+
+msgid "Transmettez cet identifiant pour recevoir la licence, puis collez-la ici. Sans licence, le serveur reste en lecture seule et un seul poste peut s'inscrire."
+msgstr "この識別子を送ってライセンスを受け取り、ここに貼り付けてください。ライセンスがない場合、サーバーは閲覧専用のままで、登録できる端末は 1 台だけです。"
+
+msgid "Vous pourrez aussi l'installer plus tard."
+msgstr "後から導入することもできます。"
+
+msgid "Plus d'informations"
+msgstr "その他の情報"
+
+msgid "Replier"
+msgstr "折りたたむ"
+
+msgid "{} champs facultatifs"
+msgstr "任意項目 {} 件"
+
+msgid "Tout se modifie plus tard dans les Paramètres."
+msgstr "すべて後から設定で変更できます。"
+
+msgid "8 caractères au moins."
+msgstr "8 文字以上。"
+
+msgid "En pourcentage, séparés par des points-virgules. Modifiables plus tard."
+msgstr "パーセントで、セミコロンで区切って入力します。後から変更できます。"
+
+msgid "Sauvegarde chiffrée chaque jour et à l'arrêt du service. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr."
+msgstr "毎日とサービス停止時に暗号化してバックアップします。このパスワードがなければどのバックアップも復元できず、発行元も復旧できません。安全な場所に控えてください。"
+
+msgid "De préférence sur un autre disque (externe ou partage réseau)."
+msgstr "できれば別のディスク（外付けディスクまたはネットワーク共有）に。"
+
+msgid "Code complet, ou code court XXXX-XXXX-XXXX avec l'adresse du serveur."
+msgstr "完全なコード、またはサーバーのアドレスと短いコード XXXX-XXXX-XXXX。"
+
+msgid "Mode d'affichage"
+msgstr "表示モード"
+
+msgid "Propre à ce poste : sur un autre poste, votre compte garde le mode qui y a été choisi."
+msgstr "この端末専用です。別の端末では、そこで選んだモードがアカウントに使われます。"
+
+msgid "Comme Windows"
+msgstr "Windows と同じ"
+
+msgid "Clair ou sombre selon le réglage de Windows."
+msgstr "Windows の設定に合わせてライトまたはダーク。"
+
+msgid "Clair"
+msgstr "ライト"
+
+msgid "Fond blanc, toujours."
+msgstr "常に白い背景。"
+
+msgid "Sombre"
+msgstr "ダーク"
+
+msgid "Fond sombre, toujours. Les documents et leur aperçu restent sur fond blanc."
+msgstr "常に暗い背景。文書とそのプレビューは白い背景のままです。"
+
+msgid "Palette du mode sombre"
+msgstr "ダークモードの配色"
+
+msgid "Graphite"
+msgstr "グラファイト"
+
+msgid "Ardoise"
+msgstr "スレート"
+
+msgid "Anthracite"
+msgstr "アンスラサイト"

@@ -4605,3 +4605,90 @@ msgstr "the printer refused page {}"
 
 msgid "fenêtre d'impression indisponible (code {})"
 msgstr "print dialog unavailable (code {})"
+
+msgid "La facturation de votre entreprise, en FCFA et en sept langues."
+msgstr "Your company's invoicing, in FCFA and in seven languages."
+
+msgid "Du devis à l'avoir : chaque document validé reçoit son numéro et s'exporte en PDF."
+msgstr "From quote to credit note: every validated document receives its number and can be exported to PDF."
+
+msgid "Saisissez un règlement sur la facture : l'état Impayé, Partiel ou Payé se calcule seul."
+msgstr "Enter a payment on the invoice: the Unpaid, Partial or Paid status is calculated automatically."
+
+msgid "Chacun se connecte avec son propre compte ; chaque validation est inscrite dans l'historique."
+msgstr "Everyone signs in with their own account; every validation is recorded in the history."
+
+msgid "Demandez un code d'inscription à l'Admin de l'entreprise."
+msgstr "Ask the company's Admin for an enrolment code."
+
+msgid "PREMIÈRE INSTALLATION"
+msgstr "FIRST INSTALLATION"
+
+msgid "Transmettez cet identifiant pour recevoir la licence, puis collez-la ici. Sans licence, le serveur reste en lecture seule et un seul poste peut s'inscrire."
+msgstr "Send this identifier to receive the licence, then paste it here. Without a licence, the server stays read-only and a single workstation can enrol."
+
+msgid "Vous pourrez aussi l'installer plus tard."
+msgstr "You can also install it later."
+
+msgid "Plus d'informations"
+msgstr "More information"
+
+msgid "Replier"
+msgstr "Collapse"
+
+msgid "{} champs facultatifs"
+msgstr "{} optional fields"
+
+msgid "Tout se modifie plus tard dans les Paramètres."
+msgstr "Everything can be changed later in Settings."
+
+msgid "8 caractères au moins."
+msgstr "At least 8 characters."
+
+msgid "En pourcentage, séparés par des points-virgules. Modifiables plus tard."
+msgstr "As percentages, separated by semicolons. Can be changed later."
+
+msgid "Sauvegarde chiffrée chaque jour et à l'arrêt du service. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr."
+msgstr "Encrypted backup every day and when the service stops. Without this password, no backup can be restored, and the publisher cannot recover it: write it down somewhere safe."
+
+msgid "De préférence sur un autre disque (externe ou partage réseau)."
+msgstr "Preferably on a different disk (external disk or network share)."
+
+msgid "Code complet, ou code court XXXX-XXXX-XXXX avec l'adresse du serveur."
+msgstr "Full code, or short code XXXX-XXXX-XXXX with the server address."
+
+msgid "Mode d'affichage"
+msgstr "Display mode"
+
+msgid "Propre à ce poste : sur un autre poste, votre compte garde le mode qui y a été choisi."
+msgstr "Specific to this workstation: on another workstation, your account keeps the mode chosen there."
+
+msgid "Comme Windows"
+msgstr "Same as Windows"
+
+msgid "Clair ou sombre selon le réglage de Windows."
+msgstr "Light or dark, following the Windows setting."
+
+msgid "Clair"
+msgstr "Light"
+
+msgid "Fond blanc, toujours."
+msgstr "White background, always."
+
+msgid "Sombre"
+msgstr "Dark"
+
+msgid "Fond sombre, toujours. Les documents et leur aperçu restent sur fond blanc."
+msgstr "Dark background, always. Documents and their preview stay on a white background."
+
+msgid "Palette du mode sombre"
+msgstr "Dark mode palette"
+
+msgid "Graphite"
+msgstr "Graphite"
+
+msgid "Ardoise"
+msgstr "Slate"
+
+msgid "Anthracite"
+msgstr "Anthracite"

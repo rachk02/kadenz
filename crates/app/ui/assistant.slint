@@ -10,8 +10,9 @@
 // attend le jalon F7. Une étape « Sauvegardes » demande le dossier, l'heure et le
 // mot de passe des sauvegardes du serveur (décision 56).
 
-import { CheckBox } from "std-widgets.slint";
-import { Bouton, Champ, MessageErreur, MotifMarque, Rangee, Section, Theme, Titre } from "composants.slint";
+import { CheckBox, ScrollView } from "std-widgets.slint";
+import { Bouton, Champ, MessageErreur, Rangee, Section, Theme } from "composants.slint";
+import { GrandTitre } from "connexion.slint";
 import { IdentifiantPoste, LicenceApi, SaisieCle, VerificationUi } from "licence.slint";
 import { RestaurationFichier, SauvegardesApi } from "sauvegardes.slint";
 
@@ -101,6 +102,8 @@ export component EcranAssistant inherits Rectangle {
     property <string> sauvegarde-heure: root.defaut-heure-sauvegardes;
     property <string> sauvegarde-mot-de-passe;
     property <string> sauvegarde-confirmation;
+    // Étape Entreprise : champs facultatifs dépliés.
+    property <bool> plus-ouvert: false;
 
     function suivant() {
         if (root.etape == 0 && root.cle-licence != "") {
@@ -130,94 +133,137 @@ export component EcranAssistant inherits Rectangle {
         }
     }
 
-    background: white;
+    background: Theme.fond;
+
+    // Refonte du 2026-11-18 (docs/marque/propositions-2026-11-18-refonte-ecrans) : le bloc
+    // de l'étape reste à la même place et à la même largeur à toutes les étapes ; il défile
+    // s'il dépasse, les boutons restent fixes dans la bande du bas.
+    property <length> marge: 68px;
+    property <length> haut: 72px;
+    property <length> bande: 100px;
 
     Rangee {
         remplit: true;
-        // Bandeau de marque : logo Kadenz et étapes, sur le motif Quatre pièces (docs/marque).
+
+        // Colonne de marque : logo, étapes (faites cochées, en cours marquée d'un carré
+        // ambre) et triangle tramé, sur Nuit.
         Rectangle {
-            width: 240px;
+            width: 232px;
             background: Theme.nuit;
             clip: true;
 
-            MotifMarque {
+            Image {
                 x: 0;
                 y: 0;
                 width: parent.width;
                 height: parent.height;
-                pas: 40px;
+                source: Theme.sombre ? @image-url("icones/trame-etapes-sombre.svg") : @image-url("icones/trame-etapes.svg");
+                image-fit: cover;
+                vertical-alignment: ImageVerticalAlignment.bottom;
             }
 
             VerticalLayout {
-                padding: 28px;
-                spacing: 14px;
+                padding-left: 28px;
+                padding-right: 28px;
+                padding-top: 44px;
+                spacing: 0px;
                 alignment: start;
 
                 Image {
                     source: @image-url("icones/kadenz-logo-horizontal-negatif.svg");
-                    width: 130px;
-                    height: 36px;
+                    width: 120px;
+                    height: 26px;
                     image-fit: contain;
                     horizontal-alignment: Theme.rtl ? ImageHorizontalAlignment.right : ImageHorizontalAlignment.left;
                 }
 
-                Rectangle {
-                    height: 20px;
+                Rectangle { height: 62px; }
+
+                Text {
+                    horizontal-alignment: Theme.debut;
+                    text: @tr("PREMIÈRE INSTALLATION");
+                    font-size: 12px;
+                    font-weight: 600;
+                    letter-spacing: 1.2px;
+                    color: #c5cae0;
+                    // Colonne étroite : le titre passe à la ligne plutôt que d'être coupé.
+                    wrap: word-wrap;
                 }
 
+                Rectangle { height: 14px; }
+
                 for nom[i] in root.etapes: Rangee {
-                    spacing: 8px;
+                    height: 34px;
+                    spacing: 12px;
+
                     Rectangle {
-                        width: 6px;
-                        height: 6px;
+                        width: 12px;
                         cross-axis-self-alignment: CrossAxisAlignment.center;
-                        background: i == root.etape ? white : transparent;
+                        height: 12px;
+
+                        if i < root.etape: Path {
+                            width: 12px;
+                            height: 12px;
+                            viewbox-width: 12;
+                            viewbox-height: 12;
+                            commands: "M 1.5 6.5 L 4.5 9.5 L 10.5 2.5";
+                            stroke: Theme.ambre;
+                            stroke-width: 2px;
+                        }
+
+                        if i == root.etape: Rectangle {
+                            x: 2px;
+                            y: 2px;
+                            width: 8px;
+                            height: 8px;
+                            background: Theme.ambre;
+                        }
                     }
 
                     Text {
+                        vertical-alignment: center;
                         horizontal-alignment: Theme.debut;
                         text: nom;
-                        font-size: 13px;
+                        font-size: 14.5px;
                         font-weight: i == root.etape ? 600 : 400;
-                        color: i == root.etape ? white : #c5cae0;
+                        color: i == root.etape ? white : i < root.etape ? #c5cae0 : #8c94c2;
                     }
                 }
             }
         }
 
-        VerticalLayout {
-            alignment: center;
+        zone := Rectangle {
+            horizontal-stretch: 1;
 
-            // Colonne de 720 px au plus, plus étroite dans une petite fenêtre (les
-            // textes passent à la ligne). HorizontalLayout et non Rangee : un texte
-            // qui passe à la ligne dans un Flexbox fait boucler la mise en page.
-            HorizontalLayout {
-                alignment: center;
+            property <length> largeur: min(620px, self.width - 2 * root.marge);
 
-                VerticalLayout {
-                    max-width: 720px;
-                    horizontal-stretch: 1;
-                    spacing: 16px;
-                    padding: 24px;
+            ScrollView {
+                x: Theme.rtl ? parent.width - self.width - root.marge + 12px : root.marge - 12px;
+                y: root.haut;
+                width: parent.largeur + 24px;
+                height: parent.height - root.haut - root.bande - 8px;
+                content-width: self.visible-width;
+                content-height: corps.preferred-height + 24px;
 
-                    Titre {
-                        text: @tr("Première installation");
-                    }
+                corps := VerticalLayout {
+                    x: 12px;
+                    width: parent.width - 24px;
+                    spacing: 20px;
+                    alignment: start;
 
-                    Text {
-                        horizontal-alignment: Theme.debut;
-                        text: @tr("Étape {} sur {} : {}", root.etape + 1, root.etapes.length, root.etapes[root.etape]);
-                        color: Theme.texte-secondaire;
+                    GrandTitre {
+                        text: root.etapes[root.etape];
                     }
 
                     if root.etape == 0: VerticalLayout {
-                        spacing: 12px;
+                        spacing: 16px;
 
                         Text {
                             horizontal-alignment: Theme.debut;
                             text: root.serveur
-                                ? @tr("La licence d'abonnement est liée à l'entreprise. Transmettez l'identifiant ci-dessous pour la recevoir, puis collez-la ici. Sans licence, le serveur reste en lecture seule et un seul poste peut s'inscrire, pour installer la licence plus tard depuis ce poste.")
+                                ? @tr("Transmettez cet identifiant pour recevoir la licence, puis collez-la ici. Sans licence, le serveur reste en lecture seule et un seul poste peut s'inscrire.")
                                 : @tr("La licence est liée à ce poste. Transmettez l'identifiant ci-dessous pour recevoir la clé, puis collez-la ici. Sans clé, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La clé peut aussi être saisie plus tard, dans les Paramètres.");
+                            font-size: 15px;
                             color: Theme.texte-secondaire;
                             wrap: word-wrap;
                         }
@@ -232,8 +278,15 @@ export component EcranAssistant inherits Rectangle {
                             cle <=> root.cle-licence;
                         }
 
+                        if root.serveur: Text {
+                            horizontal-alignment: Theme.debut;
+                            text: @tr("Vous pourrez aussi l'installer plus tard.");
+                            font-size: 12.5px;
+                            color: Theme.texte-secondaire;
+                        }
+
                         // Réinstallation : reprendre une sauvegarde au lieu de tout ressaisir.
-                        // Sur le serveur, la restauration vient avec le jalon F7.
+                        // Sur le serveur, la restauration passe par la fenêtre du serveur.
                         if !root.serveur: Section {
                             text: @tr("Données d'une installation précédente");
                         }
@@ -257,144 +310,231 @@ export component EcranAssistant inherits Rectangle {
                         }
                     }
 
-                    if root.etape == 1: GridLayout {
-                        spacing: 12px;
-                        Row {
-                            Champ {
-                                libelle: @tr("Nom de l'entreprise (obligatoire)");
-                                valeur <=> root.nom;
-                            }
+                    // Entreprise : six champs visibles (nom, adresse, téléphone et email, RCCM
+                    // et IFU), les sept autres repliés (décision de l'utilisateur du 2026-11-18).
+                    if root.etape == 1: VerticalLayout {
+                        spacing: 16px;
 
-                            Champ {
-                                libelle: @tr("Adresse / boîte postale");
-                                valeur <=> root.adresse;
-                            }
+                        Champ {
+                            libelle: @tr("Nom de l'entreprise (obligatoire)");
+                            valeur <=> root.nom;
                         }
 
-                        Row {
+                        Champ {
+                            libelle: @tr("Adresse / boîte postale");
+                            valeur <=> root.adresse;
+                        }
+
+                        HorizontalLayout {
+                            spacing: 16px;
                             Champ {
+                                width: (parent.width - 16px) / 2;
                                 libelle: @tr("Téléphone");
                                 valeur <=> root.telephone;
                             }
 
                             Champ {
+                                width: (parent.width - 16px) / 2;
                                 libelle: @tr("Email");
                                 valeur <=> root.email;
                             }
                         }
 
-                        Row {
+                        HorizontalLayout {
+                            spacing: 16px;
                             Champ {
-                                libelle: @tr("Site web");
-                                valeur <=> root.site-web;
+                                width: (parent.width - 16px) / 2;
+                                libelle: @tr("RCCM");
+                                valeur <=> root.rccm;
                             }
 
                             Champ {
-                                libelle: @tr("Localisation");
-                                valeur <=> root.localisation;
+                                width: (parent.width - 16px) / 2;
+                                libelle: @tr("IFU");
+                                valeur <=> root.ifu;
                             }
                         }
 
-                        Row {
+                        Rectangle {
+                            height: 42px;
+                            background: Theme.fond-lateral;
+                            border-width: 1px;
+                            border-color: Theme.bordure;
+                            border-radius: 4px;
+
+                            Rangee {
+                                padding-left: 14px;
+                                padding-right: 14px;
+
+                                Text {
+                                    vertical-alignment: center;
+                                    horizontal-alignment: Theme.debut;
+                                    text: @tr("Plus d'informations");
+                                    font-size: 14px;
+                                    color: Theme.texte;
+                                }
+
+                                Rectangle { horizontal-stretch: 1; }
+
+                                Text {
+                                    vertical-alignment: center;
+                                    text: root.plus-ouvert ? @tr("Replier") : @tr("{} champs facultatifs", 7);
+                                    font-size: 13px;
+                                    color: Theme.texte-secondaire;
+                                }
+                            }
+
+                            TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => {
+                                    root.plus-ouvert = !root.plus-ouvert;
+                                }
+                            }
+                        }
+
+                        if !root.plus-ouvert: Text {
+                            horizontal-alignment: Theme.debut;
+                            text: @tr("Tout se modifie plus tard dans les Paramètres.");
+                            font-size: 12.5px;
+                            color: Theme.texte-secondaire;
+                        }
+
+                        if root.plus-ouvert: VerticalLayout {
+                            spacing: 16px;
+
+                            HorizontalLayout {
+                                spacing: 16px;
+                                Champ {
+                                    width: (parent.width - 16px) / 2;
+                                    libelle: @tr("Localisation");
+                                    valeur <=> root.localisation;
+                                }
+
+                                Champ {
+                                    width: (parent.width - 16px) / 2;
+                                    libelle: @tr("Site web");
+                                    valeur <=> root.site-web;
+                                }
+                            }
+
                             Champ {
                                 libelle: @tr("Régime d'imposition");
                                 valeur <=> root.regime;
                             }
 
-                            Champ {
-                                libelle: @tr("RCCM");
-                                valeur <=> root.rccm;
-                            }
-                        }
+                            HorizontalLayout {
+                                spacing: 16px;
+                                Champ {
+                                    width: (parent.width - 16px) / 2;
+                                    libelle: @tr("Compte bancaire 1");
+                                    valeur <=> root.banque1;
+                                }
 
-                        Row {
-                            Champ {
-                                libelle: @tr("IFU");
-                                valeur <=> root.ifu;
-                            }
-
-                            Champ {
-                                libelle: @tr("Compte bancaire 1");
-                                valeur <=> root.banque1;
-                            }
-                        }
-
-                        Row {
-                            Champ {
-                                libelle: @tr("Compte bancaire 2");
-                                valeur <=> root.banque2;
+                                Champ {
+                                    width: (parent.width - 16px) / 2;
+                                    libelle: @tr("Compte bancaire 2");
+                                    valeur <=> root.banque2;
+                                }
                             }
 
-                            Champ {
-                                libelle: @tr("Responsable facturation");
-                                valeur <=> root.responsable-facturation;
-                            }
-                        }
+                            HorizontalLayout {
+                                spacing: 16px;
+                                Champ {
+                                    width: (parent.width - 16px) / 2;
+                                    libelle: @tr("Responsable facturation");
+                                    valeur <=> root.responsable-facturation;
+                                }
 
-                        Row {
-                            Champ {
-                                libelle: @tr("Responsable comptabilité");
-                                valeur <=> root.responsable-comptabilite;
+                                Champ {
+                                    width: (parent.width - 16px) / 2;
+                                    libelle: @tr("Responsable comptabilité");
+                                    valeur <=> root.responsable-comptabilite;
+                                }
                             }
                         }
                     }
 
                     if root.etape == 2: VerticalLayout {
-                        spacing: 12px;
+                        spacing: 16px;
 
                         Text {
                             horizontal-alignment: Theme.debut;
                             text: @tr("Ce compte administre l'installation : utilisateurs, droits, sauvegardes.");
+                            font-size: 15px;
                             color: Theme.texte-secondaire;
                             wrap: word-wrap;
                         }
 
-                        Champ {
-                            libelle: @tr("Nom complet");
-                            valeur <=> root.admin-nom;
+                        HorizontalLayout {
+                            spacing: 16px;
+                            Champ {
+                                width: (parent.width - 16px) / 2;
+                                libelle: @tr("Nom complet");
+                                valeur <=> root.admin-nom;
+                            }
+
+                            Champ {
+                                width: (parent.width - 16px) / 2;
+                                libelle: @tr("Identifiant de connexion");
+                                valeur <=> root.admin-identifiant;
+                            }
                         }
 
-                        Champ {
-                            libelle: @tr("Identifiant de connexion");
-                            valeur <=> root.admin-identifiant;
+                        HorizontalLayout {
+                            spacing: 16px;
+                            Champ {
+                                width: (parent.width - 16px) / 2;
+                                libelle: @tr("Mot de passe");
+                                secret: true;
+                                valeur <=> root.admin-mot-de-passe;
+                            }
+
+                            Champ {
+                                width: (parent.width - 16px) / 2;
+                                libelle: @tr("Confirmation du mot de passe");
+                                secret: true;
+                                valeur <=> root.admin-confirmation;
+                            }
                         }
 
-                        Champ {
-                            libelle: @tr("Mot de passe (8 caractères au moins)");
-                            secret: true;
-                            valeur <=> root.admin-mot-de-passe;
-                        }
-
-                        Champ {
-                            libelle: @tr("Confirmation du mot de passe");
-                            secret: true;
-                            valeur <=> root.admin-confirmation;
+                        Text {
+                            horizontal-alignment: Theme.debut;
+                            text: @tr("8 caractères au moins.");
+                            font-size: 12.5px;
+                            color: Theme.texte-secondaire;
                         }
                     }
 
                     if root.etape == 3: VerticalLayout {
-                        spacing: 12px;
+                        spacing: 16px;
 
                         Text {
                             horizontal-alignment: Theme.debut;
-                            text: @tr("Valeurs séparées par des points-virgules, en pourcentage (ex. 0 ; 18). Modifiables plus tard dans les paramètres.");
+                            text: @tr("En pourcentage, séparés par des points-virgules. Modifiables plus tard.");
+                            font-size: 15px;
                             color: Theme.texte-secondaire;
                             wrap: word-wrap;
                         }
 
-                        Champ {
-                            libelle: @tr("Taux de TVA (%)");
-                            valeur <=> root.taux-tva;
-                        }
+                        HorizontalLayout {
+                            spacing: 16px;
+                            Champ {
+                                width: (parent.width - 32px) / 3;
+                                libelle: @tr("Taux de TVA (%)");
+                                valeur <=> root.taux-tva;
+                            }
 
-                        Champ {
-                            libelle: @tr("Taux de remise (%)");
-                            valeur <=> root.taux-remise;
-                        }
+                            Champ {
+                                width: (parent.width - 32px) / 3;
+                                libelle: @tr("Taux de remise (%)");
+                                valeur <=> root.taux-remise;
+                            }
 
-                        Champ {
-                            libelle: @tr("Taux de retenue (%)");
-                            valeur <=> root.taux-retenue;
+                            Champ {
+                                width: (parent.width - 32px) / 3;
+                                libelle: @tr("Taux de retenue (%)");
+                                valeur <=> root.taux-retenue;
+                            }
                         }
 
                         Champ {
@@ -409,33 +549,45 @@ export component EcranAssistant inherits Rectangle {
                     }
 
                     if root.serveur && root.etape == 4: VerticalLayout {
-                        spacing: 12px;
+                        spacing: 16px;
 
                         Text {
                             horizontal-alignment: Theme.debut;
-                            text: @tr("Le serveur sauvegarde sa base chaque jour à l'heure choisie, et à l'arrêt du service. Les sauvegardes sont chiffrées par ce mot de passe : sans lui, aucune ne peut être restaurée, et l'éditeur ne peut pas le retrouver. Notez-le en lieu sûr. Choisissez de préférence un dossier sur un autre disque que celui du serveur (disque externe ou partage réseau).");
+                            text: @tr("Sauvegarde chiffrée chaque jour et à l'arrêt du service. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr.");
+                            font-size: 15px;
                             color: Theme.texte-secondaire;
                             wrap: word-wrap;
                         }
 
-                        Rangee {
-                            spacing: 8px;
+                        VerticalLayout {
+                            spacing: 6px;
 
-                            Champ {
-                                horizontal-stretch: 1;
-                                libelle: @tr("Dossier des sauvegardes");
-                                valeur <=> root.sauvegarde-dossier;
-                            }
+                            Rangee {
+                                spacing: 10px;
 
-                            VerticalLayout {
-                                alignment: end;
+                                Champ {
+                                    horizontal-stretch: 1;
+                                    libelle: @tr("Dossier des sauvegardes");
+                                    valeur <=> root.sauvegarde-dossier;
+                                }
 
-                                Bouton {
-                                    text: @tr("Choisir un dossier");
-                                    clicked => {
-                                        root.sauvegarde-dossier = root.choisir-dossier-sauvegardes(root.sauvegarde-dossier);
+                                VerticalLayout {
+                                    alignment: end;
+
+                                    Bouton {
+                                        text: @tr("Choisir un dossier");
+                                        clicked => {
+                                            root.sauvegarde-dossier = root.choisir-dossier-sauvegardes(root.sauvegarde-dossier);
+                                        }
                                     }
                                 }
+                            }
+
+                            Text {
+                                horizontal-alignment: Theme.debut;
+                                text: @tr("De préférence sur un autre disque (externe ou partage réseau).");
+                                font-size: 12.5px;
+                                color: Theme.texte-secondaire;
                             }
                         }
 
@@ -444,21 +596,33 @@ export component EcranAssistant inherits Rectangle {
                             valeur <=> root.sauvegarde-heure;
                         }
 
-                        Champ {
-                            libelle: @tr("Mot de passe des sauvegardes (8 caractères au moins)");
-                            secret: true;
-                            valeur <=> root.sauvegarde-mot-de-passe;
+                        HorizontalLayout {
+                            spacing: 16px;
+                            Champ {
+                                width: (parent.width - 16px) / 2;
+                                libelle: @tr("Mot de passe des sauvegardes");
+                                secret: true;
+                                valeur <=> root.sauvegarde-mot-de-passe;
+                            }
+
+                            Champ {
+                                width: (parent.width - 16px) / 2;
+                                libelle: @tr("Confirmation du mot de passe");
+                                secret: true;
+                                valeur <=> root.sauvegarde-confirmation;
+                            }
                         }
 
-                        Champ {
-                            libelle: @tr("Confirmation du mot de passe");
-                            secret: true;
-                            valeur <=> root.sauvegarde-confirmation;
+                        Text {
+                            horizontal-alignment: Theme.debut;
+                            text: @tr("8 caractères au moins.");
+                            font-size: 12.5px;
+                            color: Theme.texte-secondaire;
                         }
                     }
 
                     if root.etape == root.recapitulatif: VerticalLayout {
-                        spacing: 8px;
+                        spacing: 10px;
 
                         Text {
                             horizontal-alignment: Theme.debut;
@@ -511,59 +675,73 @@ export component EcranAssistant inherits Rectangle {
                     if root.erreur != "": MessageErreur {
                         text: root.erreur;
                     }
+                }
+            }
 
-                    Rangee {
-                        spacing: 8px;
-                        alignment: end;
+            // Bande du bas : boutons à place fixe.
+            Rectangle {
+                x: 0;
+                y: parent.height - root.bande;
+                width: parent.width;
+                height: root.bande;
+                background: Theme.fond-lateral;
 
-                        if root.etape > 0: Bouton {
-                            text: @tr("Précédent");
-                            clicked => {
-                                root.erreur = "";
-                                root.etape -= 1;
-                            }
+                Rangee {
+                    x: Theme.rtl ? parent.width - self.width - root.marge : root.marge;
+                    y: (parent.height - 40px) / 2;
+                    width: zone.largeur;
+                    height: 40px;
+                    spacing: 10px;
+
+                    if root.etape > 0: Bouton {
+                        text: @tr("Précédent");
+                        clicked => {
+                            root.erreur = "";
+                            root.etape -= 1;
                         }
+                    }
 
-                        if root.etape < root.etapes.length - 1: Bouton {
-                            text: @tr("Suivant");
-                            primary: true;
-                            clicked => {
-                                root.suivant();
-                            }
+                    Rectangle { }
+
+                    if root.etape < root.etapes.length - 1: Bouton {
+                        text: @tr("Suivant");
+                        primary: true;
+                        clicked => {
+                            root.suivant();
                         }
+                    }
 
-                        if root.etape == root.etapes.length - 1: Bouton {
-                            text: @tr("Terminer l'installation");
-                            primary: true;
-                            clicked => {
-                                root.erreur = root.terminer({
-                                    nom: root.nom,
-                                    adresse: root.adresse,
-                                    telephone: root.telephone,
-                                    email: root.email,
-                                    site-web: root.site-web,
-                                    localisation: root.localisation,
-                                    regime: root.regime,
-                                    rccm: root.rccm,
-                                    ifu: root.ifu,
-                                    banque1: root.banque1,
-                                    banque2: root.banque2,
-                                    responsable-facturation: root.responsable-facturation,
-                                    responsable-comptabilite: root.responsable-comptabilite,
-                                    admin-nom: root.admin-nom,
-                                    admin-identifiant: root.admin-identifiant,
-                                    admin-mot-de-passe: root.admin-mot-de-passe,
-                                    taux-tva: root.taux-tva,
-                                    taux-remise: root.taux-remise,
-                                    taux-retenue: root.taux-retenue,
-                                    modes-paiement: root.modes-paiement,
-                                    orthographe-traditionnelle: root.orthographe-traditionnelle,
-                                    cle-licence: root.cle-licence,
-                                    sauvegarde-dossier: root.sauvegarde-dossier,
-                                    sauvegarde-heure: root.sauvegarde-heure,
-                                    sauvegarde-mot-de-passe: root.serveur ? root.sauvegarde-mot-de-passe : "",
-                                });
-                            }
+                    if root.etape == root.etapes.length - 1: Bouton {
+                        text: @tr("Terminer l'installation");
+                        primary: true;
+                        clicked => {
+                            root.erreur = root.terminer({
+                                nom: root.nom,
+                                adresse: root.adresse,
+                                telephone: root.telephone,
+                                email: root.email,
+                                site-web: root.site-web,
+                                localisation: root.localisation,
+                                regime: root.regime,
+                                rccm: root.rccm,
+                                ifu: root.ifu,
+                                banque1: root.banque1,
+                                banque2: root.banque2,
+                                responsable-facturation: root.responsable-facturation,
+                                responsable-comptabilite: root.responsable-comptabilite,
+                                admin-nom: root.admin-nom,
+                                admin-identifiant: root.admin-identifiant,
+                                admin-mot-de-passe: root.admin-mot-de-passe,
+                                taux-tva: root.taux-tva,
+                                taux-remise: root.taux-remise,
+                                taux-retenue: root.taux-retenue,
+                                modes-paiement: root.modes-paiement,
+                                orthographe-traditionnelle: root.orthographe-traditionnelle,
+                                cle-licence: root.cle-licence,
+                                sauvegarde-dossier: root.sauvegarde-dossier,
+                                sauvegarde-heure: root.sauvegarde-heure,
+                                sauvegarde-mot-de-passe: root.serveur ? root.sauvegarde-mot-de-passe : "",
+                            });
                         }
                     }
                 }

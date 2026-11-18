@@ -74,7 +74,7 @@ export global ServeurApi {
 // Bandeau permanent des sauvegardes du serveur (décision 56) : le réglage se
 // fait dans la fenêtre du serveur, sur sa machine, d'où l'absence de bouton.
 export component BandeauSauvegarde inherits Rectangle {
-    background: #fff8eb;
+    background: Theme.fond-attente;
     border-width: 1px;
     border-color: Theme.ambre;
     border-radius: 4px;
@@ -122,15 +122,18 @@ component Ligne inherits GridLayout {
 // Inscription d'un poste par code : rubrique « Serveur » d'un poste non relié,
 // et écran de premier lancement.
 export component InscriptionPoste inherits VerticalLayout {
+    // Écran de premier lancement (refonte du 2026-11-18) : ni titre ni consigne au-dessus
+    // du code, une aide courte dessous ; l'écran porte déjà le titre.
+    in property <bool> compact: false;
     property <string> code;
     property <string> adresse;
     spacing: 12px;
 
-    Section {
+    if !root.compact: Section {
         text: @tr("Inscription de ce poste");
     }
 
-    Text {
+    if !root.compact: Text {
         horizontal-alignment: Theme.debut;
         text: @tr("Collez le code complet, ou tapez le code court (XXXX-XXXX-XXXX) et indiquez l'adresse du serveur.");
         color: Theme.texte-secondaire;
@@ -154,6 +157,14 @@ export component InscriptionPoste inherits VerticalLayout {
             wrap: char-wrap;
             height: 72px;
             enabled: ServeurApi.empreinte-a-confirmer == "";
+        }
+
+        if root.compact: Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Code complet, ou code court XXXX-XXXX-XXXX avec l'adresse du serveur.");
+            font-size: 12px;
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
         }
     }
 
