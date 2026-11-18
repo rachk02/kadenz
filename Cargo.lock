@@ -3284,6 +3284,8 @@ dependencies = [
  "kadenz-stockage",
  "maud",
  "rusqlite",
+ "serde_json",
+ "sha2",
  "tokio",
 ]
 

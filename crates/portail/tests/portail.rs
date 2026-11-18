@@ -1,6 +1,7 @@
 //! Essais du portail (jalon F9a) : droits des revendeurs, paiements,
 //! émission acceptée par un serveur Kadenz, journal en ajout seul, routes
-//! HTTP (sessions, jeton anti-falsification, en-têtes).
+//! HTTP (sessions, jeton anti-falsification, en-têtes), codes d'activation
+//! (décision 74).
 
 use std::io::{Read, Write};
 use std::net::{SocketAddr, TcpStream};
@@ -13,7 +14,10 @@ use ed25519_dalek::SigningKey;
 use kadenz_domaine::module::Module;
 use kadenz_domaine::role::Role as RoleKadenz;
 use kadenz_portail::web::{self, ConfigWeb};
-use kadenz_portail::{Compte, ErreurPortail, NouveauPaiement, Portail};
+use kadenz_portail::{
+    Activation, Compte, DemandeActivation, ErreurPortail, EtatCode, MODELES_ACTIVATION, NouveauPaiement,
+    Portail,
+};
 use kadenz_stockage::comptes::NouvelUtilisateur;
 use kadenz_stockage::entreprise::Entreprise as FicheKadenz;
 use kadenz_stockage::installation::{self, InstallationInitiale};
@@ -554,4 +558,201 @@ fn programme_refuse_une_cle_inconnue() {
     assert!(!sortie.status.success());
     assert!(String::from_utf8_lossy(&sortie.stderr).contains("pas une clé du portail reconnue"));
     let _ = std::fs::remove_dir_all(d);
+}
+
+// ----- Codes d'activation (décision 74) -----
+
+fn demande(code: &str, entreprise: &str) -> DemandeActivation {
+    DemandeActivation {
+        code: code.into(),
+        entreprise: entreprise.into(),
+        client: "Boulangerie Wendé".into(),
+        version: "1.0.1".into(),
+    }
+}
+
+fn refus(r: Result<Activation, ErreurPortail>) -> String {
+    match r {
+        Err(ErreurPortail::Validation(m)) => m,
+        autre => panic!("refus attendu : {autre:?}"),
+    }
+}
+
+#[test]
+fn code_tire_puis_active() {
+    let (p, d, editeur, a, _) = portail("codes", "2026-11-15");
+    p.creer_entreprise(&editeur, ENTREPRISE_A, "Boulangerie Wendé", Some(a.id))
+        .unwrap();
+    let paiement = p
+        .enregistrer_paiement(&a, ENTREPRISE_A, &saisie("3", "annuelle"))
+        .unwrap();
+    let modules = [Module::TOUS[0]];
+    let cree = p.creer_code(&a, paiement.id, &modules).unwrap();
+    assert_eq!(cree.code.len(), 29);
+    assert!(kadenz_licence::code_court::verifier(&cree.code).is_ok());
+    assert_eq!(cree.fiche.etat, EtatCode::Libre);
+    assert_eq!(cree.fiche.entreprise.as_deref(), Some(ENTREPRISE_A));
+    assert_eq!(cree.fiche.postes, 3);
+    assert_eq!(cree.code[24..], cree.fiche.fin);
+
+    // Un paiement ne sert qu'une fois : ni second code, ni licence longue.
+    assert!(p.paiement(&a, paiement.id).unwrap().a_servi());
+    assert!(matches!(
+        p.creer_code(&a, paiement.id, &modules),
+        Err(ErreurPortail::Validation(_))
+    ));
+    assert!(matches!(
+        p.emettre(&a, paiement.id, &modules, "2027-11-14"),
+        Err(ErreurPortail::Validation(_))
+    ));
+    assert_eq!(p.entreprises(&a).unwrap()[0].paiements_libres, 0);
+
+    // Refus : code inconnu, code mal saisi, autre entreprise.
+    let inconnu = kadenz_licence::code_court::tirer().unwrap();
+    assert_eq!(
+        refus(p.activer(&demande(&inconnu, ENTREPRISE_A), "10.0.0.1")),
+        MODELES_ACTIVATION[0]
+    );
+    assert_eq!(
+        refus(p.activer(&demande("ABCDE", ENTREPRISE_A), "10.0.0.1")),
+        MODELES_ACTIVATION[0]
+    );
+    assert_eq!(
+        refus(p.activer(&demande(&cree.code, ENTREPRISE_B), "10.0.0.1")),
+        MODELES_ACTIVATION[1]
+    );
+
+    // Activation : code collé en minuscules sans tirets ; échéance d'une
+    // première licence, un an moins un jour.
+    let colle = cree.code.to_lowercase().replace('-', "");
+    let activation = p
+        .activer(&demande(&colle, ENTREPRISE_A), "10.0.0.2")
+        .unwrap();
+    assert_eq!(activation.postes, 3);
+    assert_eq!(activation.debut, "2026-11-15");
+    assert_eq!(activation.echeance, "2027-11-14");
+    let lue = kadenz_licence::entreprise::verifier(
+        &activation.licence,
+        ENTREPRISE_A,
+        &[p.cle_publique()],
+    )
+    .unwrap();
+    assert_eq!(lue.postes, 3);
+    assert_eq!(lue.modules, modules.to_vec());
+
+    // Le code est activé, lié à la licence émise au nom du revendeur.
+    let fiche = p.fiche(&a, ENTREPRISE_A).unwrap();
+    assert_eq!(fiche.codes.len(), 1);
+    assert_eq!(fiche.codes[0].etat, EtatCode::Active);
+    assert_eq!(fiche.licences.len(), 1);
+    assert_eq!(fiche.codes[0].licence, Some(fiche.licences[0].id));
+    assert_eq!(fiche.licences[0].emetteur, "Revendeur A");
+    assert_eq!(fiche.licences[0].par, "Revendeur A");
+
+    // Réinstallation par la même entreprise : la même licence, rien de neuf.
+    let encore = p
+        .activer(&demande(&cree.code, ENTREPRISE_A), "10.0.0.3")
+        .unwrap();
+    assert_eq!(encore, activation);
+    assert_eq!(p.fiche(&a, ENTREPRISE_A).unwrap().licences.len(), 1);
+    assert_eq!(
+        refus(p.activer(&demande(&cree.code, ENTREPRISE_B), "10.0.0.1")),
+        MODELES_ACTIVATION[1]
+    );
+
+    // Renouvellement : le code suivant prolonge l'échéance qui court.
+    let second = p
+        .enregistrer_paiement(&a, ENTREPRISE_A, &saisie("5", "mensuelle"))
+        .unwrap();
+    let code2 = p.creer_code(&editeur, second.id, &Module::TOUS).unwrap();
+    let renouvellement = p
+        .activer(&demande(&code2.code, ENTREPRISE_A), "10.0.0.2")
+        .unwrap();
+    assert_eq!(renouvellement.echeance, "2027-12-14");
+    assert_eq!(renouvellement.postes, 5);
+
+    // Journal : tirages, activation, réinstallation, refus.
+    let actions: Vec<String> = p
+        .journal(&editeur)
+        .unwrap()
+        .into_iter()
+        .map(|a| a.action)
+        .collect();
+    for attendu in ["code_cree", "code_active", "code_reactive", "activation_refusee"] {
+        assert!(actions.iter().any(|a| a == attendu), "{attendu} absent du journal");
+    }
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+#[test]
+fn activation_freinee() {
+    let (p, d, _, _, _) = portail("codes-frein", "2026-11-15");
+    let faux = kadenz_licence::code_court::tirer().unwrap();
+    for _ in 0..5 {
+        assert!(matches!(
+            p.activer(&demande(&faux, ENTREPRISE_A), "10.0.0.9"),
+            Err(ErreurPortail::Validation(_))
+        ));
+    }
+    assert!(matches!(
+        p.activer(&demande(&faux, ENTREPRISE_A), "10.0.0.9"),
+        Err(ErreurPortail::Freine(_))
+    ));
+    // Même entreprise depuis une autre adresse : freinée aussi.
+    assert!(matches!(
+        p.activer(&demande(&faux, ENTREPRISE_A), "10.0.0.10"),
+        Err(ErreurPortail::Freine(_))
+    ));
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+#[test]
+fn activation_par_la_route_json() {
+    let (p, d, editeur, _, _) = portail("codes-web", "2026-11-15");
+    p.creer_entreprise(&editeur, ENTREPRISE_A, "Boulangerie Wendé", None)
+        .unwrap();
+    let paiement = p
+        .enregistrer_paiement(&editeur, ENTREPRISE_A, &saisie("2", "annuelle"))
+        .unwrap();
+    let cree = p.creer_code(&editeur, paiement.id, &Module::TOUS).unwrap();
+    let lance = web::lancer(
+        p,
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        ConfigWeb::default(),
+    )
+    .unwrap();
+    let a = lance.adresse();
+
+    let r = requete(a, "POST", "/api/activation", None, "pas du json");
+    assert_eq!(r.statut, 400);
+
+    let corps = serde_json::json!({
+        "code": cree.code, "entreprise": ENTREPRISE_B, "client": "X", "version": "1.0.1"
+    })
+    .to_string();
+    let r = requete(a, "POST", "/api/activation", None, &corps);
+    assert_eq!(r.statut, 422);
+    let v: serde_json::Value = serde_json::from_str(&r.corps).unwrap();
+    assert_eq!(v["erreur"], MODELES_ACTIVATION[1]);
+
+    let corps = serde_json::json!({
+        "code": cree.code, "entreprise": ENTREPRISE_A,
+        "client": "Boulangerie Wendé", "version": "1.0.1"
+    })
+    .to_string();
+    let r = requete(a, "POST", "/api/activation", None, &corps);
+    assert_eq!(r.statut, 200, "{}", r.corps);
+    assert!(
+        r.entete("content-type")
+            .unwrap()
+            .starts_with("application/json")
+    );
+    assert_eq!(r.entete("cache-control"), Some("no-store"));
+    let v: serde_json::Value = serde_json::from_str(&r.corps).unwrap();
+    assert!(v["licence"].as_str().unwrap().starts_with("KADENZ-E-"));
+    assert_eq!(v["postes"], 2);
+    assert_eq!(v["formule"], "annuelle");
+    assert_eq!(v["echeance"], "2027-11-14");
+    lance.arreter();
+    let _ = std::fs::remove_dir_all(&d);
 }

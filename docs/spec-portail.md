@@ -44,6 +44,8 @@ Base SQLite dans le dossier du portail (proposé : protégée par les droits du 
 - Début : date du jour (UTC). Date d'émission : date du jour. Émetteur : l'éditeur, ou le revendeur (identifiant et nom).
 - La licence est signée par la clé du portail et vérifiée aussitôt avec la clé publique avant d'être enregistrée. Le texte s'affiche pour être copié dans la rubrique « Abonnement » d'un poste Admin. Un serveur accepte une seconde licence émise le même jour : la licence installée est toujours remplacée, seule la date retenue contre le retour en arrière dépend de la date d'émission (`abonnement::enregistrer_avec`).
 
+- Depuis la décision 74 (codes de licence courts, `docs/spec-codes-licence.md`), la page d'émission tire un code d'activation à la place du texte : postes et formule du paiement, modules choisis, code lié d'avance à l'entreprise du paiement, affiché une seule fois. La licence est émise quand le programme du client envoie le code (`POST /api/activation`), avec l'échéance calculée ce jour-là par la règle ci-dessus.
+
 ## 6. Sécurité
 
 - Mots de passe : argon2id, 10 caractères au moins (proposé).

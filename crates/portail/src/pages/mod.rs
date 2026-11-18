@@ -10,6 +10,7 @@ use crate::{Compte, Message, Role};
 use kadenz_domaine::module::Module;
 use kadenz_licence::entreprise::Formule;
 
+mod code;
 mod comptes;
 mod connexion;
 mod emission;
@@ -23,6 +24,7 @@ mod nouveau_paiement;
 mod nouvelle_entreprise;
 mod style;
 
+pub use code::{code, code_cree};
 pub use comptes::comptes;
 pub use connexion::connexion;
 pub use emission::emission;

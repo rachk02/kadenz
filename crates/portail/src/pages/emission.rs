@@ -1,7 +1,7 @@
-//! Émission d'une licence à partir d'un paiement non utilisé (GET et POST
-//! /paiements/{id}/licence), spec. portail section 5 : formule et postes
-//! repris du paiement, modules et échéance proposés par le crate et
-//! modifiables.
+//! Code d'activation d'un paiement non utilisé (GET et POST
+//! /paiements/{id}/licence ; décision 74) : formule et postes repris du
+//! paiement, modules proposés et modifiables ; l'échéance est calculée à
+//! l'activation.
 
 use maud::{Markup, html};
 
@@ -21,7 +21,7 @@ pub fn emission(
 ) -> Markup {
     let chemin = chemin_entreprise(&e.identifiant);
     let contenu = html! {
-        (titre("Émettre la licence", html! {
+        (titre("Tirer le code d'activation", html! {
             a.bouton href=(chemin) { "Retour à l'entreprise" }
         }))
         div.carte {
@@ -43,18 +43,14 @@ pub fn emission(
                 }
             }
         }
-        h2 { "Licence" }
+        h2 { "Code d'activation" }
         div.carte {
             div.carte-interieur {
                 form.formulaire method="post" action={ "/paiements/" (p.id) "/licence" } {
                     (jeton(c))
                     (erreur_formulaire(erreur))
-                    div.champ {
-                        label for="echeance" { "Échéance" }
-                        input #echeance type="date" name="echeance" value=(prop.echeance) required;
-                        p.aide {
-                            "Dernier jour couvert, sans délai de grâce : le lendemain, Kadenz passe en lecture seule. Proposée d'après la dernière licence et la formule, modifiable."
-                        }
+                    p.aide {
+                        "Échéance si le code est activé aujourd'hui : " (date(&prop.echeance)) ". Elle est calculée le jour de l'activation : l'échéance de la dernière licence si elle court encore, sinon la veille, plus un mois ou un an selon la formule. Dernier jour couvert, sans délai de grâce."
                     }
                     fieldset {
                         legend.legende { "Modules" }
@@ -70,15 +66,15 @@ pub fn emission(
                         p.aide { "Repris de la dernière licence de l'entreprise ; tous les modules pour une première licence." }
                     }
                     p.aide {
-                        "La licence est signée par la clé du portail et vérifiée avant d'être enregistrée. Son texte s'affiche ensuite, à coller dans la rubrique « Abonnement » d'un poste Admin."
+                        "Le code s'affiche une seule fois, à remettre au client. Quand il le saisit dans Kadenz, le portail émet la licence, signée par sa clé, et la renvoie au programme."
                     }
                     div.actions {
-                        button.bouton.bouton-principal type="submit" { "Émettre la licence" }
+                        button.bouton.bouton-principal type="submit" { "Tirer le code" }
                         a.bouton href=(chemin) { "Annuler" }
                     }
                 }
             }
         }
     };
-    page(c, "Émettre la licence", Rubrique::Entreprises, contenu)
+    page(c, "Tirer le code d'activation", Rubrique::Entreprises, contenu)
 }

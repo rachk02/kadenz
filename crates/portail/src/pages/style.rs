@@ -138,6 +138,7 @@ legend { padding: 0 6px; }
 .en-ligne { display: inline; margin: 0; }
 
 /* Licence */
+.code-activation { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 20px; letter-spacing: 0.06em; }
 .licence-texte {
   font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 13px;
   width: 100%; min-height: 140px; resize: vertical; word-break: break-all;

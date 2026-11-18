@@ -46,7 +46,7 @@ pub fn fiche_entreprise(c: &Cadre, f: &FicheEntreprise) -> Markup {
         h2 { "Paiements" }
         div.carte {
             @if f.paiements.is_empty() {
-                p.vide { "Aucun paiement enregistré. Enregistrez le paiement reçu, puis émettez la licence." }
+                p.vide { "Aucun paiement enregistré. Enregistrez le paiement reçu, puis tirez le code d'activation." }
             } @else {
                 div.tableau-cadre {
                     table {
@@ -73,10 +73,11 @@ pub fn fiche_entreprise(c: &Cadre, f: &FicheEntreprise) -> Markup {
                                     td.court { (libelle_formule(p.formule)) }
                                     td { (p.saisi_par) }
                                     td.court {
-                                        @match p.licence {
-                                            Some(id) => a href={ "/licences/" (id) } { "Voir la licence" },
-                                            None => a.bouton.bouton-principal.bouton-petit
-                                                href={ "/paiements/" (p.id) "/licence" } { "Émettre la licence" },
+                                        @match (p.licence, p.code) {
+                                            (Some(id), _) => a href={ "/licences/" (id) } { "Voir la licence" },
+                                            (None, Some(id)) => a href={ "/codes/" (id) } { "Voir le code" },
+                                            (None, None) => a.bouton.bouton-principal.bouton-petit
+                                                href={ "/paiements/" (p.id) "/licence" } { "Tirer le code" },
                                         }
                                     }
                                 }

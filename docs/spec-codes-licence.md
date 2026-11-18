@@ -4,6 +4,7 @@
 |---|---|---|
 | 0.1 | 2026-11-18 | Premier jet par kadenz-c1, d'après les décisions de l'utilisateur du 2026-11-18 (décision 74 du cahier de la phase 2). À valider avec kadenz-6d avant tout code. |
 | 0.2 | 2026-11-18 | Relecture de kadenz-6d : séparateurs retirés sans rien dire et autres caractères signalés, résumé dans la réponse du portail, champ sur un `TextInput` avec curseur en octets, lot L5 réparti, question ouverte sur la lecture des postes dans le code. Lot L1 livré. |
+| 0.3 | 2026-11-18 | Lot L2a livré : schéma du portail en version 2 avec chemin de migration, code tiré depuis un paiement, route `/api/activation`. Règle des dates alignée sur l'émission existante. Codes à vendre reportés en L2b. Essai de bout en bout revu : l'exécutable du portail n'accepte que la clé embarquée. |
 
 ## 1. Décisions de l'utilisateur (2026-11-18)
 
@@ -66,7 +67,7 @@ Règles :
 - code libre : il se lie à l'entreprise (créée au portail si elle n'y est pas encore, avec la raison sociale reçue), la licence est émise et signée, le code passe à « activé » ;
 - code déjà activé par la même entreprise : la même licence est renvoyée, sans nouvelle émission (réinstallation) ;
 - code activé ou lié d'avance à une autre entreprise : refus ;
-- début : le lendemain de l'échéance de la dernière licence de l'entreprise si elle court encore, sinon le jour même ; échéance : un mois ou un an moins un jour selon la formule (règle déjà proposée pour l'émission, section 5 de la spécification du portail) ;
+- début : le jour de l'activation ; échéance : celle de la dernière licence de l'entreprise si elle court encore, sinon la veille, plus un mois ou un an selon la formule (même règle que l'émission depuis un paiement, section 5 de la spécification du portail ; un serveur remplace la licence installée dès qu'il en reçoit une nouvelle) ;
 - modules : ceux du code ;
 - frein : 5 échecs par adresse ou par entreprise, puis attente doublée jusqu'à 15 minutes, avec `frein.rs` ; chaque échec noté au journal.
 
@@ -97,7 +98,7 @@ Réponse : `{ "licence": "KADENZ-E-...", "postes", "formule", "debut", "echeance
 
 - `code_court` : aller-retour normalisation et écriture ; collages variés ; tout code tiré passe le contrôle ; une substitution est toujours détectée, une inversion de deux voisins aussi, sauf A et 9.
 - Portail, dans le processus : code inconnu, code libre activé, réactivation par la même entreprise (même licence), autre entreprise refusée, code annulé, frein après 5 échecs, début calé sur l'échéance précédente.
-- Bout en bout, en local seulement : `kadenz-portail` sur 127.0.0.1 avec une base et des clés d'essai (`kadenz-editeur generer` dans un dossier temporaire), KadenzAdmin pointé dessus par `KADENZ_PORTAIL`. Jamais la clé de production, jamais le VPS : la mise en ligne reste une décision de l'utilisateur.
+- Bout en bout, en local seulement. L'exécutable `kadenz-portail` refuse toute clé autre que la clé embarquée, et les programmes du client ne reconnaissent que les licences signées par elle. L'essai passe donc par le portail lancé dans le processus d'essai (`web::lancer` sur 127.0.0.1, clé d'essai), avec le client d'activation pointé dessus (`activation_par_la_route_json` pour la route). Jamais la clé de production, jamais le VPS : la mise en ligne reste une décision de l'utilisateur.
 - Chaque texte nouveau dans les six fichiers de traduction.
 
 ## 9. Ce qui bloque la publication
@@ -109,7 +110,8 @@ Avec l'activation en ligne seulement, une version qui contient ces codes ne s'ac
 | Lot | Contenu | Session |
 |---|---|---|
 | L1 | Module `code_court` (format, contrôle, normalisation, mise en forme du champ) et ses essais | kadenz-c1, livré |
-| L2 | Portail : schéma, émission des codes, codes à vendre, route d'activation, essais | kadenz-c1 |
+| L2a | Portail : schéma en version 2 et migration, code tiré depuis un paiement, route d'activation, pages, essais | kadenz-c1, livré |
+| L2b | Portail : codes à vendre (lien au paiement facultatif, reconstruction de `licence_emise`), annulation d'un code | kadenz-c1 |
 | L3 | Client d'activation (`kadenz-licence` ou nouveau module), adresse du portail | kadenz-c1 |
 | L4 | `ChampCode` dans `composants.slint` | kadenz-6d |
 | L5 | Étape Licence de l'assistant de KadenzAdmin, avec ses traductions | kadenz-c1 |

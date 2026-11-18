@@ -6,8 +6,9 @@ use std::path::Path;
 
 use rusqlite::Connection;
 
-/// Version du schéma, dans `PRAGMA user_version`.
-const VERSION: i64 = 1;
+/// Version du schéma, dans `PRAGMA user_version` : celle du schéma de départ,
+/// puis une par pas de `MIGRATIONS`.
+const VERSION_DEPART: i64 = 1;
 
 const SCHEMA: &str = "
 CREATE TABLE compte (
@@ -69,6 +70,38 @@ CREATE INDEX paiement_entreprise ON paiement (entreprise);
 CREATE INDEX licence_entreprise ON licence_emise (entreprise);
 ";
 
+/// Pas de migration, dans l'ordre : le pas `i` mène de la version
+/// `VERSION_DEPART + i` à la suivante. Une base neuve reçoit le schéma de
+/// départ puis tous les pas, comme une base existante.
+const MIGRATIONS: &[&str] = &[
+    // 1 vers 2 : codes de licence courts (décision 74, `docs/spec-codes-licence.md`).
+    // Le code en clair n'est jamais gardé : son empreinte SHA-256, et sa fin
+    // pour le reconnaître. Le lien entre code et licence est porté par
+    // `licence_emise.code` seulement.
+    "
+CREATE TABLE code_activation (
+    id INTEGER PRIMARY KEY,
+    empreinte TEXT NOT NULL UNIQUE,
+    fin TEXT NOT NULL,
+    postes INTEGER NOT NULL CHECK (postes BETWEEN 1 AND 1000),
+    formule TEXT NOT NULL CHECK (formule IN ('mensuelle', 'annuelle')),
+    modules TEXT NOT NULL,
+    paiement INTEGER REFERENCES paiement (id),
+    entreprise TEXT REFERENCES entreprise (identifiant),
+    etat TEXT NOT NULL DEFAULT 'libre' CHECK (etat IN ('libre', 'active', 'annule')),
+    cree_par INTEGER NOT NULL REFERENCES compte (id),
+    cree_le TEXT NOT NULL,
+    active_le TEXT
+);
+CREATE INDEX code_entreprise ON code_activation (entreprise);
+CREATE INDEX code_paiement ON code_activation (paiement);
+ALTER TABLE licence_emise ADD COLUMN code INTEGER REFERENCES code_activation (id);
+",
+];
+
+/// Dernière version du schéma.
+pub(crate) const VERSION: i64 = VERSION_DEPART + MIGRATIONS.len() as i64;
+
 /// Ouvre (et crée au besoin) la base du portail dans le dossier.
 pub(crate) fn ouvrir(dossier: &Path) -> rusqlite::Result<Connection> {
     std::fs::create_dir_all(dossier).map_err(|e| {
@@ -82,13 +115,35 @@ pub(crate) fn ouvrir(dossier: &Path) -> rusqlite::Result<Connection> {
     let conn = Connection::open(&chemin)?;
     restreindre(&chemin, 0o600);
     conn.execute_batch("PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;")?;
-    let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
+    migrer(&conn)?;
+    Ok(conn)
+}
+
+/// Amène la base à la dernière version, un pas par transaction. Une base
+/// plus récente que ce programme est refusée.
+pub(crate) fn migrer(conn: &Connection) -> rusqlite::Result<()> {
+    let mut version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
     if version == 0 {
         conn.execute_batch(&format!(
-            "BEGIN; {SCHEMA} PRAGMA user_version = {VERSION}; COMMIT;"
+            "BEGIN; {SCHEMA} PRAGMA user_version = {VERSION_DEPART}; COMMIT;"
         ))?;
+        version = VERSION_DEPART;
     }
-    Ok(conn)
+    if version > VERSION {
+        return Err(rusqlite::Error::SqliteFailure(
+            rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_CANTOPEN),
+            Some(format!(
+                "base du portail en version {version}, plus récente que ce programme ({VERSION})"
+            )),
+        ));
+    }
+    while version < VERSION {
+        let pas = MIGRATIONS[(version - VERSION_DEPART) as usize];
+        let suivante = version + 1;
+        conn.execute_batch(&format!("BEGIN; {pas} PRAGMA user_version = {suivante}; COMMIT;"))?;
+        version = suivante;
+    }
+    Ok(())
 }
 
 /// Dossier et fichiers du portail réservés au seul compte du service (Linux).
@@ -100,3 +155,46 @@ pub(crate) fn restreindre(chemin: &Path, mode: u32) {
 
 #[cfg(not(unix))]
 pub(crate) fn restreindre(_chemin: &Path, _mode: u32) {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Une base en version 1 qui contient déjà une licence émise passe en
+    /// dernière version sans rien perdre.
+    #[test]
+    fn base_en_version_1_migree() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch("PRAGMA foreign_keys = ON;").unwrap();
+        conn.execute_batch(&format!("BEGIN; {SCHEMA} PRAGMA user_version = 1; COMMIT;")).unwrap();
+        conn.execute_batch(
+            "INSERT INTO compte (id, identifiant, nom, role, mot_de_passe, actif, cree_le)
+                 VALUES (1, 'ed', 'Éditeur', 'editeur', 'x', 1, '2026-11-01');
+             INSERT INTO entreprise (identifiant, client, cree_le)
+                 VALUES ('00000000-0000-4000-8000-000000000001', 'Client', '2026-11-01');
+             INSERT INTO paiement (id, entreprise, recu_le, mode, montant, devise, postes, formule, saisi_par, saisi_le)
+                 VALUES (1, '00000000-0000-4000-8000-000000000001', '2026-11-01', 'virement', 100, 'XOF', 3, 'annuelle', 1, '2026-11-01');
+             INSERT INTO licence_emise (entreprise, paiement, texte, debut, echeance, postes, modules, formule, emetteur, emise_le, par)
+                 VALUES ('00000000-0000-4000-8000-000000000001', 1, 'KADENZ-E-x', '2026-11-01', '2027-11-01', 3, '', 'annuelle', 'Éditeur', '2026-11-01', 1);",
+        )
+        .unwrap();
+        migrer(&conn).unwrap();
+        let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0)).unwrap();
+        assert_eq!(version, VERSION);
+        let (texte, code): (String, Option<i64>) = conn
+            .query_row("SELECT texte, code FROM licence_emise", [], |r| Ok((r.get(0)?, r.get(1)?)))
+            .unwrap();
+        assert_eq!((texte.as_str(), code), ("KADENZ-E-x", None));
+        // Une seconde ouverture ne refait rien.
+        migrer(&conn).unwrap();
+    }
+
+    #[test]
+    fn base_neuve_en_derniere_version() {
+        let conn = Connection::open_in_memory().unwrap();
+        migrer(&conn).unwrap();
+        let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0)).unwrap();
+        assert_eq!(version, VERSION);
+        conn.execute_batch("SELECT empreinte FROM code_activation; SELECT code FROM licence_emise;").unwrap();
+    }
+}

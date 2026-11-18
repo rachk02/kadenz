@@ -1,6 +1,8 @@
 //! Routes du portail (spécification du portail, sections 2 et 6) : pages
 //! servies en HTTP par axum, sessions par cookie, jeton anti-falsification sur
-//! chaque formulaire, en-têtes de sécurité, aucun script.
+//! chaque formulaire, en-têtes de sécurité, aucun script. Une seule route
+//! hors de la console : `POST /api/activation` (décision 74), en JSON, sans
+//! session ni jeton, appelée par le programme du client.
 //!
 //! Chaque appel au portail (base SQLite, synchrone) passe par
 //! `spawn_blocking`, pour ne jamais bloquer un fil de tokio.
@@ -10,6 +12,7 @@ use std::net::{SocketAddr, TcpListener as StdListener};
 use std::thread::JoinHandle;
 
 use axum::Router;
+use axum::body::Bytes;
 use axum::extract::{ConnectInfo, Form, Path, State};
 use axum::http::header::{
     CACHE_CONTROL, CONTENT_TYPE, COOKIE, LOCATION, REFERRER_POLICY, SET_COOKIE,
@@ -23,7 +26,9 @@ use kadenz_domaine::module::Module;
 use maud::Markup;
 
 use crate::pages::{self, Cadre};
-use crate::{Compte, ErreurPortail, Message, NouveauPaiement, Portail};
+use crate::{
+    Compte, DemandeActivation, ErreurPortail, MODELES_ACTIVATION, Message, NouveauPaiement, Portail,
+};
 
 /// Nom du cookie de session.
 pub const COOKIE_SESSION: &str = "kadenz_portail";
@@ -67,6 +72,8 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
         )
         .route("/paiements/{id}/licence", get(page_emission).post(emission))
         .route("/licences/{id}", get(licence))
+        .route("/codes/{id}", get(code))
+        .route("/api/activation", post(activation))
         .route("/comptes", get(page_comptes).post(nouveau_compte))
         .route("/comptes/{id}/actif", post(regler_actif))
         .route("/mot-de-passe", get(page_mot_de_passe).post(mot_de_passe))
@@ -528,9 +535,10 @@ async fn emission_formulaire(
     })
     .await;
     match lu {
-        Ok((_, p, _)) if p.licence.is_some() && erreur.is_none() => {
-            rediriger(&format!("/licences/{}", p.licence.unwrap_or_default()))
-        }
+        Ok((_, p, _)) if p.a_servi() && erreur.is_none() => match (p.licence, p.code) {
+            (Some(l), _) => rediriger(&format!("/licences/{l}")),
+            (None, k) => rediriger(&format!("/codes/{}", k.unwrap_or_default())),
+        },
         Ok((e, p, prop)) => html(
             statut,
             pages::emission(&c.cadre(None), &e, &p, &prop, erreur.as_deref()),
@@ -553,11 +561,16 @@ async fn emission(
         .into_iter()
         .filter(|m| champ(&champs, &format!("module_{}", m.code())) == "1")
         .collect();
-    let echeance = champ(&champs, "echeance").to_string();
     let portail = etat.portail.clone();
     let compte = c.compte.clone();
-    match bloquant(move || portail.emettre(&compte, id, &modules, &echeance)).await {
-        Ok(l) => rediriger(&format!("/licences/{}?m=licence", l.id)),
+    // Code en clair rendu une seule fois : la page s'affiche ici, sans
+    // redirection, et n'est pas gardée par le navigateur (Cache-Control).
+    match bloquant(move || portail.creer_code(&compte, id, &modules)).await {
+        Ok(cree) => {
+            let mut r = html(StatusCode::OK, pages::code_cree(&c.cadre(None), &cree));
+            r.headers_mut().insert(CACHE_CONTROL, HeaderValue::from_static("no-store"));
+            r
+        }
         Err(ErreurPortail::Validation(m)) => {
             emission_formulaire(&etat, &c, id, Some(m), StatusCode::UNPROCESSABLE_ENTITY).await
         }
@@ -583,6 +596,77 @@ async fn licence(
             html(StatusCode::OK, pages::licence(&c.cadre(m.as_ref()), &l))
         }
         Err(e) => page_erreur(Some(&c), &e),
+    }
+}
+
+async fn code(State(etat): State<Etat>, entetes: HeaderMap, Path(id): Path<i64>) -> Response {
+    let c = match exiger(&etat, &entetes, None).await {
+        Ok(c) => c,
+        Err(r) => return *r,
+    };
+    let portail = etat.portail.clone();
+    let compte = c.compte.clone();
+    match bloquant(move || portail.code(&compte, id)).await {
+        Ok(k) => html(StatusCode::OK, pages::code(&c.cadre(None), &k)),
+        Err(e) => page_erreur(Some(&c), &e),
+    }
+}
+
+// ----- Activation (programme du client) -----
+
+fn json(statut: StatusCode, valeur: serde_json::Value) -> Response {
+    let mut r = (statut, valeur.to_string()).into_response();
+    let entetes = r.headers_mut();
+    entetes.insert(CONTENT_TYPE, HeaderValue::from_static("application/json; charset=utf-8"));
+    entetes.insert(CACHE_CONTROL, HeaderValue::from_static("no-store"));
+    r
+}
+
+/// Refus en JSON : un modèle fixe, traduit par le programme du client, et ses
+/// valeurs.
+fn refus_json(statut: StatusCode, modele: &str, valeurs: &[String]) -> Response {
+    json(statut, serde_json::json!({ "erreur": modele, "valeurs": valeurs }))
+}
+
+async fn activation(
+    State(etat): State<Etat>,
+    ConnectInfo(pair): ConnectInfo<SocketAddr>,
+    entetes: HeaderMap,
+    corps: Bytes,
+) -> Response {
+    let Ok(valeur) = serde_json::from_slice::<serde_json::Value>(&corps) else {
+        return refus_json(StatusCode::BAD_REQUEST, "demande illisible", &[]);
+    };
+    let texte = |nom: &str| {
+        valeur.get(nom).and_then(serde_json::Value::as_str).unwrap_or("").to_string()
+    };
+    let demande = DemandeActivation {
+        code: texte("code"),
+        entreprise: texte("entreprise"),
+        client: texte("client"),
+        version: texte("version"),
+    };
+    let adresse = adresse_client(&etat, &entetes, pair);
+    let portail = etat.portail.clone();
+    match bloquant(move || portail.activer(&demande, &adresse)).await {
+        Ok(a) => json(
+            StatusCode::OK,
+            serde_json::json!({
+                "licence": a.licence,
+                "postes": a.postes,
+                "formule": a.formule.code(),
+                "debut": a.debut,
+                "echeance": a.echeance,
+            }),
+        ),
+        Err(ErreurPortail::Validation(m)) => refus_json(StatusCode::UNPROCESSABLE_ENTITY, &m, &[]),
+        Err(ErreurPortail::Freine(s)) => {
+            refus_json(StatusCode::TOO_MANY_REQUESTS, MODELES_ACTIVATION[2], &[s.to_string()])
+        }
+        Err(e) => {
+            eprintln!("activation : {e}");
+            refus_json(StatusCode::INTERNAL_SERVER_ERROR, MODELES_ACTIVATION[3], &[])
+        }
     }
 }
 

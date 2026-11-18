@@ -13,6 +13,8 @@ argon2.workspace = true
 chrono.workspace = true
 ed25519-dalek.workspace = true
 getrandom.workspace = true
+sha2.workspace = true
+serde_json.workspace = true
 axum = { version = "0.8.9", default-features = false, features = ["tokio", "http1", "form"] }
 tokio = { version = "1.54.1", features = ["rt-multi-thread", "net", "sync"] }
 maud = "0.27.0"
