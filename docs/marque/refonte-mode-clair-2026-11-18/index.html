@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<title>Kadenz, mode clair</title>
+<style>
+:root { --nuit:#1A2259; --indigo:#2D3A8C; --ambre:#E3A23B; --brume:#F4F5F9;
+        --encre:#1F2933; --ardoise:#52606D; --trait:#D9DCE3; }
+* { box-sizing:border-box; margin:0; }
+em, i { font-style:normal; }
+body { background:var(--brume); color:var(--encre); font-family:Inter, "Segoe UI", sans-serif;
+        width:2640px; padding:72px 80px 88px; }
+.titre { display:flex; align-items:baseline; gap:28px; border-bottom:1px solid var(--trait);
+          padding-bottom:28px; margin-bottom:48px; }
+.titre h1 { font-family:"Space Grotesk", Inter, sans-serif; font-size:52px; font-weight:700; color:var(--nuit); }
+.titre p { font-size:20px; color:var(--ardoise); }
+section { margin-bottom:56px; }
+section header { display:flex; align-items:baseline; gap:18px; margin-bottom:22px; }
+.num { font-family:"Space Grotesk", Inter, sans-serif; font-weight:700; font-size:20px; color:var(--ambre); }
+h2 { font-family:"Space Grotesk", Inter, sans-serif; font-size:30px; color:var(--nuit); }
+.ou { font-size:17px; color:var(--ardoise); }
+.rang { display:grid; gap:28px; }
+.quatre { grid-template-columns:repeat(4, 1fr); }
+.deux { grid-template-columns:repeat(2, 1fr); max-width:1720px; }
+figure { background:white; border:1px solid var(--trait); border-radius:4px; padding:14px; }
+figure img { width:100%; display:block; border:1px solid var(--trait); }
+figcaption { display:grid; grid-template-columns:auto 1fr; column-gap:12px; row-gap:4px; padding:14px 4px 2px; }
+figcaption b { font-size:14px; color:var(--indigo); letter-spacing:.5px; }
+figcaption span { font-weight:600; font-size:17px; }
+figcaption small { grid-column:1 / -1; font-size:14.5px; color:var(--ardoise); }
+</style></head>
+<body>
+<div class="titre"><h1>Mode clair</h1><p>Écrans refaits le 2026-11-18, Kadenz 1.0.0, captures sur dossiers d'essai</p></div>
+<section>
+  <header><span class="num">01</span><h2>Présentation</h2><p class="ou">Poste, premier lancement</p></header>
+  <div class="rang quatre"><figure>
+  <img src="ecrans/p1-bienvenue.png" alt="Bienvenue dans Kadenz">
+  <figcaption><b>1 sur 4</b><span>Bienvenue dans Kadenz</span><small>choix du mode d'affichage ; en clair, la rangée des palettes sombres est masquée</small></figcaption>
+</figure><figure>
+  <img src="ecrans/p2-vos-documents.png" alt="Vos documents">
+  <figcaption><b>2 sur 4</b><span>Vos documents</span><small>une phrase, bloc et boutons à la même place</small></figcaption>
+</figure><figure>
+  <img src="ecrans/p3-vos-paiements.png" alt="Vos paiements">
+  <figcaption><b>3 sur 4</b><span>Vos paiements</span><small>une pièce du symbole tramée par page</small></figcaption>
+</figure><figure>
+  <img src="ecrans/p4-vos-donnees.png" alt="Vos données">
+  <figcaption><b>4 sur 4</b><span>Vos données</span><small>dernier bouton « Rejoindre l'entreprise » en multiposte</small></figcaption>
+</figure></div>
+</section><section>
+  <header><span class="num">02</span><h2>Inscription et connexion</h2><p class="ou">Poste</p></header>
+  <div class="rang deux"><figure>
+  <img src="ecrans/inscription-poste.png" alt="Rejoindre l'entreprise">
+  <figcaption><b>Poste</b><span>Rejoindre l'entreprise</span><small>panneau tramé à gauche, formulaire compact</small></figcaption>
+</figure><figure>
+  <img src="ecrans/connexion.png" alt="Connexion">
+  <figcaption><b>Poste</b><span>Connexion</span><small>formulaire court sous le nom de l'entreprise</small></figcaption>
+</figure></div>
+</section><section>
+  <header><span class="num">03</span><h2>Assistant de création</h2><p class="ou">Serveur, KadenzAdmin</p></header>
+  <div class="rang quatre"><figure>
+  <img src="ecrans/a1-licence.png" alt="Licence">
+  <figcaption><b>1 sur 6</b><span>Licence</span><small>identifiant à transmettre, clé facultative</small></figcaption>
+</figure><figure>
+  <img src="ecrans/a2-entreprise.png" alt="Entreprise">
+  <figcaption><b>2 sur 6</b><span>Entreprise</span><small>6 champs visibles, 7 facultatifs repliés</small></figcaption>
+</figure><figure>
+  <img src="ecrans/a2-entreprise-deplie.png" alt="Entreprise, dépliée">
+  <figcaption><b>2 sur 6</b><span>Entreprise, dépliée</span><small>la zone défile, les boutons restent en bas</small></figcaption>
+</figure><figure>
+  <img src="ecrans/a3-administrateur.png" alt="Administrateur">
+  <figcaption><b>3 sur 6</b><span>Administrateur</span><small>champs par paires de largeur égale</small></figcaption>
+</figure><figure>
+  <img src="ecrans/a4-taux-et-paiements.png" alt="Taux et paiements">
+  <figcaption><b>4 sur 6</b><span>Taux et paiements</span><small>trois taux côte à côte</small></figcaption>
+</figure><figure>
+  <img src="ecrans/a5-sauvegardes.png" alt="Sauvegardes">
+  <figcaption><b>5 sur 6</b><span>Sauvegardes</span><small>dossier, heure, mot de passe</small></figcaption>
+</figure><figure>
+  <img src="ecrans/a6-recapitulatif.png" alt="Récapitulatif">
+  <figcaption><b>6 sur 6</b><span>Récapitulatif</span><small>résumé avant de terminer</small></figcaption>
+</figure></div>
+</section><section>
+  <header><span class="num">04</span><h2>Réglage de l'affichage</h2><p class="ou">Poste connecté, Paramètres</p></header>
+  <div class="rang deux"><figure>
+  <img src="ecrans/parametres-affichage.png" alt="Navigation et affichage">
+  <figcaption><b>Paramètres</b><span>Navigation et affichage</span><small>mode Comme Windows, Clair, Sombre ; palettes Graphite, Ardoise, Anthracite</small></figcaption>
+</figure></div>
+</section>
+</body></html>
