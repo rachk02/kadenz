@@ -4695,3 +4695,15 @@ msgstr "Anthracite"
 
 msgid "Aucun document à afficher."
 msgstr "No documents to display."
+
+msgid "code incomplet : {} caractères sur 25"
+msgstr "incomplete code: {} characters out of 25"
+
+msgid "code erroné : vérifiez la saisie"
+msgstr "incorrect code: check what you typed"
+
+msgid "les lettres O et I et les chiffres 0 et 1 n'existent pas dans un code : vérifiez la saisie"
+msgstr "the letters O and I and the digits 0 and 1 are not used in codes: check what you typed"
+
+msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
+msgstr "character removed: a code only has letters A to Z and digits 2 to 9"

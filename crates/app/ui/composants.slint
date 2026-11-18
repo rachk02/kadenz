@@ -927,3 +927,103 @@ export component Case inherits Rectangle {
         }
     }
 }
+
+// Code de licence court tel que le champ doit l'afficher (code_saisie.rs).
+export struct CodeSaisi {
+    // Texte mis en forme : groupes de 5 séparés par un tiret.
+    texte: string,
+    // Position du curseur dans texte, en octets.
+    curseur: int,
+    // Message à montrer sous le champ ; vide pendant la saisie d'un code incomplet.
+    message: string,
+    // Code complet et caractère de contrôle juste.
+    valide: bool,
+}
+
+// Mise en forme des codes, branchée par l'application et par KadenzAdmin
+// (code_court::mettre_en_forme, docs/spec-codes-licence.md, section 6).
+export global CodeCourtUi {
+    pure callback formater(precedent: string, nouveau: string) -> CodeSaisi;
+}
+
+// Champ d'un code de licence court, aux couleurs du thème : majuscules, tirets placés
+// tout seuls, collage accepté (avec ou sans tirets, espaces, retours à la ligne). Un
+// TextInput et non un LineEdit : il faut replacer le curseur après chaque mise en forme.
+export component ChampCode inherits VerticalLayout {
+    in property <string> libelle;
+    in property <bool> lecture-seule: false;
+    out property <string> code: root.etat.texte;
+    out property <bool> valide: root.etat.valide;
+    out property <string> message: root.etat.message;
+    callback valide-entree();
+    property <CodeSaisi> etat;
+
+    // Efface le champ (après une activation réussie, par exemple).
+    public function vider() {
+        root.etat = { texte: "", curseur: 0, message: "", valide: false };
+        saisie.text = "";
+    }
+
+    spacing: 4px;
+    forward-focus: saisie;
+
+    if root.libelle != "": Text {
+        text: root.libelle;
+        font-size: 12px;
+        color: Theme.texte-secondaire;
+        horizontal-alignment: Theme.debut;
+    }
+
+    Rectangle {
+        height: 32px;
+        border-radius: 4px;
+        background: root.lecture-seule ? Theme.fond-discret : Theme.champ;
+        border-width: saisie.has-focus ? 2px : 1px;
+        border-color: saisie.has-focus ? Theme.focus : Theme.bordure-champ;
+
+        // Indice du format, tant que le champ est vide.
+        if saisie.text == "": Text {
+            x: 10px;
+            width: parent.width - 20px;
+            vertical-alignment: center;
+            horizontal-alignment: left;
+            text: "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX";
+            font-family: "Consolas";
+            font-size: 15px;
+            color: Theme.texte-desactive;
+        }
+
+        // Le code reste de gauche à droite, même dans une interface de droite à gauche.
+        saisie := TextInput {
+            x: 10px;
+            width: parent.width - 20px;
+            vertical-alignment: center;
+            horizontal-alignment: left;
+            single-line: true;
+            read-only: root.lecture-seule;
+            font-family: "Consolas";
+            font-size: 15px;
+            color: Theme.texte;
+            selection-background-color: Theme.accent-survol;
+            selection-foreground-color: Theme.texte;
+            accessible-role: text-input;
+            accessible-label: root.libelle;
+            edited => {
+                root.etat = CodeCourtUi.formater(root.etat.texte, self.text);
+                self.text = root.etat.texte;
+                self.set-selection-offsets(root.etat.curseur, root.etat.curseur);
+            }
+            accepted => {
+                root.valide-entree();
+            }
+        }
+    }
+
+    if root.message != "": Text {
+        text: root.message;
+        font-size: 12px;
+        color: Theme.erreur;
+        horizontal-alignment: Theme.debut;
+        wrap: word-wrap;
+    }
+}

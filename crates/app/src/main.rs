@@ -5,6 +5,7 @@ mod abonnement;
 mod acces_distant;
 mod administration;
 mod apercu;
+mod code_saisie;
 mod comptabilite;
 mod excel;
 mod factures;
@@ -678,6 +679,8 @@ fn main() -> Result<(), slint::PlatformError> {
     theme::appliquer(&fenetre, theme::du_poste());
     fenetre.global::<Affichage>().set_animations(theme::animations_du_poste());
     let _suivi_windows = theme::suivre_windows(&fenetre);
+    // Champ des codes de licence courts (ChampCode).
+    fenetre.global::<CodeCourtUi>().on_formater(|precedent, nouveau| code_saisie::formater(&precedent, &nouveau));
     let resultat = fenetre.run();
     // Fenêtre fermée : sauvegarde automatique de la base ouverte.
     // Poste relié : synchroniseur arrêté, et pas de sauvegarde de la copie, les

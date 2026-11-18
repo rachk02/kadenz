@@ -4695,3 +4695,15 @@ msgstr "アンスラサイト"
 
 msgid "Aucun document à afficher."
 msgstr "表示する書類はありません。"
+
+msgid "code incomplet : {} caractères sur 25"
+msgstr "コードが不完全です：25文字中{}文字"
+
+msgid "code erroné : vérifiez la saisie"
+msgstr "コードが正しくありません：入力を確認してください"
+
+msgid "les lettres O et I et les chiffres 0 et 1 n'existent pas dans un code : vérifiez la saisie"
+msgstr "コードには英字のOとI、数字の0と1は使われません：入力を確認してください"
+
+msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
+msgstr "文字を削除しました：コードに使われるのはAからZの英字と2から9の数字だけです"

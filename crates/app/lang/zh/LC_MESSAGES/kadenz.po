@@ -4695,3 +4695,15 @@ msgstr "无烟煤"
 
 msgid "Aucun document à afficher."
 msgstr "没有可显示的单据。"
+
+msgid "code incomplet : {} caractères sur 25"
+msgstr "代码不完整：{} 个字符，共 25 个"
+
+msgid "code erroné : vérifiez la saisie"
+msgstr "代码有误：请检查输入"
+
+msgid "les lettres O et I et les chiffres 0 et 1 n'existent pas dans un code : vérifiez la saisie"
+msgstr "代码中不含字母 O、I 和数字 0、1：请检查输入"
+
+msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
+msgstr "已删除字符：代码只含字母 A 至 Z 和数字 2 至 9"

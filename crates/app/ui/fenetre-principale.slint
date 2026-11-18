@@ -1,7 +1,7 @@
 // Fenêtre principale : écrans de démarrage, puis application avec sa navigation
 // (bandeau ou barre latérale, navigation.slint) et ses pages.
 import { Palette } from "std-widgets.slint";
-import { Affichage, Alerte, Confirmation, Droits, Ecriture, FenetreAlerte, FenetreConfirmation, Modules, Rangee, Retour, Theme } from "composants.slint";
+import { Affichage, Alerte, CodeCourtUi, CodeSaisi, Confirmation, Droits, Ecriture, FenetreAlerte, FenetreConfirmation, Modules, Rangee, Retour, Theme } from "composants.slint";
 import { EcranInscription } from "premier-lancement.slint";
 import { EcranConnexion } from "connexion.slint";
 import { EcranPresentation } from "presentation.slint";
@@ -27,7 +27,7 @@ import { AccesDistantApi, PosteDistantUi } from "acces-distant.slint";
 import { EcranDemarrageImpossible, SauvegardesApi } from "sauvegardes.slint";
 import { ApercuApi, FenetreApercu, PageApercuUi } from "apercu.slint";
 
-export { AbonnementApi, AccesDistantApi, ApercuApi, PageApercuUi, PosteDistantUi, ChampSuspenduUi, ConnexionApi, DocumentAValiderUi, LigneResumeUi, ServeurApi, SuspendueUi, SuspenduesApi, Affichage, Alerte, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, StockApi, LigneInventaireUi, ProduitStockUi, ComptabiliteApi, CompteComptableUi, TiersApi, UtilisateursApi }
+export { AbonnementApi, AccesDistantApi, ApercuApi, CodeCourtUi, CodeSaisi, PageApercuUi, PosteDistantUi, ChampSuspenduUi, ConnexionApi, DocumentAValiderUi, LigneResumeUi, ServeurApi, SuspendueUi, SuspenduesApi, Affichage, Alerte, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, StockApi, LigneInventaireUi, ProduitStockUi, ComptabiliteApi, CompteComptableUi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, presentation, inscription, connexion, application }

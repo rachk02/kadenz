@@ -12,6 +12,10 @@
 #[path = "../../app/src/traduction.rs"]
 mod traduction;
 
+// Champ des codes de licence courts, partagé avec l'application.
+#[path = "../../app/src/code_saisie.rs"]
+mod code_saisie;
+
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -1033,6 +1037,7 @@ fn brancher_assistant(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossier: 
 fn main() -> Result<(), slint::PlatformError> {
     traduction::choisir_demarrage();
     let fenetre = FenetreAdmin::new()?;
+    fenetre.global::<CodeCourtUi>().on_formater(|precedent, nouveau| code_saisie::formater(&precedent, &nouveau));
     let dossier = Rc::new(dossier());
     let fa = fenetre.as_weak();
     fenetre
