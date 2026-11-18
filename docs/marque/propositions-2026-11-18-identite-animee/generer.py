@@ -334,7 +334,9 @@ function tampon(c, cx, cy, T, debut) {
 
 const DOCS = ["Devis", "Bon de commande", "Bordereau de livraison", "Facture", "Avoir"];
 
+%%FONCTIONS%%
 const DIR = {
+%%DIRECTIONS%%
   A: {
     periode: 8, moment: 4.2,
     scene(c, w, h, T) {
@@ -600,18 +602,30 @@ Promise.all([
 """
 
 
-def page():
+INTRO = ("Cinq directions et une variante (A2) autour du logo Quatre pièces, qui ne change pas, ni ses couleurs ni ses polices. "
+         "Chacune a son mouvement, son motif, une scène 16:9 et une affiche 9:16. On peut retenir une direction, "
+         "ou en assembler plusieurs.")
+PIED = ("Textes repris de l'application (présentation, menus, documents, états de paiement) et de la charte "
+        "(ton, construction du symbole, familles de modules). Animations dessinées en direct dans la page ; une "
+        "vidéo de la direction retenue peut être exportée ensuite.")
+
+
+def page(directions=None, titre="Identité animée", intro=INTRO, pied=PIED, avant="", fonctions="", entrees=""):
+    """Page complète ; les autres générateurs de propositions l'appellent avec leurs
+    propres directions, leurs fonctions JS (fonctions) et leurs entrées de DIR (entrees)."""
+    directions = directions or DIRECTIONS
     images, ratios = {}, {}
     for cle, fichier in IMAGES.items():
         images[cle], ratios[cle] = donnees_image(fichier)
     import json
-    script = SCRIPT.replace("%%IMAGES%%", json.dumps(images)).replace("%%RATIOS%%", json.dumps(ratios))
-    sections = "\n".join(section(d) for d in DIRECTIONS)
-    sommaire = "".join(f'<a href="#dir-{d["id"]}"><b>{d["id"]}</b> {d["nom"]}</a>' for d in DIRECTIONS)
+    script = (SCRIPT.replace("%%IMAGES%%", json.dumps(images)).replace("%%RATIOS%%", json.dumps(ratios))
+              .replace("%%FONCTIONS%%", fonctions).replace("%%DIRECTIONS%%", entrees))
+    sections = "\n".join(section(d) for d in directions)
+    sommaire = "".join(f'<a href="#dir-{d["id"]}"><b>{d["id"]}</b> {d["nom"]}</a>' for d in directions)
     return f"""<!doctype html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kadenz, identité animée</title>
+<title>Kadenz, {titre.lower()}</title>
 <style>
 @font-face {{ font-family:Inter; src:url(../planches/polices/Inter.woff2) format("woff2"); font-weight:100 900; }}
 @font-face {{ font-family:"Space Grotesk"; src:url(../planches/polices/SpaceGrotesk.ttf) format("truetype"); font-weight:300 700; }}
@@ -660,17 +674,14 @@ footer {{ border-top:1px solid var(--trait); padding-top:24px; color:var(--ardoi
 </style></head>
 <body>
 <div class="entete">
-  <div><h1>Identité animée</h1>
-  <p>Cinq directions et une variante (A2) autour du logo Quatre pièces, qui ne change pas, ni ses couleurs ni ses polices.
-  Chacune a son mouvement, son motif, une scène 16:9 et une affiche 9:16. On peut retenir une direction,
-  ou en assembler plusieurs.</p></div>
+  <div><h1>{titre}</h1>
+  <p>{intro}</p></div>
   <button id="pause" type="button">Mettre en pause</button>
 </div>
+{avant}
 <nav>{sommaire}</nav>
 {sections}
-<footer>Textes repris de l'application (présentation, menus, documents, états de paiement) et de la charte
-(ton, construction du symbole, familles de modules). Animations dessinées en direct dans la page ; une
-vidéo de la direction retenue peut être exportée ensuite.</footer>
+<footer>{pied}</footer>
 <script>{script}</script>
 </body></html>
 """
