@@ -191,6 +191,8 @@ Trois directions retenues par l'utilisateur le 2026-11-18 parmi six propositions
 | A2 Trame de pièces | La composition de A, faite du motif Quatre pièces : symbole en petites pièces ambre sur le motif ton sur ton ; taille constante, sans fondu ; le motif s'arrête net sous le texte | Pièces en Ambre, comme A |
 | C Tournant | Le motif Tournant en mouvement : les quarts de disque tournent d'un quart de tour au passage d'une onde ; le logo reste sur une zone calme | Aucun |
 
+Écrans du logiciel avec ces motifs, en clair et en sombre (Graphite, Ardoise, Anthracite) : `propositions-2026-11-18-ecrans-animes/` (présentation, inscription, connexion, assistant KadenzAdmin, tableau de bord, À propos, liste vide ; un motif recommandé par écran, les autres au choix). Proposition en attente d'adoption, rien n'est encore implémenté.
+
 ## Modules (proposition)
 
 La pièce du module est pleine, les trois autres sont au trait : Ventes (carré : devis, proforma, factures), Commandes (quart de disque : bons de commande), Livraisons (triangle : bons de livraison), Paiements (disque : règlements, relances). Cette répartition est une proposition à valider ; elle ne change rien au découpage réel des licences.

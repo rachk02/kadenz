@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kadenz, écrans animés</title><style>
+@font-face { font-family:Inter; src:url(../planches/polices/Inter.woff2) format("woff2"); font-weight:100 900; }
+@font-face { font-family:"Space Grotesk"; src:url(../planches/polices/SpaceGrotesk.ttf) format("truetype"); font-weight:300 700; }
+* { box-sizing:border-box; margin:0; }
+em, i { font-style:normal; }
+:root { --page:#F4F5F9; --encre:#1F2933; --ardoise:#52606D; --trait:#D9DCE3; --nuit:#1A2259; --indigo:#2D3A8C; --ambre:#E3A23B; }
+body { background:var(--page); color:var(--encre); font-family:Inter, "Segoe UI", sans-serif; max-width:1680px; margin:0 auto; padding:52px 44px 80px; }
+.entete { display:flex; flex-wrap:wrap; gap:24px; justify-content:space-between; align-items:flex-end; border-bottom:1px solid var(--trait); padding-bottom:24px; margin-bottom:22px; }
+.entete h1 { font-family:"Space Grotesk", Inter, sans-serif; font-size:44px; color:var(--nuit); }
+.entete p { color:var(--ardoise); font-size:17px; line-height:1.5; max-width:820px; margin-top:8px; }
+.reglages { display:flex; flex-wrap:wrap; gap:18px; align-items:center; margin-bottom:40px; }
+.reglages b { font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--ardoise); margin-right:4px; }
+.choix { display:inline-flex; gap:6px; flex-wrap:wrap; }
+.choix button { font:500 14px Inter, sans-serif; background:white; border:1px solid var(--trait); border-radius:4px; padding:8px 12px; cursor:pointer; color:var(--encre); }
+.choix button.on { background:var(--indigo); border-color:var(--indigo); color:white; }
+section.ecran { margin-bottom:64px; }
+section.ecran header { display:flex; flex-wrap:wrap; gap:16px 28px; align-items:flex-end; justify-content:space-between; margin-bottom:16px; }
+section.ecran h2 { font-family:"Space Grotesk", Inter, sans-serif; font-size:28px; color:var(--nuit); }
+section.ecran header p { color:var(--ardoise); font-size:15.5px; line-height:1.5; max-width:820px; margin-top:6px; }
+.duo { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+.duo figcaption { font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--ardoise); font-weight:600; margin-bottom:8px; }
+.cadre { position:relative; width:100%; aspect-ratio:1200/760; overflow:hidden; border:1px solid var(--trait); }
+.cadre > .m { position:absolute; left:0; top:0; width:1200px; height:760px; transform-origin:0 0; }
+footer { border-top:1px solid var(--trait); padding-top:22px; color:var(--ardoise); font-size:14.5px; line-height:1.6; }
+@media (max-width: 1000px) { body { padding:28px 16px 56px; } .duo { grid-template-columns:1fr; } }
+
+/* Jetons de l'application (composants.slint) */
+.m.clair { --fond:#ffffff; --lateral:#f4f5f9; --surface:#ffffff; --panneau:#1a2259; --accent:#2d3a8c; --sur-accent:#ffffff;
+  --survol:#e8eaf6; --champ:#ffffff; --bordure:#d9dce3; --bordure-champ:#7b8794; --texte:#1f2933; --second:#52606d;
+  --ok:#067647; --ko:#b42318; --at:#b54708; --barre:#f3f3f3; --barre-texte:#1f2933;
+  --points:#2d3a8c; --motif:#232c6b; --motif-clair:#2a3478; --lignes:#f4f5f9; --sur-panneau:#ffffff; --second-panneau:#c5cae0; }
+.m.sombre { --ok:#47cd89; --ko:#f97066; --at:#fdb022; --sur-panneau:#eeebe7; --points:#4a4d52; }
+body[data-palette="0"] .m.sombre { --fond:#17181b; --lateral:#1e2024; --surface:#1e2024; --panneau:#111214; --accent:#e3a23b; --sur-accent:#17181b;
+  --survol:#2b2e34; --champ:#26282d; --bordure:#33363c; --bordure-champ:#6e737d; --texte:#ecedef; --second:#a3a8b0;
+  --barre:#1e2024; --barre-texte:#ecedef; --motif:#212327; --motif-clair:#2a2d32; --lignes:#ecedef; --second-panneau:#a3a8b0; }
+body[data-palette="1"] .m.sombre { --fond:#15191e; --lateral:#1c2229; --surface:#1f2933; --panneau:#101317; --accent:#8f9bea; --sur-accent:#15191e;
+  --survol:#2a3542; --champ:#27313c; --bordure:#334050; --bordure-champ:#6f7d8c; --texte:#f4f5f9; --second:#a9b4c0;
+  --barre:#1c2229; --barre-texte:#f4f5f9; --motif:#1c232b; --motif-clair:#253039; --lignes:#f4f5f9; --second-panneau:#a9b4c0; }
+body[data-palette="2"] .m.sombre { --fond:#1a1918; --lateral:#211f1e; --surface:#232120; --panneau:#131211; --accent:#e3a23b; --sur-accent:#1a1918;
+  --survol:#302d2a; --champ:#2b2927; --bordure:#383533; --bordure-champ:#77716b; --texte:#eeebe7; --second:#ada69f;
+  --barre:#211f1e; --barre-texte:#eeebe7; --motif:#22201e; --motif-clair:#2c2a27; --lignes:#eeebe7; --second-panneau:#ada69f; }
+
+.m { background:var(--fond); color:var(--texte); font-family:Inter, sans-serif; font-size:14px; display:flex; flex-direction:column; }
+.m .barre { height:32px; flex:none; background:var(--barre); color:var(--barre-texte); display:flex; align-items:center; gap:8px; padding:0 12px; font-size:12.5px; }
+.m .barre .ctl { margin-left:auto; font-weight:400; letter-spacing:2px; opacity:.8; }
+.m .mini { width:16px; height:16px; }
+.m .corps { flex:1; position:relative; overflow:hidden; }
+.m .rang { display:flex; height:100%; }
+.m .col-form { position:relative; width:47%; flex:none; height:100%; }
+.m .col-form.large { width:auto; flex:1; }
+.m .logo-col { position:absolute; left:72px; top:56px; height:30px; }
+.m .bloc { position:absolute; left:72px; width:416px; display:flex; flex-direction:column; }
+.m .etapes { display:flex; gap:8px; margin-bottom:22px; }
+.m .etapes i { width:44px; height:4px; background:var(--bordure); }
+.m .etapes i.on { background:var(--accent); }
+.m .sur { font-size:12px; font-weight:600; letter-spacing:1.6px; color:var(--second); margin-bottom:12px; }
+.m h1 { font-family:"Space Grotesk", Inter, sans-serif; font-size:32px; font-weight:700; color:var(--texte); line-height:1.15; }
+.m .txt { font-size:16px; color:var(--second); margin-top:14px; line-height:1.45; }
+.m label { display:block; font-size:12.5px; color:var(--second); margin:14px 0 6px; }
+.m .champ { height:34px; border:1px solid var(--bordure-champ); background:var(--champ); border-radius:4px; color:var(--second); font-size:12.5px; padding:8px 10px; white-space:nowrap; overflow:hidden; }
+.m .champ.haut { height:68px; }
+.m .aide { display:block; font-size:12px; color:var(--second); margin-top:6px; }
+.m .ligne { display:flex; gap:10px; align-items:center; }
+.m .ligne .champ { flex:1; }
+.m .ligne.entre { justify-content:space-between; margin-bottom:16px; }
+.m .btn { display:inline-flex; align-items:center; justify-content:center; height:38px; padding:0 16px; border:1px solid var(--bordure); border-radius:4px; background:var(--surface); color:var(--texte); font-weight:500; font-size:13.5px; white-space:nowrap; }
+.m .btn.prim { background:var(--accent); border-color:var(--accent); color:var(--sur-accent); font-weight:600; }
+.m .btn.plein { width:100%; }
+.m .seg { display:flex; gap:8px; }
+.m .seg span { height:34px; padding:0 14px; display:inline-flex; align-items:center; border:1px solid var(--bordure-champ); border-radius:4px; background:var(--champ); font-size:13.5px; }
+.m .seg span.on, .m.clair .seg .sel-clair, .m.sombre .seg .sel-sombre { background:var(--accent); border-color:var(--accent); color:var(--sur-accent); font-weight:600; }
+.m.clair .sombre-seul, .m.sombre .clair-seul { display:none !important; }
+.m .pastilles { display:flex; gap:12px; }
+.m .pastilles span { display:flex; flex-direction:column; align-items:center; gap:5px; font-size:12px; color:var(--second); }
+.m .pastilles i { width:64px; height:40px; border:1px solid var(--bordure-champ); border-radius:4px; }
+.m .boutons { position:absolute; left:72px; width:416px; bottom:56px; display:flex; gap:10px; justify-content:flex-end; }
+.m .panneau { position:relative; flex:1; background:var(--panneau); overflow:hidden; }
+.m .panneau.etroit { flex:none; width:42%; }
+.m .panneau canvas { position:absolute; inset:0; width:100%; height:100%; }
+.m .logo-panneau { position:absolute; left:48px; top:56px; height:30px; z-index:1; }
+.m .pied-panneau { position:absolute; left:48px; bottom:44px; display:flex; flex-direction:column; gap:6px; }
+.m .pied-panneau b { font-family:"Space Grotesk", Inter, sans-serif; font-size:22px; color:var(--sur-panneau); }
+.m .pied-panneau small { font-size:12px; color:var(--second-panneau); }
+.m .colonne-etapes { position:relative; width:232px; flex:none; background:var(--panneau); overflow:hidden; padding:56px 0 0 28px; }
+.m .colonne-etapes canvas { position:absolute; inset:0; width:100%; height:100%; }
+.m .logo-etapes { position:relative; height:26px; margin-bottom:62px; }
+.m .clair-sur { position:relative; color:var(--second-panneau); }
+.m .liste-etapes { position:relative; list-style:none; padding:0; }
+.m .liste-etapes li { height:34px; display:flex; align-items:center; gap:12px; color:var(--second-panneau); font-size:14px; padding-left:22px; position:relative; }
+.m .liste-etapes li.fait::before { content:""; position:absolute; left:2px; width:8px; height:4px; border-left:2px solid var(--ambre); border-bottom:2px solid var(--ambre); transform:rotate(-45deg); top:13px; }
+.m .liste-etapes li.cours { color:var(--sur-panneau); font-weight:600; }
+.m .liste-etapes li.cours::before { content:""; position:absolute; left:2px; width:8px; height:8px; background:var(--ambre); }
+.m .zone { flex:1; position:relative; display:flex; flex-direction:column; }
+.m .defile { flex:1; padding:72px 68px 0; display:flex; flex-direction:column; max-width:756px; }
+.m .defile h1 { margin-bottom:6px; }
+.m .paire { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.m .pli { margin-top:18px; height:42px; display:flex; align-items:center; justify-content:space-between; padding:0 14px; background:var(--lateral); border:1px solid var(--bordure); border-radius:4px; }
+.m .pli small { color:var(--second); }
+.m .bande-boutons { height:100px; flex:none; background:var(--lateral); display:flex; justify-content:space-between; align-items:center; padding:0 68px; max-width:none; }
+.m .menu { width:236px; flex:none; background:var(--lateral); padding:12px 10px; display:flex; flex-direction:column; font-size:13.5px; }
+.m .menu .ent { display:flex; align-items:center; gap:8px; padding:6px 8px 12px; }
+.m .menu .ent b { font-family:"Space Grotesk", Inter, sans-serif; font-size:15px; }
+.m .mini2 { width:22px; height:22px; }
+.m .menu .grp { font-size:11.5px; font-weight:600; color:var(--second); margin:10px 8px 4px; }
+.m .item { display:flex; align-items:center; gap:10px; height:30px; padding:0 8px; border-radius:4px; }
+.m .item.actif { background:var(--accent); color:var(--sur-accent); font-weight:600; }
+.m .ico { width:17px; height:17px; flex:none; background:currentColor; -webkit-mask:var(--i) center/contain no-repeat; mask:var(--i) center/contain no-repeat; }
+.m .menu .bas { margin-top:auto; }
+.m .menu .bas small { display:block; color:var(--second); font-size:11.5px; padding:8px; }
+.m .principal { flex:1; padding:22px 26px; overflow:hidden; display:flex; flex-direction:column; }
+.m .principal h3 { font-size:14px; margin:16px 0 8px; }
+.m .bandeau { position:relative; height:118px; flex:none; background:var(--panneau); overflow:hidden; border-radius:4px; }
+.m .bandeau.court { height:110px; border-radius:4px 4px 0 0; }
+.m .bandeau canvas { position:absolute; inset:0; width:100%; height:100%; }
+.m .txt-bandeau { position:absolute; left:24px; top:28px; }
+.m .txt-bandeau h1 { color:var(--sur-panneau); font-size:28px; }
+.m .txt-bandeau small { color:var(--second-panneau); font-size:12.5px; display:block; margin-top:6px; }
+.m .logo-bandeau { position:absolute; left:24px; top:40px; height:28px; }
+.m .cartes3 { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:10px; }
+.m .carte { background:var(--surface); border:1px solid var(--bordure); border-radius:4px; padding:12px 14px; display:flex; flex-direction:column; gap:4px; }
+.m .carte b { font-size:18px; font-family:"Space Grotesk", Inter, sans-serif; }
+.m .carte small { color:var(--second); font-size:12px; }
+.m .carte .ok { color:var(--ok); } .m .carte .ko { color:var(--ko); }
+.m .carte.large h4 { font-size:13.5px; }
+.m .anneau-ca { display:flex; align-items:center; gap:22px; margin-top:8px; }
+.m .donut { width:92px; height:92px; border-radius:50%; border:12px solid var(--ko); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.m .donut b { font-size:15px; } .m .donut small { font-size:11px; color:var(--second); }
+.m .leg { list-style:none; padding:0; font-size:12.5px; display:grid; gap:6px; }
+.m .leg li { display:grid; grid-template-columns:12px 70px 50px 110px; align-items:center; gap:6px; }
+.m .leg i { width:10px; height:10px; } .m .leg i.ko { background:var(--ko); } .m .leg i.at { background:var(--at); } .m .leg i.ok { background:var(--ok); }
+.m .rubriques { width:250px; flex:none; border-right:1px solid var(--bordure); padding:20px 12px; font-size:13.5px; display:flex; flex-direction:column; gap:2px; }
+.cadre .m h2, .cadre .m h3, .cadre .m h4 { color:var(--texte); }
+.m .rubriques h2 { font-family:"Space Grotesk", Inter, sans-serif; font-size:22px; margin:0 8px 12px; }
+.m .carte-apropos { border:1px solid var(--bordure); border-radius:4px; background:var(--surface); display:flex; flex-direction:column; max-width:600px; }
+.m .carte-apropos .contenu { padding:18px 20px; display:flex; flex-direction:column; }
+.m .carte-apropos h4 { font-family:"Space Grotesk", Inter, sans-serif; font-size:18px; }
+.m .lig { display:flex; justify-content:space-between; border-top:1px solid var(--bordure); margin-top:14px; padding-top:10px; font-size:13.5px; }
+.m .lig span { color:var(--second); }
+.m .filtres { margin-bottom:12px; } .m .filtres .f1 { flex:2.2; } .m .filtres .f2 { flex:1.1; } .m .filtres .f3 { flex:1; }
+.m .tableau { flex:1; border:1px solid var(--bordure); border-radius:4px; display:flex; flex-direction:column; }
+.m .entete-t { display:grid; grid-template-columns:1.1fr .9fr 1.2fr 1.4fr 1fr .8fr .9fr .7fr .9fr; padding:10px 12px; font-size:12px; font-weight:600; color:var(--second); border-bottom:1px solid var(--bordure); }
+.m .vide { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; color:var(--second); }
+.m .vide canvas { width:96px; height:96px; }
+</style></head>
+<body data-palette="2">
+<div class="entete"><div><h1>Écrans du logiciel, motifs animés</h1>
+<p>Sept écrans de Kadenz en mode clair et en mode sombre, avec les motifs retenus. Chaque écran a un motif
+recommandé (bouton actif) ; les autres boutons montrent le même écran avec un autre motif. La palette du mode
+sombre se change en haut. Dans le logiciel, l'entrée animée joue une fois ; ici elle se répète toutes les 12 s
+pour qu'on la voie.</p></div></div>
+<div class="reglages"><b>Palette sombre</b><span class="choix"><button data-palette-choix="0">Graphite</button><button data-palette-choix="1">Ardoise</button><button data-palette-choix="2" class="on">Anthracite</button></span>
+<b style="margin-left:18px">Même motif partout</b><span class="choix"><button data-tous="A">A Trame</button><button data-tous="A2">A2 Trame de pièces</button><button data-tous="C">C Tournant</button><button data-tous="A+">A+ Anneaux</button><button data-tous="A2+">A2+ Pièces et lignes</button></span></div>
+<section class="ecran" data-ecran="presentation"><header><div><h2>Présentation, page 1</h2><p>Premier lancement. La pièce de la page se compose à l'arrivée, puis le panneau reste calme ; une pièce différente par page (carré, quart de disque, triangle, disque).</p></div>
+<div class="choix"><button data-motif-choix="A" class="">A Trame</button><button data-motif-choix="A2" class="on">A2 Trame de pièces</button><button data-motif-choix="C" class="">C Tournant</button><button data-motif-choix="A+" class="">A+ Anneaux</button><button data-motif-choix="A2+" class="">A2+ Pièces et lignes</button></div></header>
+<div class="duo"><figure><figcaption>Mode clair</figcaption><div class="cadre"><div class="m clair "><div class="barre"><img class="mini" data-logo="sym"><span>Kadenz</span>
+<b class="ctl">&#8211;&#160;&#160;&#9633;&#160;&#160;&#215;</b></div><div class="corps"><div class="rang"><div class="col-form">
+<img class="logo-col" data-logo="auto">
+<div class="bloc" style="top:210px">
+  <div class="etapes"><i class="on"></i><i></i><i></i><i></i></div>
+  <p class="sur">1 sur 4</p><h1>Bienvenue dans Kadenz</h1>
+  <p class="txt">La facturation de votre entreprise, en FCFA et en sept langues.</p>
+  <p class="sur" style="margin-top:30px">Mode d'affichage</p>
+  <div class="seg"><span>Comme Windows</span><span class="sel-clair">Clair</span><span class="sel-sombre">Sombre</span></div>
+  <div class="sombre-seul"><p class="sur" style="margin-top:16px">Palette du mode sombre</p>
+  <div class="pastilles"><span data-p="0"><i style="background:#17181b"></i>Graphite</span><span data-p="1"><i style="background:#15191e"></i>Ardoise</span><span data-p="2"><i style="background:#1a1918"></i>Anthracite</span></div></div>
+</div>
+<div class="boutons"><span class="btn">Passer</span><span class="btn prim">Suivant</span></div>
+</div><div class="panneau"><canvas data-piece="carre" data-cadre="panneau"></canvas>
+<div class="pied-panneau"><b>Gestion commerciale</b><small>Version 1.0.0</small></div></div></div></div></div></div></figure>
+<figure><figcaption>Mode sombre</figcaption><div class="cadre"><div class="m sombre "><div class="barre"><img class="mini" data-logo="sym"><span>Kadenz</span>
+<b class="ctl">&#8211;&#160;&#160;&#9633;&#160;&#160;&#215;</b></div><div class="corps"><div class="rang"><div class="col-form">
+<img class="logo-col" data-logo="auto">
+<div class="bloc" style="top:210px">
+  <div class="etapes"><i class="on"></i><i></i><i></i><i></i></div>
+  <p class="sur">1 sur 4</p><h1>Bienvenue dans Kadenz</h1>
+  <p class="txt">La facturation de votre entreprise, en FCFA et en sept langues.</p>
+  <p class="sur" style="margin-top:30px">Mode d'affichage</p>
+  <div class="seg"><span>Comme Windows</span><span class="sel-clair">Clair</span><span class="sel-sombre">Sombre</span></div>
+  <div class="sombre-seul"><p class="sur" style="margin-top:16px">Palette du mode sombre</p>
+  <div class="pastilles"><span data-p="0"><i style="background:#17181b"></i>Graphite</span><span data-p="1"><i style="background:#15191e"></i>Ardoise</span><span data-p="2"><i style="background:#1a1918"></i>Anthracite</span></div></div>
+</div>
+<div class="boutons"><span class="btn">Passer</span><span class="btn prim">Suivant</span></div>
+</div><div class="panneau"><canvas data-piece="carre" data-cadre="panneau"></canvas>
+<div class="pied-panneau"><b>Gestion commerciale</b><small>Version 1.0.0</small></div></div></div></div></div></div></figure></div></section><section class="ecran" data-ecran="inscription"><header><div><h2>Inscription du poste</h2><p>Panneau à gauche avec le logo ; le disque se compose une fois à l'arrivée.</p></div>
+<div class="choix"><button data-motif-choix="A" class="on">A Trame</button><button data-motif-choix="A2" class="">A2 Trame de pièces</button><button data-motif-choix="C" class="">C Tournant</button><button data-motif-choix="A+" class="">A+ Anneaux</button><button data-motif-choix="A2+" class="">A2+ Pièces et lignes</button></div></header>
+<div class="duo"><figure><figcaption>Mode clair</figcaption><div class="cadre"><div class="m clair "><div class="barre"><img class="mini" data-logo="sym"><span>Kadenz</span>
+<b class="ctl">&#8211;&#160;&#160;&#9633;&#160;&#160;&#215;</b></div><div class="corps"><div class="rang"><div class="panneau etroit"><img class="logo-panneau" data-logo="logoN"><canvas data-piece="disque" data-cadre="panneau"></canvas>
+<div class="pied-panneau"><b>Gestion commerciale</b><small>Version 1.0.0</small></div></div>
+<div class="col-form large"><div class="bloc" style="top:200px;left:80px;width:470px">
+  <p class="sur">PREMIER LANCEMENT</p><h1>Rejoindre l'entreprise</h1>
+  <p class="txt">Demandez un code d'inscription à l'Admin de l'entreprise.</p>
+  <label style="margin-top:26px">Code d'inscription</label><div class="champ haut"></div>
+  <small class="aide">Code complet, ou code court XXXX-XXXX-XXXX avec l'adresse du serveur.</small>
+  <label>Adresse du serveur (code court seulement)</label>
+  <div class="ligne"><div class="champ"></div><span class="btn">Rechercher sur le réseau</span></div>
+  <span class="btn prim" style="margin-top:14px;align-self:flex-start">Inscrire ce poste</span>
+</div></div></div></div></div></div></figure>
+<figure><figcaption>Mode sombre</figcaption><div class="cadre"><div class="m sombre "><div class="barre"><img class="mini" data-logo="sym"><span>Kadenz</span>
+<b class="ctl">&#8211;&#160;&#160;&#9633;&#160;&#160;&#215;</b></div><div class="corps"><div class="rang"><div class="panneau etroit"><img class="logo-panneau" data-logo="logoN"><canvas data-piece="disque" data-cadre="panneau"></canvas>
+<div class="pied-panneau"><b>Gestion commerciale</b><small>Version 1.0.0</small></div></div>
+<div class="col-form large"><div class="bloc" style="top:200px;left:80px;width:470px">
+  <p class="sur">PREMIER LANCEMENT</p><h1>Rejoindre l'entreprise</h1>
+  <p class="txt">Demandez un code d'inscription à l'Admin de l'entreprise.</p>
+  <label style="margin-top:26px">Code d'inscription</label><div class="champ haut"></div>
+  <small class="aide">Code complet, ou code court XXXX-XXXX-XXXX avec l'adresse du serveur.</small>
+  <label>Adresse du serveur (code court seulement)</label>
+  <div class="ligne"><div class="champ"></div><span class="btn">Rechercher sur le réseau</span></div>
+  <span class="btn prim" style="margin-top:14px;align-self:flex-start">Inscrire ce poste</span>
+</div></div></div></div></div></div></figure></div></section><section class="ecran" data-ecran="connexion"><header><div><h2>Connexion</h2><p>Le seul écran où le mouvement continue : très lent, pour ne pas distraire pendant la saisie.</p></div>
+<div class="choix"><button data-motif-choix="A" class="">A Trame</button><button data-motif-choix="A2" class="">A2 Trame de pièces</button><button data-motif-choix="C" class="">C Tournant</button><button data-motif-choix="A+" class="on">A+ Anneaux</button><button data-motif-choix="A2+" class="">A2+ Pièces et lignes</button></div></header>
+<div class="duo"><figure><figcaption>Mode clair</figcaption><div class="cadre"><div class="m clair "><div class="barre"><img class="mini" data-logo="sym"><span>Entreprise d'essai</span>
+<b class="ctl">&#8211;&#160;&#160;&#9633;&#160;&#160;&#215;</b></div><div class="corps"><div class="rang"><div class="col-form">
+<img class="logo-col" data-logo="auto">
+<div class="bloc" style="top:250px;width:360px">
+  <p class="sur">CONNEXION</p><h1>Entreprise d'essai</h1>
+  <label style="margin-top:26px">Identifiant</label><div class="champ"></div>
+  <label>Mot de passe</label><div class="champ"></div>
+  <span class="btn prim plein" style="margin-top:22px">Se connecter</span>
+</div></div><div class="panneau"><canvas data-piece="quart" data-cadre="panneau"></canvas>
+<div class="pied-panneau"><b>Gestion commerciale</b><small>Version 1.0.0</small></div></div></div></div></div></div></figure>
+<figure><figcaption>Mode sombre</figcaption><div class="cadre"><div class="m sombre "><div class="barre"><img class="mini" data-logo="sym"><span>Entreprise d'essai</span>
+<b class="ctl">&#8211;&#160;&#160;&#9633;&#160;&#160;&#215;</b></div><div class="corps"><div class="rang"><div class="col-form">
+<img class="logo-col" data-logo="auto">
+<div class="bloc" style="top:250px;width:360px">
+  <p class="sur">CONNEXION</p><h1>Entreprise d'essai</h1>
+  <label style="margin-top:26px">Identifiant</label><div class="champ"></div>
+  <label>Mot de passe</label><div class="champ"></div>
+  <span class="btn prim plein" style="margin-top:22px">Se connecter</span>
+</div></div><div class="panneau"><canvas data-piece="quart" data-cadre="panneau"></canvas>
+<div class="pied-panneau"><b>Gestion commerciale</b><small>Version 1.0.0</small></div></div></div></div></div></div></figure></div></section><section class="ecran" data-ecran="assistant"><header><div><h2>Assistant de création (KadenzAdmin)</h2><p>Colonne des étapes : le motif avance d'un temps à chaque étape franchie.</p></div>
+<div class="choix"><button data-motif-choix="A" class="">A Trame</button><button data-motif-choix="A2" class="">A2 Trame de pièces</button><button data-motif-choix="C" class="on">C Tournant</button><button data-motif-choix="A+" class="">A+ Anneaux</button><button data-motif-choix="A2+" class="">A2+ Pièces et lignes</button></div></header>
+<div class="duo"><figure><figcaption>Mode clair</figcaption><div class="cadre"><div class="m clair "><div class="barre"><img class="mini" data-logo="sym"><span>Kadenz - Administration du serveur</span>
+<b class="ctl">&#8211;&#160;&#160;&#9633;&#160;&#160;&#215;</b></div><div class="corps"><div class="rang">
+<div class="colonne-etapes"><canvas data-piece="tri" data-cadre="colonne"></canvas>
+  <img class="logo-etapes" data-logo="logoN"><p class="sur clair-sur">PREMIÈRE INSTALLATION</p><ul class="liste-etapes"><li class="fait">Licence</li><li class="cours">Entreprise</li><li class="">Administrateur</li><li class="">Taux et paiements</li><li class="">Sauvegardes</li><li class="">Récapitulatif</li></ul></div>
+<div class="zone"><div class="defile"><h1>Entreprise</h1>
+  <label>Nom de l'entreprise (obligatoire)</label><div class="champ"></div>
+  <label>Adresse / boîte postale</label><div class="champ"></div>
+  <div class="paire"><div><label>Téléphone</label><div class="champ"></div></div><div><label>Email</label><div class="champ"></div></div></div><div class="paire"><div><label>RCCM</label><div class="champ"></div></div><div><label>IFU</label><div class="champ"></div></div></div>
+  <div class="pli"><span>Plus d'informations</span><small>7 champs facultatifs</small></div>
+  <small class="aide">Tout se modifie plus tard dans les Paramètres.</small></div>
+  <div class="bande-boutons"><span class="btn">Précédent</span><span class="btn prim">Suivant</span></div></div></div></div></div></div></figure>
+<figure><figcaption>Mode sombre</figcaption><div class="cadre"><div class="m sombre "><div class="barre"><img class="mini" data-logo="sym"><span>Kadenz - Administration du serveur</span>
+<b class="ctl">&#8211;&#160;&#160;&#9633;&#160;&#160;&#215;</b></div><div class="corps"><div class="rang">
+<div class="colonne-etapes"><canvas data-piece="tri" data-cadre="colonne"></canvas>
+  <img class="logo-etapes" data-logo="logoN"><p class="sur clair-sur">PREMIÈRE INSTALLATION</p><ul class="liste-etapes"><li class="fait">Licence</li><li class="cours">Entreprise</li><li class="">Administrateur</li><li class="">Taux et paiements</li><li class="">Sauvegardes</li><li class="">Récapitulatif</li></ul></div>
+<div class="zone"><div class="defile"><h1>Entreprise</h1>
+  <label>Nom de l'entreprise (obligatoire)</label><div class="champ"></div>
+  <label>Adresse / boîte postale</label><div class="champ"></div>
+  <div class="paire"><div><label>Téléphone</label><div class="champ"></div></div><div><label>Email</label><div class="champ"></div></div></div><div class="paire"><div><label>RCCM</label><div class="champ"></div></div><div><label>IFU</label><div class="champ"></div></div></div>
+  <div class="pli"><span>Plus d'informations</span><small>7 champs facultatifs</small></div>
+  <small class="aide">Tout se modifie plus tard dans les Paramètres.</small></div>
+  <div class="bande-boutons"><span class="btn">Précédent</span><span class="btn prim">Suivant</span></div></div></div></div></div></div></figure></div></section><section class="ecran" data-ecran="tableau"><header><div><h2>Tableau de bord</h2><p>Proposition : un bandeau de marque bas, derrière le titre, animé une fois à l'ouverture. Le reste de l'écran ne bouge pas.</p></div>
+<div class="choix"><button data-motif-choix="A" class="">A Trame</button><button data-motif-choix="A2" class="on">A2 Trame de pièces</button><button data-motif-choix="C" class="">C Tournant</button><button data-motif-choix="A+" class="">A+ Anneaux</button><button data-motif-choix="A2+" class="">A2+ Pièces et lignes</button></div></header>
+<div class="duo"><figure><figcaption>Mode clair</figcaption><div class="cadre"><div class="m clair "><div class="barre"><img class="mini" data-logo="sym"><span>Entreprise d'essai</span>
+<b class="ctl">&#8211;&#160;&#160;&#9633;&#160;&#160;&#215;</b></div><div class="corps"><div class="rang"><div class="menu"><div class="ent"><img class="mini2" data-logo="symAuto"><b>Entreprise d'essai</b></div><div class="item actif"><i class="ico" style="--i:url(#tableau-de-bord)" data-ico="tableau-de-bord"></i>Tableau de bord</div><p class="grp">Documents</p><div class="item"><i class="ico" style="--i:url(#devis)" data-ico="devis"></i>Devis</div><div class="item"><i class="ico" style="--i:url(#proforma)" data-ico="proforma"></i>Proforma</div><div class="item"><i class="ico" style="--i:url(#bons-commande)" data-ico="bons-commande"></i>Bons de commande</div><div class="item"><i class="ico" style="--i:url(#livraisons)" data-ico="livraisons"></i>Livraisons</div><div class="item"><i class="ico" style="--i:url(#factures)" data-ico="factures"></i>Factures</div><div class="item"><i class="ico" style="--i:url(#avoirs)" data-ico="avoirs"></i>Avoirs</div><p class="grp">Paiements</p><div class="item"><i class="ico" style="--i:url(#reglements)" data-ico="reglements"></i>Règlements</div><div class="item"><i class="ico" style="--i:url(#suivi-fournisseurs)" data-ico="suivi-fournisseurs"></i>Suivi fournisseurs</div><div class="item"><i class="ico" style="--i:url(#relances)" data-ico="relances"></i>Relances</div><div class="item"><i class="ico" style="--i:url(#comptabilite)" data-ico="comptabilite"></i>Comptabilité</div><p class="grp">Référentiels</p><div class="item"><i class="ico" style="--i:url(#tiers)" data-ico="tiers"></i>Tiers</div><div class="item"><i class="ico" style="--i:url(#produits)" data-ico="produits"></i>Produits</div><div class="bas"><div class="item"><i class="ico" style="--i:url(#parametres)" data-ico="parametres"></i>Paramètres</div><small>Administrateur (Administrateur)</small></div></div>
+<div class="principal">
+  <div class="bandeau"><canvas data-piece="disque" data-cadre="bande"></canvas>
+    <div class="txt-bandeau"><h1>Tableau de bord</h1><small>Période du 01/01/2026 au 31/12/2026.</small></div></div>
+  <h3>Ventes</h3>
+  <div class="cartes3"><div class="carte"><b class="">359 500 FCFA</b><small>Chiffre d'affaires HT</small></div><div class="carte"><b class="">0 FCFA</b><small>TVA</small></div><div class="carte"><b class="">359 500 FCFA</b><small>Chiffre d'affaires TTC</small></div></div>
+  <div class="cartes3"><div class="carte"><b class="ok">0 FCFA</b><small>Total payé</small></div><div class="carte"><b class="ko">359 500 FCFA</b><small>Total impayé</small></div><div></div></div>
+  <div class="carte large"><h4>CA par état de paiement</h4><div class="anneau-ca"><div class="donut"><b>0 %</b><small>payé</small></div>
+  <ul class="leg"><li><i class="ko"></i>Impayé<span>100 %</span><span>359 500 FCFA</span></li><li><i class="at"></i>Partiel<span>0 %</span><span>0 FCFA</span></li><li><i class="ok"></i>Payé<span>0 %</span><span>0 FCFA</span></li></ul></div></div>
+</div></div></div></div></div></figure>
+<figure><figcaption>Mode sombre</figcaption><div class="cadre"><div class="m sombre "><div class="barre"><img class="mini" data-logo="sym"><span>Entreprise d'essai</span>
+<b class="ctl">&#8211;&#160;&#160;&#9633;&#160;&#160;&#215;</b></div><div class="corps"><div class="rang"><div class="menu"><div class="ent"><img class="mini2" data-logo="symAuto"><b>Entreprise d'essai</b></div><div class="item actif"><i class="ico" style="--i:url(#tableau-de-bord)" data-ico="tableau-de-bord"></i>Tableau de bord</div><p class="grp">Documents</p><div class="item"><i class="ico" style="--i:url(#devis)" data-ico="devis"></i>Devis</div><div class="item"><i class="ico" style="--i:url(#proforma)" data-ico="proforma"></i>Proforma</div><div class="item"><i class="ico" style="--i:url(#bons-commande)" data-ico="bons-commande"></i>Bons de commande</div><div class="item"><i class="ico" style="--i:url(#livraisons)" data-ico="livraisons"></i>Livraisons</div><div class="item"><i class="ico" style="--i:url(#factures)" data-ico="factures"></i>Factures</div><div class="item"><i class="ico" style="--i:url(#avoirs)" data-ico="avoirs"></i>Avoirs</div><p class="grp">Paiements</p><div class="item"><i class="ico" style="--i:url(#reglements)" data-ico="reglements"></i>Règlements</div><div class="item"><i class="ico" style="--i:url(#suivi-fournisseurs)" data-ico="suivi-fournisseurs"></i>Suivi fournisseurs</div><div class="item"><i class="ico" style="--i:url(#relances)" data-ico="relances"></i>Relances</div><div class="item"><i class="ico" style="--i:url(#comptabilite)" data-ico="comptabilite"></i>Comptabilité</div><p class="grp">Référentiels</p><div class="item"><i class="ico" style="--i:url(#tiers)" data-ico="tiers"></i>Tiers</div><div class="item"><i class="ico" style="--i:url(#produits)" data-ico="produits"></i>Produits</div><div class="bas"><div class="item"><i class="ico" style="--i:url(#parametres)" data-ico="parametres"></i>Paramètres</div><small>Administrateur (Administrateur)</small></div></div>
+<div class="principal">
+  <div class="bandeau"><canvas data-piece="disque" data-cadre="bande"></canvas>
+    <div class="txt-bandeau"><h1>Tableau de bord</h1><small>Période du 01/01/2026 au 31/12/2026.</small></div></div>
+  <h3>Ventes</h3>
+  <div class="cartes3"><div class="carte"><b class="">359 500 FCFA</b><small>Chiffre d'affaires HT</small></div><div class="carte"><b class="">0 FCFA</b><small>TVA</small></div><div class="carte"><b class="">359 500 FCFA</b><small>Chiffre d'affaires TTC</small></div></div>
+  <div class="cartes3"><div class="carte"><b class="ok">0 FCFA</b><small>Total payé</small></div><div class="carte"><b class="ko">359 500 FCFA</b><small>Total impayé</small></div><div></div></div>
+  <div class="carte large"><h4>CA par état de paiement</h4><div class="anneau-ca"><div class="donut"><b>0 %</b><small>payé</small></div>
+  <ul class="leg"><li><i class="ko"></i>Impayé<span>100 %</span><span>359 500 FCFA</span></li><li><i class="at"></i>Partiel<span>0 %</span><span>0 FCFA</span></li><li><i class="ok"></i>Payé<span>0 %</span><span>0 FCFA</span></li></ul></div></div>
+</div></div></div></div></div></figure></div></section><section class="ecran" data-ecran="apropos"><header><div><h2>Paramètres, À propos</h2><p>Proposition : un bandeau de marque en tête de la carte À propos.</p></div>
+<div class="choix"><button data-motif-choix="A" class="">A Trame</button><button data-motif-choix="A2" class="">A2 Trame de pièces</button><button data-motif-choix="C" class="">C Tournant</button><button data-motif-choix="A+" class="">A+ Anneaux</button><button data-motif-choix="A2+" class="on">A2+ Pièces et lignes</button></div></header>
+<div class="duo"><figure><figcaption>Mode clair</figcaption><div class="cadre"><div class="m clair "><div class="barre"><img class="mini" data-logo="sym"><span>Entreprise d'essai</span>
+<b class="ctl">&#8211;&#160;&#160;&#9633;&#160;&#160;&#215;</b></div><div class="corps"><div class="rang"><div class="menu"><div class="ent"><img class="mini2" data-logo="symAuto"><b>Entreprise d'essai</b></div><div class="item"><i class="ico" style="--i:url(#tableau-de-bord)" data-ico="tableau-de-bord"></i>Tableau de bord</div><p class="grp">Documents</p><div class="item"><i class="ico" style="--i:url(#devis)" data-ico="devis"></i>Devis</div><div class="item"><i class="ico" style="--i:url(#proforma)" data-ico="proforma"></i>Proforma</div><div class="item"><i class="ico" style="--i:url(#bons-commande)" data-ico="bons-commande"></i>Bons de commande</div><div class="item"><i class="ico" style="--i:url(#livraisons)" data-ico="livraisons"></i>Livraisons</div><div class="item"><i class="ico" style="--i:url(#factures)" data-ico="factures"></i>Factures</div><div class="item"><i class="ico" style="--i:url(#avoirs)" data-ico="avoirs"></i>Avoirs</div><p class="grp">Paiements</p><div class="item"><i class="ico" style="--i:url(#reglements)" data-ico="reglements"></i>Règlements</div><div class="item"><i class="ico" style="--i:url(#suivi-fournisseurs)" data-ico="suivi-fournisseurs"></i>Suivi fournisseurs</div><div class="item"><i class="ico" style="--i:url(#relances)" data-ico="relances"></i>Relances</div><div class="item"><i class="ico" style="--i:url(#comptabilite)" data-ico="comptabilite"></i>Comptabilité</div><p class="grp">Référentiels</p><div class="item"><i class="ico" style="--i:url(#tiers)" data-ico="tiers"></i>Tiers</div><div class="item"><i class="ico" style="--i:url(#produits)" data-ico="produits"></i>Produits</div><div class="bas"><div class="item actif"><i class="ico" style="--i:url(#parametres)" data-ico="parametres"></i>Paramètres</div><small>Administrateur (Administrateur)</small></div></div>
+<div class="rubriques"><h2>Paramètres</h2><div class="item"><i class="ico" style="--i:url(#mon-compte)" data-ico="mon-compte"></i>Mon compte</div><div class="item"><i class="ico" style="--i:url(#navigation)" data-ico="navigation"></i>Navigation et affichage</div><div class="item"><i class="ico" style="--i:url(#entreprise)" data-ico="entreprise"></i>Entreprise</div><div class="item"><i class="ico" style="--i:url(#documents)" data-ico="documents"></i>Documents</div><div class="item"><i class="ico" style="--i:url(#paiements)" data-ico="paiements"></i>Paiements</div><div class="item"><i class="ico" style="--i:url(#comptabilite)" data-ico="comptabilite"></i>Comptabilité</div><div class="item"><i class="ico" style="--i:url(#exports)" data-ico="exports"></i>Textes imprimés et exports</div><div class="item"><i class="ico" style="--i:url(#impression)" data-ico="impression"></i>Impression</div><div class="item"><i class="ico" style="--i:url(#utilisateurs)" data-ico="utilisateurs"></i>Utilisateurs</div><div class="item"><i class="ico" style="--i:url(#licence)" data-ico="licence"></i>Abonnement</div><div class="item"><i class="ico" style="--i:url(#mises-a-jour)" data-ico="mises-a-jour"></i>Mises à jour</div><div class="item"><i class="ico" style="--i:url(#parametres)" data-ico="parametres"></i>Serveur</div><div class="item"><i class="ico" style="--i:url(#acces-distant)" data-ico="acces-distant"></i>Accès à distance</div><div class="item"><i class="ico" style="--i:url(#relances)" data-ico="relances"></i>Opérations suspendues</div><div class="item actif"><i class="ico" style="--i:url(#a-propos)" data-ico="a-propos"></i>À propos</div></div>
+<div class="principal"><h1 style="margin-bottom:16px">À propos</h1>
+  <div class="carte-apropos"><div class="bandeau court"><canvas data-piece="quart" data-cadre="bande"></canvas>
+    <img class="logo-bandeau" data-logo="logoN"></div>
+    <div class="contenu"><h4>Gestion commerciale</h4><p class="txt" style="font-size:14px">Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements.</p>
+    <div class="lig"><span>Version</span><b>1.0.0</b></div>
+    <span class="btn" style="margin-top:14px;align-self:flex-start">Revoir la présentation</span></div></div>
+</div></div></div></div></div></figure>
+<figure><figcaption>Mode sombre</figcaption><div class="cadre"><div class="m sombre "><div class="barre"><img class="mini" data-logo="sym"><span>Entreprise d'essai</span>
+<b class="ctl">&#8211;&#160;&#160;&#9633;&#160;&#160;&#215;</b></div><div class="corps"><div class="rang"><div class="menu"><div class="ent"><img class="mini2" data-logo="symAuto"><b>Entreprise d'essai</b></div><div class="item"><i class="ico" style="--i:url(#tableau-de-bord)" data-ico="tableau-de-bord"></i>Tableau de bord</div><p class="grp">Documents</p><div class="item"><i class="ico" style="--i:url(#devis)" data-ico="devis"></i>Devis</div><div class="item"><i class="ico" style="--i:url(#proforma)" data-ico="proforma"></i>Proforma</div><div class="item"><i class="ico" style="--i:url(#bons-commande)" data-ico="bons-commande"></i>Bons de commande</div><div class="item"><i class="ico" style="--i:url(#livraisons)" data-ico="livraisons"></i>Livraisons</div><div class="item"><i class="ico" style="--i:url(#factures)" data-ico="factures"></i>Factures</div><div class="item"><i class="ico" style="--i:url(#avoirs)" data-ico="avoirs"></i>Avoirs</div><p class="grp">Paiements</p><div class="item"><i class="ico" style="--i:url(#reglements)" data-ico="reglements"></i>Règlements</div><div class="item"><i class="ico" style="--i:url(#suivi-fournisseurs)" data-ico="suivi-fournisseurs"></i>Suivi fournisseurs</div><div class="item"><i class="ico" style="--i:url(#relances)" data-ico="relances"></i>Relances</div><div class="item"><i class="ico" style="--i:url(#comptabilite)" data-ico="comptabilite"></i>Comptabilité</div><p class="grp">Référentiels</p><div class="item"><i class="ico" style="--i:url(#tiers)" data-ico="tiers"></i>Tiers</div><div class="item"><i class="ico" style="--i:url(#produits)" data-ico="produits"></i>Produits</div><div class="bas"><div class="item actif"><i class="ico" style="--i:url(#parametres)" data-ico="parametres"></i>Paramètres</div><small>Administrateur (Administrateur)</small></div></div>
+<div class="rubriques"><h2>Paramètres</h2><div class="item"><i class="ico" style="--i:url(#mon-compte)" data-ico="mon-compte"></i>Mon compte</div><div class="item"><i class="ico" style="--i:url(#navigation)" data-ico="navigation"></i>Navigation et affichage</div><div class="item"><i class="ico" style="--i:url(#entreprise)" data-ico="entreprise"></i>Entreprise</div><div class="item"><i class="ico" style="--i:url(#documents)" data-ico="documents"></i>Documents</div><div class="item"><i class="ico" style="--i:url(#paiements)" data-ico="paiements"></i>Paiements</div><div class="item"><i class="ico" style="--i:url(#comptabilite)" data-ico="comptabilite"></i>Comptabilité</div><div class="item"><i class="ico" style="--i:url(#exports)" data-ico="exports"></i>Textes imprimés et exports</div><div class="item"><i class="ico" style="--i:url(#impression)" data-ico="impression"></i>Impression</div><div class="item"><i class="ico" style="--i:url(#utilisateurs)" data-ico="utilisateurs"></i>Utilisateurs</div><div class="item"><i class="ico" style="--i:url(#licence)" data-ico="licence"></i>Abonnement</div><div class="item"><i class="ico" style="--i:url(#mises-a-jour)" data-ico="mises-a-jour"></i>Mises à jour</div><div class="item"><i class="ico" style="--i:url(#parametres)" data-ico="parametres"></i>Serveur</div><div class="item"><i class="ico" style="--i:url(#acces-distant)" data-ico="acces-distant"></i>Accès à distance</div><div class="item"><i class="ico" style="--i:url(#relances)" data-ico="relances"></i>Opérations suspendues</div><div class="item actif"><i class="ico" style="--i:url(#a-propos)" data-ico="a-propos"></i>À propos</div></div>
+<div class="principal"><h1 style="margin-bottom:16px">À propos</h1>
+  <div class="carte-apropos"><div class="bandeau court"><canvas data-piece="quart" data-cadre="bande"></canvas>
+    <img class="logo-bandeau" data-logo="logoN"></div>
+    <div class="contenu"><h4>Gestion commerciale</h4><p class="txt" style="font-size:14px">Devis, proforma, bons de commande, bordereaux de livraison, factures et paiements.</p>
+    <div class="lig"><span>Version</span><b>1.0.0</b></div>
+    <span class="btn" style="margin-top:14px;align-self:flex-start">Revoir la présentation</span></div></div>
+</div></div></div></div></div></figure></div></section><section class="ecran" data-ecran="vide"><header><div><h2>Liste vide</h2><p>Proposition : une petite pièce animée au-dessus du message, quand une liste est vide.</p></div>
+<div class="choix"><button data-motif-choix="A" class="">A Trame</button><button data-motif-choix="A2" class="on">A2 Trame de pièces</button><button data-motif-choix="C" class="">C Tournant</button><button data-motif-choix="A+" class="">A+ Anneaux</button><button data-motif-choix="A2+" class="">A2+ Pièces et lignes</button></div></header>
+<div class="duo"><figure><figcaption>Mode clair</figcaption><div class="cadre"><div class="m clair "><div class="barre"><img class="mini" data-logo="sym"><span>Entreprise d'essai</span>
+<b class="ctl">&#8211;&#160;&#160;&#9633;&#160;&#160;&#215;</b></div><div class="corps"><div class="rang"><div class="menu"><div class="ent"><img class="mini2" data-logo="symAuto"><b>Entreprise d'essai</b></div><div class="item"><i class="ico" style="--i:url(#tableau-de-bord)" data-ico="tableau-de-bord"></i>Tableau de bord</div><p class="grp">Documents</p><div class="item"><i class="ico" style="--i:url(#devis)" data-ico="devis"></i>Devis</div><div class="item"><i class="ico" style="--i:url(#proforma)" data-ico="proforma"></i>Proforma</div><div class="item"><i class="ico" style="--i:url(#bons-commande)" data-ico="bons-commande"></i>Bons de commande</div><div class="item"><i class="ico" style="--i:url(#livraisons)" data-ico="livraisons"></i>Livraisons</div><div class="item actif"><i class="ico" style="--i:url(#factures)" data-ico="factures"></i>Factures</div><div class="item"><i class="ico" style="--i:url(#avoirs)" data-ico="avoirs"></i>Avoirs</div><p class="grp">Paiements</p><div class="item"><i class="ico" style="--i:url(#reglements)" data-ico="reglements"></i>Règlements</div><div class="item"><i class="ico" style="--i:url(#suivi-fournisseurs)" data-ico="suivi-fournisseurs"></i>Suivi fournisseurs</div><div class="item"><i class="ico" style="--i:url(#relances)" data-ico="relances"></i>Relances</div><div class="item"><i class="ico" style="--i:url(#comptabilite)" data-ico="comptabilite"></i>Comptabilité</div><p class="grp">Référentiels</p><div class="item"><i class="ico" style="--i:url(#tiers)" data-ico="tiers"></i>Tiers</div><div class="item"><i class="ico" style="--i:url(#produits)" data-ico="produits"></i>Produits</div><div class="bas"><div class="item"><i class="ico" style="--i:url(#parametres)" data-ico="parametres"></i>Paramètres</div><small>Administrateur (Administrateur)</small></div></div>
+<div class="principal"><div class="ligne entre"><h1>Factures</h1><div class="ligne"><span class="btn">Exporter en Excel</span><span class="btn prim">Nouvelle facture</span></div></div>
+  <div class="ligne filtres"><div class="champ f1">Rechercher : numéro, client, libellé</div><div class="champ f2">Tous les statuts</div><div class="champ f2">Tout paiement</div><div class="champ f3">Du JJ/MM/AAAA</div><div class="champ f3">Au JJ/MM/AAAA</div></div>
+  <div class="tableau"><div class="entete-t"><span>N°</span><span>Date</span><span>Client</span><span>Libellé</span><span>Montant TTC</span><span>Statut</span><span>Paiement</span><span>Mode</span><span>Échéance</span></div>
+  <div class="vide"><canvas data-piece="carre" data-cadre="vignette"></canvas><p>Aucune facture sur la période.</p></div></div>
+</div></div></div></div></div></figure>
+<figure><figcaption>Mode sombre</figcaption><div class="cadre"><div class="m sombre "><div class="barre"><img class="mini" data-logo="sym"><span>Entreprise d'essai</span>
+<b class="ctl">&#8211;&#160;&#160;&#9633;&#160;&#160;&#215;</b></div><div class="corps"><div class="rang"><div class="menu"><div class="ent"><img class="mini2" data-logo="symAuto"><b>Entreprise d'essai</b></div><div class="item"><i class="ico" style="--i:url(#tableau-de-bord)" data-ico="tableau-de-bord"></i>Tableau de bord</div><p class="grp">Documents</p><div class="item"><i class="ico" style="--i:url(#devis)" data-ico="devis"></i>Devis</div><div class="item"><i class="ico" style="--i:url(#proforma)" data-ico="proforma"></i>Proforma</div><div class="item"><i class="ico" style="--i:url(#bons-commande)" data-ico="bons-commande"></i>Bons de commande</div><div class="item"><i class="ico" style="--i:url(#livraisons)" data-ico="livraisons"></i>Livraisons</div><div class="item actif"><i class="ico" style="--i:url(#factures)" data-ico="factures"></i>Factures</div><div class="item"><i class="ico" style="--i:url(#avoirs)" data-ico="avoirs"></i>Avoirs</div><p class="grp">Paiements</p><div class="item"><i class="ico" style="--i:url(#reglements)" data-ico="reglements"></i>Règlements</div><div class="item"><i class="ico" style="--i:url(#suivi-fournisseurs)" data-ico="suivi-fournisseurs"></i>Suivi fournisseurs</div><div class="item"><i class="ico" style="--i:url(#relances)" data-ico="relances"></i>Relances</div><div class="item"><i class="ico" style="--i:url(#comptabilite)" data-ico="comptabilite"></i>Comptabilité</div><p class="grp">Référentiels</p><div class="item"><i class="ico" style="--i:url(#tiers)" data-ico="tiers"></i>Tiers</div><div class="item"><i class="ico" style="--i:url(#produits)" data-ico="produits"></i>Produits</div><div class="bas"><div class="item"><i class="ico" style="--i:url(#parametres)" data-ico="parametres"></i>Paramètres</div><small>Administrateur (Administrateur)</small></div></div>
+<div class="principal"><div class="ligne entre"><h1>Factures</h1><div class="ligne"><span class="btn">Exporter en Excel</span><span class="btn prim">Nouvelle facture</span></div></div>
+  <div class="ligne filtres"><div class="champ f1">Rechercher : numéro, client, libellé</div><div class="champ f2">Tous les statuts</div><div class="champ f2">Tout paiement</div><div class="champ f3">Du JJ/MM/AAAA</div><div class="champ f3">Au JJ/MM/AAAA</div></div>
+  <div class="tableau"><div class="entete-t"><span>N°</span><span>Date</span><span>Client</span><span>Libellé</span><span>Montant TTC</span><span>Statut</span><span>Paiement</span><span>Mode</span><span>Échéance</span></div>
+  <div class="vide"><canvas data-piece="carre" data-cadre="vignette"></canvas><p>Aucune facture sur la période.</p></div></div>
+</div></div></div></div></div></figure></div></section>
+<footer>Textes : chaînes de l'application. Montants et « Entreprise d'essai » : base d'essai. Couleurs : jetons de
+composants.slint (clair, Graphite, Ardoise, Anthracite). En mode sombre, les motifs passent en gris (aucun bleu),
+seul l'Ambre reste. Le bandeau du tableau de bord, celui de la carte À propos et la pièce de la liste vide sont
+des propositions nouvelles ; les autres écrans gardent la mise en page adoptée le 2026-11-18.</footer>
+<script>
+const LOGOS = {"logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5MTEuOTkgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkthZGVueiI+PHRpdGxlPkthZGVuejwvdGl0bGU+PHBhdGggZmlsbD0iIzJEM0E4QyIgZD0iTTE2IDE2IEwxMjAgMTYgTDEyMCAxMjAgTDE2IDEyMCBaIE0xMzYgMTIwIEwxMzYgMTQuNDQgQTEwNS41NiAxMDUuNTYgMCAwIDEgMjQxLjU2IDEyMCBaIE0xNiAxMzYgTDEyMCAyNDAgTDE2IDI0MCBaIE0xMzQuNDQgMTg4IEE1My41NiA1My41NiAwIDEgMSAyNDEuNTYgMTg4IEE1My41NiA1My41NiAwIDEgMSAxMzQuNDQgMTg4IFoiLz48cGF0aCBmaWxsPSIjMUEyMjU5IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyODAgMTcyLjI3KSBzY2FsZSgwLjE3OTEyKSIgZD0iTTczLjE0OTc4MDI3MzQzNzUgMC4wVi03MDAuMEgxODcuNjAwNTg1OTM3NVYtMzA2Ljg3NTQyNzI0NjA5Mzc1SDIwNC41NTA2NTkxNzk2ODc1TDM4My40MjQ2MjE1ODIwMzEyNSAtNDk0LjI1MDEyMjA3MDMxMjVINTM0LjEyNTU0OTMxNjQwNjJMMjk0LjgwMTI2OTUzMTI1IC0yNTQuNzc1MDg1NDQ5MjE4NzVMNTQyLjEyNTU0OTMxNjQwNjIgMC4wSDM5My4yNDk2MzM3ODkwNjI1TDIwNC41NTA2NTkxNzk2ODc1IC0yMDAuODQ5NzMxNDQ1MzEyNUgxODcuNjAwNTg1OTM3NVYwLjBaTTc3NC4yNzQ4NDEzMDg1OTM4IDE0LjBRNzIxLjYyNDgxNjg5NDUzMTIgMTQuMCA2NzkuNzEyMzEwNzkxMDE1NiAtNC4zMjUwMTIyMDcwMzEyNVE2MzcuNzk5ODA0Njg3NSAtMjIuNjUwMDI0NDE0MDYyNSA2MTMuMzg3Mjk4NTgzOTg0NCAtNTcuODg3NTQyNzI0NjA5Mzc1UTU4OC45NzQ3OTI0ODA0Njg4IC05My4xMjUwNjEwMzUxNTYyNSA1ODguOTc0NzkyNDgwNDY4OCAtMTQzLjYwMDA5NzY1NjI1UTU4OC45NzQ3OTI0ODA0Njg4IC0xOTQuMjUwMTIyMDcwMzEyNSA2MTMuMzg3Mjk4NTgzOTg0NCAtMjI4LjMxMjY1MjU4Nzg5MDYyUTYzNy43OTk4MDQ2ODc1IC0yNjIuMzc1MTgzMTA1NDY4NzUgNjgwLjg2MjMzNTIwNTA3ODEgLTI3OS42MTI3MDE0MTYwMTU2UTcyMy45MjQ4NjU3MjI2NTYyIC0yOTYuODUwMjE5NzI2NTYyNSA3NzguODc0OTM4OTY0ODQzOCAtMjk2Ljg1MDIxOTcyNjU2MjVIOTIyLjIyNDQyNjI2OTUzMTJWLTMyNi43NzUwODU0NDkyMTg3NVE5MjIuMjI0NDI2MjY5NTMxMiAtMzY1Ljk3NDc5MjQ4MDQ2ODc1IDg5OC4xMjQ1NzI3NTM5MDYyIC0zOTAuMzEyMTY0MzA2NjQwNlE4NzQuMDI0NzE5MjM4MjgxMiAtNDE0LjY0OTUzNjEzMjgxMjUgODIzLjA0OTkyNjc1NzgxMjUgLTQxNC42NDk1MzYxMzI4MTI1UTc3My4wNzUxMzQyNzczNDM4IC00MTQuNjQ5NTM2MTMyODEyNSA3NDcuNTM3ODExMjc5Mjk2OSAtMzkxLjM5OTY1ODIwMzEyNVE3MjIuMDAwNDg4MjgxMjUgLTM2OC4xNDk3ODAyNzM0Mzc1IDcxMy45NTA1NjE1MjM0Mzc1IC0zMzAuODI1MDEyMjA3MDMxMjVMNjA4LjA5OTg1MzUxNTYyNSAtMzY1Ljk3NTI4MDc2MTcxODc1UTYyMC4wOTk4NTM1MTU2MjUgLTQwNC44NTAyMTk3MjY1NjI1IDY0Ni41MTIzNTk2MTkxNDA2IC00MzYuODc1MTgzMTA1NDY4NzVRNjcyLjkyNDg2NTcyMjY1NjIgLTQ2OC45MDAxNDY0ODQzNzUgNzE3LjE2MjM4NDAzMzIwMzEgLTQ4OC41NzUxMzQyNzczNDM3NVE3NjEuMzk5OTAyMzQzNzUgLTUwOC4yNTAxMjIwNzAzMTI1IDgyNC42OTk5NTExNzE4NzUgLTUwOC4yNTAxMjIwNzAzMTI1UTkyMS42NTAwMjQ0MTQwNjI1IC01MDguMjUwMTIyMDcwMzEyNSA5NzcuNTEyNjAzNzU5NzY1NiAtNDU5LjQyNTEwOTg2MzI4MTI1UTEwMzMuMzc1MTgzMTA1NDY4OCAtNDEwLjYwMDA5NzY1NjI1IDEwMzMuMzc1MTgzMTA1NDY4OCAtMzE4LjgyNTAxMjIwNzAzMTI1Vi0xMjQuOTAwNjM0NzY1NjI1UTEwMzMuMzc1MTgzMTA1NDY4OCAtOTQuOTAwNjM0NzY1NjI1IDEwNjEuMzc1MTgzMTA1NDY4OCAtOTQuOTAwNjM0NzY1NjI1SDExMDIuNjAwMDk3NjU2MjVWMC4wSDEwMjIuMDk5ODUzNTE1NjI1UTk4Ni4xNDk3ODAyNzM0Mzc1IDAuMCA5NjMuMTk5NzA3MDMxMjUgLTE4LjA4NzQ5Mzg5NjQ4NDM3NVE5NDAuMjQ5NjMzNzg5MDYyNSAtMzYuMTc0OTg3NzkyOTY4NzUgOTQwLjI0OTYzMzc4OTA2MjUgLTY2LjUyNDk2MzM3ODkwNjI1Vi02OC41NzQ4OTAxMzY3MTg3NUg5MjIuODI0NTIzOTI1NzgxMlE5MTcuMjQ5NjMzNzg5MDYyNSAtNTQuODI1MDEyMjA3MDMxMjUgOTAyLjExMjIxMzEzNDc2NTYgLTM1LjA2MjUzMDUxNzU3ODEyNVE4ODYuOTc0NzkyNDgwNDY4OCAtMTUuMzAwMDQ4ODI4MTI1IDg1Ni40NDk4MjkxMDE1NjI1IC0wLjY1MDAyNDQxNDA2MjVRODI1LjkyNDg2NTcyMjY1NjIgMTQuMCA3NzQuMjc0ODQxMzA4NTkzOCAxNC4wWk03OTMuMTI1MDYxMDM1MTU2MiAtNzkuNjAwNTg1OTM3NVE4NTAuMzI0NzY4MDY2NDA2MiAtNzkuNjAwNTg1OTM3NSA4ODYuMjc0NTk3MTY3OTY4OCAtMTEyLjA3NTM3ODQxNzk2ODc1UTkyMi4yMjQ0MjYyNjk1MzEyIC0xNDQuNTUwMTcwODk4NDM3NSA5MjIuMjI0NDI2MjY5NTMxMiAtMTk5Ljg0OTczMTQ0NTMxMjVWLTIxMC4xOTk3MDcwMzEyNUg3ODYuNDc1MDM2NjIxMDkzOFE3NDguNTAwMjQ0MTQwNjI1IC0yMTAuMTk5NzA3MDMxMjUgNzI1Ljk2MjkyMTE0MjU3ODEgLTE5My44ODcyOTg1ODM5ODQzOFE3MDMuNDI1NTk4MTQ0NTMxMiAtMTc3LjU3NDg5MDEzNjcxODc1IDcwMy40MjU1OTgxNDQ1MzEyIC0xNDcuMDc1MTM0Mjc3MzQzNzVRNzAzLjQyNTU5ODE0NDUzMTIgLTExNi41NzUzNzg0MTc5Njg3NSA3MjYuOTYyOTIxMTQyNTc4MSAtOTguMDg3OTgyMTc3NzM0MzhRNzUwLjUwMDI0NDE0MDYyNSAtNzkuNjAwNTg1OTM3NSA3OTMuMTI1MDYxMDM1MTU2MiAtNzkuNjAwNTg1OTM3NVpNMTM4OS44OTk2NTgyMDMxMjUgMTQuMFExMzI5Ljg0OTczMTQ0NTMxMjUgMTQuMCAxMjc4LjA4NzI0OTc1NTg1OTQgLTE1LjY3NDk4Nzc5Mjk2ODc1UTEyMjYuMzI0NzY4MDY2NDA2MiAtNDUuMzQ5OTc1NTg1OTM3NSAxMTk1LjIzNzI3NDE2OTkyMTkgLTEwMi4yNjI0ODE2ODk0NTMxMlExMTY0LjE0OTc4MDI3MzQzNzUgLTE1OS4xNzQ5ODc3OTI5Njg3NSAxMTY0LjE0OTc4MDI3MzQzNzUgLTIzOS40NzUwMzY2MjEwOTM3NVYtMjU0Ljc3NTA4NTQ0OTIxODc1UTExNjQuMTQ5NzgwMjczNDM3NSAtMzM1LjA3NTEzNDI3NzM0Mzc1IDExOTUuMTQ5NzgwMjczNDM3NSAtMzkxLjk4NzY0MDM4MDg1OTRRMTIyNi4xNDk3ODAyNzM0Mzc1IC00NDguOTAwMTQ2NDg0Mzc1IDEyNzcuNTg3MjQ5NzU1ODU5NCAtNDc4LjU3NTEzNDI3NzM0Mzc1UTEzMjkuMDI0NzE5MjM4MjgxMiAtNTA4LjI1MDEyMjA3MDMxMjUgMTM4OS44OTk2NTgyMDMxMjUgLTUwOC4yNTAxMjIwNzAzMTI1UTE0MzYuNDc0NTQ4MzM5ODQzOCAtNTA4LjI1MDEyMjA3MDMxMjUgMTQ2OC4xMTE5Njg5OTQxNDA2IC00OTcuMDUwMTcwODk4NDM3NVExNDk5Ljc0OTM4OTY0ODQzNzUgLTQ4NS44NTAyMTk3MjY1NjI1IDE1MTkuNTM2ODM0NzE2Nzk2OSAtNDY4LjcxMjc5OTA3MjI2NTZRMTUzOS4zMjQyNzk3ODUxNTYyIC00NTEuNTc1Mzc4NDE3OTY4NzUgMTU0OS44NDkyNDMxNjQwNjI1IC00MzIuMzUwNDYzODY3MTg3NUgxNTY2Ljc5OTMxNjQwNjI1Vi03MDAuMEgxNjgxLjI1MDEyMjA3MDMxMjVWMC4wSDE1NjguNzk5MzE2NDA2MjVWLTY1LjA3NDY0NTk5NjA5Mzc1SDE1NTEuODQ5MjQzMTY0MDYyNVExNTM0LjE0OTI5MTk5MjE4NzUgLTM0Ljk3NDc5MjQ4MDQ2ODc1IDE0OTcuMDc0NDAxODU1NDY4OCAtMTAuNDg3Mzk2MjQwMjM0Mzc1UTE0NTkuOTk5NTExNzE4NzUgMTQuMCAxMzg5Ljg5OTY1ODIwMzEyNSAxNC4wWk0xNDIzLjY5OTk1MTE3MTg3NSAtODYuMjAwNjgzNTkzNzVRMTQ4Ni4wNzQ2NDU5OTYwOTM4IC04Ni4yMDA2ODM1OTM3NSAxNTI3LjI2MTk5MzQwODIwMzEgLTEyNi40MTI5OTQzODQ3NjU2MlExNTY4LjQ0OTM0MDgyMDMxMjUgLTE2Ni42MjUzMDUxNzU3ODEyNSAxNTY4LjQ0OTM0MDgyMDMxMjUgLTI0Mi4zMDAwNDg4MjgxMjVWLTI1MS45NTAwNzMyNDIxODc1UTE1NjguNDQ5MzQwODIwMzEyNSAtMzI3LjYyNDgxNjg5NDUzMTI1IDE1MjcuNjc0NDk5NTExNzE4OCAtMzY3LjgzNzEyNzY4NTU0NjlRMTQ4Ni44OTk2NTgyMDMxMjUgLTQwOC4wNDk0Mzg0NzY1NjI1IDE0MjMuNjk5OTUxMTcxODc1IC00MDguMDQ5NDM4NDc2NTYyNVExMzYxLjUwMDI0NDE0MDYyNSAtNDA4LjA0OTQzODQ3NjU2MjUgMTMyMC4yMjU0MDI4MzIwMzEyIC0zNjcuODM3MTI3Njg1NTQ2OVExMjc4Ljk1MDU2MTUyMzQzNzUgLTMyNy42MjQ4MTY4OTQ1MzEyNSAxMjc4Ljk1MDU2MTUyMzQzNzUgLTI1MS45NTAwNzMyNDIxODc1Vi0yNDIuMzAwMDQ4ODI4MTI1UTEyNzguOTUwNTYxNTIzNDM3NSAtMTY2LjYyNTMwNTE3NTc4MTI1IDEzMjAuMjI1NDAyODMyMDMxMiAtMTI2LjQxMjk5NDM4NDc2NTYyUTEzNjEuNTAwMjQ0MTQwNjI1IC04Ni4yMDA2ODM1OTM3NSAxNDIzLjY5OTk1MTE3MTg3NSAtODYuMjAwNjgzNTkzNzVaTTIwNDIuNzk5ODA0Njg3NSAxNC4wUTE5NjguNjI0ODE2ODk0NTMxMiAxNC4wIDE5MTIuMjk5ODA0Njg3NSAtMTcuNVExODU1Ljk3NDc5MjQ4MDQ2ODggLTQ5LjAgMTgyNC41NjIyODYzNzY5NTMxIC0xMDYuNDEyNTA2MTAzNTE1NjJRMTc5My4xNDk3ODAyNzM0Mzc1IC0xNjMuODI1MDEyMjA3MDMxMjUgMTc5My4xNDk3ODAyNzM0Mzc1IC0yNDEuMTI1MDYxMDM1MTU2MjVWLTI1My4xMjUwNjEwMzUxNTYyNVExNzkzLjE0OTc4MDI3MzQzNzUgLTMzMC42MDAwOTc2NTYyNSAxODI0LjE0OTc4MDI3MzQzNzUgLTM4Ny45MjUxMDk4NjMyODEyNVExODU1LjE0OTc4MDI3MzQzNzUgLTQ0NS4yNTAxMjIwNzAzMTI1IDE5MTAuODg3Mjk4NTgzOTg0NCAtNDc2Ljc1MDEyMjA3MDMxMjVRMTk2Ni42MjQ4MTY4OTQ1MzEyIC01MDguMjUwMTIyMDcwMzEyNSAyMDM5LjkyNDg2NTcyMjY1NjIgLTUwOC4yNTAxMjIwNzAzMTI1UTIxMTIuMDQ5OTI2NzU3ODEyNSAtNTA4LjI1MDEyMjA3MDMxMjUgMjE2NS43ODc0NDUwNjgzNTk0IC00NzYuNDUwMDczMjQyMTg3NVEyMjE5LjUyNDk2MzM3ODkwNjIgLTQ0NC42NTAwMjQ0MTQwNjI1IDIyNDkuNTI0OTYzMzc4OTA2MiAtMzg3Ljg0OTk3NTU4NTkzNzVRMjI3OS41MjQ5NjMzNzg5MDYyIC0zMzEuMDQ5OTI2NzU3ODEyNSAyMjc5LjUyNDk2MzM3ODkwNjIgLTI1NS4zOTk5MDIzNDM3NVYtMjE0LjMyNDc2ODA2NjQwNjI1SDE5MDkuMjUwNjEwMzUxNTYyNVExOTExLjQyNTU5ODE0NDUzMTIgLTE1Ni4zMjUyNTYzNDc2NTYyNSAxOTUwLjMxMjg5NjcyODUxNTYgLTEyMS4yNjI5Njk5NzA3MDMxMlExOTg5LjIwMDE5NTMxMjUgLTg2LjIwMDY4MzU5Mzc1IDIwNDYuMDk5ODUzNTE1NjI1IC04Ni4yMDA2ODM1OTM3NVEyMTAxLjcyNDY3MDQxMDE1NjIgLTg2LjIwMDY4MzU5Mzc1IDIxMjguOTEyMDE3ODIyMjY1NiAtMTEwLjYwMDU4NTkzNzVRMjE1Ni4wOTkzNjUyMzQzNzUgLTEzNS4wMDA0ODgyODEyNSAyMTcwLjMyNDI3OTc4NTE1NjIgLTE2NS45NzUyODA3NjE3MTg3NUwyMjY0Ljc0OTg3NzkyOTY4NzUgLTExNy4yMjQ5MTQ1NTA3ODEyNVEyMjUwLjU3NDg5MDEzNjcxODggLTkwLjAgMjIyNC4wNzQ4OTAxMzY3MTg4IC01OS4zMjUwMTIyMDcwMzEyNVEyMTk3LjU3NDg5MDEzNjcxODggLTI4LjY1MDAyNDQxNDA2MjUgMjE1My45MjQ4NjU3MjI2NTYyIC03LjMyNTAxMjIwNzAzMTI1UTIxMTAuMjc0ODQxMzA4NTkzOCAxNC4wIDIwNDIuNzk5ODA0Njg3NSAxNC4wWk0xOTEwLjI1MDYxMDM1MTU2MjUgLTMwMC45NzUyODA3NjE3MTg3NUgyMTYzLjI0OTE0NTUwNzgxMjVRMjE1OS4yNDkxNDU1MDc4MTI1IC0zNTAuMjc0ODQxMzA4NTkzNzUgMjEyNS44NjE4NDY5MjM4MjggLTM3OS4xNjIxMzk4OTI1NzgxUTIwOTIuNDc0NTQ4MzM5ODQzOCAtNDA4LjA0OTQzODQ3NjU2MjUgMjAzOS4wOTk4NTM1MTU2MjUgLTQwOC4wNDk0Mzg0NzY1NjI1UTE5ODQuMjUwMTIyMDcwMzEyNSAtNDA4LjA0OTQzODQ3NjU2MjUgMTk1MS4xMDAzNDE3OTY4NzUgLTM3OS4xNjIxMzk4OTI1NzgxUTE5MTcuOTUwNTYxNTIzNDM3NSAtMzUwLjI3NDg0MTMwODU5Mzc1IDE5MTAuMjUwNjEwMzUxNTYyNSAtMzAwLjk3NTI4MDc2MTcxODc1Wk0yMzg4LjE0OTc4MDI3MzQzNzUgMC4wVi00OTQuMjUwMTIyMDcwMzEyNUgyNTAwLjYwMDU4NTkzNzVWLTQyNC44NzU0MjcyNDYwOTM3NUgyNTE3LjU1MDY1OTE3OTY4NzVRMjUzMC42MDA1ODU5Mzc1IC00NTMuMTUwMjY4NTU0Njg3NSAyNTY1LjAwMDQ4ODI4MTI1IC00NzcuODc1MTgzMTA1NDY4NzVRMjU5OS40MDAzOTA2MjUgLTUwMi42MDAwOTc2NTYyNSAyNjY4LjMyNTI1NjM0NzY1NjIgLTUwMi42MDAwOTc2NTYyNVEyNzI1LjQ1MDMxNzM4MjgxMjUgLTUwMi42MDAwOTc2NTYyNSAyNzY5LjAzNzgxMTI3OTI5NyAtNDc2Ljg4NzU0MjcyNDYwOTRRMjgxMi42MjUzMDUxNzU3ODEyIC00NTEuMTc0OTg3NzkyOTY4NzUgMjgzNy4wNjI3NzQ2NTgyMDMgLTQwNS4wMjQ5NjMzNzg5MDYyNVEyODYxLjUwMDI0NDE0MDYyNSAtMzU4Ljg3NDkzODk2NDg0Mzc1IDI4NjEuNTAwMjQ0MTQwNjI1IC0yOTYuMFYwLjBIMjc0Ny4wNDk0Mzg0NzY1NjI1Vi0yODcuMDQ5OTI2NzU3ODEyNVEyNzQ3LjA0OTQzODQ3NjU2MjUgLTM0Ny4yNDk2MzM3ODkwNjI1IDI3MTcuMzYyMDkxMDY0NDUzIC0zNzYuNDc0NTQ4MzM5ODQzNzVRMjY4Ny42NzQ3NDM2NTIzNDM4IC00MDUuNjk5NDYyODkwNjI1IDI2MzMuODc0OTM4OTY0ODQzOCAtNDA1LjY5OTQ2Mjg5MDYyNVEyNTcyLjkwMDE0NjQ4NDM3NSAtNDA1LjY5OTQ2Mjg5MDYyNSAyNTM3Ljc1MDM2NjIxMDkzNzUgLTM2NS4yNzQ1OTcxNjc5Njg3NVEyNTAyLjYwMDU4NTkzNzUgLTMyNC44NDk3MzE0NDUzMTI1IDI1MDIuNjAwNTg1OTM3NSAtMjUwLjQyNTEwOTg2MzI4MTI1VjAuMFpNMjk3NC4wOTk4NTM1MTU2MjUgMC4wVi0xMzguMTAwODMwMDc4MTI1TDMyNTUuNzI0MTgyMTI4OTA2MiAtMzg0LjA0OTQzODQ3NjU2MjVWLTM5OC45OTk1MTE3MTg3NUgyOTg0LjA5OTg1MzUxNTYyNVYtNDk0LjI1MDEyMjA3MDMxMjVIMzM4MC4yNTAxMjIwNzAzMTI1Vi0zNTYuMTQ5MjkxOTkyMTg3NUwzMDk4LjQ1MDgwNTY2NDA2MjUgLTExMC4yMDA2ODM1OTM3NVYtOTUuMjUwNjEwMzUxNTYyNUgzMzg4LjI1MDEyMjA3MDMxMjVWMC4wWiIvPjwvc3ZnPg0K", "logoN": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5MTEuOTkgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkthZGVueiI+PHRpdGxlPkthZGVuejwvdGl0bGU+PHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTE2IDE2IEwxMjAgMTYgTDEyMCAxMjAgTDE2IDEyMCBaIE0xMzYgMTIwIEwxMzYgMTQuNDQgQTEwNS41NiAxMDUuNTYgMCAwIDEgMjQxLjU2IDEyMCBaIE0xNiAxMzYgTDEyMCAyNDAgTDE2IDI0MCBaIE0xMzQuNDQgMTg4IEE1My41NiA1My41NiAwIDEgMSAyNDEuNTYgMTg4IEE1My41NiA1My41NiAwIDEgMSAxMzQuNDQgMTg4IFoiLz48cGF0aCBmaWxsPSIjRkZGRkZGIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyODAgMTcyLjI3KSBzY2FsZSgwLjE3OTEyKSIgZD0iTTczLjE0OTc4MDI3MzQzNzUgMC4wVi03MDAuMEgxODcuNjAwNTg1OTM3NVYtMzA2Ljg3NTQyNzI0NjA5Mzc1SDIwNC41NTA2NTkxNzk2ODc1TDM4My40MjQ2MjE1ODIwMzEyNSAtNDk0LjI1MDEyMjA3MDMxMjVINTM0LjEyNTU0OTMxNjQwNjJMMjk0LjgwMTI2OTUzMTI1IC0yNTQuNzc1MDg1NDQ5MjE4NzVMNTQyLjEyNTU0OTMxNjQwNjIgMC4wSDM5My4yNDk2MzM3ODkwNjI1TDIwNC41NTA2NTkxNzk2ODc1IC0yMDAuODQ5NzMxNDQ1MzEyNUgxODcuNjAwNTg1OTM3NVYwLjBaTTc3NC4yNzQ4NDEzMDg1OTM4IDE0LjBRNzIxLjYyNDgxNjg5NDUzMTIgMTQuMCA2NzkuNzEyMzEwNzkxMDE1NiAtNC4zMjUwMTIyMDcwMzEyNVE2MzcuNzk5ODA0Njg3NSAtMjIuNjUwMDI0NDE0MDYyNSA2MTMuMzg3Mjk4NTgzOTg0NCAtNTcuODg3NTQyNzI0NjA5Mzc1UTU4OC45NzQ3OTI0ODA0Njg4IC05My4xMjUwNjEwMzUxNTYyNSA1ODguOTc0NzkyNDgwNDY4OCAtMTQzLjYwMDA5NzY1NjI1UTU4OC45NzQ3OTI0ODA0Njg4IC0xOTQuMjUwMTIyMDcwMzEyNSA2MTMuMzg3Mjk4NTgzOTg0NCAtMjI4LjMxMjY1MjU4Nzg5MDYyUTYzNy43OTk4MDQ2ODc1IC0yNjIuMzc1MTgzMTA1NDY4NzUgNjgwLjg2MjMzNTIwNTA3ODEgLTI3OS42MTI3MDE0MTYwMTU2UTcyMy45MjQ4NjU3MjI2NTYyIC0yOTYuODUwMjE5NzI2NTYyNSA3NzguODc0OTM4OTY0ODQzOCAtMjk2Ljg1MDIxOTcyNjU2MjVIOTIyLjIyNDQyNjI2OTUzMTJWLTMyNi43NzUwODU0NDkyMTg3NVE5MjIuMjI0NDI2MjY5NTMxMiAtMzY1Ljk3NDc5MjQ4MDQ2ODc1IDg5OC4xMjQ1NzI3NTM5MDYyIC0zOTAuMzEyMTY0MzA2NjQwNlE4NzQuMDI0NzE5MjM4MjgxMiAtNDE0LjY0OTUzNjEzMjgxMjUgODIzLjA0OTkyNjc1NzgxMjUgLTQxNC42NDk1MzYxMzI4MTI1UTc3My4wNzUxMzQyNzczNDM4IC00MTQuNjQ5NTM2MTMyODEyNSA3NDcuNTM3ODExMjc5Mjk2OSAtMzkxLjM5OTY1ODIwMzEyNVE3MjIuMDAwNDg4MjgxMjUgLTM2OC4xNDk3ODAyNzM0Mzc1IDcxMy45NTA1NjE1MjM0Mzc1IC0zMzAuODI1MDEyMjA3MDMxMjVMNjA4LjA5OTg1MzUxNTYyNSAtMzY1Ljk3NTI4MDc2MTcxODc1UTYyMC4wOTk4NTM1MTU2MjUgLTQwNC44NTAyMTk3MjY1NjI1IDY0Ni41MTIzNTk2MTkxNDA2IC00MzYuODc1MTgzMTA1NDY4NzVRNjcyLjkyNDg2NTcyMjY1NjIgLTQ2OC45MDAxNDY0ODQzNzUgNzE3LjE2MjM4NDAzMzIwMzEgLTQ4OC41NzUxMzQyNzczNDM3NVE3NjEuMzk5OTAyMzQzNzUgLTUwOC4yNTAxMjIwNzAzMTI1IDgyNC42OTk5NTExNzE4NzUgLTUwOC4yNTAxMjIwNzAzMTI1UTkyMS42NTAwMjQ0MTQwNjI1IC01MDguMjUwMTIyMDcwMzEyNSA5NzcuNTEyNjAzNzU5NzY1NiAtNDU5LjQyNTEwOTg2MzI4MTI1UTEwMzMuMzc1MTgzMTA1NDY4OCAtNDEwLjYwMDA5NzY1NjI1IDEwMzMuMzc1MTgzMTA1NDY4OCAtMzE4LjgyNTAxMjIwNzAzMTI1Vi0xMjQuOTAwNjM0NzY1NjI1UTEwMzMuMzc1MTgzMTA1NDY4OCAtOTQuOTAwNjM0NzY1NjI1IDEwNjEuMzc1MTgzMTA1NDY4OCAtOTQuOTAwNjM0NzY1NjI1SDExMDIuNjAwMDk3NjU2MjVWMC4wSDEwMjIuMDk5ODUzNTE1NjI1UTk4Ni4xNDk3ODAyNzM0Mzc1IDAuMCA5NjMuMTk5NzA3MDMxMjUgLTE4LjA4NzQ5Mzg5NjQ4NDM3NVE5NDAuMjQ5NjMzNzg5MDYyNSAtMzYuMTc0OTg3NzkyOTY4NzUgOTQwLjI0OTYzMzc4OTA2MjUgLTY2LjUyNDk2MzM3ODkwNjI1Vi02OC41NzQ4OTAxMzY3MTg3NUg5MjIuODI0NTIzOTI1NzgxMlE5MTcuMjQ5NjMzNzg5MDYyNSAtNTQuODI1MDEyMjA3MDMxMjUgOTAyLjExMjIxMzEzNDc2NTYgLTM1LjA2MjUzMDUxNzU3ODEyNVE4ODYuOTc0NzkyNDgwNDY4OCAtMTUuMzAwMDQ4ODI4MTI1IDg1Ni40NDk4MjkxMDE1NjI1IC0wLjY1MDAyNDQxNDA2MjVRODI1LjkyNDg2NTcyMjY1NjIgMTQuMCA3NzQuMjc0ODQxMzA4NTkzOCAxNC4wWk03OTMuMTI1MDYxMDM1MTU2MiAtNzkuNjAwNTg1OTM3NVE4NTAuMzI0NzY4MDY2NDA2MiAtNzkuNjAwNTg1OTM3NSA4ODYuMjc0NTk3MTY3OTY4OCAtMTEyLjA3NTM3ODQxNzk2ODc1UTkyMi4yMjQ0MjYyNjk1MzEyIC0xNDQuNTUwMTcwODk4NDM3NSA5MjIuMjI0NDI2MjY5NTMxMiAtMTk5Ljg0OTczMTQ0NTMxMjVWLTIxMC4xOTk3MDcwMzEyNUg3ODYuNDc1MDM2NjIxMDkzOFE3NDguNTAwMjQ0MTQwNjI1IC0yMTAuMTk5NzA3MDMxMjUgNzI1Ljk2MjkyMTE0MjU3ODEgLTE5My44ODcyOTg1ODM5ODQzOFE3MDMuNDI1NTk4MTQ0NTMxMiAtMTc3LjU3NDg5MDEzNjcxODc1IDcwMy40MjU1OTgxNDQ1MzEyIC0xNDcuMDc1MTM0Mjc3MzQzNzVRNzAzLjQyNTU5ODE0NDUzMTIgLTExNi41NzUzNzg0MTc5Njg3NSA3MjYuOTYyOTIxMTQyNTc4MSAtOTguMDg3OTgyMTc3NzM0MzhRNzUwLjUwMDI0NDE0MDYyNSAtNzkuNjAwNTg1OTM3NSA3OTMuMTI1MDYxMDM1MTU2MiAtNzkuNjAwNTg1OTM3NVpNMTM4OS44OTk2NTgyMDMxMjUgMTQuMFExMzI5Ljg0OTczMTQ0NTMxMjUgMTQuMCAxMjc4LjA4NzI0OTc1NTg1OTQgLTE1LjY3NDk4Nzc5Mjk2ODc1UTEyMjYuMzI0NzY4MDY2NDA2MiAtNDUuMzQ5OTc1NTg1OTM3NSAxMTk1LjIzNzI3NDE2OTkyMTkgLTEwMi4yNjI0ODE2ODk0NTMxMlExMTY0LjE0OTc4MDI3MzQzNzUgLTE1OS4xNzQ5ODc3OTI5Njg3NSAxMTY0LjE0OTc4MDI3MzQzNzUgLTIzOS40NzUwMzY2MjEwOTM3NVYtMjU0Ljc3NTA4NTQ0OTIxODc1UTExNjQuMTQ5NzgwMjczNDM3NSAtMzM1LjA3NTEzNDI3NzM0Mzc1IDExOTUuMTQ5NzgwMjczNDM3NSAtMzkxLjk4NzY0MDM4MDg1OTRRMTIyNi4xNDk3ODAyNzM0Mzc1IC00NDguOTAwMTQ2NDg0Mzc1IDEyNzcuNTg3MjQ5NzU1ODU5NCAtNDc4LjU3NTEzNDI3NzM0Mzc1UTEzMjkuMDI0NzE5MjM4MjgxMiAtNTA4LjI1MDEyMjA3MDMxMjUgMTM4OS44OTk2NTgyMDMxMjUgLTUwOC4yNTAxMjIwNzAzMTI1UTE0MzYuNDc0NTQ4MzM5ODQzOCAtNTA4LjI1MDEyMjA3MDMxMjUgMTQ2OC4xMTE5Njg5OTQxNDA2IC00OTcuMDUwMTcwODk4NDM3NVExNDk5Ljc0OTM4OTY0ODQzNzUgLTQ4NS44NTAyMTk3MjY1NjI1IDE1MTkuNTM2ODM0NzE2Nzk2OSAtNDY4LjcxMjc5OTA3MjI2NTZRMTUzOS4zMjQyNzk3ODUxNTYyIC00NTEuNTc1Mzc4NDE3OTY4NzUgMTU0OS44NDkyNDMxNjQwNjI1IC00MzIuMzUwNDYzODY3MTg3NUgxNTY2Ljc5OTMxNjQwNjI1Vi03MDAuMEgxNjgxLjI1MDEyMjA3MDMxMjVWMC4wSDE1NjguNzk5MzE2NDA2MjVWLTY1LjA3NDY0NTk5NjA5Mzc1SDE1NTEuODQ5MjQzMTY0MDYyNVExNTM0LjE0OTI5MTk5MjE4NzUgLTM0Ljk3NDc5MjQ4MDQ2ODc1IDE0OTcuMDc0NDAxODU1NDY4OCAtMTAuNDg3Mzk2MjQwMjM0Mzc1UTE0NTkuOTk5NTExNzE4NzUgMTQuMCAxMzg5Ljg5OTY1ODIwMzEyNSAxNC4wWk0xNDIzLjY5OTk1MTE3MTg3NSAtODYuMjAwNjgzNTkzNzVRMTQ4Ni4wNzQ2NDU5OTYwOTM4IC04Ni4yMDA2ODM1OTM3NSAxNTI3LjI2MTk5MzQwODIwMzEgLTEyNi40MTI5OTQzODQ3NjU2MlExNTY4LjQ0OTM0MDgyMDMxMjUgLTE2Ni42MjUzMDUxNzU3ODEyNSAxNTY4LjQ0OTM0MDgyMDMxMjUgLTI0Mi4zMDAwNDg4MjgxMjVWLTI1MS45NTAwNzMyNDIxODc1UTE1NjguNDQ5MzQwODIwMzEyNSAtMzI3LjYyNDgxNjg5NDUzMTI1IDE1MjcuNjc0NDk5NTExNzE4OCAtMzY3LjgzNzEyNzY4NTU0NjlRMTQ4Ni44OTk2NTgyMDMxMjUgLTQwOC4wNDk0Mzg0NzY1NjI1IDE0MjMuNjk5OTUxMTcxODc1IC00MDguMDQ5NDM4NDc2NTYyNVExMzYxLjUwMDI0NDE0MDYyNSAtNDA4LjA0OTQzODQ3NjU2MjUgMTMyMC4yMjU0MDI4MzIwMzEyIC0zNjcuODM3MTI3Njg1NTQ2OVExMjc4Ljk1MDU2MTUyMzQzNzUgLTMyNy42MjQ4MTY4OTQ1MzEyNSAxMjc4Ljk1MDU2MTUyMzQzNzUgLTI1MS45NTAwNzMyNDIxODc1Vi0yNDIuMzAwMDQ4ODI4MTI1UTEyNzguOTUwNTYxNTIzNDM3NSAtMTY2LjYyNTMwNTE3NTc4MTI1IDEzMjAuMjI1NDAyODMyMDMxMiAtMTI2LjQxMjk5NDM4NDc2NTYyUTEzNjEuNTAwMjQ0MTQwNjI1IC04Ni4yMDA2ODM1OTM3NSAxNDIzLjY5OTk1MTE3MTg3NSAtODYuMjAwNjgzNTkzNzVaTTIwNDIuNzk5ODA0Njg3NSAxNC4wUTE5NjguNjI0ODE2ODk0NTMxMiAxNC4wIDE5MTIuMjk5ODA0Njg3NSAtMTcuNVExODU1Ljk3NDc5MjQ4MDQ2ODggLTQ5LjAgMTgyNC41NjIyODYzNzY5NTMxIC0xMDYuNDEyNTA2MTAzNTE1NjJRMTc5My4xNDk3ODAyNzM0Mzc1IC0xNjMuODI1MDEyMjA3MDMxMjUgMTc5My4xNDk3ODAyNzM0Mzc1IC0yNDEuMTI1MDYxMDM1MTU2MjVWLTI1My4xMjUwNjEwMzUxNTYyNVExNzkzLjE0OTc4MDI3MzQzNzUgLTMzMC42MDAwOTc2NTYyNSAxODI0LjE0OTc4MDI3MzQzNzUgLTM4Ny45MjUxMDk4NjMyODEyNVExODU1LjE0OTc4MDI3MzQzNzUgLTQ0NS4yNTAxMjIwNzAzMTI1IDE5MTAuODg3Mjk4NTgzOTg0NCAtNDc2Ljc1MDEyMjA3MDMxMjVRMTk2Ni42MjQ4MTY4OTQ1MzEyIC01MDguMjUwMTIyMDcwMzEyNSAyMDM5LjkyNDg2NTcyMjY1NjIgLTUwOC4yNTAxMjIwNzAzMTI1UTIxMTIuMDQ5OTI2NzU3ODEyNSAtNTA4LjI1MDEyMjA3MDMxMjUgMjE2NS43ODc0NDUwNjgzNTk0IC00NzYuNDUwMDczMjQyMTg3NVEyMjE5LjUyNDk2MzM3ODkwNjIgLTQ0NC42NTAwMjQ0MTQwNjI1IDIyNDkuNTI0OTYzMzc4OTA2MiAtMzg3Ljg0OTk3NTU4NTkzNzVRMjI3OS41MjQ5NjMzNzg5MDYyIC0zMzEuMDQ5OTI2NzU3ODEyNSAyMjc5LjUyNDk2MzM3ODkwNjIgLTI1NS4zOTk5MDIzNDM3NVYtMjE0LjMyNDc2ODA2NjQwNjI1SDE5MDkuMjUwNjEwMzUxNTYyNVExOTExLjQyNTU5ODE0NDUzMTIgLTE1Ni4zMjUyNTYzNDc2NTYyNSAxOTUwLjMxMjg5NjcyODUxNTYgLTEyMS4yNjI5Njk5NzA3MDMxMlExOTg5LjIwMDE5NTMxMjUgLTg2LjIwMDY4MzU5Mzc1IDIwNDYuMDk5ODUzNTE1NjI1IC04Ni4yMDA2ODM1OTM3NVEyMTAxLjcyNDY3MDQxMDE1NjIgLTg2LjIwMDY4MzU5Mzc1IDIxMjguOTEyMDE3ODIyMjY1NiAtMTEwLjYwMDU4NTkzNzVRMjE1Ni4wOTkzNjUyMzQzNzUgLTEzNS4wMDA0ODgyODEyNSAyMTcwLjMyNDI3OTc4NTE1NjIgLTE2NS45NzUyODA3NjE3MTg3NUwyMjY0Ljc0OTg3NzkyOTY4NzUgLTExNy4yMjQ5MTQ1NTA3ODEyNVEyMjUwLjU3NDg5MDEzNjcxODggLTkwLjAgMjIyNC4wNzQ4OTAxMzY3MTg4IC01OS4zMjUwMTIyMDcwMzEyNVEyMTk3LjU3NDg5MDEzNjcxODggLTI4LjY1MDAyNDQxNDA2MjUgMjE1My45MjQ4NjU3MjI2NTYyIC03LjMyNTAxMjIwNzAzMTI1UTIxMTAuMjc0ODQxMzA4NTkzOCAxNC4wIDIwNDIuNzk5ODA0Njg3NSAxNC4wWk0xOTEwLjI1MDYxMDM1MTU2MjUgLTMwMC45NzUyODA3NjE3MTg3NUgyMTYzLjI0OTE0NTUwNzgxMjVRMjE1OS4yNDkxNDU1MDc4MTI1IC0zNTAuMjc0ODQxMzA4NTkzNzUgMjEyNS44NjE4NDY5MjM4MjggLTM3OS4xNjIxMzk4OTI1NzgxUTIwOTIuNDc0NTQ4MzM5ODQzOCAtNDA4LjA0OTQzODQ3NjU2MjUgMjAzOS4wOTk4NTM1MTU2MjUgLTQwOC4wNDk0Mzg0NzY1NjI1UTE5ODQuMjUwMTIyMDcwMzEyNSAtNDA4LjA0OTQzODQ3NjU2MjUgMTk1MS4xMDAzNDE3OTY4NzUgLTM3OS4xNjIxMzk4OTI1NzgxUTE5MTcuOTUwNTYxNTIzNDM3NSAtMzUwLjI3NDg0MTMwODU5Mzc1IDE5MTAuMjUwNjEwMzUxNTYyNSAtMzAwLjk3NTI4MDc2MTcxODc1Wk0yMzg4LjE0OTc4MDI3MzQzNzUgMC4wVi00OTQuMjUwMTIyMDcwMzEyNUgyNTAwLjYwMDU4NTkzNzVWLTQyNC44NzU0MjcyNDYwOTM3NUgyNTE3LjU1MDY1OTE3OTY4NzVRMjUzMC42MDA1ODU5Mzc1IC00NTMuMTUwMjY4NTU0Njg3NSAyNTY1LjAwMDQ4ODI4MTI1IC00NzcuODc1MTgzMTA1NDY4NzVRMjU5OS40MDAzOTA2MjUgLTUwMi42MDAwOTc2NTYyNSAyNjY4LjMyNTI1NjM0NzY1NjIgLTUwMi42MDAwOTc2NTYyNVEyNzI1LjQ1MDMxNzM4MjgxMjUgLTUwMi42MDAwOTc2NTYyNSAyNzY5LjAzNzgxMTI3OTI5NyAtNDc2Ljg4NzU0MjcyNDYwOTRRMjgxMi42MjUzMDUxNzU3ODEyIC00NTEuMTc0OTg3NzkyOTY4NzUgMjgzNy4wNjI3NzQ2NTgyMDMgLTQwNS4wMjQ5NjMzNzg5MDYyNVEyODYxLjUwMDI0NDE0MDYyNSAtMzU4Ljg3NDkzODk2NDg0Mzc1IDI4NjEuNTAwMjQ0MTQwNjI1IC0yOTYuMFYwLjBIMjc0Ny4wNDk0Mzg0NzY1NjI1Vi0yODcuMDQ5OTI2NzU3ODEyNVEyNzQ3LjA0OTQzODQ3NjU2MjUgLTM0Ny4yNDk2MzM3ODkwNjI1IDI3MTcuMzYyMDkxMDY0NDUzIC0zNzYuNDc0NTQ4MzM5ODQzNzVRMjY4Ny42NzQ3NDM2NTIzNDM4IC00MDUuNjk5NDYyODkwNjI1IDI2MzMuODc0OTM4OTY0ODQzOCAtNDA1LjY5OTQ2Mjg5MDYyNVEyNTcyLjkwMDE0NjQ4NDM3NSAtNDA1LjY5OTQ2Mjg5MDYyNSAyNTM3Ljc1MDM2NjIxMDkzNzUgLTM2NS4yNzQ1OTcxNjc5Njg3NVEyNTAyLjYwMDU4NTkzNzUgLTMyNC44NDk3MzE0NDUzMTI1IDI1MDIuNjAwNTg1OTM3NSAtMjUwLjQyNTEwOTg2MzI4MTI1VjAuMFpNMjk3NC4wOTk4NTM1MTU2MjUgMC4wVi0xMzguMTAwODMwMDc4MTI1TDMyNTUuNzI0MTgyMTI4OTA2MiAtMzg0LjA0OTQzODQ3NjU2MjVWLTM5OC45OTk1MTE3MTg3NUgyOTg0LjA5OTg1MzUxNTYyNVYtNDk0LjI1MDEyMjA3MDMxMjVIMzM4MC4yNTAxMjIwNzAzMTI1Vi0zNTYuMTQ5MjkxOTkyMTg3NUwzMDk4LjQ1MDgwNTY2NDA2MjUgLTExMC4yMDA2ODM1OTM3NVYtOTUuMjUwNjEwMzUxNTYyNUgzMzg4LjI1MDEyMjA3MDMxMjVWMC4wWiIvPjwvc3ZnPg0K", "sym": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkthZGVueiI+PHRpdGxlPkthZGVuejwvdGl0bGU+PHBhdGggZmlsbD0iIzJEM0E4QyIgZD0iTTE2IDE2IEwxMjAgMTYgTDEyMCAxMjAgTDE2IDEyMCBaIE0xMzYgMTIwIEwxMzYgMTQuNDQgQTEwNS41NiAxMDUuNTYgMCAwIDEgMjQxLjU2IDEyMCBaIE0xNiAxMzYgTDEyMCAyNDAgTDE2IDI0MCBaIE0xMzQuNDQgMTg4IEE1My41NiA1My41NiAwIDEgMSAyNDEuNTYgMTg4IEE1My41NiA1My41NiAwIDEgMSAxMzQuNDQgMTg4IFoiLz48L3N2Zz4NCg==", "symN": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkthZGVueiI+PHRpdGxlPkthZGVuejwvdGl0bGU+PHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTE2IDE2IEwxMjAgMTYgTDEyMCAxMjAgTDE2IDEyMCBaIE0xMzYgMTIwIEwxMzYgMTQuNDQgQTEwNS41NiAxMDUuNTYgMCAwIDEgMjQxLjU2IDEyMCBaIE0xNiAxMzYgTDEyMCAyNDAgTDE2IDI0MCBaIE0xMzQuNDQgMTg4IEE1My41NiA1My41NiAwIDEgMSAyNDEuNTYgMTg4IEE1My41NiA1My41NiAwIDEgMSAxMzQuNDQgMTg4IFoiLz48L3N2Zz4NCg=="};
+const ICONES = {"tableau-de-bord": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSI3LjUiIGhlaWdodD0iMTAiIHJ4PSIyIi8+PHJlY3QgeD0iMTMuNSIgeT0iMyIgd2lkdGg9IjcuNSIgaGVpZ2h0PSI2IiByeD0iMiIvPjxyZWN0IHg9IjEzLjUiIHk9IjEyIiB3aWR0aD0iNy41IiBoZWlnaHQ9IjkiIHJ4PSIyIi8+PHJlY3QgeD0iMyIgeT0iMTYiIHdpZHRoPSI3LjUiIGhlaWdodD0iNSIgcng9IjIiLz48L2c+PC9zdmc+DQo=", "devis": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZGVmcz48bWFzayBpZD0iZCIgbWFza1VuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeD0iMCIgeT0iMCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNMTkgMTMuNWwyLjUgMi41LTUuNSA1LjVIMTMuNVYxOVoiIGZpbGw9IiMwMDAiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSI0LjUiLz48L21hc2s+PC9kZWZzPjxnIG1hc2s9InVybCgjZCkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDIxSDZhMSAxIDAgMCAxLTEtMVY0YTEgMSAwIDAgMSAxLTFoOGw1IDV2My41Ii8+PHBhdGggZD0iTTE0IDN2NWg1Ii8+PHBhdGggZD0iTTggOS41aDNNOCAxM2g2Ii8+PC9nPjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTE5IDEzLjVsMi41IDIuNS01LjUgNS41SDEzLjVWMTlaIi8+PC9nPjwvc3ZnPg0K", "proforma": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik00IDZoMTIuNXYxNWwtMi4wOC0xLjMzTDEyLjMzIDIxbC0yLjA4LTEuMzNMOC4xNyAyMWwtMi4wOS0xLjMzTDQgMjFaIi8+PHBhdGggZD0iTTcgMTAuNWg2LjVNNyAxNGg0Ii8+PC9nPjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTcuNSA2VjIuNUgyMHYxNC41aC0zLjUiLz48L2c+PC9zdmc+DQo=", "bons-commande": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjUiIHk9IjQuNSIgd2lkdGg9IjE0IiBoZWlnaHQ9IjE2LjUiIHJ4PSIyIi8+PHJlY3QgeD0iOSIgeT0iMi41IiB3aWR0aD0iNiIgaGVpZ2h0PSI0IiByeD0iMSIvPjxwYXRoIGQ9Ik04LjUgMTEuNWwxLjUgMS41IDIuNS0yLjVNMTQgMTJoMS41TTguNSAxN2g3Ii8+PC9nPjwvc3ZnPg0K", "livraisons": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZGVmcz48bWFzayBpZD0iZCIgbWFza1VuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeD0iMCIgeT0iMCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiNmZmYiLz48Y2lyY2xlIGN4PSIxNyIgY3k9IjE3IiByPSI0LjUiIGZpbGw9IiMwMDAiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSI0LjUiLz48L21hc2s+PC9kZWZzPjxnIG1hc2s9InVybCgjZCkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHJlY3QgeD0iMi41IiB5PSI0IiB3aWR0aD0iMTQiIGhlaWdodD0iMTMuNSIgcng9IjIiLz48cGF0aCBkPSJNNy41IDR2NWwyLTEuMjUgMiAxLjI1VjQiLz48L2c+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxNyIgY3k9IjE3IiByPSI0LjUiLz48L2c+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTUgMTdsMS41IDEuNSAyLjUtMi43NSIvPjwvZz48L3N2Zz4NCg==", "factures": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik01IDNoMTR2MThsLTIuMzMtMS41TDE0LjMzIDIxIDEyIDE5LjUgOS42NyAyMSA3LjMzIDE5LjUgNSAyMVoiLz48cGF0aCBkPSJNOC41IDhoN004LjUgMTEuNWg3TTguNSAxNWg0Ii8+PC9nPjwvc3ZnPg0K", "avoirs": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik01IDNoMTR2MThsLTIuMzMtMS41TDE0LjMzIDIxIDEyIDE5LjUgOS42NyAyMSA3LjMzIDE5LjUgNSAyMVoiLz48cGF0aCBkPSJNMTAuNSA3LjUgOCAxMGwyLjUgMi41TTggMTBoNWEyLjUgMi41IDAgMCAxIDAgNWgtMiIvPjwvZz48L3N2Zz4NCg==", "reglements": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjIuNSIgeT0iNiIgd2lkdGg9IjE5IiBoZWlnaHQ9IjEyIiByeD0iMiIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjIuNzUiLz48cGF0aCBkPSJNNiAxMmguMDFNMTggMTJoLjAxIi8+PC9nPjwvc3ZnPg0K", "suivi-fournisseurs": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZGVmcz48bWFzayBpZD0iZCIgbWFza1VuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeD0iMCIgeT0iMCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiNmZmYiLz48Y2lyY2xlIGN4PSIxNy41IiBjeT0iMTcuNSIgcj0iNC41IiBmaWxsPSIjMDAwIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iNC41Ii8+PC9tYXNrPjwvZGVmcz48ZyBtYXNrPSJ1cmwoI2QpIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjQiIHk9IjQuNSIgd2lkdGg9IjEzIiBoZWlnaHQ9IjE2LjUiIHJ4PSIyIi8+PHJlY3QgeD0iNy41IiB5PSIyLjUiIHdpZHRoPSI2IiBoZWlnaHQ9IjQiIHJ4PSIxIi8+PHBhdGggZD0iTTcuNSAxMWg2TTcuNSAxNC41aDMiLz48L2c+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxNy41IiBjeT0iMTcuNSIgcj0iNC41Ii8+PC9nPjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTE3LjUgMTUuMjV2Mi4yNWwxLjUgMSIvPjwvZz48L3N2Zz4NCg==", "relances": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik02IDE2LjVWMTFhNiA2IDAgMCAxIDEyIDB2NS41bDEuNSAxLjVoLTE1WiIvPjwvZz48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xMCAyMWg0Ii8+PHBhdGggZD0iTTIuNSA4YTEwIDEwIDAgMCAxIDIuNS00LjVNMjEuNSA4QTEwIDEwIDAgMCAwIDE5IDMuNSIvPjwvZz48L3N2Zz4NCg==", "comptabilite": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xMiA2LjVDMTAgNSA3IDQuNSAyLjUgNC41djE0YzQuNSAwIDcuNS41IDkuNSAyIDItMS41IDUtMiA5LjUtMnYtMTRjLTQuNSAwLTcuNS41LTkuNSAyWiIvPjxwYXRoIGQ9Ik0xMiA2LjV2MTRNNS41IDloMy41TTUuNSAxMi41aDMuNU0xNSA5aDMuNU0xNSAxMi41aDMuNSIvPjwvZz48L3N2Zz4NCg==", "tiers": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjkiIGN5PSI4IiByPSIzLjUiLz48cGF0aCBkPSJNMi41IDIwYTYuNSA2LjUgMCAwIDEgMTMgMFoiLz48L2c+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTUuNSA0LjdhMy41IDMuNSAwIDAgMSAwIDYuNk0xOCAxNC4yQTYuNSA2LjUgMCAwIDEgMjEuNSAyMCIvPjwvZz48L3N2Zz4NCg==", "produits": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0zIDEyLjJWNGExIDEgMCAwIDEgMS0xaDguMmExIDEgMCAwIDEgLjcuM2w4LjMgOC4zYTEgMSAwIDAgMSAwIDEuNGwtOC4yIDguMmExIDEgMCAwIDEtMS40IDBMMy4zIDEyLjlhMSAxIDAgMCAxLS4zLS43WiIvPjxjaXJjbGUgY3g9IjgiIGN5PSI4IiByPSIxLjc1Ii8+PC9nPjwvc3ZnPg0K", "parametres": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xOS4wNyA5LjgxTDIxLjM2IDEwLjM5TDIxLjM2IDEzLjYxTDE5LjA3IDE0LjE5TDE4LjU1IDE1LjQ1TDE5Ljc2IDE3LjQ4TDE3LjQ4IDE5Ljc2TDE1LjQ1IDE4LjU1TDE0LjE5IDE5LjA3TDEzLjYxIDIxLjM2TDEwLjM5IDIxLjM2TDkuODEgMTkuMDdMOC41NSAxOC41NUw2LjUyIDE5Ljc2TDQuMjQgMTcuNDhMNS40NSAxNS40NUw0LjkzIDE0LjE5TDIuNjQgMTMuNjFMMi42NCAxMC4zOUw0LjkzIDkuODFMNS40NSA4LjU1TDQuMjQgNi41Mkw2LjUyIDQuMjRMOC41NSA1LjQ1TDkuODEgNC45M0wxMC4zOSAyLjY0TDEzLjYxIDIuNjRMMTQuMTkgNC45M0wxNS40NSA1LjQ1TDE3LjQ4IDQuMjRMMTkuNzYgNi41MkwxOC41NSA4LjU1WiIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjMiLz48L2c+PC9zdmc+DQo=", "mon-compte": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjkuNSIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTAiIHI9IjMiLz48cGF0aCBkPSJNNi41IDE4LjVhNi41IDYuNSAwIDAgMSAxMSAwIi8+PC9nPjwvc3ZnPg0K", "navigation": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjIuNSIgeT0iNCIgd2lkdGg9IjE5IiBoZWlnaHQ9IjE2IiByeD0iMiIvPjxwYXRoIGQ9Ik0yLjUgOC41aDE5TTguNSA4LjVWMjAiLz48L2c+PC9zdmc+DQo=", "entreprise": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0zLjUgMjFWNC41QTEuNSAxLjUgMCAwIDEgNSAzaDhhMS41IDEuNSAwIDAgMSAxLjUgMS41VjIxIi8+PHBhdGggZD0iTTE0LjUgOUgxOWExLjUgMS41IDAgMCAxIDEuNSAxLjVWMjEiLz48cGF0aCBkPSJNNy41IDcuNWgzTTcuNSAxMWgzTTcuNSAxNC41aDNNOSAyMXYtMyIvPjwvZz48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yLjUgMjFoMTkiLz48L2c+PC9zdmc+DQo=", "documents": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xNCAyLjVINi41QTEuNSAxLjUgMCAwIDAgNSA0djE2YTEuNSAxLjUgMCAwIDAgMS41IDEuNWgxMUExLjUgMS41IDAgMCAwIDE5IDIwVjcuNVoiLz48cGF0aCBkPSJNMTQgMi41djVoNSIvPjxwYXRoIGQ9Ik0xMCAxMXY3TTEzLjUgMTF2N004IDEzaDcuNU04IDE2aDcuNSIvPjwvZz48L3N2Zz4NCg==", "paiements": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjIuNSIgeT0iNSIgd2lkdGg9IjE5IiBoZWlnaHQ9IjE0IiByeD0iMiIvPjxwYXRoIGQ9Ik0yLjUgOS41aDE5TTYgMTVoNCIvPjwvZz48L3N2Zz4NCg==", "exports": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xMiAyMUg2LjVBMS41IDEuNSAwIDAgMSA1IDE5LjV2LTE1QTEuNSAxLjUgMCAwIDEgNi41IDNIMTRsNSA1djMiLz48cGF0aCBkPSJNMTQgM3Y1aDVNOC41IDEyaDQiLz48L2c+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTMuNSAxNi41SDIxTTE4IDEzLjVsMyAzLTMgMyIvPjwvZz48L3N2Zz4NCg==", "impression": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik02IDE3SDRhMS41IDEuNSAwIDAgMS0xLjUtMS41di02QTEuNSAxLjUgMCAwIDEgNCA4aDE2YTEuNSAxLjUgMCAwIDEgMS41IDEuNXY2QTEuNSAxLjUgMCAwIDEgMjAgMTdoLTIiLz48cGF0aCBkPSJNNiA4VjNoMTJ2NSIvPjxyZWN0IHg9IjYiIHk9IjEzIiB3aWR0aD0iMTIiIGhlaWdodD0iOCIgcng9IjEiLz48cGF0aCBkPSJNNiAxM2gxMk0xNy41IDEwLjVoLjAxIi8+PC9nPjwvc3ZnPg0K", "utilisateurs": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZGVmcz48bWFzayBpZD0iZCIgbWFza1VuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeD0iMCIgeT0iMCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNMTcuNSAxMS41bDQgMS41djNjMCAyLjUtMS44IDQuMy00IDUtMi4yLS43LTQtMi41LTQtNXYtM1oiIGZpbGw9IiMwMDAiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSI0LjUiLz48L21hc2s+PC9kZWZzPjxnIG1hc2s9InVybCgjZCkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iOSIgY3k9IjgiIHI9IjMuNSIvPjxwYXRoIGQ9Ik0yLjUgMjBhNi41IDYuNSAwIDAgMSAxMyAwWiIvPjwvZz48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xNy41IDExLjVsNCAxLjV2M2MwIDIuNS0xLjggNC4zLTQgNS0yLjItLjctNC0yLjUtNC01di0zWiIvPjwvZz48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xNiAxNi4yNWwxIDEgMi0yIi8+PC9nPjwvc3ZnPg0K", "licence": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjcuNSIgY3k9IjE2LjUiIHI9IjUiLz48Y2lyY2xlIGN4PSI3LjUiIGN5PSIxNi41IiByPSIxLjUiLz48L2c+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTEgMTMgMjAuNSAzLjVNMTcuNSA2LjVsMi41IDIuNU0xNSA5bDIgMiIvPjwvZz48L3N2Zz4NCg==", "mises-a-jour": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjwvZz48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMCAxMEE4LjUgOC41IDAgMCAwIDQuNiA3LjVNNCAzLjV2NGg0Ii8+PHBhdGggZD0iTTQgMTRhOC41IDguNSAwIDAgMCAxNS40IDIuNU0yMCAyMC41di00aC00Ii8+PC9nPjwvc3ZnPg0K", "acces-distant": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZGVmcz48bWFzayBpZD0iZCIgbWFza1VuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeD0iMCIgeT0iMCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiNmZmYiLz48Y2lyY2xlIGN4PSIxNyIgY3k9IjE2LjUiIHI9IjUuNSIgZmlsbD0iIzAwMCIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjQuNSIvPjwvbWFzaz48L2RlZnM+PGcgbWFzaz0idXJsKCNkKSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cmVjdCB4PSIyLjUiIHk9IjMuNSIgd2lkdGg9IjE1IiBoZWlnaHQ9IjEwIiByeD0iMiIvPjwvZz48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjE3IiBjeT0iMTYuNSIgcj0iNS41Ii8+PC9nPjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEgMTcuNWgxMSIvPjxwYXRoIGQ9Ik0xMS41IDE2LjVoMTEiLz48cGF0aCBkPSJNMTcgMTFjLTEuNiAxLjUtMi40IDMuMy0yLjQgNS41cy44IDQgMi40IDUuNWMxLjYtMS41IDIuNC0zLjMgMi40LTUuNXMtLjgtNC0yLjQtNS41WiIvPjwvZz48L3N2Zz4NCg==", "a-propos": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjkuNSIvPjxwYXRoIGQ9Ik0xMiAxMXY1LjVNMTIgNy43NWguMDEiLz48L2c+PC9zdmc+DQo="};
+const DEFAUTS = {"presentation": "A2", "inscription": "A", "connexion": "A+", "assistant": "C", "tableau": "A2", "apropos": "A2+", "vide": "A2"};
+const PI = Math.PI;
+const PIECES = {
+  carre: new Path2D("M16 16 L120 16 L120 120 L16 120 Z"),
+  quart: new Path2D("M136 120 L136 14.44 A105.56 105.56 0 0 1 241.56 120 Z"),
+  tri: new Path2D("M16 136 L120 240 L16 240 Z"),
+  disque: new Path2D("M134.44 188 A53.56 53.56 0 1 1 241.56 188 A53.56 53.56 0 1 1 134.44 188 Z"),
+};
+const ORDRE = ["carre", "quart", "tri", "disque"];
+const CENTRE = { carre: [68, 68], quart: [188, 68], tri: [68, 188], disque: [188, 188] };
+const AMBRE = "#E3A23B";
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lin = (t, a, d) => clamp((t - a) / d);
+const eOut = x => 1 - Math.pow(1 - x, 3);
+const eInOut = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const eBack = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const hash = (i, j) => (((i * 73856093) ^ (j * 19349663)) >>> 0) % 4;
+function dans(k, u, v) {
+  switch (k) {
+    case "carre": return u >= 16 && u <= 120 && v >= 16 && v <= 120;
+    case "quart": return u >= 136 && v <= 120 && (u - 136) ** 2 + (v - 120) ** 2 <= 105.56 ** 2;
+    case "tri": return u >= 16 && v <= 240 && v >= 136 && (u - 16) <= (v - 136);
+    case "disque": return (u - 188) ** 2 + (v - 188) ** 2 <= 53.56 ** 2;
+  }
+  return false;
+}
+function alea(graine) {
+  let a = graine >>> 0;
+  return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function rgba(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
+function unePiece(c, k, cx, cy, s, couleur, e = 1) {
+  if (e <= 0.001) return; const [px, py] = CENTRE[k];
+  c.save(); c.translate(cx, cy); c.scale(s / 104 * e, s / 104 * e); c.translate(-px, -py); c.fillStyle = couleur; c.fill(PIECES[k]); c.restore();
+}
+
+// Placement : la pièce vedette, ses dimensions, et la zone nette (sans motif) de chaque cadre.
+function placement(cadre, w, h, piece) {
+  let cell, cx, cy, nette;
+  if (cadre === "panneau") { cell = 0.6 * Math.min(w, h * 0.8); cx = w / 2; cy = h * 0.42; nette = (x, y) => y > h - 150 || y < 100; }
+  else if (cadre === "colonne") { cell = 0.9 * w; cx = w * 0.42; cy = h - 0.55 * w; nette = (x, y) => y < h - 1.25 * w; }
+  else if (cadre === "bande") { cell = 0.82 * h; cx = w - 0.75 * h; cy = h / 2; nette = (x, y) => x < w * 0.42; }
+  else { cell = 0.72 * w; cx = w / 2; cy = h / 2; nette = () => false; }
+  const S = cell * 256 / 104, [px, py] = CENTRE[piece];
+  return { cell, S, ox: cx - px / 256 * S, oy: cy - py / 256 * S, nette };
+}
+
+const MOTIF = {
+  A(c, w, h, T, k, p) {
+    const pas = Math.max(10, w / (p.cadre === "vignette" ? 9 : 36)), g = eOut(lin(T, 0.2, 1.4));
+    for (let y = pas / 2; y < h; y += pas) for (let x = pas / 2; x < w; x += pas) {
+      const u = (x - p.ox) / p.S * 256, v = (y - p.oy) / p.S * 256;
+      const onde = 0.5 + 0.5 * Math.sin((x * 0.9 + y * 0.6) * 0.011 - T * 2.4);
+      if (dans(p.piece, u, v) && g > 0.01) {
+        const d = (u + v) / 512, lum = Math.min(1, Math.max(0.42, 0.3 + d * 1.2));
+        c.fillStyle = AMBRE; c.beginPath(); c.arc(x, y, pas * 0.5 * lum * g * (0.86 + 0.14 * onde), 0, 2 * PI); c.fill(); continue;
+      }
+      if (p.nette(x, y)) continue;
+      c.fillStyle = k.points; c.beginPath(); c.arc(x, y, pas * (0.09 + 0.07 * onde), 0, 2 * PI); c.fill();
+    }
+  },
+  A2(c, w, h, T, k, p) {
+    const cell = p.cadre === "vignette" ? w / 6 : p.cadre === "bande" ? h / 4 : w / 14, m = cell / 2;
+    for (let j = 0; j * cell < h; j++) for (let i = 0; i * cell < w; i++) {
+      const cx = i * cell + m, cy = j * cell + m, kk = ORDRE[(i + j) % 4];
+      const u = (cx - p.ox) / p.S * 256, v = (cy - p.oy) / p.S * 256;
+      if (dans(p.piece, u, v)) {
+        const [pcx, pcy] = CENTRE[p.piece], r = clamp(((u - pcx) + (v - pcy)) / 208 + 0.5);
+        const e = eBack(clamp((lin(T, 0.2, 1.4) * 1.25 - r) / 0.25));
+        if (e > 0.01) { unePiece(c, kk, cx, cy, cell * 0.86, AMBRE, e); continue; }
+      }
+      if (p.nette(cx, cy)) continue;
+      const l = 0.5 + 0.5 * Math.sin((i + j) * 0.45 - T * PI / 2);
+      unePiece(c, kk, cx, cy, cell * 0.86, l > 0.8 ? k.motifClair : k.motif);
+    }
+  },
+  C(c, w, h, T, k, p) {
+    const cell = p.cadre === "vignette" ? w / 3 : p.cadre === "bande" ? h / 2 : p.cadre === "colonne" ? w / 3 : w / 7;
+    const m = cell / 2, R = cell * 0.96;
+    for (let j = 0; j * cell < h; j++) for (let i = 0; i * cell < w; i++) {
+      const cx = i * cell + m, cy = j * cell + m; if (p.nette(cx, cy)) continue;
+      const phase = T / 1.5 - (i + j) * 0.06, n = Math.floor(phase), fr = phase - n;
+      const rot = (hash(i, j) + n + eInOut(clamp(fr / 0.35))) * PI / 2;
+      const amb = p.cadre !== "bande" && i === 1 && j === (p.cadre === "colonne" ? Math.floor(h / cell) - 1 : Math.floor((h / cell) * 0.6));
+      c.save(); c.translate(cx, cy); c.rotate(rot); c.fillStyle = amb ? AMBRE : k.motif;
+      c.beginPath(); c.moveTo(-m, m); c.lineTo(-m, m - R); c.arc(-m, m, R, -PI / 2, 0); c.closePath(); c.fill(); c.restore();
+    }
+  },
+  "A+"(c, w, h, T, k, p) {
+    const cle = p.cle + k.points + k.lignes;
+    if (!CACHE.has(cle)) {
+      const rnd = alea(17), m = 24, R = Math.ceil(1.15 * Math.max(w, h * 1.4)), calques = new Map();
+      const bandes = [[0.42, 0.52, 2], [0.55, 0.57, 2], [0.61, 0.82, 1], [0.86, 0.9, 1], [0.95, 1.1, 1]];
+      const unite = Math.max(w, h * 1.4) * 0.92, aire = w * h;
+      for (const [a, b, tours] of bandes) {
+        if (!calques.has(tours)) { const t = document.createElement("canvas"); t.width = t.height = 2 * R * NET; t.getContext("2d").scale(NET, NET); calques.set(tours, t); }
+        const g = calques.get(tours).getContext("2d"), n = Math.round(aire / 360 * (b - a) * 10);
+        for (let i = 0; i < n; i++) {
+          const r = (a + (b - a) * rnd()) * unite, th = rnd() * 2 * PI / m, s = (0.35 + 1.6 * Math.pow(rnd(), 2.8)) * (w / 560);
+          const am = rnd() < 0.025; g.fillStyle = am ? AMBRE : rgba(k.lignes, 0.15 + 0.6 * rnd());
+          for (let j = 0; j < m; j++) { const an = th + j * 2 * PI / m; g.beginPath(); g.arc(R + r * Math.cos(an), R + r * Math.sin(an), s, 0, 2 * PI); g.fill(); }
+        }
+      }
+      CACHE.set(cle, { calques, R });
+    }
+    const { calques, R } = CACHE.get(cle), cx = -0.32 * w, cy = 0.36 * h, base = T / 12 * 2 * PI / 24;
+    c.save(); c.beginPath();
+    if (p.cadre === "panneau") c.rect(0, 100, w, h - 250); else if (p.cadre === "bande") c.rect(w * 0.42, 0, w, h);
+    else if (p.cadre === "colonne") c.rect(0, h - 1.25 * w, w, h); else c.rect(0, 0, w, h);
+    c.clip();
+    for (const [tours, t] of calques) { c.save(); c.translate(cx, cy); c.rotate(base * tours); c.drawImage(t, -R, -R, 2 * R, 2 * R); c.restore(); }
+    c.restore();
+    const e = eBack(lin(T, 0.3, 0.8));
+    unePiece(c, p.piece, p.ox + CENTRE[p.piece][0] / 256 * p.S, p.oy + CENTRE[p.piece][1] / 256 * p.S, p.cell * (p.cadre === "panneau" ? 0.62 : 0.8), AMBRE, e);
+  },
+  "A2+"(c, w, h, T, k, p) {
+    const styles = { carre: 1, quart: 0, tri: 2, disque: 3 }, entier = p.cadre === "panneau" || p.cadre === "bande";
+    const ordre = entier ? ORDRE : [p.piece];
+    let S = p.S, ox = p.ox, oy = p.oy;
+    if (p.cadre === "panneau") { S = Math.min(w * 0.7, h * 0.5); ox = (w - S) / 2; oy = h * 0.42 - S / 2; }
+    if (p.cadre === "bande") { S = h * 0.8; ox = w - S - h * 0.35; oy = (h - S) / 2; }
+    ordre.forEach((kk, i) => {
+      const pr = lin(T, 0.3 + i * 0.5, 0.9); if (pr <= 0) return;
+      const st = styles[kk]; c.save(); c.translate(ox, oy); c.scale(S / 256, S / 256);
+      if (st === 0) { const e = eBack(pr), [px, py] = CENTRE[kk]; c.translate(px, py); c.scale(e, e); c.translate(-px, -py); c.fillStyle = k.lignes; c.fill(PIECES[kk]); }
+      else if (st === 3) { const e = eBack(pr), [px, py] = CENTRE[kk]; c.translate(px, py); c.scale(e, e); c.translate(-px, -py);
+        c.fillStyle = AMBRE; c.fill(PIECES[kk]); c.fillStyle = k.fond; c.beginPath(); c.arc(px, py, 30, 0, 2 * PI); c.fill();
+        c.fillStyle = k.lignes; c.beginPath(); c.arc(px, py, 12, 0, 2 * PI); c.fill(); }
+      else lignes(c, kk, eInOut(pr), st === 1 ? 6 : 7, st === 1 ? k.lignes : AMBRE, st === 1 ? 5 : 4);
+      c.restore();
+    });
+  },
+};
+function lignes(c, k, prog, nb, couleur, ep) {
+  c.save(); c.clip(PIECES[k]); c.strokeStyle = couleur; c.lineWidth = ep;
+  for (let i = 0; i < nb; i++) {
+    const f = clamp(prog * nb - i); if (f <= 0) break;
+    c.beginPath(); let L;
+    if (k === "carre") { const e = (i + 0.5) * 52 / nb, a = 16 + e, b = 120 - e; L = 4 * (b - a); c.moveTo(a, a); c.lineTo(b, a); c.lineTo(b, b); c.lineTo(a, b); c.closePath(); }
+    else if (k === "quart") { const r = 105.56 * (i + 0.5) / nb; L = r * PI / 2; c.arc(136, 120, r, -PI / 2, 0); }
+    else if (k === "tri") { const cc = -224 + (i + 0.5) * 104 / nb; L = Math.hypot(224 + cc, 224 + cc); c.moveTo(16, 16 - cc); c.lineTo(240 + cc, 240); }
+    else { const r = 53.56 * (i + 0.5) / nb; L = 2 * PI * r; c.arc(188, 188, r, -PI / 2, 1.5 * PI); }
+    c.setLineDash([L * f, L + 1]); c.stroke();
+  }
+  c.restore();
+}
+
+const CACHE = new Map();
+const params = new URLSearchParams(location.search);
+const fige = params.get("fige") === "1";
+const choixMotif = Object.assign({}, DEFAUTS);
+let origine = performance.now();
+
+// Logos et icônes
+function logoPour(el) {
+  const m = el.closest(".m"), sombre = m && m.classList.contains("sombre"), n = el.dataset.logo;
+  if (n === "auto") return sombre ? LOGOS.logoN : LOGOS.logo;
+  if (n === "symAuto") return sombre ? LOGOS.symN : LOGOS.sym;
+  return LOGOS[n];
+}
+document.querySelectorAll("img[data-logo]").forEach(el => el.src = logoPour(el));
+document.querySelectorAll("i[data-ico]").forEach(el => el.style.setProperty("--i", `url("${ICONES[el.dataset.ico]}")`));
+
+// Mise à l'échelle des fenêtres
+const ro = new ResizeObserver(es => es.forEach(e => { const m = e.target.firstElementChild; m.style.transform = `scale(${e.contentRect.width / 1200})`; }));
+document.querySelectorAll(".cadre").forEach(c => ro.observe(c));
+
+// Toiles
+const toiles = [...document.querySelectorAll(".m canvas")];
+const visibles = new Set();
+const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? visibles.add(e.target) : visibles.delete(e.target)), { rootMargin: "200px" });
+// clientWidth ignore la transformation : ce sont déjà les dimensions de la fenêtre à 1200 x 760.
+const NET = 2;
+toiles.forEach(t => {
+  t.dataset.w = t.clientWidth || 300; t.dataset.h = t.clientHeight || 300;
+  t.width = t.dataset.w * NET; t.height = t.dataset.h * NET;
+  t.dataset.cle = Math.random().toString(36).slice(2);
+  io.observe(t);
+});
+function couleurs(t) {
+  const s = getComputedStyle(t.closest(".m"));
+  const v = n => s.getPropertyValue(n).trim();
+  return { fond: v("--panneau"), points: v("--points"), motif: v("--motif"), motifClair: v("--motif-clair"), lignes: v("--lignes") };
+}
+let cacheCouleurs = new Map();
+function dessiner(t) {
+  for (const toile of toiles) {
+    if (!fige && !visibles.has(toile)) continue;
+    const ecran = toile.closest("section").dataset.ecran, motif = choixMotif[ecran];
+    if (!cacheCouleurs.has(toile)) cacheCouleurs.set(toile, couleurs(toile));
+    const k = cacheCouleurs.get(toile), c = toile.getContext("2d"), w = +toile.dataset.w, h = +toile.dataset.h;
+    const piece = toile.dataset.piece, cadre = toile.dataset.cadre, p = placement(cadre, w, h, piece);
+    p.piece = piece; p.cadre = cadre; p.cle = toile.dataset.cle;
+    const T = fige ? 3.6 : t % 12;
+    c.setTransform(NET, 0, 0, NET, 0, 0); c.clearRect(0, 0, w, h);
+    if (cadre === "vignette") { c.fillStyle = k.fond; c.fillRect(0, 0, w, h); }
+    MOTIF[motif](c, w, h, T, k, p);
+  }
+}
+function boucle(now) { dessiner((now - origine) / 1000); if (!fige) requestAnimationFrame(boucle); else document.body.dataset.pret = "1"; }
+
+// Réglages de la page
+document.querySelectorAll("[data-palette-choix]").forEach(b => b.onclick = () => {
+  document.body.dataset.palette = b.dataset.paletteChoix; cacheCouleurs = new Map(); CACHE.clear();
+  document.querySelectorAll("[data-palette-choix]").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".pastilles span").forEach(s => s.querySelector("i").style.outline = s.dataset.p === b.dataset.paletteChoix ? "2px solid var(--accent)" : "none");
+});
+document.querySelectorAll("[data-motif-choix]").forEach(b => b.onclick = () => {
+  const sec = b.closest("section"); choixMotif[sec.dataset.ecran] = b.dataset.motifChoix;
+  sec.querySelectorAll("[data-motif-choix]").forEach(x => x.classList.toggle("on", x === b)); origine = performance.now();
+});
+document.querySelectorAll("[data-tous]").forEach(b => b.onclick = () => {
+  document.querySelectorAll("section.ecran").forEach(sec => { choixMotif[sec.dataset.ecran] = b.dataset.tous;
+    sec.querySelectorAll("[data-motif-choix]").forEach(x => x.classList.toggle("on", x.dataset.motifChoix === b.dataset.tous)); });
+  origine = performance.now();
+});
+document.querySelectorAll(".pastilles span").forEach(s => s.querySelector("i").style.outline = s.dataset.p === "2" ? "2px solid var(--accent)" : "none");
+
+Promise.all([document.fonts.load('700 30px "Space Grotesk"'), document.fonts.load("400 14px Inter")])
+  .then(() => { origine = performance.now(); requestAnimationFrame(boucle); });
+</script></body></html>
