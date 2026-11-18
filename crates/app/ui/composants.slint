@@ -26,22 +26,42 @@ export global Theme {
     out property <TextHorizontalAlignment> fin: root.rtl ? TextHorizontalAlignment.left : TextHorizontalAlignment.right;
     out property <LayoutAlignment> rangee-debut: root.rtl ? LayoutAlignment.end : LayoutAlignment.start;
     out property <LayoutAlignment> rangee-fin: root.rtl ? LayoutAlignment.start : LayoutAlignment.end;
+    // Mode sombre (refonte du 2026-11-18, docs/marque/propositions-2026-11-18-refonte-ecrans) :
+    // vrai quand le compte a choisi le mode sombre, ou « comme Windows » avec Windows en sombre.
+    // Chaque couleur ci-dessous a sa valeur claire puis sa valeur sombre.
+    in property <bool> sombre: false;
     // Couleurs de la marque (docs/marque) : Indigo (accent, logo), Nuit pour les panneaux
     // de marque, les bulles et les alertes sombres ; couleurs de l'ancienne identité,
     // reprises le 2026-11-12 à la demande de l'utilisateur.
-    out property <color> nuit: #1a2259;
-    out property <color> accent: #2d3a8c;
-    out property <color> accent-survol: #e8eaf6;
+    // Fond des pages et des fenêtres (blanc en clair, Nuit en sombre).
+    out property <color> fond: root.sombre ? #1a2259 : #ffffff;
+    out property <color> fond-lateral: root.sombre ? #232c6b : #f4f5f9;
+    // Panneaux de marque, bulles, alertes sombres : en sombre, un cran sous le fond pour
+    // s'en détacher.
+    out property <color> nuit: root.sombre ? #151c4c : #1a2259;
+    // Bouton principal, liens, éléments actifs : Indigo en clair, Ambre en sombre.
+    out property <color> accent: root.sombre ? #e3a23b : #2d3a8c;
+    // Texte posé sur l'accent (bouton principal).
+    out property <color> texte-sur-accent: root.sombre ? #1a2259 : #ffffff;
+    out property <color> accent-survol: root.sombre ? #2d3a8c : #e8eaf6;
+    // Fond des champs de saisie et des boutons secondaires.
+    out property <color> champ: root.sombre ? #232c6b : #ffffff;
+    // Séparateurs de zones (décoratifs).
+    out property <color> bordure: root.sombre ? #3a4795 : #d9dce3;
+    // Contours des champs et des boutons secondaires : 3 : 1 au moins sur le fond et sur
+    // fond-lateral (WCAG 1.4.11).
+    out property <color> bordure-champ: root.sombre ? #6e7bc9 : #7b8794;
+    // Contour du champ actif, 2 px.
+    out property <color> focus: root.sombre ? #e3a23b : #2d3a8c;
+    out property <color> texte: root.sombre ? #f4f5f9 : #1f2933;
+    out property <color> texte-secondaire: root.sombre ? #c5cae0 : #52606d;
     // Ambre : touche d'accent sur les fonds sombres (jamais en texte sur blanc).
     out property <color> ambre: #e3a23b;
-    out property <color> texte: #1f2933;
-    out property <color> texte-secondaire: #52606d;
-    out property <color> erreur: #b42318;
+    // Couleurs d'état, éclaircies en sombre pour rester lisibles sur Nuit.
+    out property <color> erreur: root.sombre ? #f97066 : #b42318;
     // Ambre foncé, lisible sur fond blanc : résultat attendu du serveur.
-    out property <color> attente: #b54708;
-    out property <color> succes: #067647;
-    out property <color> fond-lateral: #f4f5f9;
-    out property <color> bordure: #d9dce3;
+    out property <color> attente: root.sombre ? #fdb022 : #b54708;
+    out property <color> succes: root.sombre ? #47cd89 : #067647;
 }
 
 // Préférences d'affichage du compte connecté (migration 0006) : navigation par
