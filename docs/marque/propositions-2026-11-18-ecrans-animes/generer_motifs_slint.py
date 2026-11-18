@@ -206,7 +206,7 @@ global DonneesMotif {{
 
 // Entrée jouée une fois : t en secondes depuis l'apparition, figé à la fin (la fenêtre
 // ne se redessine plus) ou d'emblée quand les animations sont coupées.
-component Entree inherits Rectangle {{
+export component Entree inherits Rectangle {{
     width: 0px;
     height: 0px;
     in property <duration> longueur: 1900ms;
