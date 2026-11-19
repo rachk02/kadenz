@@ -13,6 +13,7 @@ use std::future::Future;
 use std::net::{IpAddr, SocketAddr, TcpListener as StdListener};
 use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
+use std::sync::LazyLock;
 use std::task::{Context, Poll};
 use std::thread::JoinHandle;
 
@@ -63,7 +64,21 @@ const POLICE_SPACE: &[u8] = include_bytes!("../../app/ui/polices/SpaceGrotesk-Bo
 const FAVICON: &[u8] = include_bytes!("../statique/favicon-portail-6c6118946e.svg");
 const PILIERS: &[u8] = include_bytes!("../statique/piliers-ff8f49030c.svg");
 const SCRIPT_CODE: &[u8] = include_bytes!("../statique/code-connexion-bd47a7a773.js");
-const ROBOTS: &str = "User-agent: *\nDisallow: /\n";
+const PARTAGE: &[u8] = include_bytes!("../statique/partage-9405c98b03.png");
+
+/// robots.txt : le portail reste hors des moteurs de recherche (choix de
+/// l'utilisateur du 2026-11-19). Seule la page de connexion, et ce qu'il faut
+/// pour la rendre, peut être lue : un robot y trouve le `noindex` (une page
+/// interdite de lecture peut être indexée sans son contenu, sur la foi des
+/// liens). `$` limite la règle à `/connexion` même, pas `/connexion/code`.
+static ROBOTS: LazyLock<String> = LazyLock::new(|| {
+    format!(
+        "User-agent: *\nDisallow: /\nAllow: /connexion$\nAllow: /style.css$\nAllow: /police/\nAllow: {}$\nAllow: {}$\nAllow: {}$\n",
+        pages::FAVICON,
+        pages::IMAGE_PILIERS,
+        pages::IMAGE_PARTAGE
+    )
+});
 
 /// Taille maximale d'un corps de requête. Le plus gros formulaire (une
 /// licence collée, un compte) et la demande d'activation tiennent en
@@ -107,6 +122,23 @@ pub struct ConfigWeb {
     pub mandataire: Option<IpAddr>,
     /// En-tête lu pour les requêtes du mandataire.
     pub entete_client: EnteteClient,
+    /// Adresse du portail sur Internet (`https://nom`, sans barre finale),
+    /// pour l'aperçu des liens partagés de la page de connexion ; rien n'est
+    /// émis sans elle (jamais tirée de l'en-tête `Host`).
+    pub adresse_publique: Option<String>,
+}
+
+/// Adresse publique admise par `--adresse-publique` : `https://` puis un nom
+/// d'hôte (lettres, chiffres, points, tirets, port éventuel), barre finale
+/// retirée. Rien d'autre, pour qu'elle ne puisse rien glisser dans la page.
+pub fn adresse_publique(texte: &str) -> Option<String> {
+    let texte = texte.trim().trim_end_matches('/');
+    let hote = texte.strip_prefix("https://")?;
+    let permis = |c: char| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | ':');
+    if hote.is_empty() || !hote.chars().all(permis) || hote.starts_with(['.', '-', ':']) {
+        return None;
+    }
+    Some(texte.to_string())
 }
 
 #[derive(Clone)]
@@ -185,6 +217,10 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
         .route(
             "/robots.txt",
             get(|| async { statique("text/plain; charset=utf-8", ROBOTS.as_bytes(), false) }),
+        )
+        .route(
+            pages::IMAGE_PARTAGE,
+            get(|| async { statique("image/png", PARTAGE, true) }),
         )
         // Santé (vérification de Docker, « kadenz-portail sante ») : hors des
         // sessions et du frein, ne dit rien d'autre que « ok ».
@@ -513,8 +549,17 @@ fn cookie_efface(nom: &str) -> String {
 
 /// Page de connexion avec un jeton neuf, posé aussi en cookie.
 fn page_de_connexion(statut: StatusCode, erreur: Option<&str>) -> Response {
+    page_de_connexion_avec(statut, erreur, None)
+}
+
+/// Page de connexion avec l'aperçu de partage (GET /connexion seulement).
+fn page_de_connexion_avec(
+    statut: StatusCode,
+    erreur: Option<&str>,
+    adresse_publique: Option<&str>,
+) -> Response {
     let jeton = crate::sessions::alea();
-    let mut r = html(statut, pages::connexion(&jeton, erreur));
+    let mut r = html(statut, pages::connexion(&jeton, erreur, adresse_publique));
     if let Ok(v) = HeaderValue::from_str(&format!(
         "{COOKIE_CONNEXION}={jeton}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age={DUREE_JETON_CONNEXION}"
     )) {
@@ -571,7 +616,11 @@ async fn page_connexion(State(etat): State<Etat>, entetes: HeaderMap) -> Respons
     if connecte(&etat, &entetes).await.is_some() {
         return rediriger("/");
     }
-    page_de_connexion(StatusCode::OK, None)
+    page_de_connexion_avec(
+        StatusCode::OK,
+        None,
+        etat.config.adresse_publique.as_deref(),
+    )
 }
 
 async fn connexion(
@@ -1452,6 +1501,41 @@ pub fn lancer(portail: Portail, ecoute: SocketAddr, config: ConfigWeb) -> std::i
 mod tests {
     use super::*;
 
+    #[test]
+    fn adresse_publique_admise() {
+        assert_eq!(
+            adresse_publique("https://licences.exemple.fr/").as_deref(),
+            Some("https://licences.exemple.fr")
+        );
+        assert_eq!(
+            adresse_publique("https://hote:8443").as_deref(),
+            Some("https://hote:8443")
+        );
+        for refusee in [
+            "http://licences.exemple.fr",
+            "https://",
+            "https://licences.exemple.fr/chemin",
+            "https://a\"b",
+            "https://a b",
+            "licences.exemple.fr",
+        ] {
+            assert_eq!(adresse_publique(refusee), None, "{refusee}");
+        }
+    }
+
+    #[test]
+    fn apercu_de_partage_avec_l_adresse_publique() {
+        let page =
+            pages::connexion("jeton", None, Some("https://licences.exemple.fr")).into_string();
+        assert!(page.contains("content=\"noindex, nofollow\""));
+        assert!(page.contains(&format!(
+            "property=\"og:image\" content=\"https://licences.exemple.fr{}\"",
+            pages::IMAGE_PARTAGE
+        )));
+        assert!(page.contains("content=\"https://licences.exemple.fr/connexion\""));
+        assert!(!page.contains("rel=\"canonical\""));
+    }
+
     /// Fichiers servis avec un cache d'un an : le nom porte les 10 premiers
     /// chiffres hexadécimaux du SHA-256 du contenu. Un fichier modifié sans
     /// être renommé resterait périmé chez les navigateurs.
@@ -1461,6 +1545,7 @@ mod tests {
             (pages::SCRIPT_CODE, SCRIPT_CODE),
             (pages::IMAGE_PILIERS, PILIERS),
             (pages::FAVICON, FAVICON),
+            (pages::IMAGE_PARTAGE, PARTAGE),
         ] {
             let empreinte = ring::digest::digest(&ring::digest::SHA256, octets);
             let hex: String = empreinte

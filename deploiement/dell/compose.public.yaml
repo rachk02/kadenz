@@ -27,6 +27,10 @@ services:
       - ${IP_TUNNEL:?IP_TUNNEL manquant}
       - --entete-client
       - cf-connecting-ip
+      # Aperçu des liens partagés de la page de connexion (Open Graph) ;
+      # le portail reste en noindex.
+      - --adresse-publique
+      - ${ADRESSE_PUBLIQUE:?ADRESSE_PUBLIQUE manquant}
     networks:
       portail: {}
       console: {}

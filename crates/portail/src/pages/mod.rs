@@ -72,6 +72,14 @@ pub const IMAGE_PILIERS: &str = "/piliers-ff8f49030c.svg";
 /// (demande de l'utilisateur du 2026-11-19). Même règle d'empreinte.
 pub const FAVICON: &str = "/favicon-portail-6c6118946e.svg";
 
+/// Image d'aperçu des liens partagés (Open Graph, 1200 x 630, 96 Ko) : les
+/// colonnes et le titre du portail. Même règle d'empreinte.
+pub const IMAGE_PARTAGE: &str = "/partage-9405c98b03.png";
+
+/// Description de la page de connexion, tirée de son pied (balise
+/// description et aperçu des liens partagés).
+pub const DESCRIPTION: &str = "Portail des licences Kadenz : enregistrement des paiements et émission des licences d'abonnement, pour l'éditeur et ses revendeurs.";
+
 /// Seul script du portail : le code de connexion en six cases (choix de
 /// l'utilisateur du 2026-11-19). Il ne fait qu'embellir la page du code ;
 /// sans lui, le champ unique reste. Même règle d'empreinte que l'image.
@@ -79,12 +87,21 @@ pub const SCRIPT_CODE: &str = "/code-connexion-bd47a7a773.js";
 
 /// En-tête HTML commun : titre, feuille de style, aucune indexation.
 fn tete(titre: &str) -> Markup {
+    tete_avec(titre, html! {})
+}
+
+/// En-tête HTML avec des balises propres à la page. Le portail reste hors
+/// des moteurs de recherche (choix de l'utilisateur du 2026-11-19, « rester
+/// invisible ») : `noindex` partout, même avec un aperçu de partage.
+fn tete_avec(titre: &str, en_plus: Markup) -> Markup {
     html! {
         head {
             meta charset="utf-8";
             meta name="viewport" content="width=device-width, initial-scale=1";
             meta name="robots" content="noindex, nofollow";
+            meta name="theme-color" content="#000000";
             title { (titre) " - Portail des licences Kadenz" }
+            (en_plus)
             link rel="icon" href=(FAVICON) type="image/svg+xml";
             link rel="stylesheet" href="/style.css";
         }

@@ -1,7 +1,7 @@
 //! Portail des licences de Kadenz (jalon F9).
 //!
 //! Usage :
-//! - `kadenz-portail --dossier <dossier> --cle <fichier> [--ecoute <adresse:port>] [--mandataire <adresse> [--entete-client <en-tête>]]` :
+//! - `kadenz-portail --dossier <dossier> --cle <fichier> [--ecoute <adresse:port>] [--mandataire <adresse> [--entete-client <en-tête>]] [--adresse-publique https://<nom>]` :
 //!   lance le portail. Le fichier de clé contient la clé privée du portail
 //!   en hexadécimal (format de `kadenz-editeur`) ; sans lui, le portail ne
 //!   démarre pas. Écoute par défaut sur `127.0.0.1:47382`.
@@ -10,6 +10,9 @@
 //!   l'adresse du client est lue dans l'en-tête donné par `--entete-client` :
 //!   `x-forwarded-for` (défaut, dernière valeur) ou `cf-connecting-ip`
 //!   (derrière Cloudflare Tunnel).
+//!   `--adresse-publique https://<nom>` : adresse du portail sur Internet,
+//!   pour l'aperçu des liens partagés de la page de connexion (sans elle,
+//!   aucune balise Open Graph).
 //! - `kadenz-portail sante [--ecoute <adresse:port>]` : interroge `/sante` du
 //!   portail local (vérification de santé de Docker, l'image n'a pas curl) ;
 //!   code de sortie 0 si le portail répond 200.
@@ -47,7 +50,7 @@ const ECOUTE_PAR_DEFAUT: ([u8; 4], u16) = ([127, 0, 0, 1], 47382);
 
 fn usage() -> ExitCode {
     eprintln!(
-        "usage : kadenz-portail --dossier <dossier> --cle <fichier> [--ecoute <adresse:port>] [--mandataire <adresse> [--entete-client x-forwarded-for|cf-connecting-ip]]\n\
+        "usage : kadenz-portail --dossier <dossier> --cle <fichier> [--ecoute <adresse:port>] [--mandataire <adresse> [--entete-client x-forwarded-for|cf-connecting-ip]] [--adresse-publique https://<nom>]\n\
          \x20       kadenz-portail --dossier <dossier> creer-editeur <identifiant> <nom>\n\
          \x20       kadenz-portail --dossier <dossier> retirer-double-authentification <identifiant>\n\
          \x20       kadenz-portail --dossier <dossier> journal-verifier [--archive <fichier>|-]\n\
@@ -180,6 +183,12 @@ fn main() -> ExitCode {
                     .and_then(|a| web::EnteteClient::depuis_option(&a))
                 {
                     Some(e) => config.entete_client = e,
+                    None => return usage(),
+                }
+            }
+            "--adresse-publique" => {
+                match arguments.next().and_then(|a| web::adresse_publique(&a)) {
+                    Some(a) => config.adresse_publique = Some(a),
                     None => return usage(),
                 }
             }

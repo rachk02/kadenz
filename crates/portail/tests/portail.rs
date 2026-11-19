@@ -595,9 +595,27 @@ fn routes_sessions_et_jetons() {
     let a = lance.adresse();
 
     // Console privée : rien à indexer, en-têtes de sécurité partout.
+    // Seule la page de connexion peut être lue, pour que son noindex soit vu.
     let r = requete(a, "GET", "/robots.txt", None, "");
     assert_eq!(r.statut, 200);
-    assert!(r.corps.contains("Disallow: /"));
+    assert!(r.corps.contains(
+        "Disallow: /
+"
+    ));
+    assert!(r.corps.contains(
+        "Allow: /connexion$
+"
+    ));
+    assert!(!r.corps.contains("Sitemap"));
+    let connexion = requete(a, "GET", "/connexion", None, "");
+    assert!(connexion.corps.contains("content=\"noindex, nofollow\""));
+    assert!(connexion.corps.contains("name=\"description\""));
+    assert_eq!(connexion.entete("x-robots-tag"), Some("noindex, nofollow"));
+    // Sans adresse publique, aucun aperçu de partage.
+    assert!(!connexion.corps.contains("og:image"));
+    let image = requete(a, "GET", kadenz_portail::pages::IMAGE_PARTAGE, None, "");
+    assert_eq!(image.statut, 200);
+    assert_eq!(image.entete("content-type"), Some("image/png"));
     assert!(
         r.entete("content-security-policy")
             .unwrap()
