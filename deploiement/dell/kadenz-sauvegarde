@@ -20,8 +20,10 @@ REGLAGES=${KADENZ_ENV:-/etc/kadenz/kadenz.env}
 SORTIE=${KADENZ_SAUVEGARDES:-/var/backups/kadenz}
 ALERTE=${ALERTE:-/usr/local/sbin/alerte}
 
+# Entrée standard fermée : sans elle, docker compose run ou exec lit la suite
+# d'un script appelant (relevé à l'essai sur le Dell).
 kz() {
-    docker compose -f "$SOURCE/deploiement/dell/compose.yaml" --env-file "$REGLAGES" "$@"
+    docker compose -f "$SOURCE/deploiement/dell/compose.yaml" --env-file "$REGLAGES" "$@" </dev/null
 }
 
 # Alerte du Dell : alerte "titre" "message" [priorité 1 à 5, 3 par défaut],
@@ -45,6 +47,8 @@ verdict=$(kz run --rm -T outil-sqlite /depot/portail.sqlite "PRAGMA integrity_ch
     || echec "contrôle de la copie de la base du portail impossible"
 [ "$verdict" = "ok" ] || echec "copie de la base du portail endommagée : $verdict"
 mv -f "$SORTIE/depot/portail.sqlite" "$SORTIE/portail/portail.sqlite"
+# La copie sort en 644 (umask du conteneur).
+chmod 600 "$SORTIE/portail/portail.sqlite"
 
 # 2. Journal du portail : entrées après la dernière déjà exportée.
 journal="$SORTIE/portail/journal.jsonl"
