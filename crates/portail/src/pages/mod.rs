@@ -63,10 +63,14 @@ enum Rubrique {
 /// Symbole de la marque, en blanc, posé sur le bandeau Nuit.
 const SYMBOLE: &str = r##"<svg class="symbole" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-hidden="true"><path fill="#FFFFFF" d="M16 16 L120 16 L120 120 L16 120 Z M136 120 L136 14.44 A105.56 105.56 0 0 1 241.56 120 Z M16 136 L120 240 L16 240 Z M134.44 188 A53.56 53.56 0 1 1 241.56 188 A53.56 53.56 0 1 1 134.44 188 Z"/></svg>"##;
 
-/// Colonnes de la page de connexion (SVG de points, 47 Ko, tiré de
+/// Colonnes de la page de connexion (SVG de points, 44 Ko, tiré de
 /// docs/marque/propositions-2026-11-19-portail/piliers.js) ; l'empreinte dans
 /// le nom permet un cache long. Servi par `web.rs`.
-pub const IMAGE_PILIERS: &str = "/piliers-caae728454.svg";
+pub const IMAGE_PILIERS: &str = "/piliers-ff8f49030c.svg";
+
+/// Icône du portail : symbole blanc sur fond noir, au thème « piliers »
+/// (demande de l'utilisateur du 2026-11-19). Même règle d'empreinte.
+pub const FAVICON: &str = "/favicon-portail-6c6118946e.svg";
 
 /// Seul script du portail : le code de connexion en six cases (choix de
 /// l'utilisateur du 2026-11-19). Il ne fait qu'embellir la page du code ;
@@ -81,7 +85,7 @@ fn tete(titre: &str) -> Markup {
             meta name="viewport" content="width=device-width, initial-scale=1";
             meta name="robots" content="noindex, nofollow";
             title { (titre) " - Portail des licences Kadenz" }
-            link rel="icon" href="/favicon.svg" type="image/svg+xml";
+            link rel="icon" href=(FAVICON) type="image/svg+xml";
             link rel="stylesheet" href="/style.css";
         }
     }

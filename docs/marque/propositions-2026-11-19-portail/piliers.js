@@ -189,12 +189,16 @@
     graine = 7;
     const L = largeur;
     const H = hauteur;
-    const grand = Math.min(L * 0.13, H * 0.13);
+    // Colonnes tenues dans la zone toujours visible du portail, où l'image
+    // est cadrée en cover jusqu'à un panneau de rapport 0,7 (environ 85 px
+    // rognés de chaque côté sur 800) : chapiteaux entiers, à gauche comme à
+    // droite (remarque de l'utilisateur du 2026-11-19).
+    const grand = Math.min(L * 0.12, H * 0.12);
     const moyen = grand * 0.74;
     const sol = H * 0.985;
-    colonne(c, L * 0.2, grand, -H * 0.03, sol, 18);
-    colonne(c, L * 0.54, moyen, H * 0.17, sol, 12);
-    colonne(c, L * 0.85, grand, -H * 0.03, sol, 16);
+    colonne(c, L * 0.24, grand, -H * 0.03, sol, 18);
+    colonne(c, L * 0.51, moyen, H * 0.17, sol, 12);
+    colonne(c, L * 0.76, grand, -H * 0.03, sol, 16);
     return c.getImageData(0, 0, largeur, hauteur).data;
   }
 
