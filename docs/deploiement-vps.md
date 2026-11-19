@@ -6,6 +6,7 @@
 | 0.2 | 2026-11-18 | Relecture d'OpenCode (réponse 6) intégrée : filtrage par la chaîne DOCKER-USER, Caddy sans root sur les ports internes 8080 et 8443, apex, journaux d'accès, rotation des journaux Docker, healthchecks, ulimits et pids du relais, pages d'erreur par code, pièges de la sauvegarde SQLite, défauts du relais à corriger dans le code. |
 | 0.3 | 2026-11-18 | Lot R1 du relais écrit (pas encore compilé ni commité) : les quatre défauts du relais passent en « corrigé dans R1 » ; sonde de santé `kadenz-relais sante` ; propriétaire de `/donnees` ; adresses vues par le relais derrière docker-proxy, à vérifier avant la mise en ligne. |
 | 0.4 | 2026-11-19 | Section 7 : variante sur le Dell avec Tailscale, sans nom de domaine (décision de l'utilisateur du 2026-11-19). Funnel vérifié dans sa documentation : le portail y passe, le relais non dans son protocole actuel ; trois pistes pour le relais, à trancher. |
+| 0.5 | 2026-11-19 | `--mandataire` prend l'adresse du mandataire de confiance (lot D1 de kadenz-3a) : Caddy à adresse fixe sur le réseau « console » (paramètres `RESEAU_CONSOLE` et `IP_CADDY_CONSOLE`), adresse de tailscaled à relever sur le Dell pour Funnel ; sonde de santé du portail. |
 
 Statut : **proposé**. Le VPS, son prestataire, le nom de domaine et la mise en service restent à la décision de l'utilisateur (décisions 16 et 69 du cahier de la phase 2). Le relais et le portail y iront une fois leur implémentation finie (décision de l'utilisateur du 2026-11-18). Pour l'instant, ni domaine ni VPS : hébergement sur le Dell avec Tailscale, et Vercel au besoin (décision du 2026-11-19, section 7). Rien ici n'a été essayé sur un VPS ; chaque fichier est à relire et à essayer d'abord sur une machine d'essai.
 
@@ -31,6 +32,8 @@ Paramètres, à remplir par l'utilisateur, jamais inventés :
 | `DOMAINE_APEX` | domaine nu, redirigé vers le site (bloc à retirer si le DNS ne le publie pas) |
 | `EMAIL_ACME` | adresse donnée à l'autorité de certification (facultative) |
 | `PORT_RELAIS` | port public du relais, 47381 par défaut |
+| `RESEAU_CONSOLE` | sous-réseau privé du réseau Docker « console », libre sur l'hôte |
+| `IP_CADDY_CONSOLE` | adresse de Caddy dans ce sous-réseau, donnée au portail par `--mandataire` |
 
 ## 2. Caddyfile proposé
 
@@ -167,7 +170,12 @@ services:
     security_opt: [no-new-privileges:true]
     pids_limit: 256
     mem_limit: 256m
-    networks: [entree, console]
+    # Adresse fixe sur le réseau « console » : c'est elle que le portail reçoit par
+    # --mandataire, la seule dont il croit l'en-tête X-Forwarded-For.
+    networks:
+      entree: {}
+      console:
+        ipv4_address: ${IP_CADDY_CONSOLE}
 
   portail:
     <<: *journaux
@@ -177,7 +185,7 @@ services:
     restart: unless-stopped
     # Le portail ne traite pas SIGTERM (crates/portail/Dockerfile) : init obligatoire.
     init: true
-    command: ["--cle", "/run/secrets/cle_portail", "--mandataire"]
+    command: ["--cle", "/run/secrets/cle_portail", "--mandataire", "${IP_CADDY_CONSOLE}"]
     secrets: [cle_portail]
     volumes:
       - portail-donnees:/donnees
@@ -225,6 +233,10 @@ networks:
   entree: {}
   console:
     internal: true
+    # Sous-réseau fixé pour que l'adresse de Caddy (IP_CADDY_CONSOLE) le soit aussi.
+    ipam:
+      config:
+        - subnet: ${RESEAU_CONSOLE}
   # Le relais n'a besoin d'aucun accès sortant ; internal: true est à essayer, en
   # vérifiant que la publication du port fonctionne toujours.
   relais: {}
@@ -241,12 +253,12 @@ secrets:
 ```
 
 - `ENTRYPOINT` des Dockerfile : `--dossier /donnees --ecoute 0.0.0.0:...` ; `command` ne fait qu'ajouter les options. Le portail refuse de démarrer sans `--cle`, et refuse une clé que Kadenz ne reconnaît pas (`crates/portail/src/main.rs`).
-- `--mandataire` : le portail lit alors le dernier `X-Forwarded-For`. Il le croit aujourd'hui sans vérifier que le pair est Caddy (défaut 4 de la réponse 5) : c'est pourquoi le réseau `console` est interne et ne contient que Caddy et le portail. Le défaut reste à corriger avant la mise en ligne.
+- `--mandataire <adresse>` : adresse IP du mandataire de confiance, vue par le conteneur du portail. Pour les seules connexions venues de cette adresse, le portail lit l'adresse du client dans la dernière valeur de `X-Forwarded-For` ; pour toute autre, il garde l'adresse du pair (`crates/portail/src/web.rs`, `adresse_selon`, et son essai). Le défaut 4 de la réponse 5 (en-tête cru sans vérifier le pair) est ainsi corrigé dans le lot D1 de kadenz-3a, encore en cours au 2026-11-19. Ici, l'adresse est celle de Caddy sur le réseau `console`, fixée par `IP_CADDY_CONSOLE` dans le sous-réseau `RESEAU_CONSOLE`. Le réseau `console` reste interne et ne contient que Caddy et le portail.
 - Caddy sans root (réponse 6 d'OpenCode, point b) : avec `cap_drop: ALL`, la capacité de fichier que porte le binaire de l'image est masquée par l'ensemble limite et n'apporte rien ; un Caddy root aurait besoin de `cap_add: NET_BIND_SERVICE`, et un Caddy non root ne peut pas compter sur cette capacité de fichier sous `no-new-privileges`. D'où les ports internes 8080 et 8443. À vérifier à l'essai : `caddy validate`, et l'écriture des certificats dans `/data/caddy` avec l'uid 65534.
 - Clé du portail : fichier hors dépôt, jamais dans l'image, exclu des sauvegardes (le dossier `secrets/` est exclu du dépôt restic). En compose sans Swarm, un secret de type fichier est un montage du fichier de l'hôte, avec ses droits : le fichier doit être lisible par l'utilisateur `kadenz` du conteneur seul (mode 400). Cet utilisateur est créé par `useradd --system` sans uid fixe (Dockerfile) : fixer `--uid 10001` dans les deux Dockerfile rend le propriétaire stable. Une copie hors ligne de la clé reste chez l'éditeur ; procédure de compromission : révocation et remplacement par une mise à jour (décision 29).
 - Santé : les images du portail et du relais (debian-slim) n'ont ni curl ni wget. Une sonde demande soit une sous-commande de santé dans les deux programmes, soit une sonde extérieure (section 6). Sans elle, la panne silencieuse du relais décrite plus bas ne se voit pas.
   - Relais (lot R1) : `kadenz-relais sante --dossier /donnees` fait la poignée de main TLS avec le certificat du dossier épinglé, attend le défi du relais, puis sort avec le code 0 ou 1, sans rien créer. Le `--dossier` est obligatoire dans la sonde : le défaut est le chemin relatif `donnees-relais`. Dans le Dockerfile (lot D1 de kadenz-3a) : `HEALTHCHECK CMD ["kadenz-relais", "sante", "--dossier", "/donnees"]`.
-  - Portail : sous-commande de santé à prévoir dans les lots du portail.
+  - Portail (lot D1 de kadenz-3a, en cours) : `kadenz-portail sante [--ecoute <adresse:port>]` interroge `/sante` du portail local et sort avec le code 0 si la réponse est 200 (`crates/portail/src/main.rs`).
 - Propriétaire de `/donnees` du relais : l'utilisateur du conteneur (uid 10001, une fois fixé dans le Dockerfile). Le relais met le dossier en 700 au démarrage et refuse de démarrer s'il ne peut pas le faire (lot R1) ; un volume créé avec un autre propriétaire l'empêche donc de démarrer, ce qui se voit tout de suite au lieu de passer inaperçu.
 - Variante à trois conteneurs : un service `site` sur l'image Caddy, avec `auto_https off`, `admin off`, racine en lecture seule et `file_server`, sur le réseau `console` ; le Caddy d'entrée fait alors `reverse_proxy site:80` pour l'hôte du site.
 - Démon Docker : mode rootless ou `userns-remap` à étudier, à décider avant la mise en service, car `userns-remap` change le propriétaire des volumes et du secret ; jamais de `docker.sock` monté, jamais `--privileged` ni `network_mode: host`.
@@ -331,7 +343,7 @@ Décision de l'utilisateur du 2026-11-19, transmise par kadenz-cc : pas de nom d
 
 ### Conséquences pour chaque service
 
-- **Console des licences (portail)** : compatible. `tailscale funnel --https=443` vers le port local du portail ; Tailscale fournit le certificat du nom ts.net, Caddy n'est plus indispensable devant. Deux points à vérifier à l'essai, faute de documentation : l'adresse du client que voit le portail (Funnel n'annonce pas de `X-Forwarded-For` ; sans elle, le frein de connexion du portail et le journal compteraient toutes les requêtes comme une seule adresse), et la tenue de l'option `--mandataire`, qui ne doit pas croire un en-tête qu'un client aurait fourni lui-même.
+- **Console des licences (portail)** : compatible. `tailscale funnel --https=443` vers le port local du portail ; Tailscale fournit le certificat du nom ts.net, Caddy n'est plus indispensable devant. Deux points à vérifier à l'essai, faute de documentation : l'adresse du client que voit le portail (Funnel n'annonce pas de `X-Forwarded-For` ; sans elle, le frein de connexion du portail et le journal compteraient toutes les requêtes comme une seule adresse), et l'adresse à donner à `--mandataire` : celle de tailscaled vue par le conteneur du portail, sans doute la passerelle du réseau Docker si tailscaled tourne sur l'hôte (remarque de kadenz-3a), à relever à l'essai sur le Dell. Le portail ne croit `X-Forwarded-For` que des connexions venues de cette adresse.
 - **Site public** : un seul nom ts.net par machine, et les cookies ne sont pas isolés par port : site et console sur le même nom (443 et 8443) partageraient le cookie de session de la console, ce que la recommandation des deux noms d'hôte (section 1) voulait éviter. Héberger le site statique sur Vercel, sous son adresse par défaut, garde les deux origines séparées ; les conditions de Vercel sont à vérifier dans sa documentation avant de l'adopter.
 - **Relais d'accès à distance** : **incompatible avec Funnel dans son protocole actuel**, pour deux raisons tirées du code :
   1. un poste se présente par des trames en clair (premier octet au plus 0x10, `crates/relais/src/relais.rs`, fonction `connexion`) ; Funnel n'accepte que des connexions TLS ;
