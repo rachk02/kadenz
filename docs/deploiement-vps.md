@@ -13,6 +13,7 @@
 | 0.9 | 2026-11-19 | Section 7 : ouverture de la console par Cloudflare Tunnel, domaine acheté par l'utilisateur chez Cloudflare (transmis par kadenz-51). Surcouche `compose.public.yaml` (cloudflared durci, sans port publié, jeton lu depuis un fichier hors dépôt, `--mandataire` à l'adresse de cloudflared), sonde de santé par les étiquettes de Compose, étapes du compte Cloudflare marquées pour l'utilisateur, option Cloudflare Access en décision de l'utilisateur. Rien n'est lancé ; l'en-tête de l'adresse du client attend la vérification d'OpenCode. |
 | 0.10 | 2026-11-19 | Cloudflare Tunnel : image cloudflared relevée sur le Dell par kadenz-51 (2026.10.7, empreinte, utilisateur 65532, `--token-file` présent) ; adresse du client lue dans `CF-Connecting-IP` (vérification d'OpenCode, option `--entete-client` du portail) ; relais : piste de la redirection de port sur la box retenue pour plus tard. |
 | 0.11 | 2026-11-19 | Cloudflare Tunnel : tunnel de l'utilisateur relié, conteneur provisoire `kadenz-tunnel` sur le Dell (kadenz-51), à retirer avant le démarrage par la surcouche ; jeton à nettoyer de sa fin de ligne. |
+| 0.12 | 2026-11-19 | Portail en service sur le Dell (kadenz-51, accord de l'utilisateur). Point d'entrée unique `kadenz-compose` : la surcouche publique est gardée à chaque appel dès que `KADENZ_PUBLIC=1`, garde-fou contre la recréation du portail sans elle ; `kadenz-sauvegarde` passe par lui. |
 
 Statut : **proposé**. Le VPS, son prestataire, le nom de domaine et la mise en service restent à la décision de l'utilisateur (décisions 16 et 69 du cahier de la phase 2). Le relais et le portail y iront une fois leur implémentation finie (décision de l'utilisateur du 2026-11-18). Pour l'instant, ni domaine ni VPS : hébergement sur le Dell avec Tailscale, et Vercel au besoin (décision du 2026-11-19, section 7). Rien ici n'a été essayé sur un VPS ; chaque fichier est à relire et à essayer d'abord sur une machine d'essai.
 
@@ -386,6 +387,7 @@ Pour les essais internes, la piste C suffit et ne demande rien. Pour des clients
 | `kadenz-sauvegarde` | crochet appelé par `/usr/local/sbin/sauvegarde` avant restic |
 | `kadenz-sante`, `kadenz-sante.service`, `kadenz-sante.timer` | santé des conteneurs toutes les 5 minutes, alerte au changement d'état ; conteneurs trouvés par les étiquettes de Compose, `tunnel` surveillé seulement s'il existe |
 | `compose.public.yaml` | ouverture de la console par Cloudflare Tunnel, sur accord de l'utilisateur (sous-section « Cloudflare Tunnel ») |
+| `kadenz-compose` | point d'entrée unique de Docker Compose : `compose.yaml`, plus `compose.public.yaml` si `KADENZ_PUBLIC=1` dans les réglages, ou `compose.essai.yaml` si `KADENZ_ESSAI=1` à l'appel ; garde-fou (choix et limites) |
 
 Le Dockerfile du portail prend un argument `PROFIL` (`release` par défaut) ; celui du relais ne change pas : le relais reste en version optimisée, y compris à l'essai.
 
@@ -399,20 +401,20 @@ Le Dockerfile du portail prend un argument `PROFIL` (`release` par défaut) ; ce
 - Santé : `restart: unless-stopped` ne redémarre pas un conteneur « unhealthy » ; l'alerte de `kadenz-sante` est la seule réaction. Une alerte à la panne, une au retour, pas à chaque passage ; un conteneur absent ou arrêté compte comme une panne.
 - `/usr/local/sbin/alerte` prend `alerte "titre" "message" [priorité 1 à 5]`, priorité 3 par défaut, titre préfixé par le nom de la machine (relevé sur le Dell par kadenz-cc). Titres « Kadenz, sauvegarde » et « Kadenz, <service> » ; priorité 4 pour un échec ou une panne, 3 pour un retour. Variables `ALERTE`, `KADENZ_SOURCE`, `KADENZ_ENV`, `KADENZ_SAUVEGARDES` pour adapter les chemins sans modifier les scripts.
 - Construction sur le Dell : 3,2 Go de mémoire, d'où `CARGO_BUILD_JOBS=1`.
+- Tous les appels passent par `kadenz-compose`, jamais par `docker compose -f compose.yaml` seul. Une fois le portail ouvert, un appel sans la surcouche signale le tunnel comme « orphan container », et un `up` recréerait le portail avec l'ancien `--mandataire` et sans `--entete-client` : le frein par adresse cesserait de distinguer les clients, sans rien signaler ; un `--remove-orphans` couperait le tunnel. `kadenz-compose` ajoute la surcouche dès que `KADENZ_PUBLIC=1` figure dans `/etc/kadenz/kadenz.env` (ligne lue, fichier jamais exécuté). Garde-fou : sans `KADENZ_PUBLIC=1` alors qu'un conteneur du service `tunnel` existe, `up`, `create`, `down` et `rm` sont refusés ; `ps`, `logs`, `config`, `exec`, `cp`, `run` et `restart` passent. `KADENZ_ESSAI=1` est refusé quand le portail est ouvert. `COMPOSE_FILE` n'est pas employé : la documentation de Compose ne le dit lu que depuis le fichier `.env` du dossier de travail (https://docs.docker.com/compose/how-tos/environment-variables/envvars/), et un `-f` explicite l'emporte. Le nom du projet vient de `name: kadenz` dans `compose.yaml`.
 
 #### Procédure
 
 Tout se fait en root (`sudo -i`), depuis `/opt/kadenz/source` : les chemins `deploiement/dell/...` y sont relatifs. Raccourcis utilisés plus bas :
 
 ```sh
-kz()  { docker compose -f /opt/kadenz/source/deploiement/dell/compose.yaml --env-file /etc/kadenz/kadenz.env "$@"; }
-kze() { docker compose -f /opt/kadenz/source/deploiement/dell/compose.yaml \
-          -f /opt/kadenz/source/deploiement/dell/compose.essai.yaml --env-file /etc/kadenz/kadenz.env "$@"; }
+kz()  { /usr/local/sbin/kadenz-compose "$@"; }
+kze() { KADENZ_ESSAI=1 /usr/local/sbin/kadenz-compose "$@"; }
 ```
 
 1. **Relire l'existant** : `/usr/local/sbin/alerte` (forme d'appel ci-dessus) et `/usr/local/sbin/sauvegarde` (fonction `echec`, commentaire « Données à sauvegarder », ligne `restic backup --one-file-system --tag auto` sur deux lignes, au 2026-11-19). Si l'un a changé, ajuster les scripts de la trousse.
 2. **Source** dans `/opt/kadenz/source`, au commit voulu. La façon dont le Dell obtient le code reste à la décision de l'utilisateur (plan de découpage des dépôts). Vérifier que l'arbre est propre (`git status --porcelain` vide) et noter `git rev-parse --short=12 HEAD`.
-3. **Réglages** : copier `kadenz.env.exemple` dans `/etc/kadenz/kadenz.env` (root, 600) ; `KADENZ_REV` = le commit noté à l'étape 2, sinon l'étiquette ment ; choisir un sous-réseau libre (`docker network ls`, `docker network inspect`, `ip route`) pour `RESEAU_PORTAIL` et sa première adresse pour `PASSERELLE_PORTAIL`.
+3. **Réglages** : `install -m 755 deploiement/dell/kadenz-compose /usr/local/sbin/kadenz-compose` ; copier `kadenz.env.exemple` dans `/etc/kadenz/kadenz.env` (root, 600), `KADENZ_PUBLIC` vide ; `KADENZ_REV` = le commit noté à l'étape 2, sinon l'étiquette ment ; choisir un sous-réseau libre (`docker network ls`, `docker network inspect`, `ip route`) pour `RESEAU_PORTAIL` et sa première adresse pour `PASSERELLE_PORTAIL`.
 4. **Clé d'essai** (jamais la clé de production) : paire Ed25519 neuve, la clé privée dans un fichier réservé à l'uid 10001, la clé publique affichée pour `CLE_PUBLIQUE_ESSAI` ; `CLE_PORTAIL=/srv/kadenz/essai/cle-portail.hex`.
 
    ```sh
@@ -466,10 +468,11 @@ Ce que fait la surcouche `compose.public.yaml` :
 Étapes sur le Dell, en root depuis la source (fonctions `kz`, `kze` de la procédure ci-dessus) :
 
 1. Réglages : `IMAGE_CLOUDFLARED` (valeur de `kadenz.env.exemple` ; pour une version plus récente, `docker pull cloudflare/cloudflared:<version>` puis `docker image inspect --format '{{index .RepoDigests 0}}'`, une version publiée depuis au moins deux semaines), `RESEAU_CONSOLE` (sous-réseau libre), `IP_TUNNEL` (dans ce sous-réseau, pas la première adresse), `JETON_TUNNEL`.
-2. Vérifier la configuration fusionnée : `kz -f deploiement/dell/compose.public.yaml config` ne doit montrer aucun `ports:` pour `tunnel`, et les réseaux `portail` et `console` pour le portail.
-3. Démarrer, **sur accord de l'utilisateur** : d'abord retirer le conteneur provisoire posé par kadenz-51 le 2026-11-19 (`docker run` hors Compose, même image et même jeton, aucune route publiée) : `docker rm -f kadenz-tunnel` ; puis `kz -f deploiement/dell/compose.public.yaml up -d portail tunnel`. Le portail est recréé avec le nouveau `--mandataire`. Le conteneur provisoire n'a pas les étiquettes de Compose : `kadenz-sante` ne le surveille pas.
+2. Poser `KADENZ_PUBLIC=1` dans `/etc/kadenz/kadenz.env`, puis vérifier la configuration fusionnée : `kz config` ne doit montrer aucun `ports:` pour `tunnel`, et les réseaux `portail` et `console` pour le portail.
+3. Démarrer, **sur accord de l'utilisateur** : d'abord retirer le conteneur provisoire posé par kadenz-51 le 2026-11-19 (`docker run` hors Compose, même image et même jeton, aucune route publiée) : `docker rm -f kadenz-tunnel` ; puis `kz up -d portail tunnel`. Le portail est recréé avec le nouveau `--mandataire`. Le conteneur provisoire n'a pas les étiquettes de Compose : `kadenz-sante` ne le surveille pas.
 4. Vérifier : tunnel « Healthy » dans le tableau de bord de l'utilisateur ; `https://licences.mcarre.dev/` ouvre la page de connexion ; les cookies `__Host-` et `Secure` passent (HTTPS terminé chez Cloudflare) ; l'adresse notée au journal de la console pour cette connexion doit être l'adresse publique du poste qui se connecte, et non `IP_TUNNEL`.
-5. Retour en arrière : `kz -f deploiement/dell/compose.public.yaml stop tunnel`, ou révocation du jeton dans le compte, puis `kz up -d portail` pour revenir au `--mandataire` de la passerelle.
+5. Retour en arrière : `kz stop tunnel` suffit à couper l'accès (ou révocation du jeton dans le compte), `KADENZ_PUBLIC=1` restant posé. Pour revenir tout à fait à la console locale : `kz rm -s -f tunnel`, puis `KADENZ_PUBLIC` remis à vide dans `/etc/kadenz/kadenz.env`, puis `kz up -d portail` (retour au `--mandataire` de la passerelle). Dans l'autre ordre, le garde-fou refuse le `up`.
+6. Dell déjà ouvert avant `kadenz-compose` (2026-11-19) : installer `kadenz-compose` et le nouveau `kadenz-sauvegarde` dans `/usr/local/sbin`, ajouter `KADENZ_PUBLIC=1` aux réglages ; contrôle sans rien recréer : `kz config --services` liste `tunnel`, `kz ps` ne signale plus d'orphelin, et `docker inspect -f '{{index .Config.Labels "com.docker.compose.project"}}' kadenz-portail-1` rend `kadenz`.
 
 Jamais avec `compose.essai.yaml` (image d'essai, clé d'essai), sauf essai décidé par l'utilisateur. Aucune étape ne modifie l'accès au Dell ; une étape qui le ferait serait à faire **seulement avec l'utilisateur sur place**.
 

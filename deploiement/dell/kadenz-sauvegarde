@@ -20,10 +20,13 @@ REGLAGES=${KADENZ_ENV:-/etc/kadenz/kadenz.env}
 SORTIE=${KADENZ_SAUVEGARDES:-/var/backups/kadenz}
 ALERTE=${ALERTE:-/usr/local/sbin/alerte}
 
-# Entrée standard fermée : sans elle, docker compose run ou exec lit la suite
-# d'un script appelant (relevé à l'essai sur le Dell).
+# Par kadenz-compose, qui garde la surcouche publique une fois le portail
+# ouvert (plus d'avertissement « orphan container » pour le tunnel). Entrée
+# standard fermée : sans elle, docker compose run ou exec lit la suite d'un
+# script appelant (relevé à l'essai sur le Dell).
+COMPOSE=${KADENZ_COMPOSE:-/usr/local/sbin/kadenz-compose}
 kz() {
-    docker compose -f "$SOURCE/deploiement/dell/compose.yaml" --env-file "$REGLAGES" "$@" </dev/null
+    KADENZ_SOURCE="$SOURCE" KADENZ_ENV="$REGLAGES" "$COMPOSE" "$@" </dev/null
 }
 
 # Alerte du Dell : alerte "titre" "message" [priorité 1 à 5, 3 par défaut],

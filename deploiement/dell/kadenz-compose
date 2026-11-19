@@ -1,0 +1,82 @@
+#!/bin/sh
+# Point d'entrée unique de Docker Compose pour Kadenz sur le Dell, à installer
+# dans /usr/local/sbin/kadenz-compose. Procédure : docs/deploiement-vps.md,
+# section 7.
+#
+# Construit la liste des fichiers : compose.yaml toujours, puis
+# compose.public.yaml si /etc/kadenz/kadenz.env contient KADENZ_PUBLIC=1
+# (portail ouvert par Cloudflare Tunnel), ou compose.essai.yaml si
+# KADENZ_ESSAI=1 est posé dans l'environnement de l'appel. Ainsi, un appel
+# n'oublie jamais la surcouche publique : sans elle, un « up » recréerait le
+# portail avec l'ancien --mandataire et sans --entete-client, et le frein par
+# adresse cesserait de distinguer les clients sans rien signaler.
+#
+# Garde-fou : KADENZ_PUBLIC n'est pas à 1 alors qu'un conteneur du service
+# tunnel existe : up, create, down et rm sont refusés (recréation du portail
+# sans la surcouche, ou tunnel coupé par --remove-orphans). Les autres
+# commandes passent : ps, logs, config, exec, cp, run (conteneur ponctuel de
+# l'outil de sauvegarde), restart (ne recrée rien).
+#
+# Le fichier de réglages est lu ligne à ligne, jamais exécuté. Le nom du
+# projet vient de « name: kadenz » dans compose.yaml.
+
+set -u
+
+SOURCE=${KADENZ_SOURCE:-/opt/kadenz/source}
+REGLAGES=${KADENZ_ENV:-/etc/kadenz/kadenz.env}
+PROJET=kadenz
+DOSSIER="$SOURCE/deploiement/dell"
+
+refus() {
+    echo "kadenz-compose : $1" >&2
+    exit 2
+}
+
+[ -r "$REGLAGES" ] || refus "réglages illisibles : $REGLAGES"
+public=$(sed -n 's/^KADENZ_PUBLIC=//p' "$REGLAGES" | tail -n 1 | tr -d '\r" ')
+essai=${KADENZ_ESSAI:-}
+
+# Sous-commande : premier argument qui n'est pas une option globale.
+commande=
+attendre_valeur=
+for argument in "$@"; do
+    if [ -n "$attendre_valeur" ]; then
+        attendre_valeur=
+        continue
+    fi
+    case "$argument" in
+        --profile | -f | --file | --env-file | -p | --project-name | --project-directory | --ansi | --progress | --parallel)
+            attendre_valeur=1 ;;
+        -*) ;;
+        *)
+            commande=$argument
+            break ;;
+    esac
+done
+
+if [ "$public" = "1" ] && [ "$essai" = "1" ]; then
+    refus "KADENZ_ESSAI=1 refusé : le portail est ouvert au public (KADENZ_PUBLIC=1), jamais avec l'image ni la clé d'essai"
+fi
+
+if [ "$public" != "1" ]; then
+    case "$commande" in
+        up | create | down | rm)
+            tunnel=$(docker ps -a -q \
+                --filter "label=com.docker.compose.project=$PROJET" \
+                --filter "label=com.docker.compose.service=tunnel" \
+                </dev/null 2>/dev/null | head -n 1)
+            if [ -n "$tunnel" ]; then
+                refus "« $commande » refusé : le tunnel existe mais $REGLAGES ne contient pas KADENZ_PUBLIC=1. Poser KADENZ_PUBLIC=1, ou arrêter et retirer le tunnel d'abord (procédure, retour en arrière)."
+            fi ;;
+    esac
+fi
+
+# Ordre des fichiers : compose.yaml d'abord, la surcouche ensuite.
+if [ "$public" = "1" ]; then
+    exec docker compose -f "$DOSSIER/compose.yaml" -f "$DOSSIER/compose.public.yaml" \
+        --env-file "$REGLAGES" "$@"
+elif [ "$essai" = "1" ]; then
+    exec docker compose -f "$DOSSIER/compose.yaml" -f "$DOSSIER/compose.essai.yaml" \
+        --env-file "$REGLAGES" "$@"
+fi
+exec docker compose -f "$DOSSIER/compose.yaml" --env-file "$REGLAGES" "$@"

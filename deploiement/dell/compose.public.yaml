@@ -1,8 +1,7 @@
 # Ouverture de la console des licences vers Internet par Cloudflare Tunnel.
-# Surcouche, sur accord de l'utilisateur seulement :
-#
-#   docker compose -f deploiement/dell/compose.yaml -f deploiement/dell/compose.public.yaml \
-#     --env-file /etc/kadenz/kadenz.env up -d
+# Surcouche, sur accord de l'utilisateur seulement. Jamais appelée à la main :
+# KADENZ_PUBLIC=1 dans /etc/kadenz/kadenz.env, et kadenz-compose l'ajoute à
+# chaque appel (kadenz-compose up -d portail tunnel).
 #
 # Procédure : docs/deploiement-vps.md, section 7, « Cloudflare Tunnel ».
 #
