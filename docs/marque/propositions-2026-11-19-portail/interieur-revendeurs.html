@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<!-- Maquette du 2026-11-19, pages intérieures du portail : données d'exemple. -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Revendeurs - Portail des licences Kadenz (maquette, données d'exemple)</title>
+<link rel="stylesheet" href="identite.css">
+<link rel="stylesheet" href="interieur.css">
+</head>
+<body>
+<header class="bandeau">
+<div class="bandeau-interieur">
+<a class="marque" href="interieur-entreprises.html"><svg class="symbole" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-hidden="true"><path fill="#FFFFFF" d="M16 16 L120 16 L120 120 L16 120 Z M136 120 L136 14.44 A105.56 105.56 0 0 1 241.56 120 Z M16 136 L120 240 L16 240 Z M134.44 188 A53.56 53.56 0 1 1 241.56 188 A53.56 53.56 0 1 1 134.44 188 Z"/></svg><span class="marque-nom">Portail des licences</span></a>
+<nav class="menu" aria-label="Menu"><a class="menu-lien" href="interieur-entreprises.html">Entreprises</a><a class="menu-lien" href="interieur-code.html">Codes à vendre</a><a class="menu-lien" href="interieur-revendeurs.html" aria-current="page">Revendeurs</a><a class="menu-lien" href="interieur-journal.html">Journal</a></nav>
+<div class="compte">
+<a class="compte-nom" href="#" title="Changer de mot de passe">Éditeur exemple<span class="compte-role">Éditeur</span></a>
+<form class="deconnexion" method="post" action="#"><button class="bouton bouton-sombre" type="submit">Se déconnecter</button></form>
+</div>
+</div>
+</header>
+<main class="contenu">
+<div class="titre-page"><div><h1>Revendeurs</h1></div><div class="titre-actions"></div></div><p class="texte">Un revendeur ne voit que les entreprises qui lui sont rattachées. Son nom est repris comme émetteur dans les licences qu'il émet. Un compte désactivé ne peut plus se connecter et ses sessions sont fermées.</p><div class="carte"><div class="tableau-cadre"><table><thead><tr><th>Nom</th><th>Identifiant</th><th>Rôle</th><th>État</th><th></th></tr></thead><tbody><tr><td data-libelle="Nom">Éditeur exemple</td><td data-libelle="Identifiant"><span class="identifiant">editeur</span></td><td class="court" data-libelle="Rôle">Éditeur</td><td class="court" data-libelle="État"><span class="etat etat-ok">Actif</span></td><td class="court" data-libelle=""></td></tr><tr><td data-libelle="Nom">Revendeur exemple Nord</td><td data-libelle="Identifiant"><span class="identifiant">revendeur.nord</span></td><td class="court" data-libelle="Rôle">Revendeur</td><td class="court" data-libelle="État"><span class="etat etat-ok">Actif</span></td><td class="court" data-libelle=""><form class="en-ligne" method="post" action="#"><button class="bouton bouton-petit" type="submit">Désactiver</button></form></td></tr><tr><td data-libelle="Nom">Revendeur exemple Sud</td><td data-libelle="Identifiant"><span class="identifiant">revendeur.sud</span></td><td class="court" data-libelle="Rôle">Revendeur</td><td class="court" data-libelle="État"><span class="etat etat-neutre">Désactivé</span></td><td class="court" data-libelle=""><form class="en-ligne" method="post" action="#"><button class="bouton bouton-petit" type="submit">Réactiver</button></form></td></tr></tbody></table></div></div><h2>Nouveau revendeur</h2><div class="carte"><div class="carte-interieur"><form class="formulaire" method="post" action="#"><div class="rangee"><div class="champ"><label for="identifiant">Identifiant de connexion</label><input id="identifiant" type="text" name="identifiant" required autocomplete="off" spellcheck="false"></div><div class="champ"><label for="nom">Nom du revendeur</label><input id="nom" type="text" name="nom" required autocomplete="organization"></div></div><div class="champ"><label for="mot_de_passe">Mot de passe provisoire</label><input id="mot_de_passe" type="password" name="mot_de_passe" required minlength="15" autocomplete="new-password"><p class="aide">15 caractères au moins, pas un mot de passe courant. Transmettez-le au revendeur par un canal sûr ; il pourra le changer après sa connexion.</p></div><div class="actions"><button class="bouton bouton-principal" type="submit">Créer le revendeur</button></div></form></div></div>
+</main>
+</body>
+</html>

@@ -1,0 +1,249 @@
+/* Portail des licences : pages de connexion proposées le 2026-11-19
+   (kadenz-3a), après identite.css. Deux mises en page, d'après les deux
+   références de l'utilisateur :
+   A, cadre sombre : formulaire à gauche, illustration en points à droite ;
+   B, carte : visuel à gauche, formulaire à droite, sur fond Lavande pâle.
+   Aucune image servie : symbole, icônes, points et arches sont des SVG en
+   ligne. Aucun style en ligne. */
+
+/* ----- Commun ----- */
+
+.connexion-boite {
+  width: 100%;
+  max-width: 380px;
+}
+
+.connexion-boite h1 {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.connexion-boite .texte {
+  margin: 0 0 32px;
+  font-size: 15px;
+}
+
+.sombre .connexion-boite h1 {
+  color: var(--blanc);
+}
+
+.sombre .connexion-boite .texte {
+  color: var(--lavande);
+}
+
+.connexion-boite form {
+  margin: 0;
+}
+
+.connexion-boite .bouton-plein {
+  margin-top: 12px;
+}
+
+.retour {
+  margin: 24px 0 0;
+  font-size: 14px;
+}
+
+.sombre .retour a {
+  color: var(--lavande);
+}
+
+.sombre .retour a:hover {
+  color: var(--blanc);
+}
+
+.separateur {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 32px 0 16px;
+  font-size: 12px;
+  color: var(--lavande);
+}
+
+.separateur::before,
+.separateur::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--trait-sombre);
+}
+
+.pied {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--lavande);
+}
+
+/* ----- A : cadre sombre ----- */
+
+body.connexion-a {
+  min-height: 100vh;
+  margin: 0;
+  padding: 40px;
+  background: #0D001C; /* fond d'écran, plus profond que l'Abysse */
+}
+
+.connexion-a .cadre {
+  display: grid;
+  grid-template-columns: minmax(380px, 5fr) 7fr;
+  max-width: 1360px;
+  min-height: calc(100vh - 80px);
+  margin: 0 auto;
+  background: var(--abysse);
+  border: 10px solid var(--champ-sombre);
+  border-radius: var(--angle);
+  overflow: hidden;
+}
+
+.connexion-a .colonne {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 40px;
+}
+
+.connexion-a .marque {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 48px;
+  color: var(--blanc);
+}
+
+.connexion-a .marque .symbole {
+  width: 56px;
+  height: 56px;
+}
+
+.connexion-a .illustration {
+  position: relative;
+  min-height: 420px;
+}
+
+.connexion-a .illustration svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ----- B : carte ----- */
+
+body.connexion-b {
+  min-height: 100vh;
+  margin: 0;
+  padding: 56px 40px;
+  background: var(--lavande-pale);
+}
+
+.connexion-b .carte {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  max-width: 1160px;
+  min-height: calc(100vh - 112px);
+  margin: 0 auto;
+  padding: 12px;
+  background: var(--abysse);
+  border-radius: var(--angle);
+}
+
+.connexion-b .visuel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 40px;
+  color: var(--blanc);
+  background: var(--violet);
+  border-radius: var(--angle);
+  overflow: hidden;
+}
+
+.connexion-b .logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--blanc);
+}
+
+.connexion-b .logo .symbole {
+  width: 36px;
+  height: 36px;
+}
+
+.connexion-b .logo .mot {
+  display: block;
+  height: 26px;
+  width: auto;
+  fill: currentColor;
+}
+
+.connexion-b .accroche {
+  position: relative;
+  z-index: 1;
+  max-width: 420px;
+  margin: 40px 0 0;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.connexion-b .visuel .arches {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 58%;
+}
+
+.connexion-b .formulaire {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 40px;
+}
+
+/* ----- Petits écrans ----- */
+
+@media (max-width: 860px) {
+  body.connexion-a,
+  body.connexion-b {
+    padding: 0;
+  }
+
+  .connexion-a .cadre,
+  .connexion-b .carte {
+    grid-template-columns: 1fr;
+    min-height: 100vh;
+    border-width: 0;
+    border-radius: 0;
+  }
+
+  /* Sur petit écran, les portails en points ne seraient plus qu'une bande
+     bruitée : retirés, le symbole suffit. */
+  .connexion-a .illustration {
+    display: none;
+  }
+
+  .connexion-a .colonne,
+  .connexion-b .formulaire {
+    padding: 32px 16px 48px;
+  }
+
+  .connexion-b .visuel {
+    min-height: 260px;
+    padding: 24px;
+  }
+
+  .connexion-b .accroche {
+    margin-top: 24px;
+    font-size: 19px;
+  }
+
+  .connexion-boite h1 {
+    font-size: 26px;
+  }
+}

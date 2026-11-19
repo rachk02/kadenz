@@ -1,0 +1,429 @@
+/* Portail des licences : identité proposée le 2026-11-19 (kadenz-3a), d'après
+   les 7 images de référence de l'utilisateur. Fichier commun : connexion.css
+   (kadenz-3a) et interieur.css (kadenz-cb) s'ajoutent après lui.
+
+   Règles de la CSP du portail : aucun style en ligne, aucune image en data:,
+   aucun script. Aucun italique. Angles de 4 px au plus ; les seules courbes
+   sont celles des arches dessinées. Aucun liseré sur un seul côté.
+
+   Contrastes (WCAG) calculés le 2026-11-19, notés à côté de chaque jeton. */
+
+@font-face {
+  font-family: "Inter";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  /* Dans le portail : url("/police/inter-regular.ttf") */
+  src: url("../../../crates/app/ui/polices/Inter-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  /* Dans le portail : url("/police/inter-semibold.ttf") */
+  src: url("../../../crates/app/ui/polices/Inter-SemiBold.ttf") format("truetype");
+}
+
+
+@font-face {
+  font-family: "Inter";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  /* Nouveau : route /police/inter-bold.ttf à ajouter (fichier déjà dans le dépôt, OFL) */
+  src: url("../../../crates/app/ui/polices/Inter-Bold.ttf") format("truetype");
+}
+
+:root {
+  /* Couleurs des références */
+  --nuit-violette: #240046; /* R36 G0 B70 ; blanc dessus 18,1:1 */
+  --violet: #7B2CBF;        /* sur blanc 7,1:1 ; blanc dessus 7,1:1 ; sur Nuit 2,5:1 : jamais en texte sur sombre */
+  --orange: #F56A00;        /* sur blanc 3,0:1 : jamais en petit texte sur clair ; sur Nuit 6,0:1 ; Nuit dessus 6,0:1 */
+  --blanc: #FFFFFF;
+  --noir: #000000;
+
+  /* Dérivées */
+  --abysse: #170030;        /* fond des pages sombres ; blanc dessus 19,5:1 ; orange dessus 6,4:1 */
+  --violet-fonce: #5E1F99;  /* survol du Violet ; sur blanc 9,9:1 */
+  --violet-clair: #B794F0;  /* grands chiffres sur sombre ; sur Nuit 7,3:1 */
+  --lavande: #C9B3EE;       /* texte secondaire sur Nuit 9,6:1, sur Abysse 10,4:1 */
+  --lavande-pale: #EFE7FB;  /* fond clair ; Nuit dessus 15,0:1 ; Violet dessus 5,9:1 */
+  --gris-violet: #6B6380;   /* texte secondaire sur blanc 5,6:1 */
+  --trait-clair: #DDD3EE;   /* bordures sur clair (pas de texte) */
+  --trait-sombre: #3A2160;  /* bordures sur sombre (pas de texte) */
+  --champ-sombre: #22093F;  /* fond d'un champ sur Abysse */
+
+  /* Marque Kadenz, reprises */
+  --succes: #067647;
+  --erreur: #B42318;
+
+  /* Police : Inter (OFL), déjà servie par le portail, en premier choix
+     proposé ; repli Helvetica, Arial. Seconde option à soumettre :
+     Instrument Sans ou Schibsted Grotesk (OFL, fichiers à ajouter). */
+  --police: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  --angle: 4px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--police);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--nuit-violette);
+  background: var(--blanc);
+}
+
+em,
+i,
+cite,
+address {
+  font-style: normal;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+a {
+  color: var(--violet);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--violet-fonce);
+}
+
+:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
+/* Surtitre : petites capitales espacées. Orange seulement sur fond sombre. */
+.surtitre {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--violet);
+}
+
+.sombre .surtitre {
+  color: var(--orange);
+}
+
+/* Champs */
+.champ {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.champ label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.saisie {
+  position: relative;
+}
+
+.saisie svg {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translateY(-50%);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--gris-violet);
+  pointer-events: none;
+}
+
+.champ input {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  font: inherit;
+  color: var(--nuit-violette);
+  background: var(--blanc);
+  border: 1px solid var(--trait-clair);
+  border-radius: var(--angle);
+}
+
+.saisie svg + input {
+  padding-left: 46px;
+}
+
+.champ input:focus {
+  border-color: var(--violet);
+  outline: 2px solid var(--orange);
+  outline-offset: 1px;
+}
+
+.sombre .champ label {
+  color: var(--blanc);
+}
+
+.sombre .champ input {
+  color: var(--blanc);
+  background: var(--champ-sombre);
+  border-color: var(--trait-sombre);
+}
+
+.sombre .saisie svg {
+  color: var(--lavande);
+}
+
+.aide {
+  margin: -12px 0 20px;
+  font-size: 13px;
+  color: var(--gris-violet);
+}
+
+.sombre .aide {
+  color: var(--lavande);
+}
+
+.rangee {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+fieldset {
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid var(--trait-clair);
+  border-radius: var(--angle);
+}
+
+legend.legende {
+  padding: 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+label.case {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+label.case input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--violet);
+}
+
+.champ input.code {
+  font-family: var(--mono);
+  font-size: 22px;
+  letter-spacing: 0.3em;
+}
+
+/* Boutons : noms du portail actuel (style.rs). .bouton seul : bouton clair. */
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 18px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--nuit-violette);
+  background: var(--blanc);
+  border: 1px solid var(--trait-clair);
+  border-radius: var(--angle);
+  cursor: pointer;
+}
+
+.bouton:hover {
+  color: var(--nuit-violette);
+  background: var(--lavande-pale);
+}
+
+.bouton-principal {
+  color: var(--blanc);
+  background: var(--violet);
+  border-color: var(--violet);
+}
+
+.bouton-principal:hover {
+  color: var(--blanc);
+  background: var(--violet-fonce);
+  border-color: var(--violet-fonce);
+}
+
+/* Sur fond sombre, bouton secondaire (Se déconnecter du bandeau). */
+.bouton-sombre {
+  color: var(--blanc);
+  background: transparent;
+  border-color: var(--trait-sombre);
+}
+
+.bouton-sombre:hover {
+  color: var(--blanc);
+  background: var(--trait-sombre);
+}
+
+/* Nouveau : bouton plein blanc sur fond sombre (connexion A). */
+.bouton-blanc {
+  color: var(--nuit-violette);
+  background: var(--blanc);
+  border-color: var(--blanc);
+}
+
+.bouton-blanc:hover {
+  color: var(--nuit-violette);
+  background: var(--lavande-pale);
+  border-color: var(--lavande-pale);
+}
+
+/* Nouveau : accent Orange, texte Nuit (6,0:1). */
+.bouton-accent {
+  color: var(--nuit-violette);
+  background: var(--orange);
+  border-color: var(--orange);
+}
+
+.bouton-accent:hover {
+  color: var(--nuit-violette);
+  background: #FF8A2B; /* Nuit dessus 7,7:1 */
+  border-color: #FF8A2B;
+}
+
+.bouton-petit {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+/* Nouveau : bouton de 48 px sur toute la largeur (connexion). */
+.bouton-plein {
+  width: 100%;
+  min-height: 48px;
+  font-size: 16px;
+}
+
+/* États : noms du portail actuel. 4 px, jamais en pilule. */
+.etat {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: var(--angle);
+}
+
+.etat-ok {
+  color: var(--blanc);
+  background: var(--succes); /* 5,7:1 */
+}
+
+/* Action à faire (paiements à utiliser) : Orange, texte Nuit. */
+.etat-attente {
+  color: var(--nuit-violette);
+  background: var(--orange);
+}
+
+.etat-neutre {
+  color: var(--nuit-violette);
+  background: var(--lavande-pale);
+}
+
+/* Nouveau : étiquette de marque (planche, menus). */
+.etiquette {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--angle);
+  color: var(--nuit-violette);
+  background: var(--lavande-pale);
+}
+
+.etiquette-violet {
+  color: var(--blanc);
+  background: var(--violet);
+}
+
+.etiquette-orange {
+  color: var(--nuit-violette);
+  background: var(--orange);
+}
+
+.etiquette-blanche {
+  color: var(--nuit-violette);
+  background: var(--blanc);
+}
+
+/* Messages : bordure égale sur les quatre côtés. */
+.message {
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  font-size: 14px;
+  border: 1px solid;
+  border-radius: var(--angle);
+}
+
+.message-erreur {
+  color: var(--erreur);
+  background: #FDF1F0;
+  border-color: #F2C4C0;
+}
+
+.message-ok {
+  color: var(--succes);
+  background: #ECF7F1;
+  border-color: #B9E0CC;
+}
+
+.sombre .message-erreur {
+  color: #FFD9D5; /* sur #3A0A1C : 13,0:1 */
+  background: #3A0A1C;
+  border-color: #7A1E2C;
+}
+
+/* Symbole Kadenz en ligne (SVG) : couleur par currentColor. */
+.symbole {
+  display: block;
+  fill: currentColor;
+}
+
+/* Arche en SVG en ligne. */
+.arche {
+  display: block;
+}

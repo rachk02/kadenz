@@ -1,0 +1,188 @@
+/* Pages intérieures du portail des licences : proposition du 2026-11-19.
+   Chargée après identite.css (jetons, base, boutons, champs, étiquettes,
+   messages). Mêmes noms de classes que crates/portail/src/pages ; les ajouts
+   de balisage sont marqués AJOUT. Aucun style en ligne, aucune image : les
+   arches sont des pseudo-éléments (CSP du portail : default-src 'self'). */
+
+:root {
+  --arche-sombre: #31095E;   /* arche ton sur ton sur la Nuit violette */
+  --arche-claire: #E4D7F8;   /* arche ton sur ton sur la Lavande pâle */
+  --survol-ligne: #F7F2FD;
+  --succes-fond: #ECF7F1;
+  --erreur-fond: #FDF0EF;
+  --orange-fond: #FFF1E6;
+}
+
+body { background: var(--lavande-pale); }
+
+/* Bandeau : Abysse, symbole blanc, menu en étiquettes */
+.bandeau { background: var(--abysse); color: var(--blanc); }
+.bandeau-interieur {
+  max-width: 1120px; margin: 0 auto; padding: 12px 16px;
+  display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+}
+.marque { display: flex; align-items: center; gap: 10px; color: var(--blanc); text-decoration: none; }
+.marque:hover { color: var(--blanc); }
+.symbole { width: 28px; height: 28px; display: block; }
+.marque-nom { font-weight: 600; font-size: 16px; letter-spacing: -0.01em; }
+.menu { display: flex; gap: 6px; flex-wrap: wrap; }
+.menu-lien {
+  color: var(--lavande); text-decoration: none; font-weight: 600; font-size: 14px;
+  padding: 6px 12px; border-radius: 4px; border: 1px solid transparent;
+}
+.menu-lien:hover { color: var(--blanc); border-color: var(--trait-sombre); }
+.menu-lien[aria-current="page"] { background: var(--orange); border-color: var(--orange); color: var(--nuit-violette); }
+.compte { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+.compte-nom { color: var(--blanc); text-decoration: none; font-weight: 600; display: flex; flex-direction: column; line-height: 1.2; text-align: right; }
+.compte-nom:hover { color: var(--blanc); text-decoration: underline; }
+.compte-role { color: var(--lavande); font-weight: 400; font-size: 13px; }
+.deconnexion { margin: 0; }
+
+/* Contenu */
+.contenu { max-width: 1120px; margin: 0 auto; padding: 0 16px 56px; }
+
+/* Tête de page : aplat Nuit violette sur toute la largeur, arches en rangée
+   qui montent du bas, comme les colonnes d'un portail. Pleine largeur sans
+   balisage de plus : ombre portée étendue, rognée sur les côtés. */
+.titre-page {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  background: var(--nuit-violette);
+  box-shadow: 0 0 0 100vmax var(--nuit-violette);
+  clip-path: inset(0 -100vmax);
+  padding: 40px 0 36px; margin-bottom: 28px;
+}
+.titre-page::before {
+  content: ""; position: absolute; z-index: -1;
+  right: 8px; bottom: -64px; width: 104px; height: 200px;
+  border-radius: 52px 52px 0 0;
+  background: var(--arche-sombre);
+  box-shadow: -120px 36px 0 var(--arche-sombre), -240px 72px 0 var(--arche-sombre);
+}
+.titre-page h1 {
+  color: var(--blanc); font-size: 40px; line-height: 1.1; font-weight: 700;
+  letter-spacing: -0.02em; margin: 0; max-width: 720px; overflow-wrap: anywhere;
+}
+.surtitre-page { display: block; color: var(--lavande); font-size: 14px; font-weight: 600; margin: 0 0 8px; }
+.titre-page .identifiant { color: var(--lavande); display: block; margin-top: 10px; }
+.titre-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+/* Sur la Nuit, le principal passe en Orange : le Violet n'y a que 2,5:1. */
+.titre-page .bouton-principal { background: var(--orange); border-color: var(--orange); color: var(--nuit-violette); }
+.titre-page .bouton-principal:hover { background: #FF7E1A; border-color: #FF7E1A; color: var(--nuit-violette); }
+.titre-page .bouton { background: transparent; border-color: var(--lavande); color: var(--blanc); }
+.titre-page .bouton:hover { background: rgba(255, 255, 255, 0.08); color: var(--blanc); }
+.titre-page:has(+ .chiffres) { padding-bottom: 84px; margin-bottom: 0; }
+
+/* AJOUT : chiffres clés, cartes posées à cheval sur la tête de page */
+.chiffres {
+  position: relative; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px; margin: -52px 0 28px; padding: 0; list-style: none;
+}
+.chiffre { background: var(--blanc); border: 1px solid var(--trait-clair); border-radius: 4px; padding: 18px 20px; }
+.chiffre-valeur {
+  display: block; color: var(--violet); font-size: 40px; font-weight: 700; line-height: 1;
+  letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+}
+.chiffre-valeur.chiffre-date { font-size: 30px; }
+.chiffre-libelle { display: block; color: var(--gris-violet); font-size: 14px; margin-top: 8px; }
+.chiffre-accent { background: var(--orange); border-color: var(--orange); }
+.chiffre-accent .chiffre-valeur, .chiffre-accent .chiffre-libelle { color: var(--nuit-violette); }
+
+.texte { color: var(--gris-violet); margin: 0 0 18px; max-width: 760px; }
+.vide { color: var(--gris-violet); padding: 28px 20px; margin: 0; }
+h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--nuit-violette); margin: 36px 0 14px; }
+
+/* Cartes et fiches */
+.carte { background: var(--blanc); border: 1px solid var(--trait-clair); border-radius: 4px; }
+.carte-interieur { padding: 22px 24px; }
+.grille-fiche { display: grid; grid-template-columns: minmax(160px, 230px) 1fr; gap: 12px 24px; margin: 0; }
+.grille-fiche dt { color: var(--gris-violet); }
+.grille-fiche dd { margin: 0; font-weight: 600; color: var(--nuit-violette); overflow-wrap: anywhere; }
+.identifiant { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 13px; color: var(--gris-violet); word-break: break-all; }
+.identifiant.identifiant-court { word-break: normal; white-space: nowrap; }
+
+/* Tableaux : en-tête calme, lignes larges, chiffres alignés */
+.tableau-cadre { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 13px 18px; border-bottom: 1px solid var(--trait-clair); vertical-align: middle; }
+th {
+  font-size: 12px; font-weight: 600; color: var(--gris-violet); background: var(--blanc);
+  text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--survol-ligne); }
+td a { color: var(--violet); font-weight: 600; text-decoration: none; }
+td a:hover { color: var(--violet-fonce); text-decoration: underline; }
+td.nombre, th.nombre { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+td.nombre { font-weight: 600; color: var(--nuit-violette); }
+td.court { white-space: nowrap; }
+td.details { overflow-wrap: anywhere; min-width: 260px; color: var(--gris-violet); }
+
+/* AJOUT : le code affiché une seule fois, sous deux arches concentriques */
+.code-une-fois {
+  position: relative; isolation: isolate; overflow: hidden;
+  background: var(--nuit-violette); color: var(--blanc);
+  border-radius: 4px; padding: 32px 28px 28px; margin-bottom: 20px;
+}
+.code-une-fois::before, .code-une-fois::after {
+  content: ""; position: absolute; z-index: -1; left: 50%; border-radius: 999px 999px 0 0;
+}
+.code-une-fois::before { width: 440px; height: 380px; bottom: -150px; margin-left: -220px; background: var(--arche-sombre); }
+.code-une-fois::after { width: 280px; height: 300px; bottom: -150px; margin-left: -140px; background: var(--nuit-violette); }
+.code-une-fois .etat { background: var(--orange); border-color: var(--orange); color: var(--nuit-violette); }
+.code-une-fois label { display: block; color: var(--lavande); font-weight: 600; margin: 14px 0 8px; }
+.code-une-fois .code-activation {
+  display: block; width: 100%; background: transparent; border: 1px solid var(--trait-sombre); border-radius: 4px;
+  color: var(--blanc); font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 34px; font-weight: 600; letter-spacing: 0.08em; padding: 14px 16px; text-align: center;
+}
+.code-une-fois .code-activation:focus { outline: 2px solid var(--orange); outline-offset: 2px; border-color: var(--orange); }
+.code-une-fois .aide { color: var(--lavande); margin: 14px auto 0; max-width: 640px; text-align: center; }
+.codes-tires { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.codes-tires li { border: 1px solid var(--trait-sombre); border-radius: 4px; padding: 10px 14px; text-align: center; }
+.codes-tires .code-activation { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 20px; letter-spacing: 0.06em; color: var(--blanc); }
+
+/* AJOUT : chaîne du journal, l'état en grand */
+.chaine { display: grid; grid-template-columns: auto 1fr; gap: 6px 24px; align-items: start; }
+.chaine-etat { grid-row: span 2; color: var(--succes); font-size: 26px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.chaine-etat.chaine-rompue { color: var(--erreur); }
+.chaine-detail { color: var(--gris-violet); margin: 0; }
+
+/* Formulaires du contenu */
+.formulaire { max-width: 680px; }
+.cases { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+/* Modules en étiquettes à cocher : cochée, l'étiquette passe en Violet. */
+.cases .case {
+  display: flex; align-items: center; gap: 8px; margin: 0;
+  border: 1px solid var(--trait-clair); border-radius: 4px; padding: 8px 12px; cursor: pointer;
+}
+.cases .case:hover { border-color: var(--violet); }
+.cases .case:has(input:checked) { background: var(--violet); border-color: var(--violet); color: var(--blanc); }
+.cases .case input { accent-color: var(--orange); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.en-ligne { display: inline; margin: 0; }
+
+@media (max-width: 760px) {
+  .compte { margin-left: 0; width: 100%; justify-content: space-between; }
+  .compte-nom { text-align: left; }
+  .titre-page { padding: 28px 0 28px; }
+  .titre-page::before { right: -40px; transform: scale(0.7); transform-origin: bottom right; }
+  .titre-page h1 { font-size: 30px; }
+  .titre-page:has(+ .chiffres) { padding-bottom: 72px; }
+  .grille-fiche { grid-template-columns: 1fr; gap: 2px; }
+  .grille-fiche dd { margin-bottom: 10px; }
+  .chaine { grid-template-columns: 1fr; }
+  .chaine-etat { grid-row: auto; }
+  .code-une-fois .code-activation { font-size: 22px; }
+
+  /* Tableaux en cartes empilées : chaque cellule porte son en-tête
+     (AJOUT : attribut data-libelle sur les td). */
+  .tableau-cadre table, .tableau-cadre tbody, .tableau-cadre tr, .tableau-cadre td { display: block; width: 100%; }
+  .tableau-cadre thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .tableau-cadre tr { padding: 10px 0; border-bottom: 1px solid var(--trait-clair); }
+  .tableau-cadre tbody tr:last-child { border-bottom: none; }
+  .tableau-cadre td { display: flex; justify-content: space-between; gap: 16px; border: none; padding: 5px 18px; text-align: right; white-space: normal; min-width: 0; }
+  .tableau-cadre td::before { content: attr(data-libelle); color: var(--gris-violet); font-size: 13px; text-align: left; flex: none; }
+  .tableau-cadre td.nombre { text-align: right; }
+  .tableau-cadre td:empty { display: none; }
+}
