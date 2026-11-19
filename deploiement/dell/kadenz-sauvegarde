@@ -44,6 +44,13 @@ echec() {
     exit 1
 }
 
+# Alerte sans arrêt : pour l'archivage du journal (étape 4), dont un refus ne
+# doit pas priver le Dell de la sauvegarde restic qui suit ce crochet.
+avertir() {
+    echo "kadenz-sauvegarde : $1" >&2
+    "$ALERTE" "Kadenz, sauvegarde" "$1" 4 || true
+}
+
 umask 077
 install -d -m 700 "$SORTIE" "$SORTIE/portail" "$SORTIE/relais"
 # Dépôt intermédiaire de l'outil sqlite3, qui tourne sous l'uid 10001.
@@ -84,34 +91,35 @@ chmod 600 "$SORTIE/depot/relais.crt" "$SORTIE/depot/relais.cle"
 mv -f "$SORTIE/depot/relais.crt" "$SORTIE/depot/relais.cle" "$SORTIE/relais/"
 
 # 4. Archivage du journal du portail (audit d'OpenCode, lot C), en dernier :
-# un refus n'empêche pas les copies. La copie de la base (étape 1) contient
-# encore les entrées archivées ; journal.jsonl les garde toutes.
+# un refus alerte sans arrêter, ni les copies ni la sauvegarde restic. La
+# copie de la base (étape 1) contient encore les entrées archivées ;
+# journal.jsonl les garde toutes.
+archiver_journal() {
+    kz_entree exec -T portail kadenz-portail --dossier /donnees journal-verifier --archive - \
+        < "$journal" > /dev/null \
+        || { avertir "journal.jsonl et base du portail en désaccord : rien n'est archivé"; return 0; }
+    # Dernière ligne de l'export d'avant la limite (heures UTC du journal,
+    # comparées comme du texte) ; arrêt à la première plus récente.
+    limite=$(date -u -d "$1 days ago" '+%Y-%m-%d %H:%M:%S') \
+        || { avertir "date limite de l'archivage incalculable"; return 0; }
+    point=$(awk -v l="$limite" '
+        match($0, /"heure":"[^"]*"/) {
+            if (substr($0, RSTART + 9, RLENGTH - 10) >= l) exit
+            d = $0
+        }
+        END { print d }' "$journal")
+    [ -n "$point" ] || return 0
+    id=$(printf '%s\n' "$point" | grep -o '"id":[0-9]*' | tail -n 1 | cut -d: -f2)
+    sceau=$(printf '%s\n' "$point" | grep -o '"empreinte":"[0-9a-f]*"' | tail -n 1 | cut -d'"' -f4)
+    kz exec -T portail kadenz-portail --dossier /donnees journal-archiver \
+        --jusqua "$id" --sceau "$sceau" --jours "$1" > /dev/null \
+        || avertir "archivage du journal du portail refusé (entrée $id)"
+}
 jours=${KADENZ_JOURNAL_JOURS-$(sed -n 's/^KADENZ_JOURNAL_JOURS=//p' "$REGLAGES" | tail -n 1 | tr -d '\r" ')}
 case $jours in
     '') ;;
-    *[!0-9]*) echec "KADENZ_JOURNAL_JOURS invalide : $jours" ;;
-    *)
-        kz_entree exec -T portail kadenz-portail --dossier /donnees journal-verifier --archive - \
-            < "$journal" > /dev/null \
-            || echec "journal.jsonl et base du portail en désaccord : rien n'est archivé"
-        # Dernière ligne de l'export d'avant la limite (heures UTC du
-        # journal, comparées comme du texte) ; arrêt à la première plus récente.
-        limite=$(date -u -d "$jours days ago" '+%Y-%m-%d %H:%M:%S') \
-            || echec "date limite de l'archivage incalculable"
-        point=$(awk -v l="$limite" '
-            match($0, /"heure":"[^"]*"/) {
-                if (substr($0, RSTART + 9, RLENGTH - 10) >= l) exit
-                d = $0
-            }
-            END { print d }' "$journal")
-        if [ -n "$point" ]; then
-            id=$(printf '%s\n' "$point" | grep -o '"id":[0-9]*' | tail -n 1 | cut -d: -f2)
-            sceau=$(printf '%s\n' "$point" | grep -o '"empreinte":"[0-9a-f]*"' | tail -n 1 | cut -d'"' -f4)
-            kz exec -T portail kadenz-portail --dossier /donnees journal-archiver \
-                --jusqua "$id" --sceau "$sceau" --jours "$jours" > /dev/null \
-                || echec "archivage du journal du portail refusé (entrée $id)"
-        fi
-        ;;
+    *[!0-9]*) avertir "KADENZ_JOURNAL_JOURS invalide : $jours ; rien n'est archivé" ;;
+    *) archiver_journal "$jours" ;;
 esac
 
 echo "kadenz-sauvegarde : copies prêtes dans $SORTIE"
