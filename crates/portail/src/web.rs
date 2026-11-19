@@ -1,6 +1,7 @@
 //! Routes du portail (spécification du portail, sections 2 et 6) : pages
 //! servies en HTTP par axum, sessions par cookie, jeton anti-falsification sur
-//! chaque formulaire, en-têtes de sécurité, aucun script. Une seule route
+//! chaque formulaire, en-têtes de sécurité, un seul script (code de connexion
+//! en six cases, servi ici). Une seule route
 //! hors de la console : `POST /api/activation` (décision 74), en JSON, sans
 //! session ni jeton, appelée par le programme du client.
 //!
@@ -61,6 +62,7 @@ const POLICE_INTER_DEMI: &[u8] = include_bytes!("../../app/ui/polices/Inter-Semi
 const POLICE_SPACE: &[u8] = include_bytes!("../../app/ui/polices/SpaceGrotesk-Bold.ttf");
 const FAVICON: &[u8] = include_bytes!("../../../docs/marque/web/favicon.svg");
 const PILIERS: &[u8] = include_bytes!("../statique/piliers-caae728454.svg");
+const SCRIPT_CODE: &[u8] = include_bytes!("../statique/code-connexion-84bd897f87.js");
 const ROBOTS: &str = "User-agent: *\nDisallow: /\n";
 
 /// Taille maximale d'un corps de requête. Le plus gros formulaire (une
@@ -171,6 +173,10 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
             get(|| async { statique("image/svg+xml", PILIERS, true) }),
         )
         .route(
+            pages::SCRIPT_CODE,
+            get(|| async { statique("text/javascript; charset=utf-8", SCRIPT_CODE, true) }),
+        )
+        .route(
             "/robots.txt",
             get(|| async { statique("text/plain; charset=utf-8", ROBOTS.as_bytes(), false) }),
         )
@@ -234,13 +240,15 @@ async fn sans_panique(requete: Request, suite: Next) -> Response {
     garder(suite.run(requete)).await
 }
 
-/// En-têtes de sécurité sur chaque réponse.
+/// En-têtes de sécurité sur chaque réponse. Scripts : ceux du portail
+/// seulement (`script-src 'self'`, aujourd'hui le seul code en six cases),
+/// jamais en ligne ni évalués.
 async fn entetes(mut reponse: Response) -> Response {
     let h = reponse.headers_mut();
     h.insert(
         HeaderName::from_static("content-security-policy"),
         HeaderValue::from_static(
-            "default-src 'self'; script-src 'none'; object-src 'none'; form-action 'self'; \
+            "default-src 'self'; script-src 'self'; object-src 'none'; form-action 'self'; \
              frame-ancestors 'none'; base-uri 'none'",
         ),
     );
@@ -1437,6 +1445,26 @@ pub fn lancer(portail: Portail, ecoute: SocketAddr, config: ConfigWeb) -> std::i
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Fichiers servis avec un cache d'un an : le nom porte les 10 premiers
+    /// chiffres hexadécimaux du SHA-256 du contenu. Un fichier modifié sans
+    /// être renommé resterait périmé chez les navigateurs.
+    #[test]
+    fn empreinte_des_fichiers_dans_leur_nom() {
+        for (chemin, octets) in [
+            (pages::SCRIPT_CODE, SCRIPT_CODE),
+            (pages::IMAGE_PILIERS, PILIERS),
+        ] {
+            let empreinte = ring::digest::digest(&ring::digest::SHA256, octets);
+            let hex: String = empreinte
+                .as_ref()
+                .iter()
+                .map(|o| format!("{o:02x}"))
+                .collect();
+            let attendu = format!("-{}.", &hex[..10]);
+            assert!(chemin.contains(&attendu), "{chemin} : attendu {attendu}");
+        }
+    }
 
     fn entetes(valeurs: &[&str]) -> HeaderMap {
         entetes_nommes("x-forwarded-for", valeurs)

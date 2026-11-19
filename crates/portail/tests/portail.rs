@@ -693,7 +693,7 @@ fn routes_sessions_et_jetons() {
 }
 
 /// Lot D2 : connexion protégée contre la falsification, rotation de la
-/// session, politique de contenu sans script ni objet.
+/// session, politique de contenu sans script étranger ni objet.
 #[test]
 fn connexion_sans_falsification_et_rotation() {
     let d = dossier("connexion-d2");
@@ -712,7 +712,10 @@ fn connexion_sans_falsification_et_rotation() {
     let a = lance.adresse();
     let politique = requete(a, "GET", "/connexion", None, "");
     let politique = politique.entete("content-security-policy").unwrap();
-    assert!(politique.contains("script-src 'none'") && politique.contains("object-src 'none'"));
+    // Scripts du portail seulement (le code en six cases) : ni en ligne, ni
+    // évalués, ni d'ailleurs.
+    assert!(politique.contains("script-src 'self'") && politique.contains("object-src 'none'"));
+    assert!(!politique.contains("unsafe-inline") && !politique.contains("unsafe-eval"));
     let identifiants = format!("identifiant=revendeur&mot_de_passe={MOT_DE_PASSE}");
 
     // Sans jeton, sans cookie, ou avec un jeton qui n'est pas celui du
@@ -936,6 +939,17 @@ fn double_authentification_des_editeurs() {
     let etape = etape_de(&se_connecter(a, "editeur", MOT_DE_PASSE, None));
     let page = requete(a, "GET", "/connexion/code", Some(&etape), "");
     assert_eq!(page.statut, 200);
+    // Six cases par le script du portail ; le champ unique reste sans lui.
+    let script = kadenz_portail::pages::SCRIPT_CODE;
+    assert!(page.corps.contains(&format!("src=\"{script}\"")));
+    assert!(page.corps.contains("id=\"code\""));
+    let js = requete(a, "GET", script, None, "");
+    assert_eq!(js.statut, 200);
+    assert_eq!(
+        js.entete("content-type"),
+        Some("text/javascript; charset=utf-8")
+    );
+    assert!(js.corps.contains("/connexion/code"));
     let champ_etape = valeur_champ(&page.corps, "name=\"etape\"");
     let poster = |etape: &str, champ: &str, code: &str, en_plus: &[(&str, &str)]| {
         requete_avec(

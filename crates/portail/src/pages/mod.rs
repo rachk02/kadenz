@@ -1,7 +1,8 @@
 //! Pages du portail des licences (jalon F9b, spec. portail) : HTML simple
 //! rendu sur le serveur, sans script ni style en ligne (la politique de
-//! sécurité des contenus les refuse), feuille de style unique servie en
-//! `/style.css`. Les signatures sont fixées par les routes de `web.rs` ;
+//! sécurité des contenus les refuse ; seul script, servi par le portail :
+//! le code de connexion en six cases, `SCRIPT_CODE`), feuille de style
+//! unique servie en `/style.css`. Les signatures sont fixées par les routes de `web.rs` ;
 //! chaque page reçoit des données déjà filtrées selon le rôle du compte.
 
 use maud::{DOCTYPE, Markup, PreEscaped, html};
@@ -66,6 +67,11 @@ const SYMBOLE: &str = r##"<svg class="symbole" xmlns="http://www.w3.org/2000/svg
 /// docs/marque/propositions-2026-11-19-portail/piliers.js) ; l'empreinte dans
 /// le nom permet un cache long. Servi par `web.rs`.
 pub const IMAGE_PILIERS: &str = "/piliers-caae728454.svg";
+
+/// Seul script du portail : le code de connexion en six cases (choix de
+/// l'utilisateur du 2026-11-19). Il ne fait qu'embellir la page du code ;
+/// sans lui, le champ unique reste. Même règle d'empreinte que l'image.
+pub const SCRIPT_CODE: &str = "/code-connexion-84bd897f87.js";
 
 /// En-tête HTML commun : titre, feuille de style, aucune indexation.
 fn tete(titre: &str) -> Markup {

@@ -3,3 +3,5 @@ crates/relais/Dockerfile text eol=lf
 crates/portail/Dockerfile text eol=lf
 # Trousse du Dell : scripts, unités systemd et compose lus sous Linux.
 deploiement/** text eol=lf
+# Fichiers servis par le portail sous un nom à empreinte : octets tels quels.
+crates/portail/statique/** -text

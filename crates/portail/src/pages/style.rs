@@ -149,13 +149,14 @@ legend { padding: 0 6px; }
 /* Connexion : thème « piliers », adopté par l'utilisateur le 2026-11-19
    (docs/marque/propositions-2026-11-19-portail) : noir pur, vert sauge,
    colonnes fixes en points (image servie par le portail), champs pleins
-   arrondis. Aucun script. */
-body.connexion { background: #000000; color: #F2F3EF; padding: 32px; }
+   arrondis. Code de connexion en six cases par le script du portail. Sans
+   cadre ni largeur maximale : noir sur toute la fenêtre (demande de
+   l'utilisateur du 2026-11-19). */
+body.connexion { background: #000000; color: #F2F3EF; margin: 0; padding: 0; }
 body.connexion :focus-visible { outline-color: #A7B58E; }
 .cadre-connexion {
   display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  max-width: 1360px; min-height: calc(100vh - 64px); margin: 0 auto; padding: 10px;
-  background: #000000; border: 1px solid #1A1A1A; border-radius: 20px;
+  min-height: 100vh; background: #000000;
 }
 .colonne-connexion { display: flex; align-items: center; justify-content: center; padding: 56px 40px; }
 .connexion-boite { width: 100%; max-width: 380px; }
@@ -191,15 +192,47 @@ body.connexion .message-erreur { color: #F08A8A; background: rgba(229, 83, 75, 0
 .separateur { display: flex; align-items: center; gap: 12px; margin: 32px 0 16px; font-size: 12px; color: #9DA197; }
 .separateur::before, .separateur::after { content: ""; flex: 1; height: 1px; background: #2A2C2E; }
 .connexion-pied { margin: 0; font-size: 13px; line-height: 1.6; text-align: center; color: #9DA197; }
-.illustration-connexion { position: relative; min-height: 520px; overflow: hidden; border-radius: 14px; background: #000000; }
-.illustration-connexion img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center bottom; }
+.illustration-connexion { position: relative; min-height: 520px; overflow: hidden; background: #000000; }
+.illustration-connexion img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
+body.connexion [hidden] { display: none !important; }
+/* Code en six cases (statique/code-connexion-*.js) */
+.chiffres-code { min-width: 0; margin: 0 0 4px; padding: 0; border: 0; border-radius: 0; }
+.chiffres-code legend { margin-bottom: 10px; padding: 0; font-size: 13px; font-weight: 500; color: #F2F3EF; }
+.chiffres { display: flex; align-items: center; gap: 8px; }
+body.connexion .chiffres input[type="text"] {
+  flex: 1 1 0; width: 0; min-width: 0; height: 58px; padding: 0; text-align: center;
+  font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; caret-color: #A7B58E;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
+}
+.chiffres-tiret { flex: 0 0 10px; height: 2px; background: #2A2C2E; }
+.chiffres-code.verification input { border-color: #A7B58E; animation: code-attente 0.9s ease-in-out infinite; }
+body.connexion .chiffres-code.juste input { background: #10220F; border-color: #5FBF63; box-shadow: 0 0 0 4px rgba(95, 191, 99, 0.18); }
+body.connexion .chiffres-code.faux input { background: #2A0F0F; border-color: #E5534B; box-shadow: 0 0 0 4px rgba(229, 83, 75, 0.18); }
+.chiffres-code.faux .chiffres { animation: code-secousse 0.42s ease-in-out; }
+@keyframes code-attente { 0%, 100% { background: #17181A; } 50% { background: #23261F; } }
+@keyframes code-secousse {
+  0%, 100% { transform: translateX(0); } 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); } 80% { transform: translateX(2px); }
+}
+.avis-code { margin: 14px 0 0; padding: 11px 14px; font-size: 14px; font-weight: 500; border: 1px solid transparent; border-radius: 9px; }
+.avis-code-ok { color: #9FD3A0; background: rgba(95, 191, 99, 0.1); border-color: rgba(95, 191, 99, 0.38); }
+.avis-code-erreur { color: #F08A8A; background: rgba(229, 83, 75, 0.1); border-color: rgba(229, 83, 75, 0.38); }
+.bascule-code { margin: 20px 0 0; text-align: center; }
+.lien-code {
+  padding: 0; font: inherit; font-size: 14px; color: #F2F3EF; background: none; border: 0; cursor: pointer;
+  text-decoration: underline; text-decoration-color: #9DA197; text-underline-offset: 3px;
+}
+.lien-code:hover { color: #FFFFFF; }
+@media (prefers-reduced-motion: reduce) {
+  .chiffres-code.verification input, .chiffres-code.faux .chiffres { animation: none; }
+  body.connexion .chiffres input[type="text"] { transition: none; }
+}
 
 /* Page d'erreur sans compte */
 .page-simple { max-width: 560px; margin: 0 auto; padding: 64px 16px; }
 
 @media (max-width: 860px) {
-  body.connexion { padding: 12px; }
-  .cadre-connexion { grid-template-columns: 1fr; min-height: calc(100vh - 24px); }
+  .cadre-connexion { grid-template-columns: 1fr; }
   .illustration-connexion { display: none; }
   .colonne-connexion { padding: 40px 20px; }
 }

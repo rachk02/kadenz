@@ -1,11 +1,12 @@
 //! Connexion : seules pages sans compte (POST /connexion, puis
 //! /connexion/code). Thème « piliers » adopté par l'utilisateur le
 //! 2026-11-19 : formulaire à gauche, colonnes en points à droite (image
-//! servie par le portail, masquée sous 860 px). Aucun script.
+//! servie par le portail, masquée sous 860 px). Seul script : le code en
+//! six cases de la seconde étape, qui garde son champ unique sans lui.
 
 use maud::{DOCTYPE, Markup, PreEscaped, html};
 
-use super::{IMAGE_PILIERS, SYMBOLE, message, tete};
+use super::{IMAGE_PILIERS, SCRIPT_CODE, SYMBOLE, message, tete};
 
 const ICONE_IDENTIFIANT: &str = r#"<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>"#;
 const ICONE_MOT_DE_PASSE: &str = r#"<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></svg>"#;
@@ -76,7 +77,9 @@ pub fn connexion(jeton: &str, erreur: Option<&str>) -> Markup {
 
 /// Seconde étape de la connexion (double authentification) ; `etape` est le
 /// jeton de l'étape, le même que dans le cookie posé avec la redirection.
-/// Champ unique : les six cases demandent un script, pas encore décidé.
+/// Le script `SCRIPT_CODE` remplace le champ unique par six cases à
+/// validation automatique ; sans script, le champ unique et son bouton
+/// restent (codes de secours compris).
 pub fn code_connexion(etape: &str, erreur: Option<&str>) -> Markup {
     cadre(
         "Code de connexion",
@@ -100,6 +103,7 @@ pub fn code_connexion(etape: &str, erreur: Option<&str>) -> Markup {
                 button.bouton-sauge type="submit" { "Valider" }
             }
             p.connexion-retour { a href="/connexion" { "Revenir à la connexion" } }
+            script src=(SCRIPT_CODE) defer {}
         },
     )
 }
