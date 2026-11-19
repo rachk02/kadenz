@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Connexion - Portail des licences Kadenz</title>
+<link rel="stylesheet" href="identite.css"><link rel="stylesheet" href="connexion.css"><link rel="stylesheet" href="particules.css">
+<script src="particules.js" defer></script>
+</head>
+<body class="connexion-a particules">
+<div class="cadre sombre">
+<main class="colonne">
+<div class="connexion-boite">
+<div class="marque"><svg class="symbole" viewBox="0 0 256 256" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 16 L120 16 L120 120 L16 120 Z M136 120 L136 14.44 A105.56 105.56 0 0 1 241.56 120 Z M16 136 L120 240 L16 240 Z M134.44 188 A53.56 53.56 0 1 1 241.56 188 A53.56 53.56 0 1 1 134.44 188 Z"/></svg></div>
+<p class="surtitre">Connexion</p>
+<h1>Portail des licences</h1>
+<p class="texte">Saisissez votre identifiant et votre mot de passe.</p>
+<form method="get" action="connexion-a-code-particules.html">
+<div class="champ">
+<label for="identifiant">Identifiant</label>
+<div class="saisie"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg><input id="identifiant" type="text" autocomplete="username" required autofocus></div>
+</div>
+<div class="champ">
+<label for="mot_de_passe">Mot de passe</label>
+<div class="saisie"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></svg><input id="mot_de_passe" type="password" autocomplete="current-password" required></div>
+</div>
+<button class="bouton bouton-blanc bouton-plein" type="submit">Se connecter</button>
+</form>
+<div class="separateur" aria-hidden="true">kadenz</div>
+<p class="pied">Enregistrement des paiements et émission des licences d'abonnement Kadenz, pour l'éditeur et ses revendeurs.</p>
+</div>
+</main>
+<div class="illustration" aria-hidden="true">
+<canvas id="particules"></canvas>
+<p class="legende-figure" id="legende-figure"><strong></strong><span></span></p>
+</div>
+</div>
+<nav class="choix-figure" aria-label="Choix de l'illustration (maquette)">
+<button type="button" data-figure="portails">Portails</button>
+<button type="button" data-figure="parthenon">Parthénon</button>
+<button type="button" data-figure="colisee">Colisée</button>
+<button type="button" data-figure="pantheon">Panthéon</button>
+<button type="button" data-figure="aqueduc">Aqueduc</button>
+<button type="button" data-figure="chouette">Chouette d'Athéna</button>
+<button type="button" data-figure="amphore">Amphore</button>
+</nav>
+</body>
+</html>

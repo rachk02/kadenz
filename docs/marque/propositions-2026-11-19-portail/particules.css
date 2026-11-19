@@ -1,0 +1,364 @@
+/* Portail des licences : connexion A en particules, proposée le 2026-11-19
+   (kadenz-e6) à la demande de l'utilisateur. Après identite.css et
+   connexion.css. Champs, bouton et cadre arrondis d'après la référence de
+   l'utilisateur (cadre sombre, panneau d'image en retrait, champs pleins
+   sans trait, trait clair au focus). Aucun style en ligne. */
+
+body.connexion-a.particules {
+  padding: 32px;
+}
+
+.connexion-a.particules .cadre {
+  grid-template-columns: minmax(380px, 5fr) 7fr;
+  min-height: calc(100vh - 64px);
+  padding: 10px;
+  border: 0;
+  border-radius: 22px;
+  background: #10001F;
+}
+
+/* Panneau de l'illustration, en retrait dans le cadre, comme l'image de la
+   référence. */
+.connexion-a.particules .illustration {
+  order: 2;
+  min-height: 520px;
+  overflow: hidden;
+  border-radius: 16px;
+  background:
+    radial-gradient(110% 80% at 62% 38%, #2C0B55 0%, #1B0539 52%, #110024 100%);
+}
+
+.connexion-a.particules .illustration canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.connexion-a.particules .legende-figure {
+  position: absolute;
+  left: 28px;
+  bottom: 24px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--lavande);
+  pointer-events: none;
+}
+
+.connexion-a.particules .legende-figure strong {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--blanc);
+}
+
+/* ----- Champs arrondis, pleins, sans trait au repos ----- */
+
+.particules .champ {
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.particules .champ label {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.particules.sombre .champ input,
+.particules .sombre .champ input {
+  height: 48px;
+  color: var(--blanc);
+  background: #1D0A38;
+  border: 1px solid #1D0A38;
+  border-radius: 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.particules .sombre .champ input:hover {
+  border-color: var(--trait-sombre);
+}
+
+.particules .sombre .champ input:focus {
+  background: #200B3E;
+  border-color: var(--violet-clair);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(183, 148, 240, 0.16);
+}
+
+.particules .sombre .saisie svg {
+  color: var(--violet-clair);
+}
+
+.particules .connexion-boite .bouton-plein {
+  min-height: 48px;
+  margin-top: 16px;
+  border-radius: 10px;
+}
+
+.particules .bouton-blanc:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 3px;
+}
+
+/* ----- Choix de l'illustration (maquette seulement, pas dans le portail) ----- */
+
+.choix-figure {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: calc(100vw - 32px);
+  padding: 6px;
+  background: rgba(16, 0, 31, 0.92);
+  border: 1px solid var(--trait-sombre);
+  border-radius: 12px;
+  transform: translateX(-50%);
+}
+
+.choix-figure button {
+  min-height: 32px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--lavande);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.choix-figure button:hover {
+  color: var(--blanc);
+  background: #1D0A38;
+}
+
+.choix-figure button[aria-pressed="true"] {
+  color: var(--nuit-violette);
+  background: var(--lavande);
+}
+
+.capture .choix-figure {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  body.connexion-a.particules {
+    padding: 12px;
+  }
+
+  .connexion-a.particules .cadre {
+    grid-template-columns: 1fr;
+  }
+
+  .connexion-a.particules .illustration {
+    display: block;
+    order: 0;
+    min-height: 240px;
+  }
+}
+
+/* ----- Code de connexion en six cases ----- */
+
+.cases-code {
+  min-width: 0;
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+}
+
+.cases-code .legende {
+  margin-bottom: 10px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--blanc);
+}
+
+.cases {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cases input {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  height: 58px;
+  padding: 0;
+  font: inherit;
+  font-size: 24px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--blanc);
+  caret-color: var(--violet-clair);
+  background: #1D0A38;
+  border: 1px solid #1D0A38;
+  border-radius: 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.cases input:hover {
+  border-color: var(--trait-sombre);
+}
+
+.cases input:focus {
+  background: #200B3E;
+  border-color: var(--violet-clair);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(183, 148, 240, 0.16);
+}
+
+.cases .tiret {
+  flex: 0 0 10px;
+  height: 2px;
+  background: var(--trait-sombre);
+}
+
+.cases-code.verification input {
+  border-color: var(--violet-clair);
+  animation: attente 0.9s ease-in-out infinite;
+}
+
+.cases-code.verification input:nth-child(2) { animation-delay: 0.08s; }
+.cases-code.verification input:nth-child(3) { animation-delay: 0.16s; }
+.cases-code.verification input:nth-child(5) { animation-delay: 0.24s; }
+.cases-code.verification input:nth-child(6) { animation-delay: 0.32s; }
+.cases-code.verification input:nth-child(7) { animation-delay: 0.40s; }
+
+.cases-code.juste input {
+  color: #FFFFFF;
+  background: #0B3B26;
+  border-color: #2FBF71;
+  box-shadow: 0 0 0 4px rgba(47, 191, 113, 0.18);
+}
+
+.cases-code.faux input {
+  color: #FFFFFF;
+  background: #45101A;
+  border-color: #F0525F;
+  box-shadow: 0 0 0 4px rgba(240, 82, 95, 0.18);
+}
+
+.cases-code.faux .cases {
+  animation: secousse 0.42s ease-in-out;
+}
+
+@keyframes attente {
+  0%, 100% { background: #1D0A38; }
+  50% { background: #2A0F52; }
+}
+
+@keyframes secousse {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(2px); }
+}
+
+/* Avis qui apparaît sous les cases. */
+.avis {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.avis.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.avis svg {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.avis-ok {
+  color: #7EE2AC;
+  background: rgba(47, 191, 113, 0.12);
+  border-color: rgba(47, 191, 113, 0.4);
+}
+
+.avis-erreur {
+  color: #FF9AA2;
+  background: rgba(240, 82, 95, 0.12);
+  border-color: rgba(240, 82, 95, 0.4);
+}
+
+.avis.avis-ok .icone-erreur,
+.avis.avis-erreur .icone-ok {
+  display: none;
+}
+
+.bascule {
+  margin: 12px 0 0;
+}
+
+.lien {
+  padding: 0;
+  font: inherit;
+  font-size: 14px;
+  color: var(--lavande);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.lien:hover {
+  color: var(--blanc);
+}
+
+.secours .bouton-plein {
+  margin-top: 4px;
+}
+
+.note-maquette {
+  margin: 20px 0 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--lavande);
+  border: 1px dashed var(--trait-sombre);
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cases-code.verification input,
+  .cases-code.faux .cases {
+    animation: none;
+  }
+
+  .avis {
+    transition: none;
+  }
+}
+
+/* Un élément masqué le reste, même sous un display posé plus haut. */
+.particules [hidden] {
+  display: none !important;
+}
