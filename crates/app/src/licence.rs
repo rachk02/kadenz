@@ -1,16 +1,21 @@
 //! Licence du poste (jalon J9) : identifiant du poste, état de la licence, modules
-//! activés et masquage des écrans des modules désactivés.
+//! activés et masquage des écrans des modules désactivés. En 0.2.3 (ligne V1 par
+//! codes, docs/spec-codes-licence.md, section 7 bis) : échéance, postes et
+//! bandeau d'avertissement, et activation d'un code court auprès du portail
+//! (`ActivationUi`).
 
 use kadenz_domaine::document::TypeDocument;
 use kadenz_domaine::message::MessageCompose;
 use kadenz_domaine::module::Module;
-use kadenz_stockage::licence::{self as stockage, EtatLicence};
-use slint::{ComponentHandle, ModelRc, VecModel};
+use kadenz_licence::Licence;
+use kadenz_stockage::licence::{self as stockage, Avertissement, EtatLicence};
+use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 
 use crate::referentiels::{retour_erreur, retour_ok, texte_erreur};
 use crate::traduction::{tr, trf};
 use crate::{
-    EtatPartage, FenetrePrincipale, LicenceApi, ModuleUi, Modules, Page, Retour, VerificationUi,
+    ActivationUi, EtatPartage, FenetrePrincipale, LicenceApi, ModuleUi, Modules, Page, Retour,
+    VerificationUi,
 };
 
 fn message(m: MessageCompose) -> String {
@@ -24,6 +29,70 @@ fn liste_modules(modules: &[Module]) -> String {
         .map(|m| tr(m.libelle()))
         .collect::<Vec<_>>()
         .join(", ")
+}
+
+/// Date AAAA-MM-JJ d'une licence en JJ/MM/AAAA ; telle quelle si elle est illisible.
+fn date_lisible(date: &str) -> String {
+    chrono::NaiveDate::parse_from_str(date, "%Y-%m-%d")
+        .map(crate::factures::date_en_texte)
+        .unwrap_or_else(|_| date.to_string())
+}
+
+/// Échéance en clair : date, ou « Perpétuelle » pour une licence version 1.
+fn echeance_en_clair(l: &Licence) -> String {
+    match &l.echeance {
+        Some(date) => date_lisible(date),
+        None => tr("Perpétuelle"),
+    }
+}
+
+/// Résumé d'une licence pour l'assistant et le récapitulatif.
+fn resume(l: &Licence) -> String {
+    match &l.echeance {
+        Some(date) => trf(
+            "{}, valable jusqu'au {}, modules : {}",
+            &[&l.client, &date_lisible(date), &liste_modules(&l.modules)],
+        ),
+        None => trf(
+            "clé valide pour {}, modules : {}",
+            &[&l.client, &liste_modules(&l.modules)],
+        ),
+    }
+}
+
+/// Bandeau de la page Licence et son niveau (1 : 30 et 7 jours, 2 : la veille et
+/// après l'échéance) ; vide sans avertissement (licence perpétuelle comprise).
+fn bandeau(etat: &EtatLicence) -> (String, i32) {
+    let echeance = match etat {
+        EtatLicence::Valide(l, _) | EtatLicence::Expiree(l) => {
+            l.echeance.as_deref().map(date_lisible).unwrap_or_default()
+        }
+        _ => String::new(),
+    };
+    match etat.avertissement() {
+        Avertissement::Aucun => (String::new(), 0),
+        Avertissement::Trente | Avertissement::Sept => (
+            trf(
+                "La licence arrive à échéance dans {} jours, le {}. Renouvelez-la avec un nouveau code d'activation pour garder les modules.",
+                &[&etat.jours_restants().unwrap_or_default(), &echeance],
+            ),
+            1,
+        ),
+        Avertissement::Veille => (
+            trf(
+                "La licence arrive à échéance le {}. Renouvelez-la dès maintenant avec un nouveau code d'activation pour garder les modules.",
+                &[&echeance],
+            ),
+            2,
+        ),
+        Avertissement::Expiree => (
+            trf(
+                "La licence est échue depuis le {} : seul le socle est disponible, les données des modules sont gardées. Renouvelez-la avec un nouveau code d'activation.",
+                &[&echeance],
+            ),
+            2,
+        ),
+    }
 }
 
 /// Module dont dépend une page du menu, s'il y en a un (le reste est le socle).
@@ -64,36 +133,43 @@ pub(crate) fn afficher(
     etat: &EtatLicence,
 ) {
     let api = f.global::<LicenceApi>();
-    let (texte, valide, client, emise_le) = match etat {
-        EtatLicence::Absente => (
-            tr("Aucune clé : socle seul"),
-            false,
-            String::new(),
-            String::new(),
-        ),
+    let (texte, valide, licence) = match etat {
+        EtatLicence::Absente => (tr("Aucune licence : socle seul"), false, None),
         EtatLicence::Invalide(m) => (
             trf("Clé invalide, socle seul : {}", &[&message(m.clone())]),
             false,
-            String::new(),
-            String::new(),
+            None,
         ),
-        EtatLicence::Valide(l, _) => (
-            tr("Licence valide"),
-            true,
-            l.client.clone(),
-            l.emise_le.clone(),
-        ),
+        EtatLicence::Valide(l, _) => (tr("Licence valide"), true, Some(l)),
         EtatLicence::Expiree(l) => (
-            tr("Licence échue, socle seul"),
+            trf(
+                "Licence échue le {} : socle seul",
+                &[&l.echeance.as_deref().map(date_lisible).unwrap_or_default()],
+            ),
             false,
-            l.client.clone(),
-            l.emise_le.clone(),
+            Some(l),
         ),
     };
     api.set_etat(texte.into());
     api.set_valide(valide);
-    api.set_client(client.into());
-    api.set_emise_le(emise_le.into());
+    api.set_client(licence.map(|l| l.client.clone()).unwrap_or_default().into());
+    api.set_emise_le(
+        licence
+            .map(|l| date_lisible(&l.emise_le))
+            .unwrap_or_default()
+            .into(),
+    );
+    api.set_datee(licence.is_some_and(|l| !l.perpetuelle()));
+    api.set_echeance(licence.map(echeance_en_clair).unwrap_or_default().into());
+    api.set_postes(
+        licence
+            .map(|l| l.postes.to_string())
+            .unwrap_or_default()
+            .into(),
+    );
+    let (texte_bandeau, niveau) = bandeau(etat);
+    api.set_bandeau(texte_bandeau.into());
+    api.set_niveau_bandeau(niveau);
     let actifs = etat.modules();
     api.set_modules(ModelRc::new(VecModel::from(
         Module::TOUS
@@ -129,6 +205,7 @@ pub(crate) fn ouvrir(f: &FenetrePrincipale, conn: &kadenz_stockage::Connexion, p
 }
 
 pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
+    brancher_activation(fenetre, etat);
     let api = fenetre.global::<LicenceApi>();
 
     // Étape de l'assistant : la base n'a pas encore de compte, la clé est vérifiée seule.
@@ -166,14 +243,82 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 }
                 match licence {
                     EtatLicence::Valide(..) => retour_ok(tr("Clé enregistrée.")),
-                    EtatLicence::Expiree(_) => retour_erreur(tr("Licence échue, socle seul")),
+                    EtatLicence::Expiree(l) => retour_erreur(trf(
+                        "Clé enregistrée, mais la licence est échue depuis le {} : seul le socle est disponible.",
+                        &[&l.echeance.as_deref().map(date_lisible).unwrap_or_default()],
+                    )),
                     EtatLicence::Invalide(m) => retour_erreur(message(m)),
-                    EtatLicence::Absente => retour_erreur(tr("Aucune clé : socle seul")),
+                    EtatLicence::Absente => retour_erreur(tr("Aucune licence : socle seul")),
                 }
             }
             Err(erreur) => retour_erreur(texte_erreur(erreur)),
         }
     });
+}
+
+/// Activation d'un code court (décision 75) : le portail est appelé dans un fil à
+/// part avec l'identifiant de ce poste et la raison sociale. Dans l'assistant
+/// (aucune session), la licence reçue et vérifiée est rendue à l'écran, qui la
+/// garde jusqu'à la fin de l'installation ; dans la page Licence, elle suit le
+/// chemin d'une clé collée (`LicenceApi.enregistrer`), dans la boucle de
+/// l'interface, même si la page a été quittée entre-temps.
+fn brancher_activation(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
+    let (fa, e) = (fenetre.as_weak(), etat.clone());
+    fenetre
+        .global::<ActivationUi>()
+        .on_activer(move |code, client| {
+            let Some(f) = fa.upgrade() else {
+                return;
+            };
+            let ui = f.global::<ActivationUi>();
+            let (poste, client, en_session) = {
+                let etat = e.borrow();
+                let client = if client.is_empty() {
+                    kadenz_stockage::entreprise::lire(&etat.conn)
+                        .ok()
+                        .flatten()
+                        .map(|en| en.nom)
+                        .unwrap_or_default()
+                } else {
+                    client.to_string()
+                };
+                (etat.poste.clone(), client, etat.utilisateur.is_some())
+            };
+            ui.set_message(SharedString::new());
+            ui.set_etat(1);
+            let (code, fa) = (code.to_string(), fa.clone());
+            std::thread::spawn(move || {
+                let resultat = crate::activation_ui::activer(&code, &poste, &client);
+                let _ = slint::invoke_from_event_loop(move || {
+                    let Some(f) = fa.upgrade() else {
+                        return;
+                    };
+                    let ui = f.global::<ActivationUi>();
+                    match resultat {
+                        Ok((texte, licence)) if en_session => {
+                            ui.set_licence(texte.clone().into());
+                            ui.set_resume(resume(&licence).into());
+                            let retour = f.global::<LicenceApi>().invoke_enregistrer(texte.into());
+                            ui.set_message(if retour.ok {
+                                crate::phrase(tr("licence activée et enregistrée sur ce poste"))
+                            } else {
+                                retour.message
+                            });
+                            ui.set_etat(if retour.ok { 2 } else { 3 });
+                        }
+                        Ok((texte, licence)) => {
+                            ui.set_licence(texte.into());
+                            ui.set_resume(resume(&licence).into());
+                            ui.set_etat(2);
+                        }
+                        Err(m) => {
+                            ui.set_message(crate::activation_ui::message(&m).into());
+                            ui.set_etat(3);
+                        }
+                    }
+                });
+            });
+        });
 }
 
 /// Enregistre la clé saisie dans l'assistant, une fois l'administrateur créé. Un échec
@@ -201,6 +346,24 @@ mod tests {
     fn textes_du_domaine_traduits() {
         let mut textes: Vec<&str> = Module::TOUS.iter().map(|m| m.libelle()).collect();
         textes.extend(stockage::modeles_erreur());
+        let manquants = crate::traduction::sans_traduction(&textes);
+        assert!(manquants.is_empty(), "sans traduction : {manquants:?}");
+    }
+
+    /// Textes de l'échéance et de l'activation construits ici (0.2.3).
+    #[test]
+    fn textes_de_l_echeance_traduits() {
+        let textes = [
+            "Perpétuelle",
+            "{}, valable jusqu'au {}, modules : {}",
+            "La licence arrive à échéance dans {} jours, le {}. Renouvelez-la avec un nouveau code d'activation pour garder les modules.",
+            "La licence arrive à échéance le {}. Renouvelez-la dès maintenant avec un nouveau code d'activation pour garder les modules.",
+            "La licence est échue depuis le {} : seul le socle est disponible, les données des modules sont gardées. Renouvelez-la avec un nouveau code d'activation.",
+            "Aucune licence : socle seul",
+            "Licence échue le {} : socle seul",
+            "Clé enregistrée, mais la licence est échue depuis le {} : seul le socle est disponible.",
+            "licence activée et enregistrée sur ce poste",
+        ];
         let manquants = crate::traduction::sans_traduction(&textes);
         assert!(manquants.is_empty(), "sans traduction : {manquants:?}");
     }

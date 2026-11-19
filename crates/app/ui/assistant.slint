@@ -1,11 +1,14 @@
 // Assistant de premier lancement (cahier des charges, section 4.1).
-// L'étape de licence est en tête (jalon J9) : clé facultative. L'import des produits et des
+// L'étape de licence est en tête (jalon J9) : licence facultative. En 0.2.3 (ligne V1
+// par codes, docs/spec-codes-licence.md, section 7 bis) : code d'activation court,
+// activé auprès du portail au passage de l'étape Entreprise (le portail a besoin de la
+// raison sociale) ; une longue clé déjà remise reste acceptée. L'import des produits et des
 // tiers se fait depuis les écrans Tiers et Produits ; l'étape d'import facultative
 // de l'assistant reste à ajouter.
 
 import { CheckBox } from "std-widgets.slint";
-import { Bouton, Champ, MessageErreur, MotifMarque, Rangee, Section, Theme, Titre } from "composants.slint";
-import { IdentifiantPoste, LicenceApi, SaisieCle, VerificationUi } from "licence.slint";
+import { Bouton, Champ, ChampCode, Lien, MessageErreur, MotifMarque, Rangee, Section, Theme, Titre } from "composants.slint";
+import { ActivationUi, IdentifiantPoste, LicenceApi, SaisieCle, VerificationUi } from "licence.slint";
 import { RestaurationFichier, SauvegardesApi } from "sauvegardes.slint";
 
 export struct DonneesAssistant {
@@ -47,10 +50,31 @@ export component EcranAssistant inherits Rectangle {
     property <[string]> etapes: [@tr("Licence"), @tr("Entreprise"), @tr("Administrateur"), @tr("Taux et paiements"), @tr("Récapitulatif")];
     property <int> etape: 0;
     property <string> erreur;
+    // Licence retenue : longue clé collée, ou licence reçue du portail pour le code.
     property <string> cle-licence;
-    // Résumé de la clé vérifiée (client et modules), vide sans clé.
+    // Résumé de la licence retenue (client, échéance, modules), vide sans licence.
     property <string> resume-licence;
     property <VerificationUi> verification;
+    // Code d'activation court ; la licence reçue remplit cle-licence.
+    property <string> code-licence;
+    property <bool> code-valide;
+    // Saisie d'une longue clé à la place du code (« J'ai une clé longue »).
+    property <bool> cle-longue: false;
+    property <int> etat-activation: ActivationUi.etat;
+    changed etat-activation => {
+        if (root.etape != 1) {
+            return;
+        }
+        if (root.etat-activation == 2) {
+            root.cle-licence = ActivationUi.licence;
+            root.resume-licence = ActivationUi.resume;
+            root.erreur = "";
+            root.etape = 2;
+        } else if (root.etat-activation == 3) {
+            root.erreur = ActivationUi.message;
+            root.etape = 0;
+        }
+    }
 
     property <string> nom;
     property <string> adresse;
@@ -77,20 +101,26 @@ export component EcranAssistant inherits Rectangle {
     property <bool> orthographe-traditionnelle: true;
 
     function suivant() {
-        if (root.etape == 0 && root.cle-licence != "") {
+        if (root.etape == 0 && root.cle-longue && root.cle-licence != "") {
             root.verification = LicenceApi.verifier(root.cle-licence);
         }
-        if (root.etape == 0 && root.cle-licence != "" && !root.verification.ok) {
+        if (root.etape == 0 && root.cle-longue && root.cle-licence != "" && !root.verification.ok) {
             root.erreur = root.verification.message;
             root.resume-licence = "";
+        } else if (root.etape == 0 && !root.cle-longue && root.code-licence != "" && !root.code-valide) {
+            root.erreur = @tr("Le code d'activation est incomplet ou erroné : corrigez-le, ou videz le champ pour continuer sans licence.");
         } else if (root.etape == 1 && root.nom == "") {
             root.erreur = @tr("Le nom de l'entreprise est obligatoire.");
+        } else if (root.etape == 1 && !root.cle-longue && root.code-licence != "" && root.cle-licence == "") {
+            // Activation en ligne ; la suite vient de changed etat-activation.
+            root.erreur = "";
+            ActivationUi.activer(root.code-licence, root.nom);
         } else if (root.etape == 2 && (root.admin-nom == "" || root.admin-identifiant == "")) {
             root.erreur = @tr("Le nom complet et l'identifiant sont obligatoires.");
         } else if (root.etape == 2 && root.admin-mot-de-passe != root.admin-confirmation) {
             root.erreur = @tr("Les deux mots de passe ne correspondent pas.");
         } else {
-            if (root.etape == 0) {
+            if (root.etape == 0 && root.cle-longue) {
                 root.resume-licence = root.cle-licence == "" ? "" : root.verification.message;
             }
             root.erreur = "";
@@ -179,20 +209,59 @@ export component EcranAssistant inherits Rectangle {
 
                         Text {
                             horizontal-alignment: Theme.debut;
-                            text: @tr("La licence est liée à ce poste. Transmettez l'identifiant ci-dessous pour recevoir la clé, puis collez-la ici. Sans clé, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La clé peut aussi être saisie plus tard, dans les Paramètres.");
+                            text: @tr("La licence est liée à ce poste. Si vous avez reçu un code d'activation, tapez-le ici : Kadenz demandera la licence au portail après l'étape Entreprise, une connexion à Internet est alors nécessaire. Sans licence, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La licence peut aussi être activée plus tard, dans les Paramètres.");
                             color: Theme.texte-secondaire;
                             wrap: word-wrap;
+                        }
+
+                        if !root.cle-longue: ChampCode {
+                            libelle: @tr("Code d'activation");
+                            init => {
+                                self.remplir(root.code-licence);
+                            }
+                            changed code => {
+                                // Un autre code : la licence reçue ne vaut plus.
+                                if (self.code != root.code-licence) {
+                                    root.code-licence = self.code;
+                                    root.cle-licence = "";
+                                    root.resume-licence = "";
+                                    root.erreur = "";
+                                }
+                                root.code-valide = self.valide;
+                            }
+                            valide-entree => {
+                                root.suivant();
+                            }
+                        }
+
+                        if root.cle-longue: SaisieCle {
+                            cle <=> root.cle-licence;
+                        }
+
+                        Lien {
+                            text: root.cle-longue ? @tr("J'ai un code d'activation") : @tr("J'ai une clé longue");
+                            clique => {
+                                root.cle-longue = !root.cle-longue;
+                                root.code-licence = "";
+                                root.code-valide = false;
+                                root.cle-licence = "";
+                                root.resume-licence = "";
+                                root.erreur = "";
+                            }
                         }
 
                         Section {
                             text: @tr("Identifiant du poste");
                         }
 
-                        IdentifiantPoste { }
-
-                        SaisieCle {
-                            cle <=> root.cle-licence;
+                        Text {
+                            horizontal-alignment: Theme.debut;
+                            text: @tr("Le support peut vous demander cet identifiant.");
+                            color: Theme.texte-secondaire;
+                            wrap: word-wrap;
                         }
+
+                        IdentifiantPoste { }
 
                         // Réinstallation : reprendre une sauvegarde au lieu de tout ressaisir.
                         Section {
@@ -374,7 +443,7 @@ export component EcranAssistant inherits Rectangle {
 
                         Text {
                             horizontal-alignment: Theme.debut;
-                            text: root.resume-licence == "" ? @tr("Licence : aucune clé, socle seul") : @tr("Licence : {}", root.resume-licence);
+                            text: root.resume-licence == "" ? @tr("Licence : aucune, socle seul") : @tr("Licence : {}", root.resume-licence);
                             color: Theme.texte;
                             wrap: word-wrap;
                         }
@@ -421,6 +490,7 @@ export component EcranAssistant inherits Rectangle {
 
                         if root.etape > 0: Bouton {
                             text: @tr("Précédent");
+                            enabled: !(ActivationUi.etat == 1 && root.etape == 1);
                             clicked => {
                                 root.erreur = "";
                                 root.etape -= 1;
@@ -428,7 +498,8 @@ export component EcranAssistant inherits Rectangle {
                         }
 
                         if root.etape < root.etapes.length - 1: Bouton {
-                            text: @tr("Suivant");
+                            text: ActivationUi.etat == 1 && root.etape == 1 ? @tr("Activation de la licence…") : @tr("Suivant");
+                            enabled: !(ActivationUi.etat == 1 && root.etape == 1);
                             primary: true;
                             clicked => {
                                 root.suivant();

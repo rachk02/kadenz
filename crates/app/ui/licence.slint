@@ -1,9 +1,11 @@
-// Licence du poste (jalon J9) : identifiant du poste à transmettre pour recevoir
-// une clé, état de la licence, modules activés, remplacement de la clé. Sans clé
-// valide, seul le socle est disponible (référentiels, administration, factures et
-// avoirs) ; les données des modules sont gardées.
+// Licence du poste (jalon J9 ; ligne V1 par codes en 0.2.3, décision 75,
+// docs/spec-codes-licence.md, section 7 bis) : état de la licence, échéance et
+// postes, bandeau avant l'échéance, modules activés, activation d'un code court
+// auprès du portail, et longue clé encore acceptée. Sans licence en cours, seul le
+// socle est disponible (référentiels, administration, factures et avoirs) ; les
+// données des modules sont gardées.
 import { LineEdit, ScrollView, TextEdit } from "std-widgets.slint";
-import { Alerte, Bouton, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, ChampCode, Lien, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct ModuleUi {
     libelle: string,
@@ -24,10 +26,38 @@ export global LicenceApi {
     in property <bool> valide;
     in property <string> client;
     in property <string> emise-le;
+    // Licence datée (version 2) : échéance en clair et postes couverts ;
+    // licence perpétuelle (version 1) : echeance vaut « Perpétuelle ».
+    in property <bool> datee;
+    in property <string> echeance;
+    in property <string> postes;
+    // Bandeau avant l'échéance ou après : texte construit par l'application, vide
+    // sans avertissement ; niveau 1 (30 et 7 jours), 2 (la veille, échue).
+    in property <string> bandeau;
+    in property <int> niveau-bandeau;
     in property <[ModuleUi]> modules;
 
     callback verifier(cle: string) -> VerificationUi;
     callback enregistrer(cle: string) -> Retour;
+}
+
+// Activation d'un code court auprès du portail (ligne V1, décision 75), pour
+// l'assistant et la page Licence. etat : 0 rien en cours, 1 activation en cours,
+// 2 licence reçue, 3 refus (message). L'activation se fait dans un fil à part ;
+// la licence reçue est vérifiée par l'application avec les clés embarquées et
+// l'identifiant de ce poste avant d'être rendue ici. Dans l'assistant, elle est
+// gardée jusqu'à la fin de l'installation ; dans la page Licence, elle est
+// enregistrée aussitôt.
+export global ActivationUi {
+    in-out property <int> etat;
+    // Licence reçue (KADENZ-...), vérifiée.
+    in-out property <string> licence;
+    // Résumé pour l'assistant : client, échéance, modules.
+    in-out property <string> resume;
+    // Refus traduit, ou confirmation dans la page Licence.
+    in-out property <string> message;
+    // client vide : raison sociale lue dans la base.
+    callback activer(code: string, client: string);
 }
 
 // Identifiant du poste en lecture seule, avec un bouton qui le copie.
@@ -71,6 +101,27 @@ export component SaisieCle inherits VerticalLayout {
     }
 }
 
+// Bandeau d'avertissement de l'échéance, bordé sur ses quatre côtés.
+component BandeauLicence inherits Rectangle {
+    in property <string> text;
+    in property <int> niveau;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: root.niveau >= 2 ? Theme.erreur : Theme.ambre;
+    background: root.niveau >= 2 ? #fdf0ef : #fdf6ea;
+
+    VerticalLayout {
+        padding: 12px;
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: root.text;
+            color: root.niveau >= 2 ? Theme.erreur : Theme.texte;
+            wrap: word-wrap;
+        }
+    }
+}
+
 component LigneLicence inherits GridLayout {
     in property <string> libelle;
     in property <string> valeur;
@@ -98,6 +149,27 @@ component LigneLicence inherits GridLayout {
 export component PageLicence inherits ScrollView {
     property <string> cle;
     property <Retour> retour;
+    // Saisie ouverte : 0 aucune, 1 code d'activation, 2 longue clé.
+    property <int> saisie: 0;
+    property <bool> en-cours: ActivationUi.etat == 1;
+    // Licence reçue et enregistrée : la saisie du code se referme, le message reste.
+    property <int> etat-activation: ActivationUi.etat;
+    changed etat-activation => {
+        if (root.etat-activation == 2 && root.saisie == 1) {
+            root.saisie = 0;
+        }
+    }
+
+    function activer(code: string) {
+        if (!root.en-cours) {
+            ActivationUi.activer(code, "");
+        }
+    }
+
+    init => {
+        ActivationUi.etat = 0;
+        ActivationUi.message = "";
+    }
 
     VerticalLayout {
         padding: 24px;
@@ -110,23 +182,15 @@ export component PageLicence inherits ScrollView {
 
         Text {
             horizontal-alignment: Theme.debut;
-            text: @tr("La licence est liée à ce poste. Sans clé valide, seul le socle est disponible : tiers, produits, factures, avoirs et administration ; les données des autres modules sont gardées.");
+            text: @tr("La licence est liée à ce poste. Sans licence en cours, seul le socle est disponible : tiers, produits, factures, avoirs et administration ; les données des autres modules sont gardées.");
             color: Theme.texte-secondaire;
             wrap: word-wrap;
         }
 
-        Section {
-            text: @tr("Identifiant du poste");
+        if LicenceApi.bandeau != "": BandeauLicence {
+            text: LicenceApi.bandeau;
+            niveau: LicenceApi.niveau-bandeau;
         }
-
-        Text {
-            horizontal-alignment: Theme.debut;
-            text: @tr("Transmettez cet identifiant pour recevoir la clé de ce poste.");
-            color: Theme.texte-secondaire;
-            wrap: word-wrap;
-        }
-
-        IdentifiantPoste { }
 
         Section {
             text: @tr("État");
@@ -137,14 +201,24 @@ export component PageLicence inherits ScrollView {
             valeur: LicenceApi.etat;
         }
 
-        if LicenceApi.valide: LigneLicence {
+        if LicenceApi.client != "": LigneLicence {
             libelle: @tr("Client");
             valeur: LicenceApi.client;
         }
 
-        if LicenceApi.valide: LigneLicence {
+        if LicenceApi.emise-le != "": LigneLicence {
             libelle: @tr("Émise le");
             valeur: LicenceApi.emise-le;
+        }
+
+        if LicenceApi.echeance != "": LigneLicence {
+            libelle: @tr("Échéance");
+            valeur: LicenceApi.echeance;
+        }
+
+        if LicenceApi.datee: LigneLicence {
+            libelle: @tr("Postes");
+            valeur: LicenceApi.postes;
         }
 
         Section {
@@ -157,33 +231,133 @@ export component PageLicence inherits ScrollView {
         }
 
         Section {
-            text: @tr("Remplacer la clé");
+            text: LicenceApi.datee ? @tr("Renouveler la licence") : @tr("Activer une licence");
         }
 
-        SaisieCle {
-            cle <=> root.cle;
-        }
-
-        Rangee {
+        if root.saisie == 0: Rangee {
             spacing: 8px;
             alignment: start;
 
             Bouton {
-                text: @tr("Enregistrer la clé");
+                text: LicenceApi.datee ? @tr("Renouveler") : @tr("Activer un code");
                 primary: true;
                 clicked => {
-                    root.retour = LicenceApi.enregistrer(root.cle);
-                    Alerte.retour(root.retour);
-                    if (root.retour.ok) {
-                        root.cle = "";
+                    ActivationUi.etat = 0;
+                    ActivationUi.message = "";
+                    root.saisie = 1;
+                }
+            }
+        }
+
+        if root.saisie == 1: VerticalLayout {
+            spacing: 8px;
+
+            Text {
+                horizontal-alignment: Theme.debut;
+                text: @tr("Tapez le code d'activation reçu de l'éditeur ou du revendeur. Kadenz demande la licence au portail, la vérifie, puis l'enregistre sur ce poste. Une connexion à Internet est nécessaire.");
+                color: Theme.texte-secondaire;
+                wrap: word-wrap;
+            }
+
+            champ := ChampCode {
+                libelle: @tr("Code d'activation");
+                lecture-seule: root.en-cours;
+                valide-entree => {
+                    if (self.valide) {
+                        root.activer(self.code);
+                    }
+                }
+            }
+
+            Rangee {
+                spacing: 8px;
+                alignment: start;
+
+                Bouton {
+                    text: root.en-cours ? @tr("Activation de la licence…") : @tr("Activer le code");
+                    primary: true;
+                    enabled: champ.valide && !root.en-cours;
+                    clicked => {
+                        root.activer(champ.code);
+                    }
+                }
+
+                Bouton {
+                    text: @tr("Annuler");
+                    enabled: !root.en-cours;
+                    clicked => {
+                        ActivationUi.message = "";
+                        root.saisie = 0;
                     }
                 }
             }
         }
 
-        MessageRetour {
-            erreurs-seules: true;
-            retour: root.retour;
+        if ActivationUi.message != "": Text {
+            horizontal-alignment: Theme.debut;
+            text: ActivationUi.message;
+            color: ActivationUi.etat == 3 ? Theme.erreur : Theme.succes;
+            wrap: word-wrap;
         }
+
+        if root.saisie == 2: VerticalLayout {
+            spacing: 8px;
+
+            SaisieCle {
+                cle <=> root.cle;
+            }
+
+            Rangee {
+                spacing: 8px;
+                alignment: start;
+
+                Bouton {
+                    text: @tr("Enregistrer la clé");
+                    primary: true;
+                    clicked => {
+                        root.retour = LicenceApi.enregistrer(root.cle);
+                        Alerte.retour(root.retour);
+                        if (root.retour.ok) {
+                            root.cle = "";
+                            root.saisie = 0;
+                        }
+                    }
+                }
+
+                Bouton {
+                    text: @tr("Annuler");
+                    clicked => {
+                        root.cle = "";
+                        root.saisie = 0;
+                    }
+                }
+            }
+
+            MessageRetour {
+                erreurs-seules: true;
+                retour: root.retour;
+            }
+        }
+
+        if root.saisie != 2: Lien {
+            text: @tr("J'ai une clé longue");
+            clique => {
+                ActivationUi.message = "";
+                root.saisie = 2;
+            }
+        }
+
+        Section {
+            text: @tr("Identifiant du poste");
+        }
+
+        Text {
+            horizontal-alignment: Theme.debut;
+            text: @tr("Le support peut vous demander cet identifiant.");
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        IdentifiantPoste { }
     }
 }

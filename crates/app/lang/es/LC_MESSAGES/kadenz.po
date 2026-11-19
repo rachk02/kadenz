@@ -2963,3 +2963,83 @@ msgstr "respuesta inesperada del portal de activación"
 
 msgid "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste"
 msgstr "conexión segura con el portal rechazada: compruebe la fecha y la hora del equipo"
+
+# Écrans de la 0.2.3 : code d'activation, échéance (docs/spec-codes-licence.md, section 7 bis)
+
+msgid "La licence est liée à ce poste. Sans licence en cours, seul le socle est disponible : tiers, produits, factures, avoirs et administration ; les données des autres modules sont gardées."
+msgstr "La licencia está vinculada a este puesto. Sin una licencia en curso, solo está disponible la base: terceros, productos, facturas, abonos y administración; los datos de los demás módulos se conservan."
+
+msgid "Postes"
+msgstr "Puestos"
+
+msgid "Renouveler la licence"
+msgstr "Renovar la licencia"
+
+msgid "Activer une licence"
+msgstr "Activar una licencia"
+
+msgid "Renouveler"
+msgstr "Renovar"
+
+msgid "Activer un code"
+msgstr "Activar un código"
+
+msgid "Tapez le code d'activation reçu de l'éditeur ou du revendeur. Kadenz demande la licence au portail, la vérifie, puis l'enregistre sur ce poste. Une connexion à Internet est nécessaire."
+msgstr "Escriba el código de activación recibido del editor o del distribuidor. Kadenz solicita la licencia al portal, la verifica y después la guarda en este puesto. Se necesita una conexión a Internet."
+
+msgid "Code d'activation"
+msgstr "Código de activación"
+
+msgid "Activation de la licence…"
+msgstr "Activando la licencia…"
+
+msgid "Activer le code"
+msgstr "Activar el código"
+
+msgid "J'ai une clé longue"
+msgstr "Tengo una clave larga"
+
+msgid "J'ai un code d'activation"
+msgstr "Tengo un código de activación"
+
+msgid "Le support peut vous demander cet identifiant."
+msgstr "El soporte puede pedirle este identificador."
+
+msgid "Le code d'activation est incomplet ou erroné : corrigez-le, ou videz le champ pour continuer sans licence."
+msgstr "El código de activación está incompleto o es erróneo: corríjalo, o vacíe el campo para continuar sin licencia."
+
+msgid "La licence est liée à ce poste. Si vous avez reçu un code d'activation, tapez-le ici : Kadenz demandera la licence au portail après l'étape Entreprise, une connexion à Internet est alors nécessaire. Sans licence, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La licence peut aussi être activée plus tard, dans les Paramètres."
+msgstr "La licencia está vinculada a este puesto. Si ha recibido un código de activación, escríbalo aquí: Kadenz solicitará la licencia al portal después del paso Empresa, y entonces se necesitará una conexión a Internet. Sin licencia, solo está disponible la base: terceros, productos, facturas, abonos y administración. La licencia también puede activarse más tarde, en los Parámetros."
+
+msgid "Licence : aucune, socle seul"
+msgstr "Licencia: ninguna, solo la base"
+
+msgid "Perpétuelle"
+msgstr "Perpetua"
+
+msgid "{}, valable jusqu'au {}, modules : {}"
+msgstr "{}, válida hasta el {}, módulos: {}"
+
+msgid "La licence arrive à échéance dans {} jours, le {}. Renouvelez-la avec un nouveau code d'activation pour garder les modules."
+msgstr "La licencia vence dentro de {} días, el {}. Renuévela con un nuevo código de activación para conservar los módulos."
+
+msgid "La licence arrive à échéance le {}. Renouvelez-la dès maintenant avec un nouveau code d'activation pour garder les modules."
+msgstr "La licencia vence el {}. Renuévela ahora con un nuevo código de activación para conservar los módulos."
+
+msgid "La licence est échue depuis le {} : seul le socle est disponible, les données des modules sont gardées. Renouvelez-la avec un nouveau code d'activation."
+msgstr "La licencia venció el {}: solo está disponible la base y los datos de los módulos se conservan. Renuévela con un nuevo código de activación."
+
+msgid "Aucune licence : socle seul"
+msgstr "Sin licencia: solo la base"
+
+msgid "Licence échue le {} : socle seul"
+msgstr "Licencia vencida el {}: solo la base"
+
+msgid "Clé enregistrée, mais la licence est échue depuis le {} : seul le socle est disponible."
+msgstr "Clave guardada, pero la licencia venció el {}: solo está disponible la base."
+
+msgid "licence activée et enregistrée sur ce poste"
+msgstr "licencia activada y guardada en este puesto"
+
+msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
+msgstr "carácter eliminado: un código solo tiene letras de la A a la Z y cifras del 2 al 9"

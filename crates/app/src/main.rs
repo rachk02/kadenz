@@ -8,10 +8,10 @@ mod graphiques;
 mod import_ecran;
 mod impression;
 mod instance;
-// Activation des codes de licence courts (décision 75) : branchée par les
-// écrans de la 0.2.3.
-#[allow(dead_code)]
+// Activation des codes de licence courts (décision 75) : assistant et page
+// Licence de la 0.2.3 (licence.rs).
 mod activation_ui;
+mod code_saisie;
 mod licence;
 mod maj;
 mod paiements;
@@ -416,6 +416,9 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     pilotage::brancher(fenetre, &etat);
     impression::brancher(fenetre, &etat);
     licence::brancher(fenetre, &etat);
+    fenetre
+        .global::<CodeCourtUi>()
+        .on_formater(|precedent, nouveau| code_saisie::formater(&precedent, &nouveau));
     sauvegardes::brancher(fenetre, &etat);
     maj::brancher(fenetre);
 

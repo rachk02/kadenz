@@ -2963,3 +2963,83 @@ msgstr "etkinleştirme portalından beklenmeyen yanıt"
 
 msgid "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste"
 msgstr "portala güvenli bağlantı reddedildi: bu bilgisayarın tarih ve saatini kontrol edin"
+
+# Écrans de la 0.2.3 : code d'activation, échéance (docs/spec-codes-licence.md, section 7 bis)
+
+msgid "La licence est liée à ce poste. Sans licence en cours, seul le socle est disponible : tiers, produits, factures, avoirs et administration ; les données des autres modules sont gardées."
+msgstr "Lisans bu iş istasyonuna bağlıdır. Geçerli bir lisans olmadan yalnızca temel kullanılabilir: cariler, ürünler, faturalar, iade faturaları ve yönetim; diğer modüllerin verileri korunur."
+
+msgid "Postes"
+msgstr "İş istasyonları"
+
+msgid "Renouveler la licence"
+msgstr "Lisansı yenile"
+
+msgid "Activer une licence"
+msgstr "Lisans etkinleştir"
+
+msgid "Renouveler"
+msgstr "Yenile"
+
+msgid "Activer un code"
+msgstr "Kod etkinleştir"
+
+msgid "Tapez le code d'activation reçu de l'éditeur ou du revendeur. Kadenz demande la licence au portail, la vérifie, puis l'enregistre sur ce poste. Une connexion à Internet est nécessaire."
+msgstr "Yayıncıdan veya bayiden aldığınız etkinleştirme kodunu yazın. Kadenz lisansı portaldan ister, doğrular ve ardından bu iş istasyonuna kaydeder. İnternet bağlantısı gereklidir."
+
+msgid "Code d'activation"
+msgstr "Etkinleştirme kodu"
+
+msgid "Activation de la licence…"
+msgstr "Lisans etkinleştiriliyor…"
+
+msgid "Activer le code"
+msgstr "Kodu etkinleştir"
+
+msgid "J'ai une clé longue"
+msgstr "Uzun bir anahtarım var"
+
+msgid "J'ai un code d'activation"
+msgstr "Etkinleştirme kodum var"
+
+msgid "Le support peut vous demander cet identifiant."
+msgstr "Destek ekibi bu kimliği sizden isteyebilir."
+
+msgid "Le code d'activation est incomplet ou erroné : corrigez-le, ou videz le champ pour continuer sans licence."
+msgstr "Etkinleştirme kodu eksik veya hatalı: düzeltin ya da lisanssız devam etmek için alanı boşaltın."
+
+msgid "La licence est liée à ce poste. Si vous avez reçu un code d'activation, tapez-le ici : Kadenz demandera la licence au portail après l'étape Entreprise, une connexion à Internet est alors nécessaire. Sans licence, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La licence peut aussi être activée plus tard, dans les Paramètres."
+msgstr "Lisans bu iş istasyonuna bağlıdır. Bir etkinleştirme kodu aldıysanız buraya yazın: Kadenz, Şirket adımından sonra lisansı portaldan isteyecektir; bu sırada İnternet bağlantısı gerekir. Lisans olmadan yalnızca temel kullanılabilir: cariler, ürünler, faturalar, iade faturaları ve yönetim. Lisans daha sonra Ayarlar'dan da etkinleştirilebilir."
+
+msgid "Licence : aucune, socle seul"
+msgstr "Lisans: yok, yalnızca temel"
+
+msgid "Perpétuelle"
+msgstr "Süresiz"
+
+msgid "{}, valable jusqu'au {}, modules : {}"
+msgstr "{}, {} tarihine kadar geçerli, modüller: {}"
+
+msgid "La licence arrive à échéance dans {} jours, le {}. Renouvelez-la avec un nouveau code d'activation pour garder les modules."
+msgstr "Lisansın süresi {} gün sonra, {} tarihinde doluyor. Modülleri korumak için yeni bir etkinleştirme koduyla yenileyin."
+
+msgid "La licence arrive à échéance le {}. Renouvelez-la dès maintenant avec un nouveau code d'activation pour garder les modules."
+msgstr "Lisansın süresi {} tarihinde doluyor. Modülleri korumak için hemen yeni bir etkinleştirme koduyla yenileyin."
+
+msgid "La licence est échue depuis le {} : seul le socle est disponible, les données des modules sont gardées. Renouvelez-la avec un nouveau code d'activation."
+msgstr "Lisansın süresi {} tarihinde doldu: yalnızca temel kullanılabilir, modül verileri korunur. Yeni bir etkinleştirme koduyla yenileyin."
+
+msgid "Aucune licence : socle seul"
+msgstr "Lisans yok: yalnızca temel"
+
+msgid "Licence échue le {} : socle seul"
+msgstr "Lisansın süresi {} tarihinde doldu: yalnızca temel"
+
+msgid "Clé enregistrée, mais la licence est échue depuis le {} : seul le socle est disponible."
+msgstr "Anahtar kaydedildi, ancak lisansın süresi {} tarihinde doldu: yalnızca temel kullanılabilir."
+
+msgid "licence activée et enregistrée sur ce poste"
+msgstr "lisans etkinleştirildi ve bu iş istasyonuna kaydedildi"
+
+msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
+msgstr "karakter kaldırıldı: bir kodda yalnızca A-Z harfleri ve 2-9 rakamları bulunur"

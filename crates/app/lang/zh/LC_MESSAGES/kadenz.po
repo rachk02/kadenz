@@ -2963,3 +2963,83 @@ msgstr "激活门户返回了意外的响应"
 
 msgid "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste"
 msgstr "与门户的安全连接被拒绝：请检查本机的日期和时间"
+
+# Écrans de la 0.2.3 : code d'activation, échéance (docs/spec-codes-licence.md, section 7 bis)
+
+msgid "La licence est liée à ce poste. Sans licence en cours, seul le socle est disponible : tiers, produits, factures, avoirs et administration ; les données des autres modules sont gardées."
+msgstr "许可证与本工作站绑定。没有有效许可证时，只能使用基础功能：往来方、产品、发票、贷项通知单和管理；其他模块的数据会保留。"
+
+msgid "Postes"
+msgstr "工作站"
+
+msgid "Renouveler la licence"
+msgstr "续订许可证"
+
+msgid "Activer une licence"
+msgstr "激活许可证"
+
+msgid "Renouveler"
+msgstr "续订"
+
+msgid "Activer un code"
+msgstr "激活代码"
+
+msgid "Tapez le code d'activation reçu de l'éditeur ou du revendeur. Kadenz demande la licence au portail, la vérifie, puis l'enregistre sur ce poste. Une connexion à Internet est nécessaire."
+msgstr "请输入从发行商或经销商处收到的激活码。Kadenz 向门户申请许可证并进行验证，然后保存到本工作站。需要连接互联网。"
+
+msgid "Code d'activation"
+msgstr "激活码"
+
+msgid "Activation de la licence…"
+msgstr "正在激活许可证…"
+
+msgid "Activer le code"
+msgstr "激活代码"
+
+msgid "J'ai une clé longue"
+msgstr "我有长密钥"
+
+msgid "J'ai un code d'activation"
+msgstr "我有激活码"
+
+msgid "Le support peut vous demander cet identifiant."
+msgstr "技术支持可能会向您索取此标识符。"
+
+msgid "Le code d'activation est incomplet ou erroné : corrigez-le, ou videz le champ pour continuer sans licence."
+msgstr "激活码不完整或有误：请更正，或清空该字段以在没有许可证的情况下继续。"
+
+msgid "La licence est liée à ce poste. Si vous avez reçu un code d'activation, tapez-le ici : Kadenz demandera la licence au portail après l'étape Entreprise, une connexion à Internet est alors nécessaire. Sans licence, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La licence peut aussi être activée plus tard, dans les Paramètres."
+msgstr "许可证与本工作站绑定。如果您已收到激活码，请在此输入：Kadenz 将在“企业”步骤之后向门户申请许可证，届时需要连接互联网。没有许可证时，只能使用基础功能：往来方、产品、发票、贷项通知单和管理。也可以稍后在“设置”中激活许可证。"
+
+msgid "Licence : aucune, socle seul"
+msgstr "许可证：无，仅基础功能"
+
+msgid "Perpétuelle"
+msgstr "永久"
+
+msgid "{}, valable jusqu'au {}, modules : {}"
+msgstr "{}，有效期至 {}，模块：{}"
+
+msgid "La licence arrive à échéance dans {} jours, le {}. Renouvelez-la avec un nouveau code d'activation pour garder les modules."
+msgstr "许可证将在 {} 天后（{}）到期。请使用新的激活码续订，以保留各模块。"
+
+msgid "La licence arrive à échéance le {}. Renouvelez-la dès maintenant avec un nouveau code d'activation pour garder les modules."
+msgstr "许可证将于 {} 到期。请立即使用新的激活码续订，以保留各模块。"
+
+msgid "La licence est échue depuis le {} : seul le socle est disponible, les données des modules sont gardées. Renouvelez-la avec un nouveau code d'activation."
+msgstr "许可证已于 {} 到期：只能使用基础功能，各模块的数据会保留。请使用新的激活码续订。"
+
+msgid "Aucune licence : socle seul"
+msgstr "无许可证：仅基础功能"
+
+msgid "Licence échue le {} : socle seul"
+msgstr "许可证已于 {} 到期：仅基础功能"
+
+msgid "Clé enregistrée, mais la licence est échue depuis le {} : seul le socle est disponible."
+msgstr "密钥已保存，但许可证已于 {} 到期：只能使用基础功能。"
+
+msgid "licence activée et enregistrée sur ce poste"
+msgstr "许可证已激活并保存到本工作站"
+
+msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
+msgstr "已删除字符：代码只含字母 A 至 Z 和数字 2 至 9"

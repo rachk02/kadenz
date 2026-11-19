@@ -2963,3 +2963,83 @@ msgstr "unexpected response from the activation portal"
 
 msgid "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste"
 msgstr "secure connection to the portal refused: check this computer's date and time"
+
+# Écrans de la 0.2.3 : code d'activation, échéance (docs/spec-codes-licence.md, section 7 bis)
+
+msgid "La licence est liée à ce poste. Sans licence en cours, seul le socle est disponible : tiers, produits, factures, avoirs et administration ; les données des autres modules sont gardées."
+msgstr "The license is tied to this computer. Without a current license, only the base is available: third parties, products, invoices, credit notes and administration; the data of the other modules is kept."
+
+msgid "Postes"
+msgstr "Workstations"
+
+msgid "Renouveler la licence"
+msgstr "Renew the license"
+
+msgid "Activer une licence"
+msgstr "Activate a license"
+
+msgid "Renouveler"
+msgstr "Renew"
+
+msgid "Activer un code"
+msgstr "Activate a code"
+
+msgid "Tapez le code d'activation reçu de l'éditeur ou du revendeur. Kadenz demande la licence au portail, la vérifie, puis l'enregistre sur ce poste. Une connexion à Internet est nécessaire."
+msgstr "Type the activation code received from the publisher or the reseller. Kadenz requests the license from the portal, verifies it, then saves it on this computer. An Internet connection is required."
+
+msgid "Code d'activation"
+msgstr "Activation code"
+
+msgid "Activation de la licence…"
+msgstr "Activating the license…"
+
+msgid "Activer le code"
+msgstr "Activate the code"
+
+msgid "J'ai une clé longue"
+msgstr "I have a long key"
+
+msgid "J'ai un code d'activation"
+msgstr "I have an activation code"
+
+msgid "Le support peut vous demander cet identifiant."
+msgstr "Support may ask you for this identifier."
+
+msgid "Le code d'activation est incomplet ou erroné : corrigez-le, ou videz le champ pour continuer sans licence."
+msgstr "The activation code is incomplete or incorrect: correct it, or clear the field to continue without a license."
+
+msgid "La licence est liée à ce poste. Si vous avez reçu un code d'activation, tapez-le ici : Kadenz demandera la licence au portail après l'étape Entreprise, une connexion à Internet est alors nécessaire. Sans licence, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La licence peut aussi être activée plus tard, dans les Paramètres."
+msgstr "The license is tied to this computer. If you have received an activation code, type it here: Kadenz will request the license from the portal after the Company step, and an Internet connection is then required. Without a license, only the base is available: third parties, products, invoices, credit notes and administration. The license can also be activated later, in the Settings."
+
+msgid "Licence : aucune, socle seul"
+msgstr "License: none, base only"
+
+msgid "Perpétuelle"
+msgstr "Perpetual"
+
+msgid "{}, valable jusqu'au {}, modules : {}"
+msgstr "{}, valid until {}, modules: {}"
+
+msgid "La licence arrive à échéance dans {} jours, le {}. Renouvelez-la avec un nouveau code d'activation pour garder les modules."
+msgstr "The license expires in {} days, on {}. Renew it with a new activation code to keep the modules."
+
+msgid "La licence arrive à échéance le {}. Renouvelez-la dès maintenant avec un nouveau code d'activation pour garder les modules."
+msgstr "The license expires on {}. Renew it now with a new activation code to keep the modules."
+
+msgid "La licence est échue depuis le {} : seul le socle est disponible, les données des modules sont gardées. Renouvelez-la avec un nouveau code d'activation."
+msgstr "The license expired on {}: only the base is available, and the module data is kept. Renew it with a new activation code."
+
+msgid "Aucune licence : socle seul"
+msgstr "No license: base only"
+
+msgid "Licence échue le {} : socle seul"
+msgstr "License expired on {}: base only"
+
+msgid "Clé enregistrée, mais la licence est échue depuis le {} : seul le socle est disponible."
+msgstr "Key saved, but the license expired on {}: only the base is available."
+
+msgid "licence activée et enregistrée sur ce poste"
+msgstr "license activated and saved on this computer"
+
+msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
+msgstr "character removed: a code only has letters A to Z and digits 2 to 9"

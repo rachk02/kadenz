@@ -622,3 +622,140 @@ export component ElementNavigation inherits Rectangle {
         }
     }
 }
+
+// Code de licence court tel que le champ doit l'afficher (code_saisie.rs).
+export struct CodeSaisi {
+    // Texte mis en forme : groupes de 5 séparés par un tiret.
+    texte: string,
+    // Position du curseur dans texte, en octets.
+    curseur: int,
+    // Message à montrer sous le champ ; vide pendant la saisie d'un code incomplet.
+    message: string,
+    // Code complet et caractère de contrôle juste.
+    valide: bool,
+}
+
+// Mise en forme des codes, branchée par l'application (code_court::mettre_en_forme,
+// docs/spec-codes-licence.md, section 6).
+export global CodeCourtUi {
+    pure callback formater(precedent: string, nouveau: string) -> CodeSaisi;
+}
+
+// Champ d'un code de licence court (ligne V1, 0.2.3) : majuscules, tirets placés tout
+// seuls, collage accepté (avec ou sans tirets, espaces, retours à la ligne). Un
+// TextInput et non un LineEdit : il faut replacer le curseur après chaque mise en forme.
+// Repris de main, recâblé sur les couleurs de la 0.2.2, qui n'a ni jeton de fond de
+// champ ni jeton de focus (docs/spec-codes-licence.md, section 7 bis).
+export component ChampCode inherits VerticalLayout {
+    in property <string> libelle;
+    in property <bool> lecture-seule: false;
+    out property <string> code: root.etat.texte;
+    out property <bool> valide: root.etat.valide;
+    out property <string> message: root.etat.message;
+    callback valide-entree();
+    property <CodeSaisi> etat;
+
+    // Reprend un code déjà saisi (champ recréé en revenant à une étape).
+    public function remplir(texte: string) {
+        root.etat = CodeCourtUi.formater("", texte);
+        saisie.text = root.etat.texte;
+    }
+
+    // Efface le champ (après une activation réussie, par exemple).
+    public function vider() {
+        root.etat = { texte: "", curseur: 0, message: "", valide: false };
+        saisie.text = "";
+    }
+
+    spacing: 4px;
+    forward-focus: saisie;
+
+    if root.libelle != "": Text {
+        text: root.libelle;
+        font-size: 12px;
+        color: Theme.texte-secondaire;
+        horizontal-alignment: Theme.debut;
+    }
+
+    Rectangle {
+        height: 32px;
+        border-radius: 4px;
+        background: root.lecture-seule ? Theme.fond-lateral : white;
+        border-width: saisie.has-focus ? 2px : 1px;
+        border-color: saisie.has-focus ? Theme.accent : Theme.bordure;
+
+        // Indice du format, tant que le champ est vide.
+        if saisie.text == "": Text {
+            x: 10px;
+            width: parent.width - 20px;
+            vertical-alignment: center;
+            horizontal-alignment: left;
+            text: "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX";
+            font-family: "Consolas";
+            font-size: 15px;
+            color: Theme.bordure;
+        }
+
+        // Le code reste de gauche à droite, même dans une interface de droite à gauche.
+        saisie := TextInput {
+            x: 10px;
+            width: parent.width - 20px;
+            vertical-alignment: center;
+            horizontal-alignment: left;
+            single-line: true;
+            read-only: root.lecture-seule;
+            font-family: "Consolas";
+            font-size: 15px;
+            color: Theme.texte;
+            selection-background-color: Theme.accent-survol;
+            selection-foreground-color: Theme.texte;
+            accessible-role: text-input;
+            accessible-label: root.libelle;
+            edited => {
+                root.etat = CodeCourtUi.formater(root.etat.texte, self.text);
+                self.text = root.etat.texte;
+                self.set-selection-offsets(root.etat.curseur, root.etat.curseur);
+            }
+            accepted => {
+                root.valide-entree();
+            }
+        }
+    }
+
+    if root.message != "": Text {
+        text: root.message;
+        font-size: 12px;
+        color: Theme.erreur;
+        horizontal-alignment: Theme.debut;
+        wrap: word-wrap;
+    }
+}
+
+// Lien discret dans le texte (par exemple « J'ai une clé longue »).
+export component Lien inherits Rectangle {
+    in property <string> text;
+    callback clique();
+    min-width: etiquette.preferred-width;
+    min-height: etiquette.preferred-height;
+    accessible-role: button;
+    accessible-label: root.text;
+    accessible-action-default => {
+        root.clique();
+    }
+
+    etiquette := Text {
+        width: parent.width;
+        text: root.text;
+        color: zone.has-hover ? Theme.nuit : Theme.accent;
+        font-size: 12.5px;
+        horizontal-alignment: Theme.debut;
+        wrap: word-wrap;
+    }
+
+    zone := TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            root.clique();
+        }
+    }
+}

@@ -2963,3 +2963,83 @@ msgstr "アクティベーションポータルから予期しない応答があ
 
 msgid "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste"
 msgstr "ポータルへの安全な接続が拒否されました：このコンピューターの日付と時刻を確認してください"
+
+# Écrans de la 0.2.3 : code d'activation, échéance (docs/spec-codes-licence.md, section 7 bis)
+
+msgid "La licence est liée à ce poste. Sans licence en cours, seul le socle est disponible : tiers, produits, factures, avoirs et administration ; les données des autres modules sont gardées."
+msgstr "ライセンスはこの端末に紐づいています。有効なライセンスがない場合は、基本機能（取引先、商品、請求書、貸方票、管理）のみ利用できます。その他のモジュールのデータは保持されます。"
+
+msgid "Postes"
+msgstr "端末"
+
+msgid "Renouveler la licence"
+msgstr "ライセンスの更新"
+
+msgid "Activer une licence"
+msgstr "ライセンスの有効化"
+
+msgid "Renouveler"
+msgstr "更新"
+
+msgid "Activer un code"
+msgstr "コードを有効化"
+
+msgid "Tapez le code d'activation reçu de l'éditeur ou du revendeur. Kadenz demande la licence au portail, la vérifie, puis l'enregistre sur ce poste. Une connexion à Internet est nécessaire."
+msgstr "発行元または販売店から受け取ったアクティベーションコードを入力してください。Kadenz がポータルにライセンスを要求して検証し、この端末に保存します。インターネット接続が必要です。"
+
+msgid "Code d'activation"
+msgstr "アクティベーションコード"
+
+msgid "Activation de la licence…"
+msgstr "ライセンスを有効化しています…"
+
+msgid "Activer le code"
+msgstr "コードを有効化"
+
+msgid "J'ai une clé longue"
+msgstr "長いキーを持っています"
+
+msgid "J'ai un code d'activation"
+msgstr "アクティベーションコードを持っています"
+
+msgid "Le support peut vous demander cet identifiant."
+msgstr "サポートからこの識別子を尋ねられることがあります。"
+
+msgid "Le code d'activation est incomplet ou erroné : corrigez-le, ou videz le champ pour continuer sans licence."
+msgstr "アクティベーションコードが不完全または誤っています。修正するか、ライセンスなしで続ける場合は欄を空にしてください。"
+
+msgid "La licence est liée à ce poste. Si vous avez reçu un code d'activation, tapez-le ici : Kadenz demandera la licence au portail après l'étape Entreprise, une connexion à Internet est alors nécessaire. Sans licence, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La licence peut aussi être activée plus tard, dans les Paramètres."
+msgstr "ライセンスはこの端末に紐づいています。アクティベーションコードを受け取っている場合はここに入力してください。Kadenz は「会社」の手順の後にポータルへライセンスを要求するため、その際にインターネット接続が必要です。ライセンスがない場合は、基本機能（取引先、商品、請求書、貸方票、管理）のみ利用できます。ライセンスは後から「設定」で有効化することもできます。"
+
+msgid "Licence : aucune, socle seul"
+msgstr "ライセンス：なし（基本機能のみ）"
+
+msgid "Perpétuelle"
+msgstr "無期限"
+
+msgid "{}, valable jusqu'au {}, modules : {}"
+msgstr "{}、{} まで有効、モジュール：{}"
+
+msgid "La licence arrive à échéance dans {} jours, le {}. Renouvelez-la avec un nouveau code d'activation pour garder les modules."
+msgstr "ライセンスはあと {} 日、{} に期限切れになります。モジュールを使い続けるには、新しいアクティベーションコードで更新してください。"
+
+msgid "La licence arrive à échéance le {}. Renouvelez-la dès maintenant avec un nouveau code d'activation pour garder les modules."
+msgstr "ライセンスは {} に期限切れになります。モジュールを使い続けるには、今すぐ新しいアクティベーションコードで更新してください。"
+
+msgid "La licence est échue depuis le {} : seul le socle est disponible, les données des modules sont gardées. Renouvelez-la avec un nouveau code d'activation."
+msgstr "ライセンスは {} に期限切れになりました。基本機能のみ利用でき、モジュールのデータは保持されています。新しいアクティベーションコードで更新してください。"
+
+msgid "Aucune licence : socle seul"
+msgstr "ライセンスなし：基本機能のみ"
+
+msgid "Licence échue le {} : socle seul"
+msgstr "ライセンスは {} に期限切れ：基本機能のみ"
+
+msgid "Clé enregistrée, mais la licence est échue depuis le {} : seul le socle est disponible."
+msgstr "キーを保存しましたが、ライセンスは {} に期限切れになっています。基本機能のみ利用できます。"
+
+msgid "licence activée et enregistrée sur ce poste"
+msgstr "ライセンスを有効化し、この端末に保存しました"
+
+msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
+msgstr "文字を削除しました：コードに使われるのはAからZの英字と2から9の数字だけです"
