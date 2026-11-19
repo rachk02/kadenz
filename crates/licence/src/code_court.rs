@@ -122,19 +122,29 @@ pub struct MiseEnForme {
 
 /// Mise en forme d'un champ en cours de saisie (`edited`), à partir du texte
 /// affiché avant la modification et du texte brut après. La fin de la partie
-/// tapée, collée ou effacée se trouve par le suffixe commun aux deux textes ;
-/// le curseur se place après le même caractère utile dans le texte remis en
-/// forme. Les deux textes peuvent contenir de l'UTF-8 (collage).
+/// tapée, collée ou effacée se trouve par le suffixe commun aux deux textes,
+/// borné par leur préfixe commun : sans cette borne, un caractère tapé après
+/// le même caractère (« ZU » puis « U ») passerait pour une frappe avant lui,
+/// et la suite de la saisie s'insérerait devant ; le curseur se place après le
+/// même caractère utile dans le texte remis en forme. Les deux textes peuvent
+/// contenir de l'UTF-8 (collage).
 pub fn mettre_en_forme(precedent: &str, nouveau: &str) -> MiseEnForme {
     let avant: Vec<char> = precedent.chars().collect();
     let apres: Vec<char> = nouveau.chars().collect();
+    let prefixe = avant
+        .iter()
+        .zip(apres.iter())
+        .take_while(|(a, b)| a == b)
+        .count();
+    let borne = avant.len().min(apres.len()) - prefixe;
     let commun = avant
         .iter()
         .rev()
         .zip(apres.iter().rev())
+        .take(borne)
         .take_while(|(a, b)| a == b)
         .count();
-    let fin = apres.len() - commun.min(apres.len());
+    let fin = apres.len() - commun;
     let utiles = normaliser(nouveau);
     let n = normaliser(&apres[..fin].iter().collect::<String>())
         .chars()
@@ -341,5 +351,33 @@ mod tests {
         assert_eq!(forme("", "a1b"), ("AB".into(), 2, Ambigu));
         // Texte vide.
         assert_eq!(forme("A", ""), (String::new(), 0, Aucun));
+        // Majuscule tapée après la même majuscule : curseur après les deux.
+        assert_eq!(
+            forme("W5FPC-8ZU", "W5FPC-8ZUU"),
+            ("W5FPC-8ZUU".into(), 10, Aucun)
+        );
+    }
+
+    /// Frappe d'un code caractère par caractère, en majuscules, comme le champ
+    /// de Slint : chaque caractère s'insère au curseur rendu par la frappe
+    /// précédente (essai à l'écran de la 0.2.3 : « UU » déplaçait la suite).
+    #[test]
+    fn frappe_avec_lettres_doublees() {
+        let taper = |code: &str| {
+            let (mut texte, mut curseur) = (String::new(), 0usize);
+            for c in code.chars().filter(|c| *c != '-') {
+                let nouveau = format!("{}{c}{}", &texte[..curseur], &texte[curseur..]);
+                let m = mettre_en_forme(&texte, &nouveau);
+                (texte, curseur) = (m.texte, m.curseur);
+            }
+            (texte, curseur)
+        };
+        for code in [
+            "W5FPC-8ZUUR-FRQH9-ALFWA-TQHTQ",
+            "MQQ4H-GA64T-R568T-CENRB-DBSLD",
+            "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA",
+        ] {
+            assert_eq!(taper(code), (code.to_string(), code.len()), "{code}");
+        }
     }
 }
