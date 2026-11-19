@@ -130,6 +130,29 @@ CREATE INDEX licence_entreprise ON licence_emise (entreprise);
     // (lot D1, docs/spec-portail.md, section 9), pour survivre à un
     // redémarrage. Dates en secondes depuis 1970 (UTC).
     TABLE_FREIN,
+    // 4 vers 5 : codes de la ligne V1 (décision 75, lot L8,
+    // docs/spec-codes-licence.md, section 7 bis). Un code a une gamme ; un
+    // code V1 donne une licence V1 datée liée à un poste, une ligne de
+    // `licence_v1` par poste qui l'a activé. La ligne en cours est celle sans
+    // date de libération (une au plus par code).
+    "
+ALTER TABLE code_activation ADD COLUMN gamme TEXT NOT NULL DEFAULT 'entreprise'
+    CHECK (gamme IN ('entreprise', 'v1'));
+CREATE TABLE licence_v1 (
+    id INTEGER PRIMARY KEY,
+    code INTEGER NOT NULL REFERENCES code_activation (id),
+    poste TEXT NOT NULL,
+    client TEXT NOT NULL,
+    texte TEXT NOT NULL,
+    debut TEXT NOT NULL,
+    echeance TEXT NOT NULL,
+    emise_le TEXT NOT NULL,
+    liberee_le TEXT,
+    liberee_par INTEGER REFERENCES compte (id)
+);
+CREATE INDEX licence_v1_code ON licence_v1 (code);
+CREATE UNIQUE INDEX licence_v1_en_cours ON licence_v1 (code) WHERE liberee_le IS NULL;
+",
 ];
 
 /// Table du frein (`frein.rs`) : une ligne par clé, échecs comptés, fin de

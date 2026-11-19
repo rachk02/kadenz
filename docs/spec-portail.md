@@ -76,7 +76,7 @@ Base SQLite dans le dossier du portail (proposé : protégée par les droits du 
 
 ## 9. Durcissement (relecture d'OpenCode, docs/securite/echanges-opencode.md)
 
-Ordre décidé entre sessions le 2026-11-19 : D1 (livré le 2026-11-19), puis L8 (codes de la ligne V1, docs/spec-codes-licence.md), puis D2, puis la chaîne de hachage du journal et la double authentification des éditeurs, avant toute mise en service.
+Ordre décidé entre sessions le 2026-11-19 : D1 (livré le 2026-11-19), puis L8 (codes de la ligne V1, docs/spec-codes-licence.md ; livré le 2026-11-19), puis D2, puis la chaîne de hachage du journal et la double authentification des éditeurs, avant toute mise en service.
 
 - D1, indépendant des pages :
   - verrou de la base relâché pendant Argon2 ;

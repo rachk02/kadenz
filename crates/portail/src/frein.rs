@@ -71,20 +71,33 @@ pub(crate) fn cles_connexion(identifiant: &str, adresse: &str) -> Vec<Cle> {
     ]
 }
 
-/// Clés d'une activation : l'adresse, puis l'entreprise seulement si son
-/// identifiant est valide (sinon la clé viendrait d'un texte quelconque).
-pub(crate) fn cles_activation(entreprise: Option<&str>, adresse: &str) -> Vec<Cle> {
+/// Titulaire d'une activation, déjà validé : entreprise (identifiant de la
+/// base, gamme entreprise) ou poste (identifiant de poste, ligne V1).
+#[derive(Clone, Copy, Debug)]
+pub(crate) enum Titulaire<'a> {
+    Entreprise(&'a str),
+    Poste(&'a str),
+}
+
+/// Clés d'une activation : l'adresse, puis le titulaire seulement s'il est
+/// valide (sinon la clé viendrait d'un texte quelconque).
+pub(crate) fn cles_activation(titulaire: Option<Titulaire>, adresse: &str) -> Vec<Cle> {
     let mut cles = vec![Cle {
         texte: format!("activation:ip:{adresse}"),
         regle: STRICTE,
     }];
-    if let Some(entreprise) = entreprise {
+    let titulaire = match titulaire {
+        Some(Titulaire::Entreprise(e)) => Some(format!("ent:{e}")),
+        Some(Titulaire::Poste(p)) => Some(format!("poste:{p}")),
+        None => None,
+    };
+    if let Some(t) = titulaire {
         cles.push(Cle {
-            texte: format!("activation:ent-ip:{entreprise}|{adresse}"),
+            texte: format!("activation:{t}|{adresse}"),
             regle: STRICTE,
         });
         cles.push(Cle {
-            texte: format!("activation:ent:{entreprise}"),
+            texte: format!("activation:{t}"),
             regle: LARGE,
         });
     }
@@ -277,8 +290,16 @@ mod tests {
     fn cle_d_entreprise_seulement_si_valide() {
         assert_eq!(cles_activation(None, "1.2.3.4").len(), 1);
         assert_eq!(
-            cles_activation(Some("0f8e1d2c-3b4a-4596-8778-695a4b3c2d1e"), "1.2.3.4").len(),
+            cles_activation(
+                Some(Titulaire::Entreprise(
+                    "0f8e1d2c-3b4a-4596-8778-695a4b3c2d1e"
+                )),
+                "1.2.3.4"
+            )
+            .len(),
             3
         );
+        let poste = cles_activation(Some(Titulaire::Poste("ABCD-EFGH-JKMN-PQRS")), "1.2.3.4");
+        assert_eq!(poste[2].texte, "activation:poste:ABCD-EFGH-JKMN-PQRS");
     }
 }

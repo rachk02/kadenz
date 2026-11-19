@@ -715,7 +715,169 @@ fn demande(code: &str, entreprise: &str) -> DemandeActivation {
         entreprise: entreprise.into(),
         client: "Boulangerie Wendé".into(),
         version: "1.0.1".into(),
+        poste: String::new(),
     }
+}
+
+/// Demande d'un poste de la ligne V1 (0.2.3).
+fn demande_v1(code: &str, poste: &str) -> DemandeActivation {
+    DemandeActivation {
+        code: code.into(),
+        entreprise: String::new(),
+        client: "Pharmacie Nabiiga".into(),
+        version: "0.2.3".into(),
+        poste: poste.into(),
+    }
+}
+
+const POSTE_1: &str = "ABCD-EFGH-JKMN-PQRS";
+const POSTE_2: &str = "0123-4567-89AB-CDEF";
+
+/// Licence V1 reçue : datée, pour ce poste, signée par la clé du portail et
+/// acceptée par la règle de clé par version (`verifier_selon`).
+fn licence_v1_lue(p: &Portail, texte: &str, poste: &str) -> kadenz_licence::Licence {
+    kadenz_licence::verifier_selon(texte, poste, &[], &[p.cle_publique()]).unwrap()
+}
+
+#[test]
+fn code_v1_active_puis_libere() {
+    let (p, d, editeur, a, _) = portail("codes-v1", "2026-11-15");
+    // Un code V1 vaut un poste.
+    assert!(matches!(
+        p.creer_codes_gamme(&a, "v1", "1", "3", "annuelle", &Module::TOUS),
+        Err(ErreurPortail::Validation(_))
+    ));
+    let code = p
+        .creer_codes_gamme(&a, "v1", "1", "1", "annuelle", &[Module::Devis])
+        .unwrap()
+        .remove(0);
+    assert_eq!(code.fiche.gamme, kadenz_portail::Gamme::V1);
+
+    // Code V1 présenté comme un code d'entreprise (logiciel 1.x) : refus [5].
+    assert_eq!(
+        refus(p.activer(&demande(&code.code, ENTREPRISE_A), "10.0.3.1")),
+        MODELES_ACTIVATION[5]
+    );
+    // Demande avec les deux, ou sans aucun : invalide [4].
+    let mut les_deux = demande_v1(&code.code, POSTE_1);
+    les_deux.entreprise = ENTREPRISE_A.into();
+    assert_eq!(
+        refus(p.activer(&les_deux, "10.0.3.1")),
+        MODELES_ACTIVATION[4]
+    );
+    assert_eq!(
+        refus(p.activer(&demande_v1(&code.code, "pas-un-poste"), "10.0.3.1")),
+        MODELES_ACTIVATION[4]
+    );
+
+    // Première activation : licence V1 datée, une année moins un jour.
+    let premiere = p
+        .activer(&demande_v1(&code.code, POSTE_1), "10.0.3.2")
+        .unwrap();
+    assert_eq!(
+        (
+            premiere.postes,
+            premiere.debut.as_str(),
+            premiere.echeance.as_str()
+        ),
+        (1, "2026-11-15", "2027-11-14")
+    );
+    let lue = licence_v1_lue(&p, &premiere.licence, POSTE_1);
+    assert_eq!(lue.echeance.as_deref(), Some("2027-11-14"));
+    assert_eq!(lue.modules, vec![Module::Devis]);
+    assert_eq!(lue.client, "Pharmacie Nabiiga");
+    // Le poste en minuscules est le même poste : même licence.
+    let encore = p
+        .activer(&demande_v1(&code.code, &POSTE_1.to_lowercase()), "10.0.3.3")
+        .unwrap();
+    assert_eq!(encore.licence, premiere.licence);
+    // Autre poste pendant que le code est lié : refus [6].
+    assert_eq!(
+        refus(p.activer(&demande_v1(&code.code, POSTE_2), "10.0.3.4")),
+        MODELES_ACTIVATION[6]
+    );
+    // Un revendeur qui n'a pas tiré le code ne le voit pas ; l'éditeur et le
+    // revendeur qui l'a tiré le libèrent.
+    let fiche = p.code(&a, code.fiche.id).unwrap();
+    assert_eq!(fiche.poste.as_deref(), Some(POSTE_1));
+    let rev_b = p.connecter("rev-b", MOT_DE_PASSE, "10.0.3.5").unwrap().1;
+    assert_eq!(
+        p.liberer_poste(&rev_b, code.fiche.id),
+        Err(ErreurPortail::Introuvable)
+    );
+    let liberee = p.liberer_poste(&a, code.fiche.id).unwrap();
+    assert_eq!(liberee.poste, None);
+    assert!(matches!(
+        p.liberer_poste(&editeur, code.fiche.id),
+        Err(ErreurPortail::Validation(_))
+    ));
+
+    // Nouveau poste : licence pour lui, même échéance que la première.
+    let seconde = p
+        .activer(&demande_v1(&code.code, POSTE_2), "10.0.3.6")
+        .unwrap();
+    assert_eq!(seconde.echeance, "2027-11-14");
+    assert_eq!(seconde.debut, "2026-11-15");
+    let lue = licence_v1_lue(&p, &seconde.licence, POSTE_2);
+    assert_eq!(lue.poste, POSTE_2);
+    // L'ancien poste est refusé à son tour.
+    assert_eq!(
+        refus(p.activer(&demande_v1(&code.code, POSTE_1), "10.0.3.7")),
+        MODELES_ACTIVATION[6]
+    );
+    // Un code V1 activé ne s'annule pas ; un code d'entreprise ne se libère pas.
+    assert!(matches!(
+        p.annuler_code(&a, code.fiche.id),
+        Err(ErreurPortail::Validation(_))
+    ));
+    let entreprise = p
+        .creer_codes(&a, "1", "2", "annuelle", &Module::TOUS)
+        .unwrap()
+        .remove(0);
+    assert_eq!(entreprise.fiche.gamme, kadenz_portail::Gamme::Entreprise);
+    assert!(matches!(
+        p.liberer_poste(&a, entreprise.fiche.id),
+        Err(ErreurPortail::Validation(_))
+    ));
+    // Code d'entreprise présenté par un poste V1 : refus [5].
+    assert_eq!(
+        refus(p.activer(&demande_v1(&entreprise.code, POSTE_1), "10.0.3.8")),
+        MODELES_ACTIVATION[5]
+    );
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+/// Route JSON : un poste V1 active son code avec le champ `poste`.
+#[test]
+fn activation_v1_par_la_route_json() {
+    let (p, d, _, a, _) = portail("codes-v1-json", "2026-11-15");
+    let code = p
+        .creer_codes_gamme(&a, "v1", "1", "1", "mensuelle", &Module::TOUS)
+        .unwrap()
+        .remove(0);
+    let cle = p.cle_publique();
+    let lance = web::lancer(
+        p,
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        ConfigWeb::default(),
+    )
+    .unwrap();
+    let corps = serde_json::json!({
+        "code": code.code,
+        "poste": POSTE_1,
+        "client": "Pharmacie Nabiiga",
+        "version": "0.2.3",
+    })
+    .to_string();
+    let r = requete(lance.adresse(), "POST", "/api/activation", None, &corps);
+    assert_eq!(r.statut, 200, "{}", r.corps);
+    let v: serde_json::Value = serde_json::from_str(&r.corps).unwrap();
+    assert_eq!(v["postes"], 1);
+    assert_eq!(v["echeance"], "2026-12-14");
+    let texte = v["licence"].as_str().unwrap();
+    assert!(kadenz_licence::verifier_selon(texte, POSTE_1, &[], &[cle]).is_ok());
+    lance.arreter();
+    let _ = std::fs::remove_dir_all(&d);
 }
 
 fn refus(r: Result<Activation, ErreurPortail>) -> String {

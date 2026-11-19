@@ -3,9 +3,12 @@
 //! licences émises sont acceptées par un banc d'essai. Exemple de
 //! développement : il n'est jamais livré.
 //!
-//! Usage : `portail_essai <dossier> [<adresse:port>]`. Au premier lancement,
-//! crée le compte éditeur `editeur` (mot de passe `motdepasse12`). Écoute par
-//! défaut sur `127.0.0.1:47382`. Arrêt : fin du processus.
+//! Usage : `portail_essai <dossier> [<adresse:port> [<mandataire>]]`. Au
+//! premier lancement, crée le compte éditeur `editeur` (mot de passe
+//! `phrase-de-passe-essai-12`). Écoute par défaut sur `127.0.0.1:47382`.
+//! `<mandataire>` : adresse IP du mandataire de confiance, comme
+//! `--mandataire` du vrai portail (essai derrière Caddy ou Funnel). Arrêt :
+//! fin du processus.
 
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -15,7 +18,7 @@ use ed25519_dalek::SigningKey;
 use kadenz_portail::Portail;
 use kadenz_portail::web::{self, ConfigWeb};
 
-const MOT_DE_PASSE: &str = "motdepasse12";
+const MOT_DE_PASSE: &str = "phrase-de-passe-essai-12";
 
 /// Clé d'essai du banc, la même que dans `banc_essai`.
 fn cle_essai() -> SigningKey {
@@ -25,7 +28,7 @@ fn cle_essai() -> SigningKey {
 fn main() -> ExitCode {
     let mut arguments = std::env::args().skip(1);
     let Some(dossier) = arguments.next().map(PathBuf::from) else {
-        eprintln!("usage : portail_essai <dossier> [<adresse:port>]");
+        eprintln!("usage : portail_essai <dossier> [<adresse:port> [<mandataire>]]");
         return ExitCode::FAILURE;
     };
     let ecoute: SocketAddr = match arguments.next() {
@@ -38,6 +41,16 @@ fn main() -> ExitCode {
             }
         },
     };
+    let mut config = ConfigWeb::default();
+    if let Some(m) = arguments.next() {
+        match m.parse() {
+            Ok(m) => config.mandataire = Some(m),
+            Err(_) => {
+                eprintln!("adresse de mandataire invalide : {m}");
+                return ExitCode::FAILURE;
+            }
+        }
+    }
     let portail = match Portail::ouvrir(&dossier, cle_essai()) {
         Ok(p) => p,
         Err(e) => {
@@ -47,9 +60,15 @@ fn main() -> ExitCode {
     };
     match portail.creer_editeur("editeur", "Éditeur d'essai", MOT_DE_PASSE) {
         Ok(_) => println!("Compte éditeur créé : editeur ; mot de passe : {MOT_DE_PASSE}"),
-        Err(_) => println!("Compte éditeur : editeur (déjà créé)"),
+        Err(kadenz_portail::ErreurPortail::Validation(m)) if m == "identifiant déjà pris" => {
+            println!("Compte éditeur : editeur (déjà créé)")
+        }
+        Err(e) => {
+            eprintln!("compte éditeur non créé : {e}");
+            return ExitCode::FAILURE;
+        }
     }
-    let lance = match web::lancer(portail, ecoute, ConfigWeb::default()) {
+    let lance = match web::lancer(portail, ecoute, config) {
         Ok(l) => l,
         Err(e) => {
             eprintln!("écoute sur {ecoute} impossible : {e}");

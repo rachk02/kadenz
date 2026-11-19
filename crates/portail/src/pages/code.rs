@@ -9,7 +9,7 @@ use super::{
     Cadre, Rubrique, chemin_entreprise, erreur_formulaire, heure, jeton, libelle_formule,
     liste_modules, page, titre,
 };
-use crate::{CODES_PAR_TIRAGE, CodeActivation, CodeCree, EtatCode};
+use crate::{CODES_PAR_TIRAGE, CodeActivation, CodeCree, EtatCode, Gamme};
 use kadenz_domaine::module::Module;
 
 fn retour(code: &CodeActivation) -> Markup {
@@ -27,8 +27,19 @@ fn grille(code: &CodeActivation) -> Markup {
         dl.grille-fiche {
             dt { "Code" }
             dd { span.identifiant.identifiant-court { "…" (code.fin) } }
+            dt { "Gamme" }
+            dd { (code.gamme.libelle()) }
             dt { "État" }
             dd { (code.etat.libelle()) }
+            @if code.gamme == Gamme::V1 {
+                dt { "Poste lié" }
+                dd {
+                    @match &code.poste {
+                        Some(p) => span.identifiant { (p) },
+                        None => "aucun",
+                    }
+                }
+            }
             @if let Some(e) = &code.entreprise {
                 dt { "Identifiant de l'entreprise" }
                 dd { span.identifiant { (e) } }
@@ -84,6 +95,17 @@ pub fn code(c: &Cadre, code: &CodeActivation) -> Markup {
             div.carte-interieur {
                 (grille(code))
                 p.aide { "Le code en clair n'est pas gardé par le portail : seule sa fin reste visible." }
+                @if code.gamme == Gamme::V1 && code.poste.is_some() {
+                    form.formulaire method="post" action={ "/codes/" (code.id) "/liberer" } {
+                        (jeton(c))
+                        p.aide {
+                            "Changement d'ordinateur du client : libérer le poste rend le code activable sur un autre poste, avec la même échéance. L'ancien poste garde sa licence jusqu'à l'échéance."
+                        }
+                        div.actions {
+                            button.bouton type="submit" { "Libérer le poste" }
+                        }
+                    }
+                }
                 @if code.etat == EtatCode::Libre {
                     form.formulaire method="post" action={ "/codes/" (code.id) "/annuler" } {
                         (jeton(c))
@@ -116,6 +138,14 @@ pub fn codes(c: &Cadre, liste: &[CodeActivation], erreur: Option<&str>) -> Marku
                         "Des codes sans paiement ni entreprise, à remettre ou à vendre : l'entreprise se lie au code quand le client l'active, et la licence est émise ce jour-là."
                     }
                     div.rangee {
+                        div.champ {
+                            label for="gamme" { "Gamme" }
+                            select #gamme name="gamme" required {
+                                option value=(Gamme::Entreprise.code()) selected { (Gamme::Entreprise.libelle()) }
+                                option value=(Gamme::V1.code()) { (Gamme::V1.libelle()) }
+                            }
+                            p.aide { "Un code de la ligne V1 vaut un poste." }
+                        }
                         div.champ {
                             label for="nombre" { "Nombre de codes" }
                             input #nombre type="number" name="nombre" min="1" max=(CODES_PAR_TIRAGE)
@@ -161,6 +191,7 @@ pub fn codes(c: &Cadre, liste: &[CodeActivation], erreur: Option<&str>) -> Marku
                         thead {
                             tr {
                                 th { "Code" }
+                                th { "Gamme" }
                                 th { "État" }
                                 th.nombre { "Postes" }
                                 th { "Formule" }
@@ -173,6 +204,7 @@ pub fn codes(c: &Cadre, liste: &[CodeActivation], erreur: Option<&str>) -> Marku
                             @for k in liste {
                                 tr {
                                     td.court { a href={ "/codes/" (k.id) } { "…" (k.fin) } }
+                                    td.court { (k.gamme.code()) }
                                     td.court { (k.etat.libelle()) }
                                     td.nombre { (k.postes) }
                                     td.court { (libelle_formule(k.formule)) }

@@ -211,10 +211,45 @@ impl EtatCode {
     }
 }
 
+/// Gamme d'un code (décision 75) : abonnement d'entreprise (serveur et
+/// postes 1.x) ou ligne V1 (un poste de la 0.2.x).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Gamme {
+    Entreprise,
+    V1,
+}
+
+impl Gamme {
+    pub fn code(self) -> &'static str {
+        match self {
+            Gamme::Entreprise => "entreprise",
+            Gamme::V1 => "v1",
+        }
+    }
+
+    pub fn libelle(self) -> &'static str {
+        match self {
+            Gamme::Entreprise => "Entreprise (serveur et postes)",
+            Gamme::V1 => "Ligne V1 (un poste)",
+        }
+    }
+
+    fn depuis_code(code: &str) -> Option<Gamme> {
+        match code {
+            "entreprise" => Some(Gamme::Entreprise),
+            "v1" => Some(Gamme::V1),
+            _ => None,
+        }
+    }
+}
+
 /// Code d'activation, sans le code en clair (jamais gardé).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CodeActivation {
     pub id: i64,
+    pub gamme: Gamme,
+    /// Poste lié en ce moment (code V1 activé, pas libéré).
+    pub poste: Option<String>,
     /// Cinq derniers caractères, pour le reconnaître.
     pub fin: String,
     pub postes: u32,
@@ -250,6 +285,8 @@ pub struct DemandeActivation {
     pub client: String,
     /// Version du programme, notée au journal.
     pub version: String,
+    /// Identifiant du poste (ligne V1) ; vide pour une demande d'entreprise.
+    pub poste: String,
 }
 
 /// Réponse d'activation : la licence signée et son résumé pour l'écran.
@@ -521,6 +558,22 @@ fn valider_texte(texte: &str, champ: &str, max: usize) -> Resultat<String> {
 
 /// Identifiant d'entreprise : un UUID, comme celui tiré à la création de la
 /// base de Kadenz.
+/// Identifiant de poste (`kadenz_licence::identifiant_poste`) : quatre
+/// groupes de quatre caractères en base 32 de Crockford, majuscules.
+fn valider_poste(poste: &str) -> Resultat<String> {
+    let poste = poste.trim().to_ascii_uppercase();
+    let alphabet = |c: char| c.is_ascii_digit() || (c.is_ascii_uppercase() && !"ILOU".contains(c));
+    let forme = poste.len() == 19
+        && poste.char_indices().all(|(i, c)| match i {
+            4 | 9 | 14 => c == '-',
+            _ => alphabet(c),
+        });
+    if !forme {
+        return refus("identifiant de poste invalide");
+    }
+    Ok(poste)
+}
+
 fn valider_uuid(identifiant: &str) -> Resultat<String> {
     let id = identifiant.trim().to_ascii_lowercase();
     let forme = id.len() == 36
@@ -650,13 +703,16 @@ fn paiement_depuis(r: &rusqlite::Row) -> rusqlite::Result<Paiement> {
 }
 
 const SELECT_CODE: &str = "SELECT k.id, k.fin, k.postes, k.formule, k.modules, k.paiement,
-            k.entreprise, k.etat, c.nom, k.cree_le, k.active_le, l.id, k.cree_par
+            k.entreprise, k.etat, c.nom, k.cree_le, k.active_le, l.id, k.cree_par, k.gamme,
+            (SELECT v.poste FROM licence_v1 v WHERE v.code = k.id AND v.liberee_le IS NULL)
      FROM code_activation k JOIN compte c ON c.id = k.cree_par
      LEFT JOIN licence_emise l ON l.code = k.id";
 
 fn code_depuis(r: &rusqlite::Row) -> rusqlite::Result<CodeActivation> {
     Ok(CodeActivation {
         id: r.get(0)?,
+        gamme: Gamme::depuis_code(&r.get::<_, String>(13)?).unwrap_or(Gamme::Entreprise),
+        poste: r.get(14)?,
         fin: r.get(1)?,
         postes: r.get(2)?,
         formule: Formule::depuis_code(&r.get::<_, String>(3)?).unwrap_or(Formule::Annuelle),
@@ -1489,6 +1545,7 @@ impl Portail {
             paiement.formule,
             &modules,
             Some((paiement.id, &paiement.entreprise)),
+            Gamme::Entreprise,
         )?;
         let details = format!(
             "code …{fin}, paiement {}, {} postes, formule {}, modules : {}",
@@ -1522,6 +1579,22 @@ impl Portail {
         formule: &str,
         modules: &[Module],
     ) -> Resultat<Vec<CodeCree>> {
+        self.creer_codes_gamme(acteur, "entreprise", nombre, postes, formule, modules)
+    }
+
+    /// Comme [`Portail::creer_codes`], pour une gamme choisie (décision 75) :
+    /// un code V1 vaut un poste.
+    pub fn creer_codes_gamme(
+        &self,
+        acteur: &Compte,
+        gamme: &str,
+        nombre: &str,
+        postes: &str,
+        formule: &str,
+        modules: &[Module],
+    ) -> Resultat<Vec<CodeCree>> {
+        let gamme = Gamme::depuis_code(gamme.trim())
+            .ok_or_else(|| ErreurPortail::Validation("gamme invalide".into()))?;
         let conn = self.conn();
         let acteur = relire(&conn, acteur)?;
         let nombre: u32 = nombre
@@ -1535,6 +1608,9 @@ impl Portail {
                 ))
             })?;
         let postes = valider_postes(postes)?;
+        if gamme == Gamme::V1 && postes != 1 {
+            return refus("un code de la ligne V1 vaut un poste");
+        }
         let formule = valider_formule(formule)?;
         let modules: Vec<Module> = Module::TOUS
             .into_iter()
@@ -1543,14 +1619,22 @@ impl Portail {
         let transaction = conn.unchecked_transaction()?;
         let mut tires = Vec::new();
         for _ in 0..nombre {
-            let (id, code, fin) =
-                inserer_code(&transaction, &acteur, postes, formule, &modules, None)?;
+            let (id, code, fin) = inserer_code(
+                &transaction,
+                &acteur,
+                postes,
+                formule,
+                &modules,
+                None,
+                gamme,
+            )?;
             tires.push((id, code, fin));
         }
         let fins: Vec<&str> = tires.iter().map(|t| t.2.as_str()).collect();
         let details = format!(
-            "{nombre} codes à vendre (…{}), {postes} postes, formule {}, modules : {}",
+            "{nombre} codes à vendre (…{}), gamme {}, {postes} postes, formule {}, modules : {}",
             fins.join(", …"),
+            gamme.code(),
             formule.code(),
             liste_modules(&modules)
         );
@@ -1628,6 +1712,153 @@ impl Portail {
         code_permis(&conn, &acteur, id)
     }
 
+    /// Libère le poste lié à un code V1 (« Libérer le poste », décision 75) :
+    /// l'éditeur, ou le compte qui a tiré le code. Le code redevient
+    /// activable sur un autre poste, avec la même échéance.
+    pub fn liberer_poste(&self, acteur: &Compte, id: i64) -> Resultat<CodeActivation> {
+        let conn = self.conn();
+        let acteur = relire(&conn, acteur)?;
+        let code = code_permis(&conn, &acteur, id)?;
+        let createur: i64 = conn.query_row(
+            "SELECT cree_par FROM code_activation WHERE id = ?1",
+            [id],
+            |r| r.get(0),
+        )?;
+        if acteur.role != Role::Editeur && createur != acteur.id {
+            return Err(ErreurPortail::Interdit);
+        }
+        if code.gamme != Gamme::V1 {
+            return refus("seul un code de la ligne V1 est lié à un poste");
+        }
+        let Some(poste) = &code.poste else {
+            return refus("aucun poste n'est lié à ce code");
+        };
+        conn.execute(
+            "UPDATE licence_v1 SET liberee_le = ?2, liberee_par = ?3
+             WHERE code = ?1 AND liberee_le IS NULL",
+            params![id, maintenant(), acteur.id],
+        )?;
+        noter(
+            &conn,
+            Some(acteur.id),
+            "poste_libere",
+            None,
+            &format!("code …{}, poste {poste}", code.fin),
+        )?;
+        code_permis(&conn, &acteur, id)
+    }
+
+    /// Activation d'un code V1 pour un poste (décision 75) : même poste,
+    /// même licence ; autre poste pendant que le code est lié, refus [6] ;
+    /// code libre ou libéré, licence V1 datée signée par la clé du portail.
+    /// Après une libération, l'échéance reste celle de la première activation
+    /// (un changement de poste ne prolonge rien).
+    fn activer_v1(
+        &self,
+        conn: &Connection,
+        trouve: &CodeActivation,
+        poste: &str,
+        client: &str,
+        demande: &DemandeActivation,
+        adresse: &str,
+    ) -> Resultat<Activation> {
+        let en_cours: Option<(String, String, String, String)> = conn
+            .query_row(
+                "SELECT poste, texte, debut, echeance FROM licence_v1
+                 WHERE code = ?1 AND liberee_le IS NULL",
+                [trouve.id],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)),
+            )
+            .optional()?;
+        if let Some((lie, texte, debut, echeance)) = en_cours {
+            if lie != poste {
+                return Err(ErreurPortail::Validation(MODELES_ACTIVATION[6].into()));
+            }
+            noter(
+                conn,
+                None,
+                "code_reactive",
+                None,
+                &format!("code …{}, poste {poste}, adresse {adresse}", trouve.fin),
+            )?;
+            return Ok(Activation {
+                licence: texte,
+                postes: 1,
+                formule: trouve.formule,
+                debut,
+                echeance,
+            });
+        }
+        let aujourdhui = self.aujourdhui();
+        let premiere: Option<(String, String)> = conn
+            .query_row(
+                "SELECT debut, echeance FROM licence_v1 WHERE code = ?1 ORDER BY id LIMIT 1",
+                [trouve.id],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .optional()?;
+        let (debut, echeance) = match premiere {
+            Some(p) => p,
+            None => {
+                let veille = aujourdhui.pred_opt().unwrap_or(aujourdhui);
+                (
+                    aujourdhui.format("%Y-%m-%d").to_string(),
+                    ajouter_periode(veille, trouve.formule)
+                        .format("%Y-%m-%d")
+                        .to_string(),
+                )
+            }
+        };
+        let licence = kadenz_licence::Licence {
+            client: client.to_string(),
+            poste: poste.to_string(),
+            modules: trouve.modules.clone(),
+            emise_le: aujourdhui.format("%Y-%m-%d").to_string(),
+            echeance: Some(echeance.clone()),
+            postes: 1,
+        };
+        let texte = kadenz_licence::emettre(&licence, &self.0.cle)
+            .map_err(|e| ErreurPortail::Interne(e.modele.to_string()))?;
+        let transaction = conn.unchecked_transaction()?;
+        transaction.execute(
+            "INSERT INTO licence_v1 (code, poste, client, texte, debut, echeance, emise_le)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            params![
+                trouve.id,
+                poste,
+                client,
+                texte,
+                debut,
+                echeance,
+                maintenant()
+            ],
+        )?;
+        transaction.execute(
+            "UPDATE code_activation SET etat = 'active', active_le = coalesce(active_le, ?2)
+             WHERE id = ?1",
+            params![trouve.id, maintenant()],
+        )?;
+        noter(
+            &transaction,
+            None,
+            "code_v1_active",
+            None,
+            &format!(
+                "code …{}, poste {poste}, client {client}, échéance {echeance}, version {}, adresse {adresse}",
+                trouve.fin,
+                demande.version.trim()
+            ),
+        )?;
+        transaction.commit()?;
+        Ok(Activation {
+            licence: texte,
+            postes: 1,
+            formule: trouve.formule,
+            debut,
+            echeance,
+        })
+    }
+
     /// Activation demandée par le programme du client, sans compte connecté
     /// (route `/api/activation`). Code libre : la licence est émise, signée et
     /// le code passe à « activé » ; code déjà activé par la même entreprise :
@@ -1635,7 +1866,13 @@ impl Portail {
     pub fn activer(&self, demande: &DemandeActivation, adresse: &str) -> Resultat<Activation> {
         let entreprise_demandee = demande.entreprise.trim().to_ascii_lowercase();
         let entreprise_valide = valider_uuid(&entreprise_demandee).ok();
-        let cles = frein::cles_activation(entreprise_valide.as_deref(), adresse);
+        let poste_valide = valider_poste(&demande.poste).ok();
+        let titulaire = match (&entreprise_valide, &poste_valide) {
+            (Some(e), None) => Some(frein::Titulaire::Entreprise(e)),
+            (None, Some(p)) => Some(frein::Titulaire::Poste(p)),
+            _ => None,
+        };
+        let cles = frein::cles_activation(titulaire, adresse);
         let conn = self.conn();
         if let Some(attente) = frein::attente(&conn, &cles, secondes())? {
             return Err(ErreurPortail::Freine(attente));
@@ -1645,8 +1882,12 @@ impl Portail {
             Ok(_) => frein::reussite(&conn, &cles)?,
             Err(ErreurPortail::Validation(modele)) => {
                 frein::echec(&conn, &cles, secondes())?;
+                let titulaire = match &poste_valide {
+                    Some(p) => format!("poste {p}"),
+                    None => format!("entreprise {entreprise_demandee}"),
+                };
                 let details = format!(
-                    "entreprise {entreprise_demandee}, adresse {adresse}, version {} : {modele}",
+                    "{titulaire}, adresse {adresse}, version {} : {modele}",
                     demande.version.trim()
                 );
                 // Un journal en échec ne change pas la réponse : le refus reste un refus.
@@ -1668,7 +1909,12 @@ impl Portail {
         let utiles = code_court::normaliser(&code);
         // Refus du portail traduisibles par le client : un modèle fixe.
         let invalide = |_| ErreurPortail::Validation(MODELES_ACTIVATION[4].into());
-        let identifiant = valider_uuid(&demande.entreprise).map_err(invalide)?;
+        // Une demande porte une entreprise (gamme entreprise) ou un poste
+        // (ligne V1), jamais les deux.
+        let par_poste = !demande.poste.trim().is_empty();
+        if par_poste == !demande.entreprise.trim().is_empty() {
+            return Err(ErreurPortail::Validation(MODELES_ACTIVATION[4].into()));
+        }
         let client = valider_texte(&demande.client, "nom du client", 200).map_err(invalide)?;
         let trouve = conn
             .query_row(
@@ -1679,6 +1925,20 @@ impl Portail {
             .optional()?
             .filter(|c| c.etat != EtatCode::Annule)
             .ok_or_else(inconnu)?;
+        // Code d'une gamme présenté par un logiciel de l'autre : refus [5].
+        let gamme_demandee = if par_poste {
+            Gamme::V1
+        } else {
+            Gamme::Entreprise
+        };
+        if trouve.gamme != gamme_demandee {
+            return Err(ErreurPortail::Validation(MODELES_ACTIVATION[5].into()));
+        }
+        if par_poste {
+            let poste = valider_poste(&demande.poste).map_err(invalide)?;
+            return self.activer_v1(conn, &trouve, &poste, &client, demande, adresse);
+        }
+        let identifiant = valider_uuid(&demande.entreprise).map_err(invalide)?;
         if trouve
             .entreprise
             .as_deref()
@@ -1886,14 +2146,15 @@ fn inserer_code(
     formule: Formule,
     modules: &[Module],
     lien: Option<(i64, &str)>,
+    gamme: Gamme,
 ) -> Resultat<(i64, String, String)> {
     let code = code_court::tirer().map_err(ErreurPortail::Interne)?;
     let utiles = code_court::normaliser(&code);
     let fin: String = utiles.chars().skip(code_court::LONGUEUR - 5).collect();
     conn.execute(
         "INSERT INTO code_activation (empreinte, fin, postes, formule, modules, paiement,
-                                      entreprise, cree_par, cree_le)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                                      entreprise, cree_par, cree_le, gamme)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
         params![
             empreinte_code(&utiles),
             fin,
@@ -1904,6 +2165,7 @@ fn inserer_code(
             lien.map(|l| l.1),
             acteur.id,
             maintenant(),
+            gamme.code(),
         ],
     )?;
     Ok((conn.last_insert_rowid(), code, fin))
