@@ -12,6 +12,7 @@
 
 mod base;
 mod chaine;
+mod coffre;
 mod frein;
 pub mod pages;
 mod sessions;
@@ -427,6 +428,9 @@ fn refus<T>(message: &str) -> Resultat<T> {
 struct Interieur {
     conn: Mutex<Connection>,
     cle: SigningKey,
+    /// Chiffrement des secrets de double authentification (clé dérivée de
+    /// `cle`, module `coffre`).
+    coffre: coffre::Coffre,
     horloge: Horloge,
     sessions: Mutex<Sessions>,
     hachage: Porte,
@@ -672,6 +676,7 @@ fn code_de_secours() -> Resultat<String> {
 /// pour le journal.
 fn verifier_second_facteur(
     conn: &Connection,
+    coffre: &coffre::Coffre,
     compte: i64,
     saisi: &str,
 ) -> Resultat<Option<&'static str>> {
@@ -687,9 +692,7 @@ fn verifier_second_facteur(
         return Ok(None);
     };
     if saisi.len() == totp::CHIFFRES as usize && saisi.bytes().all(|o| o.is_ascii_digit()) {
-        let octets = totp::decoder(&secret).ok_or_else(|| {
-            ErreurPortail::Interne("secret de double authentification illisible".into())
-        })?;
+        let octets = octets_du_secret(coffre, compte, &secret)?;
         let Some(pas) = totp::verifier(&octets, saisi, secondes() as u64, dernier_pas) else {
             return Ok(None);
         };
@@ -706,6 +709,50 @@ fn verifier_second_facteur(
         params![compte, empreinte_code(saisi), maintenant()],
     )?;
     Ok((pris >= 1).then_some("code de secours"))
+}
+
+/// Secret (Base32) d'un compte, déchiffré. Illisible : clé du portail
+/// changée ou valeur altérée ; le compte passe par
+/// `retirer-double-authentification`.
+fn secret_du_compte(coffre: &coffre::Coffre, compte: i64, stocke: &str) -> Resultat<String> {
+    coffre.dechiffrer(compte, stocke).ok_or_else(|| {
+        ErreurPortail::Interne(format!(
+            "secret de double authentification du compte {compte} illisible (clé du portail changée ?)"
+        ))
+    })
+}
+
+fn octets_du_secret(coffre: &coffre::Coffre, compte: i64, stocke: &str) -> Resultat<Vec<u8>> {
+    totp::decoder(&secret_du_compte(coffre, compte, stocke)?)
+        .ok_or_else(|| ErreurPortail::Interne("secret de double authentification illisible".into()))
+}
+
+/// Au démarrage : chiffre les secrets encore en clair (bases d'avant le
+/// schéma 10), en une transaction. Sans effet s'ils le sont tous ; un échec
+/// ne change rien et arrête le démarrage.
+fn chiffrer_secrets(conn: &Connection, coffre: &coffre::Coffre) -> Resultat<()> {
+    let en_clair: Vec<(i64, String)> = conn
+        .prepare("SELECT compte, secret FROM double_authentification")?
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?
+        .collect::<rusqlite::Result<Vec<(i64, String)>>>()?
+        .into_iter()
+        .filter(|(_, secret)| !coffre::chiffre(secret))
+        .collect();
+    if en_clair.is_empty() {
+        return Ok(());
+    }
+    let transaction = conn.unchecked_transaction()?;
+    for (compte, secret) in &en_clair {
+        let stocke = coffre
+            .chiffrer(*compte, secret)
+            .map_err(ErreurPortail::Interne)?;
+        transaction.execute(
+            "UPDATE double_authentification SET secret = ?2 WHERE compte = ?1",
+            params![compte, stocke],
+        )?;
+    }
+    transaction.commit()?;
+    Ok(())
 }
 
 fn valider_uuid(identifiant: &str) -> Resultat<String> {
@@ -1089,9 +1136,12 @@ impl Portail {
     /// Comme [`Portail::ouvrir`], avec une horloge choisie (essais).
     pub fn ouvrir_avec(dossier: &Path, cle: SigningKey, horloge: Horloge) -> Resultat<Portail> {
         let conn = base::ouvrir(dossier)?;
+        let coffre = coffre::Coffre::depuis_cle(&cle);
+        chiffrer_secrets(&conn, &coffre)?;
         Ok(Portail(Arc::new(Interieur {
             conn: Mutex::new(conn),
             cle,
+            coffre,
             horloge,
             sessions: Mutex::new(Sessions::default()),
             hachage: Porte::new(HACHAGES_SIMULTANES),
@@ -1424,7 +1474,7 @@ impl Portail {
             return Err(ErreurPortail::Freine(attente));
         }
         let saisi = normaliser_code(code);
-        let Some(moyen) = verifier_second_facteur(&conn, compte_id, &saisi)? else {
+        let Some(moyen) = verifier_second_facteur(&conn, &self.0.coffre, compte_id, &saisi)? else {
             frein::echec(&conn, &cles, secondes())?;
             noter(
                 &conn,
@@ -1491,14 +1541,19 @@ impl Portail {
             .optional()?;
         match ligne {
             Some((_, Some(_))) => refus("la double authentification est déjà active"),
-            Some((secret, None)) => Ok(secret),
+            Some((stocke, None)) => secret_du_compte(&self.0.coffre, acteur.id, &stocke),
             None => {
                 let mut octets = [0u8; totp::OCTETS_SECRET];
                 getrandom::fill(&mut octets).map_err(|e| ErreurPortail::Interne(e.to_string()))?;
                 let secret = totp::encoder(&octets);
+                let stocke = self
+                    .0
+                    .coffre
+                    .chiffrer(acteur.id, &secret)
+                    .map_err(ErreurPortail::Interne)?;
                 conn.execute(
                     "INSERT INTO double_authentification (compte, secret) VALUES (?1, ?2)",
-                    params![acteur.id, secret],
+                    params![acteur.id, stocke],
                 )?;
                 Ok(secret)
             }
@@ -1525,9 +1580,7 @@ impl Portail {
         let Some(secret) = secret else {
             return refus("aucune mise en place en cours : rechargez la page");
         };
-        let octets = totp::decoder(&secret).ok_or_else(|| {
-            ErreurPortail::Interne("secret de double authentification illisible".into())
-        })?;
+        let octets = octets_du_secret(&self.0.coffre, acteur.id, &secret)?;
         let Some(pas) = totp::verifier(&octets, &normaliser_code(code), secondes() as u64, 0)
         else {
             return refus(

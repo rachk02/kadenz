@@ -14,6 +14,7 @@
 | 0.10 | 2026-11-19 | Cloudflare Tunnel : image cloudflared relevée sur le Dell par kadenz-51 (2026.10.7, empreinte, utilisateur 65532, `--token-file` présent) ; adresse du client lue dans `CF-Connecting-IP` (vérification d'OpenCode, option `--entete-client` du portail) ; relais : piste de la redirection de port sur la box retenue pour plus tard. |
 | 0.11 | 2026-11-19 | Cloudflare Tunnel : tunnel de l'utilisateur relié, conteneur provisoire `kadenz-tunnel` sur le Dell (kadenz-51), à retirer avant le démarrage par la surcouche ; jeton à nettoyer de sa fin de ligne. |
 | 0.12 | 2026-11-19 | Portail en service sur le Dell (kadenz-51, accord de l'utilisateur). Point d'entrée unique `kadenz-compose` : la surcouche publique est gardée à chaque appel dès que `KADENZ_PUBLIC=1`, garde-fou contre la recréation du portail sans elle ; `kadenz-sauvegarde` passe par lui. |
+| 0.13 | 2026-11-19 | Secrets de double authentification chiffrés avec une clé dérivée de celle du portail (spécification du portail 0.11) : changer la clé du portail demande `retirer-double-authentification` pour chaque éditeur. |
 
 Statut : **proposé**. Le VPS, son prestataire, le nom de domaine et la mise en service restent à la décision de l'utilisateur (décisions 16 et 69 du cahier de la phase 2). Le relais et le portail y iront une fois leur implémentation finie (décision de l'utilisateur du 2026-11-18). Pour l'instant, ni domaine ni VPS : hébergement sur le Dell avec Tailscale, et Vercel au besoin (décision du 2026-11-19, section 7). Rien ici n'a été essayé sur un VPS ; chaque fichier est à relire et à essayer d'abord sur une machine d'essai.
 
@@ -321,6 +322,7 @@ iptables -I DOCKER-USER 6 -j DROP
 - La base n'est pas chiffrée au repos : la copie part chiffrée, hors du VPS. L'utilisateur emploie déjà restic vers OneDrive pour son serveur maison ; la même méthode convient, avec un dépôt restic propre au VPS et un mot de passe gardé hors du VPS. La destination reste à son choix.
 - Relais : après chaque restauration, comparer l'empreinte affichée au démarrage à celle réglée sur les serveurs d'entreprise (une restauration qui oublie le certificat ou la clé en crée une nouvelle sans prévenir).
 - La clé du portail n'entre pas dans ces sauvegardes : elle a sa copie hors ligne chez l'éditeur.
+- Les secrets de double authentification sont chiffrés dans la base avec une clé dérivée de celle du portail (spécification du portail, section 9). Restaurer une base avec une autre clé du portail, ou changer la clé, les rend illisibles : pour chaque éditeur, `kadenz-portail --dossier <dossier> retirer-double-authentification <identifiant>`, puis nouvelle mise en place à sa connexion. La première ouverture par le programme du schéma 10 chiffre les secrets encore en clair ; essayer cette ouverture sur une copie de la base avant de remplacer le portail en service.
 - Durée de conservation du journal du portail (adresses IP et identifiants) : à décider (réponse 5, points légers).
 
 ## 6. Avant la mise en ligne

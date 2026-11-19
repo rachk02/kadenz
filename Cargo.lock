@@ -3298,6 +3298,7 @@ dependencies = [
  "kadenz-maj",
  "kadenz-stockage",
  "maud",
+ "ring",
  "rpassword",
  "rusqlite",
  "serde_json",

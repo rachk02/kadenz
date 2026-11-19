@@ -201,6 +201,14 @@ ALTER TABLE frein ADD COLUMN signale INTEGER;
     "
 CREATE UNIQUE INDEX licence_code ON licence_emise (code) WHERE code IS NOT NULL;
 ",
+    // 9 vers 10 : secrets de double authentification chiffrés (module
+    // `coffre`, audit d'OpenCode, lot B), au démarrage, après la migration.
+    // Aucun changement de table : la version sert de marqueur, pour qu'un
+    // programme plus ancien refuse la base au lieu de lire un secret chiffré
+    // comme du Base32 et de bloquer la connexion sans rien dire.
+    "
+-- marqueur : secrets de double authentification chiffrés
+",
 ];
 
 /// Version du schéma qui crée la chaîne du journal.

@@ -1863,3 +1863,93 @@ fn corps_trop_long_refuse_sans_lecture() {
     lance.arreter();
     let _ = std::fs::remove_dir_all(d);
 }
+
+/// Valeur stockée du secret de double authentification d'un compte.
+fn secret_stocke(d: &std::path::Path, compte: i64) -> String {
+    let conn = rusqlite::Connection::open(d.join("portail.sqlite")).unwrap();
+    conn.query_row(
+        "SELECT secret FROM double_authentification WHERE compte = ?1",
+        [compte],
+        |r| r.get(0),
+    )
+    .unwrap()
+}
+
+/// Lot B : le secret est stocké chiffré ; recopié sur un autre compte dans
+/// la base, il ne sert à rien (donnée associée : l'identifiant du compte).
+#[test]
+fn secret_chiffre_et_lie_a_son_compte() {
+    let d = dossier("secret-chiffre");
+    let p = Portail::ouvrir(&d, cle_essai()).unwrap();
+    let editeur = p.creer_editeur("editeur", "Éditeur", MOT_DE_PASSE).unwrap();
+    let revendeur = p
+        .creer_revendeur(&editeur, "revendeur", "Revendeur", MOT_DE_PASSE)
+        .unwrap();
+    let secret = p.preparer_double_authentification(&editeur).unwrap();
+    let stocke = secret_stocke(&d, editeur.id);
+    assert!(stocke.starts_with("c1:"), "{stocke}");
+    assert!(!stocke.contains(&secret));
+    // Page rechargée : le même secret, en clair pour l'application.
+    assert_eq!(
+        p.preparer_double_authentification(&editeur).unwrap(),
+        secret
+    );
+    let code = kadenz_portail::totp::code_pour(&secret, maintenant_unix()).unwrap();
+    p.activer_double_authentification(&editeur, &code).unwrap();
+
+    // Le secret de l'éditeur recopié sur le revendeur.
+    {
+        let conn = rusqlite::Connection::open(d.join("portail.sqlite")).unwrap();
+        conn.execute(
+            "INSERT INTO double_authentification (compte, secret, active_le, dernier_pas)
+             SELECT ?2, secret, active_le, 0 FROM double_authentification WHERE compte = ?1",
+            [editeur.id, revendeur.id],
+        )
+        .unwrap();
+    }
+    let etape = match p.connecter("revendeur", MOT_DE_PASSE, "10.0.6.1") {
+        Err(ErreurPortail::DeuxiemeFacteur(e)) => e,
+        autre => panic!("étape du code attendue : {autre:?}"),
+    };
+    let code = kadenz_portail::totp::code_pour(&secret, maintenant_unix() + 30).unwrap();
+    assert!(matches!(
+        p.confirmer_code(&etape, &code, "10.0.6.1"),
+        Err(ErreurPortail::Interne(_))
+    ));
+    drop(p);
+    let _ = std::fs::remove_dir_all(d);
+}
+
+/// Lot B : une base d'avant le chiffrement (secret en clair) est chiffrée au
+/// démarrage, sans perte : le même secret reste valable.
+#[test]
+fn secret_en_clair_chiffre_au_demarrage() {
+    let d = dossier("secret-en-clair");
+    let p = Portail::ouvrir(&d, cle_essai()).unwrap();
+    let editeur = p.creer_editeur("editeur", "Éditeur", MOT_DE_PASSE).unwrap();
+    drop(p);
+    let secret = "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
+    {
+        let conn = rusqlite::Connection::open(d.join("portail.sqlite")).unwrap();
+        conn.execute(
+            "INSERT INTO double_authentification (compte, secret) VALUES (?1, ?2)",
+            rusqlite::params![editeur.id, secret],
+        )
+        .unwrap();
+    }
+    let p = Portail::ouvrir(&d, cle_essai()).unwrap();
+    let stocke = secret_stocke(&d, editeur.id);
+    assert!(stocke.starts_with("c1:"), "{stocke}");
+    assert_eq!(
+        p.preparer_double_authentification(&editeur).unwrap(),
+        secret
+    );
+    let code = kadenz_portail::totp::code_pour(secret, maintenant_unix()).unwrap();
+    assert!(p.activer_double_authentification(&editeur, &code).is_ok());
+    // Une seconde ouverture ne rechiffre rien.
+    drop(p);
+    let p = Portail::ouvrir(&d, cle_essai()).unwrap();
+    assert_eq!(secret_stocke(&d, editeur.id), stocke);
+    drop(p);
+    let _ = std::fs::remove_dir_all(d);
+}
