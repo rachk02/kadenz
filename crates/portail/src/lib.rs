@@ -33,7 +33,7 @@ use kadenz_licence::entreprise::{self as lic, Emetteur, Formule, LicenceEntrepri
 use rusqlite::{Connection, OptionalExtension, params};
 use sha2::{Digest, Sha256};
 
-pub use chaine::{EntreeChainee, EtatChaine};
+pub use chaine::{Archivage, EntreeChainee, EtatChaine, lire_export};
 
 use sessions::Sessions;
 
@@ -2584,6 +2584,31 @@ impl Portail {
     /// serveur).
     pub fn verifier_journal(&self) -> Resultat<EtatChaine> {
         Ok(chaine::verifier(&self.conn())?)
+    }
+
+    /// Export du journal (depuis la première entrée) et base vérifiés
+    /// ensemble, avant un archivage (programme).
+    pub fn verifier_journal_avec_export(&self, export: &[EntreeChainee]) -> Resultat<EtatChaine> {
+        let conn = self.conn();
+        // Une lecture cohérente de la base, même si le portail écrit.
+        let transaction = conn.unchecked_transaction()?;
+        Ok(chaine::verifier_avec_export(&transaction, export)?)
+    }
+
+    /// Retire de la base les entrées du journal jusqu'à `jusqua` (sceau :
+    /// son empreinte), si toutes ont plus de `jours` jours (programme ; voir
+    /// `chaine::archiver`). L'export doit avoir été vérifié avec la base
+    /// juste avant.
+    pub fn archiver_journal(&self, jusqua: i64, sceau: &str, jours: u32) -> Resultat<Archivage> {
+        if jours == 0 {
+            return Err(ErreurPortail::Validation(
+                "durée de conservation du journal : un jour au moins".into(),
+            ));
+        }
+        let limite = (Utc::now() - chrono::Duration::days(i64::from(jours)))
+            .format("%Y-%m-%d %H:%M:%S")
+            .to_string();
+        chaine::archiver(&self.conn(), jusqua, sceau, &limite)
     }
 
     /// Entrées du journal après l'identifiant `depuis`, avec leurs

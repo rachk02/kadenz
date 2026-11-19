@@ -20,9 +20,15 @@
 //!   retire la double authentification d'un compte (téléphone perdu sans
 //!   code de secours) ; journalisé, le compte la remet en place à sa
 //!   prochaine connexion. Sans la clé du portail.
-//! - `kadenz-portail --dossier <dossier> journal-verifier` : recalcule la
-//!   chaîne de hachage du journal ; affiche le nombre d'entrées et le sceau,
-//!   code de sortie 1 si la chaîne est rompue.
+//! - `kadenz-portail --dossier <dossier> journal-verifier [--archive <fichier>|-]` :
+//!   recalcule la chaîne de hachage du journal ; affiche le nombre d'entrées
+//!   et le sceau, code de sortie 1 si la chaîne est rompue. Avec
+//!   `--archive`, vérifie aussi l'export complet (`journal.jsonl`, `-` pour
+//!   l'entrée standard) avec la base, avant un archivage.
+//! - `kadenz-portail --dossier <dossier> journal-archiver --jusqua <id> --sceau <empreinte> --jours <n>` :
+//!   retire de la base les entrées jusqu'à `<id>` (sceau : son empreinte,
+//!   dans l'export), si toutes ont plus de `<n>` jours ; refus sans rien
+//!   changer sinon. Elles ne restent que dans l'export.
 //! - `kadenz-portail --dossier <dossier> journal-exporter [--depuis <id>]` :
 //!   écrit sur la sortie standard les entrées du journal après `<id>`, une
 //!   ligne JSON par entrée avec son empreinte, à copier hors du serveur.
@@ -44,7 +50,8 @@ fn usage() -> ExitCode {
         "usage : kadenz-portail --dossier <dossier> --cle <fichier> [--ecoute <adresse:port>] [--mandataire <adresse> [--entete-client x-forwarded-for|cf-connecting-ip]]\n\
          \x20       kadenz-portail --dossier <dossier> creer-editeur <identifiant> <nom>\n\
          \x20       kadenz-portail --dossier <dossier> retirer-double-authentification <identifiant>\n\
-         \x20       kadenz-portail --dossier <dossier> journal-verifier\n\
+         \x20       kadenz-portail --dossier <dossier> journal-verifier [--archive <fichier>|-]\n\
+         \x20       kadenz-portail --dossier <dossier> journal-archiver --jusqua <id> --sceau <empreinte> --jours <n>\n\
          \x20       kadenz-portail --dossier <dossier> journal-exporter [--depuis <id>]\n\
          \x20       kadenz-portail sante [--ecoute <adresse:port>]"
     );
@@ -61,11 +68,38 @@ fn ouvrir_sans_cle(dossier: &std::path::Path) -> Result<Portail, ExitCode> {
     })
 }
 
-fn verifier_journal(portail: &Portail) -> ExitCode {
-    match portail.verifier_journal() {
+/// Lit l'export du journal dans un fichier, ou sur l'entrée standard (`-`).
+fn lire_archive(chemin: &str) -> Result<Vec<kadenz_portail::EntreeChainee>, String> {
+    let mut texte = String::new();
+    if chemin == "-" {
+        std::io::stdin()
+            .lock()
+            .read_to_string(&mut texte)
+            .map_err(|e| format!("lecture de l'export sur l'entrée standard : {e}"))?;
+    } else {
+        texte = std::fs::read_to_string(chemin).map_err(|e| format!("{chemin} : {e}"))?;
+    }
+    kadenz_portail::lire_export(&texte)
+}
+
+fn verifier_journal(portail: &Portail, archive: Option<&str>) -> ExitCode {
+    let resultat = match archive {
+        None => portail.verifier_journal(),
+        Some(chemin) => match lire_archive(chemin) {
+            Ok(export) => portail.verifier_journal_avec_export(&export),
+            Err(e) => {
+                eprintln!("{e}");
+                return ExitCode::FAILURE;
+            }
+        },
+    };
+    match resultat {
         Ok(e) => match e.rupture {
             None => {
                 println!("Chaîne du journal intacte : {} entrées.", e.entrees);
+                if let Some(d) = e.depart {
+                    println!("Entrées archivées jusqu'à {d}.");
+                }
                 println!("Sceau : {}", e.sceau);
                 ExitCode::SUCCESS
             }
@@ -122,6 +156,11 @@ fn main() -> ExitCode {
     let mut verifier = false;
     let mut retirer: Option<String> = None;
     let mut exporter: Option<i64> = None;
+    let mut archive: Option<String> = None;
+    let mut archiver = false;
+    let mut jusqua: Option<i64> = None;
+    let mut sceau: Option<String> = None;
+    let mut jours: Option<u32> = None;
     let mut arguments = std::env::args().skip(1);
     while let Some(argument) = arguments.next() {
         match argument.as_str() {
@@ -146,6 +185,23 @@ fn main() -> ExitCode {
             }
             "sante" => sante = true,
             "journal-verifier" => verifier = true,
+            "--archive" => match arguments.next() {
+                Some(a) => archive = Some(a),
+                None => return usage(),
+            },
+            "journal-archiver" => archiver = true,
+            "--jusqua" => match arguments.next().and_then(|a| a.parse().ok()) {
+                Some(j) => jusqua = Some(j),
+                None => return usage(),
+            },
+            "--sceau" => match arguments.next() {
+                Some(s) => sceau = Some(s),
+                None => return usage(),
+            },
+            "--jours" => match arguments.next().and_then(|a| a.parse().ok()) {
+                Some(j) => jours = Some(j),
+                None => return usage(),
+            },
             "retirer-double-authentification" => match arguments.next() {
                 Some(i) => retirer = Some(i),
                 None => return usage(),
@@ -188,6 +244,36 @@ fn main() -> ExitCode {
         };
     }
 
+    if archiver {
+        let (Some(jusqua), Some(sceau), Some(jours)) = (jusqua, sceau, jours) else {
+            return usage();
+        };
+        let portail = match ouvrir_sans_cle(&dossier) {
+            Ok(p) => p,
+            Err(code) => return code,
+        };
+        return match portail.archiver_journal(jusqua, &sceau, jours) {
+            Ok(a) if a.retirees == 0 => {
+                println!(
+                    "Rien de plus à archiver : entrées archivées jusqu'à {}.",
+                    a.jusqua
+                );
+                ExitCode::SUCCESS
+            }
+            Ok(a) => {
+                println!(
+                    "Journal archivé : {} entrées retirées de la base jusqu'à l'entrée {} ; elles restent dans l'export.",
+                    a.retirees, a.jusqua
+                );
+                ExitCode::SUCCESS
+            }
+            Err(e) => {
+                eprintln!("{e}");
+                ExitCode::FAILURE
+            }
+        };
+    }
+
     if verifier || exporter.is_some() {
         let portail = match ouvrir_sans_cle(&dossier) {
             Ok(p) => p,
@@ -195,7 +281,7 @@ fn main() -> ExitCode {
         };
         return match exporter {
             Some(depuis) => exporter_journal(&portail, depuis),
-            None => verifier_journal(&portail),
+            None => verifier_journal(&portail, archive.as_deref()),
         };
     }
 

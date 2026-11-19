@@ -209,7 +209,31 @@ CREATE UNIQUE INDEX licence_code ON licence_emise (code) WHERE code IS NOT NULL;
     "
 -- marqueur : secrets de double authentification chiffrés
 ",
+    // 10 vers 11 : archivage du journal (audit d'OpenCode, lot C). Chaque
+    // archivage note ici la dernière entrée retirée de la base et son
+    // empreinte : la chaîne repart de là (`chaine::verifier`). En ajout seul.
+    "
+CREATE TABLE journal_depart (
+    id INTEGER PRIMARY KEY,
+    empreinte TEXT NOT NULL,
+    archive_le TEXT NOT NULL
+);
+CREATE TRIGGER journal_depart_sans_modification BEFORE UPDATE ON journal_depart
+BEGIN SELECT RAISE(ABORT, 'journal en ajout seul'); END;
+CREATE TRIGGER journal_depart_sans_effacement BEFORE DELETE ON journal_depart
+BEGIN SELECT RAISE(ABORT, 'journal en ajout seul'); END;
+",
 ];
+
+/// Déclencheurs qui interdisent l'effacement du journal et de sa chaîne
+/// (schémas 1 et 6), levés puis remis par l'archivage seul, dans sa
+/// transaction (`chaine::archiver`).
+pub(crate) const JOURNAL_SANS_EFFACEMENT: &str = "
+CREATE TRIGGER journal_sans_effacement BEFORE DELETE ON journal
+BEGIN SELECT RAISE(ABORT, 'journal en ajout seul'); END;
+CREATE TRIGGER journal_chaine_sans_effacement BEFORE DELETE ON journal_chaine
+BEGIN SELECT RAISE(ABORT, 'journal en ajout seul'); END;
+";
 
 /// Version du schéma qui crée la chaîne du journal.
 const VERSION_CHAINE: i64 = 6;

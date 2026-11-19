@@ -24,7 +24,10 @@ pub fn journal(c: &Cadre, actions: &[Action], chaine: Option<&EtatChaine>) -> Ma
                         dt { "Chaîne du journal" }
                         dd {
                             @match e.rupture {
-                                None => { "intacte, " (e.entrees) " entrée" @if e.entrees > 1 { "s" } " vérifiée" @if e.entrees > 1 { "s" } }
+                                None => {
+                                    "intacte, " (e.entrees) " entrée" @if e.entrees > 1 { "s" } " vérifiée" @if e.entrees > 1 { "s" }
+                                    @if let Some(d) = e.depart { ", après l'entrée " (d) " (entrées antérieures archivées)" }
+                                }
                                 Some(id) => { "rompue à l'entrée " (id) " : le journal a été modifié hors du portail" }
                             }
                         }
@@ -115,6 +118,7 @@ fn libelle_action(code: &str) -> &str {
         "code_refuse" => "Code de double authentification refusé",
         "double_authentification_activee" => "Double authentification activée",
         "double_authentification_retiree" => "Double authentification retirée",
+        "journal_archive" => "Journal archivé",
         _ => code,
     }
 }
