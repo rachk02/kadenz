@@ -12,11 +12,17 @@
 //!   connexion.
 //!
 //! Le serveur démarre hors du fil de l'interface, derrière l'écran d'attente ;
-//! l'inscription aussi : le serveur la traite dans son propre fil de base.
+//! l'installation et l'inscription aussi.
+//!
+//! Fermeture (lot M3) : voile, vidage borné de la file d'envoi, puis arrêt du
+//! serveur intégré, qui fait la sauvegarde d'arrêt ; la fenêtre se ferme
+//! ensuite. La copie du poste est dans `%LOCALAPPDATA%\Kadenz`, avec le
+//! serveur (`dossier_copie`).
 
 use std::cell::{Cell, RefCell};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use std::thread::JoinHandle;
 use std::time::Duration;
 
 use chrono::{NaiveTime, Utc};
@@ -51,15 +57,30 @@ pub(crate) type Integre = Rc<RefCell<Option<Serveur>>>;
 pub(crate) type Demarrer =
     Rc<dyn Fn(&FenetrePrincipale, Connexion) -> Result<(), kadenz_stockage::Erreur>>;
 
+/// Session ouverte de `main` : la fermeture en retire le synchroniseur.
+pub(crate) type Session = Rc<RefCell<Option<crate::EtatPartage>>>;
+
+/// Vidage de la file d'envoi à la fermeture (spécification, section 4).
+const DELAI_VIDAGE: Duration = Duration::from_secs(25);
+/// Fermeture longue : texte changé, puis bouton « Fermer sans attendre ».
+const FERMETURE_LENTE: Duration = Duration::from_secs(10);
+const FERMETURE_LONGUE: Duration = Duration::from_secs(30);
+
 struct Contexte {
     integre: Integre,
     demarrer: Demarrer,
+    session: Session,
     /// Dossier du serveur intégré.
     dossier: PathBuf,
+    /// Travail en cours hors du fil de l'interface (`en_fond`) : il tient le
+    /// serveur et le rend en finissant.
+    fil: RefCell<Option<JoinHandle<Option<Serveur>>>>,
 }
 
 thread_local! {
     static CONTEXTE: RefCell<Option<Rc<Contexte>>> = const { RefCell::new(None) };
+    /// Fermeture en cours : une seconde demande est ignorée.
+    static FERMETURE: Cell<bool> = const { Cell::new(false) };
     /// Reprise de la base V1 à proposer à la prochaine connexion d'un Admin
     /// (spécification, section 3.0) : posé après l'inscription automatique.
     static REPRISE_A_PROPOSER: Cell<bool> = const { Cell::new(false) };
@@ -85,6 +106,20 @@ fn dossier_serveur() -> Option<PathBuf> {
         return Some(crate::dossier_donnees().join("Serveur"));
     }
     kadenz_serveur::dossier_monoposte()
+}
+
+/// Dossier de la copie du poste relié. Monoposte : à côté du serveur intégré,
+/// dans `%LOCALAPPDATA%\Kadenz`, non itinérant : sur un profil itinérant, la
+/// copie ne suit pas le compte sur une machine qui n'a pas ce serveur. La
+/// base V1, elle, reste lue dans `%APPDATA%\Kadenz`. Multiposte : le dossier
+/// des données.
+pub(crate) fn dossier_copie() -> PathBuf {
+    if edition_monoposte()
+        && let Some(dossier) = dossier_serveur().as_deref().and_then(Path::parent)
+    {
+        return dossier.to_path_buf();
+    }
+    crate::dossier_donnees()
 }
 
 /// Nom de ce poste sur le serveur : le nom de la machine.
@@ -147,15 +182,72 @@ fn sur_le_serveur<R: Send + 'static>(
     let Some(serveur) = integre.as_ref() else {
         return Err(crate::phrase(tr("le serveur de Kadenz est arrêté")));
     };
-    serveur.base(tache).map_err(|detail| {
-        crate::consigner_erreur(&format!("Serveur intégré : {detail}"));
-        crate::phrase(tr("le serveur de Kadenz ne répond pas"))
-    })
+    serveur.base(tache).map_err(ne_repond_pas)
+}
+
+fn ne_repond_pas(detail: String) -> SharedString {
+    crate::consigner_erreur(&format!("Serveur intégré : {detail}"));
+    crate::phrase(tr("le serveur de Kadenz ne répond pas"))
+}
+
+/// Travail long sur le serveur intégré, hors du fil de l'interface : le
+/// serveur passe au fil le temps du travail (`None` avant son démarrage), puis
+/// revient, et `suite` reçoit le résultat dans le fil de l'interface. Une
+/// fermeture demandée entre-temps attend ce fil, puis arrête le serveur
+/// qu'il rend (fenêtre jamais fermée sur un serveur encore ouvert).
+fn en_fond<T: Send + 'static>(
+    f: &FenetrePrincipale,
+    c: &Contexte,
+    travail: impl FnOnce(Option<Serveur>) -> (Option<Serveur>, T) + Send + 'static,
+    suite: fn(&FenetrePrincipale, T),
+) {
+    let serveur = c.integre.borrow_mut().take();
+    let fa = f.as_weak();
+    let fil = std::thread::spawn(move || {
+        let (serveur, resultat) = travail(serveur);
+        let _ = fa.upgrade_in_event_loop(move |f| {
+            if revenir(&f) {
+                suite(&f, resultat);
+            }
+        });
+        serveur
+    });
+    *c.fil.borrow_mut() = Some(fil);
+}
+
+/// Fin d'un travail `en_fond` : le serveur revient dans `integre`. Faux si la
+/// fermeture a pris le fil entre-temps : c'est elle qui arrête le serveur.
+fn revenir(f: &FenetrePrincipale) -> bool {
+    let Some(c) = contexte() else { return false };
+    let Some(fil) = c.fil.borrow_mut().take() else {
+        return false;
+    };
+    match fil.join() {
+        Ok(serveur) => {
+            *c.integre.borrow_mut() = serveur;
+            true
+        }
+        Err(_) => {
+            crate::consigner_erreur("Serveur intégré : fil de travail interrompu");
+            impossible(
+                f,
+                tr(
+                    "Kadenz n'a pas pu démarrer sur cet ordinateur. Le détail est dans le fichier erreurs.log.",
+                ),
+            );
+            false
+        }
+    }
 }
 
 /// Démarre l'édition monoposte : écran d'attente, serveur intégré démarré dans
 /// un fil à part, puis l'écran qui convient à l'état trouvé.
-pub(crate) fn lancer(f: &FenetrePrincipale, integre: Integre, demarrer: Demarrer) {
+pub(crate) fn lancer(
+    f: &FenetrePrincipale,
+    integre: Integre,
+    demarrer: Demarrer,
+    session: Session,
+) {
     f.global::<MonoposteApi>().set_actif(true);
     attendre(f, tr("Démarrage de Kadenz..."));
     // erreurs.log est à côté de la base V1 : son dossier peut ne pas exister
@@ -171,23 +263,30 @@ pub(crate) fn lancer(f: &FenetrePrincipale, integre: Integre, demarrer: Demarrer
         );
         return;
     };
-    CONTEXTE.set(Some(Rc::new(Contexte {
+    let c = Rc::new(Contexte {
         integre,
         demarrer,
+        session,
         dossier: dossier.clone(),
-    })));
+        fil: RefCell::default(),
+    });
+    CONTEXTE.set(Some(c.clone()));
     brancher(f);
-    let fa = f.as_weak();
-    std::thread::spawn(move || {
-        let resultat = Serveur::demarrer(Config::monoposte(dossier));
-        let _ = fa.upgrade_in_event_loop(move |f| match resultat {
-            Ok(serveur) => serveur_demarre(&f, serveur),
+    en_fond(
+        f,
+        &c,
+        move |_| match Serveur::demarrer(Config::monoposte(dossier)) {
+            Ok(serveur) => (Some(serveur), Ok(())),
+            Err(e) => (None, Err(e)),
+        },
+        |f, resultat| match resultat {
+            Ok(()) => serveur_demarre(f),
             Err(e) => {
                 crate::consigner_erreur(&format!("Démarrage du serveur intégré : {e}"));
-                impossible(&f, message_erreur(&e));
+                impossible(f, message_erreur(&e));
             }
-        });
-    });
+        },
+    );
 }
 
 fn brancher(f: &FenetrePrincipale) {
@@ -220,18 +319,101 @@ fn brancher(f: &FenetrePrincipale) {
                 .spawn();
         }
     });
+
+    // Fermeture : la fenêtre reste affichée sous le voile pendant
+    // l'enregistrement et la sauvegarde d'arrêt (spécification, section 4).
+    let fa = f.as_weak();
+    f.window().on_close_requested(move || {
+        if let Some(f) = fa.upgrade() {
+            fermer(&f);
+        }
+        slint::CloseRequestResponse::KeepWindowShown
+    });
+
+    api.on_fermer_sans_attendre(|| {
+        crate::consigner_erreur("Fermeture sans attendre la sauvegarde d'arrêt");
+        let _ = slint::quit_event_loop();
+    });
 }
 
-fn serveur_demarre(f: &FenetrePrincipale, serveur: Serveur) {
+/// Fermeture du monoposte : voile, puis, dans un fil à part, vidage borné de
+/// la file d'envoi, arrêt du synchroniseur, puis arrêt du serveur intégré,
+/// qui fait la sauvegarde d'arrêt, ferme sa base et rend le verrou. La
+/// fenêtre se ferme à la fin du fil ; au bout de 30 s, le voile propose de
+/// fermer sans attendre la sauvegarde. Une seconde demande est ignorée.
+fn fermer(f: &FenetrePrincipale) {
+    if FERMETURE.replace(true) {
+        return;
+    }
+    let api = f.global::<MonoposteApi>();
+    api.set_fermeture_texte(tr("Enregistrement et sauvegarde en cours...").into());
+    api.set_fermeture(true);
+    let (synchro, fil, serveur) = match contexte() {
+        Some(c) => {
+            let synchro = c
+                .session
+                .borrow()
+                .as_ref()
+                .and_then(|etat| etat.borrow_mut().relie.take())
+                .map(|relie| relie.synchro);
+            let fil = c.fil.borrow_mut().take();
+            (synchro, fil, c.integre.borrow_mut().take())
+        }
+        None => (None, None, None),
+    };
+    std::thread::spawn(move || {
+        if let Some(synchro) = synchro {
+            if !synchro.vider(DELAI_VIDAGE) {
+                // Rien n'est perdu : la file reste dans la copie et part au
+                // lancement suivant.
+                crate::consigner_erreur("Fermeture : file d'envoi non vide après le délai");
+            }
+            synchro.arreter();
+        }
+        // Démarrage ou installation en cours : le serveur est dans ce fil.
+        let serveur = serveur.or_else(|| fil.and_then(|fil| fil.join().ok().flatten()));
+        if let Some(serveur) = serveur {
+            serveur.arreter();
+        }
+        let _ = slint::quit_event_loop();
+    });
+    let fa = f.as_weak();
+    slint::Timer::single_shot(FERMETURE_LENTE, move || {
+        if let Some(f) = fa.upgrade() {
+            f.global::<MonoposteApi>()
+                .set_fermeture_texte(tr("La sauvegarde prend plus de temps que prévu...").into());
+        }
+    });
+    let fa = f.as_weak();
+    slint::Timer::single_shot(FERMETURE_LONGUE, move || {
+        if let Some(f) = fa.upgrade() {
+            f.global::<MonoposteApi>().set_fermeture_longue(true);
+        }
+    });
+}
+
+/// Sortie de la boucle d'événements sans passer par `fermer` (mise à jour) :
+/// travail en cours attendu, puis serveur intégré arrêté, sauvegarde d'arrêt
+/// comprise. Après `fermer`, il n'y a plus rien à arrêter.
+pub(crate) fn arreter_a_la_sortie() {
     let Some(c) = contexte() else { return };
-    *c.integre.borrow_mut() = Some(serveur);
+    let fil = c.fil.borrow_mut().take();
+    let serveur = c.integre.borrow_mut().take();
+    let serveur = serveur.or_else(|| fil.and_then(|fil| fil.join().ok().flatten()));
+    if let Some(serveur) = serveur {
+        serveur.arreter();
+    }
+}
+
+fn serveur_demarre(f: &FenetrePrincipale) {
+    let Some(c) = contexte() else { return };
     match sur_le_serveur(&c, |conn| comptes::etat_installation(conn)) {
         Ok(Ok(EtatInstallation::AssistantRequis)) => {
             preparer_assistant(f, &c);
             f.set_ecran(Ecran::Presentation);
         }
         Ok(Ok(EtatInstallation::ConnexionRequise)) => {
-            match poste_relie::copie(&crate::dossier_donnees()) {
+            match poste_relie::copie(&dossier_copie()) {
                 Some(copie) => ouvrir_poste(f, &c, &copie),
                 // Entreprise installée, poste pas encore inscrit : installation
                 // interrompue, reprise à l'inscription (spécification, section 3).
@@ -246,18 +428,28 @@ fn serveur_demarre(f: &FenetrePrincipale, serveur: Serveur) {
     }
 }
 
-/// Copie du poste relié présente : son adresse est mise au port effectif du
-/// serveur intégré, avant le synchroniseur (spécification, section 2.1).
-fn ouvrir_poste(f: &FenetrePrincipale, c: &Contexte, copie: &Path) {
-    let (adresse, empreinte) = {
-        let integre = c.integre.borrow();
-        let Some(serveur) = integre.as_ref() else {
-            return;
-        };
+/// Adresse `127.0.0.1:port` et empreinte du serveur intégré, s'il tourne.
+fn adresse_du_serveur(c: &Contexte) -> Option<(String, String)> {
+    c.integre.borrow().as_ref().map(|serveur| {
         (
             format!("127.0.0.1:{}", serveur.adresse().port()),
             serveur.empreinte().to_string(),
         )
+    })
+}
+
+/// Copie du poste relié présente : son adresse est mise au port effectif du
+/// serveur intégré, avant le synchroniseur (spécification, section 2.1).
+fn ouvrir_poste(f: &FenetrePrincipale, c: &Contexte, copie: &Path) {
+    let Some((adresse, empreinte)) = adresse_du_serveur(c) else {
+        crate::consigner_erreur("Ouverture du poste : serveur intégré absent");
+        impossible(
+            f,
+            tr(
+                "Kadenz n'a pas pu démarrer sur cet ordinateur. Le détail est dans le fichier erreurs.log.",
+            ),
+        );
+        return;
     };
     let ouverture = poste_relie::ouvrir_copie(copie).and_then(|conn| {
         let poste = poste_relie::lire(&conn)?;
@@ -479,18 +671,39 @@ fn terminer(f: &FenetrePrincipale, d: &DonneesAssistant) -> SharedString {
     // Licence facultative : sans elle, lecture seule (décision 40), un seul
     // poste permis (décision 41), celui-ci.
     let cle = d.cle_licence.trim().to_string();
-    let installation = sur_le_serveur(&c, move |conn| {
-        let licence = (!cle.is_empty()).then_some(cle.as_str());
-        admin::installer(conn, &init, licence).map(|_| ())
-    });
-    match installation {
-        Ok(Ok(())) => {
-            inscrire(f);
-            SharedString::new()
-        }
-        Ok(Err(e)) => crate::phrase(e),
-        Err(message) => message,
-    }
+    let api = f.global::<MonoposteApi>();
+    api.set_erreur_installation(SharedString::new());
+    api.set_installation(true);
+    // Hors du fil de l'interface : le hachage du mot de passe de l'Admin
+    // (Argon2) gèlerait la fenêtre.
+    en_fond(
+        f,
+        &c,
+        move |serveur| {
+            let resultat = serveur.as_ref().map(|serveur| {
+                serveur.base(move |conn| {
+                    let licence = (!cle.is_empty()).then_some(cle.as_str());
+                    admin::installer(conn, &init, licence).map(|_| ())
+                })
+            });
+            (serveur, resultat)
+        },
+        |f, resultat| {
+            let api = f.global::<MonoposteApi>();
+            api.set_installation(false);
+            let erreur = match resultat {
+                Some(Ok(Ok(()))) => {
+                    inscrire(f);
+                    return;
+                }
+                Some(Ok(Err(e))) => crate::phrase(e),
+                Some(Err(detail)) => ne_repond_pas(detail),
+                None => crate::phrase(tr("le serveur de Kadenz est arrêté")),
+            };
+            api.set_erreur_installation(erreur);
+        },
+    );
+    SharedString::new()
 }
 
 /// Inscription automatique de ce poste sur le serveur intégré
@@ -500,15 +713,9 @@ fn terminer(f: &FenetrePrincipale, d: &DonneesAssistant) -> SharedString {
 fn inscrire(f: &FenetrePrincipale) {
     let Some(c) = contexte() else { return };
     attendre(f, tr("Inscription de ce poste..."));
-    let (adresse, empreinte) = {
-        let integre = c.integre.borrow();
-        let Some(serveur) = integre.as_ref() else {
-            return;
-        };
-        (
-            format!("127.0.0.1:{}", serveur.adresse().port()),
-            serveur.empreinte().to_string(),
-        )
+    let Some((adresse, empreinte)) = adresse_du_serveur(&c) else {
+        echec_inscription(f, crate::phrase(tr("le serveur de Kadenz est arrêté")));
+        return;
     };
     let machine = nom_machine();
     let nom = machine.clone();
@@ -570,6 +777,11 @@ fn inscription_reussie(
     inscrit: Inscrit,
 ) {
     let Some(c) = contexte() else { return };
+    // Fermeture en cours : pas de copie ; au lancement suivant, l'inscription
+    // reprend (poste retiré, nouveau code).
+    if FERMETURE.get() {
+        return;
+    }
     let poste = PosteRelie {
         adresse,
         empreinte_serveur: empreinte,
@@ -578,7 +790,7 @@ fn inscription_reussie(
         certificat: identite.certificat,
         cle: identite.cle,
     };
-    let ouverture = poste_relie::creer_copie(&crate::dossier_donnees(), &poste)
+    let ouverture = poste_relie::creer_copie(&dossier_copie(), &poste)
         .and_then(|chemin| poste_relie::ouvrir_copie(&chemin));
     let conn = match ouverture {
         Ok(conn) => conn,
@@ -695,15 +907,9 @@ mod tests {
                 .unwrap(),
             1
         );
+        // L'arrêt rend la main base fermée : le dossier s'efface aussitôt.
         serveur.arreter();
-        // Le fil de la base du serveur se termine après l'arrêt, sans être
-        // attendu : sa connexion SQLite peut tenir encore le fichier un instant.
-        for _ in 0..50 {
-            if std::fs::remove_dir_all(&dossier).is_ok() || !dossier.exists() {
-                break;
-            }
-            std::thread::sleep(Duration::from_millis(100));
-        }
+        std::fs::remove_dir_all(&dossier).unwrap();
         assert!(
             !dossier.exists(),
             "dossier d'essai resté : {}",

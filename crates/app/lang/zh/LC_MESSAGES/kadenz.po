@@ -4812,3 +4812,23 @@ msgstr "此工作站的数据副本属于另一台服务器，而不是此计算
 
 msgid "Inscription de ce poste..."
 msgstr "正在注册此工作站..."
+
+# Édition monoposte, lot M3 : fermeture sous voile, installation hors du fil de l'interface (2026-11-19)
+
+msgid "Fermeture de Kadenz"
+msgstr "正在关闭 Kadenz"
+
+msgid "Enregistrement et sauvegarde en cours..."
+msgstr "正在保存和备份..."
+
+msgid "La sauvegarde prend plus de temps que prévu..."
+msgstr "备份所需时间比预期更长..."
+
+msgid "La base est intacte. Sans attendre, cette sauvegarde n'est pas faite ; la dernière sauvegarde complète reste."
+msgstr "数据库完好无损。不等待的话，本次备份不会进行；最近一次完整备份仍然保留。"
+
+msgid "Fermer sans attendre la sauvegarde"
+msgstr "不等待备份直接关闭"
+
+msgid "Installation en cours…"
+msgstr "正在安装…"

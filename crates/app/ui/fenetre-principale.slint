@@ -27,7 +27,7 @@ import { AccesDistantApi, PosteDistantUi } from "acces-distant.slint";
 import { EcranDemarrageImpossible, SauvegardesApi } from "sauvegardes.slint";
 import { ApercuApi, FenetreApercu, PageApercuUi } from "apercu.slint";
 import { DonneesAssistant, EcranAssistant } from "assistant.slint";
-import { EcranAttente, MonoposteApi } from "monoposte.slint";
+import { EcranAttente, MonoposteApi, VoileFermeture } from "monoposte.slint";
 
 export { DonneesAssistant, MonoposteApi, AbonnementApi, AccesDistantApi, ActivationUi, ApercuApi, CodeCourtUi, CodeSaisi, PageApercuUi, PosteDistantUi, ChampSuspenduUi, ConnexionApi, DocumentAValiderUi, LigneResumeUi, ServeurApi, SuspendueUi, SuspenduesApi, Affichage, Alerte, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, StockApi, LigneInventaireUi, ProduitStockUi, ComptabiliteApi, CompteComptableUi, TiersApi, UtilisateursApi }
 
@@ -146,6 +146,8 @@ export component FenetrePrincipale inherits Window {
         choisir-dossier-sauvegardes(actuel) => {
             MonoposteApi.choisir-dossier-sauvegardes(actuel)
         }
+        occupe: MonoposteApi.installation;
+        erreur-installation: MonoposteApi.erreur-installation;
         terminer(donnees) => {
             MonoposteApi.terminer(donnees)
         }
@@ -441,6 +443,13 @@ export component FenetrePrincipale inherits Window {
 
     // Demande de confirmation commune, au-dessus de tout.
     FenetreConfirmation {
+        width: root.width;
+        height: root.height;
+    }
+
+    // Monoposte : fermeture en cours (enregistrement, sauvegarde d'arrêt),
+    // par-dessus tout, confirmations comprises.
+    if MonoposteApi.fermeture: VoileFermeture {
         width: root.width;
         height: root.height;
     }

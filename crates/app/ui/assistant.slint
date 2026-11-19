@@ -69,6 +69,17 @@ export component EcranAssistant inherits Rectangle {
     // Renvoie un message d'erreur, ou une chaîne vide si l'installation a réussi.
     callback terminer(DonneesAssistant) -> string;
 
+    // Monoposte : installation en cours hors du fil de l'interface (hachage du
+    // mot de passe de l'Admin), boutons inactifs ; son erreur arrive ensuite
+    // par `erreur-installation`.
+    in property <bool> occupe: false;
+    in property <string> erreur-installation;
+    changed erreur-installation => {
+        if (self.erreur-installation != "") {
+            root.erreur = self.erreur-installation;
+        }
+    }
+
     property <[string]> etapes: root.serveur
         ? [@tr("Licence"), @tr("Entreprise"), @tr("Administrateur"), @tr("Taux et paiements"), @tr("Sauvegardes"), @tr("Récapitulatif")]
         : [@tr("Licence"), @tr("Entreprise"), @tr("Administrateur"), @tr("Taux et paiements"), @tr("Récapitulatif")];
@@ -749,7 +760,7 @@ export component EcranAssistant inherits Rectangle {
 
                     if root.etape > 0: Bouton {
                         text: @tr("Précédent");
-                        enabled: !(ActivationUi.etat == 1 && root.etape == 1);
+                        enabled: !(ActivationUi.etat == 1 && root.etape == 1) && !root.occupe;
                         clicked => {
                             root.erreur = "";
                             root.etape -= 1;
@@ -768,7 +779,8 @@ export component EcranAssistant inherits Rectangle {
                     }
 
                     if root.etape == root.etapes.length - 1: Bouton {
-                        text: @tr("Terminer l'installation");
+                        text: root.occupe ? @tr("Installation en cours…") : @tr("Terminer l'installation");
+                        enabled: !root.occupe;
                         primary: true;
                         clicked => {
                             root.erreur = root.terminer({

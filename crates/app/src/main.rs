@@ -658,7 +658,7 @@ fn main() -> Result<(), slint::PlatformError> {
             });
             brancher(fenetre, etat.clone());
             if let Some(copie) = inscrit
-                .then(|| kadenz_stockage::poste_relie::copie(&dossier_donnees()))
+                .then(|| kadenz_stockage::poste_relie::copie(&monoposte::dossier_copie()))
                 .flatten()
             {
                 relie::demarrer(fenetre, &etat, copie);
@@ -673,11 +673,16 @@ fn main() -> Result<(), slint::PlatformError> {
     // La base V1 n'est pas ouverte.
     let integre: monoposte::Integre = Rc::default();
     let demarrage = if monoposte::edition_monoposte() {
-        monoposte::lancer(&fenetre, integre.clone(), Rc::new(demarrer.clone()));
+        monoposte::lancer(
+            &fenetre,
+            integre.clone(),
+            Rc::new(demarrer.clone()),
+            session.clone(),
+        );
         Ok(())
     } else {
         // Poste relié : la copie du serveur ; la base V1 reste intacte (décision 45).
-        match kadenz_stockage::poste_relie::copie(&dossier_donnees()) {
+        match kadenz_stockage::poste_relie::copie(&monoposte::dossier_copie()) {
             Some(copie) => kadenz_stockage::poste_relie::ouvrir_copie(&copie)
                 .and_then(|conn| demarrer(&fenetre, conn)),
             None => kadenz_stockage::ouvrir(&chemin).and_then(|conn| demarrer(&fenetre, conn)),
@@ -716,11 +721,9 @@ fn main() -> Result<(), slint::PlatformError> {
             sauvegardes::sauvegarder_a_la_fermeture(&e);
         }
     }
-    // Monoposte : serveur intégré arrêté après le synchroniseur ; son arrêt fait
-    // la sauvegarde si un mot de passe est choisi, puis rend le verrou du
-    // dossier. Voile et délai borné : lot M3.
-    if let Some(serveur) = integre.borrow_mut().take() {
-        serveur.arreter();
-    }
+    // Monoposte : la fermeture de la fenêtre a déjà tout arrêté sous le voile
+    // (monoposte::fermer) ; sinon (sortie pour la mise à jour), serveur
+    // intégré arrêté ici, après le synchroniseur, travail en cours attendu.
+    monoposte::arreter_a_la_sortie();
     resultat
 }

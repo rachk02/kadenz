@@ -187,7 +187,7 @@ fn inscription_reussie(
     // Copie du serveur créée à côté de la base V1, qui reste intacte
     // (décision 45) ; la session passe sur la copie et revient à l'écran de
     // connexion, pour un compte de l'entreprise.
-    let dossier = crate::dossier_donnees();
+    let dossier = crate::monoposte::dossier_copie();
     let ouverture = poste_relie::creer_copie(&dossier, &poste)
         .and_then(|chemin| poste_relie::ouvrir_copie(&chemin).map(|conn| (chemin, conn)));
     match ouverture {

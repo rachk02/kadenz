@@ -796,6 +796,14 @@ fn recevoir(f: &FenetrePrincipale, evenement: Evenement) {
             // Écritures permises ou non : droits, menu et fiche ouverte suivent.
             {
                 let e = etat.borrow();
+                // Copie neuve : le nom de l'entreprise arrive avec la première
+                // synchronisation (écran de connexion du monoposte).
+                if let Ok(Some(fiche)) = kadenz_stockage::entreprise::lire(&e.conn)
+                    && !fiche.nom.trim().is_empty()
+                    && f.get_nom_entreprise() != fiche.nom.trim()
+                {
+                    f.set_nom_entreprise(fiche.nom.trim().into());
+                }
                 afficher(f, &e);
                 crate::appliquer_droits(f, &e);
             }

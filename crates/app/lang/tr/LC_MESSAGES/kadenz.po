@@ -4812,3 +4812,23 @@ msgstr "Bu istasyonun veri kopyası bu bilgisayarınkinden başka bir sunucuya a
 
 msgid "Inscription de ce poste..."
 msgstr "Bu istasyon kaydediliyor..."
+
+# Édition monoposte, lot M3 : fermeture sous voile, installation hors du fil de l'interface (2026-11-19)
+
+msgid "Fermeture de Kadenz"
+msgstr "Kadenz kapatılıyor"
+
+msgid "Enregistrement et sauvegarde en cours..."
+msgstr "Kaydediliyor ve yedekleniyor..."
+
+msgid "La sauvegarde prend plus de temps que prévu..."
+msgstr "Yedekleme beklenenden uzun sürüyor..."
+
+msgid "La base est intacte. Sans attendre, cette sauvegarde n'est pas faite ; la dernière sauvegarde complète reste."
+msgstr "Veritabanı sağlam. Beklemeden kapatılırsa bu yedek alınmaz; son tam yedek yerinde kalır."
+
+msgid "Fermer sans attendre la sauvegarde"
+msgstr "Yedeklemeyi beklemeden kapat"
+
+msgid "Installation en cours…"
+msgstr "Kuruluyor…"

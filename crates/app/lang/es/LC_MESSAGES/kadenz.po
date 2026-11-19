@@ -4812,3 +4812,23 @@ msgstr "La copia de los datos de este puesto pertenece a un servidor distinto de
 
 msgid "Inscription de ce poste..."
 msgstr "Registrando este puesto..."
+
+# Édition monoposte, lot M3 : fermeture sous voile, installation hors du fil de l'interface (2026-11-19)
+
+msgid "Fermeture de Kadenz"
+msgstr "Cerrando Kadenz"
+
+msgid "Enregistrement et sauvegarde en cours..."
+msgstr "Guardando y haciendo la copia de seguridad..."
+
+msgid "La sauvegarde prend plus de temps que prévu..."
+msgstr "La copia de seguridad tarda más de lo previsto..."
+
+msgid "La base est intacte. Sans attendre, cette sauvegarde n'est pas faite ; la dernière sauvegarde complète reste."
+msgstr "La base de datos está intacta. Sin esperar, esta copia de seguridad no se hace; se conserva la última copia completa."
+
+msgid "Fermer sans attendre la sauvegarde"
+msgstr "Cerrar sin esperar la copia de seguridad"
+
+msgid "Installation en cours…"
+msgstr "Instalando…"

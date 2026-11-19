@@ -4812,3 +4812,23 @@ msgstr "نسخة بيانات هذا الجهاز تخص خادمًا غير خ�
 
 msgid "Inscription de ce poste..."
 msgstr "جارٍ تسجيل هذا الجهاز..."
+
+# Édition monoposte, lot M3 : fermeture sous voile, installation hors du fil de l'interface (2026-11-19)
+
+msgid "Fermeture de Kadenz"
+msgstr "جارٍ إغلاق Kadenz"
+
+msgid "Enregistrement et sauvegarde en cours..."
+msgstr "جارٍ الحفظ والنسخ الاحتياطي..."
+
+msgid "La sauvegarde prend plus de temps que prévu..."
+msgstr "يستغرق النسخ الاحتياطي وقتًا أطول من المتوقع..."
+
+msgid "La base est intacte. Sans attendre, cette sauvegarde n'est pas faite ; la dernière sauvegarde complète reste."
+msgstr "قاعدة البيانات سليمة. دون انتظار، لا تُنجز هذه النسخة الاحتياطية؛ وتبقى آخر نسخة احتياطية كاملة."
+
+msgid "Fermer sans attendre la sauvegarde"
+msgstr "الإغلاق دون انتظار النسخ الاحتياطي"
+
+msgid "Installation en cours…"
+msgstr "جارٍ التثبيت…"

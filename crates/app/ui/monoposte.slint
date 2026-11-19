@@ -18,14 +18,79 @@ export global MonoposteApi {
     in property <string> defaut-dossier-sauvegardes;
     in property <string> defaut-heure-sauvegardes;
 
+    // Installation de l'entreprise en cours, puis son erreur éventuelle,
+    // montrée par l'assistant.
+    in property <bool> installation: false;
+    in property <string> erreur-installation;
+
     // Écran d'attente : texte de l'étape en cours, ou erreur avec « Réessayer ».
     in property <string> attente;
     in property <string> erreur;
+
+    // Fermeture (spécification, section 4) : voile au-dessus de tout, texte de
+    // l'étape, puis, au bout de 30 s, le bouton qui ferme sans attendre.
+    in property <bool> fermeture: false;
+    in property <string> fermeture-texte;
+    in property <bool> fermeture-longue: false;
 
     callback choisir-dossier-sauvegardes(actuel: string) -> string;
     // Message d'erreur, ou chaîne vide si l'installation a réussi.
     callback terminer(DonneesAssistant) -> string;
     callback reessayer();
+    callback fermer-sans-attendre();
+}
+
+// Voile de fermeture : il couvre la fenêtre et prend tous les clics et
+// toutes les touches, donc aucune écriture ne part pendant l'enregistrement.
+export component VoileFermeture inherits Rectangle {
+    background: Theme.fond.with-alpha(0.92);
+
+    TouchArea { }
+
+    FocusScope {
+        init => {
+            self.focus();
+        }
+        key-pressed(event) => {
+            accept
+        }
+    }
+
+    VerticalLayout {
+        alignment: center;
+        padding: 24px;
+        spacing: 16px;
+
+        Titre {
+            text: @tr("Fermeture de Kadenz");
+            horizontal-alignment: center;
+        }
+
+        Text {
+            text: MonoposteApi.fermeture-texte;
+            horizontal-alignment: center;
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        if MonoposteApi.fermeture-longue: Text {
+            text: @tr("La base est intacte. Sans attendre, cette sauvegarde n'est pas faite ; la dernière sauvegarde complète reste.");
+            horizontal-alignment: center;
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        if MonoposteApi.fermeture-longue: HorizontalLayout {
+            alignment: center;
+
+            Bouton {
+                text: @tr("Fermer sans attendre la sauvegarde");
+                clicked => {
+                    MonoposteApi.fermer-sans-attendre();
+                }
+            }
+        }
+    }
 }
 
 // Démarrage du serveur intégré, puis inscription du poste : quelques secondes.

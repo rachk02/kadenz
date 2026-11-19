@@ -4812,3 +4812,23 @@ msgstr "The copy of this workstation's data belongs to a server other than the o
 
 msgid "Inscription de ce poste..."
 msgstr "Registering this workstation..."
+
+# Édition monoposte, lot M3 : fermeture sous voile, installation hors du fil de l'interface (2026-11-19)
+
+msgid "Fermeture de Kadenz"
+msgstr "Closing Kadenz"
+
+msgid "Enregistrement et sauvegarde en cours..."
+msgstr "Saving and backing up..."
+
+msgid "La sauvegarde prend plus de temps que prévu..."
+msgstr "The backup is taking longer than expected..."
+
+msgid "La base est intacte. Sans attendre, cette sauvegarde n'est pas faite ; la dernière sauvegarde complète reste."
+msgstr "The database is intact. Without waiting, this backup is not made; the last complete backup remains."
+
+msgid "Fermer sans attendre la sauvegarde"
+msgstr "Close without waiting for the backup"
+
+msgid "Installation en cours…"
+msgstr "Installing…"

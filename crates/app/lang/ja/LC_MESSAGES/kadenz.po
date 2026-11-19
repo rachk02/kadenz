@@ -4812,3 +4812,23 @@ msgstr "この端末のデータのコピーは、このコンピューターの
 
 msgid "Inscription de ce poste..."
 msgstr "この端末を登録しています..."
+
+# Édition monoposte, lot M3 : fermeture sous voile, installation hors du fil de l'interface (2026-11-19)
+
+msgid "Fermeture de Kadenz"
+msgstr "Kadenz を終了しています"
+
+msgid "Enregistrement et sauvegarde en cours..."
+msgstr "保存とバックアップを行っています..."
+
+msgid "La sauvegarde prend plus de temps que prévu..."
+msgstr "バックアップに予想より時間がかかっています..."
+
+msgid "La base est intacte. Sans attendre, cette sauvegarde n'est pas faite ; la dernière sauvegarde complète reste."
+msgstr "データベースは無事です。待たずに終了すると今回のバックアップは作成されませんが、最後の完全なバックアップは残ります。"
+
+msgid "Fermer sans attendre la sauvegarde"
+msgstr "バックアップを待たずに終了"
+
+msgid "Installation en cours…"
+msgstr "インストールしています…"
