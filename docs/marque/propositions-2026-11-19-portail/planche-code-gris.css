@@ -1,0 +1,142 @@
+/* Planche du 2026-11-19 : code de connexion sans message de succès ni
+   d'échec, couleur sur la seule bordure des cases, petits textes en gris
+   à la manière d'Apple (gris du mode sombre de macOS et iOS : systemGray
+   #8E8E93, secondaryLabel rgba(235, 235, 245, 0.6), tertiaryLabel
+   rgba(235, 235, 245, 0.3), systemRed #FF453A, systemGreen #30D158).
+   Après identite.css et piliers.css. Aucun style en ligne. */
+
+body.planche-gris {
+  margin: 0;
+  padding: 40px;
+  color: #F2F3EF;
+  background: #000000;
+}
+
+.planche-gris .titre-planche {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.planche-gris .sous-titre-planche {
+  margin: 0 0 32px;
+  font-size: 14px;
+  color: #8E8E93;
+}
+
+.planche-gris .proposition {
+  margin: 0 0 48px;
+}
+
+.planche-gris .proposition h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.planche-gris .proposition .detail {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: #8E8E93;
+}
+
+.planche-gris .vues {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.planche-gris .vue {
+  padding: 36px 32px 28px;
+  background: #000000;
+  border: 1px solid #1C1C1E;
+  border-radius: 14px;
+}
+
+.planche-gris .vue-nom {
+  margin: 0 0 18px;
+  font-size: 12px;
+  color: #636366;
+}
+
+/* ----- Cases : couleur sur la seule bordure ----- */
+
+.planche-gris .cases input {
+  background: #17181A;
+  border: 1.5px solid #17181A;
+  box-shadow: none;
+}
+
+.planche-gris .cases input.actif {
+  border-color: #A7B58E;
+}
+
+.planche-gris .cases-code.faux input {
+  background: #17181A;
+  border-color: #FF453A;
+  box-shadow: none;
+}
+
+.planche-gris .cases-code.juste input {
+  background: #17181A;
+  border-color: #30D158;
+  box-shadow: none;
+}
+
+.planche-gris .retour,
+.planche-gris .bascule {
+  margin: 18px 0 0;
+}
+
+.planche-gris .retour a,
+.planche-gris .lien {
+  text-decoration: none;
+}
+
+/* ----- Proposition A : un seul gris, systemGray ----- */
+
+.gris-a .surtitre,
+.gris-a .texte,
+.gris-a .cases-code .legende,
+.gris-a .retour a,
+.gris-a .lien,
+.gris-a .separateur,
+.gris-a .pied {
+  color: #8E8E93;
+}
+
+/* ----- Proposition B : deux niveaux, secondaryLabel et tertiaryLabel ----- */
+
+.gris-b .surtitre,
+.gris-b .texte,
+.gris-b .cases-code .legende,
+.gris-b .retour a,
+.gris-b .lien {
+  color: rgba(235, 235, 245, 0.6);
+}
+
+.gris-b .separateur,
+.gris-b .pied {
+  color: rgba(235, 235, 245, 0.3);
+}
+
+/* ----- Proposition C : comme A, surtitre gardé en vert sauge ----- */
+
+.gris-c .texte,
+.gris-c .cases-code .legende,
+.gris-c .retour a,
+.gris-c .lien,
+.gris-c .separateur,
+.gris-c .pied {
+  color: #8E8E93;
+}
+
+.gris-c .surtitre {
+  color: #A7B58E;
+}
+
+@media (max-width: 1100px) {
+  .planche-gris .vues {
+    grid-template-columns: 1fr;
+  }
+}
