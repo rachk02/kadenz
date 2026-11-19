@@ -429,8 +429,9 @@ struct Interieur {
     conn: Mutex<Connection>,
     cle: SigningKey,
     /// Chiffrement des secrets de double authentification (clé dérivée de
-    /// `cle`, module `coffre`).
-    coffre: coffre::Coffre,
+    /// `cle`, module `coffre`). Absent quand la base est ouverte sans la clé
+    /// du portail (commandes d'administration).
+    coffre: Option<coffre::Coffre>,
     horloge: Horloge,
     sessions: Mutex<Sessions>,
     hachage: Porte,
@@ -1135,9 +1136,33 @@ impl Portail {
 
     /// Comme [`Portail::ouvrir`], avec une horloge choisie (essais).
     pub fn ouvrir_avec(dossier: &Path, cle: SigningKey, horloge: Horloge) -> Resultat<Portail> {
-        let conn = base::ouvrir(dossier)?;
         let coffre = coffre::Coffre::depuis_cle(&cle);
-        chiffrer_secrets(&conn, &coffre)?;
+        Portail::construire(dossier, cle, Some(coffre), horloge)
+    }
+
+    /// Ouvre la base pour une commande d'administration qui ne signe rien et
+    /// ne lit aucun secret de double authentification (création d'un compte,
+    /// retrait de la double authentification, journal) : la clé du portail
+    /// n'est pas lue, une clé jetable la remplace. Les secrets restent tels
+    /// quels : ceux encore en clair ne sont chiffrés qu'à l'ouverture avec la
+    /// clé du portail, jamais avec la clé jetable.
+    pub fn ouvrir_sans_cle(dossier: &Path) -> Resultat<Portail> {
+        let mut graine = zeroize::Zeroizing::new([0u8; 32]);
+        getrandom::fill(&mut graine[..]).map_err(|e| ErreurPortail::Interne(e.to_string()))?;
+        let cle = SigningKey::from_bytes(&graine);
+        Portail::construire(dossier, cle, None, Arc::new(|| Utc::now().date_naive()))
+    }
+
+    fn construire(
+        dossier: &Path,
+        cle: SigningKey,
+        coffre: Option<coffre::Coffre>,
+        horloge: Horloge,
+    ) -> Resultat<Portail> {
+        let conn = base::ouvrir(dossier)?;
+        if let Some(coffre) = &coffre {
+            chiffrer_secrets(&conn, coffre)?;
+        }
         Ok(Portail(Arc::new(Interieur {
             conn: Mutex::new(conn),
             cle,
@@ -1147,6 +1172,17 @@ impl Portail {
             hachage: Porte::new(HACHAGES_SIMULTANES),
             etapes: Mutex::new(std::collections::HashMap::new()),
         })))
+    }
+
+    /// Chiffrement des secrets de double authentification ; refusé quand la
+    /// base est ouverte sans la clé du portail.
+    fn coffre(&self) -> Resultat<&coffre::Coffre> {
+        self.0.coffre.as_ref().ok_or_else(|| {
+            ErreurPortail::Interne(
+                "portail ouvert sans sa clé : secrets de double authentification indisponibles"
+                    .into(),
+            )
+        })
     }
 
     /// Hache un mot de passe hors du verrou de la base, par la porte.
@@ -1474,7 +1510,7 @@ impl Portail {
             return Err(ErreurPortail::Freine(attente));
         }
         let saisi = normaliser_code(code);
-        let Some(moyen) = verifier_second_facteur(&conn, &self.0.coffre, compte_id, &saisi)? else {
+        let Some(moyen) = verifier_second_facteur(&conn, self.coffre()?, compte_id, &saisi)? else {
             frein::echec(&conn, &cles, secondes())?;
             noter(
                 &conn,
@@ -1541,14 +1577,13 @@ impl Portail {
             .optional()?;
         match ligne {
             Some((_, Some(_))) => refus("la double authentification est déjà active"),
-            Some((stocke, None)) => secret_du_compte(&self.0.coffre, acteur.id, &stocke),
+            Some((stocke, None)) => secret_du_compte(self.coffre()?, acteur.id, &stocke),
             None => {
                 let mut octets = [0u8; totp::OCTETS_SECRET];
                 getrandom::fill(&mut octets).map_err(|e| ErreurPortail::Interne(e.to_string()))?;
                 let secret = totp::encoder(&octets);
                 let stocke = self
-                    .0
-                    .coffre
+                    .coffre()?
                     .chiffrer(acteur.id, &secret)
                     .map_err(ErreurPortail::Interne)?;
                 conn.execute(
@@ -1580,7 +1615,7 @@ impl Portail {
         let Some(secret) = secret else {
             return refus("aucune mise en place en cours : rechargez la page");
         };
-        let octets = octets_du_secret(&self.0.coffre, acteur.id, &secret)?;
+        let octets = octets_du_secret(self.coffre()?, acteur.id, &secret)?;
         let Some(pas) = totp::verifier(&octets, &normaliser_code(code), secondes() as u64, 0)
         else {
             return refus(

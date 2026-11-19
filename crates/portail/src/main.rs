@@ -52,16 +52,10 @@ fn usage() -> ExitCode {
 }
 
 /// Ouvre la base pour une commande qui ne signe rien (création d'un compte,
-/// journal) : une clé jetable suffit, la clé du portail n'est pas lue.
+/// journal, retrait de la double authentification) : la clé du portail n'est
+/// pas lue, et les secrets de double authentification ne sont pas touchés.
 fn ouvrir_sans_cle(dossier: &std::path::Path) -> Result<Portail, ExitCode> {
-    let mut graine = [0u8; 32];
-    if getrandom::fill(&mut graine).is_err() {
-        eprintln!("générateur aléatoire du système indisponible");
-        return Err(ExitCode::FAILURE);
-    }
-    let cle = ed25519_dalek::SigningKey::from_bytes(&graine);
-    graine.zeroize();
-    Portail::ouvrir(dossier, cle).map_err(|e| {
+    Portail::ouvrir_sans_cle(dossier).map_err(|e| {
         eprintln!("{e}");
         ExitCode::FAILURE
     })

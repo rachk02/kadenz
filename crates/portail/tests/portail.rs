@@ -1953,3 +1953,67 @@ fn secret_en_clair_chiffre_au_demarrage() {
     drop(p);
     let _ = std::fs::remove_dir_all(d);
 }
+
+/// Lot B : une commande d'administration ouvre la base sans la clé du
+/// portail ; elle ne doit pas chiffrer un secret en clair avec sa clé
+/// jetable (il serait perdu), ni lire un secret chiffré.
+#[test]
+fn ouverture_sans_cle_laisse_les_secrets() {
+    let d = dossier("sans-cle-secrets");
+    let p = Portail::ouvrir(&d, cle_essai()).unwrap();
+    let editeur = p.creer_editeur("editeur", "Éditeur", MOT_DE_PASSE).unwrap();
+    drop(p);
+    let secret = "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
+    {
+        let conn = rusqlite::Connection::open(d.join("portail.sqlite")).unwrap();
+        conn.execute(
+            "INSERT INTO double_authentification (compte, secret) VALUES (?1, ?2)",
+            rusqlite::params![editeur.id, secret],
+        )
+        .unwrap();
+    }
+    let outil = Portail::ouvrir_sans_cle(&d).unwrap();
+    assert!(outil.verifier_journal().unwrap().rupture.is_none());
+    assert_eq!(secret_stocke(&d, editeur.id), secret);
+    assert!(matches!(
+        outil.preparer_double_authentification(&editeur),
+        Err(ErreurPortail::Interne(_))
+    ));
+    drop(outil);
+    // Avec la clé : chiffré, et toujours le même secret.
+    let p = Portail::ouvrir(&d, cle_essai()).unwrap();
+    let stocke = secret_stocke(&d, editeur.id);
+    assert!(stocke.starts_with("c1:"));
+    assert_eq!(
+        p.preparer_double_authentification(&editeur).unwrap(),
+        secret
+    );
+    drop(p);
+    // Avec une autre clé : la valeur chiffrée n'est jamais réécrite, ni au
+    // démarrage ni à la mise en place ; la lecture est refusée.
+    let autre = Portail::ouvrir(&d, SigningKey::from_bytes(&[6u8; 32])).unwrap();
+    assert_eq!(secret_stocke(&d, editeur.id), stocke);
+    assert!(matches!(
+        autre.preparer_double_authentification(&editeur),
+        Err(ErreurPortail::Interne(_))
+    ));
+    assert_eq!(secret_stocke(&d, editeur.id), stocke);
+    drop(autre);
+    let outil = Portail::ouvrir_sans_cle(&d).unwrap();
+    assert!(matches!(
+        outil.preparer_double_authentification(&editeur),
+        Err(ErreurPortail::Interne(_))
+    ));
+    assert_eq!(secret_stocke(&d, editeur.id), stocke);
+    // Le retrait reste possible sans la clé (téléphone perdu, clé changée).
+    outil.retirer_double_authentification("editeur").unwrap();
+    let reste: i64 = rusqlite::Connection::open(d.join("portail.sqlite"))
+        .unwrap()
+        .query_row("SELECT count(*) FROM double_authentification", [], |r| {
+            r.get(0)
+        })
+        .unwrap();
+    assert_eq!(reste, 0);
+    drop(outil);
+    let _ = std::fs::remove_dir_all(d);
+}
