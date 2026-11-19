@@ -5,6 +5,7 @@
 | 0.1 | 2026-11-19 | Premier jet de kadenz-3a, après l'état des lieux et les ajouts de kadenz-cc (une seule instance, authentification gardée, clés au niveau du compte, arrêt propre). Rien n'est codé. |
 | 0.2 | 2026-11-19 | Relecture de kadenz-74 : passage des clients de la V1, assistant de l'application, voile de fermeture, sauvegardes sous Documents, causes du démarrage impossible, serveur démarré avant la copie, partage des lots. M1 livré (606aa2e) ; erreur de démarrage typée et vidage borné de la file. |
 | 0.3 | 2026-11-19 | M2 livré par kadenz-74 (f8c8908). `Serveur::arreter` rend la main base fermée (remarque de kadenz-74). Fermeture : bornes fixées par kadenz-cc, sauvegarde d'arrêt faite par `Serveur::arreter` lui-même, fin de session Windows vérifiée dans les sources de winit par kadenz-74. |
+| 0.4 | 2026-11-19 | M3 livré par kadenz-74 (1d4eea1). Décisions de kadenz-cc après la relecture du M2 par kadenz-3a : fermeture sans arrêt forcé ni processus invisible (bouton à 30 s), copie du poste dans `%LOCALAPPDATA%\Kadenz` à côté du serveur, cas « copie présente, serveur neuf » mené à la restauration ou à un nouveau départ, copie perdue. Conséquences pour M5 : désinstallation, attente de la fin du processus par l'installateur. |
 
 Statut : **proposé**. Les points marqués « à trancher par l'utilisateur » lui sont posés groupés par kadenz-cc. Le reste se décide entre sessions (décision du 2026-11-16).
 
@@ -36,6 +37,7 @@ Statut : **proposé**. Les points marqués « à trancher par l'utilisateur » l
 ### 2.3 Dossier, clés et droits
 
 - Dossier du serveur : `%LOCALAPPDATA%\Kadenz\Serveur`, dans le profil du compte Windows, et non `%ProgramData%\Kadenz\Serveur` (service du multiposte).
+- Copie du poste relié : `%LOCALAPPDATA%\Kadenz\kadenz-poste.sqlite`, à côté de `Serveur\` (décision de kadenz-cc). Copie et serveur restent ensemble : sur un profil itinérant de domaine, `%APPDATA%` suit le compte sur une autre machine, `%LOCALAPPDATA%` non ; une copie dans `%APPDATA%` arriverait sans son serveur. La base V1 et `erreurs.log` restent dans `%APPDATA%\Kadenz` ; la reprise V1 (section 3.0) y lit. Tout ce qui cherche la copie en monoposte (application, désinstallation du lot M5) suit cet emplacement.
 - Clés. Aujourd'hui, toutes les clés du serveur sont protégées par DPAPI à la portée **machine** : clé de la base (`kadenz_stockage::ouvrir_serveur`), clé TLS (`identite`), mot de passe des sauvegardes (`sauvegardes.rs`), restauration (`restauration.rs`). À cette portée, n'importe quel compte de la machine qui lit le fichier peut le déchiffrer ; la protection repose sur les droits du dossier. En monoposte, ces quatre chemins passent à la portée **compte** (`Portee::Compte`, comme la base V1 et le poste relié). Une portée est ajoutée à la configuration du serveur et à l'ouverture de sa base ; sa valeur par défaut reste `Machine`, et le multiposte ne change pas.
 - Droits du dossier. `droits::restreindre` réserve aujourd'hui le dossier à SYSTEM et aux Administrateurs. Dans un profil, cela bloquerait le compte lui-même. Un mode « compte courant » est ajouté : propriétaire le compte courant, accès au compte courant et à SYSTEM, sans héritage. Il est posé à la création du dossier et vérifié à chaque démarrage, comme le mode actuel. Couper le contrôle (`controle_droits: false`) est écarté : ce réglage reste réservé aux essais.
 
@@ -85,6 +87,19 @@ Ordre, tout dans l'application :
 
 En cas d'échec entre les étapes 3 et 5, un relancement reprend là où l'installation s'est arrêtée : entreprise installée mais poste non inscrit, on reprend à l'étape 4. Il n'y a jamais de seconde entreprise.
 
+L'installation (`admin::installer`, avec le hachage Argon2 du mot de passe de l'Admin) se fait hors du fil de l'interface, derrière l'écran d'attente (M3).
+
+### 3.2 État trouvé au lancement
+
+| Serveur | Copie du poste | Conduite |
+|---|---|---|
+| sans entreprise | absente | Premier lancement : étapes 1 à 5 ci-dessus. |
+| entreprise installée | absente | Installation interrompue, ou copie perdue : reprise à l'étape 4. Les postes déjà inscrits sont retirés avant le nouveau code (`postes::retirer`) : en monoposte, aucun autre poste ne peut exister, et la limite d'un poste sans licence (décision 41) refuserait sinon l'inscription. Les écritures que la copie perdue n'avait pas encore envoyées sont perdues avec elle. |
+| entreprise installée | présente, même empreinte | Adresse mise au port effectif, puis connexion (section 2.1). |
+| sans entreprise | présente | Dossier du serveur perdu (nettoyage, profil recréé), copie gardée. Détecté avant l'assistant, qui créerait une entreprise vide (relecture de kadenz-3a, décision de kadenz-cc). Proposé d'abord : restaurer une sauvegarde du serveur (lot M4) ; elle porte l'identité du serveur (`restauration.rs`), donc l'empreinte redevient celle de la copie. Sinon « Repartir à neuf », après confirmation : la copie est mise de côté, renommée avec la date, jamais effacée, puis premier lancement. |
+| entreprise installée | présente, autre empreinte | Même conduite : restauration proposée d'abord, sinon « Repartir à neuf » avec la copie mise de côté. |
+
+
 ### 3.0 Clients de la V1
 
 Un client de la ligne 0.2.x qui installe l'édition monoposte a déjà sa base V1 (`%APPDATA%\Kadenz\kadenz.sqlite`) ; aujourd'hui, l'application l'ouvre quand il n'y a pas de copie de poste relié (kadenz-74).
@@ -102,9 +117,15 @@ Un client de la ligne 0.2.x qui installe l'édition monoposte a déjà sa base V
 
 ## 4. Fermeture
 
-La décision 47 coupe la sauvegarde à la fermeture sur un poste relié. Le monoposte n'en aurait donc aucune. En monoposte, la fermeture de la fenêtre suit cet ordre, avec un délai total de 30 secondes, sauvegarde d'arrêt comprise (kadenz-cc) : à 10 secondes, le voile dit que l'opération prend plus de temps que prévu ; à 30 secondes, la fenêtre se ferme même si le fil n'a pas fini.
+La décision 47 coupe la sauvegarde à la fermeture sur un poste relié. Le monoposte n'en aurait donc aucune. En monoposte, la fermeture de la fenêtre suit l'ordre ci-dessous. Décision de kadenz-cc (M3, livré en 1d4eea1) : jamais de fermeture forcée pendant la sauvegarde d'arrêt, jamais de processus qui continue sans fenêtre.
 
-Aujourd'hui, le travail de fermeture se fait après la fin de `fenetre.run()`, donc fenêtre disparue : aucun message ne peut s'afficher, et un second lancement pendant ce temps ramènerait au premier plan une fenêtre qui n'existe plus (kadenz-74). La demande de fermeture est donc interceptée : la fenêtre reste affichée sous un voile « Enregistrement et sauvegarde en cours… », qui bloque aussi les écritures (étape 1). Les étapes 2 à 4 se font dans un fil à part, puis la fenêtre se ferme. `Serveur` et `Synchroniseur` sont `Send`, vérifié à la compilation.
+- Le vidage de la file est borné à 25 secondes.
+- À 10 secondes, le voile affiche « La sauvegarde prend plus de temps que prévu... ».
+- À 30 secondes, un bouton « Fermer sans attendre la sauvegarde » apparaît : la base reste intacte (mode WAL), et la dernière sauvegarde complète reste en place, la sauvegarde en cours s'écrivant dans `en-cours`. Sans clic, la fenêtre attend la fin du fil.
+- Une seconde demande de fermeture pendant le voile est ignorée.
+- Une fermeture pendant le démarrage du serveur ou pendant l'installation attend la fin de ce fil, puis arrête le serveur.
+
+Aujourd'hui, le travail de fermeture se fait après la fin de `fenetre.run()`, donc fenêtre disparue : aucun message ne peut s'afficher, et un second lancement pendant ce temps ramènerait au premier plan une fenêtre qui n'existe plus (kadenz-74). La demande de fermeture est donc interceptée : la fenêtre reste affichée sous un voile « Enregistrement et sauvegarde en cours… », qui bloque aussi les écritures (étape 1). Les étapes 2 à 4 se font dans un fil à part, puis la fenêtre se ferme, à la fin du fil ou sur le bouton. `Serveur` et `Synchroniseur` sont `Send`, vérifié à la compilation.
 
 1. Les nouvelles écritures sont bloquées dans l'interface.
 2. La file d'envoi du synchroniseur se vide vers le serveur, avec une attente bornée (`Synchroniseur::vider(délai)`, vrai si la file est vide). La file est gardée dans la copie et renvoyée au démarrage suivant avec le même identifiant, sans double application (`kadenz-poste`). Un délai dépassé ne perd donc rien : l'écriture part au lancement suivant.
@@ -112,6 +133,8 @@ Aujourd'hui, le travail de fermeture se fait après la fin de `fenetre.run()`, d
 4. Arrêt du serveur (`Serveur::arreter`) : écoute, planification et relais s'arrêtent ; puis la sauvegarde d'arrêt (décision 35), faite par `arreter` lui-même quand un mot de passe des sauvegardes est choisi, comme la sauvegarde de la V1 à la fermeture : l'application n'en lance pas une seconde ; puis la connexion à la base se ferme et le fil de la base est joint ; enfin le verrou du dossier est rendu. Au retour, le fichier de la base n'est plus ouvert.
 
 Les sauvegardes quotidiennes planifiées du serveur ne tournent que fenêtre ouverte.
+
+Mise à jour : l'application sort de sa boucle, puis fait la sauvegarde d'arrêt. Le processus peut donc vivre quelques secondes après le lancement de l'installateur ; celui-ci attend la fin du processus avant de remplacer les fichiers (lot M5, remarque de kadenz-74).
 
 Fermeture de la session Windows ou arrêt de la machine : winit (0.30.13, `platform_impl/windows/event_loop.rs`) ne traduit que `WM_CLOSE` en demande de fermeture ; `WM_QUERYENDSESSION` et `WM_ENDSESSION` passent à `DefWindowProc`, et Windows termine le processus après `WM_ENDSESSION` (vérifié dans les sources par kadenz-74). Il n'y a donc ni voile, ni vidage, ni sauvegarde d'arrêt. Les données restent intactes : la base du serveur est en mode WAL, et la file du synchroniseur, gardée dans la copie, part au lancement suivant. C'est accepté.
 
@@ -166,6 +189,7 @@ Ensuite, le poste devient un poste relié ordinaire. Ce passage n'est pas dans l
 ## 9. Essais
 
 - Chaque essai donne son propre dossier du serveur, comme `dossier_essai` de `KadenzAdmin`. Jamais `%APPDATA%\Kadenz` ni `%LOCALAPPDATA%\Kadenz` (base réelle de l'utilisateur).
+- Essai à l'écran : avec `KADENZ_BASE` posé, le serveur intégré prend `<dossier de KADENZ_BASE>\Serveur` (M2, kadenz-74), dans un dossier temporaire.
 - Essais automatiques prévus :
   - démarrage sur `127.0.0.1` sans découverte ;
   - port repris, puis port pris et réécrit ;
@@ -185,10 +209,10 @@ Chaque lot est compilé et essayé dans son propre tour.
 | Lot | Contenu | Crates |
 |---|---|---|
 | M1 | Serveur configurable : portée des clés, mode de droits « compte courant », verrou du dossier, port repris ou réécrit. Livré (606aa2e). | `kadenz-stockage`, `kadenz-serveur` |
-| M2 | Démarrage de l'application en monoposte, assistant, inscription automatique, reprise d'une installation interrompue | `kadenz-app` (`.po` communs) |
-| M3 | Fermeture et sauvegarde | `kadenz-app`, `kadenz-poste` |
-| M4 | Rubrique « Sauvegardes » et restauration en monoposte, rubriques cachées | `kadenz-app` (`.po` communs) |
-| M5 | Marque d'édition et installateur monoposte, après la décision de la section 6 | `installateur/` |
+| M2 | Démarrage de l'application en monoposte, assistant, inscription automatique, reprise d'une installation interrompue. Livré (f8c8908). | `kadenz-app` (`.po` communs) |
+| M3 | Fermeture et sauvegarde. Livré : part du serveur (d430fe1, 25e48b5), part de l'application (1d4eea1). | `kadenz-app`, `kadenz-poste`, `kadenz-serveur` |
+| M4 | Rubrique « Sauvegardes » et restauration en monoposte, rubriques cachées, conduite « copie présente, serveur neuf » de la section 3.2 | `kadenz-app` (`.po` communs) |
+| M5 | Marque d'édition et installateur monoposte, après la décision de la section 6. Désinstallation avec la copie dans `%LOCALAPPDATA%\Kadenz` (section 2.3) ; mise à jour qui attend la fin du processus (section 4). | `installateur/` |
 
 Partage arrêté entre kadenz-74 et kadenz-3a (2026-11-19), sans fichier touché par les deux :
 
