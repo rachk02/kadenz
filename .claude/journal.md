@@ -921,3 +921,4 @@
 [2026-11-19 19:48:16] Suivi - Design : connexion « piliers » (ebb200f, colonnes corinthiennes en points, noir et vert sauge) livrée par kadenz-e6 sur demande directe de l'utilisateur ; aucune intégration dans le portail sans son accord.
 [2026-11-19 20:13:37] Instruction - Connexion « piliers » : colonnes fixes, sans réaction à la souris, et fond tout noir (choix de l'utilisateur) ; réaction gardée seulement par ?souris-active, capture de la souris retirée.
 [2026-11-19 20:15:35] Instruction - Connexion « piliers » : panneau des colonnes en noir pur aussi (demande de l'utilisateur).
+[2026-11-19 20:20:37] Instruction - Connexion « piliers » : côté du formulaire en noir pur aussi, tout l'écran est noir (demande de l'utilisateur).

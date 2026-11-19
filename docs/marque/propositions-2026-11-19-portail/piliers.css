@@ -6,7 +6,7 @@
 
 :root {
   --pl-fond: #000000;        /* noir, autour du cadre */
-  --pl-cadre: #050505;       /* noir du cadre, à peine détaché du fond */
+  --pl-cadre: #000000;       /* noir pur, comme le fond et le panneau */
   --pl-panneau: #000000;     /* noir du panneau des colonnes */
   --pl-champ: #17181A;       /* champ plein */
   --pl-champ-survol: #1D1F21;
