@@ -53,35 +53,53 @@ fn erreur_io(e: io::Error) -> ErreurRelais {
     }
 }
 
+/// Connexion TLS 1.3 vers le relais, certificat épinglé, poignée de main faite.
+fn canal_epingle(relais: &str, empreinte: &str, delai: Duration) -> Result<Canal, ErreurRelais> {
+    let tcp = tcp_vers(relais, delai)?;
+    let fournisseur = fournisseur();
+    let ecart = Arc::new(AtomicBool::new(false));
+    let verification = Arc::new(Epinglage {
+        empreinte: empreinte.to_lowercase(),
+        fournisseur: fournisseur.clone(),
+        ecart: ecart.clone(),
+    });
+    let config = ClientConfig::builder_with_provider(fournisseur)
+        .with_protocol_versions(&[&rustls::version::TLS13])
+        .map_err(|e| ErreurRelais::Protocole(e.to_string()))?
+        .dangerous()
+        .with_custom_certificate_verifier(verification)
+        .with_no_client_auth();
+    let nom = ServerName::try_from(NOM_TLS).map_err(|e| ErreurRelais::Protocole(e.to_string()))?;
+    let conn = ClientConnection::new(Arc::new(config), nom)
+        .map_err(|e| ErreurRelais::Protocole(e.to_string()))?;
+    let mut canal = Canal::nouveau(conn, tcp);
+    if let Err(err) = canal.poignee(delai) {
+        return Err(if ecart.load(Ordering::SeqCst) {
+            ErreurRelais::CertificatDifferent
+        } else {
+            erreur_io(err)
+        });
+    }
+    Ok(canal)
+}
+
+/// Contrôle de santé du relais (sonde du conteneur, lot R1) : connexion,
+/// poignée de main TLS avec le certificat épinglé, puis réception du défi.
+/// Le relais a donc accepté la connexion, lancé son fil et répondu ; aucune
+/// entreprise n'est enregistrée, la connexion est fermée aussitôt.
+pub fn verifier_sante(relais: &str, empreinte: &str, delai: Duration) -> Result<(), ErreurRelais> {
+    let mut canal = canal_epingle(relais, empreinte, delai)?;
+    match canal.attendre(delai).map_err(erreur_io)? {
+        Trame::Defi { .. } => Ok(()),
+        Trame::Refus { motif, valeurs } => Err(ErreurRelais::Refus { motif, valeurs }),
+        autre => Err(ErreurRelais::Protocole(format!("{autre:?}"))),
+    }
+}
+
 impl Controle {
     /// Ouvre la connexion de contrôle et enregistre l'entreprise.
     pub fn enregistrer(e: &Enregistrement, delai: Duration) -> Result<Controle, ErreurRelais> {
-        let tcp = tcp_vers(e.relais, delai)?;
-        let fournisseur = fournisseur();
-        let ecart = Arc::new(AtomicBool::new(false));
-        let verification = Arc::new(Epinglage {
-            empreinte: e.empreinte_relais.to_lowercase(),
-            fournisseur: fournisseur.clone(),
-            ecart: ecart.clone(),
-        });
-        let config = ClientConfig::builder_with_provider(fournisseur)
-            .with_protocol_versions(&[&rustls::version::TLS13])
-            .map_err(|e| ErreurRelais::Protocole(e.to_string()))?
-            .dangerous()
-            .with_custom_certificate_verifier(verification)
-            .with_no_client_auth();
-        let nom =
-            ServerName::try_from(NOM_TLS).map_err(|e| ErreurRelais::Protocole(e.to_string()))?;
-        let conn = ClientConnection::new(Arc::new(config), nom)
-            .map_err(|e| ErreurRelais::Protocole(e.to_string()))?;
-        let mut canal = Canal::nouveau(conn, tcp);
-        if let Err(err) = canal.poignee(delai) {
-            return Err(if ecart.load(Ordering::SeqCst) {
-                ErreurRelais::CertificatDifferent
-            } else {
-                erreur_io(err)
-            });
-        }
+        let mut canal = canal_epingle(e.relais, e.empreinte_relais, delai)?;
         let defi = match canal.attendre(delai).map_err(erreur_io)? {
             Trame::Defi { defi } => preuve::depuis_base64(&defi)
                 .ok_or_else(|| ErreurRelais::Protocole("défi illisible".into()))?,

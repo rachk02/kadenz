@@ -59,21 +59,66 @@ pub fn nouvelle_identite(nom: &str) -> Result<IdentiteRelais, String> {
 }
 
 /// Identité du relais dans son dossier de données, créée au premier
-/// lancement. La clé est écrite avant le certificat : tant que le certificat
-/// n'est pas écrit, son empreinte n'a été donnée à personne.
+/// lancement, quand ni le certificat ni la clé n'existent. Si un seul des deux
+/// est là (restauration partielle), le relais refuse de démarrer au lieu d'en
+/// créer une autre : une nouvelle identité change l'empreinte réglée sur les
+/// serveurs des entreprises, qui ne pourraient plus s'y connecter (lot R1).
+/// Le dossier est restreint à son propriétaire (700) : il garde la clé et des
+/// traces qui nomment les entreprises et les postes.
 pub fn identite_relais(dossier: &Path) -> Result<IdentiteRelais, String> {
     std::fs::create_dir_all(dossier).map_err(|e| format!("{}: {e}", dossier.display()))?;
+    restreindre_dossier(dossier)?;
     let chemin_certificat = dossier.join(NOM_CERTIFICAT);
     let chemin_cle = dossier.join(NOM_CLE);
-    if chemin_certificat.exists() {
-        let certificat = std::fs::read(&chemin_certificat).map_err(|e| e.to_string())?;
-        let cle = std::fs::read(&chemin_cle).map_err(|e| e.to_string())?;
-        return Ok(IdentiteRelais { certificat, cle });
+    match (chemin_certificat.exists(), chemin_cle.exists()) {
+        (true, true) => {
+            let certificat = std::fs::read(&chemin_certificat)
+                .map_err(|e| format!("{} : {e}", chemin_certificat.display()))?;
+            let cle = std::fs::read(&chemin_cle)
+                .map_err(|e| format!("{} : {e}", chemin_cle.display()))?;
+            Ok(IdentiteRelais { certificat, cle })
+        }
+        (true, false) => Err(format!(
+            "certificat du relais présent mais clé absente ({}) : restaurez la clé \
+             sauvegardée avec ce certificat ; le relais ne crée pas d'autre identité, \
+             qui changerait l'empreinte réglée sur les serveurs",
+            chemin_cle.display()
+        )),
+        (false, true) => Err(format!(
+            "clé du relais présente mais certificat absent ({}) : restaurez le certificat \
+             sauvegardé avec cette clé ; si le relais n'a jamais servi (aucune empreinte \
+             donnée), supprimez la clé pour créer une nouvelle identité",
+            chemin_certificat.display()
+        )),
+        (false, false) => {
+            let identite = nouvelle_identite(NOM_TLS)?;
+            ecrire_cle(&chemin_cle, &identite.cle)?;
+            std::fs::write(&chemin_certificat, &identite.certificat)
+                .map_err(|e| format!("{} : {e}", chemin_certificat.display()))?;
+            Ok(identite)
+        }
     }
-    let identite = nouvelle_identite(NOM_TLS)?;
-    ecrire_cle(&chemin_cle, &identite.cle)?;
-    std::fs::write(&chemin_certificat, &identite.certificat).map_err(|e| e.to_string())?;
-    Ok(identite)
+}
+
+/// Empreinte du certificat déjà présent dans le dossier, sans rien créer
+/// (sous-commande de santé).
+pub fn empreinte_enregistree(dossier: &Path) -> Result<String, String> {
+    let chemin = dossier.join(NOM_CERTIFICAT);
+    std::fs::read(&chemin)
+        .map(|c| empreinte(&c))
+        .map_err(|e| format!("{} : {e}", chemin.display()))
+}
+
+#[cfg(unix)]
+fn restreindre_dossier(dossier: &Path) -> Result<(), String> {
+    use std::os::unix::fs::PermissionsExt;
+    std::fs::set_permissions(dossier, std::fs::Permissions::from_mode(0o700))
+        .map_err(|e| format!("{} : droits 700 impossibles : {e}", dossier.display()))
+}
+
+#[cfg(not(unix))]
+fn restreindre_dossier(_dossier: &Path) -> Result<(), String> {
+    Ok(())
 }
 
 #[cfg(unix)]

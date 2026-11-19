@@ -16,6 +16,7 @@ use ed25519_dalek::VerifyingKey;
 use rustls::{ServerConfig, ServerConnection};
 
 use crate::controle::{BATTEMENT, SILENCE};
+use crate::frein::{Cle, Frein};
 use crate::preuve::{self, ROLE_POSTE, ROLE_SERVEUR, empreinte};
 use crate::tls::{Canal, fournisseur, identite_relais};
 use crate::trames::{self, TAILLE_EN_CLAIR, Trame};
@@ -34,6 +35,10 @@ const DELAI_TRAMES: Duration = Duration::from_secs(5);
 const INACTIVITE: Duration = Duration::from_secs(600);
 /// Traces gardées (décision 59).
 const JOURS_DE_TRACES: i64 = 30;
+/// Refus de connexion (plafond, frein, fil impossible) : une ligne de trace
+/// par minute au plus, avec leur nombre par motif, pour qu'une attaque ne
+/// remplisse pas le disque.
+const RESUME_DES_REFUS: Duration = Duration::from_secs(60);
 
 pub struct Config {
     pub adresse: SocketAddr,
@@ -50,10 +55,24 @@ pub struct Config {
     /// Date UTC du jour, `AAAA-MM-JJ`, pour l'échéance des licences
     /// (remplacée par les essais).
     pub date_utc: Horloge,
+    /// Lance un fil ; les essais le remplacent pour simuler la limite de
+    /// fils d'un conteneur.
+    pub lanceur: Lanceur,
 }
 
 /// Date UTC du jour, `AAAA-MM-JJ`.
 pub type Horloge = Arc<dyn Fn() -> String + Send + Sync>;
+
+/// Lance un travail dans un nouveau fil. Un échec (limite de fils du
+/// conteneur, mémoire) est rendu, jamais une panique : le travail est alors
+/// abandonné, ce qui rend ses places et ferme ses connexions (lot R1).
+pub type Lanceur = Arc<dyn Fn(Box<dyn FnOnce() + Send>) -> io::Result<()> + Send + Sync>;
+
+/// Lanceur ordinaire : `thread::Builder`, qui rend l'erreur au lieu de
+/// paniquer comme `thread::spawn`.
+pub fn lanceur_ordinaire() -> Lanceur {
+    Arc::new(|travail: Box<dyn FnOnce() + Send>| thread::Builder::new().spawn(travail).map(|_| ()))
+}
 
 impl Config {
     pub fn nouvelle(
@@ -70,6 +89,7 @@ impl Config {
             battement: BATTEMENT,
             silence: SILENCE,
             date_utc: Arc::new(aujourdhui_utc),
+            lanceur: lanceur_ordinaire(),
         }
     }
 }
@@ -190,6 +210,55 @@ struct Etat {
     battement: Duration,
     silence: Duration,
     date_utc: Horloge,
+    lanceur: Lanceur,
+    /// Connexions ouvertes en tout.
+    ouvertes: AtomicUsize,
+    frein: Mutex<Frein>,
+    /// Refus de connexion comptés depuis la dernière ligne de trace.
+    refus: Mutex<(Instant, HashMap<&'static str, u64>)>,
+}
+
+impl Etat {
+    /// Compte un refus de connexion ; une ligne de résumé par minute au plus.
+    fn compter_refus(&self, motif: &'static str) {
+        let Ok(mut refus) = self.refus.lock() else {
+            return;
+        };
+        *refus.1.entry(motif).or_insert(0) += 1;
+        if refus.0.elapsed() < RESUME_DES_REFUS {
+            return;
+        }
+        refus.0 = Instant::now();
+        let mut lignes: Vec<String> = refus
+            .1
+            .drain()
+            .map(|(m, n)| format!("refus_connexions motif={m} nombre={n}"))
+            .collect();
+        drop(refus);
+        lignes.sort();
+        for ligne in lignes {
+            self.traces.noter(&ligne);
+        }
+    }
+}
+
+/// Place d'une connexion admise : rendue au plafond global et au frein de
+/// son adresse quand la connexion se termine, ou quand son fil n'a pas pu
+/// être lancé (le travail abandonné est détruit avec elle).
+struct Admise {
+    etat: Arc<Etat>,
+    cle: Option<Cle>,
+}
+
+impl Drop for Admise {
+    fn drop(&mut self) {
+        self.etat.ouvertes.fetch_sub(1, Ordering::SeqCst);
+        if let Some(cle) = self.cle
+            && let Ok(mut frein) = self.etat.frein.lock()
+        {
+            frein.fermer(cle);
+        }
+    }
 }
 
 /// Rend sa place au compteur quand la connexion se termine.
@@ -240,10 +309,24 @@ impl Relais {
             battement: config.battement,
             silence: config.silence,
             date_utc: config.date_utc,
+            lanceur: config.lanceur,
+            ouvertes: AtomicUsize::new(0),
+            frein: Mutex::new(Frein::nouveau()),
+            // Premier refus noté aussitôt (horloge reculée d'une minute quand
+            // c'est possible).
+            refus: Mutex::new((
+                Instant::now()
+                    .checked_sub(RESUME_DES_REFUS)
+                    .unwrap_or_else(Instant::now),
+                HashMap::new(),
+            )),
         });
         let fil = {
             let etat = etat.clone();
-            thread::spawn(move || ecouter(ecoute, etat))
+            thread::Builder::new()
+                .name("ecoute".into())
+                .spawn(move || ecouter(ecoute, etat))
+                .map_err(|e| format!("fil d'écoute impossible : {e}"))?
         };
         Ok(Relais {
             adresse,
@@ -298,8 +381,10 @@ impl Drop for Relais {
     }
 }
 
+/// Boucle d'écoute. Rien n'y panique : une connexion refusée (plafond,
+/// frein de son adresse, fil impossible) est fermée et comptée, et l'écoute
+/// continue (lot R1).
 fn ecouter(ecoute: TcpListener, etat: Arc<Etat>) {
-    let ouvertes = Arc::new(AtomicUsize::new(0));
     for flux in ecoute.incoming() {
         if etat.arret.load(Ordering::SeqCst) {
             break;
@@ -308,16 +393,40 @@ fn ecouter(ecoute: TcpListener, etat: Arc<Etat>) {
             thread::sleep(Duration::from_millis(50));
             continue;
         };
-        if ouvertes.fetch_add(1, Ordering::SeqCst) >= CONNEXIONS_MAX {
-            ouvertes.fetch_sub(1, Ordering::SeqCst);
+        if etat.ouvertes.fetch_add(1, Ordering::SeqCst) >= CONNEXIONS_MAX {
+            etat.ouvertes.fetch_sub(1, Ordering::SeqCst);
+            etat.compter_refus("plafond_global");
             continue;
         }
-        let etat = etat.clone();
-        let ouvertes = ouvertes.clone();
-        thread::spawn(move || {
-            let _place = Place(&ouvertes);
-            connexion(&etat, tcp);
+        // Dès ici, la place globale est rendue par `Admise`, quoi qu'il arrive.
+        let mut admise = Admise {
+            etat: etat.clone(),
+            cle: None,
+        };
+        if let Ok(pair) = tcp.peer_addr() {
+            let cle = Cle::de(pair.ip());
+            let decision = etat
+                .frein
+                .lock()
+                .map(|mut f| f.admettre(cle, Instant::now()));
+            match decision {
+                Ok(Ok(())) => admise.cle = Some(cle),
+                Ok(Err(refus)) => {
+                    etat.compter_refus(refus.motif());
+                    continue;
+                }
+                Err(_) => continue,
+            }
+        }
+        let travail_etat = etat.clone();
+        let travail: Box<dyn FnOnce() + Send> = Box::new(move || {
+            let _admise = admise;
+            connexion(&travail_etat, tcp);
         });
+        if (etat.lanceur)(travail).is_err() {
+            // Le travail, sa connexion et sa place ont été détruits avec lui.
+            etat.compter_refus("fil_impossible");
+        }
     }
 }
 
@@ -557,9 +666,21 @@ fn relier(etat: &Etat, inscrite: &Inscrite, poste: &str, tcp: TcpStream, serveur
         let _ = tcp.shutdown(Shutdown::Both);
         let _ = serveur.shutdown(Shutdown::Both);
     }
-    let retour = thread::spawn(move || copier(serveur2, tcp2));
-    let montant = copier(tcp, serveur);
-    let descendant = retour.join().unwrap_or(0);
+    // Sens serveur vers poste dans un second fil ; s'il ne peut pas être
+    // lancé, la session est coupée proprement (lot R1).
+    let (volume, reception) = mpsc::channel();
+    let retour: Box<dyn FnOnce() + Send> = Box::new(move || {
+        let _ = volume.send(copier(serveur2, tcp2));
+    });
+    let (montant, descendant) = if (etat.lanceur)(retour).is_ok() {
+        let montant = copier(tcp, serveur);
+        (montant, reception.recv().unwrap_or(0))
+    } else {
+        let _ = tcp.shutdown(Shutdown::Both);
+        let _ = serveur.shutdown(Shutdown::Both);
+        etat.compter_refus("fil_impossible");
+        (0, 0)
+    };
     if let Ok(mut reliees) = inscrite.reliees.lock() {
         reliees.retain(|(n, ..)| *n != numero);
     }

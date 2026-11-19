@@ -4,8 +4,10 @@
 |---|---|---|
 | 0.1 | 2026-11-18 | Brouillon de kadenz-74 à la demande de kadenz-cc : Caddyfile, compose.yaml, pare-feu et sauvegardes proposés, d'après la réponse 4 d'OpenCode (`docs/securite/echanges-opencode.md`), la section 7 de `docs/spec-synchronisation.md` et les Dockerfile du dépôt. Rien n'est en service. |
 | 0.2 | 2026-11-18 | Relecture d'OpenCode (réponse 6) intégrée : filtrage par la chaîne DOCKER-USER, Caddy sans root sur les ports internes 8080 et 8443, apex, journaux d'accès, rotation des journaux Docker, healthchecks, ulimits et pids du relais, pages d'erreur par code, pièges de la sauvegarde SQLite, défauts du relais à corriger dans le code. |
+| 0.3 | 2026-11-18 | Lot R1 du relais écrit (pas encore compilé ni commité) : les quatre défauts du relais passent en « corrigé dans R1 » ; sonde de santé `kadenz-relais sante` ; propriétaire de `/donnees` ; adresses vues par le relais derrière docker-proxy, à vérifier avant la mise en ligne. |
+| 0.4 | 2026-11-19 | Section 7 : variante sur le Dell avec Tailscale, sans nom de domaine (décision de l'utilisateur du 2026-11-19). Funnel vérifié dans sa documentation : le portail y passe, le relais non dans son protocole actuel ; trois pistes pour le relais, à trancher. |
 
-Statut : **proposé**. Le VPS, son prestataire, le nom de domaine et la mise en service restent à la décision de l'utilisateur (décisions 16 et 69 du cahier de la phase 2). Le relais et le portail y iront une fois leur implémentation finie (décision de l'utilisateur du 2026-11-18). Rien ici n'a été essayé sur un VPS ; chaque fichier est à relire et à essayer d'abord sur une machine d'essai.
+Statut : **proposé**. Le VPS, son prestataire, le nom de domaine et la mise en service restent à la décision de l'utilisateur (décisions 16 et 69 du cahier de la phase 2). Le relais et le portail y iront une fois leur implémentation finie (décision de l'utilisateur du 2026-11-18). Pour l'instant, ni domaine ni VPS : hébergement sur le Dell avec Tailscale, et Vercel au besoin (décision du 2026-11-19, section 7). Rien ici n'a été essayé sur un VPS ; chaque fichier est à relire et à essayer d'abord sur une machine d'essai.
 
 ## 1. Ce qui tourne sur le VPS
 
@@ -243,6 +245,9 @@ secrets:
 - Caddy sans root (réponse 6 d'OpenCode, point b) : avec `cap_drop: ALL`, la capacité de fichier que porte le binaire de l'image est masquée par l'ensemble limite et n'apporte rien ; un Caddy root aurait besoin de `cap_add: NET_BIND_SERVICE`, et un Caddy non root ne peut pas compter sur cette capacité de fichier sous `no-new-privileges`. D'où les ports internes 8080 et 8443. À vérifier à l'essai : `caddy validate`, et l'écriture des certificats dans `/data/caddy` avec l'uid 65534.
 - Clé du portail : fichier hors dépôt, jamais dans l'image, exclu des sauvegardes (le dossier `secrets/` est exclu du dépôt restic). En compose sans Swarm, un secret de type fichier est un montage du fichier de l'hôte, avec ses droits : le fichier doit être lisible par l'utilisateur `kadenz` du conteneur seul (mode 400). Cet utilisateur est créé par `useradd --system` sans uid fixe (Dockerfile) : fixer `--uid 10001` dans les deux Dockerfile rend le propriétaire stable. Une copie hors ligne de la clé reste chez l'éditeur ; procédure de compromission : révocation et remplacement par une mise à jour (décision 29).
 - Santé : les images du portail et du relais (debian-slim) n'ont ni curl ni wget. Une sonde demande soit une sous-commande de santé dans les deux programmes, soit une sonde extérieure (section 6). Sans elle, la panne silencieuse du relais décrite plus bas ne se voit pas.
+  - Relais (lot R1) : `kadenz-relais sante --dossier /donnees` fait la poignée de main TLS avec le certificat du dossier épinglé, attend le défi du relais, puis sort avec le code 0 ou 1, sans rien créer. Le `--dossier` est obligatoire dans la sonde : le défaut est le chemin relatif `donnees-relais`. Dans le Dockerfile (lot D1 de kadenz-3a) : `HEALTHCHECK CMD ["kadenz-relais", "sante", "--dossier", "/donnees"]`.
+  - Portail : sous-commande de santé à prévoir dans les lots du portail.
+- Propriétaire de `/donnees` du relais : l'utilisateur du conteneur (uid 10001, une fois fixé dans le Dockerfile). Le relais met le dossier en 700 au démarrage et refuse de démarrer s'il ne peut pas le faire (lot R1) ; un volume créé avec un autre propriétaire l'empêche donc de démarrer, ce qui se voit tout de suite au lieu de passer inaperçu.
 - Variante à trois conteneurs : un service `site` sur l'image Caddy, avec `auto_https off`, `admin off`, racine en lecture seule et `file_server`, sur le réseau `console` ; le Caddy d'entrée fait alors `reverse_proxy site:80` pour l'hôte du site.
 - Démon Docker : mode rootless ou `userns-remap` à étudier, à décider avant la mise en service, car `userns-remap` change le propriétaire des volumes et du secret ; jamais de `docker.sock` monté, jamais `--privileged` ni `network_mode: host`.
 
@@ -252,10 +257,10 @@ Relevées par OpenCode (réponses 5 et 6), à porter dans les lots du portail et
 
 | Programme | Correction |
 |---|---|
-| relais | un échec de création de fil (`thread::spawn`) panique et tue le fil d'écoute ; le processus reste vivant sans plus rien accepter (`crates/relais/src/relais.rs`, `main.rs`) : passer par `thread::Builder::spawn` et refuser la connexion |
-| relais | aucun frein par adresse sur les nouvelles connexions ; en attendant, plafond par source dans `DOCKER-USER` (section 4) |
-| relais | un certificat manquant est régénéré même si la clé est là (`crates/relais/src/tls.rs`) : une restauration partielle change l'empreinte sans prévenir ; procédure de compromission de l'identité à écrire |
-| relais | `/donnees` créé sans `chmod 700` (`crates/relais/Dockerfile`), contrairement au portail |
+| relais | **corrigé dans le lot R1** (écrit, compilation et commit en attente) : un échec de création de fil paniquait et tuait le fil d'écoute. Désormais `thread::Builder::spawn` ; la connexion est refusée, comptée dans les traces, et l'écoute continue ; une session dont le second fil ne part pas est coupée proprement. Essai automatique avec une limite de fils simulée |
+| relais | **corrigé dans le lot R1** : frein par adresse (`crates/relais/src/frein.rs`), 256 connexions ouvertes au plus par adresse (pire cas d'une entreprise entière derrière une adresse : 161), rafale de 160 puis 16 nouvelles connexions par seconde, préfixe /64 en IPv6, table bornée à 16384 adresses. Le plafond par source dans `DOCKER-USER` (section 4) reste utile en amont |
+| relais | **corrigé dans le lot R1** : un certificat ou une clé présent seul fait refuser le démarrage avec un message clair, au lieu de créer une nouvelle identité. Essai automatique dans les deux sens. Reste à écrire : la procédure de compromission de l'identité |
+| relais | **corrigé dans le lot R1** : le relais met son dossier de données en 700 au démarrage (propriétaire du volume : voir plus haut) |
 | portail et relais | binaires d'essai et clé d'essai dans les images de production ; uid de l'utilisateur `kadenz` à fixer |
 | portail | défauts 1 à 9 de la réponse 5 (décision de kadenz-cc du 2026-11-18) ; journal structuré sur la sortie, avec l'adresse du client, pour fail2ban |
 
@@ -303,5 +308,49 @@ iptables -I DOCKER-USER 6 -j DROP
 
 1. Corrections de la section 3 faites dans le code (portail et relais), binaires d'essai retirés des images, image de Caddy épinglée par empreinte.
 2. Nom de domaine et VPS choisis par l'utilisateur ; paramètres de la section 1 remplis.
-3. Essai complet sur une machine d'essai : démarrage, certificats, en-têtes vérifiés (`curl -I`, erreurs et redirections comprises), règles `DOCKER-USER` après un redémarrage de Docker, balayage des ports depuis l'extérieur, essai de charge du relais, activation d'un code depuis un KadenzAdmin d'essai, enregistrement d'un serveur d'essai sur le relais, sauvegarde puis restauration de la base.
-4. Supervision : sonde HTTP sur la console et poignée TLS sur le relais toutes les minutes, alerte sur l'expiration des certificats, le disque, les redémarrages. L'utilisateur a déjà ntfy et healthchecks.io pour son serveur maison ; même méthode possible.
+3. Adresses vues par le relais : son frein par adresse (lot R1) ne sépare les clients que s'il voit leur vraie adresse. Une connexion qui passe par `docker-proxy` (IPv6 publié sans ip6tables, trafic en épingle depuis le VPS lui-même, `userland-proxy` actif) arrive avec l'adresse de la passerelle du pont Docker : tous ces clients partagent alors un seul seau de 256 connexions. Vérifier depuis deux adresses extérieures, en IPv4 et en IPv6, que les traces du relais et ses refus distinguent bien les adresses ; sinon, désactiver `userland-proxy` dans `daemon.json` avec ip6tables actif, ou couper IPv6.
+4. Essai complet sur une machine d'essai : démarrage, certificats, en-têtes vérifiés (`curl -I`, erreurs et redirections comprises), règles `DOCKER-USER` après un redémarrage de Docker, balayage des ports depuis l'extérieur, essai de charge du relais, activation d'un code depuis un KadenzAdmin d'essai, enregistrement d'un serveur d'essai sur le relais, sauvegarde puis restauration de la base.
+5. Supervision : sonde HTTP sur la console et poignée TLS sur le relais toutes les minutes, alerte sur l'expiration des certificats, le disque, les redémarrages. L'utilisateur a déjà ntfy et healthchecks.io pour son serveur maison ; même méthode possible.
+
+## 7. Variante : Dell et Tailscale, sans nom de domaine
+
+Décision de l'utilisateur du 2026-11-19, transmise par kadenz-cc : pas de nom de domaine ni de VPS pour l'instant ; hébergement sur le Dell (serveur maison, déjà relié par Tailscale) et, au besoin, sur Vercel ; Docker accordé sur le Dell. Les sections 2 à 6 restent la cible pour un VPS ; cette section dit ce qui change sur le Dell. Rien n'y a été essayé.
+
+### Ce que permet Tailscale Funnel (documentation vérifiée le 2026-11-19)
+
+| Point | Ce que dit Tailscale | Source |
+|---|---|---|
+| Ports publics | 443, 8443 et 10000 seulement | https://tailscale.com/kb/1223/funnel |
+| Nom public | un nom dans le domaine du tailnet, `<machine>.<tailnet>.ts.net` ; pas de domaine personnel | même page |
+| Chiffrement | « Funnel only works over TLS-encrypted connections » | même page |
+| Aiguillage | les serveurs relais de Funnel lisent le nom SNI du ClientHello TLS et transmettent la connexion chiffrée à la machine, sans terminer TLS | https://tailscale.com/blog/introducing-tailscale-funnel |
+| Modes | `--https=<port>` (Tailscale termine TLS avec un certificat ts.net et passe à un service HTTP local), `--tcp=<port>` (TCP brut), `--tls-terminated-tcp=<port>` ; `--proxy-protocol=1|2` pour transmettre l'adresse du client en TCP | https://tailscale.com/kb/1311/tailscale-funnel |
+| Débit | « subject to non-configurable bandwidth limits », valeur non publiée sur la page | https://tailscale.com/kb/1223/funnel |
+| En-têtes | le trafic Funnel ne porte aucun en-tête d'identité Tailscale ; la page de Serve ne dit rien de `X-Forwarded-For` | https://tailscale.com/kb/1312/serve |
+| Prérequis | MagicDNS, certificats HTTPS du tailnet, attribut `funnel` dans la politique du tailnet, Tailscale 1.38.3 ou plus | https://tailscale.com/kb/1223/funnel |
+
+### Conséquences pour chaque service
+
+- **Console des licences (portail)** : compatible. `tailscale funnel --https=443` vers le port local du portail ; Tailscale fournit le certificat du nom ts.net, Caddy n'est plus indispensable devant. Deux points à vérifier à l'essai, faute de documentation : l'adresse du client que voit le portail (Funnel n'annonce pas de `X-Forwarded-For` ; sans elle, le frein de connexion du portail et le journal compteraient toutes les requêtes comme une seule adresse), et la tenue de l'option `--mandataire`, qui ne doit pas croire un en-tête qu'un client aurait fourni lui-même.
+- **Site public** : un seul nom ts.net par machine, et les cookies ne sont pas isolés par port : site et console sur le même nom (443 et 8443) partageraient le cookie de session de la console, ce que la recommandation des deux noms d'hôte (section 1) voulait éviter. Héberger le site statique sur Vercel, sous son adresse par défaut, garde les deux origines séparées ; les conditions de Vercel sont à vérifier dans sa documentation avant de l'adopter.
+- **Relais d'accès à distance** : **incompatible avec Funnel dans son protocole actuel**, pour deux raisons tirées du code :
+  1. un poste se présente par des trames en clair (premier octet au plus 0x10, `crates/relais/src/relais.rs`, fonction `connexion`) ; Funnel n'accepte que des connexions TLS ;
+  2. la connexion de contrôle d'un serveur est bien en TLS, mais avec le nom SNI `kadenz-relais` (`NOM_TLS`, `crates/relais/src/tls.rs`), et non le nom ts.net de la machine ; Funnel ne peut pas l'aiguiller.
+
+  De plus, derrière Funnel, le relais verrait toutes les connexions venir de Tailscale : son frein par adresse (lot R1) n'aurait plus d'effet sans `--proxy-protocol` et sans lecture du protocole PROXY dans le relais, qui ne la fait pas aujourd'hui.
+
+### Pistes pour le relais, à trancher
+
+| Piste | Ce qu'elle demande | Limites |
+|---|---|---|
+| A. Redirection d'un port de la box vers le Dell | une adresse IPv4 publique (pas de CGNAT) et une redirection de port sur la box ; adresse du relais donnée en IP | l'adresse publique d'un abonnement domestique peut changer, et chaque serveur d'entreprise devrait alors être réglé de nouveau ; à vérifier chez le fournisseur d'accès de l'utilisateur |
+| B. Protocole du relais rendu compatible avec Funnel | toutes les connexions en TLS avec le nom SNI ts.net (le relais garde son certificat épinglé, Funnel ne terminant pas TLS), trames du poste passées dans TLS, lecture du protocole PROXY ; nouvelle version des trames, donc changement dans le relais, le serveur et le poste | changement de spécification (section 7 de `docs/spec-synchronisation.md`) à décider entre sessions ; débit de Funnel limité et non publié ; nom public lié au tailnet de l'utilisateur |
+| C. Relais joignable dans le tailnet seulement | aucune modification | les serveurs et postes des entreprises clientes devraient rejoindre le tailnet de l'utilisateur ; ne convient qu'aux essais internes (jugement) |
+
+Pour les essais internes, la piste C suffit et ne demande rien. Pour des clients réels, A dépend de la ligne de l'utilisateur, B d'une décision de conception ; le VPS des sections 2 à 6 reste la solution sans ces limites.
+
+### Ce qui ne change pas
+
+- Docker sur le Dell : mêmes réglages de conteneurs que la section 3 (sans root, `cap_drop: ALL`, lecture seule, `pids_limit` et `ulimits` du relais, rotation des journaux) ; les règles `DOCKER-USER` de la section 4 ne s'appliquent qu'aux ports publiés, et rien n'est publié vers Internet si tout passe par Funnel.
+- Sauvegardes de la section 5 : le Dell a déjà restic vers OneDrive ; la base du portail et l'identité du relais y entrent avec les mêmes précautions (`.backup` avec l'uid du conteneur, certificat **et** clé du relais).
+- Sondes : `kadenz-relais sante --dossier /donnees` dans le conteneur ; ntfy et healthchecks.io déjà en place sur le Dell.

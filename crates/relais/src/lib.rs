@@ -14,6 +14,7 @@
 //! stockage ni de Windows.
 
 pub mod controle;
+mod frein;
 pub mod poste;
 pub mod preuve;
 pub mod relais;
@@ -22,7 +23,7 @@ pub mod trames;
 
 use std::fmt;
 
-pub use tls::{IdentiteRelais, identite_relais};
+pub use tls::{IdentiteRelais, empreinte_enregistree, identite_relais};
 
 /// Identité neuve, sans l'écrire (essais du poste et du serveur).
 #[doc(hidden)]

@@ -426,3 +426,115 @@ fn licence_echue_pendant_la_connexion() {
     r.arreter();
     let _ = std::fs::remove_dir_all(d);
 }
+
+/// Lot R1 : un fil qui ne peut pas être lancé (limite de fils du conteneur)
+/// refuse la connexion sans tuer l'écoute ; le relais répond de nouveau dès
+/// que des fils peuvent être lancés.
+#[test]
+fn fil_impossible_sans_arret_de_l_ecoute() {
+    let d = dossier("fils");
+    let refuser = Arc::new(AtomicBool::new(false));
+    let mut config = Config::nouvelle(
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        d.clone(),
+        vec![cle_portail().verifying_key()],
+    );
+    let ordinaire = kadenz_relais::relais::lanceur_ordinaire();
+    let drapeau = refuser.clone();
+    config.lanceur = Arc::new(move |travail: Box<dyn FnOnce() + Send>| {
+        if drapeau.load(Ordering::SeqCst) {
+            Err(std::io::Error::other("limite de fils simulée"))
+        } else {
+            ordinaire(travail)
+        }
+    });
+    let r = Relais::demarrer(config).unwrap();
+    let adresse = r.adresse().to_string();
+    let empreinte = r.empreinte().to_string();
+    kadenz_relais::controle::verifier_sante(&adresse, &empreinte, DELAI).unwrap();
+
+    refuser.store(true, Ordering::SeqCst);
+    for _ in 0..20 {
+        // Connexion acceptée puis fermée aussitôt, sans réponse.
+        let mut tcp = TcpStream::connect(r.adresse()).unwrap();
+        tcp.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+        let mut tampon = [0u8; 1];
+        assert!(
+            !matches!(tcp.read(&mut tampon), Ok(n) if n > 0),
+            "le relais a répondu sans fil"
+        );
+    }
+    assert!(kadenz_relais::controle::verifier_sante(&adresse, &empreinte, DELAI).is_err());
+
+    refuser.store(false, Ordering::SeqCst);
+    kadenz_relais::controle::verifier_sante(&adresse, &empreinte, DELAI)
+        .expect("l'écoute doit avoir survécu aux fils refusés");
+    r.arreter();
+    let _ = std::fs::remove_dir_all(d);
+}
+
+/// Lot R1 : une restauration partielle (certificat ou clé seul) ne crée pas
+/// d'autre identité ; l'identité complète est relue telle quelle.
+#[test]
+fn identite_partielle_refusee() {
+    let d = dossier("identite");
+    let premiere = kadenz_relais::identite_relais(&d).unwrap();
+    assert_eq!(
+        kadenz_relais::identite_relais(&d).unwrap().empreinte(),
+        premiere.empreinte()
+    );
+    assert_eq!(
+        kadenz_relais::empreinte_enregistree(&d).unwrap(),
+        premiere.empreinte()
+    );
+    let cle = std::fs::read(d.join("relais.cle")).unwrap();
+
+    // Certificat absent, clé présente : refus, clé intacte.
+    let certificat = std::fs::read(d.join("relais.crt")).unwrap();
+    std::fs::remove_file(d.join("relais.crt")).unwrap();
+    let erreur = kadenz_relais::identite_relais(&d).unwrap_err();
+    assert!(erreur.contains("certificat absent"), "{erreur}");
+    assert!(!d.join("relais.crt").exists());
+    assert_eq!(std::fs::read(d.join("relais.cle")).unwrap(), cle);
+    let mut config = Config::nouvelle(
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        d.clone(),
+        vec![cle_portail().verifying_key()],
+    );
+    config.traces = None;
+    assert!(Relais::demarrer(config).is_err());
+
+    // Clé absente, certificat présent : refus aussi.
+    std::fs::write(d.join("relais.crt"), &certificat).unwrap();
+    std::fs::remove_file(d.join("relais.cle")).unwrap();
+    let erreur = kadenz_relais::identite_relais(&d).unwrap_err();
+    assert!(erreur.contains("clé absente"), "{erreur}");
+
+    // Les deux restaurés : même empreinte qu'avant.
+    std::fs::write(d.join("relais.cle"), &cle).unwrap();
+    assert_eq!(
+        kadenz_relais::identite_relais(&d).unwrap().empreinte(),
+        premiere.empreinte()
+    );
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mode = std::fs::metadata(&d).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode, 0o700);
+    }
+    let _ = std::fs::remove_dir_all(d);
+}
+
+/// Lot R1 : la sonde de santé refuse un relais qui ne présente pas le
+/// certificat attendu.
+#[test]
+fn sante_avec_autre_empreinte_refusee() {
+    let (r, d) = relais("sante");
+    let autre = identite("autre").empreinte();
+    assert_eq!(
+        kadenz_relais::controle::verifier_sante(&r.adresse().to_string(), &autre, DELAI),
+        Err(ErreurRelais::CertificatDifferent)
+    );
+    r.arreter();
+    let _ = std::fs::remove_dir_all(d);
+}
