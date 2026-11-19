@@ -1,0 +1,470 @@
+/* Portail des licences : connexion « piliers », proposée le 2026-11-19
+   (kadenz-e6) d'après deux références de l'utilisateur : grandes colonnes
+   antiques en points sur fond noir, et la combinaison noir et vert sauge
+   (champs pleins arrondis, bouton sauge). Après identite.css (polices,
+   remise à zéro). Aucun style en ligne. */
+
+:root {
+  --pl-fond: #8F968A;        /* sauge grisé, autour du cadre */
+  --pl-cadre: #050505;       /* noir du cadre */
+  --pl-panneau: #0B0B0B;     /* noir du panneau des colonnes */
+  --pl-champ: #17181A;       /* champ plein */
+  --pl-champ-survol: #1D1F21;
+  --pl-trait: #2A2C2E;
+  --pl-texte: #F2F3EF;
+  --pl-doux: #9DA197;        /* texte secondaire, gris sauge */
+  --pl-sauge: #A7B58E;       /* bouton et accent */
+  --pl-sauge-clair: #BCC9A4;
+  --pl-sauge-sombre: #0E1209;
+  --pl-ok: #9FD3A0;
+  --pl-erreur: #F08A8A;
+}
+
+body.piliers {
+  min-height: 100vh;
+  margin: 0;
+  padding: 40px;
+  color: var(--pl-texte);
+  background: var(--pl-fond);
+}
+
+.piliers .cadre {
+  display: grid;
+  grid-template-columns: minmax(380px, 5fr) 7fr;
+  max-width: 1360px;
+  min-height: calc(100vh - 80px);
+  margin: 0 auto;
+  padding: 10px;
+  background: var(--pl-cadre);
+  border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+}
+
+.piliers .colonne {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 40px;
+}
+
+.piliers .boite {
+  width: 100%;
+  max-width: 380px;
+}
+
+.piliers .marque {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 44px;
+  color: var(--pl-texte);
+}
+
+.piliers .marque .symbole {
+  width: 52px;
+  height: 52px;
+}
+
+.piliers .surtitre {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pl-sauge);
+}
+
+.piliers h1 {
+  margin: 0 0 10px;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--pl-texte);
+}
+
+.piliers .texte {
+  margin: 0 0 32px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--pl-doux);
+}
+
+/* ----- Champs pleins, arrondis ----- */
+
+.piliers .champ {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.piliers .champ label,
+.piliers .cases-code .legende {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--pl-texte);
+}
+
+.piliers .saisie {
+  position: relative;
+}
+
+.piliers .saisie svg {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translateY(-50%);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--pl-doux);
+  pointer-events: none;
+}
+
+.piliers .champ input {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px 0 44px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--pl-texte);
+  background: var(--pl-champ);
+  border: 1px solid var(--pl-champ);
+  border-radius: 9px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.piliers .champ input::placeholder {
+  color: #5E625A;
+}
+
+.piliers .champ input:hover {
+  background: var(--pl-champ-survol);
+  border-color: var(--pl-trait);
+}
+
+.piliers .champ input:focus {
+  outline: none;
+  background: var(--pl-champ-survol);
+  border-color: var(--pl-sauge);
+  box-shadow: 0 0 0 4px rgba(167, 181, 142, 0.16);
+}
+
+.piliers .bouton-sauge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 18px;
+  padding: 0 18px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pl-sauge-sombre);
+  background: var(--pl-sauge);
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.piliers .bouton-sauge:hover {
+  background: var(--pl-sauge-clair);
+}
+
+.piliers .bouton-sauge:focus-visible {
+  outline: 2px solid var(--pl-sauge-clair);
+  outline-offset: 3px;
+}
+
+.piliers .retour,
+.piliers .bascule {
+  margin: 20px 0 0;
+  font-size: 14px;
+  text-align: center;
+  color: var(--pl-doux);
+}
+
+.piliers .retour a,
+.piliers .lien {
+  padding: 0;
+  font: inherit;
+  font-size: 14px;
+  color: var(--pl-texte);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-decoration-color: var(--pl-doux);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.piliers .separateur {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 32px 0 16px;
+  font-size: 12px;
+  color: var(--pl-doux);
+}
+
+.piliers .separateur::before,
+.piliers .separateur::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--pl-trait);
+}
+
+.piliers .pied {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--pl-doux);
+}
+
+/* ----- Panneau des colonnes ----- */
+
+.piliers .illustration {
+  position: relative;
+  min-height: 520px;
+  overflow: hidden;
+  background: var(--pl-panneau);
+  border-radius: 14px;
+}
+
+.piliers .illustration canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ----- Code en six cases ----- */
+
+.piliers .cases-code {
+  min-width: 0;
+  margin: 0 0 4px;
+  padding: 0;
+  border: 0;
+}
+
+.piliers .cases-code .legende {
+  margin-bottom: 10px;
+  padding: 0;
+}
+
+.piliers .cases {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.piliers .cases input {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  height: 58px;
+  padding: 0;
+  font: inherit;
+  font-size: 24px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--pl-texte);
+  caret-color: var(--pl-sauge);
+  background: var(--pl-champ);
+  border: 1px solid var(--pl-champ);
+  border-radius: 9px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
+}
+
+.piliers .cases input:hover {
+  border-color: var(--pl-trait);
+}
+
+.piliers .cases input:focus {
+  outline: none;
+  background: var(--pl-champ-survol);
+  border-color: var(--pl-sauge);
+  box-shadow: 0 0 0 4px rgba(167, 181, 142, 0.16);
+}
+
+.piliers .cases .tiret {
+  flex: 0 0 10px;
+  height: 2px;
+  background: var(--pl-trait);
+}
+
+.piliers .cases-code.verification input {
+  border-color: var(--pl-sauge);
+  animation: pl-attente 0.9s ease-in-out infinite;
+}
+
+.piliers .cases-code.juste input {
+  background: #10220F;
+  border-color: #5FBF63;
+  box-shadow: 0 0 0 4px rgba(95, 191, 99, 0.18);
+}
+
+.piliers .cases-code.faux input {
+  background: #2A0F0F;
+  border-color: #E5534B;
+  box-shadow: 0 0 0 4px rgba(229, 83, 75, 0.18);
+}
+
+.piliers .cases-code.faux .cases {
+  animation: pl-secousse 0.42s ease-in-out;
+}
+
+@keyframes pl-attente {
+  0%, 100% { background: var(--pl-champ); }
+  50% { background: #23261F; }
+}
+
+@keyframes pl-secousse {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(2px); }
+}
+
+.piliers .avis {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.piliers .avis.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.piliers .avis svg {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.piliers .avis-ok {
+  color: var(--pl-ok);
+  background: rgba(95, 191, 99, 0.1);
+  border-color: rgba(95, 191, 99, 0.38);
+}
+
+.piliers .avis-erreur {
+  color: var(--pl-erreur);
+  background: rgba(229, 83, 75, 0.1);
+  border-color: rgba(229, 83, 75, 0.38);
+}
+
+.piliers .avis.avis-ok .icone-erreur,
+.piliers .avis.avis-erreur .icone-ok {
+  display: none;
+}
+
+.piliers .secours .bouton-sauge {
+  margin-top: 6px;
+}
+
+.piliers .note-maquette {
+  margin: 20px 0 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--pl-doux);
+  border: 1px dashed var(--pl-trait);
+  border-radius: 8px;
+}
+
+.piliers [hidden] {
+  display: none !important;
+}
+
+/* ----- Réglage de la maquette (pas dans le portail) ----- */
+
+.reglage-maquette {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  z-index: 10;
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  background: rgba(5, 5, 5, 0.9);
+  border: 1px solid var(--pl-trait);
+  border-radius: 12px;
+  transform: translateX(-50%);
+}
+
+.reglage-maquette button {
+  min-height: 32px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--pl-doux);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.reglage-maquette button[aria-pressed="true"] {
+  color: var(--pl-sauge-sombre);
+  background: var(--pl-sauge);
+}
+
+.capture .reglage-maquette {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  body.piliers {
+    padding: 12px;
+  }
+
+  .piliers .cadre {
+    grid-template-columns: 1fr;
+  }
+
+  .piliers .illustration {
+    order: -1;
+    min-height: 220px;
+  }
+
+  .piliers .colonne {
+    padding: 40px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .piliers .cases-code.verification input,
+  .piliers .cases-code.faux .cases {
+    animation: none;
+  }
+
+  .piliers .avis,
+  .piliers .champ input,
+  .piliers .cases input {
+    transition: none;
+  }
+}

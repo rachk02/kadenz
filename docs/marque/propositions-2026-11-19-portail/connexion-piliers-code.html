@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Code de connexion - Portail des licences Kadenz</title>
+<link rel="stylesheet" href="identite.css"><link rel="stylesheet" href="piliers.css">
+<script src="piliers.js" defer></script>
+<script src="code.js" defer></script>
+</head>
+<body class="piliers">
+<div class="cadre">
+<main class="colonne">
+<div class="boite">
+<div class="marque"><svg class="symbole" viewBox="0 0 256 256" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 16 L120 16 L120 120 L16 120 Z M136 120 L136 14.44 A105.56 105.56 0 0 1 241.56 120 Z M16 136 L120 240 L16 240 Z M134.44 188 A53.56 53.56 0 1 1 241.56 188 A53.56 53.56 0 1 1 134.44 188 Z"/></svg></div>
+<p class="surtitre">Double authentification</p>
+<h1>Code de connexion</h1>
+<p class="texte">Saisissez le code à 6 chiffres affiché par votre application d'authentification, ou l'un de vos codes de secours.</p>
+<form class="formulaire-code" method="get" action="interieur-entreprises.html" data-suite="interieur-entreprises.html" data-exemple="246810">
+<fieldset class="cases-code" id="cases-code">
+<legend class="legende">Code à 6 chiffres</legend>
+<div class="cases">
+<input type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Chiffre 1" autofocus>
+<input type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Chiffre 2">
+<input type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Chiffre 3">
+<span class="tiret" aria-hidden="true"></span>
+<input type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Chiffre 4">
+<input type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Chiffre 5">
+<input type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Chiffre 6">
+</div>
+</fieldset>
+<div class="champ secours" id="secours" hidden>
+<label for="code-secours">Code de secours</label>
+<div class="saisie"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><input id="code-secours" type="text" placeholder="XXXXX-XXXXX" autocomplete="off" spellcheck="false"></div>
+<button class="bouton-sauge" type="submit">Valider</button>
+</div>
+<p class="bascule"><button type="button" class="lien" id="bascule-secours">Utiliser un code de secours</button></p>
+</form>
+<div class="avis" id="avis" role="status" aria-live="polite" hidden>
+<svg class="icone-ok" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>
+<svg class="icone-erreur" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M12 7v6M12 16.5v.5"/></svg>
+<span id="avis-texte"></span>
+</div>
+<p class="retour"><a href="connexion-piliers.html">Revenir à la connexion</a></p>
+<p class="note-maquette">Maquette : le code juste est 246810 (exemple) ; tout autre code est refusé.</p>
+<div class="separateur" aria-hidden="true">kadenz</div>
+<p class="pied">Enregistrement des paiements et émission des licences d'abonnement Kadenz, pour l'éditeur et ses revendeurs.</p>
+</div>
+</main>
+<div class="illustration" aria-hidden="true"><canvas id="piliers"></canvas></div>
+</div>
+<div class="reglage-maquette"><button type="button" id="reglage-souris" aria-pressed="true">Colonnes : réagissent à la souris</button></div>
+</body>
+</html>
