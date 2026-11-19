@@ -2918,3 +2918,48 @@ msgstr "Kadenz {} es una nueva generación: se instala por separado."
 
 msgid "clé de signature de la licence inconnue : {}"
 msgstr "clave de firma de la licencia desconocida: {}"
+
+msgid "Licence échue, socle seul"
+msgstr "Licencia vencida, solo la base"
+
+msgid "code incomplet : {} caractères sur 25"
+msgstr "código incompleto: {} caracteres de 25"
+
+msgid "code erroné : vérifiez la saisie"
+msgstr "código erróneo: revise lo introducido"
+
+msgid "les lettres O et I et les chiffres 0 et 1 n'existent pas dans un code : vérifiez la saisie"
+msgstr "las letras O e I y las cifras 0 y 1 no existen en un código: revise lo introducido"
+
+msgid "code d'activation inconnu : vérifiez la saisie"
+msgstr "código de activación desconocido: revise lo que escribió"
+
+msgid "ce code d'activation appartient à une autre entreprise"
+msgstr "este código de activación pertenece a otra empresa"
+
+msgid "trop d'essais d'activation : réessayez dans {} secondes"
+msgstr "demasiados intentos de activación: vuelva a intentarlo en {} segundos"
+
+msgid "activation impossible pour le moment : réessayez plus tard"
+msgstr "la activación no es posible por ahora: vuelva a intentarlo más tarde"
+
+msgid "demande d'activation invalide"
+msgstr "solicitud de activación no válida"
+
+msgid "ce code ne sert pas à ce logiciel : vérifiez la gamme indiquée sur votre abonnement"
+msgstr "este código no sirve para este programa: compruebe la gama indicada en su suscripción"
+
+msgid "ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer"
+msgstr "este código ya está activado en otro puesto: pida a su distribuidor que lo libere"
+
+msgid "activation indisponible : adresse du portail non configurée"
+msgstr "activación no disponible: dirección del portal no configurada"
+
+msgid "portail d'activation injoignable : vérifiez la connexion à Internet"
+msgstr "portal de activación inaccesible: compruebe la conexión a Internet"
+
+msgid "réponse inattendue du portail d'activation"
+msgstr "respuesta inesperada del portal de activación"
+
+msgid "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste"
+msgstr "conexión segura con el portal rechazada: compruebe la fecha y la hora del equipo"

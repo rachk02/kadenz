@@ -2918,3 +2918,48 @@ msgstr "Kadenz {} は新しい世代です。別途インストールします�
 
 msgid "clé de signature de la licence inconnue : {}"
 msgstr "不明なライセンス署名キー：{}"
+
+msgid "Licence échue, socle seul"
+msgstr "ライセンスの期限切れ、基本機能のみ"
+
+msgid "code incomplet : {} caractères sur 25"
+msgstr "コードが不完全です：25文字中{}文字"
+
+msgid "code erroné : vérifiez la saisie"
+msgstr "コードが正しくありません：入力を確認してください"
+
+msgid "les lettres O et I et les chiffres 0 et 1 n'existent pas dans un code : vérifiez la saisie"
+msgstr "コードには英字のOとI、数字の0と1は使われません：入力を確認してください"
+
+msgid "code d'activation inconnu : vérifiez la saisie"
+msgstr "不明なアクティベーションコードです：入力内容を確認してください"
+
+msgid "ce code d'activation appartient à une autre entreprise"
+msgstr "このアクティベーションコードは別の会社のものです"
+
+msgid "trop d'essais d'activation : réessayez dans {} secondes"
+msgstr "アクティベーションの試行回数が多すぎます：{} 秒後にもう一度お試しください"
+
+msgid "activation impossible pour le moment : réessayez plus tard"
+msgstr "現在アクティベーションできません：後でもう一度お試しください"
+
+msgid "demande d'activation invalide"
+msgstr "無効なアクティベーション要求です"
+
+msgid "ce code ne sert pas à ce logiciel : vérifiez la gamme indiquée sur votre abonnement"
+msgstr "このコードはこのソフトウェア用ではありません：サブスクリプションに記載されたエディションを確認してください"
+
+msgid "ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer"
+msgstr "このコードは既に別の端末で有効化されています：販売店に解除を依頼してください"
+
+msgid "activation indisponible : adresse du portail non configurée"
+msgstr "アクティベーションを利用できません：ポータルのアドレスが設定されていません"
+
+msgid "portail d'activation injoignable : vérifiez la connexion à Internet"
+msgstr "アクティベーションポータルに接続できません：インターネット接続を確認してください"
+
+msgid "réponse inattendue du portail d'activation"
+msgstr "アクティベーションポータルから予期しない応答がありました"
+
+msgid "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste"
+msgstr "ポータルへの安全な接続が拒否されました：このコンピューターの日付と時刻を確認してください"

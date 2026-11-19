@@ -77,9 +77,15 @@ pub(crate) fn afficher(
             String::new(),
             String::new(),
         ),
-        EtatLicence::Valide(l) => (
+        EtatLicence::Valide(l, _) => (
             tr("Licence valide"),
             true,
+            l.client.clone(),
+            l.emise_le.clone(),
+        ),
+        EtatLicence::Expiree(l) => (
+            tr("Licence échue, socle seul"),
+            false,
             l.client.clone(),
             l.emise_le.clone(),
         ),
@@ -159,7 +165,8 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                     crate::appliquer_droits(&f, &etat);
                 }
                 match licence {
-                    EtatLicence::Valide(_) => retour_ok(tr("Clé enregistrée.")),
+                    EtatLicence::Valide(..) => retour_ok(tr("Clé enregistrée.")),
+                    EtatLicence::Expiree(_) => retour_erreur(tr("Licence échue, socle seul")),
                     EtatLicence::Invalide(m) => retour_erreur(message(m)),
                     EtatLicence::Absente => retour_erreur(tr("Aucune clé : socle seul")),
                 }

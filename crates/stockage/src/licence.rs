@@ -6,10 +6,17 @@
 //! ils ne peuvent pas être forcés en modifiant ce fichier. Sans clé valide,
 //! seul le socle est actif (décision de l'utilisateur du 2026-11-11) ; les
 //! données des modules restent en base.
+//!
+//! Licences datées (décision 75, version 2, émises par le portail) : à
+//! l'échéance, retour au socle comme sans licence, après des avertissements à
+//! 30 jours, 7 jours et la veille. La date du jour retenue ne recule jamais
+//! (dernière date vue, gardée dans les paramètres système), comme pour
+//! l'abonnement du serveur dans la phase 2.
 
 use kadenz_domaine::message::MessageCompose;
 use kadenz_domaine::module::Module;
 use kadenz_domaine::role::Droit;
+use chrono::NaiveDate;
 use kadenz_licence::Licence;
 use kadenz_licence::VerifyingKey;
 use rusqlite::{Connection, OptionalExtension, params};
@@ -21,6 +28,8 @@ use crate::droits::exiger as exiger_droit;
 use crate::{Erreur, Resultat};
 
 const CLE: &str = "licence.cle";
+/// Dernière date retenue pour l'échéance (ne recule jamais).
+const DATE_VUE: &str = "licence.date_vue";
 
 /// État de la licence du poste.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -29,16 +38,125 @@ pub enum EtatLicence {
     Absente,
     /// Clé refusée (signature, autre poste...) : socle seul.
     Invalide(MessageCompose),
-    Valide(Licence),
+    /// Licence en cours, avec les jours restants jusqu'à l'échéance comprise
+    /// (0 le dernier jour valable) ; `None` pour une licence perpétuelle.
+    Valide(Licence, Option<i64>),
+    /// Licence datée dont l'échéance est passée : socle seul, la licence
+    /// (client, modules, échéance) reste lisible pour l'écran.
+    Expiree(Licence),
+}
+
+/// Palier d'avertissement avant l'échéance d'une licence datée.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Avertissement {
+    Aucun,
+    /// De 30 à 8 jours restants.
+    Trente,
+    /// De 7 à 2 jours restants.
+    Sept,
+    /// La veille et le dernier jour valable.
+    Veille,
+    /// Échéance passée.
+    Expiree,
 }
 
 impl EtatLicence {
-    /// Modules activés ; vide sans licence valide.
+    /// Modules activés ; vide sans licence en cours.
     pub fn modules(&self) -> &[Module] {
         match self {
-            EtatLicence::Valide(l) => &l.modules,
+            EtatLicence::Valide(l, _) => &l.modules,
             _ => &[],
         }
+    }
+
+    /// Jours restants d'une licence datée en cours.
+    pub fn jours_restants(&self) -> Option<i64> {
+        match self {
+            EtatLicence::Valide(_, jours) => *jours,
+            _ => None,
+        }
+    }
+
+    pub fn avertissement(&self) -> Avertissement {
+        match self {
+            EtatLicence::Expiree(_) => Avertissement::Expiree,
+            EtatLicence::Valide(_, Some(jours)) => match jours {
+                0..=1 => Avertissement::Veille,
+                2..=7 => Avertissement::Sept,
+                8..=30 => Avertissement::Trente,
+                _ => Avertissement::Aucun,
+            },
+            _ => Avertissement::Aucun,
+        }
+    }
+}
+
+/// Date du jour de l'horloge de la machine.
+pub fn horloge() -> NaiveDate {
+    chrono::Local::now().date_naive()
+}
+
+fn date(texte: &str) -> Option<NaiveDate> {
+    NaiveDate::parse_from_str(texte, "%Y-%m-%d").ok()
+}
+
+/// Date retenue, gardée : jamais avant la dernière date vue ni avant
+/// l'émission de la licence en place.
+fn date_retenue(
+    conn: &Connection,
+    horloge: NaiveDate,
+    emission: Option<NaiveDate>,
+) -> Resultat<NaiveDate> {
+    let vue = lire_parametre(conn, DATE_VUE)?.as_deref().and_then(date);
+    let retenue = [Some(horloge), vue, emission]
+        .into_iter()
+        .flatten()
+        .max()
+        .unwrap_or(horloge);
+    if vue != Some(retenue) {
+        ecrire_parametre(conn, DATE_VUE, &retenue.format("%Y-%m-%d").to_string())?;
+    }
+    Ok(retenue)
+}
+
+/// Licence vérifiée et datée : en cours ou expirée selon la date retenue.
+fn situer(conn: &Connection, licence: Licence, horloge: NaiveDate) -> Resultat<EtatLicence> {
+    let Some(echeance) = licence.echeance.as_deref().map(date) else {
+        return Ok(EtatLicence::Valide(licence, None));
+    };
+    let Some(echeance) = echeance else {
+        return Ok(EtatLicence::Invalide(MessageCompose::new(
+            "clé de licence illisible",
+            &[],
+        )));
+    };
+    let aujourdhui = date_retenue(conn, horloge, date(&licence.emise_le))?;
+    let jours = (echeance - aujourdhui).num_days();
+    Ok(if jours < 0 {
+        EtatLicence::Expiree(licence)
+    } else {
+        EtatLicence::Valide(licence, Some(jours))
+    })
+}
+
+/// Clés permises : la clé V1 pour une licence perpétuelle, la clé du portail
+/// pour une licence datée.
+pub struct Cles {
+    pub perpetuelles: Vec<VerifyingKey>,
+    pub datees: Vec<VerifyingKey>,
+}
+
+impl Cles {
+    /// Clés embarquées dans l'application.
+    pub fn embarquees() -> Result<Cles, MessageCompose> {
+        Ok(Cles {
+            perpetuelles: vec![kadenz_licence::cle_publique()?],
+            datees: kadenz_licence::cles_datees(),
+        })
+    }
+
+    fn verifier(&self, cle: &str, poste: &str) -> Result<Licence, MessageCompose> {
+        kadenz_licence::verifier_selon(cle, poste, &self.perpetuelles, &self.datees)
     }
 }
 
@@ -66,42 +184,56 @@ fn remplir(conn: &Connection, modules: &[Module]) -> Resultat<()> {
     Ok(())
 }
 
-/// Clé enregistrée ; la colonne `valeur` contient du JSON, la clé y est une
-/// chaîne JSON.
-fn cle_enregistree(conn: &Connection) -> Resultat<Option<String>> {
+/// Paramètre système ; la colonne `valeur` contient du JSON, le texte y est
+/// une chaîne JSON.
+fn lire_parametre(conn: &Connection, cle: &str) -> Resultat<Option<String>> {
     let valeur: Option<String> = conn
         .query_row(
             "SELECT valeur FROM parametre_systeme WHERE cle = ?1",
-            [CLE],
+            [cle],
             |r| r.get(0),
         )
         .optional()?;
     Ok(
         valeur.map(|v| match serde_json::from_str::<serde_json::Value>(&v) {
-            Ok(serde_json::Value::String(cle)) => cle,
+            Ok(serde_json::Value::String(texte)) => texte,
             _ => String::new(),
         }),
     )
 }
 
-/// État de la clé enregistrée pour ce poste.
-pub fn etat(conn: &Connection, poste: &str) -> Resultat<EtatLicence> {
-    let publique = match kadenz_licence::cle_publique() {
-        Ok(p) => p,
-        Err(e) => return Ok(EtatLicence::Invalide(e)),
-    };
-    etat_avec(conn, poste, &publique)
+fn ecrire_parametre(conn: &Connection, cle: &str, texte: &str) -> Resultat<()> {
+    conn.execute(
+        "INSERT INTO parametre_systeme (cle, valeur) VALUES (?1, ?2)
+         ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur",
+        params![cle, serde_json::Value::String(texte.to_owned()).to_string()],
+    )?;
+    Ok(())
 }
 
-fn etat_avec(conn: &Connection, poste: &str, publique: &VerifyingKey) -> Resultat<EtatLicence> {
-    Ok(match cle_enregistree(conn)? {
-        None => EtatLicence::Absente,
-        Some(cle) if cle.trim().is_empty() => EtatLicence::Absente,
-        Some(cle) => match kadenz_licence::verifier_avec(&cle, poste, publique) {
-            Ok(l) => EtatLicence::Valide(l),
-            Err(e) => EtatLicence::Invalide(e),
+/// État de la clé enregistrée pour ce poste, à la date du jour.
+pub fn etat(conn: &Connection, poste: &str) -> Resultat<EtatLicence> {
+    match Cles::embarquees() {
+        Ok(cles) => etat_avec(conn, poste, &cles, horloge()),
+        Err(e) => Ok(EtatLicence::Invalide(e)),
+    }
+}
+
+/// État avec des clés et une date données.
+pub fn etat_avec(
+    conn: &Connection,
+    poste: &str,
+    cles: &Cles,
+    horloge: NaiveDate,
+) -> Resultat<EtatLicence> {
+    match lire_parametre(conn, CLE)? {
+        None => Ok(EtatLicence::Absente),
+        Some(cle) if cle.trim().is_empty() => Ok(EtatLicence::Absente),
+        Some(cle) => match cles.verifier(&cle, poste) {
+            Ok(l) => situer(conn, l, horloge),
+            Err(e) => Ok(EtatLicence::Invalide(e)),
         },
-    })
+    }
 }
 
 /// Vérifie la clé enregistrée et active ses modules ; à appeler à l'ouverture
@@ -112,13 +244,14 @@ pub fn appliquer(conn: &Connection, poste: &str) -> Resultat<EtatLicence> {
     Ok(e)
 }
 
-#[cfg(test)]
-fn appliquer_avec(
+/// Idem avec des clés et une date données.
+pub fn appliquer_avec(
     conn: &Connection,
     poste: &str,
-    publique: &VerifyingKey,
+    cles: &Cles,
+    horloge: NaiveDate,
 ) -> Resultat<EtatLicence> {
-    let e = etat_avec(conn, poste, publique)?;
+    let e = etat_avec(conn, poste, cles, horloge)?;
     remplir(conn, e.modules())?;
     Ok(e)
 }
@@ -131,24 +264,23 @@ pub fn enregistrer(
     cle: &str,
     poste: &str,
 ) -> Resultat<EtatLicence> {
-    enregistrer_avec(conn, acteur, cle, poste, &kadenz_licence::cle_publique()?)
+    enregistrer_avec(conn, acteur, cle, poste, &Cles::embarquees()?, horloge())
 }
 
-fn enregistrer_avec(
+/// Idem avec des clés et une date données. Une licence datée déjà expirée est
+/// enregistrée (elle reste lisible) mais n'active aucun module.
+pub fn enregistrer_avec(
     conn: &Connection,
     acteur: &Utilisateur,
     cle: &str,
     poste: &str,
-    publique: &VerifyingKey,
+    cles: &Cles,
+    horloge: NaiveDate,
 ) -> Resultat<EtatLicence> {
     exiger_droit(conn, acteur, Droit::GererParametres)?;
     let cle: String = cle.chars().filter(|c| !c.is_whitespace()).collect();
-    let licence = kadenz_licence::verifier_avec(&cle, poste, publique)?;
-    conn.execute(
-        "INSERT INTO parametre_systeme (cle, valeur) VALUES (?1, ?2)
-         ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur",
-        params![CLE, serde_json::Value::String(cle).to_string()],
-    )?;
+    let licence = cles.verifier(&cle, poste)?;
+    ecrire_parametre(conn, CLE, &cle)?;
     audit::journaliser(
         conn,
         Entree {
@@ -161,12 +293,15 @@ fn enregistrer_avec(
                 "poste": licence.poste,
                 "modules": licence.modules.iter().map(|m| m.code()).collect::<Vec<_>>(),
                 "emise_le": licence.emise_le,
+                "echeance": licence.echeance,
+                "postes": licence.postes,
             })),
             utilisateur_id: Some(acteur.id),
         },
     )?;
-    remplir(conn, &licence.modules)?;
-    Ok(EtatLicence::Valide(licence))
+    let e = situer(conn, licence, horloge)?;
+    remplir(conn, e.modules())?;
+    Ok(e)
 }
 
 /// Le module est-il activé sur cette connexion ?
@@ -292,7 +427,11 @@ mod tests {
     fn cle_valide_enregistree_puis_reappliquee() {
         use ed25519_dalek::SigningKey;
         let privee = SigningKey::from_bytes(&[3u8; 32]);
-        let publique = privee.verifying_key();
+        let cles = Cles {
+            perpetuelles: vec![privee.verifying_key()],
+            datees: vec![],
+        };
+        let jour = NaiveDate::from_ymd_opt(2026, 11, 18).unwrap();
         let poste = "6VBZ-Z2E3-KFW9-N6QX";
         let cle = kadenz_licence::emettre(
             &Licence {
@@ -300,6 +439,8 @@ mod tests {
                 poste: poste.into(),
                 modules: vec![Module::Devis, Module::Paiements],
                 emise_le: "2026-11-11".into(),
+                echeance: None,
+                postes: 1,
             },
             &privee,
         )
@@ -307,19 +448,82 @@ mod tests {
         let conn = ouvrir_en_memoire().unwrap();
         let admin = compte(&conn, "admin", Role::Admin);
         let vente = compte(&conn, "vente", Role::Commercial);
-        assert!(enregistrer_avec(&conn, &vente, &cle, poste, &publique).is_err());
-        let e = enregistrer_avec(&conn, &admin, &cle, poste, &publique).unwrap();
+        assert!(enregistrer_avec(&conn, &vente, &cle, poste, &cles, jour).is_err());
+        let e = enregistrer_avec(&conn, &admin, &cle, poste, &cles, jour).unwrap();
+        assert_eq!(e.jours_restants(), None);
+        assert_eq!(e.avertissement(), Avertissement::Aucun);
         assert_eq!(e.modules(), [Module::Devis, Module::Paiements]);
         assert!(module_actif(&conn, Module::Devis).unwrap());
         assert!(!module_actif(&conn, Module::Livraisons).unwrap());
         // Réouverture : la clé relue active les mêmes modules.
         remplir(&conn, &[]).unwrap();
-        let relue = appliquer_avec(&conn, poste, &publique).unwrap();
+        let relue = appliquer_avec(&conn, poste, &cles, jour).unwrap();
         assert_eq!(relue, e);
         assert!(module_actif(&conn, Module::Paiements).unwrap());
         // Autre poste : socle seul.
-        let ailleurs = appliquer_avec(&conn, "AAAA-AAAA-AAAA-AAAA", &publique).unwrap();
+        let ailleurs = appliquer_avec(&conn, "AAAA-AAAA-AAAA-AAAA", &cles, jour).unwrap();
         assert!(matches!(ailleurs, EtatLicence::Invalide(_)));
         assert!(!module_actif(&conn, Module::Devis).unwrap());
+    }
+
+    fn licence_datee(privee: &ed25519_dalek::SigningKey, poste: &str, echeance: &str) -> String {
+        kadenz_licence::emettre(
+            &Licence {
+                client: "Client Essai".into(),
+                poste: poste.into(),
+                modules: vec![Module::Devis, Module::Paiements],
+                emise_le: "2026-11-18".into(),
+                echeance: Some(echeance.into()),
+                postes: 1,
+            },
+            privee,
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn echeance_avertissements_puis_socle() {
+        use ed25519_dalek::SigningKey;
+        let v1 = SigningKey::from_bytes(&[3u8; 32]);
+        let portail = SigningKey::from_bytes(&[4u8; 32]);
+        let cles = Cles {
+            perpetuelles: vec![v1.verifying_key()],
+            datees: vec![portail.verifying_key()],
+        };
+        let poste = "6VBZ-Z2E3-KFW9-N6QX";
+        let j = |t: &str| NaiveDate::parse_from_str(t, "%Y-%m-%d").unwrap();
+        let conn = ouvrir_en_memoire().unwrap();
+        let admin = compte(&conn, "admin", Role::Admin);
+        // Datée signée par la clé V1 : refusée, rien d'enregistré.
+        let mauvaise = licence_datee(&v1, poste, "2027-11-17");
+        assert!(enregistrer_avec(&conn, &admin, &mauvaise, poste, &cles, j("2026-11-18")).is_err());
+        let cle = licence_datee(&portail, poste, "2026-12-31");
+        let e = enregistrer_avec(&conn, &admin, &cle, poste, &cles, j("2026-11-18")).unwrap();
+        assert_eq!(e.jours_restants(), Some(43));
+        assert_eq!(e.avertissement(), Avertissement::Aucun);
+        for (jour, palier) in [
+            ("2026-12-01", Avertissement::Trente),
+            ("2026-12-24", Avertissement::Sept),
+            ("2026-12-30", Avertissement::Veille),
+            ("2026-12-31", Avertissement::Veille),
+        ] {
+            let e = appliquer_avec(&conn, poste, &cles, j(jour)).unwrap();
+            assert_eq!(e.avertissement(), palier, "{jour}");
+            assert!(module_actif(&conn, Module::Devis).unwrap(), "{jour}");
+        }
+        // Lendemain de l'échéance : socle seul, licence encore lisible.
+        let e = appliquer_avec(&conn, poste, &cles, j("2027-01-01")).unwrap();
+        assert!(matches!(&e, EtatLicence::Expiree(l) if l.modules == [Module::Devis, Module::Paiements]));
+        assert_eq!(e.avertissement(), Avertissement::Expiree);
+        assert!(!module_actif(&conn, Module::Devis).unwrap());
+        // Horloge reculée : la date retenue ne recule pas.
+        let e = appliquer_avec(&conn, poste, &cles, j("2026-11-20")).unwrap();
+        assert!(matches!(e, EtatLicence::Expiree(_)));
+        assert!(!module_actif(&conn, Module::Devis).unwrap());
+        // Renouvellement : nouvelle licence datée, modules rouverts.
+        let suivante = licence_datee(&portail, poste, "2027-12-31");
+        let e = enregistrer_avec(&conn, &admin, &suivante, poste, &cles, j("2027-01-02")).unwrap();
+        assert_eq!(e.avertissement(), Avertissement::Aucun);
+        assert!(module_actif(&conn, Module::Devis).unwrap());
     }
 }

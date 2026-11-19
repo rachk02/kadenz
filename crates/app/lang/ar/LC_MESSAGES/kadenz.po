@@ -2918,3 +2918,48 @@ msgstr "Kadenz {} جيل جديد: يُثبَّت بشكل منفصل."
 
 msgid "clé de signature de la licence inconnue : {}"
 msgstr "مفتاح توقيع الترخيص غير معروف: {}"
+
+msgid "Licence échue, socle seul"
+msgstr "انتهى الترخيص، الأساس فقط"
+
+msgid "code incomplet : {} caractères sur 25"
+msgstr "رمز غير مكتمل: {} حرفًا من 25"
+
+msgid "code erroné : vérifiez la saisie"
+msgstr "رمز خاطئ: تحقق من الإدخال"
+
+msgid "les lettres O et I et les chiffres 0 et 1 n'existent pas dans un code : vérifiez la saisie"
+msgstr "الحرفان O وI والرقمان 0 و1 غير موجودة في الرموز: تحقق من الإدخال"
+
+msgid "code d'activation inconnu : vérifiez la saisie"
+msgstr "رمز التفعيل غير معروف: تحقق مما أدخلته"
+
+msgid "ce code d'activation appartient à une autre entreprise"
+msgstr "رمز التفعيل هذا يخص شركة أخرى"
+
+msgid "trop d'essais d'activation : réessayez dans {} secondes"
+msgstr "محاولات تفعيل كثيرة جدًا: أعد المحاولة بعد {} ثانية"
+
+msgid "activation impossible pour le moment : réessayez plus tard"
+msgstr "التفعيل غير ممكن حاليًا: أعد المحاولة لاحقًا"
+
+msgid "demande d'activation invalide"
+msgstr "طلب تفعيل غير صالح"
+
+msgid "ce code ne sert pas à ce logiciel : vérifiez la gamme indiquée sur votre abonnement"
+msgstr "هذا الرمز لا يصلح لهذا البرنامج: تحقق من الفئة المذكورة في اشتراكك"
+
+msgid "ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer"
+msgstr "هذا الرمز مُفعَّل بالفعل على جهاز آخر: اطلب من الموزّع تحريره"
+
+msgid "activation indisponible : adresse du portail non configurée"
+msgstr "التفعيل غير متاح: عنوان البوابة غير مُعدّ"
+
+msgid "portail d'activation injoignable : vérifiez la connexion à Internet"
+msgstr "تعذّر الوصول إلى بوابة التفعيل: تحقق من الاتصال بالإنترنت"
+
+msgid "réponse inattendue du portail d'activation"
+msgstr "استجابة غير متوقعة من بوابة التفعيل"
+
+msgid "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste"
+msgstr "رُفض الاتصال الآمن بالبوابة: تحقق من تاريخ ووقت هذا الجهاز"

@@ -8,6 +8,10 @@ mod graphiques;
 mod import_ecran;
 mod impression;
 mod instance;
+// Activation des codes de licence courts (décision 75) : branchée par les
+// écrans de la 0.2.3.
+#[allow(dead_code)]
+mod activation_ui;
 mod licence;
 mod maj;
 mod paiements;

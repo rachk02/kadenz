@@ -2918,3 +2918,48 @@ msgstr "Kadenz {} 是新一代版本：需单独安装。"
 
 msgid "clé de signature de la licence inconnue : {}"
 msgstr "未知的许可证签名密钥：{}"
+
+msgid "Licence échue, socle seul"
+msgstr "许可证已到期，仅基础功能"
+
+msgid "code incomplet : {} caractères sur 25"
+msgstr "代码不完整：{} 个字符，共 25 个"
+
+msgid "code erroné : vérifiez la saisie"
+msgstr "代码有误：请检查输入"
+
+msgid "les lettres O et I et les chiffres 0 et 1 n'existent pas dans un code : vérifiez la saisie"
+msgstr "代码中不含字母 O、I 和数字 0、1：请检查输入"
+
+msgid "code d'activation inconnu : vérifiez la saisie"
+msgstr "未知的激活码：请检查输入内容"
+
+msgid "ce code d'activation appartient à une autre entreprise"
+msgstr "此激活码属于另一家企业"
+
+msgid "trop d'essais d'activation : réessayez dans {} secondes"
+msgstr "激活尝试次数过多：请在 {} 秒后重试"
+
+msgid "activation impossible pour le moment : réessayez plus tard"
+msgstr "暂时无法激活：请稍后重试"
+
+msgid "demande d'activation invalide"
+msgstr "激活请求无效"
+
+msgid "ce code ne sert pas à ce logiciel : vérifiez la gamme indiquée sur votre abonnement"
+msgstr "此代码不适用于本软件：请核对订阅上注明的产品系列"
+
+msgid "ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer"
+msgstr "此代码已在另一台工作站上激活：请联系您的经销商将其释放"
+
+msgid "activation indisponible : adresse du portail non configurée"
+msgstr "无法激活：未配置门户地址"
+
+msgid "portail d'activation injoignable : vérifiez la connexion à Internet"
+msgstr "无法连接激活门户：请检查互联网连接"
+
+msgid "réponse inattendue du portail d'activation"
+msgstr "激活门户返回了意外的响应"
+
+msgid "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste"
+msgstr "与门户的安全连接被拒绝：请检查本机的日期和时间"

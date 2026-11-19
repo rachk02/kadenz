@@ -2918,3 +2918,48 @@ msgstr "Kadenz {} is a new generation: it is installed separately."
 
 msgid "clé de signature de la licence inconnue : {}"
 msgstr "unknown licence signing key: {}"
+
+msgid "Licence échue, socle seul"
+msgstr "License expired, core only"
+
+msgid "code incomplet : {} caractères sur 25"
+msgstr "incomplete code: {} characters out of 25"
+
+msgid "code erroné : vérifiez la saisie"
+msgstr "incorrect code: check what you typed"
+
+msgid "les lettres O et I et les chiffres 0 et 1 n'existent pas dans un code : vérifiez la saisie"
+msgstr "the letters O and I and the digits 0 and 1 are not used in codes: check what you typed"
+
+msgid "code d'activation inconnu : vérifiez la saisie"
+msgstr "unknown activation code: check what you typed"
+
+msgid "ce code d'activation appartient à une autre entreprise"
+msgstr "this activation code belongs to another company"
+
+msgid "trop d'essais d'activation : réessayez dans {} secondes"
+msgstr "too many activation attempts: try again in {} seconds"
+
+msgid "activation impossible pour le moment : réessayez plus tard"
+msgstr "activation is not possible right now: try again later"
+
+msgid "demande d'activation invalide"
+msgstr "invalid activation request"
+
+msgid "ce code ne sert pas à ce logiciel : vérifiez la gamme indiquée sur votre abonnement"
+msgstr "this code is not for this software: check the range shown on your subscription"
+
+msgid "ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer"
+msgstr "this code is already activated on another workstation: ask your reseller to release it"
+
+msgid "activation indisponible : adresse du portail non configurée"
+msgstr "activation unavailable: portal address not configured"
+
+msgid "portail d'activation injoignable : vérifiez la connexion à Internet"
+msgstr "activation portal unreachable: check the Internet connection"
+
+msgid "réponse inattendue du portail d'activation"
+msgstr "unexpected response from the activation portal"
+
+msgid "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste"
+msgstr "secure connection to the portal refused: check this computer's date and time"

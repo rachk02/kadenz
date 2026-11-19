@@ -3026,6 +3026,7 @@ version = "0.2.2"
 dependencies = [
  "base64 0.22.1",
  "ed25519-dalek",
+ "getrandom 0.3.4",
  "kadenz-domaine",
  "serde_json",
  "sha2",
@@ -3038,6 +3039,7 @@ version = "0.2.2"
 dependencies = [
  "ed25519-dalek",
  "kadenz-domaine",
+ "kadenz-licence",
  "serde_json",
  "sha2",
  "ureq",

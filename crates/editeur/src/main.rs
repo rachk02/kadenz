@@ -83,6 +83,10 @@ fn emettre_cle(fichier: &str, poste: &str, client: &str, liste: &str) -> Result<
             .date_naive()
             .format("%Y-%m-%d")
             .to_string(),
+        // Licence perpétuelle de poste (version 1) ; les licences datées
+        // viennent du portail.
+        echeance: None,
+        postes: 1,
     };
     if licence.client.is_empty() {
         return Err("nom du client vide".into());

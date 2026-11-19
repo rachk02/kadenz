@@ -23,8 +23,19 @@ use kadenz_domaine::module::Module;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
+pub mod code_court;
+
 const PREFIXE: &str = "KADENZ-";
-const VERSION: u64 = 1;
+/// Licence perpétuelle, signée par la clé V1 (licences émises avant les codes).
+const VERSION_PERPETUELLE: u64 = 1;
+/// Licence datée (abonnement de la ligne V1, décision 75), émise par le portail
+/// et signée par sa clé ; refusée par la 0.2.2, qui n'en lirait pas l'échéance.
+const VERSION_DATEE: u64 = 2;
+
+/// Variable des versions de développement : clé publique d'un portail d'essai
+/// (hexadécimal), qui remplace la clé du portail pour les licences datées.
+/// Sans effet dans une version optimisée.
+pub const CLE_DATEE_ESSAI: &str = "KADENZ_PORTAIL_CLE";
 
 /// Clé publique de vérification de l'éditeur, en hexadécimal (64 caractères),
 /// produite par `kadenz-editeur generer`.
@@ -46,6 +57,17 @@ pub struct Licence {
     pub modules: Vec<Module>,
     /// Date d'émission, AAAA-MM-JJ.
     pub emise_le: String,
+    /// Dernier jour valable, AAAA-MM-JJ ; `None` pour une licence perpétuelle.
+    pub echeance: Option<String>,
+    /// Postes couverts (1 pour une licence de poste).
+    pub postes: u32,
+}
+
+impl Licence {
+    /// Licence sans échéance (version 1, émise avant les codes).
+    pub fn perpetuelle(&self) -> bool {
+        self.echeance.is_none()
+    }
 }
 
 /// Tous les modèles d'erreur de ce crate, pour vérifier leurs traductions.
@@ -111,6 +133,21 @@ pub fn cles_publiques() -> Vec<VerifyingKey> {
         .collect()
 }
 
+/// Clés acceptées pour les licences datées : la clé du portail (clé suivante
+/// embarquée), ou la clé d'essai donnée en version de développement.
+pub fn cles_datees() -> Vec<VerifyingKey> {
+    #[cfg(debug_assertions)]
+    if let Some(cle) = std::env::var(CLE_DATEE_ESSAI)
+        .ok()
+        .filter(|v| !v.trim().is_empty())
+    {
+        return cle_publique_depuis_hex(cle.trim()).into_iter().collect();
+    }
+    cle_publique_depuis_hex(CLE_PUBLIQUE_SUIVANTE)
+        .into_iter()
+        .collect()
+}
+
 /// Contrôle avant publication : la clé actuelle et la clé suivante embarquées
 /// sont valides et distinctes.
 pub fn controler_cles_embarquees() -> Result<(), String> {
@@ -148,16 +185,52 @@ pub fn en_hex(octets: &[u8]) -> String {
     octets.iter().map(|o| format!("{o:02x}")).collect()
 }
 
-/// Émet une clé de licence signée (outil éditeur seulement).
+/// Date AAAA-MM-JJ plausible (forme seulement).
+fn date_lisible(texte: &str) -> bool {
+    let o = texte.as_bytes();
+    o.len() == 10
+        && o[4] == b'-'
+        && o[7] == b'-'
+        && o.iter()
+            .enumerate()
+            .all(|(k, c)| k == 4 || k == 7 || c.is_ascii_digit())
+        && (1..=12).contains(&texte[5..7].parse::<u32>().unwrap_or(0))
+        && (1..=31).contains(&texte[8..10].parse::<u32>().unwrap_or(0))
+}
+
+/// Émet une clé de licence signée : perpétuelle (version 1, outil éditeur) sans
+/// échéance, datée (version 2, portail) avec.
 pub fn emettre(licence: &Licence, cle_privee: &SigningKey) -> Result<String, MessageCompose> {
-    let donnees = json!({
-        "version": VERSION,
-        "client": licence.client,
-        "poste": licence.poste,
-        "modules": normaliser(&licence.modules)?.iter().map(|m| m.code()).collect::<Vec<_>>(),
-        "emise_le": licence.emise_le,
-        "cle": identifiant_cle(&cle_privee.verifying_key()),
-    })
+    let modules: Vec<&str> = normaliser(&licence.modules)?
+        .iter()
+        .map(|m| m.code())
+        .collect();
+    let cle = identifiant_cle(&cle_privee.verifying_key());
+    let donnees = match &licence.echeance {
+        None => json!({
+            "version": VERSION_PERPETUELLE,
+            "client": licence.client,
+            "poste": licence.poste,
+            "modules": modules,
+            "emise_le": licence.emise_le,
+            "cle": cle,
+        }),
+        Some(echeance) => {
+            if !date_lisible(echeance) || licence.postes == 0 {
+                return Err(illisible());
+            }
+            json!({
+                "version": VERSION_DATEE,
+                "client": licence.client,
+                "poste": licence.poste,
+                "modules": modules,
+                "emise_le": licence.emise_le,
+                "echeance": echeance,
+                "postes": licence.postes,
+                "cle": cle,
+            })
+        }
+    }
     .to_string();
     let signature = cle_privee.sign(donnees.as_bytes());
     Ok(format!(
@@ -167,13 +240,45 @@ pub fn emettre(licence: &Licence, cle_privee: &SigningKey) -> Result<String, Mes
     ))
 }
 
-/// Vérifie une clé avec les clés publiques embarquées, pour le poste donné.
+/// Vérifie une clé avec les clés embarquées, pour le poste donné : une licence
+/// perpétuelle avec la clé V1 seule, une licence datée avec la clé du portail
+/// seule (décision 75 ; un portail compromis ne signe jamais de perpétuel).
 pub fn verifier(cle: &str, poste: &str) -> Result<Licence, MessageCompose> {
-    let cles = cles_publiques();
-    if cles.is_empty() {
-        return Err(cle_publique().unwrap_err());
+    let actuelle = cle_publique()?;
+    verifier_selon(cle, poste, &[actuelle], &cles_datees())
+}
+
+/// Version annoncée par une clé, avant toute vérification : sert seulement à
+/// choisir les clés publiques permises.
+fn version_annoncee(cle: &str) -> Option<u64> {
+    let cle: String = cle.chars().filter(|c| !c.is_whitespace()).collect();
+    let (donnees, _) = cle.strip_prefix(PREFIXE)?.split_once('.')?;
+    let donnees = URL_SAFE_NO_PAD.decode(donnees).ok()?;
+    serde_json::from_slice::<Value>(&donnees)
+        .ok()?
+        .get("version")?
+        .as_u64()
+}
+
+/// Vérifie une clé avec les clés permises pour sa version : `perpetuelles` pour
+/// la version 1, `datees` pour la version 2.
+pub fn verifier_selon(
+    cle: &str,
+    poste: &str,
+    perpetuelles: &[VerifyingKey],
+    datees: &[VerifyingKey],
+) -> Result<Licence, MessageCompose> {
+    let permises = match version_annoncee(cle) {
+        Some(VERSION_DATEE) => datees,
+        _ => perpetuelles,
+    };
+    let lue = verifier_parmi(cle, poste, permises)?;
+    // La version est relue après la signature : elle doit être celle qui a
+    // choisi les clés.
+    match (version_annoncee(cle), lue.perpetuelle()) {
+        (Some(VERSION_DATEE), false) | (_, true) => Ok(lue),
+        _ => Err(illisible()),
     }
-    verifier_parmi(cle, poste, &cles)
 }
 
 /// Vérifie une clé avec une clé publique donnée, pour le poste donné.
@@ -215,7 +320,7 @@ pub fn verifier_parmi(
         .map_err(|_| erreur("signature de la clé de licence invalide"))?;
 
     let version = v.get("version").and_then(Value::as_u64).unwrap_or(0);
-    if version != VERSION {
+    if version != VERSION_PERPETUELLE && version != VERSION_DATEE {
         return Err(MessageCompose::new(
             "version de clé de licence non prise en charge : {}",
             &[&version],
@@ -245,11 +350,28 @@ pub fn verifier_parmi(
             MessageCompose::new("module inconnu dans la clé de licence : {}", &[&code])
         })?);
     }
+    let (echeance, postes) = if version == VERSION_DATEE {
+        let echeance = texte("echeance")?;
+        let postes = v
+            .get("postes")
+            .and_then(Value::as_u64)
+            .and_then(|n| u32::try_from(n).ok())
+            .filter(|n| *n > 0)
+            .ok_or_else(illisible)?;
+        if !date_lisible(&echeance) {
+            return Err(illisible());
+        }
+        (Some(echeance), postes)
+    } else {
+        (None, 1)
+    };
     Ok(Licence {
         client: texte("client")?,
         poste: licence_poste,
         modules: normaliser(&modules)?,
         emise_le: texte("emise_le")?,
+        echeance,
+        postes,
     })
 }
 
@@ -335,8 +457,114 @@ mod tests {
             poste: "ABCD-EFGH-JKMN-PQRS".into(),
             modules: vec![Module::Relances, Module::Paiements, Module::Devis],
             emise_le: "2026-11-11".into(),
+            echeance: None,
+            postes: 1,
         }
     }
+
+    fn datee() -> Licence {
+        Licence {
+            echeance: Some("2027-11-17".into()),
+            emise_le: "2026-11-18".into(),
+            ..licence()
+        }
+    }
+
+    #[test]
+    fn licence_datee_aller_retour() {
+        let (privee, publique) = paire();
+        let cle = emettre(&datee(), &privee).unwrap();
+        let lue = verifier_avec(&cle, "ABCD-EFGH-JKMN-PQRS", &publique).unwrap();
+        assert_eq!(lue.echeance.as_deref(), Some("2027-11-17"));
+        assert_eq!(lue.postes, 1);
+        assert!(!lue.perpetuelle());
+        assert!(
+            verifier_avec(
+                &emettre(&licence(), &privee).unwrap(),
+                "ABCD-EFGH-JKMN-PQRS",
+                &publique
+            )
+            .unwrap()
+            .perpetuelle()
+        );
+        // Échéance ou postes invalides : refusés à l'émission.
+        for mauvaise in [
+            Licence {
+                echeance: Some("2027-13-01".into()),
+                ..datee()
+            },
+            Licence {
+                echeance: Some("17/11/2027".into()),
+                ..datee()
+            },
+            Licence {
+                postes: 0,
+                ..datee()
+            },
+        ] {
+            assert_eq!(
+                emettre(&mauvaise, &privee).unwrap_err().modele,
+                "clé de licence illisible"
+            );
+        }
+    }
+
+    /// Règle de clé par version : chaque croisement est refusé.
+    #[test]
+    fn cle_selon_la_version() {
+        let v1 = SigningKey::from_bytes(&[7u8; 32]);
+        let portail = SigningKey::from_bytes(&[8u8; 32]);
+        let (pv1, pportail) = (v1.verifying_key(), portail.verifying_key());
+        let poste = "ABCD-EFGH-JKMN-PQRS";
+        let verifier = |cle: &str| verifier_selon(cle, poste, &[pv1], &[pportail]);
+        assert!(
+            verifier(&emettre(&licence(), &v1).unwrap())
+                .unwrap()
+                .perpetuelle()
+        );
+        assert!(
+            !verifier(&emettre(&datee(), &portail).unwrap())
+                .unwrap()
+                .perpetuelle()
+        );
+        // Perpétuelle signée par le portail : refusée.
+        assert_eq!(
+            verifier(&emettre(&licence(), &portail).unwrap())
+                .unwrap_err()
+                .modele,
+            "clé de signature de la licence inconnue : {}"
+        );
+        // Datée signée par la clé V1 : refusée.
+        assert_eq!(
+            verifier(&emettre(&datee(), &v1).unwrap())
+                .unwrap_err()
+                .modele,
+            "clé de signature de la licence inconnue : {}"
+        );
+    }
+
+    /// Vecteur fixe, le même sur main et sur release/0.2.x : le format daté
+    /// émis par le portail est celui que lit la 0.2.3.
+    #[test]
+    fn vecteur_licence_datee() {
+        let (privee, publique) = paire();
+        let cle = emettre(&datee(), &privee).unwrap();
+        assert_eq!(cle, VECTEUR_DATEE);
+        let lue = verifier_avec(VECTEUR_DATEE, "ABCD-EFGH-JKMN-PQRS", &publique).unwrap();
+        // Modules relus dans l'ordre de Module::TOUS.
+        let attendue = Licence {
+            modules: vec![Module::Devis, Module::Paiements, Module::Relances],
+            ..datee()
+        };
+        assert_eq!(lue, attendue);
+    }
+
+    const VECTEUR_DATEE: &str = concat!(
+        "KADENZ-eyJjbGUiOiJmZTgxMmMxMmYzYWI0Y2U2IiwiY2xpZW50IjoiQ2xpZW50IEVzc2FpIiwiZWNoZ",
+        "WFuY2UiOiIyMDI3LTExLTE3IiwiZW1pc2VfbGUiOiIyMDI2LTExLTE4IiwibW9kdWxlcyI6WyJkZXZpc",
+        "yIsInBhaWVtZW50cyIsInJlbGFuY2VzIl0sInBvc3RlIjoiQUJDRC1FRkdILUpLTU4tUFFSUyIsInBvc",
+        "3RlcyI6MSwidmVyc2lvbiI6Mn0.Ex4IRu2dhSKxID6Ubz3C5Mn7iL0tqU-G5OzNMCdY5n3eBhxLEkIwj4op4wnBVHH8y2q8U-9wnrJfxLwze_TrBw"
+    );
 
     #[test]
     fn aller_retour() {
@@ -376,7 +604,7 @@ mod tests {
 
         // Licence d'avant le pont, sans champ `cle` : vérifiée par la clé actuelle.
         let donnees = json!({
-            "version": VERSION,
+            "version": VERSION_PERPETUELLE,
             "client": "Ancien client",
             "poste": poste,
             "modules": ["devis"],

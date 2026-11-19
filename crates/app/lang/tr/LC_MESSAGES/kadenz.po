@@ -2918,3 +2918,48 @@ msgstr "Kadenz {} yeni bir nesildir: ayrı olarak kurulur."
 
 msgid "clé de signature de la licence inconnue : {}"
 msgstr "bilinmeyen lisans imza anahtarı: {}"
+
+msgid "Licence échue, socle seul"
+msgstr "Lisansın süresi doldu, yalnızca temel"
+
+msgid "code incomplet : {} caractères sur 25"
+msgstr "eksik kod: 25 karakterden {}"
+
+msgid "code erroné : vérifiez la saisie"
+msgstr "hatalı kod: girişi kontrol edin"
+
+msgid "les lettres O et I et les chiffres 0 et 1 n'existent pas dans un code : vérifiez la saisie"
+msgstr "O ve I harfleri ile 0 ve 1 rakamları kodlarda yer almaz: girişi kontrol edin"
+
+msgid "code d'activation inconnu : vérifiez la saisie"
+msgstr "bilinmeyen etkinleştirme kodu: yazdığınızı kontrol edin"
+
+msgid "ce code d'activation appartient à une autre entreprise"
+msgstr "bu etkinleştirme kodu başka bir şirkete ait"
+
+msgid "trop d'essais d'activation : réessayez dans {} secondes"
+msgstr "çok fazla etkinleştirme denemesi: {} saniye sonra yeniden deneyin"
+
+msgid "activation impossible pour le moment : réessayez plus tard"
+msgstr "etkinleştirme şu anda yapılamıyor: daha sonra yeniden deneyin"
+
+msgid "demande d'activation invalide"
+msgstr "geçersiz etkinleştirme isteği"
+
+msgid "ce code ne sert pas à ce logiciel : vérifiez la gamme indiquée sur votre abonnement"
+msgstr "bu kod bu yazılım için değil: aboneliğinizde belirtilen ürün grubunu kontrol edin"
+
+msgid "ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer"
+msgstr "bu kod zaten başka bir iş istasyonunda etkin: bayinizden serbest bırakmasını isteyin"
+
+msgid "activation indisponible : adresse du portail non configurée"
+msgstr "etkinleştirme kullanılamıyor: portal adresi yapılandırılmamış"
+
+msgid "portail d'activation injoignable : vérifiez la connexion à Internet"
+msgstr "etkinleştirme portalına ulaşılamıyor: İnternet bağlantısını kontrol edin"
+
+msgid "réponse inattendue du portail d'activation"
+msgstr "etkinleştirme portalından beklenmeyen yanıt"
+
+msgid "connexion sécurisée au portail refusée : vérifiez la date et l'heure du poste"
+msgstr "portala güvenli bağlantı reddedildi: bu bilgisayarın tarih ve saatini kontrol edin"
