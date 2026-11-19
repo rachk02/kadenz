@@ -14,6 +14,10 @@
 //! - `kadenz-portail --dossier <dossier> creer-editeur <identifiant> <nom>` :
 //!   crée un compte éditeur, mot de passe saisi sans écho (ou lu sur l'entrée
 //!   standard quand elle n'est pas un terminal).
+//! - `kadenz-portail --dossier <dossier> retirer-double-authentification <identifiant>` :
+//!   retire la double authentification d'un compte (téléphone perdu sans
+//!   code de secours) ; journalisé, le compte la remet en place à sa
+//!   prochaine connexion. Sans la clé du portail.
 //! - `kadenz-portail --dossier <dossier> journal-verifier` : recalcule la
 //!   chaîne de hachage du journal ; affiche le nombre d'entrées et le sceau,
 //!   code de sortie 1 si la chaîne est rompue.
@@ -37,6 +41,7 @@ fn usage() -> ExitCode {
     eprintln!(
         "usage : kadenz-portail --dossier <dossier> --cle <fichier> [--ecoute <adresse:port>] [--mandataire <adresse>]\n\
          \x20       kadenz-portail --dossier <dossier> creer-editeur <identifiant> <nom>\n\
+         \x20       kadenz-portail --dossier <dossier> retirer-double-authentification <identifiant>\n\
          \x20       kadenz-portail --dossier <dossier> journal-verifier\n\
          \x20       kadenz-portail --dossier <dossier> journal-exporter [--depuis <id>]\n\
          \x20       kadenz-portail sante [--ecoute <adresse:port>]"
@@ -119,6 +124,7 @@ fn main() -> ExitCode {
     let mut creer: Option<(String, String)> = None;
     let mut sante = false;
     let mut verifier = false;
+    let mut retirer: Option<String> = None;
     let mut exporter: Option<i64> = None;
     let mut arguments = std::env::args().skip(1);
     while let Some(argument) = arguments.next() {
@@ -135,6 +141,10 @@ fn main() -> ExitCode {
             },
             "sante" => sante = true,
             "journal-verifier" => verifier = true,
+            "retirer-double-authentification" => match arguments.next() {
+                Some(i) => retirer = Some(i),
+                None => return usage(),
+            },
             "journal-exporter" => exporter = Some(exporter.unwrap_or(0)),
             "--depuis" => match arguments.next().and_then(|a| a.parse().ok()) {
                 Some(d) => exporter = Some(d),
@@ -153,6 +163,25 @@ fn main() -> ExitCode {
     let Some(dossier) = dossier else {
         return usage();
     };
+
+    if let Some(identifiant) = retirer {
+        let portail = match ouvrir_sans_cle(&dossier) {
+            Ok(p) => p,
+            Err(code) => return code,
+        };
+        return match portail.retirer_double_authentification(&identifiant) {
+            Ok(()) => {
+                println!(
+                    "Double authentification retirée pour {identifiant} : le compte la remettra en place à sa prochaine connexion."
+                );
+                ExitCode::SUCCESS
+            }
+            Err(e) => {
+                eprintln!("{e}");
+                ExitCode::FAILURE
+            }
+        };
+    }
 
     if verifier || exporter.is_some() {
         let portail = match ouvrir_sans_cle(&dossier) {

@@ -6,6 +6,9 @@
 //! Usage : `portail_essai <dossier> [<adresse:port> [<mandataire>]]`. Au
 //! premier lancement, crée le compte éditeur `editeur` (mot de passe
 //! `phrase-de-passe-essai-12`). Écoute par défaut sur `127.0.0.1:47382`.
+//! L'éditeur d'essai a la double authentification active (obligatoire pour
+//! un éditeur) : à sa création, la clé et les codes de secours sont
+//! affichés et écrits dans `<dossier>/essai-double-authentification.txt`.
 //! `<mandataire>` : adresse IP du mandataire de confiance, comme
 //! `--mandataire` du vrai portail (essai derrière Caddy ou Funnel). Arrêt :
 //! fin du processus.
@@ -23,6 +26,38 @@ const MOT_DE_PASSE: &str = "phrase-de-passe-essai-12";
 /// Clé d'essai du banc, la même que dans `banc_essai`.
 fn cle_essai() -> SigningKey {
     SigningKey::from_bytes(&[5u8; 32])
+}
+
+/// Double authentification de l'éditeur d'essai : clé tirée au hasard,
+/// activée avec le code du moment, affichée et notée dans le dossier.
+fn activer_double(
+    portail: &Portail,
+    editeur: &kadenz_portail::Compte,
+    dossier: &std::path::Path,
+) -> Result<(), String> {
+    let secret = portail
+        .preparer_double_authentification(editeur)
+        .map_err(|e| e.to_string())?;
+    let unix = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_secs();
+    let code = kadenz_portail::totp::code_pour(&secret, unix).ok_or("clé illisible")?;
+    let codes = portail
+        .activer_double_authentification(editeur, &code)
+        .map_err(|e| e.to_string())?;
+    let texte = format!(
+        "Double authentification de l'éditeur d'essai (portail d'essai seulement)\n\
+         Clé à saisir dans l'application : {}\n\
+         Codes de secours :\n{}\n",
+        kadenz_portail::totp::groupes(&secret),
+        codes.join("\n")
+    );
+    print!("{texte}");
+    let fichier = dossier.join("essai-double-authentification.txt");
+    std::fs::write(&fichier, &texte).map_err(|e| e.to_string())?;
+    println!("(noté dans {})", fichier.display());
+    Ok(())
 }
 
 fn main() -> ExitCode {
@@ -59,9 +94,18 @@ fn main() -> ExitCode {
         }
     };
     match portail.creer_editeur("editeur", "Éditeur d'essai", MOT_DE_PASSE) {
-        Ok(_) => println!("Compte éditeur créé : editeur ; mot de passe : {MOT_DE_PASSE}"),
+        Ok(editeur) => {
+            println!("Compte éditeur créé : editeur ; mot de passe : {MOT_DE_PASSE}");
+            if let Err(e) = activer_double(&portail, &editeur, &dossier) {
+                eprintln!("double authentification de l'éditeur d'essai : {e}");
+                return ExitCode::FAILURE;
+            }
+        }
         Err(kadenz_portail::ErreurPortail::Validation(m)) if m == "identifiant déjà pris" => {
-            println!("Compte éditeur : editeur (déjà créé)")
+            println!(
+                "Compte éditeur : editeur (déjà créé ; clé et codes de secours dans {})",
+                dossier.join("essai-double-authentification.txt").display()
+            )
         }
         Err(e) => {
             eprintln!("compte éditeur non créé : {e}");

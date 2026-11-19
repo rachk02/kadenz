@@ -13,6 +13,7 @@ use kadenz_licence::entreprise::Formule;
 mod code;
 mod comptes;
 mod connexion;
+mod double;
 mod emission;
 mod entreprises;
 mod erreur;
@@ -26,7 +27,8 @@ mod style;
 
 pub use code::{code, code_cree, codes, codes_crees};
 pub use comptes::comptes;
-pub use connexion::connexion;
+pub use connexion::{code_connexion, connexion};
+pub use double::{codes_secours, double_active, mise_en_place};
 pub use emission::emission;
 pub use entreprises::entreprises;
 pub use erreur::erreur;

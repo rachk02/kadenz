@@ -44,6 +44,14 @@ pub const COOKIE_CONNEXION: &str = "__Host-kadenz_connexion";
 /// Durée du jeton de connexion, en secondes.
 const DUREE_JETON_CONNEXION: u32 = 3600;
 
+/// Cookie de l'étape de connexion, entre le mot de passe accepté et le code
+/// de double authentification ; le même jeton revient dans le formulaire du
+/// code.
+pub const COOKIE_ETAPE: &str = "__Host-kadenz_etape";
+
+/// Durée du cookie d'étape, en secondes (celle de l'étape du portail).
+const DUREE_COOKIE_ETAPE: u32 = 300;
+
 const POLICE_INTER: &[u8] = include_bytes!("../../app/ui/polices/Inter-Regular.ttf");
 const POLICE_INTER_DEMI: &[u8] = include_bytes!("../../app/ui/polices/Inter-SemiBold.ttf");
 const POLICE_SPACE: &[u8] = include_bytes!("../../app/ui/polices/SpaceGrotesk-Bold.ttf");
@@ -76,6 +84,11 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
     Router::new()
         .route("/", get(accueil))
         .route("/connexion", get(page_connexion).post(connexion))
+        .route("/connexion/code", get(page_code).post(confirmer_code))
+        .route(
+            "/double-authentification",
+            get(page_double).post(activer_double),
+        )
         .route("/deconnexion", post(deconnexion))
         .route(
             "/entreprises/nouvelle",
@@ -201,10 +214,13 @@ fn jeton_du_cookie(entetes: &HeaderMap) -> Option<String> {
     valeur_cookie(entetes, COOKIE_SESSION)
 }
 
-/// Session du compte connecté : compte et jeton anti-falsification.
+/// Session du compte connecté : compte et jeton anti-falsification ;
+/// `limitee` : éditeur sans double authentification, qui n'a droit qu'à sa
+/// mise en place et à la déconnexion.
 struct Connecte {
     compte: Compte,
     csrf: String,
+    limitee: bool,
 }
 
 impl Connecte {
@@ -220,8 +236,17 @@ impl Connecte {
 async fn connecte(etat: &Etat, entetes: &HeaderMap) -> Option<Connecte> {
     let jeton = jeton_du_cookie(entetes)?;
     let portail = etat.portail.clone();
-    let (compte, csrf) = bloquant(move || portail.session(&jeton)).await?;
-    Some(Connecte { compte, csrf })
+    let (compte, csrf, limitee) = bloquant(move || {
+        let (compte, csrf) = portail.session(&jeton)?;
+        let limitee = portail.mise_en_place_exigee(&compte);
+        Some((compte, csrf, limitee))
+    })
+    .await?;
+    Some(Connecte {
+        compte,
+        csrf,
+        limitee,
+    })
 }
 
 /// Comparaison en temps constant des jetons anti-falsification.
@@ -234,10 +259,24 @@ fn egaux(a: &str, b: &str) -> bool {
 }
 
 /// Session exigée ; pour un POST, jeton anti-falsification vérifié aussi.
+/// Toute route qui agit avec les droits d'un compte passe par ici : une
+/// session limitée (éditeur sans double authentification) est renvoyée
+/// vers la mise en place.
 async fn exiger(
     etat: &Etat,
     entetes: &HeaderMap,
     champs: Option<&Champs>,
+) -> Result<Connecte, Box<Response>> {
+    exiger_avec(etat, entetes, champs, false).await
+}
+
+/// Comme [`exiger`] ; `limitee_permise` : la route sert aussi une session
+/// limitée (mise en place de la double authentification, déconnexion).
+async fn exiger_avec(
+    etat: &Etat,
+    entetes: &HeaderMap,
+    champs: Option<&Champs>,
+    limitee_permise: bool,
 ) -> Result<Connecte, Box<Response>> {
     let Some(c) = connecte(etat, entetes).await else {
         return Err(Box::new(rediriger("/connexion")));
@@ -254,6 +293,9 @@ async fn exiger(
                 ),
             )));
         }
+    }
+    if c.limitee && !limitee_permise {
+        return Err(Box::new(rediriger("/double-authentification")));
     }
     Ok(c)
 }
@@ -350,15 +392,20 @@ fn page_de_connexion(statut: StatusCode, erreur: Option<&str>) -> Response {
     r
 }
 
-/// Demande de connexion légitime : envoyée depuis le portail lui-même (pas
-/// de `Sec-Fetch-Site: cross-site` ni `same-site`), avec le jeton du
-/// formulaire égal à celui du cookie.
-fn connexion_permise(entetes: &HeaderMap, champs: &Champs) -> bool {
+/// Formulaire envoyé depuis le portail lui-même : pas de
+/// `Sec-Fetch-Site: cross-site` ni `same-site`.
+fn origine_permise(entetes: &HeaderMap) -> bool {
     let site = entetes
         .get("sec-fetch-site")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
-    if site == "cross-site" || site == "same-site" {
+    site != "cross-site" && site != "same-site"
+}
+
+/// Demande de connexion légitime : envoyée depuis le portail lui-même, avec
+/// le jeton du formulaire égal à celui du cookie.
+fn connexion_permise(entetes: &HeaderMap, champs: &Champs) -> bool {
+    if !origine_permise(entetes) {
         return false;
     }
     let recu = champs.get("csrf").map(String::as_str).unwrap_or("");
@@ -435,10 +482,154 @@ async fn connexion(
             }
             r
         }
+        Err(ErreurPortail::DeuxiemeFacteur(etape)) => {
+            let mut r = rediriger("/connexion/code");
+            for cookie in [
+                format!(
+                    "{COOKIE_ETAPE}={etape}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age={DUREE_COOKIE_ETAPE}"
+                ),
+                cookie_efface(COOKIE_CONNEXION),
+            ] {
+                if let Ok(v) = HeaderValue::from_str(&cookie) {
+                    r.headers_mut().append(SET_COOKIE, v);
+                }
+            }
+            r
+        }
         Err(e @ (ErreurPortail::Identifiants | ErreurPortail::Freine(_))) => {
             page_de_connexion(StatusCode::UNAUTHORIZED, Some(&e.to_string()))
         }
         Err(e) => page_erreur(None, &e),
+    }
+}
+
+/// Page du code de double authentification, pour une étape en cours.
+async fn page_code(State(etat): State<Etat>, entetes: HeaderMap) -> Response {
+    let Some(etape) = valeur_cookie(&entetes, COOKIE_ETAPE) else {
+        return rediriger("/connexion");
+    };
+    let portail = etat.portail.clone();
+    let e = etape.clone();
+    if !bloquant(move || portail.etape_valable(&e)).await {
+        return rediriger("/connexion");
+    }
+    html(StatusCode::OK, pages::code_connexion(&etape, None))
+}
+
+/// Seconde étape de la connexion : le jeton d'étape du cookie doit revenir
+/// dans le formulaire, envoyé depuis le portail lui-même.
+async fn confirmer_code(
+    State(etat): State<Etat>,
+    ConnectInfo(pair): ConnectInfo<SocketAddr>,
+    entetes: HeaderMap,
+    Form(champs): Form<Champs>,
+) -> Response {
+    let etape = valeur_cookie(&entetes, COOKIE_ETAPE).unwrap_or_default();
+    if !origine_permise(&entetes) || etape.is_empty() || !egaux(champ(&champs, "etape"), &etape) {
+        return page_de_connexion(
+            StatusCode::FORBIDDEN,
+            Some("formulaire expiré : reconnectez-vous"),
+        );
+    }
+    let adresse = adresse_client(&etat, &entetes, pair);
+    let portail = etat.portail.clone();
+    let code = champ(&champs, "code").to_string();
+    let ancienne = jeton_du_cookie(&entetes);
+    let e = etape.clone();
+    let resultat = bloquant(move || {
+        let r = portail.confirmer_code(&e, &code, &adresse);
+        // Rotation, comme pour une connexion sans double authentification.
+        if r.is_ok()
+            && let Some(ancienne) = ancienne
+        {
+            portail.deconnecter(&ancienne);
+        }
+        r
+    })
+    .await;
+    match resultat {
+        Ok((jeton, _)) => {
+            let mut r = rediriger("/");
+            for cookie in [cookie_session(&jeton), cookie_efface(COOKIE_ETAPE)] {
+                if let Ok(v) = HeaderValue::from_str(&cookie) {
+                    r.headers_mut().append(SET_COOKIE, v);
+                }
+            }
+            r
+        }
+        Err(ErreurPortail::Identifiants) => {
+            let mut r = page_de_connexion(
+                StatusCode::UNAUTHORIZED,
+                Some("délai dépassé ou trop de codes faux : reconnectez-vous"),
+            );
+            if let Ok(v) = HeaderValue::from_str(&cookie_efface(COOKIE_ETAPE)) {
+                r.headers_mut().append(SET_COOKIE, v);
+            }
+            r
+        }
+        Err(e @ (ErreurPortail::Validation(_) | ErreurPortail::Freine(_))) => html(
+            StatusCode::UNAUTHORIZED,
+            pages::code_connexion(&etape, Some(&e.to_string())),
+        ),
+        Err(e) => page_erreur(None, &e),
+    }
+}
+
+// ----- Double authentification -----
+
+/// Mise en place (session limitée) ; une fois active, la page le dit.
+async fn page_double(State(etat): State<Etat>, entetes: HeaderMap) -> Response {
+    let c = match exiger_avec(&etat, &entetes, None, true).await {
+        Ok(c) => c,
+        Err(r) => return *r,
+    };
+    if !c.limitee {
+        return html(StatusCode::OK, pages::double_active(&c.cadre(None)));
+    }
+    let portail = etat.portail.clone();
+    let compte = c.compte.clone();
+    match bloquant(move || portail.preparer_double_authentification(&compte)).await {
+        Ok(secret) => html(
+            StatusCode::OK,
+            pages::mise_en_place(&c.cadre(None), &secret, None),
+        ),
+        Err(e) => page_erreur(Some(&c), &e),
+    }
+}
+
+async fn activer_double(
+    State(etat): State<Etat>,
+    entetes: HeaderMap,
+    Form(champs): Form<Champs>,
+) -> Response {
+    let c = match exiger_avec(&etat, &entetes, Some(&champs), true).await {
+        Ok(c) => c,
+        Err(r) => return *r,
+    };
+    if !c.limitee {
+        return rediriger("/double-authentification");
+    }
+    let portail = etat.portail.clone();
+    let compte = c.compte.clone();
+    let code = champ(&champs, "code").to_string();
+    let resultat =
+        bloquant(
+            move || match portail.activer_double_authentification(&compte, &code) {
+                Ok(codes) => Ok(Ok(codes)),
+                Err(ErreurPortail::Validation(m)) => portail
+                    .preparer_double_authentification(&compte)
+                    .map(|secret| Err((secret, m))),
+                Err(e) => Err(e),
+            },
+        )
+        .await;
+    match resultat {
+        Ok(Ok(codes)) => html(StatusCode::OK, pages::codes_secours(&c.cadre(None), &codes)),
+        Ok(Err((secret, m))) => html(
+            StatusCode::OK,
+            pages::mise_en_place(&c.cadre(None), &secret, Some(&m)),
+        ),
+        Err(e) => page_erreur(Some(&c), &e),
     }
 }
 
@@ -447,7 +638,9 @@ async fn deconnexion(
     entetes: HeaderMap,
     Form(champs): Form<Champs>,
 ) -> Response {
-    if exiger(&etat, &entetes, Some(&champs)).await.is_ok()
+    if exiger_avec(&etat, &entetes, Some(&champs), true)
+        .await
+        .is_ok()
         && let Some(jeton) = jeton_du_cookie(&entetes)
     {
         let portail = etat.portail.clone();

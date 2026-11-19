@@ -15,6 +15,7 @@ mod chaine;
 mod frein;
 pub mod pages;
 mod sessions;
+pub mod totp;
 pub mod web;
 
 use std::path::Path;
@@ -378,6 +379,9 @@ pub enum ErreurPortail {
     Introuvable,
     /// Erreur interne (base, signature).
     Interne(String),
+    /// Mot de passe accepté, code de double authentification demandé : le
+    /// jeton de l'étape, à présenter avec le code (`confirmer_code`).
+    DeuxiemeFacteur(String),
 }
 
 impl std::fmt::Display for ErreurPortail {
@@ -394,6 +398,9 @@ impl std::fmt::Display for ErreurPortail {
             ErreurPortail::Interdit => write!(f, "action réservée à l'éditeur"),
             ErreurPortail::Introuvable => write!(f, "introuvable"),
             ErreurPortail::Interne(m) => write!(f, "erreur interne du portail : {m}"),
+            ErreurPortail::DeuxiemeFacteur(_) => {
+                write!(f, "code de double authentification demandé")
+            }
         }
     }
 }
@@ -423,7 +430,26 @@ struct Interieur {
     horloge: Horloge,
     sessions: Mutex<Sessions>,
     hachage: Porte,
+    /// Connexions dont le mot de passe est accepté et qui attendent le code
+    /// de double authentification, par jeton d'étape. Ordre des verrous :
+    /// la base, puis les étapes, jamais l'inverse.
+    etapes: Mutex<std::collections::HashMap<String, Etape>>,
 }
+
+/// Connexion en attente du code de double authentification.
+struct Etape {
+    compte: i64,
+    identifiant: String,
+    debut: std::time::Instant,
+    essais: u32,
+}
+
+/// Durée d'une étape : passé ce délai, il faut redonner le mot de passe.
+const DUREE_ETAPE: std::time::Duration = std::time::Duration::from_secs(300);
+/// Codes faux permis par étape, avant de redonner le mot de passe.
+const ESSAIS_ETAPE: u32 = 5;
+/// Codes de secours donnés à l'activation de la double authentification.
+pub const CODES_SECOURS: usize = 10;
 
 /// Hachages Argon2 simultanés au plus : le serveur maison a 2 cœurs et
 /// 3,2 Go ; sans limite, des connexions en rafale épuiseraient la mémoire.
@@ -575,6 +601,74 @@ fn valider_poste(poste: &str) -> Resultat<String> {
         return refus("identifiant de poste invalide");
     }
     Ok(poste)
+}
+
+/// Double authentification active pour ce compte.
+fn double_active(conn: &Connection, compte: i64) -> Resultat<bool> {
+    Ok(conn.query_row(
+        "SELECT EXISTS (SELECT 1 FROM double_authentification
+                        WHERE compte = ?1 AND active_le IS NOT NULL)",
+        [compte],
+        |r| r.get(0),
+    )?)
+}
+
+/// Code saisi sans espaces ni tirets, en majuscules.
+fn normaliser_code(code: &str) -> String {
+    code.chars()
+        .filter(|c| !c.is_whitespace() && *c != '-')
+        .collect::<String>()
+        .to_ascii_uppercase()
+}
+
+/// Code de secours : 10 caractères Base32 (50 bits d'aléa), `XXXXX-XXXXX`.
+fn code_de_secours() -> Resultat<String> {
+    let mut octets = [0u8; 7];
+    getrandom::fill(&mut octets).map_err(|e| ErreurPortail::Interne(e.to_string()))?;
+    let texte = totp::encoder(&octets);
+    Ok(format!("{}-{}", &texte[..5], &texte[5..10]))
+}
+
+/// Second facteur vérifié pour un compte à la double authentification
+/// active : 6 chiffres, code de l'application (un pas ne sert qu'une
+/// fois) ; sinon, code de secours encore inutilisé. Rend le moyen employé,
+/// pour le journal.
+fn verifier_second_facteur(
+    conn: &Connection,
+    compte: i64,
+    saisi: &str,
+) -> Resultat<Option<&'static str>> {
+    let ligne: Option<(String, i64)> = conn
+        .query_row(
+            "SELECT secret, dernier_pas FROM double_authentification
+             WHERE compte = ?1 AND active_le IS NOT NULL",
+            [compte],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .optional()?;
+    let Some((secret, dernier_pas)) = ligne else {
+        return Ok(None);
+    };
+    if saisi.len() == totp::CHIFFRES as usize && saisi.bytes().all(|o| o.is_ascii_digit()) {
+        let octets = totp::decoder(&secret).ok_or_else(|| {
+            ErreurPortail::Interne("secret de double authentification illisible".into())
+        })?;
+        let Some(pas) = totp::verifier(&octets, saisi, secondes() as u64, dernier_pas) else {
+            return Ok(None);
+        };
+        let pris = conn.execute(
+            "UPDATE double_authentification SET dernier_pas = ?2
+             WHERE compte = ?1 AND dernier_pas < ?2",
+            params![compte, pas],
+        )?;
+        return Ok((pris == 1).then_some("application d'authentification"));
+    }
+    let pris = conn.execute(
+        "UPDATE code_secours SET utilise_le = ?3
+         WHERE compte = ?1 AND empreinte = ?2 AND utilise_le IS NULL",
+        params![compte, empreinte_code(saisi), maintenant()],
+    )?;
+    Ok((pris >= 1).then_some("code de secours"))
 }
 
 fn valider_uuid(identifiant: &str) -> Resultat<String> {
@@ -964,6 +1058,7 @@ impl Portail {
             horloge,
             sessions: Mutex::new(Sessions::default()),
             hachage: Porte::new(HACHAGES_SIMULTANES),
+            etapes: Mutex::new(std::collections::HashMap::new()),
         })))
     }
 
@@ -1191,6 +1286,31 @@ impl Portail {
             Some((compte, hache))
                 if correct && compte.actif && encore_valable(&compte, &hache)? =>
             {
+                // Double authentification active : pas encore de session, ni
+                // d'effacement du frein (sinon le mot de passe seul relancerait
+                // les essais de code) ; une étape attend le code.
+                if double_active(&conn, compte.id)? {
+                    noter(
+                        &conn,
+                        Some(compte.id),
+                        "connexion_etape",
+                        None,
+                        &format!("adresse {adresse}, code demandé"),
+                    )?;
+                    let etape = sessions::alea();
+                    let mut etapes = verrou(&self.0.etapes);
+                    etapes.retain(|_, e| e.debut.elapsed() <= DUREE_ETAPE);
+                    etapes.insert(
+                        etape.clone(),
+                        Etape {
+                            compte: compte.id,
+                            identifiant: identifiant.clone(),
+                            debut: std::time::Instant::now(),
+                            essais: 0,
+                        },
+                    );
+                    return Err(ErreurPortail::DeuxiemeFacteur(etape));
+                }
                 frein::reussite(&conn, &cles)?;
                 noter(&conn, Some(compte.id), "connexion", None, adresse)?;
                 let jeton = verrou(&self.0.sessions).ouvrir(compte.id);
@@ -1213,6 +1333,214 @@ impl Portail {
 
     /// Session ouverte pour ce jeton : compte actif et jeton anti-falsification
     /// de la session. Prolonge la session.
+    /// Étape de connexion encore valable (page du code).
+    pub fn etape_valable(&self, etape: &str) -> bool {
+        let mut etapes = verrou(&self.0.etapes);
+        etapes.retain(|_, e| e.debut.elapsed() <= DUREE_ETAPE);
+        etapes.contains_key(etape)
+    }
+
+    /// Seconde étape de la connexion : code de l'application
+    /// d'authentification (6 chiffres) ou code de secours. Étape inconnue ou
+    /// expirée : `Identifiants` (le mot de passe est à redonner). Code faux :
+    /// refus freiné comme un mot de passe faux ; après 5 codes faux, l'étape
+    /// est close.
+    pub fn confirmer_code(
+        &self,
+        etape: &str,
+        code: &str,
+        adresse: &str,
+    ) -> Resultat<(String, Compte)> {
+        let trouvee = {
+            let mut etapes = verrou(&self.0.etapes);
+            etapes.retain(|_, e| e.debut.elapsed() <= DUREE_ETAPE);
+            etapes.get(etape).map(|e| (e.compte, e.identifiant.clone()))
+        };
+        let Some((compte_id, identifiant)) = trouvee else {
+            return Err(ErreurPortail::Identifiants);
+        };
+        let cles = frein::cles_connexion(&identifiant, adresse);
+        let conn = self.conn();
+        if let Some(attente) = frein::attente(&conn, &cles, secondes())? {
+            return Err(ErreurPortail::Freine(attente));
+        }
+        let saisi = normaliser_code(code);
+        let Some(moyen) = verifier_second_facteur(&conn, compte_id, &saisi)? else {
+            frein::echec(&conn, &cles, secondes())?;
+            noter(
+                &conn,
+                Some(compte_id),
+                "code_refuse",
+                None,
+                &format!("adresse {adresse}"),
+            )?;
+            let mut etapes = verrou(&self.0.etapes);
+            let epuisee = etapes
+                .get_mut(etape)
+                .map(|e| {
+                    e.essais += 1;
+                    e.essais >= ESSAIS_ETAPE
+                })
+                .unwrap_or(false);
+            if epuisee {
+                etapes.remove(etape);
+            }
+            return refus("code incorrect ou déjà utilisé");
+        };
+        verrou(&self.0.etapes).remove(etape);
+        let compte = conn
+            .query_row(
+                &format!("SELECT {COLONNES_COMPTE} FROM compte WHERE id = ?1"),
+                [compte_id],
+                compte_depuis,
+            )
+            .optional()?
+            .filter(|c| c.actif)
+            .ok_or(ErreurPortail::Identifiants)?;
+        frein::reussite(&conn, &cles)?;
+        noter(
+            &conn,
+            Some(compte.id),
+            "connexion",
+            None,
+            &format!("{adresse}, {moyen}"),
+        )?;
+        let jeton = verrou(&self.0.sessions).ouvrir(compte.id);
+        Ok((jeton, compte))
+    }
+
+    /// Un éditeur sans double authentification active n'a droit qu'à sa
+    /// mise en place (obligatoire avant la mise en service). En cas
+    /// d'erreur de lecture, la mise en place est exigée.
+    pub fn mise_en_place_exigee(&self, compte: &Compte) -> bool {
+        compte.role == Role::Editeur && !double_active(&self.conn(), compte.id).unwrap_or(false)
+    }
+
+    /// Mise en place de la double authentification d'un éditeur : secret en
+    /// Base32, à saisir dans l'application. Une mise en place en cours garde
+    /// son secret (page rechargée) ; une double authentification active est
+    /// refusée.
+    pub fn preparer_double_authentification(&self, acteur: &Compte) -> Resultat<String> {
+        let conn = self.conn();
+        let acteur = exiger_editeur(&conn, acteur)?;
+        let ligne: Option<(String, Option<String>)> = conn
+            .query_row(
+                "SELECT secret, active_le FROM double_authentification WHERE compte = ?1",
+                [acteur.id],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .optional()?;
+        match ligne {
+            Some((_, Some(_))) => refus("la double authentification est déjà active"),
+            Some((secret, None)) => Ok(secret),
+            None => {
+                let mut octets = [0u8; totp::OCTETS_SECRET];
+                getrandom::fill(&mut octets).map_err(|e| ErreurPortail::Interne(e.to_string()))?;
+                let secret = totp::encoder(&octets);
+                conn.execute(
+                    "INSERT INTO double_authentification (compte, secret) VALUES (?1, ?2)",
+                    params![acteur.id, secret],
+                )?;
+                Ok(secret)
+            }
+        }
+    }
+
+    /// Active la double authentification avec un premier code de
+    /// l'application ; rend les codes de secours en clair, seul moment où
+    /// ils existent (le portail n'en garde que l'empreinte).
+    pub fn activer_double_authentification(
+        &self,
+        acteur: &Compte,
+        code: &str,
+    ) -> Resultat<Vec<String>> {
+        let conn = self.conn();
+        let acteur = exiger_editeur(&conn, acteur)?;
+        let secret: Option<String> = conn
+            .query_row(
+                "SELECT secret FROM double_authentification WHERE compte = ?1 AND active_le IS NULL",
+                [acteur.id],
+                |r| r.get(0),
+            )
+            .optional()?;
+        let Some(secret) = secret else {
+            return refus("aucune mise en place en cours : rechargez la page");
+        };
+        let octets = totp::decoder(&secret).ok_or_else(|| {
+            ErreurPortail::Interne("secret de double authentification illisible".into())
+        })?;
+        let Some(pas) = totp::verifier(&octets, &normaliser_code(code), secondes() as u64, 0)
+        else {
+            return refus(
+                "code incorrect : vérifiez la clé saisie dans l'application et l'heure du téléphone",
+            );
+        };
+        let codes = (0..CODES_SECOURS)
+            .map(|_| code_de_secours())
+            .collect::<Resultat<Vec<_>>>()?;
+        let transaction = conn.unchecked_transaction()?;
+        transaction.execute(
+            "UPDATE double_authentification SET active_le = ?2, dernier_pas = ?3 WHERE compte = ?1",
+            params![acteur.id, maintenant(), pas],
+        )?;
+        transaction.execute("DELETE FROM code_secours WHERE compte = ?1", [acteur.id])?;
+        for c in &codes {
+            transaction.execute(
+                "INSERT INTO code_secours (compte, empreinte) VALUES (?1, ?2)",
+                params![acteur.id, empreinte_code(&normaliser_code(c))],
+            )?;
+        }
+        noter(
+            &transaction,
+            Some(acteur.id),
+            "double_authentification_activee",
+            None,
+            &format!(
+                "compte {}, {CODES_SECOURS} codes de secours",
+                acteur.identifiant
+            ),
+        )?;
+        transaction.commit()?;
+        Ok(codes)
+    }
+
+    /// Retire la double authentification d'un compte (programme, sur le
+    /// serveur : téléphone perdu sans code de secours). Journalisé ; le
+    /// compte devra la remettre en place à sa prochaine connexion.
+    pub fn retirer_double_authentification(&self, identifiant: &str) -> Resultat<()> {
+        let identifiant = identifiant.trim().to_ascii_lowercase();
+        let conn = self.conn();
+        let compte: Option<i64> = conn
+            .query_row(
+                "SELECT id FROM compte WHERE identifiant = ?1",
+                [&identifiant],
+                |r| r.get(0),
+            )
+            .optional()?;
+        let Some(compte) = compte else {
+            return Err(ErreurPortail::Introuvable);
+        };
+        let transaction = conn.unchecked_transaction()?;
+        let retiree = transaction.execute(
+            "DELETE FROM double_authentification WHERE compte = ?1",
+            [compte],
+        )?;
+        transaction.execute("DELETE FROM code_secours WHERE compte = ?1", [compte])?;
+        if retiree == 0 {
+            return refus("aucune double authentification pour ce compte");
+        }
+        noter(
+            &transaction,
+            None,
+            "double_authentification_retiree",
+            None,
+            &format!("compte {identifiant}, par le programme sur le serveur"),
+        )?;
+        transaction.commit()?;
+        verrou(&self.0.sessions).fermer_compte(compte);
+        Ok(())
+    }
+
     pub fn session(&self, jeton: &str) -> Option<(Compte, String)> {
         let (compte, csrf) = verrou(&self.0.sessions).toucher(jeton)?;
         let conn = self.conn();

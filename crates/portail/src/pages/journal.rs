@@ -108,6 +108,10 @@ fn libelle_action(code: &str) -> &str {
         "code_reactive" => "Code V1 réactivé",
         "poste_libere" => "Poste libéré",
         "activation_refusee" => "Activation refusée",
+        "connexion_etape" => "Mot de passe accepté, code demandé",
+        "code_refuse" => "Code de double authentification refusé",
+        "double_authentification_activee" => "Double authentification activée",
+        "double_authentification_retiree" => "Double authentification retirée",
         _ => code,
     }
 }

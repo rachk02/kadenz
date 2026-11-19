@@ -545,7 +545,11 @@ fn se_connecter(
 fn routes_sessions_et_jetons() {
     let d = dossier("web");
     let p = Portail::ouvrir(&d, cle_essai()).unwrap();
-    p.creer_editeur("editeur", "Éditeur", MOT_DE_PASSE).unwrap();
+    // Un revendeur : un éditeur n'a de session complète qu'avec la double
+    // authentification (essai double_authentification_des_editeurs).
+    let editeur = p.creer_editeur("editeur", "Éditeur", MOT_DE_PASSE).unwrap();
+    p.creer_revendeur(&editeur, "revendeur", "Revendeur", MOT_DE_PASSE)
+        .unwrap();
     let lance = web::lancer(
         p,
         SocketAddr::from(([127, 0, 0, 1], 0)),
@@ -580,9 +584,9 @@ fn routes_sessions_et_jetons() {
     assert_eq!((r.statut, r.corps.as_str()), (200, "ok"));
 
     // Mauvais mot de passe, puis le bon.
-    let r = se_connecter(a, "editeur", "faux", None);
+    let r = se_connecter(a, "revendeur", "faux", None);
     assert_eq!(r.statut, 401);
-    let r = se_connecter(a, "editeur", MOT_DE_PASSE, None);
+    let r = se_connecter(a, "revendeur", MOT_DE_PASSE, None);
     assert_eq!(r.statut, 303);
     let cookie = r.entete("set-cookie").unwrap().to_string();
     assert!(
@@ -658,7 +662,11 @@ fn routes_sessions_et_jetons() {
 fn connexion_sans_falsification_et_rotation() {
     let d = dossier("connexion-d2");
     let p = Portail::ouvrir(&d, cle_essai()).unwrap();
-    p.creer_editeur("editeur", "Éditeur", MOT_DE_PASSE).unwrap();
+    // Un revendeur : un éditeur n'a de session complète qu'avec la double
+    // authentification (essai double_authentification_des_editeurs).
+    let editeur = p.creer_editeur("editeur", "Éditeur", MOT_DE_PASSE).unwrap();
+    p.creer_revendeur(&editeur, "revendeur", "Revendeur", MOT_DE_PASSE)
+        .unwrap();
     let lance = web::lancer(
         p,
         SocketAddr::from(([127, 0, 0, 1], 0)),
@@ -669,7 +677,7 @@ fn connexion_sans_falsification_et_rotation() {
     let politique = requete(a, "GET", "/connexion", None, "");
     let politique = politique.entete("content-security-policy").unwrap();
     assert!(politique.contains("script-src 'none'") && politique.contains("object-src 'none'"));
-    let identifiants = format!("identifiant=editeur&mot_de_passe={MOT_DE_PASSE}");
+    let identifiants = format!("identifiant=revendeur&mot_de_passe={MOT_DE_PASSE}");
 
     // Sans jeton, sans cookie, ou avec un jeton qui n'est pas celui du
     // cookie : refusé, sans session.
@@ -730,7 +738,7 @@ fn connexion_sans_falsification_et_rotation() {
 
     // Nouvelle connexion depuis le même navigateur : session neuve,
     // l'ancienne est fermée.
-    let r = se_connecter(a, "editeur", MOT_DE_PASSE, Some(&premiere));
+    let r = se_connecter(a, "revendeur", MOT_DE_PASSE, Some(&premiere));
     assert_eq!(r.statut, 303);
     let seconde = morceau_cookie(r.entete("set-cookie").unwrap());
     assert_ne!(seconde, premiere);
@@ -782,6 +790,212 @@ fn chaine_du_journal() {
     assert_eq!(lignes.len() as i64, etat.entrees);
     assert_eq!(lignes.last().unwrap()["empreinte"], etat.sceau.as_str());
     let _ = std::fs::remove_dir_all(&d);
+}
+
+/// Secondes depuis 1970, pour les codes de l'application d'authentification.
+fn maintenant_unix() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
+}
+
+/// Valeur d'un champ d'une page (`name` ou `id`), comme `csrf`.
+fn valeur_champ(page: &str, attribut: &str) -> String {
+    let debut = page.find(attribut).expect("champ");
+    let reste = &page[debut..];
+    let valeur = &reste[reste.find("value=\"").unwrap() + 7..];
+    valeur[..valeur.find('"').unwrap()].to_string()
+}
+
+/// Double authentification des éditeurs : obligatoire avant tout autre
+/// usage, mise en place, connexion en deux étapes, code à usage unique,
+/// codes de secours, retrait par le programme.
+#[test]
+fn double_authentification_des_editeurs() {
+    let d = dossier("double");
+    let p = Portail::ouvrir(&d, cle_essai()).unwrap();
+    let editeur = p.creer_editeur("editeur", "Éditeur", MOT_DE_PASSE).unwrap();
+    let revendeur = p
+        .creer_revendeur(&editeur, "revendeur", "Revendeur", MOT_DE_PASSE)
+        .unwrap();
+    // Réservée aux éditeurs pour l'instant, et exigée d'eux seuls.
+    assert_eq!(
+        p.preparer_double_authentification(&revendeur),
+        Err(ErreurPortail::Interdit)
+    );
+    assert!(p.mise_en_place_exigee(&editeur));
+    assert!(!p.mise_en_place_exigee(&revendeur));
+    let lance = web::lancer(
+        p.clone(),
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        ConfigWeb::default(),
+    )
+    .unwrap();
+    let a = lance.adresse();
+
+    // Sans double authentification : session limitée à la mise en place.
+    let r = se_connecter(a, "editeur", MOT_DE_PASSE, None);
+    assert_eq!(r.statut, 303);
+    let limitee = morceau_cookie(r.entete("set-cookie").unwrap());
+    for chemin in ["/", "/codes", "/journal", "/comptes"] {
+        let r = requete(a, "GET", chemin, Some(&limitee), "");
+        assert_eq!(r.statut, 303, "{chemin}");
+        assert_eq!(r.entete("location"), Some("/double-authentification"));
+    }
+    let page = requete(a, "GET", "/double-authentification", Some(&limitee), "");
+    assert_eq!(page.statut, 200);
+    let jeton = csrf(&page.corps);
+    // Un POST qui agit avec les droits de l'éditeur est renvoyé aussi.
+    let r = requete(
+        a,
+        "POST",
+        "/codes",
+        Some(&limitee),
+        &format!("gamme=entreprise&nombre=1&postes=2&formule=annuelle&csrf={jeton}"),
+    );
+    assert_eq!(r.entete("location"), Some("/double-authentification"));
+    assert!(p.codes_a_vendre(&editeur).unwrap().is_empty());
+    let secret = valeur_champ(&page.corps, "id=\"cle\"");
+    // Page rechargée : même clé.
+    let encore = requete(a, "GET", "/double-authentification", Some(&limitee), "");
+    assert_eq!(valeur_champ(&encore.corps, "id=\"cle\""), secret);
+    // Code faux, puis le bon : codes de secours montrés.
+    let r = requete(
+        a,
+        "POST",
+        "/double-authentification",
+        Some(&limitee),
+        &format!("code=000000&csrf={jeton}"),
+    );
+    assert!(r.corps.contains("code incorrect"), "{}", r.corps);
+    let code = kadenz_portail::totp::code_pour(&secret, maintenant_unix()).unwrap();
+    let r = requete(
+        a,
+        "POST",
+        "/double-authentification",
+        Some(&limitee),
+        &format!("code={code}&csrf={jeton}"),
+    );
+    assert_eq!(r.statut, 200);
+    let secours: Vec<String> = r
+        .corps
+        .split("<span class=\"code-activation\">")
+        .skip(1)
+        .map(|m| m[..m.find('<').unwrap()].to_string())
+        .collect();
+    assert_eq!(secours.len(), kadenz_portail::CODES_SECOURS);
+    assert!(!p.mise_en_place_exigee(&editeur));
+    assert_eq!(requete(a, "GET", "/", Some(&limitee), "").statut, 200);
+
+    // Connexion suivante : le mot de passe mène à l'étape du code, sans
+    // session.
+    let etape_de = |r: &Reponse| -> String {
+        assert_eq!(r.statut, 303);
+        assert_eq!(r.entete("location"), Some("/connexion/code"));
+        let cookie = morceau_cookie(r.entete("set-cookie").unwrap());
+        assert!(cookie.starts_with("__Host-kadenz_etape="), "{cookie}");
+        cookie
+    };
+    let etape = etape_de(&se_connecter(a, "editeur", MOT_DE_PASSE, None));
+    let page = requete(a, "GET", "/connexion/code", Some(&etape), "");
+    assert_eq!(page.statut, 200);
+    let champ_etape = valeur_champ(&page.corps, "name=\"etape\"");
+    let poster = |etape: &str, champ: &str, code: &str, en_plus: &[(&str, &str)]| {
+        requete_avec(
+            a,
+            "POST",
+            "/connexion/code",
+            Some(etape),
+            en_plus,
+            &format!("etape={champ}&code={code}"),
+        )
+    };
+    // Sans le jeton d'étape dans le formulaire, ou depuis un autre site :
+    // refusé.
+    let suivant = kadenz_portail::totp::code_pour(&secret, maintenant_unix() + 30).unwrap();
+    assert_eq!(poster(&etape, "autre", &suivant, &[]).statut, 403);
+    assert_eq!(
+        poster(
+            &etape,
+            &champ_etape,
+            &suivant,
+            &[("Sec-Fetch-Site", "cross-site")]
+        )
+        .statut,
+        403
+    );
+    // Code faux : la page du code revient avec son message.
+    let r = poster(&etape, &champ_etape, "123 456", &[]);
+    assert_eq!(r.statut, 401);
+    assert!(r.corps.contains("code incorrect"));
+    // Bon code (pas suivant, dans la fenêtre permise) : session ouverte.
+    let r = poster(&etape, &champ_etape, &suivant, &[]);
+    assert_eq!(r.statut, 303);
+    let session = morceau_cookie(r.entete("set-cookie").unwrap());
+    assert!(session.starts_with("__Host-kadenz_portail="));
+    assert_eq!(requete(a, "GET", "/", Some(&session), "").statut, 200);
+
+    // Le même code ne sert pas deux fois.
+    let etape = etape_de(&se_connecter(a, "editeur", MOT_DE_PASSE, None));
+    let champ_etape = morceau_cookie(&etape)
+        .split_once('=')
+        .unwrap()
+        .1
+        .to_string();
+    let r = poster(&etape, &champ_etape, &suivant, &[]);
+    assert_eq!(r.statut, 401);
+    // Code de secours, saisi en minuscules : accepté une fois.
+    let saisi = secours[0].to_lowercase();
+    let r = poster(&etape, &champ_etape, &saisi, &[]);
+    assert_eq!(r.statut, 303);
+    let etape = etape_de(&se_connecter(a, "editeur", MOT_DE_PASSE, None));
+    let champ_etape = etape.split_once('=').unwrap().1.to_string();
+    assert_eq!(poster(&etape, &champ_etape, &saisi, &[]).statut, 401);
+
+    // Le revendeur se connecte toujours en une étape.
+    let r = se_connecter(a, "revendeur", MOT_DE_PASSE, None);
+    let cookie = morceau_cookie(r.entete("set-cookie").unwrap());
+    assert!(cookie.starts_with("__Host-kadenz_portail="));
+    assert_eq!(requete(a, "GET", "/", Some(&cookie), "").statut, 200);
+
+    // Retrait par le programme sur le serveur : journalisé, chaîne intacte,
+    // mise en place de nouveau exigée.
+    let programme = env!("CARGO_BIN_EXE_kadenz-portail");
+    let sortie = std::process::Command::new(programme)
+        .args([
+            "--dossier",
+            d.to_str().unwrap(),
+            "retirer-double-authentification",
+            "editeur",
+        ])
+        .output()
+        .unwrap();
+    assert!(sortie.status.success(), "{sortie:?}");
+    assert!(p.mise_en_place_exigee(&editeur));
+    assert_eq!(requete(a, "GET", "/", Some(&session), "").statut, 303);
+    assert_eq!(
+        p.retirer_double_authentification("editeur"),
+        Err(ErreurPortail::Validation(
+            "aucune double authentification pour ce compte".into()
+        ))
+    );
+    let etat = p.verifier_journal().unwrap();
+    assert_eq!(etat.rupture, None);
+    let journal = p.journal(&editeur);
+    // Session de l'éditeur sans double authentification : le journal reste
+    // lisible par l'API, qui n'est pas une route.
+    let actions: Vec<String> = journal.unwrap().into_iter().map(|j| j.action).collect();
+    for attendue in [
+        "double_authentification_activee",
+        "connexion_etape",
+        "code_refuse",
+        "double_authentification_retiree",
+    ] {
+        assert!(actions.iter().any(|x| x == attendue), "{attendue}");
+    }
+    lance.arreter();
+    let _ = std::fs::remove_dir_all(d);
 }
 
 #[test]
@@ -1414,7 +1628,11 @@ fn codes_a_vendre_et_annulation() {
 fn pages_des_codes_a_vendre() {
     let d = dossier("codes-pages");
     let p = Portail::ouvrir(&d, cle_essai()).unwrap();
-    p.creer_editeur("editeur", "Éditeur", MOT_DE_PASSE).unwrap();
+    // Un revendeur : un éditeur n'a de session complète qu'avec la double
+    // authentification (essai double_authentification_des_editeurs).
+    let editeur = p.creer_editeur("editeur", "Éditeur", MOT_DE_PASSE).unwrap();
+    p.creer_revendeur(&editeur, "revendeur", "Revendeur", MOT_DE_PASSE)
+        .unwrap();
     let lance = web::lancer(
         p,
         SocketAddr::from(([127, 0, 0, 1], 0)),
@@ -1422,7 +1640,7 @@ fn pages_des_codes_a_vendre() {
     )
     .unwrap();
     let a = lance.adresse();
-    let r = se_connecter(a, "editeur", MOT_DE_PASSE, None);
+    let r = se_connecter(a, "revendeur", MOT_DE_PASSE, None);
     let session = morceau_cookie(r.entete("set-cookie").unwrap());
 
     let page = requete(a, "GET", "/codes", Some(&session), "");

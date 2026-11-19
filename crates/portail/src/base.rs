@@ -167,6 +167,26 @@ BEGIN SELECT RAISE(ABORT, 'journal en ajout seul'); END;
 CREATE TRIGGER journal_chaine_sans_effacement BEFORE DELETE ON journal_chaine
 BEGIN SELECT RAISE(ABORT, 'journal en ajout seul'); END;
 ",
+    // 6 vers 7 : double authentification des éditeurs (module `totp`,
+    // spécification du portail, section 9). Secret en Base32 ; sans date
+    // d'activation, la mise en place est en cours. `dernier_pas` : dernier
+    // pas de 30 secondes accepté, pour qu'un code ne serve qu'une fois.
+    // Codes de secours gardés en empreinte SHA-256, à usage unique.
+    "
+CREATE TABLE double_authentification (
+    compte INTEGER PRIMARY KEY REFERENCES compte (id),
+    secret TEXT NOT NULL,
+    active_le TEXT,
+    dernier_pas INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE code_secours (
+    id INTEGER PRIMARY KEY,
+    compte INTEGER NOT NULL REFERENCES compte (id),
+    empreinte TEXT NOT NULL,
+    utilise_le TEXT
+);
+CREATE INDEX code_secours_compte ON code_secours (compte);
+",
 ];
 
 /// Version du schéma qui crée la chaîne du journal.

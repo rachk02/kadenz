@@ -8,6 +8,7 @@
 | 0.4 | 2026-11-19 | Construction de l'image du portail sous Linux vérifiée sur le Dell (F9c), ainsi que l'image du relais ; lot L8 livré. |
 | 0.5 | 2026-11-19 | Lot D2 livré (section 9) : jeton de la page de connexion, cookies `__Host-`, rotation de la session à la connexion, CSP sans script ni objet. |
 | 0.6 | 2026-11-19 | Chaîne de hachage du journal (schéma 6, section 9) : sceau sur la page du journal, sous-commandes `journal-verifier` et `journal-exporter`. |
+| 0.7 | 2026-11-19 | Double authentification des éditeurs (schéma 7, section 9), décidée entre sessions : TOTP écrit selon la RFC 6238, obligatoire pour un éditeur, codes de secours, retrait par le programme. |
 
 Statut : **proposé**. Les choix marqués « proposé » restent à confirmer par l'utilisateur ; les décisions citées sont celles du cahier de la phase 2.
 
@@ -79,7 +80,7 @@ Base SQLite dans le dossier du portail (proposé : protégée par les droits du 
 
 ## 9. Durcissement (relecture d'OpenCode, docs/securite/echanges-opencode.md)
 
-Ordre décidé entre sessions le 2026-11-19 : D1 (livré le 2026-11-19), puis L8 (codes de la ligne V1, docs/spec-codes-licence.md ; livré le 2026-11-19), puis D2 (livré le 2026-11-19), puis la chaîne de hachage du journal (livrée le 2026-11-19) et la double authentification des éditeurs, avant toute mise en service.
+Ordre décidé entre sessions le 2026-11-19 : D1 (livré le 2026-11-19), puis L8 (codes de la ligne V1, docs/spec-codes-licence.md ; livré le 2026-11-19), puis D2 (livré le 2026-11-19), puis la chaîne de hachage du journal (livrée le 2026-11-19) et la double authentification des éditeurs (livrée le 2026-11-19), avant toute mise en service.
 
 - D1, indépendant des pages :
   - verrou de la base relâché pendant Argon2 ;
@@ -114,4 +115,14 @@ Ordre décidé entre sessions le 2026-11-19 : D1 (livré le 2026-11-19), puis L8
   - L'éditeur voit sur la page du journal l'état de la chaîne (intacte, ou rompue à telle entrée) et le sceau, empreinte de la dernière entrée vérifiée ; un revendeur, qui ne voit qu'une partie du journal, ne le voit pas.
   - `kadenz-portail --dossier <dossier> journal-verifier` recalcule la chaîne (code de sortie 1 si elle est rompue) ; `journal-exporter [--depuis <id>]` écrit les entrées, une ligne JSON par entrée avec son empreinte, à copier hors du serveur. Ni l'une ni l'autre ne lit la clé du portail.
   - Limite : quelqu'un qui peut écrire dans la base peut recalculer toute la chaîne. Elle ne prouve l'historique que jusqu'au dernier sceau ou au dernier export gardé hors du serveur. L'export périodique hors du serveur et la durée de conservation du journal restent à décider, avec la procédure de sauvegarde.
+- Double authentification des éditeurs (décidée le 2026-11-19 entre kadenz-cc et kadenz-3a ; livrée le 2026-11-19) :
+  - Choix : TOTP écrit selon la RFC 6238 (module `totp`, une soixantaine de lignes) sur `hmac` 0.12.1 (publiée le 2022-02-17) et `sha1` 0.10.7 (2026-07-10), toutes deux sur `digest` 0.10, déjà dans l'arbre par `sha2` ; Base32 par `data-encoding` et comparaison en temps constant par `subtle`, déjà dans l'arbre. Écartés : `totp-rs` 6.0.0, qui ajoute `sha2` 0.11 et `constant_time_eq` 0.4 en doublon de versions présentes ; HMAC-SHA-256 seul, dont la prise en charge par les applications d'authentification n'est pas vérifiée. Essais : vecteurs de la RFC 4226 (annexe D) et de la RFC 6238 (annexe B, SHA-1).
+  - Réglages : HMAC-SHA-1, pas de 30 secondes, 6 chiffres, un pas d'écart permis de chaque côté ; secret de 20 octets, montré en groupes Base32 pour la saisie à la main (le code QR viendra plus tard). Un pas déjà accepté est refusé : un code ne sert qu'une fois.
+  - Obligatoire pour un éditeur : sans double authentification active, sa session est limitée à la mise en place (`/double-authentification`) et à la déconnexion ; toute route qui agit avec les droits d'un compte passe par `exiger`, qui renvoie une session limitée vers la mise en place. Réservée aux éditeurs pour l'instant ; les revendeurs viendront plus tard.
+  - Mise en place : clé tirée au hasard, gardée tant que la mise en place n'est pas finie (page rechargée), puis activée par un premier code de l'application. Dix codes de secours à usage unique (`XXXXX-XXXXX`, 50 bits) sont montrés une seule fois ; le portail n'en garde que l'empreinte SHA-256.
+  - Connexion d'un compte à la double authentification active : le mot de passe accepté n'ouvre pas de session et n'efface pas le frein ; il ouvre une étape de 5 minutes (cookie `__Host-kadenz_etape`, le même jeton dans le formulaire, refus de `Sec-Fetch-Site: cross-site` ou `same-site`). Le code de l'application ou un code de secours ouvre la session, avec la rotation de D2. Un code faux est freiné avec les clés de la connexion (D1) ; après 5 codes faux, l'étape est close et le mot de passe est à redonner.
+  - Journal (dans la chaîne) : mot de passe accepté avec code demandé, code refusé, connexion avec le moyen employé (application ou code de secours), activation, retrait.
+  - Retrait : `kadenz-portail --dossier <dossier> retirer-double-authentification <identifiant>`, sur le serveur, sans la clé du portail (téléphone perdu sans code de secours) ; les sessions ouvertes de ce compte redeviennent limitées à la mise en place.
+  - Portail d'essai : l'éditeur d'essai reçoit une clé tirée au hasard, activée au premier lancement, affichée et notée dans `<dossier>/essai-double-authentification.txt` avec ses codes de secours. Rien de cela n'est dans le programme livré.
+  - Limite : le secret est gardé en clair dans la base du portail, qui n'est pas chiffrée sur Linux, comme les empreintes des mots de passe. Les sauvegardes restic du Dell contiendront donc ce secret : chiffrées par restic, mais lisibles par qui a le mot de passe du dépôt.
 - À garder : échappement maud, SQL paramétré, jeton anti-falsification en temps constant sur les autres `POST`, empreinte des codes, clé inconnue refusée.
