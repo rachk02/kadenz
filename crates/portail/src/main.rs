@@ -14,6 +14,12 @@
 //! - `kadenz-portail --dossier <dossier> creer-editeur <identifiant> <nom>` :
 //!   crée un compte éditeur, mot de passe saisi sans écho (ou lu sur l'entrée
 //!   standard quand elle n'est pas un terminal).
+//! - `kadenz-portail --dossier <dossier> journal-verifier` : recalcule la
+//!   chaîne de hachage du journal ; affiche le nombre d'entrées et le sceau,
+//!   code de sortie 1 si la chaîne est rompue.
+//! - `kadenz-portail --dossier <dossier> journal-exporter [--depuis <id>]` :
+//!   écrit sur la sortie standard les entrées du journal après `<id>`, une
+//!   ligne JSON par entrée avec son empreinte, à copier hors du serveur.
 
 use std::io::{BufRead, IsTerminal, Read, Write};
 use std::net::{SocketAddr, TcpStream};
@@ -31,9 +37,78 @@ fn usage() -> ExitCode {
     eprintln!(
         "usage : kadenz-portail --dossier <dossier> --cle <fichier> [--ecoute <adresse:port>] [--mandataire <adresse>]\n\
          \x20       kadenz-portail --dossier <dossier> creer-editeur <identifiant> <nom>\n\
+         \x20       kadenz-portail --dossier <dossier> journal-verifier\n\
+         \x20       kadenz-portail --dossier <dossier> journal-exporter [--depuis <id>]\n\
          \x20       kadenz-portail sante [--ecoute <adresse:port>]"
     );
     ExitCode::FAILURE
+}
+
+/// Ouvre la base pour une commande qui ne signe rien (création d'un compte,
+/// journal) : une clé jetable suffit, la clé du portail n'est pas lue.
+fn ouvrir_sans_cle(dossier: &std::path::Path) -> Result<Portail, ExitCode> {
+    let mut graine = [0u8; 32];
+    if getrandom::fill(&mut graine).is_err() {
+        eprintln!("générateur aléatoire du système indisponible");
+        return Err(ExitCode::FAILURE);
+    }
+    let cle = ed25519_dalek::SigningKey::from_bytes(&graine);
+    graine.zeroize();
+    Portail::ouvrir(dossier, cle).map_err(|e| {
+        eprintln!("{e}");
+        ExitCode::FAILURE
+    })
+}
+
+fn verifier_journal(portail: &Portail) -> ExitCode {
+    match portail.verifier_journal() {
+        Ok(e) => match e.rupture {
+            None => {
+                println!("Chaîne du journal intacte : {} entrées.", e.entrees);
+                println!("Sceau : {}", e.sceau);
+                ExitCode::SUCCESS
+            }
+            Some(id) => {
+                println!(
+                    "Chaîne du journal rompue à l'entrée {id} ({} entrées vérifiées avant).",
+                    e.entrees
+                );
+                println!("Dernier sceau valable : {}", e.sceau);
+                ExitCode::FAILURE
+            }
+        },
+        Err(e) => {
+            eprintln!("{e}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn exporter_journal(portail: &Portail, depuis: i64) -> ExitCode {
+    let entrees = match portail.exporter_journal(depuis) {
+        Ok(e) => e,
+        Err(e) => {
+            eprintln!("{e}");
+            return ExitCode::FAILURE;
+        }
+    };
+    let mut sortie = std::io::stdout().lock();
+    for e in entrees {
+        let ligne = serde_json::json!({
+            "id": e.id,
+            "heure": e.heure,
+            "compte": e.compte,
+            "action": e.action,
+            "cible": e.cible,
+            "details": e.details,
+            "precedente": e.precedente,
+            "empreinte": e.empreinte,
+        });
+        if writeln!(sortie, "{ligne}").is_err() {
+            return ExitCode::FAILURE;
+        }
+    }
+    ExitCode::SUCCESS
 }
 
 fn main() -> ExitCode {
@@ -43,6 +118,8 @@ fn main() -> ExitCode {
     let mut config = ConfigWeb::default();
     let mut creer: Option<(String, String)> = None;
     let mut sante = false;
+    let mut verifier = false;
+    let mut exporter: Option<i64> = None;
     let mut arguments = std::env::args().skip(1);
     while let Some(argument) = arguments.next() {
         match argument.as_str() {
@@ -57,6 +134,12 @@ fn main() -> ExitCode {
                 None => return usage(),
             },
             "sante" => sante = true,
+            "journal-verifier" => verifier = true,
+            "journal-exporter" => exporter = Some(exporter.unwrap_or(0)),
+            "--depuis" => match arguments.next().and_then(|a| a.parse().ok()) {
+                Some(d) => exporter = Some(d),
+                None => return usage(),
+            },
             "creer-editeur" => match (arguments.next(), arguments.next()) {
                 (Some(i), Some(n)) => creer = Some((i, n)),
                 _ => return usage(),
@@ -71,22 +154,22 @@ fn main() -> ExitCode {
         return usage();
     };
 
+    if verifier || exporter.is_some() {
+        let portail = match ouvrir_sans_cle(&dossier) {
+            Ok(p) => p,
+            Err(code) => return code,
+        };
+        return match exporter {
+            Some(depuis) => exporter_journal(&portail, depuis),
+            None => verifier_journal(&portail),
+        };
+    }
+
     if let Some((identifiant, nom)) = creer {
-        // La création d'un compte n'a pas besoin de la clé de signature : une
-        // clé jetable sert à ouvrir la base, rien n'est signé.
-        let mut graine = [0u8; 32];
-        if getrandom::fill(&mut graine).is_err() {
-            eprintln!("générateur aléatoire du système indisponible");
-            return ExitCode::FAILURE;
-        }
-        let portail =
-            match Portail::ouvrir(&dossier, ed25519_dalek::SigningKey::from_bytes(&graine)) {
-                Ok(p) => p,
-                Err(e) => {
-                    eprintln!("{e}");
-                    return ExitCode::FAILURE;
-                }
-            };
+        let portail = match ouvrir_sans_cle(&dossier) {
+            Ok(p) => p,
+            Err(code) => return code,
+        };
         let invite = format!(
             "Mot de passe du compte éditeur ({LONGUEUR_MIN_MOT_DE_PASSE} caractères au moins) : "
         );

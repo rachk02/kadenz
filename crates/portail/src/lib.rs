@@ -11,6 +11,7 @@
 //! rattachées ; une entreprise d'un autre lui est « introuvable ».
 
 mod base;
+mod chaine;
 mod frein;
 pub mod pages;
 mod sessions;
@@ -29,6 +30,8 @@ use kadenz_licence::code_court;
 use kadenz_licence::entreprise::{self as lic, Emetteur, Formule, LicenceEntreprise};
 use rusqlite::{Connection, OptionalExtension, params};
 use sha2::{Digest, Sha256};
+
+pub use chaine::{EntreeChainee, EtatChaine};
 
 use sessions::Sessions;
 
@@ -869,11 +872,26 @@ fn noter(
     cible: Option<&str>,
     details: &str,
 ) -> Resultat<()> {
-    conn.execute(
-        "INSERT INTO journal (heure, compte, action, cible, details) VALUES (?1, ?2, ?3, ?4, ?5)",
-        params![maintenant(), compte, action, cible, details],
-    )?;
-    Ok(())
+    // L'entrée et son maillon ensemble, ou rien : un point de sauvegarde,
+    // valable dans une transaction en cours comme hors transaction.
+    conn.execute_batch("SAVEPOINT noter")?;
+    let ecrit = (|| -> rusqlite::Result<()> {
+        conn.execute(
+            "INSERT INTO journal (heure, compte, action, cible, details) VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![maintenant(), compte, action, cible, details],
+        )?;
+        chaine::chainer(conn, conn.last_insert_rowid())
+    })();
+    match ecrit {
+        Ok(()) => {
+            conn.execute_batch("RELEASE noter")?;
+            Ok(())
+        }
+        Err(e) => {
+            let _ = conn.execute_batch("ROLLBACK TO noter; RELEASE noter");
+            Err(e.into())
+        }
+    }
 }
 
 /// Compte connu et actif, relu de la base (un compte désactivé perd ses
@@ -2063,6 +2081,29 @@ impl Portail {
     }
 
     // ----- Journal -----
+
+    /// Chaîne du journal vérifiée, pour l'éditeur (aucune pour un
+    /// revendeur, qui ne voit qu'une partie du journal).
+    pub fn chaine_du_journal(&self, acteur: &Compte) -> Resultat<Option<EtatChaine>> {
+        let conn = self.conn();
+        let acteur = relire(&conn, acteur)?;
+        if acteur.role != Role::Editeur {
+            return Ok(None);
+        }
+        Ok(Some(chaine::verifier(&conn)?))
+    }
+
+    /// Chaîne du journal vérifiée, sans compte (programme, en local sur le
+    /// serveur).
+    pub fn verifier_journal(&self) -> Resultat<EtatChaine> {
+        Ok(chaine::verifier(&self.conn())?)
+    }
+
+    /// Entrées du journal après l'identifiant `depuis`, avec leurs
+    /// empreintes : export à copier hors du serveur (programme).
+    pub fn exporter_journal(&self, depuis: i64) -> Resultat<Vec<EntreeChainee>> {
+        Ok(chaine::entrees(&self.conn(), depuis)?)
+    }
 
     /// Journal des actions, du plus récent au plus ancien (500 au plus).
     /// L'éditeur voit tout ; un revendeur, ses propres actions.

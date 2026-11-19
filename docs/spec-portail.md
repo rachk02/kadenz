@@ -7,6 +7,7 @@
 | 0.3 | 2026-11-19 | Lot D1 livré (section 9) ; mots de passe de 15 caractères et liste de mots de passe compromis ; option `--mandataire <adresse>` ; sous-commande `sante`. |
 | 0.4 | 2026-11-19 | Construction de l'image du portail sous Linux vérifiée sur le Dell (F9c), ainsi que l'image du relais ; lot L8 livré. |
 | 0.5 | 2026-11-19 | Lot D2 livré (section 9) : jeton de la page de connexion, cookies `__Host-`, rotation de la session à la connexion, CSP sans script ni objet. |
+| 0.6 | 2026-11-19 | Chaîne de hachage du journal (schéma 6, section 9) : sceau sur la page du journal, sous-commandes `journal-verifier` et `journal-exporter`. |
 
 Statut : **proposé**. Les choix marqués « proposé » restent à confirmer par l'utilisateur ; les décisions citées sont celles du cahier de la phase 2.
 
@@ -78,7 +79,7 @@ Base SQLite dans le dossier du portail (proposé : protégée par les droits du 
 
 ## 9. Durcissement (relecture d'OpenCode, docs/securite/echanges-opencode.md)
 
-Ordre décidé entre sessions le 2026-11-19 : D1 (livré le 2026-11-19), puis L8 (codes de la ligne V1, docs/spec-codes-licence.md ; livré le 2026-11-19), puis D2, puis la chaîne de hachage du journal et la double authentification des éditeurs, avant toute mise en service.
+Ordre décidé entre sessions le 2026-11-19 : D1 (livré le 2026-11-19), puis L8 (codes de la ligne V1, docs/spec-codes-licence.md ; livré le 2026-11-19), puis D2 (livré le 2026-11-19), puis la chaîne de hachage du journal (livrée le 2026-11-19) et la double authentification des éditeurs, avant toute mise en service.
 
 - D1, indépendant des pages :
   - verrou de la base relâché pendant Argon2 ;
@@ -107,4 +108,10 @@ Ordre décidé entre sessions le 2026-11-19 : D1 (livré le 2026-11-19), puis L8
   - Cookie de session renommé `__Host-kadenz_portail` : le navigateur ne l'accepte qu'avec `Secure`, `Path=/` et sans `Domain`, si bien qu'un sous-domaine ne peut ni le poser ni le remplacer. La durée absolue de 12 heures est tenue par le portail (D1) ; le cookie reste un cookie de session du navigateur.
   - Rotation : une connexion réussie ferme la session portée par le navigateur ; le changement de mot de passe ferme déjà toutes les sessions du compte (D1). Le jeton anti-falsification des formulaires appartient à la session et change avec elle.
   - CSP : `default-src 'self'; script-src 'none'; object-src 'none'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'`.
+- Chaîne de hachage du journal (relecture d'OpenCode, défaut 12 ; livrée le 2026-11-19) :
+  - Schéma 6 : table `journal_chaine` (id de l'entrée, entrée précédente, empreinte), en ajout seul comme le journal. L'entrée précédente est unique : deux écritures concurrentes échouent au lieu de faire bifurquer la chaîne. L'entrée et son maillon s'écrivent ensemble ou pas du tout. Les entrées écrites avant la chaîne sont chaînées pendant la migration.
+  - Empreinte : SHA-256 de l'empreinte précédente et des champs de l'entrée (identifiant, heure, compte, action, cible, détails), chaque champ encodé avec sa longueur, une étiquette de domaine en tête ; 64 zéros avant la première entrée.
+  - L'éditeur voit sur la page du journal l'état de la chaîne (intacte, ou rompue à telle entrée) et le sceau, empreinte de la dernière entrée vérifiée ; un revendeur, qui ne voit qu'une partie du journal, ne le voit pas.
+  - `kadenz-portail --dossier <dossier> journal-verifier` recalcule la chaîne (code de sortie 1 si elle est rompue) ; `journal-exporter [--depuis <id>]` écrit les entrées, une ligne JSON par entrée avec son empreinte, à copier hors du serveur. Ni l'une ni l'autre ne lit la clé du portail.
+  - Limite : quelqu'un qui peut écrire dans la base peut recalculer toute la chaîne. Elle ne prouve l'historique que jusqu'au dernier sceau ou au dernier export gardé hors du serveur. L'export périodique hors du serveur et la durée de conservation du journal restent à décider, avec la procédure de sauvegarde.
 - À garder : échappement maud, SQL paramétré, jeton anti-falsification en temps constant sur les autres `POST`, empreinte des codes, clé inconnue refusée.

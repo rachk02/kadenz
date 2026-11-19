@@ -740,6 +740,50 @@ fn connexion_sans_falsification_et_rotation() {
     let _ = std::fs::remove_dir_all(d);
 }
 
+/// Chaîne du journal : vérifiée par l'API, visible de l'éditeur seul,
+/// vérifiée et exportée par le programme.
+#[test]
+fn chaine_du_journal() {
+    let (p, d, editeur, a, _) = portail("chaine", "2026-11-15");
+    p.creer_entreprise(&editeur, ENTREPRISE_A, "Boulangerie Wendé", None)
+        .unwrap();
+    let etat = p.verifier_journal().unwrap();
+    assert_eq!(etat.rupture, None);
+    assert!(etat.entrees >= 3, "{etat:?}");
+    assert_eq!(p.chaine_du_journal(&editeur).unwrap(), Some(etat.clone()));
+    assert_eq!(p.chaine_du_journal(&a).unwrap(), None);
+    let export = p.exporter_journal(0).unwrap();
+    assert_eq!(export.len() as i64, etat.entrees);
+    assert_eq!(export.last().unwrap().empreinte, etat.sceau);
+    let suite = p.exporter_journal(export[0].id).unwrap();
+    assert_eq!(suite.len(), export.len() - 1);
+    drop(p);
+
+    let programme = env!("CARGO_BIN_EXE_kadenz-portail");
+    let sortie = std::process::Command::new(programme)
+        .args(["--dossier", d.to_str().unwrap(), "journal-verifier"])
+        .output()
+        .unwrap();
+    assert!(sortie.status.success());
+    let texte = String::from_utf8_lossy(&sortie.stdout).to_string();
+    assert!(
+        texte.contains("intacte") && texte.contains(&etat.sceau),
+        "{texte}"
+    );
+    let sortie = std::process::Command::new(programme)
+        .args(["--dossier", d.to_str().unwrap(), "journal-exporter"])
+        .output()
+        .unwrap();
+    assert!(sortie.status.success());
+    let lignes: Vec<serde_json::Value> = String::from_utf8_lossy(&sortie.stdout)
+        .lines()
+        .map(|l| serde_json::from_str(l).unwrap())
+        .collect();
+    assert_eq!(lignes.len() as i64, etat.entrees);
+    assert_eq!(lignes.last().unwrap()["empreinte"], etat.sceau.as_str());
+    let _ = std::fs::remove_dir_all(&d);
+}
+
 #[test]
 fn programme_refuse_sans_cle() {
     // Le vrai programme ne démarre jamais sans fichier de clé.

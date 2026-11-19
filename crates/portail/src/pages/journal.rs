@@ -4,9 +4,10 @@
 use maud::{Markup, html};
 
 use super::{Cadre, Rubrique, heure, page, titre};
-use crate::{Action, Role};
+use crate::{Action, EtatChaine, Role};
 
-pub fn journal(c: &Cadre, actions: &[Action]) -> Markup {
+/// `chaine` : état de la chaîne de hachage, pour l'éditeur seulement.
+pub fn journal(c: &Cadre, actions: &[Action], chaine: Option<&EtatChaine>) -> Markup {
     let contenu = html! {
         (titre("Journal", html! {}))
         p.texte {
@@ -14,6 +15,26 @@ pub fn journal(c: &Cadre, actions: &[Action]) -> Markup {
                 "Chaque action du portail, de la plus récente à la plus ancienne (500 au plus). Les heures sont en temps universel (UTC)."
             } @else {
                 "Vos actions sur le portail, de la plus récente à la plus ancienne (500 au plus). Les heures sont en temps universel (UTC)."
+            }
+        }
+        @if let Some(e) = chaine {
+            div.carte {
+                div.carte-interieur {
+                    dl.grille-fiche {
+                        dt { "Chaîne du journal" }
+                        dd {
+                            @match e.rupture {
+                                None => { "intacte, " (e.entrees) " entrée" @if e.entrees > 1 { "s" } " vérifiée" @if e.entrees > 1 { "s" } }
+                                Some(id) => { "rompue à l'entrée " (id) " : le journal a été modifié hors du portail" }
+                            }
+                        }
+                        dt { "Sceau" }
+                        dd { span.identifiant { (e.sceau) } }
+                    }
+                    p.aide {
+                        "Le sceau est l'empreinte de la dernière entrée vérifiée. Noté hors du serveur, il permet de constater plus tard que rien n'a changé avant lui."
+                    }
+                }
             }
         }
         div.carte {
@@ -79,6 +100,14 @@ fn libelle_action(code: &str) -> &str {
         "entreprise_creee" => "Entreprise créée",
         "paiement_enregistre" => "Paiement enregistré",
         "licence_emise" => "Licence émise",
+        "code_cree" => "Code tiré",
+        "codes_crees" => "Codes à vendre tirés",
+        "code_annule" => "Code annulé",
+        "code_active" => "Code activé",
+        "code_v1_active" => "Code V1 activé",
+        "code_reactive" => "Code V1 réactivé",
+        "poste_libere" => "Poste libéré",
+        "activation_refusee" => "Activation refusée",
         _ => code,
     }
 }

@@ -153,7 +153,32 @@ CREATE TABLE licence_v1 (
 CREATE INDEX licence_v1_code ON licence_v1 (code);
 CREATE UNIQUE INDEX licence_v1_en_cours ON licence_v1 (code) WHERE liberee_le IS NULL;
 ",
+    // 5 vers 6 : chaîne de hachage du journal (module `chaine`, relecture
+    // d'OpenCode, défaut 12). Une empreinte par entrée, en ajout seul ; les
+    // entrées déjà écrites sont chaînées pendant le pas (`apres_pas`).
+    "
+CREATE TABLE journal_chaine (
+    id INTEGER PRIMARY KEY REFERENCES journal (id),
+    precedente INTEGER NOT NULL UNIQUE,
+    empreinte TEXT NOT NULL
+);
+CREATE TRIGGER journal_chaine_sans_modification BEFORE UPDATE ON journal_chaine
+BEGIN SELECT RAISE(ABORT, 'journal en ajout seul'); END;
+CREATE TRIGGER journal_chaine_sans_effacement BEFORE DELETE ON journal_chaine
+BEGIN SELECT RAISE(ABORT, 'journal en ajout seul'); END;
+",
 ];
+
+/// Version du schéma qui crée la chaîne du journal.
+const VERSION_CHAINE: i64 = 6;
+
+/// Travail d'un pas qui ne s'écrit pas en SQL, dans la même transaction.
+fn apres_pas(conn: &Connection, suivante: i64) -> rusqlite::Result<()> {
+    if suivante == VERSION_CHAINE {
+        crate::chaine::rattraper(conn)?;
+    }
+    Ok(())
+}
 
 /// Table du frein (`frein.rs`) : une ligne par clé, échecs comptés, fin de
 /// l'attente en cours, dernier échec.
@@ -227,6 +252,7 @@ pub(crate) fn migrer(conn: &Connection) -> rusqlite::Result<()> {
 fn appliquer_pas(conn: &Connection, pas: &str, suivante: i64) -> rusqlite::Result<()> {
     let transaction = conn.unchecked_transaction()?;
     transaction.execute_batch(pas)?;
+    apres_pas(&transaction, suivante)?;
     transaction.pragma_update(None, "user_version", suivante)?;
     let violation = transaction
         .prepare("PRAGMA foreign_key_check")?
@@ -315,6 +341,24 @@ mod tests {
         );
         // Une seconde ouverture ne refait rien.
         migrer(&conn).unwrap();
+    }
+
+    /// Le journal écrit avant la chaîne est chaîné par la migration.
+    #[test]
+    fn journal_existant_chaine_par_la_migration() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(&format!("BEGIN; {SCHEMA} PRAGMA user_version = 1; COMMIT;"))
+            .unwrap();
+        conn.execute_batch(
+            "INSERT INTO journal (heure, compte, action, cible, details)
+                 VALUES ('2026-11-01 08:00:00', NULL, 'connexion_refusee', NULL, 'adresse 10.0.0.1');
+             INSERT INTO journal (heure, compte, action, cible, details)
+                 VALUES ('2026-11-01 08:01:00', NULL, 'connexion_refusee', NULL, 'adresse 10.0.0.2');",
+        )
+        .unwrap();
+        migrer(&conn).unwrap();
+        let etat = crate::chaine::verifier(&conn).unwrap();
+        assert_eq!((etat.entrees, etat.rupture), (2, None));
     }
 
     #[test]

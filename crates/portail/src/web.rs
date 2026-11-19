@@ -1026,8 +1026,16 @@ async fn journal(State(etat): State<Etat>, entetes: HeaderMap) -> Response {
     };
     let portail = etat.portail.clone();
     let compte = c.compte.clone();
-    match bloquant(move || portail.journal(&compte)).await {
-        Ok(actions) => html(StatusCode::OK, pages::journal(&c.cadre(None), &actions)),
+    let lu = bloquant(move || {
+        let actions = portail.journal(&compte)?;
+        Ok::<_, ErreurPortail>((actions, portail.chaine_du_journal(&compte)?))
+    })
+    .await;
+    match lu {
+        Ok((actions, chaine)) => html(
+            StatusCode::OK,
+            pages::journal(&c.cadre(None), &actions, chaine.as_ref()),
+        ),
         Err(e) => page_erreur(Some(&c), &e),
     }
 }
