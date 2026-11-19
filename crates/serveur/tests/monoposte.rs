@@ -136,6 +136,13 @@ fn serveur_integre_du_monoposte() {
     let serveur = Serveur::demarrer(Config::monoposte(d.clone())).unwrap();
     assert_eq!(serveur.adresse().port(), port);
     serveur.arreter();
+    // Base fermée au retour d'`arreter` (restauration du lot M4, remarque de
+    // kadenz-74) : sous Windows, un fichier ouvert par SQLite ne se renomme
+    // pas.
+    let base = d.join(NOM_BASE);
+    let deplacee = d.join("base-deplacee.sqlite");
+    std::fs::rename(&base, &deplacee).unwrap();
+    std::fs::rename(&deplacee, &base).unwrap();
 
     // Port pris par un autre programme : un port libre, noté dans la base.
     let occupant = TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], port))).unwrap();

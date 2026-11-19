@@ -4,6 +4,7 @@
 |---|---|---|
 | 0.1 | 2026-11-19 | Premier jet de kadenz-3a, après l'état des lieux et les ajouts de kadenz-cc (une seule instance, authentification gardée, clés au niveau du compte, arrêt propre). Rien n'est codé. |
 | 0.2 | 2026-11-19 | Relecture de kadenz-74 : passage des clients de la V1, assistant de l'application, voile de fermeture, sauvegardes sous Documents, causes du démarrage impossible, serveur démarré avant la copie, partage des lots. M1 livré (606aa2e) ; erreur de démarrage typée et vidage borné de la file. |
+| 0.3 | 2026-11-19 | M2 livré par kadenz-74 (f8c8908). `Serveur::arreter` rend la main base fermée (remarque de kadenz-74). Fermeture : bornes fixées par kadenz-cc, sauvegarde d'arrêt faite par `Serveur::arreter` lui-même, fin de session Windows vérifiée dans les sources de winit par kadenz-74. |
 
 Statut : **proposé**. Les points marqués « à trancher par l'utilisateur » lui sont posés groupés par kadenz-cc. Le reste se décide entre sessions (décision du 2026-11-16).
 
@@ -101,19 +102,18 @@ Un client de la ligne 0.2.x qui installe l'édition monoposte a déjà sa base V
 
 ## 4. Fermeture
 
-La décision 47 coupe la sauvegarde à la fermeture sur un poste relié. Le monoposte n'en aurait donc aucune. En monoposte, la fermeture de la fenêtre suit cet ordre, avec un délai total borné (proposé : 30 secondes).
+La décision 47 coupe la sauvegarde à la fermeture sur un poste relié. Le monoposte n'en aurait donc aucune. En monoposte, la fermeture de la fenêtre suit cet ordre, avec un délai total de 30 secondes, sauvegarde d'arrêt comprise (kadenz-cc) : à 10 secondes, le voile dit que l'opération prend plus de temps que prévu ; à 30 secondes, la fenêtre se ferme même si le fil n'a pas fini.
 
-Aujourd'hui, le travail de fermeture se fait après la fin de `fenetre.run()`, donc fenêtre disparue : aucun message ne peut s'afficher, et un second lancement pendant ce temps ramènerait au premier plan une fenêtre qui n'existe plus (kadenz-74). La demande de fermeture est donc interceptée : la fenêtre reste affichée sous un voile « Enregistrement et sauvegarde en cours… », qui bloque aussi les écritures (étape 1). Les étapes 2 à 5 se font dans un fil à part, puis la fenêtre se ferme. `Serveur` et `Synchroniseur` sont `Send`, vérifié à la compilation.
+Aujourd'hui, le travail de fermeture se fait après la fin de `fenetre.run()`, donc fenêtre disparue : aucun message ne peut s'afficher, et un second lancement pendant ce temps ramènerait au premier plan une fenêtre qui n'existe plus (kadenz-74). La demande de fermeture est donc interceptée : la fenêtre reste affichée sous un voile « Enregistrement et sauvegarde en cours… », qui bloque aussi les écritures (étape 1). Les étapes 2 à 4 se font dans un fil à part, puis la fenêtre se ferme. `Serveur` et `Synchroniseur` sont `Send`, vérifié à la compilation.
 
 1. Les nouvelles écritures sont bloquées dans l'interface.
 2. La file d'envoi du synchroniseur se vide vers le serveur, avec une attente bornée (`Synchroniseur::vider(délai)`, vrai si la file est vide). La file est gardée dans la copie et renvoyée au démarrage suivant avec le même identifiant, sans double application (`kadenz-poste`). Un délai dépassé ne perd donc rien : l'écriture part au lancement suivant.
 3. Le synchroniseur s'arrête.
-4. Sauvegarde du serveur (`kadenz_serveur::sauvegardes::sauvegarder`), comme la sauvegarde de la V1 à la fermeture.
-5. Arrêt du serveur (`Serveur::arreter`) : écoute, planification et relais s'arrêtent, puis le verrou du dossier est rendu.
+4. Arrêt du serveur (`Serveur::arreter`) : écoute, planification et relais s'arrêtent ; puis la sauvegarde d'arrêt (décision 35), faite par `arreter` lui-même quand un mot de passe des sauvegardes est choisi, comme la sauvegarde de la V1 à la fermeture : l'application n'en lance pas une seconde ; puis la connexion à la base se ferme et le fil de la base est joint ; enfin le verrou du dossier est rendu. Au retour, le fichier de la base n'est plus ouvert.
 
 Les sauvegardes quotidiennes planifiées du serveur ne tournent que fenêtre ouverte.
 
-Fermeture de la session Windows ou arrêt de la machine : Windows laisse peu de temps. La file est gardée dans la copie et part au lancement suivant ; la sauvegarde de fermeture peut manquer. C'est accepté.
+Fermeture de la session Windows ou arrêt de la machine : winit (0.30.13, `platform_impl/windows/event_loop.rs`) ne traduit que `WM_CLOSE` en demande de fermeture ; `WM_QUERYENDSESSION` et `WM_ENDSESSION` passent à `DefWindowProc`, et Windows termine le processus après `WM_ENDSESSION` (vérifié dans les sources par kadenz-74). Il n'y a donc ni voile, ni vidage, ni sauvegarde d'arrêt. Les données restent intactes : la base du serveur est en mode WAL, et la file du synchroniseur, gardée dans la copie, part au lancement suivant. C'est accepté.
 
 ### 4.1 Dossier des sauvegardes
 
@@ -132,7 +132,7 @@ Fermeture de la session Windows ou arrêt de la machine : Windows laisse peu de 
 | Premier compte Admin et licence (assistant) | Assistant du premier lancement (section 3). |
 | Codes d'inscription des postes | Sans objet : seule l'inscription automatique, une fois. |
 | Réglage des sauvegardes (heure, dossier) | Rubrique « Sauvegardes » des Paramètres, montrée de nouveau en monoposte (exception à la décision 47), pour l'Admin. |
-| Restauration d'une sauvegarde | Rubrique « Sauvegardes » et écran « Démarrage impossible ». Le serveur intégré s'arrête d'abord, la restauration se fait sur le dossier fermé, puis le serveur redémarre et la copie du poste est recréée. |
+| Restauration d'une sauvegarde | Rubrique « Sauvegardes » et écran « Démarrage impossible ». Le serveur intégré s'arrête d'abord, la restauration se fait sur le dossier fermé, puis le serveur redémarre et la copie du poste est recréée. `Serveur::arreter` rend la main une fois la connexion à la base fermée (remarque de kadenz-74) : le fichier peut être remplacé aussitôt. |
 | Relais | Sans objet (section 2.6). |
 | Rubrique « Serveur » d'un poste relié, recherche de serveur | Cachées, sauf l'accès à la reprise V1 (section 3.0). Liste exacte des rubriques au lot M4 (kadenz-74). |
 | Mises à jour | Celles de l'application, comme aujourd'hui. |

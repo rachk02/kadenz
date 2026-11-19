@@ -420,16 +420,27 @@ fn config_tls(identite: &Identite) -> Result<Arc<ServerConfig>, String> {
 
 type Tache = Box<dyn FnOnce(&mut Connection) + Send>;
 
+/// Message au fil de la base : une tâche, ou la fermeture de la connexion.
+enum MessageBase {
+    Tache(Tache),
+    Fermer,
+}
+
 /// Accès à la base, toujours depuis le même fil : les opérations sont
 /// appliquées l'une après l'autre.
 #[derive(Clone)]
-struct Base(mpsc::Sender<Tache>);
+struct Base(mpsc::Sender<MessageBase>);
 
 impl Base {
-    fn lancer(mut conn: Connection) -> Base {
-        let (envoi, reception) = mpsc::channel::<Tache>();
-        thread::spawn(move || {
-            for tache in reception {
+    /// Lance le fil de la base ; son `JoinHandle` permet d'attendre la
+    /// fermeture de la connexion (`Serveur::fermer`).
+    fn lancer(mut conn: Connection) -> (Base, JoinHandle<()>) {
+        let (envoi, reception) = mpsc::channel::<MessageBase>();
+        let fil = thread::spawn(move || {
+            for message in reception {
+                let MessageBase::Tache(tache) = message else {
+                    break;
+                };
                 if catch_unwind(AssertUnwindSafe(|| tache(&mut conn))).is_err()
                     && !conn.is_autocommit()
                 {
@@ -437,8 +448,17 @@ impl Base {
                     let _ = conn.execute_batch("ROLLBACK");
                 }
             }
+            // Fermée ici, avant que le fil ne finisse : les sessions encore
+            // ouvertes, qui gardent une copie de `Base`, ne la retiennent pas.
+            drop(conn);
         });
-        Base(envoi)
+        (Base(envoi), fil)
+    }
+
+    /// Demande la fermeture de la connexion, après les tâches déjà reçues ;
+    /// les tâches suivantes échouent (« base du serveur arrêtée »).
+    fn fermer(&self) {
+        let _ = self.0.send(MessageBase::Fermer);
     }
 
     fn executer<R: Send + 'static>(
@@ -447,9 +467,9 @@ impl Base {
     ) -> Result<R, String> {
         let (envoi, reception) = mpsc::sync_channel(1);
         self.0
-            .send(Box::new(move |conn| {
+            .send(MessageBase::Tache(Box::new(move |conn| {
                 let _ = envoi.send(tache(conn));
-            }))
+            })))
             .map_err(|_| "base du serveur arrêtée".to_string())?;
         reception
             .recv()
@@ -585,6 +605,8 @@ pub struct Serveur {
     planification: Option<JoinHandle<()>>,
     /// Connexion de contrôle vers le relais (F8).
     relais: Option<JoinHandle<()>>,
+    /// Fil de la base : joint en dernier, la connexion fermée.
+    fil_base: Option<JoinHandle<()>>,
     dossier: PathBuf,
     avertissement: Option<String>,
     /// Verrou du dossier : rendu quand le serveur est détruit, après l'arrêt
@@ -627,7 +649,7 @@ impl Serveur {
             None
         };
         admin::noter_port(&conn, adresse.port()).map_err(ErreurDemarrage::Autre)?;
-        let base = Base::lancer(conn);
+        let (base, fil_base) = Base::lancer(conn);
         let arret = Arc::new(AtomicBool::new(false));
         let contexte = Arc::new(Contexte {
             base: base.clone(),
@@ -680,6 +702,7 @@ impl Serveur {
             decouverte,
             planification,
             relais,
+            fil_base: Some(fil_base),
             dossier: config.dossier,
             avertissement,
             _verrou: verrou,
@@ -710,8 +733,11 @@ impl Serveur {
         self.base.executer(tache)
     }
 
-    /// Cesse d'écouter. Les sessions ouvertes finissent à leur requête
-    /// suivante, ou au plus tard au bout du délai de lecture.
+    /// Cesse d'écouter, fait la sauvegarde d'arrêt, puis ferme la base : au
+    /// retour, le fichier de la base n'est plus ouvert (restauration sur le
+    /// dossier fermé, spécification du monoposte, section 5). Les sessions
+    /// ouvertes finissent à leur requête suivante, ou au plus tard au bout du
+    /// délai de lecture ; leurs requêtes à la base échouent.
     pub fn arreter(mut self) {
         self.fermer();
     }
@@ -743,6 +769,10 @@ impl Serveur {
             .is_some()
         {
             sauvegarder_et_noter(&self.base, &self.dossier, sauvegarde::Genre::Arret);
+        }
+        self.base.fermer();
+        if let Some(fil) = self.fil_base.take() {
+            let _ = fil.join();
         }
     }
 }
