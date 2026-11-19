@@ -4,7 +4,9 @@ use maud::{DOCTYPE, Markup, PreEscaped, html};
 
 use super::{SYMBOLE, message, tete};
 
-pub fn connexion(erreur: Option<&str>) -> Markup {
+/// Page de connexion ; `jeton` est le jeton anti-falsification de la
+/// connexion, le même que dans le cookie posé avec la page.
+pub fn connexion(jeton: &str, erreur: Option<&str>) -> Markup {
     html! {
         (DOCTYPE)
         html lang="fr" {
@@ -30,6 +32,7 @@ pub fn connexion(erreur: Option<&str>) -> Markup {
                                 (message(false, e))
                             }
                             form method="post" action="/connexion" {
+                                input type="hidden" name="csrf" value=(jeton);
                                 div.champ {
                                     label for="identifiant" { "Identifiant" }
                                     input #identifiant type="text" name="identifiant"

@@ -30,8 +30,19 @@ use crate::{
     Compte, DemandeActivation, ErreurPortail, MODELES_ACTIVATION, Message, NouveauPaiement, Portail,
 };
 
-/// Nom du cookie de session.
-pub const COOKIE_SESSION: &str = "kadenz_portail";
+/// Nom du cookie de session. Le préfixe `__Host-` oblige le navigateur à ne
+/// l'accepter qu'avec `Secure`, `Path=/` et sans `Domain` : un sous-domaine
+/// ne peut ni le poser ni le remplacer.
+pub const COOKIE_SESSION: &str = "__Host-kadenz_portail";
+
+/// Cookie du jeton de la page de connexion (avant toute session) : le même
+/// jeton revient dans le formulaire, sinon la connexion est refusée. Un
+/// autre site ne peut donc pas connecter le navigateur à un compte de son
+/// choix (falsification de la connexion).
+pub const COOKIE_CONNEXION: &str = "__Host-kadenz_connexion";
+
+/// Durée du jeton de connexion, en secondes.
+const DUREE_JETON_CONNEXION: u32 = 3600;
 
 const POLICE_INTER: &[u8] = include_bytes!("../../app/ui/polices/Inter-Regular.ttf");
 const POLICE_INTER_DEMI: &[u8] = include_bytes!("../../app/ui/polices/Inter-SemiBold.ttf");
@@ -127,7 +138,8 @@ async fn entetes(mut reponse: Response) -> Response {
     h.insert(
         HeaderName::from_static("content-security-policy"),
         HeaderValue::from_static(
-            "default-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+            "default-src 'self'; script-src 'none'; object-src 'none'; form-action 'self'; \
+             frame-ancestors 'none'; base-uri 'none'",
         ),
     );
     h.insert(X_CONTENT_TYPE_OPTIONS, HeaderValue::from_static("nosniff"));
@@ -174,15 +186,19 @@ async fn bloquant<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> 
         .expect("tâche du portail interrompue")
 }
 
-fn jeton_du_cookie(entetes: &HeaderMap) -> Option<String> {
+fn valeur_cookie(entetes: &HeaderMap, cookie: &str) -> Option<String> {
     entetes
         .get_all(COOKIE)
         .iter()
         .filter_map(|v| v.to_str().ok())
         .flat_map(|v| v.split(';'))
         .filter_map(|morceau| morceau.trim().split_once('='))
-        .find(|(nom, _)| *nom == COOKIE_SESSION)
+        .find(|(nom, _)| *nom == cookie)
         .map(|(_, valeur)| valeur.to_string())
+}
+
+fn jeton_du_cookie(entetes: &HeaderMap) -> Option<String> {
+    valeur_cookie(entetes, COOKIE_SESSION)
 }
 
 /// Session du compte connecté : compte et jeton anti-falsification.
@@ -312,8 +328,44 @@ fn adresse_selon(mandataire: Option<IpAddr>, entetes: &HeaderMap, pair: SocketAd
     pair_ip
 }
 
+/// Cookie de session : sans `Max-Age`, il disparaît à la fermeture du
+/// navigateur ; le portail borne de son côté la session à 12 heures.
 fn cookie_session(jeton: &str) -> String {
     format!("{COOKIE_SESSION}={jeton}; Path=/; HttpOnly; Secure; SameSite=Strict")
+}
+
+fn cookie_efface(nom: &str) -> String {
+    format!("{nom}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0")
+}
+
+/// Page de connexion avec un jeton neuf, posé aussi en cookie.
+fn page_de_connexion(statut: StatusCode, erreur: Option<&str>) -> Response {
+    let jeton = crate::sessions::alea();
+    let mut r = html(statut, pages::connexion(&jeton, erreur));
+    if let Ok(v) = HeaderValue::from_str(&format!(
+        "{COOKIE_CONNEXION}={jeton}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age={DUREE_JETON_CONNEXION}"
+    )) {
+        r.headers_mut().append(SET_COOKIE, v);
+    }
+    r
+}
+
+/// Demande de connexion légitime : envoyée depuis le portail lui-même (pas
+/// de `Sec-Fetch-Site: cross-site` ni `same-site`), avec le jeton du
+/// formulaire égal à celui du cookie.
+fn connexion_permise(entetes: &HeaderMap, champs: &Champs) -> bool {
+    let site = entetes
+        .get("sec-fetch-site")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    if site == "cross-site" || site == "same-site" {
+        return false;
+    }
+    let recu = champs.get("csrf").map(String::as_str).unwrap_or("");
+    match valeur_cookie(entetes, COOKIE_CONNEXION) {
+        Some(attendu) => !attendu.is_empty() && egaux(recu, &attendu),
+        None => false,
+    }
 }
 
 // ----- Connexion -----
@@ -341,7 +393,7 @@ async fn page_connexion(State(etat): State<Etat>, entetes: HeaderMap) -> Respons
     if connecte(&etat, &entetes).await.is_some() {
         return rediriger("/");
     }
-    html(StatusCode::OK, pages::connexion(None))
+    page_de_connexion(StatusCode::OK, None)
 }
 
 async fn connexion(
@@ -350,23 +402,42 @@ async fn connexion(
     entetes: HeaderMap,
     Form(champs): Form<Champs>,
 ) -> Response {
+    if !connexion_permise(&entetes, &champs) {
+        return page_de_connexion(
+            StatusCode::FORBIDDEN,
+            Some("formulaire expiré : rechargez la page et recommencez"),
+        );
+    }
     let adresse = adresse_client(&etat, &entetes, pair);
     let portail = etat.portail.clone();
     let identifiant = champ(&champs, "identifiant").to_string();
     let mot_de_passe = champ(&champs, "mot_de_passe").to_string();
-    match bloquant(move || portail.connecter(&identifiant, &mot_de_passe, &adresse)).await {
-        Ok((jeton, _)) => (
-            StatusCode::SEE_OTHER,
-            [
-                (LOCATION, "/".to_string()),
-                (SET_COOKIE, cookie_session(&jeton)),
-            ],
-        )
-            .into_response(),
-        Err(e @ (ErreurPortail::Identifiants | ErreurPortail::Freine(_))) => html(
-            StatusCode::UNAUTHORIZED,
-            pages::connexion(Some(&e.to_string())),
-        ),
+    let ancienne = jeton_du_cookie(&entetes);
+    let resultat = bloquant(move || {
+        let r = portail.connecter(&identifiant, &mot_de_passe, &adresse);
+        // Rotation : une connexion réussie ferme la session que portait le
+        // navigateur, et en ouvre une neuve (jamais de jeton repris).
+        if r.is_ok()
+            && let Some(ancienne) = ancienne
+        {
+            portail.deconnecter(&ancienne);
+        }
+        r
+    })
+    .await;
+    match resultat {
+        Ok((jeton, _)) => {
+            let mut r = rediriger("/");
+            for cookie in [cookie_session(&jeton), cookie_efface(COOKIE_CONNEXION)] {
+                if let Ok(v) = HeaderValue::from_str(&cookie) {
+                    r.headers_mut().append(SET_COOKIE, v);
+                }
+            }
+            r
+        }
+        Err(e @ (ErreurPortail::Identifiants | ErreurPortail::Freine(_))) => {
+            page_de_connexion(StatusCode::UNAUTHORIZED, Some(&e.to_string()))
+        }
         Err(e) => page_erreur(None, &e),
     }
 }
@@ -386,10 +457,7 @@ async fn deconnexion(
         StatusCode::SEE_OTHER,
         [
             (LOCATION, "/connexion".to_string()),
-            (
-                SET_COOKIE,
-                format!("{COOKIE_SESSION}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0"),
-            ),
+            (SET_COOKIE, cookie_efface(COOKIE_SESSION)),
         ],
     )
         .into_response()

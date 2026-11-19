@@ -6,6 +6,7 @@
 | 0.2 | 2026-11-19 | Décisions de l'utilisateur du 2026-11-19 (section 8) : pages maud gardées, dépôt à part privé, hébergement sur le Dell. Relecture d'OpenCode et ordre des lots de durcissement D1 et D2 (section 9). |
 | 0.3 | 2026-11-19 | Lot D1 livré (section 9) ; mots de passe de 15 caractères et liste de mots de passe compromis ; option `--mandataire <adresse>` ; sous-commande `sante`. |
 | 0.4 | 2026-11-19 | Construction de l'image du portail sous Linux vérifiée sur le Dell (F9c), ainsi que l'image du relais ; lot L8 livré. |
+| 0.5 | 2026-11-19 | Lot D2 livré (section 9) : jeton de la page de connexion, cookies `__Host-`, rotation de la session à la connexion, CSP sans script ni objet. |
 
 Statut : **proposé**. Les choix marqués « proposé » restent à confirmer par l'utilisateur ; les décisions citées sont celles du cahier de la phase 2.
 
@@ -54,7 +55,7 @@ Base SQLite dans le dossier du portail (proposé : protégée par les droits du 
 ## 6. Sécurité
 
 - Mots de passe : argon2id, 15 caractères au moins, et refus des mots de passe compromis de la liste embarquée (lot D1, section 9).
-- Session : jeton aléatoire de 32 octets, dans un cookie de session du navigateur `HttpOnly`, `Secure`, `SameSite=Strict`, gardé côté portail ; fin après 8 heures sans activité (proposé), à la déconnexion et à l'arrêt du portail.
+- Session : jeton aléatoire de 32 octets, dans le cookie de session du navigateur `__Host-kadenz_portail` (`HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/`, sans `Domain` ni `Max-Age`), gardé côté portail ; fin après 8 heures sans activité, 12 heures après l'ouverture quoi qu'il arrive, à la déconnexion, au changement de mot de passe et à l'arrêt du portail. Une connexion réussie ferme la session que portait le navigateur et en ouvre une neuve.
 - Chaque formulaire porte un jeton anti-falsification de la session, vérifié avant toute écriture.
 - Connexions freinées : après 5 échecs par identifiant ou par adresse, attente de 5 secondes doublée à chaque échec jusqu'à 15 minutes, comme les sessions du serveur ; chaque échec est noté au journal.
 - En-têtes : `Content-Security-Policy: default-src 'self'; form-action 'self'; frame-ancestors 'none'`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex`.
@@ -101,5 +102,9 @@ Ordre décidé entre sessions le 2026-11-19 : D1 (livré le 2026-11-19), puis L8
     - portail (125 Mo) : seul binaire `kadenz-portail`, uid 10001 ; sans `--cle`, « clé du portail manquante » et code 1 ; clé d'essai en 644, refus qui demande `chmod 400` ; en 400, « pas une clé du portail reconnue » ;
     - relais (121 Mo) : démarre en lecture seule, `cap-drop ALL`, `no-new-privileges`, `/donnees` en 700 à l'uid 10001 ; `kadenz-relais sante` rend 0 et le `HEALTHCHECK` passe à « healthy ».
     - Reste l'essai d'un portail en marche (`portail_essai`, clé du banc) derrière Tailscale, pour relever l'adresse du mandataire vue par le conteneur.
-- D2, sur les pages maud : jeton ou contrôle d'origine sur `POST /connexion`, cookie `__Host-` avec durée absolue et rotation, CSP avec `script-src 'none'` et `object-src 'none'`.
+- D2, sur les pages maud (livré le 2026-11-19) :
+  - `GET /connexion` pose un jeton aléatoire dans le cookie `__Host-kadenz_connexion` (une heure) et dans le formulaire ; `POST /connexion` exige les deux, égaux (comparaison en temps constant), et refuse une demande marquée `Sec-Fetch-Site: cross-site` ou `same-site`. Un autre site ne peut donc pas connecter le navigateur à un compte de son choix. Le cookie de connexion est effacé à la connexion réussie.
+  - Cookie de session renommé `__Host-kadenz_portail` : le navigateur ne l'accepte qu'avec `Secure`, `Path=/` et sans `Domain`, si bien qu'un sous-domaine ne peut ni le poser ni le remplacer. La durée absolue de 12 heures est tenue par le portail (D1) ; le cookie reste un cookie de session du navigateur.
+  - Rotation : une connexion réussie ferme la session portée par le navigateur ; le changement de mot de passe ferme déjà toutes les sessions du compte (D1). Le jeton anti-falsification des formulaires appartient à la session et change avec elle.
+  - CSP : `default-src 'self'; script-src 'none'; object-src 'none'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'`.
 - À garder : échappement maud, SQL paramétré, jeton anti-falsification en temps constant sur les autres `POST`, empreinte des codes, clé inconnue refusée.

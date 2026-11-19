@@ -442,12 +442,27 @@ fn requete(
     cookie: Option<&str>,
     corps: &str,
 ) -> Reponse {
+    requete_avec(adresse, methode, chemin, cookie, &[], corps)
+}
+
+/// Comme `requete`, avec des en-têtes en plus.
+fn requete_avec(
+    adresse: SocketAddr,
+    methode: &str,
+    chemin: &str,
+    cookie: Option<&str>,
+    en_plus: &[(&str, &str)],
+    corps: &str,
+) -> Reponse {
     let mut tcp = TcpStream::connect(adresse).unwrap();
     tcp.set_read_timeout(Some(Duration::from_secs(10))).unwrap();
     let mut texte =
         format!("{methode} {chemin} HTTP/1.1\r\nHost: {adresse}\r\nConnection: close\r\n");
     if let Some(c) = cookie {
         texte.push_str(&format!("Cookie: {c}\r\n"));
+    }
+    for (nom, valeur) in en_plus {
+        texte.push_str(&format!("{nom}: {valeur}\r\n"));
     }
     if methode == "POST" {
         texte.push_str(&format!(
@@ -490,6 +505,42 @@ fn csrf(page: &str) -> String {
     valeur[..valeur.find('"').unwrap()].to_string()
 }
 
+/// Premier morceau `nom=valeur` d'un en-tête Set-Cookie.
+fn morceau_cookie(set_cookie: &str) -> String {
+    set_cookie.split(';').next().unwrap().to_string()
+}
+
+/// Jeton de la page de connexion : cookie à renvoyer et champ du formulaire.
+fn jeton_connexion(a: SocketAddr) -> (String, String) {
+    let page = requete(a, "GET", "/connexion", None, "");
+    assert_eq!(page.statut, 200);
+    let cookie = morceau_cookie(page.entete("set-cookie").expect("cookie de connexion"));
+    assert!(cookie.starts_with("__Host-kadenz_connexion="));
+    (cookie, csrf(&page.corps))
+}
+
+/// Connexion par le formulaire, avec son jeton ; `session` : cookie de
+/// session déjà porté par le navigateur, envoyé avec le jeton.
+fn se_connecter(
+    a: SocketAddr,
+    identifiant: &str,
+    mot_de_passe: &str,
+    session: Option<&str>,
+) -> Reponse {
+    let (cookie, jeton) = jeton_connexion(a);
+    let cookies = match session {
+        Some(s) => format!("{s}; {cookie}"),
+        None => cookie,
+    };
+    requete(
+        a,
+        "POST",
+        "/connexion",
+        Some(&cookies),
+        &format!("identifiant={identifiant}&mot_de_passe={mot_de_passe}&csrf={jeton}"),
+    )
+}
+
 #[test]
 fn routes_sessions_et_jetons() {
     let d = dossier("web");
@@ -529,29 +580,20 @@ fn routes_sessions_et_jetons() {
     assert_eq!((r.statut, r.corps.as_str()), (200, "ok"));
 
     // Mauvais mot de passe, puis le bon.
-    let r = requete(
-        a,
-        "POST",
-        "/connexion",
-        None,
-        "identifiant=editeur&mot_de_passe=faux",
-    );
+    let r = se_connecter(a, "editeur", "faux", None);
     assert_eq!(r.statut, 401);
-    let r = requete(
-        a,
-        "POST",
-        "/connexion",
-        None,
-        &format!("identifiant=editeur&mot_de_passe={MOT_DE_PASSE}"),
-    );
+    let r = se_connecter(a, "editeur", MOT_DE_PASSE, None);
     assert_eq!(r.statut, 303);
     let cookie = r.entete("set-cookie").unwrap().to_string();
     assert!(
-        cookie.contains("HttpOnly")
+        cookie.starts_with("__Host-kadenz_portail=")
+            && cookie.contains("Path=/")
+            && !cookie.contains("Domain")
+            && cookie.contains("HttpOnly")
             && cookie.contains("Secure")
             && cookie.contains("SameSite=Strict")
     );
-    let session = cookie.split(';').next().unwrap().to_string();
+    let session = morceau_cookie(&cookie);
     assert_eq!(requete(a, "GET", "/", Some(&session), "").statut, 200);
 
     // Formulaire sans jeton ou avec un faux : refusé, rien n'est écrit.
@@ -606,6 +648,94 @@ fn routes_sessions_et_jetons() {
     assert_eq!(r.statut, 303);
     assert_eq!(requete(a, "GET", "/", Some(&session), "").statut, 303);
 
+    lance.arreter();
+    let _ = std::fs::remove_dir_all(d);
+}
+
+/// Lot D2 : connexion protégée contre la falsification, rotation de la
+/// session, politique de contenu sans script ni objet.
+#[test]
+fn connexion_sans_falsification_et_rotation() {
+    let d = dossier("connexion-d2");
+    let p = Portail::ouvrir(&d, cle_essai()).unwrap();
+    p.creer_editeur("editeur", "Éditeur", MOT_DE_PASSE).unwrap();
+    let lance = web::lancer(
+        p,
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        ConfigWeb::default(),
+    )
+    .unwrap();
+    let a = lance.adresse();
+    let politique = requete(a, "GET", "/connexion", None, "");
+    let politique = politique.entete("content-security-policy").unwrap();
+    assert!(politique.contains("script-src 'none'") && politique.contains("object-src 'none'"));
+    let identifiants = format!("identifiant=editeur&mot_de_passe={MOT_DE_PASSE}");
+
+    // Sans jeton, sans cookie, ou avec un jeton qui n'est pas celui du
+    // cookie : refusé, sans session.
+    let r = requete(a, "POST", "/connexion", None, &identifiants);
+    assert_eq!(r.statut, 403);
+    let (cookie, jeton) = jeton_connexion(a);
+    let r = requete(
+        a,
+        "POST",
+        "/connexion",
+        None,
+        &format!("{identifiants}&csrf={jeton}"),
+    );
+    assert_eq!(r.statut, 403);
+    let (_, autre) = jeton_connexion(a);
+    let r = requete(
+        a,
+        "POST",
+        "/connexion",
+        Some(&cookie),
+        &format!("{identifiants}&csrf={autre}"),
+    );
+    assert_eq!(r.statut, 403);
+    assert!(
+        !r.entete("set-cookie")
+            .unwrap_or("")
+            .starts_with("__Host-kadenz_portail=")
+    );
+    // Formulaire envoyé depuis un autre site : refusé même avec le bon jeton.
+    let r = requete_avec(
+        a,
+        "POST",
+        "/connexion",
+        Some(&cookie),
+        &[("Sec-Fetch-Site", "cross-site")],
+        &format!("{identifiants}&csrf={jeton}"),
+    );
+    assert_eq!(r.statut, 403);
+    // Depuis le portail lui-même : accepté, le cookie de connexion est effacé.
+    let r = requete_avec(
+        a,
+        "POST",
+        "/connexion",
+        Some(&cookie),
+        &[("Sec-Fetch-Site", "same-origin")],
+        &format!("{identifiants}&csrf={jeton}"),
+    );
+    assert_eq!(r.statut, 303);
+    let premiere = morceau_cookie(r.entete("set-cookie").unwrap());
+    assert!(
+        r.entetes
+            .iter()
+            .any(|(n, v)| n.eq_ignore_ascii_case("set-cookie")
+                && v.starts_with("__Host-kadenz_connexion=;")
+                && v.contains("Max-Age=0"))
+    );
+    assert_eq!(requete(a, "GET", "/", Some(&premiere), "").statut, 200);
+
+    // Nouvelle connexion depuis le même navigateur : session neuve,
+    // l'ancienne est fermée.
+    let r = se_connecter(a, "editeur", MOT_DE_PASSE, Some(&premiere));
+    assert_eq!(r.statut, 303);
+    let seconde = morceau_cookie(r.entete("set-cookie").unwrap());
+    assert_ne!(seconde, premiere);
+    assert_eq!(requete(a, "GET", "/", Some(&premiere), "").statut, 303);
+    assert_eq!(requete(a, "GET", "/", Some(&seconde), "").statut, 200);
     lance.arreter();
     let _ = std::fs::remove_dir_all(d);
 }
@@ -1248,20 +1378,8 @@ fn pages_des_codes_a_vendre() {
     )
     .unwrap();
     let a = lance.adresse();
-    let r = requete(
-        a,
-        "POST",
-        "/connexion",
-        None,
-        &format!("identifiant=editeur&mot_de_passe={MOT_DE_PASSE}"),
-    );
-    let session = r
-        .entete("set-cookie")
-        .unwrap()
-        .split(';')
-        .next()
-        .unwrap()
-        .to_string();
+    let r = se_connecter(a, "editeur", MOT_DE_PASSE, None);
+    let session = morceau_cookie(r.entete("set-cookie").unwrap());
 
     let page = requete(a, "GET", "/codes", Some(&session), "");
     assert_eq!(page.statut, 200);
