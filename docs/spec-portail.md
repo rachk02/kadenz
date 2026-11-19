@@ -3,6 +3,7 @@
 | Version | Date | Changement |
 |---|---|---|
 | 0.1 | 2026-11-15 | Forme proposée par kadenz-34 et kadenz-8e après les décisions 60 et 61 de l'utilisateur : programme, données, rôles, émission, journal, sécurité, essais. Rien n'est codé. |
+| 0.2 | 2026-11-19 | Décisions de l'utilisateur du 2026-11-19 (section 8) : pages maud gardées, dépôt à part privé, hébergement sur le Dell. Relecture d'OpenCode et ordre des lots de durcissement D1 et D2 (section 9). |
 
 Statut : **proposé**. Les choix marqués « proposé » restent à confirmer par l'utilisateur ; les décisions citées sont celles du cahier de la phase 2.
 
@@ -10,7 +11,7 @@ Statut : **proposé**. Les choix marqués « proposé » restent à confirmer pa
 
 - Le portail remplace l'outil manuel `kadenz-editeur` pour les licences d'abonnement d'entreprise (format du jalon F3, `KADENZ-E-...`). Les licences V1 perpétuelles n'y passent pas.
 - F9 est local et sans carte (décision 60) : l'éditeur ou un revendeur enregistre un paiement reçu (virement, chèque ou espèces) avec son montant et le nombre de postes payés, puis émet la licence. Aucune grille de prix ni aucun nombre de postes inclus n'est écrit dans le portail : ils viendront de l'utilisateur, avec le paiement par carte et son prestataire.
-- Mise en service sur le VPS : plus tard, à la décision de l'utilisateur, comme le relais.
+- Mise en service : plus tard, à la décision de l'utilisateur ; pour l'instant sur le serveur maison (section 8), pas sur un VPS.
 
 ## 2. Programme (décision 61)
 
@@ -60,3 +61,31 @@ Base SQLite dans le dossier du portail (proposé : protégée par les droits du 
 - **F9a** (kadenz-34) : crate `kadenz-portail` (données, rôles, émission, journal, sessions, freinage), table des routes axum, programme et exemple `portail_essai` ; essais en processus, dont un revendeur refusé sur le client d'un autre revendeur et une licence émise acceptée par `abonnement::enregistrer_avec`.
 - **F9b** (kadenz-8e) : pages dans `crates/portail/src/pages/` (un module par page), signatures fixées par F9a ; style des écrans (angles de 4 px au plus, palette et police de la marque, aucune italique), textes en français.
 - **F9c** : construction de l'image du portail sous Linux (conteneur), puis essai à l'écran, portail d'essai lancé en local : l'éditeur crée un revendeur ; le revendeur crée une entreprise (identifiant d'un banc d'essai), enregistre un paiement et émet la licence ; la licence est acceptée par le banc d'essai depuis la rubrique « Abonnement », émetteur visible ; journal complet.
+
+## 8. Décisions de l'utilisateur du 2026-11-19 (relayées par kadenz-cc)
+
+- Les pages restent produites par le serveur (maud), sans front séparé : la proposition 2 du découpage (dépôt avec une API et un front séparés) est abandonnée. OpenCode le recommandait aussi (échappement automatique, aucune surface JavaScript).
+- Le portail sort dans un dépôt à part, privé, sur le compte rachk02, avec ce dont il dépend ; le découpage se prépare après le lot D1.
+- Pas de nom de domaine ni de VPS pour l'instant : le portail sera hébergé sur le serveur maison (Dell, Tailscale), le site public seul pouvant aller sur Vercel. Vercel ne convient pas au portail, qui a une base SQLite sur disque, une clé de signature en fichier, ainsi que des sessions et un frein en mémoire. Le site ne partage pas le nom `ts.net` du portail, à cause des cookies.
+- L'adresse embarquée dans les clients (`crates/maj/portail-url.txt`) reste vide tant qu'aucune adresse n'est choisie. Une adresse Tailscale Funnel (`*.ts.net`) dépend du nom du tailnet : la question d'un nom de domaine est posée à l'utilisateur.
+- Derrière Funnel, l'adresse du client arrive dans un en-tête posé par Tailscale. Son nom est à vérifier dans la documentation et à l'essai sur le Dell avant d'être lu (option `--mandataire`, lot D1).
+- Docker est installé sur le Dell : la construction Linux du portail s'y essaiera après D1, avec une clé d'essai seulement.
+
+## 9. Durcissement (relecture d'OpenCode, docs/securite/echanges-opencode.md)
+
+Ordre décidé entre sessions le 2026-11-19 : D1, puis L8 (codes de la ligne V1, docs/spec-codes-licence.md), puis D2, puis la chaîne de hachage du journal et la double authentification des éditeurs, avant toute mise en service.
+
+- D1, indépendant des pages :
+  - verrou de la base relâché pendant Argon2 ;
+  - Argon2 factice pour un compte inconnu ou désactivé ;
+  - frein borné, purgé, persistant (schéma 4), clés construites après validation ;
+  - adresse du client lue seulement depuis un pair de confiance ;
+  - plus de verrouillage d'un compte par un tiers ;
+  - erreur interne ni affichée ni détaillée dans la page ;
+  - mot de passe de 15 caractères au moins, avec une liste embarquée de mots de passe compromis (SecLists, licence et provenance à vérifier), et mot de passe lu sans écho par `creer-editeur` ;
+  - sessions fermées au changement de mot de passe, `busy_timeout` ;
+  - fichier de clé : droits vérifiés au démarrage, effacement de la mémoire ;
+  - sous-commande de santé ;
+  - images du portail et du relais avec l'utilisateur 10001, sans binaire ni clé d'essai.
+- D2, sur les pages maud : jeton ou contrôle d'origine sur `POST /connexion`, cookie `__Host-` avec durée absolue et rotation, CSP avec `script-src 'none'` et `object-src 'none'`.
+- À garder : échappement maud, SQL paramétré, jeton anti-falsification en temps constant sur les autres `POST`, empreinte des codes, clé inconnue refusée.

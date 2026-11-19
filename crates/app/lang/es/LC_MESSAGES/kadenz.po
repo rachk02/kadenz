@@ -4746,3 +4746,9 @@ msgstr "El código de licencia está incompleto o es incorrecto: corríjalo, o v
 
 msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, le serveur reste en lecture seule et un seul poste peut s'inscrire."
 msgstr "Introduzca el código de licencia recibido con la suscripción. Se activa en línea, en el portal de Kadenz, al pasar el paso Empresa: se necesita una conexión a Internet. Sin código, el servidor queda en solo lectura y solo un puesto puede registrarse."
+
+msgid "ce code ne sert pas à ce logiciel : vérifiez la gamme indiquée sur votre abonnement"
+msgstr "este código no sirve para este programa: compruebe la gama indicada en su suscripción"
+
+msgid "ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer"
+msgstr "este código ya está activado en otro puesto: pida a su distribuidor que lo libere"

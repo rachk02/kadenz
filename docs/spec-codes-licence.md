@@ -12,6 +12,7 @@
 | 0.8 | 2026-11-18 | Décisions de l'utilisateur sur la ligne V1 : retour au socle à l'échéance, changement de poste par « Libérer le poste » au portail. |
 | 0.9 | 2026-11-18 | Contrat de la ligne V1 figé : champ `poste` de la demande, licence V1 version 2, règle de clé par version, modèles de refus [5] et [6]. |
 | 0.10 | 2026-11-18 | Correction : la 0.2.2 n'active pas les modules d'une licence signée par la clé du portail (son stockage ne vérifie qu'avec la clé V1) ; seule la vérification de son assistant accepte les deux clés. |
+| 0.11 | 2026-11-18 | Plan du portail pour la ligne V1 (lot L8) ; lots L7, L7 bis et L8 au tableau. |
 
 ## 1. Décisions de l'utilisateur (2026-11-18)
 
@@ -134,6 +135,13 @@ Contrat figé (kadenz-3a, 2026-11-18), à ne plus changer sans monter les deux c
 - Deux modèles de refus ajoutés à `MODELES_ACTIVATION`, à la suite des cinq premiers : [5] « ce code ne sert pas à ce logiciel : vérifiez la gamme indiquée sur votre abonnement » (code `v1` présenté par une 1.x, ou l'inverse), [6] « ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer ».
 - Échéance dans la 0.2.3 : état d'abonnement calculé comme dans `kadenz_stockage::abonnement` (date du poste qui ne recule jamais) ; à l'échéance, retour au socle.
 
+Portail, lot L8 (proposé par kadenz-3a) :
+- Schéma en version 4 : `code_activation` gagne `gamme` (`entreprise` par défaut, ou `v1`) et `poste` (poste lié d'un code V1) ; nouvelle table `licence_v1` (code, poste, client, texte signé, début, échéance, modules, émise le, libérée le), une ligne par poste qui a activé le code, la ligne en cours étant celle sans date de libération.
+- Tirage : la rubrique « Codes à vendre » demande la gamme ; un code V1 vaut 1 poste. Un code tiré depuis un paiement reste de gamme `entreprise`.
+- Activation : une demande avec `poste` ne vaut que pour un code `v1`, une demande avec `entreprise` que pour un code `entreprise` (sinon [5]). Code V1 libre : licence V1 datée signée par la clé du portail, début et échéance calculés comme pour la phase 2, poste lié. Même poste : même licence. Autre poste pendant que le code est lié : [6].
+- « Libérer le poste » : bouton de la fiche du code, pour l'éditeur ou celui qui a tiré le code, journalisé. Le code redevient activable ; une nouvelle activation garde l'échéance de la première (le changement de PC ne prolonge rien).
+- Essais : activation V1, réactivation, autre poste refusé, libération puis nouveau poste avec la même échéance, gamme croisée refusée, licence reçue acceptée par `kadenz_licence::verifier_selon` avec la clé du portail.
+
 - Ligne 0.2.x : monoposte seulement, un code de 1 poste. Le multiposte « petits commerces » est un code de gamme `entreprise` (serveur et postes 1.x) ; ce qui le distingue (prix, modules) relève de la grille de prix, encore ouverte (décision 73).
 
 ## 8. Essais
@@ -159,4 +167,7 @@ Avec l'activation en ligne seulement, une version qui contient ces codes ne s'ac
 | L4 | `ChampCode` dans `composants.slint` | kadenz-6d, livré |
 | L5 | Étape Licence de l'assistant de KadenzAdmin, avec ses traductions | kadenz-c1, livré |
 | L5 bis | Rubrique « Abonnement » du poste, avec ses traductions | kadenz-6d |
+| L7 | Ligne V1 sur `release/0.2.x` : licence datée, échéance, `code_court`, client d'activation (champ `poste`) | kadenz-3a, en cours |
+| L7 bis | Écrans de la 0.2.3 (assistant, page Licence) | kadenz-74 |
+| L8 | Portail : codes V1, `licence_v1`, « Libérer le poste » | kadenz-3a |
 | L6 | Essai de bout en bout local, captures | kadenz-c1 ; fait pour KadenzAdmin, reste la rubrique « Abonnement » après L5 bis |

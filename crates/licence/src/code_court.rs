@@ -33,6 +33,10 @@ pub const MODELES_ACTIVATION: &[&str] = &[
     "trop d'essais d'activation : réessayez dans {} secondes",
     "activation impossible pour le moment : réessayez plus tard",
     "demande d'activation invalide",
+    // Ligne V1 (décision 75, docs/spec-codes-licence.md, section 7 bis) : code
+    // d'une gamme présenté par un logiciel de l'autre ; poste déjà pris.
+    "ce code ne sert pas à ce logiciel : vérifiez la gamme indiquée sur votre abonnement",
+    "ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer",
 ];
 
 fn rang(c: char) -> Option<u32> {
