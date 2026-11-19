@@ -11,6 +11,7 @@
 | 0.7 | 2026-11-19 | Double authentification des éditeurs (schéma 7, section 9), décidée entre sessions : TOTP écrit selon la RFC 6238, obligatoire pour un éditeur, codes de secours, retrait par le programme. |
 | 0.8 | 2026-11-19 | Refus du frein notés au journal (schéma 8, section 9), à la suite de l'essai de bout en bout de la double authentification par kadenz-74. |
 | 0.9 | 2026-11-19 | Option `--entete-client x-forwarded-for|cf-connecting-ip` (section 9) : derrière Cloudflare Tunnel, l'adresse du client est lue dans `CF-Connecting-IP`, vérifié par OpenCode dans la documentation de Cloudflare ; `X-Forwarded-For` reste le défaut. |
+| 0.10 | 2026-11-19 | Audit d'OpenCode (2026-11-19), corrections : identifiant impossible refusé à la connexion avant le frein et le journal ; entreprise et version du programme client bornées au journal ; corps de requête limité à 64 Kio (413) ; échec de la pose des droits fatal au démarrage ; panique d'une route rendue en erreur 500 ; un code ne porte qu'une licence d'entreprise (schéma 9, index unique partiel) ; message du poste libéré. |
 
 Statut : **proposé**. Les choix marqués « proposé » restent à confirmer par l'utilisateur ; les décisions citées sont celles du cahier de la phase 2.
 

@@ -8,18 +8,22 @@
 //! `spawn_blocking`, pour ne jamais bloquer un fil de tokio.
 
 use std::collections::HashMap;
+use std::future::Future;
 use std::net::{IpAddr, SocketAddr, TcpListener as StdListener};
+use std::panic::AssertUnwindSafe;
+use std::pin::Pin;
+use std::task::{Context, Poll};
 use std::thread::JoinHandle;
 
 use axum::Router;
 use axum::body::Bytes;
-use axum::extract::{ConnectInfo, Form, Path, State};
+use axum::extract::{ConnectInfo, DefaultBodyLimit, Form, Path, Request, State};
 use axum::http::header::{
-    CACHE_CONTROL, CONTENT_TYPE, COOKIE, LOCATION, REFERRER_POLICY, SET_COOKIE,
+    CACHE_CONTROL, CONTENT_LENGTH, CONTENT_TYPE, COOKIE, LOCATION, REFERRER_POLICY, SET_COOKIE,
     X_CONTENT_TYPE_OPTIONS,
 };
 use axum::http::{HeaderMap, HeaderName, HeaderValue, StatusCode, Uri};
-use axum::middleware::map_response;
+use axum::middleware::{Next, from_fn, map_response};
 use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, post};
 use kadenz_domaine::module::Module;
@@ -57,6 +61,12 @@ const POLICE_INTER_DEMI: &[u8] = include_bytes!("../../app/ui/polices/Inter-Semi
 const POLICE_SPACE: &[u8] = include_bytes!("../../app/ui/polices/SpaceGrotesk-Bold.ttf");
 const FAVICON: &[u8] = include_bytes!("../../../docs/marque/web/favicon.svg");
 const ROBOTS: &str = "User-agent: *\nDisallow: /\n";
+
+/// Taille maximale d'un corps de requête. Le plus gros formulaire (une
+/// licence collée, un compte) et la demande d'activation tiennent en
+/// quelques kilo-octets ; le défaut d'axum, 2 Mio, laissait passer de
+/// longs textes vers le journal (audit d'OpenCode, 2026-11-19).
+pub const CORPS_MAX: usize = 64 * 1024;
 
 /// En-tête qui porte l'adresse du client, posé par le mandataire.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -166,8 +176,57 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
             get(|| async { statique("text/plain; charset=utf-8", b"ok", false) }),
         )
         .fallback(introuvable)
+        // Du plus intérieur au plus extérieur : limite lue par les
+        // extracteurs, refus sur Content-Length avant toute lecture, panique
+        // rendue en erreur 500, en-têtes de sécurité sur toute réponse.
+        .layer(DefaultBodyLimit::max(CORPS_MAX))
+        .layer(from_fn(borne_corps))
+        .layer(from_fn(sans_panique))
         .layer(map_response(entetes))
         .with_state(Etat { portail, config })
+}
+
+/// Corps annoncé plus long que `CORPS_MAX` : 413 sans rien lire. Un corps
+/// sans longueur annoncée (envoi par morceaux) est arrêté par
+/// `DefaultBodyLimit` dès qu'il dépasse.
+async fn borne_corps(requete: Request, suite: Next) -> Response {
+    let annonce = requete
+        .headers()
+        .get(CONTENT_LENGTH)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.trim().parse::<u64>().ok());
+    if annonce.is_some_and(|n| n > CORPS_MAX as u64) {
+        return StatusCode::PAYLOAD_TOO_LARGE.into_response();
+    }
+    suite.run(requete).await
+}
+
+/// Futur dont une panique est rattrapée au lieu de couper la connexion sans
+/// réponse (générateur aléatoire, tâche bloquante interrompue).
+struct SansPanique<F>(Pin<Box<F>>);
+
+impl<F: Future> Future for SansPanique<F> {
+    type Output = std::thread::Result<F::Output>;
+
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        match std::panic::catch_unwind(AssertUnwindSafe(|| self.0.as_mut().poll(cx))) {
+            Ok(Poll::Pending) => Poll::Pending,
+            Ok(Poll::Ready(v)) => Poll::Ready(Ok(v)),
+            Err(panique) => Poll::Ready(Err(panique)),
+        }
+    }
+}
+
+/// Réponse d'une route, ou la page d'erreur 500 (sans détail) si elle panique.
+async fn garder(route: impl Future<Output = Response>) -> Response {
+    match SansPanique(Box::pin(route)).await {
+        Ok(reponse) => reponse,
+        Err(_) => page_erreur(None, &ErreurPortail::Interne(String::new())),
+    }
+}
+
+async fn sans_panique(requete: Request, suite: Next) -> Response {
+    garder(suite.run(requete)).await
 }
 
 /// En-têtes de sécurité sur chaque réponse.
@@ -337,6 +396,9 @@ fn message_de(uri: &Uri) -> Option<Message> {
         "actif" => "Compte mis à jour.",
         "mot_de_passe" => "Mot de passe changé.",
         "code_annule" => "Code annulé : il ne peut plus être activé.",
+        "poste_libere" => {
+            "Poste libéré : le code peut être activé sur un autre poste, avec la même échéance."
+        }
         _ => return None,
     };
     Some(Message {
@@ -1493,6 +1555,37 @@ mod tests {
             adresse_xff(mandataire, &entetes(&["198.51.100.7"]), mappe),
             ip("198.51.100.7")
         );
+    }
+
+    fn paniquer() -> Response {
+        panic!("panique d'essai")
+    }
+
+    /// Une route qui panique rend la page d'erreur 500, sans détail.
+    #[test]
+    fn panique_rendue_en_erreur_500() {
+        let execution = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap();
+        let reponse = execution.block_on(garder(async { paniquer() }));
+        assert_eq!(reponse.status(), StatusCode::INTERNAL_SERVER_ERROR);
+        let sain = execution.block_on(garder(async { StatusCode::OK.into_response() }));
+        assert_eq!(sain.status(), StatusCode::OK);
+    }
+
+    /// Chaque code de redirection a son message, poste libéré compris.
+    #[test]
+    fn message_du_poste_libere() {
+        let uri: Uri = "/codes/3?m=poste_libere".parse().unwrap();
+        let message = message_de(&uri).expect("message du poste libéré");
+        assert!(message.ok);
+        assert!(
+            message.texte.starts_with("Poste libéré"),
+            "{}",
+            message.texte
+        );
+        let inconnu: Uri = "/codes/3?m=autre".parse().unwrap();
+        assert!(message_de(&inconnu).is_none());
     }
 
     #[test]

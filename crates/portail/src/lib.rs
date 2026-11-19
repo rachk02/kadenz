@@ -572,6 +572,25 @@ fn valider_identifiant(identifiant: &str) -> Resultat<String> {
     Ok(identifiant.to_string())
 }
 
+/// Longueurs gardées au journal pour des textes du programme client
+/// (entreprise refusée, version) : de quoi lire une erreur, jamais plus.
+const MAX_ENTREPRISE_JOURNAL: usize = 64;
+const MAX_VERSION_JOURNAL: usize = 32;
+
+/// Texte reçu d'un client et noté au journal en ajout seul : sans caractère
+/// de contrôle, borné à `max` caractères (« … » s'il est coupé). Le journal
+/// ne s'efface pas : un texte non borné y resterait.
+fn pour_journal(texte: &str, max: usize) -> String {
+    let propre: String = texte.trim().chars().filter(|c| !c.is_control()).collect();
+    if propre.chars().count() <= max {
+        propre
+    } else {
+        let mut coupe: String = propre.chars().take(max).collect();
+        coupe.push('…');
+        coupe
+    }
+}
+
 fn valider_texte(texte: &str, champ: &str, max: usize) -> Resultat<String> {
     let texte = texte.trim();
     if texte.is_empty() {
@@ -1268,7 +1287,15 @@ impl Portail {
         mot_de_passe: &str,
         adresse: &str,
     ) -> Resultat<(String, Compte)> {
-        let identifiant = identifiant.trim().to_ascii_lowercase();
+        // Identifiant qu'aucun compte ne peut porter (règle de la création) :
+        // refusé tout de suite, sans toucher au frein ni au journal, pour
+        // qu'un texte quelconque, de n'importe quelle longueur, n'y soit
+        // jamais écrit (audit d'OpenCode, 2026-11-19). La règle étant
+        // publique, la réponse rapide ne dit rien d'un compte.
+        let Ok(identifiant) = valider_identifiant(identifiant) else {
+            return Err(ErreurPortail::Identifiants);
+        };
+        let identifiant = identifiant.to_ascii_lowercase();
         let cles = frein::cles_connexion(&identifiant, adresse);
         // Frein, puis lecture du compte, sous le verrou ; vérification du mot
         // de passe hors du verrou ; puis, de nouveau sous le verrou, le compte
@@ -2224,7 +2251,7 @@ impl Portail {
             &format!(
                 "code …{}, poste {poste}, client {client}, échéance {echeance}, version {}, adresse {adresse}",
                 trouve.fin,
-                demande.version.trim()
+                pour_journal(&demande.version, MAX_VERSION_JOURNAL)
             ),
         )?;
         transaction.commit()?;
@@ -2242,8 +2269,9 @@ impl Portail {
     /// le code passe à « activé » ; code déjà activé par la même entreprise :
     /// la même licence est rendue. Les refus sont freinés comme les connexions.
     pub fn activer(&self, demande: &DemandeActivation, adresse: &str) -> Resultat<Activation> {
-        let entreprise_demandee = demande.entreprise.trim().to_ascii_lowercase();
-        let entreprise_valide = valider_uuid(&entreprise_demandee).ok();
+        let entreprise_demandee =
+            pour_journal(&demande.entreprise, MAX_ENTREPRISE_JOURNAL).to_ascii_lowercase();
+        let entreprise_valide = valider_uuid(&demande.entreprise.trim().to_ascii_lowercase()).ok();
         let poste_valide = valider_poste(&demande.poste).ok();
         let titulaire = match (&entreprise_valide, &poste_valide) {
             (Some(e), None) => Some(frein::Titulaire::Entreprise(e)),
@@ -2277,7 +2305,7 @@ impl Portail {
                 };
                 let details = format!(
                     "{titulaire}, adresse {adresse}, version {} : {modele}",
-                    demande.version.trim()
+                    pour_journal(&demande.version, MAX_VERSION_JOURNAL)
                 );
                 // Un journal en échec ne change pas la réponse : le refus reste un refus.
                 let _ = noter(&conn, None, "activation_refusee", None, &details);
@@ -2425,7 +2453,7 @@ impl Portail {
             trouve.fin,
             licence.postes,
             licence.echeance,
-            demande.version.trim()
+            pour_journal(&demande.version, MAX_VERSION_JOURNAL)
         );
         noter(
             &transaction,

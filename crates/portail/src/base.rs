@@ -193,6 +193,14 @@ CREATE INDEX code_secours_compte ON code_secours (compte);
     "
 ALTER TABLE frein ADD COLUMN signale INTEGER;
 ",
+    // 8 vers 9 : un code d'activation donne au plus une licence d'entreprise
+    // (audit d'OpenCode, 2026-11-19). L'activation le garantit déjà : un code
+    // activé rend sa licence, aucun chemin ne le remet libre, et la connexion
+    // unique sérialise les activations ; l'index en fait une règle de la
+    // base. Un doublon existant ferait échouer la migration, base intacte.
+    "
+CREATE UNIQUE INDEX licence_code ON licence_emise (code) WHERE code IS NOT NULL;
+",
 ];
 
 /// Version du schéma qui crée la chaîne du journal.
@@ -229,10 +237,18 @@ pub(crate) fn ouvrir(dossier: &Path) -> rusqlite::Result<Connection> {
             Some(format!("{} : {e}", dossier.display())),
         )
     })?;
-    restreindre(dossier, 0o700);
+    // Droits impossibles à poser : l'ouverture échoue, plutôt qu'un service
+    // qui tourne avec une base lisible par d'autres comptes.
+    let droits = |chemin: &Path, e: std::io::Error| {
+        rusqlite::Error::SqliteFailure(
+            rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_CANTOPEN),
+            Some(format!("droits de {} : {e}", chemin.display())),
+        )
+    };
+    restreindre(dossier, 0o700).map_err(|e| droits(dossier, e))?;
     let chemin = dossier.join("portail.sqlite");
     let conn = Connection::open(&chemin)?;
-    restreindre(&chemin, 0o600);
+    restreindre(&chemin, 0o600).map_err(|e| droits(&chemin, e))?;
     // busy_timeout : une sauvegarde à chaud (`.backup`) ou un autre lecteur
     // ne fait pas échouer une écriture, qui attend jusqu'à 5 secondes.
     conn.execute_batch(
@@ -296,15 +312,18 @@ fn appliquer_pas(conn: &Connection, pas: &str, suivante: i64) -> rusqlite::Resul
     transaction.commit()
 }
 
-/// Dossier et fichiers du portail réservés au seul compte du service (Linux).
+/// Dossier et fichiers du portail réservés au seul compte du service
+/// (Linux). Une erreur remonte : elle arrête le démarrage.
 #[cfg(unix)]
-pub(crate) fn restreindre(chemin: &Path, mode: u32) {
+pub(crate) fn restreindre(chemin: &Path, mode: u32) -> std::io::Result<()> {
     use std::os::unix::fs::PermissionsExt;
-    let _ = std::fs::set_permissions(chemin, std::fs::Permissions::from_mode(mode));
+    std::fs::set_permissions(chemin, std::fs::Permissions::from_mode(mode))
 }
 
 #[cfg(not(unix))]
-pub(crate) fn restreindre(_chemin: &Path, _mode: u32) {}
+pub(crate) fn restreindre(_chemin: &Path, _mode: u32) -> std::io::Result<()> {
+    Ok(())
+}
 
 #[cfg(test)]
 mod tests {
@@ -385,6 +404,35 @@ mod tests {
         migrer(&conn).unwrap();
         let etat = crate::chaine::verifier(&conn).unwrap();
         assert_eq!((etat.entrees, etat.rupture), (2, None));
+    }
+
+    /// Droits impossibles à poser : une erreur, qui arrête l'ouverture.
+    #[cfg(unix)]
+    #[test]
+    fn droits_impossibles_signales() {
+        assert!(restreindre(Path::new("/chemin/absent/portail.sqlite"), 0o600).is_err());
+    }
+
+    /// Un code ne porte qu'une licence d'entreprise ; les licences sans code
+    /// (émises sur paiement) ne sont pas concernées.
+    #[test]
+    fn un_code_une_seule_licence() {
+        let conn = Connection::open_in_memory().unwrap();
+        migrer(&conn).unwrap();
+        // Seul l'index est en cause : lignes sans compte ni entreprise réels.
+        conn.execute_batch("PRAGMA foreign_keys = OFF;").unwrap();
+        let inserer = |paiement: Option<i64>, code: Option<i64>| {
+            conn.execute(
+                "INSERT INTO licence_emise (entreprise, paiement, texte, debut, echeance, postes, modules, formule, emetteur, emise_le, par, code)
+                 VALUES ('e', ?1, 'x', 'a', 'b', 1, '', 'annuelle', 'É', 'c', 1, ?2)",
+                rusqlite::params![paiement, code],
+            )
+        };
+        inserer(None, Some(7)).unwrap();
+        assert!(inserer(None, Some(7)).is_err());
+        inserer(None, Some(8)).unwrap();
+        inserer(Some(1), None).unwrap();
+        inserer(Some(2), None).unwrap();
     }
 
     #[test]

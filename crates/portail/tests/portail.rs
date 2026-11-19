@@ -1782,3 +1782,84 @@ fn changement_de_mot_de_passe_ferme_les_sessions() {
     drop(p);
     let _ = std::fs::remove_dir_all(d);
 }
+
+/// Identifiant qu'aucun compte ne peut porter : refusé avant le frein et le
+/// journal (audit d'OpenCode, 2026-11-19).
+#[test]
+fn identifiant_impossible_ni_freine_ni_journal() {
+    let (p, d, editeur, ..) = portail("identifiant-impossible", "2026-11-15");
+    let avant = p.journal(&editeur).unwrap().len();
+    let long = "a".repeat(10_000);
+    for _ in 0..10 {
+        for identifiant in [long.as_str(), "rev a", "ré-a", ""] {
+            assert!(matches!(
+                p.connecter(identifiant, "mauvais", "10.0.4.1"),
+                Err(ErreurPortail::Identifiants)
+            ));
+        }
+    }
+    assert_eq!(p.journal(&editeur).unwrap().len(), avant);
+    // Le frein n'a rien compté : connexion valide depuis la même adresse.
+    assert!(p.connecter("rev-a", MOT_DE_PASSE, "10.0.4.1").is_ok());
+    drop(p);
+    let _ = std::fs::remove_dir_all(d);
+}
+
+/// Entreprise et version envoyées par le programme client : bornées au
+/// journal, activation refusée comme réussie.
+#[test]
+fn activation_textes_bornes_au_journal() {
+    let (p, d, editeur, a, _) = portail("activation-bornee", "2026-11-15");
+    let long = "x".repeat(10_000);
+    let mut refusee = demande("AAAA", &long);
+    refusee.version = long.clone();
+    assert!(p.activer(&refusee, "10.0.5.1").is_err());
+    let code = p
+        .creer_codes_gamme(&a, "v1", "1", "1", "mensuelle", &Module::TOUS)
+        .unwrap()
+        .remove(0);
+    let mut reussie = demande_v1(&code.code, POSTE_1);
+    reussie.version = long.clone();
+    p.activer(&reussie, "10.0.5.2").unwrap();
+    let journal = p.journal(&editeur).unwrap();
+    for action in ["activation_refusee", "code_v1_active"] {
+        let j = journal
+            .iter()
+            .find(|j| j.action == action)
+            .unwrap_or_else(|| panic!("{action} absent du journal"));
+        let longueur = j.details.chars().count();
+        assert!(longueur < 300, "{action} : {longueur} caractères");
+        assert!(j.details.contains('…'), "{}", j.details);
+    }
+    assert_eq!(p.verifier_journal().unwrap().rupture, None);
+    drop(p);
+    let _ = std::fs::remove_dir_all(d);
+}
+
+/// Corps annoncé plus long que la limite : 413, sans attendre le corps.
+#[test]
+fn corps_trop_long_refuse_sans_lecture() {
+    let (p, d, ..) = portail("corps-trop-long", "2026-11-15");
+    let lance = web::lancer(
+        p,
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        ConfigWeb::default(),
+    )
+    .unwrap();
+    for chemin in ["/api/activation", "/connexion"] {
+        let mut tcp = TcpStream::connect(lance.adresse()).unwrap();
+        tcp.set_read_timeout(Some(Duration::from_secs(10))).unwrap();
+        let tete = format!(
+            "POST {chemin} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\nContent-Type: application/json\r\nContent-Length: {}\r\n\r\n",
+            lance.adresse(),
+            web::CORPS_MAX + 1
+        );
+        tcp.write_all(tete.as_bytes()).unwrap();
+        let mut brut = Vec::new();
+        tcp.read_to_end(&mut brut).unwrap();
+        let brut = String::from_utf8_lossy(&brut);
+        assert!(brut.starts_with("HTTP/1.1 413"), "{chemin} : {brut}");
+    }
+    lance.arreter();
+    let _ = std::fs::remove_dir_all(d);
+}
