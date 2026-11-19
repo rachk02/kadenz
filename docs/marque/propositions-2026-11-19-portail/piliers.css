@@ -5,8 +5,8 @@
    remise à zéro). Aucun style en ligne. */
 
 :root {
-  --pl-fond: #8F968A;        /* sauge grisé, autour du cadre */
-  --pl-cadre: #050505;       /* noir du cadre */
+  --pl-fond: #000000;        /* noir, autour du cadre */
+  --pl-cadre: #050505;       /* noir du cadre, à peine détaché du fond */
   --pl-panneau: #0B0B0B;     /* noir du panneau des colonnes */
   --pl-champ: #17181A;       /* champ plein */
   --pl-champ-survol: #1D1F21;
@@ -36,8 +36,8 @@ body.piliers {
   margin: 0 auto;
   padding: 10px;
   background: var(--pl-cadre);
+  border: 1px solid #1A1A1A;
   border-radius: 20px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
 }
 
 .piliers .colonne {

@@ -2,12 +2,12 @@
 // noir (proposition du 2026-11-19, kadenz-e6, d'après une référence de
 // l'utilisateur). Trois colonnes en ruine, dessinées en niveaux de gris puis
 // tramées : un point par case de la grille, gardé selon la clarté du dessin.
-// La souris écarte les points, qui reviennent doucement ; un réglage de la
-// maquette fige les colonnes.
+// Colonnes fixes (choix de l'utilisateur du 2026-11-19) : dessinées une
+// fois, et de nouveau quand le panneau change de taille. L'ancienne réaction
+// à la souris reste disponible par ?souris-active.
 //
-// Paramètres de l'adresse : ?capture (sans réglage, points posés d'emblée),
-// ?souris=0.5,0.5 (souris figée, en fraction du panneau), ?fixe (colonnes
-// figées dès l'ouverture).
+// Paramètres de l'adresse : ?capture (sans réglage de maquette),
+// ?souris-active (les points s'écartent au passage de la souris).
 
 (function () {
   "use strict";
@@ -21,7 +21,7 @@
   const parametres = new URLSearchParams(window.location.search);
   const capture = parametres.has("capture");
   const reduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let reactif = !parametres.has("fixe");
+  const reactif = parametres.has("souris-active");
   if (capture) {
     document.body.classList.add("capture");
   }
@@ -230,6 +230,9 @@
     toile.width = Math.round(largeur * ratio);
     toile.height = Math.round(hauteur * ratio);
     placer();
+    if (!reactif) {
+      image();
+    }
   }
 
   function image() {
@@ -258,27 +261,26 @@
       p.y += p.vy;
       parTeinte[p.teinte].push(p);
     }
+    if (!actif) {
+      for (const p of points) {
+        p.x = p.hx;
+        p.y = p.hy;
+      }
+    }
     for (let i = 0; i < 3; i += 1) {
       ctx.fillStyle = TEINTES[i];
       for (const p of parTeinte[i]) {
         ctx.fillRect(p.x - TAILLE / 2, p.y - TAILLE / 2, TAILLE, TAILLE);
       }
     }
-    window.requestAnimationFrame(image);
+    if (reactif) {
+      window.requestAnimationFrame(image);
+    }
   }
 
-  // ----- Souris et réglage -----
+  // ----- Souris (seulement avec ?souris-active) -----
 
-  const figee = parametres.get("souris");
-  if (figee) {
-    const [fx, fy] = figee.split(",").map(Number);
-    const fixer = function () {
-      souris.x = fx * largeur;
-      souris.y = fy * hauteur;
-    };
-    window.setTimeout(fixer, 0);
-    window.addEventListener("resize", fixer);
-  } else {
+  if (reactif) {
     panneau.addEventListener("pointermove", function (e) {
       const boite = panneau.getBoundingClientRect();
       souris.x = e.clientX - boite.left;
@@ -290,26 +292,13 @@
     });
   }
 
-  const bouton = document.getElementById("reglage-souris");
-  function marquer() {
-    if (bouton) {
-      bouton.setAttribute("aria-pressed", reactif ? "true" : "false");
-      bouton.textContent = reactif ? "Colonnes : réagissent à la souris" : "Colonnes : figées";
-    }
-  }
-  if (bouton) {
-    bouton.addEventListener("click", function () {
-      reactif = !reactif;
-      marquer();
-    });
-  }
-  marquer();
-
   dimensionner();
   if (window.ResizeObserver) {
     new ResizeObserver(dimensionner).observe(panneau);
   } else {
     window.addEventListener("resize", dimensionner);
   }
-  window.requestAnimationFrame(image);
+  if (reactif) {
+    window.requestAnimationFrame(image);
+  }
 })();
