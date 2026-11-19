@@ -46,6 +46,31 @@ fn echeance_en_clair(l: &Licence) -> String {
     }
 }
 
+/// Message de refus quand la licence reçue reculerait l'échéance de la licence
+/// en cours encore valide (décision du 2026-11-19, défaut vu à l'essai à
+/// l'écran de la 0.2.3 : un ancien code plus court remplaçait sans avertir une
+/// licence plus longue). Une licence en cours échue n'est jamais protégée.
+fn recul_d_echeance(en_cours: &EtatLicence, recue: &Licence) -> Option<String> {
+    let EtatLicence::Valide(actuelle, _) = en_cours else {
+        return None;
+    };
+    let jour = |d: &Option<String>| {
+        d.as_deref()
+            .and_then(|d| chrono::NaiveDate::parse_from_str(d, "%Y-%m-%d").ok())
+    };
+    let (actuelle, recue) = (jour(&actuelle.echeance)?, jour(&recue.echeance)?);
+    (recue < actuelle).then(|| {
+        crate::phrase(trf(
+            "ce code mènerait votre licence au {}, avant son échéance actuelle du {} : licence gardée",
+            &[
+                &crate::factures::date_en_texte(recue),
+                &crate::factures::date_en_texte(actuelle),
+            ],
+        ))
+        .to_string()
+    })
+}
+
 /// Résumé d'une licence pour l'assistant et le récapitulatif.
 fn resume(l: &Licence) -> String {
     match &l.echeance {
@@ -284,6 +309,10 @@ fn brancher_activation(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 };
                 (etat.poste.clone(), client, etat.utilisateur.is_some())
             };
+            let en_cours = {
+                let etat = e.borrow();
+                stockage::etat(&etat.conn, &poste).unwrap_or(EtatLicence::Absente)
+            };
             ui.set_message(SharedString::new());
             ui.set_etat(1);
             let (code, fa) = (code.to_string(), fa.clone());
@@ -295,6 +324,13 @@ fn brancher_activation(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                     };
                     let ui = f.global::<ActivationUi>();
                     match resultat {
+                        Ok((_, licence))
+                            if en_session && recul_d_echeance(&en_cours, &licence).is_some() =>
+                        {
+                            let refus = recul_d_echeance(&en_cours, &licence).unwrap_or_default();
+                            ui.set_message(refus.into());
+                            ui.set_etat(3);
+                        }
                         Ok((texte, licence)) if en_session => {
                             ui.set_licence(texte.clone().into());
                             ui.set_resume(resume(&licence).into());
@@ -350,6 +386,39 @@ mod tests {
         assert!(manquants.is_empty(), "sans traduction : {manquants:?}");
     }
 
+    /// Une licence reçue ne recule pas l'échéance d'une licence en cours
+    /// valide ; une licence échue ou absente n'est pas protégée.
+    #[test]
+    fn licence_recue_plus_courte_refusee() {
+        crate::traduction::choisir("fr");
+        let licence = |echeance: Option<&str>| Licence {
+            client: "Quincaillerie Essai".into(),
+            poste: "6VBZ-Z2E3-KFW9-N6QX".into(),
+            modules: vec![Module::Devis],
+            emise_le: "2026-11-19".into(),
+            echeance: echeance.map(str::to_string),
+            postes: 1,
+        };
+        let annuelle = EtatLicence::Valide(licence(Some("2027-11-18")), Some(364));
+        let mensuelle = licence(Some("2026-12-18"));
+        assert_eq!(
+            recul_d_echeance(&annuelle, &mensuelle).as_deref(),
+            Some(
+                "Ce code mènerait votre licence au 18/12/2026, avant son échéance actuelle du 18/11/2027 : licence gardée."
+            )
+        );
+        // Échéance égale ou plus tardive : acceptée.
+        assert_eq!(recul_d_echeance(&annuelle, &licence(Some("2027-11-18"))), None);
+        assert_eq!(recul_d_echeance(&annuelle, &licence(Some("2028-11-18"))), None);
+        // Licence en cours échue ou absente : jamais protégée.
+        let echue = EtatLicence::Expiree(licence(Some("2026-11-01")));
+        assert_eq!(recul_d_echeance(&echue, &mensuelle), None);
+        assert_eq!(recul_d_echeance(&EtatLicence::Absente, &mensuelle), None);
+        // Licence perpétuelle en cours : hors de la règle (aucune échéance).
+        let perpetuelle = EtatLicence::Valide(licence(None), None);
+        assert_eq!(recul_d_echeance(&perpetuelle, &mensuelle), None);
+    }
+
     /// Textes de l'échéance et de l'activation construits ici (0.2.3).
     #[test]
     fn textes_de_l_echeance_traduits() {
@@ -363,6 +432,7 @@ mod tests {
             "Licence échue le {} : socle seul",
             "Clé enregistrée, mais la licence est échue depuis le {} : seul le socle est disponible.",
             "licence activée et enregistrée sur ce poste",
+            "ce code mènerait votre licence au {}, avant son échéance actuelle du {} : licence gardée",
         ];
         let manquants = crate::traduction::sans_traduction(&textes);
         assert!(manquants.is_empty(), "sans traduction : {manquants:?}");

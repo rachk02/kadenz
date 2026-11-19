@@ -3043,3 +3043,8 @@ msgstr "许可证已激活并保存到本工作站"
 
 msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
 msgstr "已删除字符：代码只含字母 A 至 Z 和数字 2 至 9"
+
+# Garde de l'échéance à l'activation (décision du 2026-11-19)
+
+msgid "ce code mènerait votre licence au {}, avant son échéance actuelle du {} : licence gardée"
+msgstr "此代码会将许可证到期日改为 {}，早于当前到期日 {}：已保留原许可证"

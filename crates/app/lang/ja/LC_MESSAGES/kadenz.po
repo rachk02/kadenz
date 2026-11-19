@@ -3043,3 +3043,8 @@ msgstr "ライセンスを有効化し、この端末に保存しました"
 
 msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
 msgstr "文字を削除しました：コードに使われるのはAからZの英字と2から9の数字だけです"
+
+# Garde de l'échéance à l'activation (décision du 2026-11-19)
+
+msgid "ce code mènerait votre licence au {}, avant son échéance actuelle du {} : licence gardée"
+msgstr "このコードではライセンスの期限が {} になり、現在の期限 {} より前になります：ライセンスは維持されました"

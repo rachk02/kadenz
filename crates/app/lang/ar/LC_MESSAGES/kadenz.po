@@ -3043,3 +3043,8 @@ msgstr "تم تفعيل الترخيص وحفظه على هذا الجهاز"
 
 msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
 msgstr "تمت إزالة حرف: لا يحتوي الرمز إلا على الحروف من A إلى Z والأرقام من 2 إلى 9"
+
+# Garde de l'échéance à l'activation (décision du 2026-11-19)
+
+msgid "ce code mènerait votre licence au {}, avant son échéance actuelle du {} : licence gardée"
+msgstr "هذا الرمز سيجعل انتهاء ترخيصك في {}، قبل تاريخ انتهائه الحالي {}: تم الإبقاء على الترخيص"

@@ -3043,3 +3043,8 @@ msgstr "license activated and saved on this computer"
 
 msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
 msgstr "character removed: a code only has letters A to Z and digits 2 to 9"
+
+# Garde de l'échéance à l'activation (décision du 2026-11-19)
+
+msgid "ce code mènerait votre licence au {}, avant son échéance actuelle du {} : licence gardée"
+msgstr "this code would bring your license to {}, before its current expiry date of {}: license kept"

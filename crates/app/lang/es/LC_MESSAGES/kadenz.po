@@ -3043,3 +3043,8 @@ msgstr "licencia activada y guardada en este puesto"
 
 msgid "caractère retiré : un code n'a que des lettres de A à Z et des chiffres de 2 à 9"
 msgstr "carácter eliminado: un código solo tiene letras de la A a la Z y cifras del 2 al 9"
+
+# Garde de l'échéance à l'activation (décision du 2026-11-19)
+
+msgid "ce code mènerait votre licence au {}, avant son échéance actuelle du {} : licence gardée"
+msgstr "este código llevaría su licencia al {}, antes de su vencimiento actual del {}: licencia conservada"
