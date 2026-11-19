@@ -2,6 +2,23 @@
 
 Format : une section par version, la plus récente en haut. Numérotation [SemVer](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORRECTIF`, tag Git `vMAJEUR.MINEUR.CORRECTIF`.
 
+## [0.2.3] - date à poser à la publication
+
+### Ajouté
+- Activation par code : la licence se donne par un code d'activation de 25 caractères (`XXXXX-XXXXX-XXXXX-XXXXX-XXXXX`), mis en forme pendant la saisie et contrôlé sur le poste avant tout envoi. Le code est activé auprès du portail Kadenz au passage de l'étape Entreprise de l'assistant, ou depuis Paramètres > Licence (bouton « Renouveler » ou « Activer un code »), avec la raison sociale et l'identifiant du poste ; une connexion à Internet est alors nécessaire. La licence reçue est vérifiée sur le poste avant d'être enregistrée.
+- Lien « J'ai une clé longue » : les clés longues déjà remises se saisissent toujours, dans l'assistant comme dans Paramètres > Licence.
+- Licence datée de la ligne V1 : lignes « Échéance » et « Postes » dans Paramètres > Licence, « Perpétuelle » pour une licence sans date ; bandeau à 30 jours, à 7 jours, la veille et après l'échéance.
+- Refus des activations qui feraient perdre une licence : un code dont la licence finirait avant l'échéance de la licence en cours encore valide est refusé, et une licence datée ne remplace pas une licence perpétuelle ; la licence en cours est gardée et le message donne les dates. Une licence échue n'est pas protégée.
+- Refus du portail affichés en clair : code d'une autre gamme, code déjà activé sur un autre poste, portail injoignable, connexion sécurisée refusée.
+
+### Modifié
+- À l'échéance d'une licence datée, retour au socle (tiers, produits, factures, avoirs, administration), sans lecture seule ; les données des modules sont gardées. Le message de l'état est daté : « Licence échue le JJ/MM/AAAA : socle seul ».
+- La date retenue pour l'échéance ne recule jamais (horloge, dernière date vue, date d'émission).
+- Le texte « Transmettez l'identifiant » disparaît ; l'identifiant du poste reste affiché, pour le support.
+
+### Corrigé
+- Saisie du code en majuscules : une lettre tapée après la même lettre ne décale plus la suite de la saisie.
+
 ## [0.2.2] - 2026-11-12
 
 ### Ajouté

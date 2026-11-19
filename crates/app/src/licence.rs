@@ -420,8 +420,14 @@ mod tests {
             )
         );
         // Échéance égale ou plus tardive : acceptée.
-        assert_eq!(recul_d_echeance(&annuelle, &licence(Some("2027-11-18"))), None);
-        assert_eq!(recul_d_echeance(&annuelle, &licence(Some("2028-11-18"))), None);
+        assert_eq!(
+            recul_d_echeance(&annuelle, &licence(Some("2027-11-18"))),
+            None
+        );
+        assert_eq!(
+            recul_d_echeance(&annuelle, &licence(Some("2028-11-18"))),
+            None
+        );
         // Licence en cours échue ou absente : jamais protégée.
         let echue = EtatLicence::Expiree(licence(Some("2026-11-01")));
         assert_eq!(recul_d_echeance(&echue, &mensuelle), None);

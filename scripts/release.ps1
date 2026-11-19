@@ -5,7 +5,8 @@
 .DESCRIPTION
     Tout se fait sur ce poste, sans consommer de minutes GitHub Actions.
     Étapes :
-      1. vérifie que l'arbre de travail est propre, sur la branche main, à jour avec origin ;
+      1. vérifie que l'arbre de travail est propre, sur main ou une branche release/*,
+         à jour avec origin ;
       2. vérifie que la version demandée correspond à [workspace.package] dans Cargo.toml
          et qu'une section existe dans CHANGELOG.md ;
       3. lance format, Clippy et tests sur tout l'espace de travail ;
@@ -43,6 +44,12 @@
     un fichier non signé est pris pour un virus par certains antivirus
     (Kaspersky, PDM:Trojan.Win32.Generic, essai du 2026-11-11).
 
+.PARAMETER Jobs
+    Nombre de compilations parallèles de cargo (CARGO_BUILD_JOBS), pour
+    clippy, les tests, la compilation optimisée et l'outil éditeur. 1 par
+    défaut : sur le poste de développement, la compilation parallèle manque de
+    mémoire.
+
 .EXAMPLE
     .\scripts\release.ps1 -Version 0.3.0 -CleMaj D:\cles\maj\kadenz-cle-privee.hex -Simulation
     .\scripts\release.ps1 -Version 0.3.0 -CleMaj D:\cles\maj\kadenz-cle-privee.hex -Certificat <empreinte>
@@ -60,7 +67,10 @@ param(
 
     [switch]$Simulation,
 
-    [string]$Certificat = ''
+    [string]$Certificat = '',
+
+    [ValidateRange(1, 64)]
+    [int]$Jobs = 1
 )
 
 $ErrorActionPreference = 'Stop'
@@ -69,6 +79,8 @@ Set-Location $racine
 
 $cargo = Join-Path $env:USERPROFILE '.cargo\bin\cargo.exe'
 if (-not (Test-Path $cargo)) { $cargo = 'cargo' }
+# Lu par chaque appel de cargo, y compris dans installateur\construire.ps1.
+$env:CARGO_BUILD_JOBS = "$Jobs"
 $tag = "v$Version"
 
 function Etape([string]$texte) { Write-Host "==> $texte" }
@@ -82,9 +94,12 @@ Etape "Contrôle du dépôt"
 if (-not (Test-Path -PathType Leaf $CleMaj)) { throw "clé privée de mise à jour introuvable : $CleMaj" }
 if (git status --porcelain) { throw "l'arbre de travail n'est pas propre" }
 $branche = git rev-parse --abbrev-ref HEAD
-if ($branche -ne 'main') { throw "la release se fait depuis main (branche actuelle : $branche)" }
-Executer git @('fetch', 'origin', 'main', '--tags')
-if ((git rev-parse HEAD) -ne (git rev-parse origin/main)) { throw "main n'est pas à jour avec origin/main" }
+# main, ou une branche de maintenance release/X.Y.x (ligne 0.2.x, gamme des versions).
+if ($branche -ne 'main' -and $branche -notlike 'release/*') {
+    throw "la release se fait depuis main ou une branche release/* (branche actuelle : $branche)"
+}
+Executer git @('fetch', 'origin', $branche, '--tags')
+if ((git rev-parse HEAD) -ne (git rev-parse "origin/$branche")) { throw "$branche n'est pas à jour avec origin/$branche" }
 if (git tag --list $tag) { throw "le tag $tag existe déjà" }
 
 Etape "Contrôle de la version"

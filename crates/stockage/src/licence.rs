@@ -13,10 +13,10 @@
 //! (dernière date vue, gardée dans les paramètres système), comme pour
 //! l'abonnement du serveur dans la phase 2.
 
+use chrono::NaiveDate;
 use kadenz_domaine::message::MessageCompose;
 use kadenz_domaine::module::Module;
 use kadenz_domaine::role::Droit;
-use chrono::NaiveDate;
 use kadenz_licence::Licence;
 use kadenz_licence::VerifyingKey;
 use rusqlite::{Connection, OptionalExtension, params};
@@ -513,7 +513,9 @@ mod tests {
         }
         // Lendemain de l'échéance : socle seul, licence encore lisible.
         let e = appliquer_avec(&conn, poste, &cles, j("2027-01-01")).unwrap();
-        assert!(matches!(&e, EtatLicence::Expiree(l) if l.modules == [Module::Devis, Module::Paiements]));
+        assert!(
+            matches!(&e, EtatLicence::Expiree(l) if l.modules == [Module::Devis, Module::Paiements])
+        );
         assert_eq!(e.avertissement(), Avertissement::Expiree);
         assert!(!module_actif(&conn, Module::Devis).unwrap());
         // Horloge reculée : la date retenue ne recule pas.
