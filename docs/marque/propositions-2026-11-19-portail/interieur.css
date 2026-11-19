@@ -67,8 +67,8 @@ body { background: var(--lavande-pale); }
 .titre-page .identifiant { color: var(--lavande); display: block; margin-top: 10px; }
 .titre-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 /* Sur la Nuit, le principal passe en Orange : le Violet n'y a que 2,5:1. */
-.titre-page .bouton-principal { background: var(--orange); border-color: var(--orange); color: var(--nuit-violette); }
-.titre-page .bouton-principal:hover { background: #FF7E1A; border-color: #FF7E1A; color: var(--nuit-violette); }
+.titre-page .bouton.bouton-principal { background: var(--orange); border-color: var(--orange); color: var(--nuit-violette); }
+.titre-page .bouton.bouton-principal:hover { background: #FF7E1A; border-color: #FF7E1A; color: var(--nuit-violette); }
 .titre-page .bouton { background: transparent; border-color: var(--lavande); color: var(--blanc); }
 .titre-page .bouton:hover { background: rgba(255, 255, 255, 0.08); color: var(--blanc); }
 .titre-page:has(+ .chiffres) { padding-bottom: 84px; margin-bottom: 0; }
@@ -147,6 +147,7 @@ td.details { overflow-wrap: anywhere; min-width: 260px; color: var(--gris-violet
 .chaine-etat { grid-row: span 2; color: var(--succes); font-size: 26px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
 .chaine-etat.chaine-rompue { color: var(--erreur); }
 .chaine-detail { color: var(--gris-violet); margin: 0; }
+.chaine .aide { grid-column: 2; margin: 4px 0 0; }
 
 /* Formulaires du contenu */
 .formulaire { max-width: 680px; }

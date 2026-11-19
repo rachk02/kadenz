@@ -220,9 +220,9 @@ def journal():
     actions = [
         ("19/11/2026 10:42:07", "Éditeur exemple", "Code tiré", "3f6c2a1e...", "3 postes, annuelle, tous les modules"),
         ("19/11/2026 10:39:51", "Éditeur exemple", "Paiement enregistré", "3f6c2a1e...", "540 000 FCFA, virement, VIR-EXEMPLE-0412"),
-        ("19/11/2026 10:38:12", "Éditeur exemple", "Connexion", "-", "double authentification"),
+        ("19/11/2026 10:38:12", "Éditeur exemple", "Connexion", "-", "adresse 198.51.100.7 (exemple)"),
         ("18/11/2026 16:05:44", REVENDEUR, "Licence émise", "c2f7a5d8...", "2 postes, jusqu'au 30/06/2027"),
-        ("18/11/2026 15:58:30", "-", "Connexion refusée", "-", "identifiant inconnu"),
+        ("18/11/2026 15:58:30", "-", "Connexion refusée", "-", "identifiant exemple, adresse 203.0.113.9 (exemple)"),
     ]
     lignes = [
         [(h, "court"), (c, ""), (a, "court"),
