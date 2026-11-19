@@ -4760,3 +4760,8 @@ msgstr "Kodu etkinleştir"
 
 msgid "Tapez le code d'activation reçu de l'éditeur ou du revendeur. Kadenz demande la licence au portail, la vérifie, puis le serveur l'applique à tous les postes de l'entreprise. Une connexion à Internet est nécessaire."
 msgstr "Yayıncıdan veya bayiden aldığınız etkinleştirme kodunu yazın. Kadenz lisansı portaldan ister ve doğrular, ardından sunucu onu şirketin tüm iş istasyonlarına uygular. İnternet bağlantısı gereklidir."
+
+# Garde de l'échéance côté serveur (décision du 2026-11-19)
+
+msgid "cette licence mènerait l'abonnement au {}, avant son échéance actuelle du {} : licence gardée"
+msgstr "bu lisans aboneliğin bitiş tarihini {} yapar, bu da mevcut bitiş tarihi olan {} tarihinden öncedir: lisans korundu"

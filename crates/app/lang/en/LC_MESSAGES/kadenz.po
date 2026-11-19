@@ -4760,3 +4760,8 @@ msgstr "Activate the code"
 
 msgid "Tapez le code d'activation reçu de l'éditeur ou du revendeur. Kadenz demande la licence au portail, la vérifie, puis le serveur l'applique à tous les postes de l'entreprise. Une connexion à Internet est nécessaire."
 msgstr "Type the activation code received from the publisher or the reseller. Kadenz requests the license from the portal and verifies it, then the server applies it to all of the company's workstations. An Internet connection is required."
+
+# Garde de l'échéance côté serveur (décision du 2026-11-19)
+
+msgid "cette licence mènerait l'abonnement au {}, avant son échéance actuelle du {} : licence gardée"
+msgstr "this license would bring the subscription to {}, before its current expiry date of {}: license kept"

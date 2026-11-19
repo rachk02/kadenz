@@ -4760,3 +4760,8 @@ msgstr "コードを有効化"
 
 msgid "Tapez le code d'activation reçu de l'éditeur ou du revendeur. Kadenz demande la licence au portail, la vérifie, puis le serveur l'applique à tous les postes de l'entreprise. Une connexion à Internet est nécessaire."
 msgstr "発行元または販売店から受け取ったアクティベーションコードを入力してください。Kadenz がポータルにライセンスを要求して検証し、サーバーが企業のすべての端末に適用します。インターネット接続が必要です。"
+
+# Garde de l'échéance côté serveur (décision du 2026-11-19)
+
+msgid "cette licence mènerait l'abonnement au {}, avant son échéance actuelle du {} : licence gardée"
+msgstr "このライセンスではサブスクリプションの期限が {} になり、現在の期限 {} より前になります：ライセンスは維持されました"

@@ -32,6 +32,11 @@ use crate::{Erreur, Resultat, licence, maintenant, postes, synchro};
 /// Message des opérations refusées pendant la lecture seule.
 pub const MODELE_LECTURE_SEULE: &str = "abonnement échu : Kadenz est en lecture seule";
 
+/// Refus d'une licence qui reculerait l'échéance de l'abonnement en cours
+/// (décision du 2026-11-19) : date reçue, puis échéance actuelle.
+pub const MODELE_RECUL_ECHEANCE: &str =
+    "cette licence mènerait l'abonnement au {}, avant son échéance actuelle du {} : licence gardée";
+
 const CLE: &str = "abonnement.cle";
 /// Dernière date retenue (ne recule jamais).
 const DATE_VUE: &str = "abonnement.date_vue";
@@ -304,7 +309,11 @@ pub(crate) fn exiger_ecriture(conn: &Connection) -> Resultat<()> {
 /// reste. Une licence plus récente que toutes les précédentes ramène la date
 /// retenue à l'horloge (horloge avancée par erreur) ; une licence plus
 /// ancienne ne le fait pas, pour qu'on ne puisse pas revenir en arrière en
-/// réinstallant une ancienne licence.
+/// réinstallant une ancienne licence. Une licence dont l'échéance tombe avant
+/// celle de l'abonnement en cours encore actif est refusée (décision du
+/// 2026-11-19 : un ancien code mensuel ne remplace plus sans avertir une
+/// licence annuelle) ; un abonnement échu, absent ou invalide n'est jamais
+/// protégé.
 pub fn enregistrer_avec(
     conn: &Connection,
     acteur: &Utilisateur,
@@ -315,6 +324,16 @@ pub fn enregistrer_avec(
     exiger_droit(conn, acteur, Droit::GererParametres)?;
     let cle: String = cle.chars().filter(|c| !c.is_whitespace()).collect();
     let licence = verifier(conn, &cle, cles_portail)??;
+    let (en_cours, _) = evaluer(conn, horloge, cles_portail)?;
+    if let (Statut::Actif, Some(actuelle)) = (en_cours.statut, &en_cours.licence)
+        && let (Some(actuelle), Some(recue)) = (date(&actuelle.echeance), date(&licence.echeance))
+        && recue < actuelle
+    {
+        return Err(crate::refus(
+            MODELE_RECUL_ECHEANCE,
+            &[&recue.format("%d/%m/%Y"), &actuelle.format("%d/%m/%Y")],
+        ));
+    }
     let emission = date(&licence.emise_le).unwrap_or(horloge);
     let derniere = lire(conn, EMISSION_VUE)?.as_deref().and_then(date);
     let en_place = lire(conn, CLE)?;
@@ -485,6 +504,43 @@ mod tests {
         let a = enregistrer_avec(&conn, &admin, &rattrapage, j("2027-01-07"), &cles).unwrap();
         assert_eq!(a.statut, Statut::Actif);
         assert_eq!(a.aujourdhui, "2027-01-07");
+    }
+
+    /// Une licence reçue ne recule pas l'échéance d'un abonnement actif ;
+    /// un abonnement échu n'est pas protégé.
+    #[test]
+    fn licence_plus_courte_refusee() {
+        let conn = ouvrir_en_memoire().unwrap();
+        let admin = compte(&conn, "admin", Role::Admin);
+        let cles = [cle_portail().verifying_key()];
+        let annuelle = licence(&conn, "2027-11-18", "2026-11-19");
+        enregistrer_avec(&conn, &admin, &annuelle, j("2026-11-19"), &cles).unwrap();
+        let mensuelle = licence(&conn, "2026-12-18", "2026-11-20");
+        match enregistrer_avec(&conn, &admin, &mensuelle, j("2026-11-20"), &cles) {
+            Err(Erreur::ValidationComposee { modele, valeurs }) => {
+                assert_eq!(modele, MODELE_RECUL_ECHEANCE);
+                assert_eq!(valeurs, ["18/12/2026", "18/11/2027"]);
+            }
+            autre => panic!("{autre:?}"),
+        }
+        // Rien n'a changé.
+        let a = etat_avec(&conn, j("2026-11-20"), &cles).unwrap();
+        assert_eq!(a.licence.unwrap().echeance, "2027-11-18");
+        // Même échéance (réinstallation) ou plus tardive : acceptée.
+        enregistrer_avec(&conn, &admin, &annuelle, j("2026-11-20"), &cles).unwrap();
+        let suivante = licence(&conn, "2028-11-18", "2026-11-21");
+        let a = enregistrer_avec(&conn, &admin, &suivante, j("2026-11-21"), &cles).unwrap();
+        assert_eq!(a.licence.unwrap().echeance, "2028-11-18");
+
+        // Abonnement échu : jamais protégé.
+        let conn = ouvrir_en_memoire().unwrap();
+        let admin = compte(&conn, "admin", Role::Admin);
+        let courte = licence(&conn, "2026-12-31", "2026-11-12");
+        enregistrer_avec(&conn, &admin, &courte, j("2026-11-12"), &cles).unwrap();
+        let plus_courte = licence(&conn, "2026-12-20", "2026-12-01");
+        let a = enregistrer_avec(&conn, &admin, &plus_courte, j("2027-01-05"), &cles).unwrap();
+        assert_eq!(a.licence.unwrap().echeance, "2026-12-20");
+        assert_eq!(a.statut, Statut::Echu);
     }
 
     #[test]

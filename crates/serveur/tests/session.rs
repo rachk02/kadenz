@@ -484,8 +484,31 @@ fn abonnement_et_lecture_seule() {
     assert_eq!(a.jours_restants, Some(365));
     assert_eq!(a.postes_utilises, 1);
 
-    // Licence échue hier : lecture seule, la consultation reste possible.
-    let a = client.renouveler(&licence(&entreprise, -1, -40)).unwrap();
+    // Licence qui reculerait l'échéance de l'abonnement actif : refusée,
+    // avec les deux dates, remontées au poste (décision du 2026-11-19).
+    let echue = licence(&entreprise, -1, -40);
+    match client.renouveler(&echue) {
+        Err(ErreurClient::Refus { modele, valeurs }) => {
+            assert_eq!(modele, abonnement::MODELE_RECUL_ECHEANCE);
+            assert_eq!(valeurs.len(), 2);
+        }
+        autre => panic!("{autre:?}"),
+    }
+    assert_eq!(client.abonnement().unwrap().statut, Statut::Actif);
+
+    // Licence échue hier, posée directement en base (la garde empêche de
+    // l'installer par-dessus la licence active) : lecture seule, la
+    // consultation reste possible.
+    serveur
+        .base(move |c| {
+            c.execute(
+                "UPDATE parametre_systeme SET valeur = ?1 WHERE cle = 'abonnement.cle'",
+                [format!("\"{echue}\"")],
+            )
+            .unwrap();
+        })
+        .unwrap();
+    let a = client.abonnement().unwrap();
     assert_eq!(a.statut, Statut::Echu);
     let op = creer_tiers(&entreprise, &poste.empreinte(), &admin, "Kaboré");
     assert!(matches!(
