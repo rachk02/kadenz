@@ -10,6 +10,7 @@
 | 0.6 | 2026-11-19 | Section 7 : trousse du Dell écrite par kadenz-3a à la demande de kadenz-cc (`deploiement/dell/`) : compose durci sur 127.0.0.1, image d'essai du portail, crochet de sauvegarde, sonde de santé et alerte, procédure ; étape Funnel sur accord de l'utilisateur. Rien n'est lancé. Section 5 : le portail a désormais un `busy_timeout`. |
 | 0.7 | 2026-11-19 | Trousse du Dell : forme d'appel de `/usr/local/sbin/alerte` et place du crochet dans `/usr/local/sbin/sauvegarde`, relevées sur le Dell par kadenz-cc. |
 | 0.8 | 2026-11-19 | Essai de la trousse sur le Dell par kadenz-cc (603d3da, scripts de 374be61), tout nettoyé ensuite : construction, clé d'essai, santé, écoute sur 127.0.0.1, cookies sur `http://localhost`, adresse vue par le portail (la passerelle), sauvegarde, restauration et alertes conformes. Écarts corrigés : copie de la base en 600, entrée standard fermée pour les appels docker, conteneur arrêté vu comme arrêté, `journal.jsonl` mis de côté après une restauration. |
+| 0.9 | 2026-11-19 | Section 7 : ouverture de la console par Cloudflare Tunnel, domaine acheté par l'utilisateur chez Cloudflare (transmis par kadenz-51). Surcouche `compose.public.yaml` (cloudflared durci, sans port publié, jeton lu depuis un fichier hors dépôt, `--mandataire` à l'adresse de cloudflared), sonde de santé par les étiquettes de Compose, étapes du compte Cloudflare marquées pour l'utilisateur, option Cloudflare Access en décision de l'utilisateur. Rien n'est lancé ; l'en-tête de l'adresse du client attend la vérification d'OpenCode. |
 
 Statut : **proposé**. Le VPS, son prestataire, le nom de domaine et la mise en service restent à la décision de l'utilisateur (décisions 16 et 69 du cahier de la phase 2). Le relais et le portail y iront une fois leur implémentation finie (décision de l'utilisateur du 2026-11-18). Pour l'instant, ni domaine ni VPS : hébergement sur le Dell avec Tailscale, et Vercel au besoin (décision du 2026-11-19, section 7). Rien ici n'a été essayé sur un VPS ; chaque fichier est à relire et à essayer d'abord sur une machine d'essai.
 
@@ -381,14 +382,15 @@ Pour les essais internes, la piste C suffit et ne demande rien. Pour des clients
 | `kadenz.env.exemple` | modèle de `/etc/kadenz/kadenz.env`, sans valeur secrète |
 | `outil-sqlite/Dockerfile` | sqlite3 sur la même image de base épinglée, sous l'uid 10001 |
 | `kadenz-sauvegarde` | crochet appelé par `/usr/local/sbin/sauvegarde` avant restic |
-| `kadenz-sante`, `kadenz-sante.service`, `kadenz-sante.timer` | santé des conteneurs toutes les 5 minutes, alerte au changement d'état |
+| `kadenz-sante`, `kadenz-sante.service`, `kadenz-sante.timer` | santé des conteneurs toutes les 5 minutes, alerte au changement d'état ; conteneurs trouvés par les étiquettes de Compose, `tunnel` surveillé seulement s'il existe |
+| `compose.public.yaml` | ouverture de la console par Cloudflare Tunnel, sur accord de l'utilisateur (sous-section « Cloudflare Tunnel ») |
 
 Le Dockerfile du portail prend un argument `PROFIL` (`release` par défaut) ; celui du relais ne change pas : le relais reste en version optimisée, y compris à l'essai.
 
 #### Choix et limites
 
 - Clé du portail : fichier de l'hôte, propriétaire `10001:10001`, mode 400, hors des dossiers sauvegardés par restic (`/etc`, `/home`, `/root`, `/usr/local`...), d'où `/srv/kadenz/cle/` dans le modèle. Le montage est en lecture seule ; un fichier absent fait refuser le démarrage au lieu de créer un dossier vide à sa place.
-- `--mandataire` reçoit la passerelle du réseau `portail`, à sous-réseau fixé (`RESEAU_PORTAIL`, `PASSERELLE_PORTAIL`) : une connexion venue de l'hôte, par docker-proxy ou par tailscaled, arrive avec cette adresse. Conséquence : tout programme local du Dell peut aussi fournir un `X-Forwarded-For` cru par le portail ; accepté sur le Dell, à revoir si d'autres services y tournent. Confirmé à l'essai du 2026-11-19 : le portail voit la passerelle, sans Funnel.
+- `--mandataire` reçoit la passerelle du réseau `portail`, à sous-réseau fixé (`RESEAU_PORTAIL`, `PASSERELLE_PORTAIL`) : une connexion venue de l'hôte, par docker-proxy ou par tailscaled, arrive avec cette adresse. Conséquence : tout programme local du Dell peut aussi fournir un `X-Forwarded-For` cru par le portail ; accepté sur le Dell, à revoir si d'autres services y tournent. Confirmé à l'essai du 2026-11-19 : le portail voit la passerelle, sans Funnel. Avec Cloudflare Tunnel, `compose.public.yaml` remplace cette valeur par l'adresse de cloudflared (plus bas).
 - Sauvegarde de la base : jamais de copie à chaud du fichier. `VACUUM INTO` par l'outil sqlite3, sous l'uid du portail (les fichiers `-wal` et `-shm` restent les siens), sans réseau ; puis `PRAGMA integrity_check` sur la copie, qui doit répondre `ok`.
 - Journal : `journal-exporter --depuis <dernier id exporté>` dans le conteneur en service, ajouté à `journal.jsonl` ; puis `journal-verifier`, dont l'échec déclenche une alerte. Après une restauration, la base a perdu les entrées postérieures à sa sauvegarde, et les entrées suivantes reprendront les mêmes numéros avec un autre contenu : `journal.jsonl` est alors mis de côté (étape 9), jamais complété tel quel.
 - Relais : certificat **et** clé copiés (`relais.crt`, `relais.cle`).
@@ -437,7 +439,62 @@ kze() { docker compose -f /opt/kadenz/source/deploiement/dell/compose.yaml \
     - essai : `kz stop relais`, une alerte « relais en panne » dans les 5 minutes ; `kz start relais`, une alerte de retour ; aucune alerte entre les deux.
 11. **Fin de l'essai** : `kze down` (les volumes restent ; `kze down -v` les efface), retirer `/srv/kadenz/essai` et l'image `kadenz-portail:essai-*`.
 
+#### Cloudflare Tunnel : sur accord de l'utilisateur
+
+Domaine acheté par l'utilisateur chez Cloudflare le 2026-11-19 (zone DNS chez Cloudflare), transmis par kadenz-51. Nom public proposé pour la console : `licences.mcarre.dev` ; `relais.mcarre.dev` réservé pour plus tard. Rien n'est lancé ; c'est la voie retenue à la place de Funnel.
+
+Ce que fait la surcouche `compose.public.yaml` :
+
+- Service `tunnel` : image officielle `cloudflare/cloudflared` épinglée par empreinte (`IMAGE_CLOUDFLARED`, à relever à la mise en service), même durcissement que les autres conteneurs, **aucun port publié**. Il ne fait que sortir vers Cloudflare ; rien ne touche le réseau de l'hôte, ni Tailscale, ni ufw, ni sshd.
+- Tunnel géré à distance : la route du nom public vers `http://portail:47382` est réglée dans le compte Cloudflare, pas dans le dépôt. cloudflared lit son jeton dans un fichier (`--token-file`, variable `TUNNEL_TOKEN_FILE`), monté en lecture seule depuis `JETON_TUNNEL` ; `--no-autoupdate` ; métriques sur `127.0.0.1:20241` dans le conteneur seulement. Source : page « Tunnel run parameters », https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/configure-tunnels/run-parameters/ (lue le 2026-11-19). En conteneur, le serveur de métriques écoute par défaut sur toutes les adresses (page « Tunnel metrics », https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/monitor-tunnels/metrics/), d'où l'adresse imposée.
+- Réseaux : `console` (interne, sous-réseau `RESEAU_CONSOLE`) entre le portail et cloudflared, à adresse fixe `IP_TUNNEL` ; `sortie` (pont ordinaire) pour la sortie de cloudflared. Le portail garde sa publication sur `127.0.0.1:47382` pour l'administration par `ssh -L` à travers Tailscale.
+- `--mandataire` reçoit `IP_TUNNEL`. Une connexion par `127.0.0.1` arrive de la passerelle du réseau `portail`, qui n'est plus le mandataire : son adresse reste celle du pair.
+- **En attente de la vérification d'OpenCode** : l'en-tête qui porte l'adresse du client derrière cloudflared, et si la dernière valeur de `X-Forwarded-For`, seule lue par le portail, est la bonne. Rien ici n'en dépend encore ; si un autre en-tête était nécessaire, le changement serait dans le code du portail, hors de ce lot.
+- Le relais n'y passe pas : un tunnel HTTP ne porte pas son protocole TCP. Son cas attend aussi OpenCode.
+- Sonde : aucune dans le conteneur, l'image n'ayant ni shell ni curl et aucune commande de santé n'étant vérifiée dans la documentation. `kadenz-sante` surveille l'état du conteneur, et l'état du tunnel se lit dans le tableau de bord de l'utilisateur.
+- Sauvegarde : rien pour cloudflared. Le jeton est révocable et se régénère dans le compte ; il n'entre pas dans restic.
+
+À relever à l'essai : la version de cloudflared (la page ne dit pas depuis quelle version `--token-file` existe) ; l'uid de l'image, propriétaire du fichier du jeton ; le point d'entrée de l'image (`docker image inspect`), la surcouche imposant `cloudflared` ; la fusion des réseaux du portail (`docker compose ... config` doit montrer `portail` et `console`).
+
+Étapes de **l'utilisateur, dans son compte Cloudflare** (libellés de la page « Create a tunnel (dashboard) », https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/, relevés par kadenz-51 le 2026-11-19) :
+
+1. **Networking > Tunnels** : créer un tunnel de type cloudflared, nommé par exemple `kadenz-dell`.
+2. Copier le jeton du tunnel et le déposer lui-même sur le Dell dans `/srv/kadenz/tunnel/jeton` (root, 600, puis propriétaire ajusté à l'uid de l'image) ; jamais dans un message, jamais dans le dépôt. Ignorer la commande d'installation proposée par la page : le conteneur de la trousse en tient lieu.
+3. Onglet **Routes**, **Published application** : nom `licences.mcarre.dev`, service `http://portail:47382`.
+
+Étapes sur le Dell, en root depuis la source (fonctions `kz`, `kze` de la procédure ci-dessus) :
+
+1. Réglages : `IMAGE_CLOUDFLARED` (version et empreinte relevées : `docker pull cloudflare/cloudflared:<version>` puis `docker image inspect --format '{{index .RepoDigests 0}}'`), `RESEAU_CONSOLE` (sous-réseau libre), `IP_TUNNEL` (dans ce sous-réseau, pas la première adresse), `JETON_TUNNEL`.
+2. Vérifier la configuration fusionnée : `kz -f deploiement/dell/compose.public.yaml config` ne doit montrer aucun `ports:` pour `tunnel`, et les réseaux `portail` et `console` pour le portail.
+3. Démarrer, **sur accord de l'utilisateur** : `kz -f deploiement/dell/compose.public.yaml up -d portail tunnel`. Le portail est recréé avec le nouveau `--mandataire`.
+4. Vérifier : tunnel « Healthy » dans le tableau de bord de l'utilisateur ; `https://licences.mcarre.dev/` ouvre la page de connexion ; les cookies `__Host-` et `Secure` passent (HTTPS terminé chez Cloudflare) ; l'adresse notée au journal de la console pour cette connexion, à comparer au résultat d'OpenCode.
+5. Retour en arrière : `kz -f deploiement/dell/compose.public.yaml stop tunnel`, ou révocation du jeton dans le compte, puis `kz up -d portail` pour revenir au `--mandataire` de la passerelle.
+
+Jamais avec `compose.essai.yaml` (image d'essai, clé d'essai), sauf essai décidé par l'utilisateur. Aucune étape ne modifie l'accès au Dell ; une étape qui le ferait serait à faire **seulement avec l'utilisateur sur place**.
+
+##### Option : Cloudflare Access devant la console (décision de l'utilisateur)
+
+Une porte de plus avant la page de connexion du portail, proposée par kadenz-51. Ce que dit la documentation, lue le 2026-11-19 :
+
+| Point | Ce que dit Cloudflare | Source |
+|---|---|---|
+| Plan gratuit | « Best for teams under 50 users », « 50 user limit » | https://www.cloudflare.com/plans/zero-trust-services/ |
+| Code par courriel | Access envoie un code à usage unique aux adresses autorisées par une politique ; il expire 10 minutes après la demande, sert une fois, et n'est envoyé que si l'adresse est autorisée | https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/ |
+| Exception d'un chemin | « Bypass is typically used to enable applications that require specific endpoints to be public » ; Cloudflare ne recommande pas Bypass pour un accès permanent direct à une application interne | https://developers.cloudflare.com/cloudflare-one/access-controls/policies/ |
+| Chemin le plus précis | « the more specific rule takes precedence », sans héritage de la règle du chemin parent | https://developers.cloudflare.com/cloudflare-one/access-controls/policies/app-paths/ |
+
+Montage proposé, entièrement dans le compte de l'utilisateur :
+
+1. Application Access sur `licences.mcarre.dev` (chemin vide), politique Allow limitée à l'adresse ou aux adresses de l'éditeur, connexion par code à usage unique.
+2. Seconde application sur `licences.mcarre.dev/api/activation`, politique Bypass « Everyone » : les postes clients appellent cette route sans session ni navigateur (`crates/portail/src/web.rs`) et seraient refusés sans elle.
+3. Vérifier que la page de connexion demande le code d'Access, puis qu'une activation depuis un KadenzAdmin d'essai passe toujours.
+
+Limites : l'activation reste exposée comme aujourd'hui, protégée par le frein et le journal du portail ; Access ajoute une dépendance à Cloudflare pour se connecter à la console (l'administration par `ssh -L` à travers Tailscale reste possible). Rien dans la trousse ne change avec cette option.
+
 #### Ouverture par Funnel : sur accord de l'utilisateur
+
+Voie remplacée par Cloudflare Tunnel (ci-dessus) depuis l'achat du domaine ; gardée pour mémoire.
+
 
 Étape écrite, **à ne faire que sur accord explicite de l'utilisateur** : elle ouvre la console à Internet et demande un changement dans son compte Tailscale. Jamais avec l'image d'essai ni la clé d'essai.
 

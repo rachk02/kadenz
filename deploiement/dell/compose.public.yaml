@@ -1,0 +1,86 @@
+# Ouverture de la console des licences vers Internet par Cloudflare Tunnel.
+# Surcouche, sur accord de l'utilisateur seulement :
+#
+#   docker compose -f deploiement/dell/compose.yaml -f deploiement/dell/compose.public.yaml \
+#     --env-file /etc/kadenz/kadenz.env up -d
+#
+# Procédure : docs/deploiement-vps.md, section 7, « Cloudflare Tunnel ».
+#
+# cloudflared ne fait que sortir vers Cloudflare : aucun port publié, rien ne
+# touche le réseau de l'hôte (Tailscale, ufw, sshd). Le nom public et sa route
+# vers http://portail:47382 sont réglés dans le compte Cloudflare de
+# l'utilisateur (tunnel géré à distance) ; aucun nom ni jeton ici.
+#
+# Le relais n'y passe pas : un tunnel HTTP ne porte pas son protocole TCP.
+
+services:
+  portail:
+    # --mandataire : l'adresse fixe de cloudflared sur le réseau « console ».
+    # La publication sur 127.0.0.1 reste (administration par ssh -L) : ces
+    # connexions viennent de la passerelle du réseau « portail », qui n'est
+    # pas le mandataire, et gardent l'adresse du pair.
+    command:
+      - --cle
+      - /run/secrets/cle_portail
+      - --mandataire
+      - ${IP_TUNNEL:?IP_TUNNEL manquant}
+    networks:
+      portail: {}
+      console: {}
+
+  tunnel:
+    # Image officielle épinglée par empreinte, à relever à la mise en service :
+    # cloudflare/cloudflared:<version>@sha256:<empreinte>.
+    image: ${IMAGE_CLOUDFLARED:?IMAGE_CLOUDFLARED manquant}
+    restart: unless-stopped
+    init: true
+    entrypoint: ["cloudflared"]
+    # Tunnel géré à distance : la route vers le portail est dans le compte
+    # Cloudflare. Métriques en local au conteneur seulement.
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --metrics
+      - 127.0.0.1:20241
+      - run
+      - --token-file
+      - /run/secrets/jeton_tunnel
+    volumes:
+      # Jeton du tunnel : fichier de l'hôte, hors dépôt et hors sauvegardes,
+      # propriétaire l'uid de l'image (relevé sur le Dell), mode 400.
+      - type: bind
+        source: ${JETON_TUNNEL:?JETON_TUNNEL manquant}
+        target: /run/secrets/jeton_tunnel
+        read_only: true
+        bind:
+          create_host_path: false
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 256
+    mem_limit: 256m
+    cpus: 0.5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Pas de sonde : l'image n'a ni shell ni curl, et aucune commande de santé
+    # n'est encore vérifiée dans la documentation. kadenz-sante surveille
+    # l'état du conteneur.
+    networks:
+      console:
+        ipv4_address: ${IP_TUNNEL:?IP_TUNNEL manquant}
+      # Sortie vers Cloudflare : le réseau « console », interne, n'en a pas.
+      sortie: {}
+
+networks:
+  # Interne : seuls le portail et cloudflared s'y trouvent.
+  console:
+    internal: true
+    ipam:
+      config:
+        - subnet: ${RESEAU_CONSOLE:?RESEAU_CONSOLE manquant}
+  sortie: {}

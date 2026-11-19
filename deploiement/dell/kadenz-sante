@@ -6,31 +6,39 @@
 # « restart: unless-stopped » ne redémarre pas un conteneur « unhealthy » :
 # cette alerte est la seule réaction. Une alerte au changement d'état
 # seulement (panne, puis retour), pas à chaque passage.
+#
+# Les conteneurs sont trouvés par les étiquettes de Compose, quelles que soient
+# les surcouches employées. portail et relais sont attendus : absents, ils
+# comptent comme en panne. tunnel (compose.public.yaml) n'est surveillé que
+# s'il existe : un conteneur arrêté reste listé, seul un retrait volontaire
+# (docker compose down ou rm) le fait sortir de la surveillance.
 
 set -u
 
-SOURCE=${KADENZ_SOURCE:-/opt/kadenz/source}
-REGLAGES=${KADENZ_ENV:-/etc/kadenz/kadenz.env}
+PROJET=${KADENZ_PROJET:-kadenz}
 ETAT=${KADENZ_ETAT_SANTE:-/var/lib/kadenz-sante}
 ALERTE=${ALERTE:-/usr/local/sbin/alerte}
-
-# Entrée standard fermée : sans elle, docker compose run ou exec lit la suite
-# d'un script appelant (relevé à l'essai sur le Dell).
-kz() {
-    docker compose -f "$SOURCE/deploiement/dell/compose.yaml" --env-file "$REGLAGES" "$@" </dev/null
-}
 
 umask 077
 mkdir -p "$ETAT"
 
-for service in portail relais; do
-    id=$(kz ps -a -q "$service" 2>/dev/null | head -n 1)
+for service in portail relais tunnel; do
+    # Entrée standard fermée : un appel docker ne lit pas la suite d'un script
+    # appelant (relevé à l'essai sur le Dell).
+    id=$(docker ps -a -q \
+        --filter "label=com.docker.compose.project=$PROJET" \
+        --filter "label=com.docker.compose.service=$service" \
+        2>/dev/null </dev/null | head -n 1)
     if [ -z "$id" ]; then
+        if [ "$service" = "tunnel" ]; then
+            rm -f "$ETAT/$service"
+            continue
+        fi
         etat=absent
     else
         # Conteneur arrêté : son état (exited...), et non le dernier résultat
         # de la sonde, resté « unhealthy ». En marche : l'état de la sonde ;
-        # sans sonde, en marche vaut bonne santé.
+        # sans sonde (tunnel), en marche vaut bonne santé.
         etat=$(docker inspect -f '{{if not .State.Running}}{{.State.Status}}{{else if .State.Health}}{{.State.Health.Status}}{{else}}healthy{{end}}' "$id" 2>/dev/null </dev/null) \
             || etat=absent
     fi
