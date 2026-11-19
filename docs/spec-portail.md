@@ -5,6 +5,7 @@
 | 0.1 | 2026-11-15 | Forme proposée par kadenz-34 et kadenz-8e après les décisions 60 et 61 de l'utilisateur : programme, données, rôles, émission, journal, sécurité, essais. Rien n'est codé. |
 | 0.2 | 2026-11-19 | Décisions de l'utilisateur du 2026-11-19 (section 8) : pages maud gardées, dépôt à part privé, hébergement sur le Dell. Relecture d'OpenCode et ordre des lots de durcissement D1 et D2 (section 9). |
 | 0.3 | 2026-11-19 | Lot D1 livré (section 9) ; mots de passe de 15 caractères et liste de mots de passe compromis ; option `--mandataire <adresse>` ; sous-commande `sante`. |
+| 0.4 | 2026-11-19 | Construction de l'image du portail sous Linux vérifiée sur le Dell (F9c), ainsi que l'image du relais ; lot L8 livré. |
 
 Statut : **proposé**. Les choix marqués « proposé » restent à confirmer par l'utilisateur ; les décisions citées sont celles du cahier de la phase 2.
 
@@ -17,7 +18,7 @@ Statut : **proposé**. Les choix marqués « proposé » restent à confirmer pa
 ## 2. Programme (décision 61)
 
 - Un seul programme Rust, `kadenz-portail` (crate `crates/portail`), qui sert des pages HTML simples rendues sur le serveur : formulaires, aucun framework JavaScript. Bibliothèques : axum et tokio pour le HTTP, maud pour les pages (gabarits vérifiés à la compilation, échappement automatique), argon2 pour les mots de passe (choix de kadenz-34 et kadenz-8e).
-- Il dépend de `kadenz-licence` (et de `kadenz-domaine` pour les modules), jamais de `kadenz-stockage` : le chiffrement de la base et des clés de `kadenz-stockage` repose sur la protection des données de Windows, et le portail tourne sous Linux. Il se construira dans un conteneur comme le relais ; cette construction sous Linux n'est pas encore essayée (SQLite de l'espace de travail remplacé par SQLite3 Multiple Ciphers, favicon repris de `docs/` malgré le `.dockerignore`), elle fait partie de F9c.
+- Il dépend de `kadenz-licence` (et de `kadenz-domaine` pour les modules), jamais de `kadenz-stockage` : le chiffrement de la base et des clés de `kadenz-stockage` repose sur la protection des données de Windows, et le portail tourne sous Linux. Il se construit dans un conteneur comme le relais (SQLite de l'espace de travail remplacé par SQLite3 Multiple Ciphers, favicon repris de `docs/` malgré le `.dockerignore`) ; cette construction sous Linux est vérifiée sur le Dell le 2026-11-19 (F9c), depuis 9510d00.
 - Lancement : `kadenz-portail --dossier <dossier> --cle <fichier> [--ecoute 127.0.0.1:47382]`. Le fichier de clé est la clé privée du portail en hexadécimal, au format de `kadenz-editeur`. Le programme refuse de démarrer sans `--cle` ; il ne prend jamais une clé d'essai à la place.
 - `kadenz-portail --dossier <dossier> creer-editeur <identifiant> <nom>` crée un compte éditeur, mot de passe saisi sans écho (ou lu sur l'entrée standard quand elle n'est pas un terminal). C'est la seule façon de créer un compte éditeur.
 - `kadenz-portail sante [--ecoute <adresse:port>]` interroge `/sante` du portail local : code de sortie 0 si le portail répond 200 (vérification de santé de Docker, l'image n'a pas curl).
@@ -96,6 +97,9 @@ Ordre décidé entre sessions le 2026-11-19 : D1 (livré le 2026-11-19), puis L8
   - `X-Forwarded-For` n'est lu que pour une connexion venue de l'adresse donnée par `--mandataire`, et sa dernière valeur doit être une adresse IP. Tailscale remplace cet en-tête par l'adresse source réelle (`addProxyForwardedHeaders`, `ipn/ipnlocal/serve.go`), et Caddy y ajoute la sienne en dernier. Reste à relever à l'essai sur le Dell l'adresse du mandataire vue par le conteneur (sans doute la passerelle du réseau Docker).
   - Mots de passe : 15 caractères, 72 mots de passe compromis refusés (ceux de 15 caractères ou plus parmi les 100 000 de la liste xato de SecLists, licence MIT ; provenance dans `crates/portail/donnees/mots-de-passe-compromis-SOURCE.txt`). Un changement de mot de passe ferme toutes les sessions du compte et en ouvre une nouvelle. Une session dure 12 heures au plus.
   - Fichier de clé refusé sous Unix s'il est lisible par le groupe ou par tous ; texte de la clé effacé de la mémoire après lecture. `busy_timeout` de 5 secondes.
-  - Images du portail et du relais : utilisateur 10001, sans binaire ni clé d'essai, avec `HEALTHCHECK`. Elles n'ont pas encore été construites ; elles le seront sur le Dell, avec une clé d'essai.
+  - Images du portail et du relais : utilisateur 10001, sans binaire ni clé d'essai, avec `HEALTHCHECK`. Construites et essayées sur le Dell le 2026-11-19 par kadenz-cc, depuis 9510d00 :
+    - portail (125 Mo) : seul binaire `kadenz-portail`, uid 10001 ; sans `--cle`, « clé du portail manquante » et code 1 ; clé d'essai en 644, refus qui demande `chmod 400` ; en 400, « pas une clé du portail reconnue » ;
+    - relais (121 Mo) : démarre en lecture seule, `cap-drop ALL`, `no-new-privileges`, `/donnees` en 700 à l'uid 10001 ; `kadenz-relais sante` rend 0 et le `HEALTHCHECK` passe à « healthy ».
+    - Reste l'essai d'un portail en marche (`portail_essai`, clé du banc) derrière Tailscale, pour relever l'adresse du mandataire vue par le conteneur.
 - D2, sur les pages maud : jeton ou contrôle d'origine sur `POST /connexion`, cookie `__Host-` avec durée absolue et rotation, CSP avec `script-src 'none'` et `object-src 'none'`.
 - À garder : échappement maud, SQL paramétré, jeton anti-falsification en temps constant sur les autres `POST`, empreinte des codes, clé inconnue refusée.
