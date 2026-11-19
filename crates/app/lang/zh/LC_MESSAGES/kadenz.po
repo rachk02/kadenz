@@ -3048,3 +3048,6 @@ msgstr "已删除字符：代码只含字母 A 至 Z 和数字 2 至 9"
 
 msgid "ce code mènerait votre licence au {}, avant son échéance actuelle du {} : licence gardée"
 msgstr "此代码会将许可证到期日改为 {}，早于当前到期日 {}：已保留原许可证"
+
+msgid "ce code remplacerait votre licence perpétuelle par une licence au {} : licence gardée ; adressez-vous à votre revendeur"
+msgstr "此代码会将您的永久许可证替换为有效期至 {} 的许可证：已保留原许可证；请联系您的经销商"

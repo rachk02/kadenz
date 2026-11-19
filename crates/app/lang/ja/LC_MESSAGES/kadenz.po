@@ -3048,3 +3048,6 @@ msgstr "文字を削除しました：コードに使われるのはAからZの�
 
 msgid "ce code mènerait votre licence au {}, avant son échéance actuelle du {} : licence gardée"
 msgstr "このコードではライセンスの期限が {} になり、現在の期限 {} より前になります：ライセンスは維持されました"
+
+msgid "ce code remplacerait votre licence perpétuelle par une licence au {} : licence gardée ; adressez-vous à votre revendeur"
+msgstr "このコードでは永久ライセンスが {} までのライセンスに置き換わります：ライセンスは維持されました。販売店にお問い合わせください"

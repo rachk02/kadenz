@@ -3048,3 +3048,6 @@ msgstr "character removed: a code only has letters A to Z and digits 2 to 9"
 
 msgid "ce code mènerait votre licence au {}, avant son échéance actuelle du {} : licence gardée"
 msgstr "this code would bring your license to {}, before its current expiry date of {}: license kept"
+
+msgid "ce code remplacerait votre licence perpétuelle par une licence au {} : licence gardée ; adressez-vous à votre revendeur"
+msgstr "this code would replace your perpetual license with a license until {}: license kept; please contact your reseller"

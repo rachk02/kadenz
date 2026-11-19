@@ -3048,3 +3048,6 @@ msgstr "karakter kaldırıldı: bir kodda yalnızca A-Z harfleri ve 2-9 rakamlar
 
 msgid "ce code mènerait votre licence au {}, avant son échéance actuelle du {} : licence gardée"
 msgstr "bu kod lisansınızın bitiş tarihini {} yapar, bu da mevcut bitiş tarihi olan {} tarihinden öncedir: lisans korundu"
+
+msgid "ce code remplacerait votre licence perpétuelle par une licence au {} : licence gardée ; adressez-vous à votre revendeur"
+msgstr "bu kod kalıcı lisansınızı {} tarihine kadar geçerli bir lisansla değiştirir: lisans korundu; bayinize başvurun"

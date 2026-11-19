@@ -3048,3 +3048,6 @@ msgstr "تمت إزالة حرف: لا يحتوي الرمز إلا على ال�
 
 msgid "ce code mènerait votre licence au {}, avant son échéance actuelle du {} : licence gardée"
 msgstr "هذا الرمز سيجعل انتهاء ترخيصك في {}، قبل تاريخ انتهائه الحالي {}: تم الإبقاء على الترخيص"
+
+msgid "ce code remplacerait votre licence perpétuelle par une licence au {} : licence gardée ; adressez-vous à votre revendeur"
+msgstr "هذا الرمز سيستبدل ترخيصك الدائم بترخيص ينتهي في {}: تم الإبقاء على الترخيص؛ يرجى مراجعة الموزع"

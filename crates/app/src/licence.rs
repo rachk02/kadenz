@@ -49,7 +49,8 @@ fn echeance_en_clair(l: &Licence) -> String {
 /// Message de refus quand la licence reçue reculerait l'échéance de la licence
 /// en cours encore valide (décision du 2026-11-19, défaut vu à l'essai à
 /// l'écran de la 0.2.3 : un ancien code plus court remplaçait sans avertir une
-/// licence plus longue). Une licence en cours échue n'est jamais protégée.
+/// licence plus longue). Une licence en cours échue n'est jamais protégée ;
+/// une licence perpétuelle en cours l'est contre toute licence datée.
 fn recul_d_echeance(en_cours: &EtatLicence, recue: &Licence) -> Option<String> {
     let EtatLicence::Valide(actuelle, _) = en_cours else {
         return None;
@@ -58,7 +59,17 @@ fn recul_d_echeance(en_cours: &EtatLicence, recue: &Licence) -> Option<String> {
         d.as_deref()
             .and_then(|d| chrono::NaiveDate::parse_from_str(d, "%Y-%m-%d").ok())
     };
-    let (actuelle, recue) = (jour(&actuelle.echeance)?, jour(&recue.echeance)?);
+    let recue = jour(&recue.echeance)?;
+    if actuelle.echeance.is_none() {
+        return Some(
+            crate::phrase(trf(
+                "ce code remplacerait votre licence perpétuelle par une licence au {} : licence gardée ; adressez-vous à votre revendeur",
+                &[&crate::factures::date_en_texte(recue)],
+            ))
+            .to_string(),
+        );
+    }
+    let actuelle = jour(&actuelle.echeance)?;
     (recue < actuelle).then(|| {
         crate::phrase(trf(
             "ce code mènerait votre licence au {}, avant son échéance actuelle du {} : licence gardée",
@@ -387,7 +398,8 @@ mod tests {
     }
 
     /// Une licence reçue ne recule pas l'échéance d'une licence en cours
-    /// valide ; une licence échue ou absente n'est pas protégée.
+    /// valide, ni ne remplace une perpétuelle ; une licence échue ou absente
+    /// n'est pas protégée.
     #[test]
     fn licence_recue_plus_courte_refusee() {
         crate::traduction::choisir("fr");
@@ -414,9 +426,16 @@ mod tests {
         let echue = EtatLicence::Expiree(licence(Some("2026-11-01")));
         assert_eq!(recul_d_echeance(&echue, &mensuelle), None);
         assert_eq!(recul_d_echeance(&EtatLicence::Absente, &mensuelle), None);
-        // Licence perpétuelle en cours : hors de la règle (aucune échéance).
+        // Licence perpétuelle en cours : protégée contre une licence datée
+        // (décision du 2026-11-19), pas contre une autre perpétuelle.
         let perpetuelle = EtatLicence::Valide(licence(None), None);
-        assert_eq!(recul_d_echeance(&perpetuelle, &mensuelle), None);
+        assert_eq!(
+            recul_d_echeance(&perpetuelle, &mensuelle).as_deref(),
+            Some(
+                "Ce code remplacerait votre licence perpétuelle par une licence au 18/12/2026 : licence gardée ; adressez-vous à votre revendeur."
+            )
+        );
+        assert_eq!(recul_d_echeance(&perpetuelle, &licence(None)), None);
     }
 
     /// Textes de l'échéance et de l'activation construits ici (0.2.3).
@@ -433,6 +452,7 @@ mod tests {
             "Clé enregistrée, mais la licence est échue depuis le {} : seul le socle est disponible.",
             "licence activée et enregistrée sur ce poste",
             "ce code mènerait votre licence au {}, avant son échéance actuelle du {} : licence gardée",
+            "ce code remplacerait votre licence perpétuelle par une licence au {} : licence gardée ; adressez-vous à votre revendeur",
         ];
         let manquants = crate::traduction::sans_traduction(&textes);
         assert!(manquants.is_empty(), "sans traduction : {manquants:?}");
