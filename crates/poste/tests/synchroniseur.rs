@@ -521,8 +521,15 @@ fn coupure_vue_a_l_envoi_ecriture_en_file() {
         }),
         Err(ErreurPoste::HorsConnexion)
     );
+    // Serveur arrêté : la file ne se vide pas, le délai est tenu et rien
+    // n'est perdu (fermeture du monoposte).
+    let debut = std::time::Instant::now();
+    assert!(!s.vider(Duration::from_millis(300)));
+    assert!(debut.elapsed() < Duration::from_secs(2));
+    assert_eq!(s.file(), 1);
 
     let serveur = relancer(&dossier_serveur, port);
+    assert!(s.vider(Duration::from_secs(30)));
     attendre("file envoyée", || s.file() == 0);
     let vus = RefCell::new(Vec::new());
     attendre("écriture confirmée", || {

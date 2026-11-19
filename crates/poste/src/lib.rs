@@ -438,6 +438,24 @@ impl Synchroniseur {
         self.a_envoyer.load(Ordering::Relaxed)
     }
 
+    /// Attend, au plus `delai`, que la file d'envoi soit vide (écritures en
+    /// file et écriture sans réponse) : fermeture du monoposte
+    /// (spécification du monoposte, section 4). Vrai si elle est vide. Un
+    /// délai dépassé ne perd rien : la file reste dans la copie et part au
+    /// démarrage suivant, avec les mêmes identifiants.
+    pub fn vider(&self, delai: Duration) -> bool {
+        let fin = Instant::now() + delai;
+        loop {
+            if self.file() == 0 {
+                return true;
+            }
+            if Instant::now() >= fin {
+                return false;
+            }
+            std::thread::sleep(Duration::from_millis(50));
+        }
+    }
+
     /// Note un brouillon à valider au retour du serveur (écrans, section 4).
     pub fn valider_au_retour(&self, document: &str) -> Result<(), ErreurPoste> {
         let document = document.to_string();
@@ -567,6 +585,13 @@ impl Synchroniseur {
             .unwrap_or(Err(ErreurPoste::Delai))
     }
 }
+
+// Le synchroniseur se déplace dans un autre fil (fermeture du monoposte,
+// faite hors du fil de l'interface) : une régression ne passe pas sans bruit.
+const _: fn() = || {
+    fn envoyable<T: Send>() {}
+    envoyable::<Synchroniseur>();
+};
 
 impl Drop for Synchroniseur {
     fn drop(&mut self) {

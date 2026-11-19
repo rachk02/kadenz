@@ -850,7 +850,7 @@ fn demarrage_sans_decouverte_si_le_port_udp_est_pris() {
         config.cles_portail = vec![cle_portail().verifying_key()];
         match Serveur::demarrer(config) {
             Ok(serveur) => break (serveur, pris),
-            Err(e) if e.contains("écoute") => continue,
+            Err(kadenz_serveur::ErreurDemarrage::Ecoute(_)) => continue,
             Err(e) => panic!("{e}"),
         }
     };

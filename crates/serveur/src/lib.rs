@@ -150,6 +150,59 @@ impl Config {
     }
 }
 
+/// Refus du démarrage du serveur, par cause : l'écran « Démarrage
+/// impossible » de l'application choisit son message traduit d'après la
+/// cause (spécification du monoposte, section 2) ; `Display` donne le texte
+/// de la trace.
+#[derive(Debug)]
+pub enum ErreurDemarrage {
+    /// Un autre serveur tient déjà le verrou du dossier.
+    Verrouille,
+    /// Droits du dossier impossibles à poser ou différents de ceux voulus.
+    Droits(String),
+    /// Le dossier appartient à l'autre édition (service ou serveur intégré).
+    AutreEdition,
+    /// Base du serveur ou sa clé : introuvable, d'un autre compte,
+    /// endommagée, indéchiffrable, d'une version plus récente.
+    Base(kadenz_stockage::Erreur),
+    /// Certificat ou clé TLS du serveur illisible.
+    Identite(String),
+    /// Écoute impossible, même sur un port libre.
+    Ecoute(String),
+    /// Autre cause (dossier non créé, port non noté).
+    Autre(String),
+}
+
+impl std::fmt::Display for ErreurDemarrage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ErreurDemarrage::Verrouille => {
+                write!(
+                    f,
+                    "un serveur est déjà ouvert sur ce dossier : démarrage refusé"
+                )
+            }
+            ErreurDemarrage::AutreEdition => write!(
+                f,
+                "le dossier appartient à l'autre édition du serveur : démarrage refusé"
+            ),
+            ErreurDemarrage::Base(e) => write!(f, "base du serveur : {e}"),
+            ErreurDemarrage::Droits(m)
+            | ErreurDemarrage::Identite(m)
+            | ErreurDemarrage::Ecoute(m)
+            | ErreurDemarrage::Autre(m) => write!(f, "{m}"),
+        }
+    }
+}
+
+impl std::error::Error for ErreurDemarrage {}
+
+impl From<ErreurDemarrage> for String {
+    fn from(e: ErreurDemarrage) -> String {
+        e.to_string()
+    }
+}
+
 /// Dossier du serveur intégré du monoposte, dans le profil du compte :
 /// `%LOCALAPPDATA%\Kadenz\Serveur`.
 pub fn dossier_monoposte() -> Option<PathBuf> {
@@ -183,20 +236,25 @@ pub fn empreinte_du_dossier(dossier: &Path) -> Result<String, String> {
     Ok(empreinte(&certificat))
 }
 
-fn preparer_dossier(config: &Config) -> Result<(), String> {
+fn preparer_dossier(config: &Config) -> Result<(), ErreurDemarrage> {
     // Un dossier vide, créé par un autre que le service, est traité comme neuf.
     let nouveau = fs::read_dir(&config.dossier)
         .map(|mut d| d.next().is_none())
         .unwrap_or(true);
-    fs::create_dir_all(&config.dossier)
-        .map_err(|e| format!("dossier {} non créé : {e}", config.dossier.display()))?;
+    fs::create_dir_all(&config.dossier).map_err(|e| {
+        ErreurDemarrage::Autre(format!(
+            "dossier {} non créé : {e}",
+            config.dossier.display()
+        ))
+    })?;
     if config.controle_droits {
         if nouveau {
-            droits::restreindre(&config.dossier, config.portee)?;
+            droits::restreindre(&config.dossier, config.portee).map_err(ErreurDemarrage::Droits)?;
         }
-        let ecarts = droits::verifier(&config.dossier, config.portee)?;
+        let ecarts =
+            droits::verifier(&config.dossier, config.portee).map_err(ErreurDemarrage::Droits)?;
         if !ecarts.is_empty() {
-            return Err(match config.portee {
+            return Err(ErreurDemarrage::Droits(match config.portee {
                 Portee::Machine => format!(
                     "le dossier {} doit appartenir à SYSTEM ou aux Administrateurs et leur être \
                      réservé ({}) : démarrage refusé",
@@ -209,50 +267,42 @@ fn preparer_dossier(config: &Config) -> Result<(), String> {
                     config.dossier.display(),
                     ecarts.join(", ")
                 ),
-            });
+            }));
         }
     }
     // Un dossier ne change jamais de portée : les clés déjà protégées ne
     // suivraient pas (passage au multiposte, section 8, non spécifié).
     if nouveau && config.portee == Portee::Compte {
         fs::write(config.dossier.join(NOM_MARQUE_COMPTE), b"")
-            .map_err(|e| format!("marque du dossier non écrite : {e}"))?;
+            .map_err(|e| ErreurDemarrage::Autre(format!("marque du dossier non écrite : {e}")))?;
     }
     if portee_du_dossier(&config.dossier) != config.portee {
-        return Err(format!(
-            "le dossier {} appartient à l'autre édition (serveur {}) : démarrage refusé",
-            config.dossier.display(),
-            match portee_du_dossier(&config.dossier) {
-                Portee::Compte => "intégré au poste",
-                Portee::Machine => "en service",
-            }
-        ));
+        return Err(ErreurDemarrage::AutreEdition);
     }
     Ok(())
 }
 
 /// Verrou exclusif du dossier, gardé par le serveur jusqu'à son arrêt ; un
 /// second serveur sur le même dossier est refusé.
-fn prendre_verrou(dossier: &Path) -> Result<fs::File, String> {
+fn prendre_verrou(dossier: &Path) -> Result<fs::File, ErreurDemarrage> {
     let fichier = fs::OpenOptions::new()
         .create(true)
         .truncate(false)
         .write(true)
         .open(dossier.join(NOM_VERROU))
-        .map_err(|e| format!("verrou du dossier impossible : {e}"))?;
+        .map_err(|e| ErreurDemarrage::Autre(format!("verrou du dossier impossible : {e}")))?;
     match fichier.try_lock() {
         Ok(()) => Ok(fichier),
-        Err(fs::TryLockError::WouldBlock) => Err(format!(
-            "un serveur est déjà ouvert sur le dossier {} : démarrage refusé",
-            dossier.display()
-        )),
-        Err(fs::TryLockError::Error(e)) => Err(format!("verrou du dossier impossible : {e}")),
+        Err(fs::TryLockError::WouldBlock) => Err(ErreurDemarrage::Verrouille),
+        Err(fs::TryLockError::Error(e)) => Err(ErreurDemarrage::Autre(format!(
+            "verrou du dossier impossible : {e}"
+        ))),
     }
 }
 
 /// Écoute du serveur. Avec `reprendre_port`, le port noté au démarrage
 /// précédent est repris, ou un port libre s'il est pris.
-fn ecouter_sur(config: &Config, conn: &Connection) -> Result<TcpListener, String> {
+fn ecouter_sur(config: &Config, conn: &Connection) -> Result<TcpListener, ErreurDemarrage> {
     let voulue = match admin::port_note(conn).filter(|_| config.reprendre_port) {
         Some(port) => SocketAddr::new(config.adresse.ip(), port),
         None => config.adresse,
@@ -260,10 +310,13 @@ fn ecouter_sur(config: &Config, conn: &Connection) -> Result<TcpListener, String
     match TcpListener::bind(voulue) {
         Ok(ecoute) => Ok(ecoute),
         Err(_) if config.reprendre_port && voulue.port() != 0 => {
-            TcpListener::bind(SocketAddr::new(voulue.ip(), 0))
-                .map_err(|e| format!("écoute sur {} impossible : {e}", voulue.ip()))
+            TcpListener::bind(SocketAddr::new(voulue.ip(), 0)).map_err(|e| {
+                ErreurDemarrage::Ecoute(format!("écoute sur {} impossible : {e}", voulue.ip()))
+            })
         }
-        Err(e) => Err(format!("écoute sur {voulue} impossible : {e}")),
+        Err(e) => Err(ErreurDemarrage::Ecoute(format!(
+            "écoute sur {voulue} impossible : {e}"
+        ))),
     }
 }
 
@@ -541,19 +594,21 @@ pub struct Serveur {
 
 impl Serveur {
     /// Prépare le dossier, ouvre la base, puis écoute ; rend la main aussitôt.
-    pub fn demarrer(config: Config) -> Result<Serveur, String> {
+    pub fn demarrer(config: Config) -> Result<Serveur, ErreurDemarrage> {
         preparer_dossier(&config)?;
         let verrou = prendre_verrou(&config.dossier)?;
-        let identite = identite(&config.dossier, config.portee)?;
-        let tls = config_tls(&identite)?;
+        let identite =
+            identite(&config.dossier, config.portee).map_err(ErreurDemarrage::Identite)?;
+        let tls = config_tls(&identite).map_err(ErreurDemarrage::Identite)?;
         let conn =
             kadenz_stockage::ouvrir_serveur_avec(&config.dossier.join(NOM_BASE), config.portee)
-                .map_err(|e| format!("base du serveur : {e}"))?;
-        let entreprise = synchro::identifiant_entreprise(&conn).map_err(|e| e.to_string())?;
-        let generation =
-            synchro::generation(&conn).map_err(|e| format!("base du serveur : {e}"))?;
+                .map_err(ErreurDemarrage::Base)?;
+        let entreprise = synchro::identifiant_entreprise(&conn).map_err(ErreurDemarrage::Base)?;
+        let generation = synchro::generation(&conn).map_err(ErreurDemarrage::Base)?;
         let ecoute = ecouter_sur(&config, &conn)?;
-        let adresse = ecoute.local_addr().map_err(|e| e.to_string())?;
+        let adresse = ecoute
+            .local_addr()
+            .map_err(|e| ErreurDemarrage::Ecoute(e.to_string()))?;
         // Un port UDP déjà pris n'empêche pas le démarrage (décision 44) : les
         // postes saisissent alors l'adresse, ou collent le code complet.
         let mut avertissement = None;
@@ -571,7 +626,7 @@ impl Serveur {
         } else {
             None
         };
-        admin::noter_port(&conn, adresse.port())?;
+        admin::noter_port(&conn, adresse.port()).map_err(ErreurDemarrage::Autre)?;
         let base = Base::lancer(conn);
         let arret = Arc::new(AtomicBool::new(false));
         let contexte = Arc::new(Contexte {
@@ -734,6 +789,14 @@ fn planifier(base: Base, dossier: PathBuf, arret: Arc<AtomicBool>) {
         thread::sleep(Duration::from_millis(250));
     }
 }
+
+// Le serveur se déplace dans un autre fil (fermeture du monoposte, faite hors
+// du fil de l'interface) : une régression ne passe pas sans bruit.
+const _: fn() = || {
+    fn envoyable<T: Send>() {}
+    envoyable::<Serveur>();
+    envoyable::<ErreurDemarrage>();
+};
 
 impl Drop for Serveur {
     fn drop(&mut self) {

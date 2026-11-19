@@ -9,8 +9,8 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener};
 use std::path::{Path, PathBuf};
 
 use kadenz_serveur::{
-    Config, NOM_BASE, NOM_CERTIFICAT, NOM_MARQUE_COMPTE, PORT_PAR_DEFAUT, Serveur, admin, droits,
-    portee_du_dossier,
+    Config, ErreurDemarrage, NOM_BASE, NOM_CERTIFICAT, NOM_MARQUE_COMPTE, PORT_PAR_DEFAUT, Serveur,
+    admin, droits, portee_du_dossier, sauvegardes,
 };
 use kadenz_stockage::chiffrement::{self, Portee};
 
@@ -85,10 +85,14 @@ fn multiposte_inchange() {
     serveur.arreter();
 
     // Un dossier de service n'est pas pris par le serveur intégré.
+    assert_eq!(
+        sauvegardes::dossier_par_defaut_de(&d),
+        sauvegardes::dossier_par_defaut()
+    );
     let mut integre = Config::monoposte(d.clone());
     integre.controle_droits = false;
     let refus = Serveur::demarrer(integre).err().unwrap();
-    assert!(refus.contains("autre édition"), "{refus}");
+    assert!(matches!(refus, ErreurDemarrage::AutreEdition), "{refus}");
     let _ = std::fs::remove_dir_all(&d);
 }
 
@@ -119,7 +123,12 @@ fn serveur_integre_du_monoposte() {
     let refus = Serveur::demarrer(Config::monoposte(d.clone()))
         .err()
         .unwrap();
-    assert!(refus.contains("déjà ouvert"), "{refus}");
+    assert!(matches!(refus, ErreurDemarrage::Verrouille), "{refus}");
+    // Sauvegardes à part de celles de la V1, sous son dossier.
+    let sauvegardes_v1 = kadenz_stockage::sauvegarde::dossier_par_defaut();
+    let par_defaut = sauvegardes::dossier_par_defaut_de(&d);
+    assert_eq!(par_defaut.parent(), Some(sauvegardes_v1.as_path()));
+    assert_eq!(sauvegardes::lire_reglage(&d).dossier, par_defaut);
 
     // Relancé : clés relues, même port.
     let port = serveur.adresse().port();
@@ -146,6 +155,6 @@ fn serveur_integre_du_monoposte() {
     service.controle_droits = false;
     service.decouverte = false;
     let refus = Serveur::demarrer(service).err().unwrap();
-    assert!(refus.contains("autre édition"), "{refus}");
+    assert!(matches!(refus, ErreurDemarrage::AutreEdition), "{refus}");
     std::fs::remove_dir_all(&d).unwrap();
 }

@@ -70,6 +70,21 @@ pub fn dossier_par_defaut() -> PathBuf {
         .join("Sauvegardes")
 }
 
+/// Dossier par défaut des sauvegardes d'un serveur selon la portée de son
+/// dossier des données : celui du service pour le multiposte ; pour le
+/// serveur intégré du monoposte, `Documents\Kadenz\Sauvegardes\Serveur`,
+/// sous le dossier que les clients de la V1 connaissent, mais à part : les
+/// sauvegardes de la V1 portent les mêmes noms, et la rotation des
+/// sauvegardes automatiques supprimerait les leurs.
+pub fn dossier_par_defaut_de(donnees: &Path) -> PathBuf {
+    match portee_du_dossier(donnees) {
+        kadenz_stockage::chiffrement::Portee::Machine => dossier_par_defaut(),
+        kadenz_stockage::chiffrement::Portee::Compte => {
+            sauvegarde::dossier_par_defaut().join("Serveur")
+        }
+    }
+}
+
 fn heure_par_defaut() -> NaiveTime {
     NaiveTime::from_hms_opt(HEURE_PAR_DEFAUT.0, HEURE_PAR_DEFAUT.1, 0).unwrap_or_default()
 }
@@ -92,7 +107,7 @@ pub fn lire_reglage(donnees: &Path) -> Reglage {
             .and_then(Value::as_str)
             .filter(|d| !d.is_empty())
             .map(PathBuf::from)
-            .unwrap_or_else(dossier_par_defaut),
+            .unwrap_or_else(|| dossier_par_defaut_de(donnees)),
         heure: brut
             .get("heure")
             .and_then(Value::as_str)
