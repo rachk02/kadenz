@@ -252,17 +252,21 @@ pub fn ouvrir(chemin: &Path) -> Resultat<Connection> {
 /// dossier (SYSTEM et Administrateurs) sont posés par le serveur. Tous les
 /// modules y sont actifs en attendant la licence d'entreprise (F3).
 pub fn ouvrir_serveur(chemin: &Path) -> Resultat<Connection> {
+    ouvrir_serveur_avec(chemin, chiffrement::Portee::Machine)
+}
+
+/// Comme [`ouvrir_serveur`], avec la portée de protection de la clé d'une base
+/// neuve : `Machine` pour le service du multiposte, `Compte` pour le serveur
+/// intégré du monoposte (spécification du monoposte, section 2.3). La clé
+/// d'une base existante se lit quelle que soit sa portée.
+pub fn ouvrir_serveur_avec(chemin: &Path, portee: chiffrement::Portee) -> Resultat<Connection> {
     if let Some(dossier) = chemin.parent() {
         std::fs::create_dir_all(dossier)?;
     }
     let neuve = std::fs::metadata(chemin)
         .map(|m| m.len() == 0)
         .unwrap_or(true);
-    let cle = chiffrement::cle_avec(
-        &chiffrement::chemin_cle(chemin),
-        neuve,
-        chiffrement::Portee::Machine,
-    )?;
+    let cle = chiffrement::cle_avec(&chiffrement::chemin_cle(chemin), neuve, portee)?;
     let mut conn = Connection::open(chemin)?;
     chiffrement::appliquer_cle(&conn, &cle)?;
     conn.pragma_update(None, "journal_mode", "WAL")?;

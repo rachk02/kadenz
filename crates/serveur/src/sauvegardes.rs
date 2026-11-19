@@ -24,7 +24,7 @@ use std::time::Duration;
 
 use chrono::{Local, NaiveDateTime, NaiveTime};
 use kadenz_protocole::sauvegarde::AvertissementSauvegarde;
-use kadenz_stockage::chiffrement::{self, Portee};
+use kadenz_stockage::chiffrement;
 use kadenz_stockage::comptes::LONGUEUR_MIN_MOT_DE_PASSE;
 use kadenz_stockage::sauvegarde::{self, Genre, InfoSauvegarde};
 use rusqlite::Connection;
@@ -32,7 +32,7 @@ use serde_json::{Value, json};
 
 pub use kadenz_stockage::sauvegarde::{ARRETS_GARDES, AUTOMATIQUES_GARDEES};
 
-use crate::{NOM_CERTIFICAT, NOM_CLE_TLS};
+use crate::{NOM_CERTIFICAT, NOM_CLE_TLS, portee_du_dossier};
 
 /// Fichier du réglage, dans le dossier des données du serveur.
 pub const FICHIER_REGLAGE: &str = "sauvegardes.reglage";
@@ -138,7 +138,7 @@ pub fn enregistrer_reglage(
                 "le mot de passe des sauvegardes doit compter au moins {LONGUEUR_MIN_MOT_DE_PASSE} caractères"
             ));
         }
-        let protege = chiffrement::proteger(mot_de_passe.as_bytes(), Portee::Machine)
+        let protege = chiffrement::proteger(mot_de_passe.as_bytes(), portee_du_dossier(donnees))
             .ok_or("protection du mot de passe par Windows impossible")?;
         brut.insert("mot_de_passe".into(), Value::String(en_hexa(&protege)));
     }

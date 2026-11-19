@@ -14,7 +14,7 @@ use kadenz_stockage::installation::{self, InstallationInitiale};
 use kadenz_stockage::{Erreur, abonnement, synchro};
 use rusqlite::{Connection, OptionalExtension};
 
-use crate::{NOM_BASE, PORT_PAR_DEFAUT, empreinte_du_dossier};
+use crate::{NOM_BASE, PORT_PAR_DEFAUT, empreinte_du_dossier, portee_du_dossier};
 
 pub use crate::restauration::{
     BilanRestauration, Restauration, arreter_service, demarrer_service, preparer_restauration,
@@ -24,10 +24,11 @@ pub use kadenz_stockage::sauvegarde::RESTAURATION_INTERROMPUE;
 
 const CLE_PORT: &str = "port_serveur";
 
-/// Ouvre la base du serveur (clé protégée au niveau de la machine), avec un
-/// délai d'attente sur verrou : le service peut écrire en même temps.
+/// Ouvre la base du serveur (clé protégée selon la portée du dossier : la
+/// machine pour le service, le compte pour le serveur intégré), avec un
+/// délai d'attente sur verrou : le serveur peut écrire en même temps.
 pub fn ouvrir_base(dossier: &Path) -> Result<Connection, String> {
-    kadenz_stockage::ouvrir_serveur(&dossier.join(NOM_BASE))
+    kadenz_stockage::ouvrir_serveur_avec(&dossier.join(NOM_BASE), portee_du_dossier(dossier))
         .map_err(|e| format!("base du serveur : {e}"))
 }
 
@@ -144,6 +145,11 @@ pub(crate) fn noter_port(conn: &Connection, port: u16) -> Result<(), String> {
 /// Port d'écoute noté au dernier démarrage du service, sinon le port par
 /// défaut.
 pub fn port(conn: &Connection) -> u16 {
+    port_note(conn).unwrap_or(PORT_PAR_DEFAUT)
+}
+
+/// Port d'écoute noté au dernier démarrage, s'il y en a un.
+pub fn port_note(conn: &Connection) -> Option<u16> {
     conn.query_row(
         "SELECT valeur FROM parametre_systeme WHERE cle = ?1",
         [CLE_PORT],
@@ -153,7 +159,6 @@ pub fn port(conn: &Connection) -> u16 {
     .ok()
     .flatten()
     .and_then(|p| p.parse().ok())
-    .unwrap_or(PORT_PAR_DEFAUT)
 }
 
 /// Adresse IPv4 de la machine sur le réseau local, par la table de routage

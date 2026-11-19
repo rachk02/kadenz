@@ -62,6 +62,14 @@ pub const NOM_CERTIFICAT: &str = "serveur.crt";
 /// Clé privée TLS, protégée par Windows au niveau de la machine.
 const NOM_CLE_TLS: &str = "serveur.cle-tls";
 
+/// Marque d'un dossier de serveur intégré (portée `Compte`, monoposte) :
+/// sans elle, le dossier est celui d'un service (portée `Machine`).
+pub const NOM_MARQUE_COMPTE: &str = "portee-compte";
+
+/// Verrou du dossier, tenu tant que le serveur tourne : deux serveurs ne
+/// s'ouvrent jamais sur la même base.
+pub const NOM_VERROU: &str = "serveur.verrou";
+
 /// Échecs de connexion permis avant la première attente.
 const ECHECS_LIBRES: u32 = 3;
 /// Première attente imposée, doublée à chaque nouvel échec.
@@ -100,6 +108,15 @@ pub struct Config {
     /// Version du protocole parlée : [`VERSION`], sauf pour les essais d'un
     /// poste face à un serveur d'une autre version (F10).
     pub version_protocole: u32,
+    /// Portée de la protection des clés et droits du dossier : `Machine` pour
+    /// le service du multiposte, `Compte` pour le serveur intégré du
+    /// monoposte (spécification du monoposte, section 2.3).
+    pub portee: Portee,
+    /// Écoute sur le port noté au démarrage précédent (adresse de
+    /// `adresse`), ou sur un port libre s'il est pris ; le port effectif est
+    /// noté et rendu par [`Serveur::adresse`]. Pour le monoposte, dont le
+    /// poste réécrit son adresse (section 2.1).
+    pub reprendre_port: bool,
 }
 
 impl Config {
@@ -114,7 +131,39 @@ impl Config {
             cles_portail: kadenz_licence::entreprise::cles_portail(),
             decouverte: true,
             version_protocole: VERSION,
+            portee: Portee::Machine,
+            reprendre_port: false,
         }
+    }
+
+    /// Serveur intégré du monoposte : 127.0.0.1 seulement, sans découverte,
+    /// clés et droits au niveau du compte, port repris d'un lancement à
+    /// l'autre.
+    pub fn monoposte(dossier: PathBuf) -> Config {
+        Config {
+            adresse: SocketAddr::from(([127, 0, 0, 1], 0)),
+            decouverte: false,
+            portee: Portee::Compte,
+            reprendre_port: true,
+            ..Config::nouvelle(dossier)
+        }
+    }
+}
+
+/// Dossier du serveur intégré du monoposte, dans le profil du compte :
+/// `%LOCALAPPDATA%\Kadenz\Serveur`.
+pub fn dossier_monoposte() -> Option<PathBuf> {
+    std::env::var_os("LOCALAPPDATA")
+        .map(PathBuf::from)
+        .map(|d| d.join("Kadenz").join("Serveur"))
+}
+
+/// Portée d'un dossier de serveur, d'après sa marque.
+pub fn portee_du_dossier(dossier: &Path) -> Portee {
+    if dossier.join(NOM_MARQUE_COMPTE).is_file() {
+        Portee::Compte
+    } else {
+        Portee::Machine
     }
 }
 
@@ -143,25 +192,85 @@ fn preparer_dossier(config: &Config) -> Result<(), String> {
         .map_err(|e| format!("dossier {} non créé : {e}", config.dossier.display()))?;
     if config.controle_droits {
         if nouveau {
-            droits::restreindre(&config.dossier)?;
+            droits::restreindre(&config.dossier, config.portee)?;
         }
-        let ecarts = droits::verifier(&config.dossier)?;
+        let ecarts = droits::verifier(&config.dossier, config.portee)?;
         if !ecarts.is_empty() {
-            return Err(format!(
-                "le dossier {} doit appartenir à SYSTEM ou aux Administrateurs et leur être \
-                 réservé ({}) : démarrage refusé",
-                config.dossier.display(),
-                ecarts.join(", ")
-            ));
+            return Err(match config.portee {
+                Portee::Machine => format!(
+                    "le dossier {} doit appartenir à SYSTEM ou aux Administrateurs et leur être \
+                     réservé ({}) : démarrage refusé",
+                    config.dossier.display(),
+                    ecarts.join(", ")
+                ),
+                Portee::Compte => format!(
+                    "le dossier {} doit appartenir au compte Windows courant et lui être \
+                     réservé, avec SYSTEM ({}) : démarrage refusé",
+                    config.dossier.display(),
+                    ecarts.join(", ")
+                ),
+            });
         }
     }
+    // Un dossier ne change jamais de portée : les clés déjà protégées ne
+    // suivraient pas (passage au multiposte, section 8, non spécifié).
+    if nouveau && config.portee == Portee::Compte {
+        fs::write(config.dossier.join(NOM_MARQUE_COMPTE), b"")
+            .map_err(|e| format!("marque du dossier non écrite : {e}"))?;
+    }
+    if portee_du_dossier(&config.dossier) != config.portee {
+        return Err(format!(
+            "le dossier {} appartient à l'autre édition (serveur {}) : démarrage refusé",
+            config.dossier.display(),
+            match portee_du_dossier(&config.dossier) {
+                Portee::Compte => "intégré au poste",
+                Portee::Machine => "en service",
+            }
+        ));
+    }
     Ok(())
+}
+
+/// Verrou exclusif du dossier, gardé par le serveur jusqu'à son arrêt ; un
+/// second serveur sur le même dossier est refusé.
+fn prendre_verrou(dossier: &Path) -> Result<fs::File, String> {
+    let fichier = fs::OpenOptions::new()
+        .create(true)
+        .truncate(false)
+        .write(true)
+        .open(dossier.join(NOM_VERROU))
+        .map_err(|e| format!("verrou du dossier impossible : {e}"))?;
+    match fichier.try_lock() {
+        Ok(()) => Ok(fichier),
+        Err(fs::TryLockError::WouldBlock) => Err(format!(
+            "un serveur est déjà ouvert sur le dossier {} : démarrage refusé",
+            dossier.display()
+        )),
+        Err(fs::TryLockError::Error(e)) => Err(format!("verrou du dossier impossible : {e}")),
+    }
+}
+
+/// Écoute du serveur. Avec `reprendre_port`, le port noté au démarrage
+/// précédent est repris, ou un port libre s'il est pris.
+fn ecouter_sur(config: &Config, conn: &Connection) -> Result<TcpListener, String> {
+    let voulue = match admin::port_note(conn).filter(|_| config.reprendre_port) {
+        Some(port) => SocketAddr::new(config.adresse.ip(), port),
+        None => config.adresse,
+    };
+    match TcpListener::bind(voulue) {
+        Ok(ecoute) => Ok(ecoute),
+        Err(_) if config.reprendre_port && voulue.port() != 0 => {
+            TcpListener::bind(SocketAddr::new(voulue.ip(), 0))
+                .map_err(|e| format!("écoute sur {} impossible : {e}", voulue.ip()))
+        }
+        Err(e) => Err(format!("écoute sur {voulue} impossible : {e}")),
+    }
 }
 
 /// Identité TLS du serveur, créée au premier démarrage. Tant que le
 /// certificat n'est pas écrit, son empreinte n'a pu être donnée à aucun poste :
 /// une clé seule est remplacée.
-fn identite(dossier: &Path) -> Result<Identite, String> {
+fn identite(dossier: &Path, portee: Portee) -> Result<Identite, String> {
     let chemin_certificat = dossier.join(NOM_CERTIFICAT);
     let chemin_cle = dossier.join(NOM_CLE_TLS);
     if chemin_certificat.exists() {
@@ -174,8 +283,8 @@ fn identite(dossier: &Path) -> Result<Identite, String> {
         return Ok(Identite { certificat, cle });
     }
     let nouvelle = Identite::nouvelle(NOM_TLS)?;
-    let protegee = chiffrement::proteger(&nouvelle.cle, Portee::Machine)
-        .ok_or("clé TLS du serveur non protégée")?;
+    let protegee =
+        chiffrement::proteger(&nouvelle.cle, portee).ok_or("clé TLS du serveur non protégée")?;
     fs::write(&chemin_cle, protegee).map_err(|e| format!("clé TLS non écrite : {e}"))?;
     fs::write(&chemin_certificat, &nouvelle.certificat)
         .map_err(|e| format!("certificat non écrit : {e}"))?;
@@ -425,21 +534,25 @@ pub struct Serveur {
     relais: Option<JoinHandle<()>>,
     dossier: PathBuf,
     avertissement: Option<String>,
+    /// Verrou du dossier : rendu quand le serveur est détruit, après l'arrêt
+    /// de ses fils (`Drop`).
+    _verrou: fs::File,
 }
 
 impl Serveur {
     /// Prépare le dossier, ouvre la base, puis écoute ; rend la main aussitôt.
     pub fn demarrer(config: Config) -> Result<Serveur, String> {
         preparer_dossier(&config)?;
-        let identite = identite(&config.dossier)?;
+        let verrou = prendre_verrou(&config.dossier)?;
+        let identite = identite(&config.dossier, config.portee)?;
         let tls = config_tls(&identite)?;
-        let conn = kadenz_stockage::ouvrir_serveur(&config.dossier.join(NOM_BASE))
-            .map_err(|e| format!("base du serveur : {e}"))?;
+        let conn =
+            kadenz_stockage::ouvrir_serveur_avec(&config.dossier.join(NOM_BASE), config.portee)
+                .map_err(|e| format!("base du serveur : {e}"))?;
         let entreprise = synchro::identifiant_entreprise(&conn).map_err(|e| e.to_string())?;
         let generation =
             synchro::generation(&conn).map_err(|e| format!("base du serveur : {e}"))?;
-        let ecoute = TcpListener::bind(config.adresse)
-            .map_err(|e| format!("écoute sur {} impossible : {e}", config.adresse))?;
+        let ecoute = ecouter_sur(&config, &conn)?;
         let adresse = ecoute.local_addr().map_err(|e| e.to_string())?;
         // Un port UDP déjà pris n'empêche pas le démarrage (décision 44) : les
         // postes saisissent alors l'adresse, ou collent le code complet.
@@ -514,6 +627,7 @@ impl Serveur {
             relais,
             dossier: config.dossier,
             avertissement,
+            _verrou: verrou,
         })
     }
 

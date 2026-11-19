@@ -23,7 +23,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use kadenz_stockage::chiffrement::{self, Portee};
+use kadenz_stockage::chiffrement;
 use kadenz_stockage::sauvegarde::{self, Genre, Restauration as Variantes};
 use kadenz_stockage::{Erreur, abonnement, distance, synchro};
 use rusqlite::{Connection, OptionalExtension};
@@ -195,7 +195,7 @@ pub fn restaurer_si(
     if let Some((certificat, cle)) = &lue.identite {
         identite_remplacee =
             fs::read(donnees.join(NOM_CERTIFICAT)).ok().as_ref() != Some(certificat);
-        let protegee = chiffrement::proteger(cle, Portee::Machine)
+        let protegee = chiffrement::proteger(cle, crate::portee_du_dossier(donnees))
             .ok_or("protection de la clé TLS par Windows impossible")?;
         fichiers.push((donnees.join(NOM_CERTIFICAT), certificat.clone()));
         fichiers.push((donnees.join(NOM_CLE_TLS), protegee));
@@ -242,7 +242,7 @@ pub fn restaurer_si(
         &preparee.travail,
         &preparee.mot_de_passe,
         &Variantes {
-            portee: Portee::Machine,
+            portee: crate::portee_du_dossier(donnees),
             avant: &avant,
             ajuster: &ajuster,
             fichiers: &fichiers,
