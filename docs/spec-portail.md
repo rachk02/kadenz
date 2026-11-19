@@ -16,7 +16,7 @@
 | 0.12 | 2026-11-19 | Lot B corrigé avant tout déploiement : les sous-commandes ouvrent la base sans la clé du portail et ne chiffrent ni ne lisent aucun secret (une clé jetable les aurait rendus illisibles) ; une valeur chiffrée n'est jamais réécrite. |
 | 0.13 | 2026-11-19 | Audit d'OpenCode, lot C : archivage du journal (schéma 11, table `journal_depart`), sous-commande `journal-archiver`, `journal-verifier --archive` qui vérifie l'export complet avec la base. |
 | 0.14 | 2026-11-19 | Pages de connexion au thème « piliers » adopté par l'utilisateur (noir, vert sauge, colonnes en points servies en SVG de 47 Ko par le portail, sans script) ; code de connexion en champ unique en attendant la décision sur le script. Le portail reste hors index : robots.txt, X-Robots-Tag, meta robots. |
-| 0.15 | 2026-11-19 | Code de connexion en six cases (choix de l'utilisateur) : seul script du portail, servi par lui avec une empreinte dans son nom ; CSP `script-src 'self'`, sans script en ligne ni évaluation ; sans script, le champ unique reste (section 9). Pages de connexion sans cadre ni largeur maximale, noir sur toute la fenêtre, colonnes entières à toute largeur (demande de l'utilisateur). |
+| 0.15 | 2026-11-19 | Code de connexion en six cases (choix de l'utilisateur) : seul script du portail, servi par lui avec une empreinte dans son nom ; CSP `script-src 'self'`, sans script en ligne ni évaluation ; sans script, le champ unique reste (section 9). Pages de connexion : cadre et taille gardés, ligne de bordure retirée (demande de l'utilisateur). |
 
 Statut : **proposé**. Les choix marqués « proposé » restent à confirmer par l'utilisateur ; les décisions citées sont celles du cahier de la phase 2.
 

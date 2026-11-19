@@ -149,14 +149,14 @@ legend { padding: 0 6px; }
 /* Connexion : thème « piliers », adopté par l'utilisateur le 2026-11-19
    (docs/marque/propositions-2026-11-19-portail) : noir pur, vert sauge,
    colonnes fixes en points (image servie par le portail), champs pleins
-   arrondis. Code de connexion en six cases par le script du portail. Sans
-   cadre ni largeur maximale : noir sur toute la fenêtre (demande de
-   l'utilisateur du 2026-11-19). */
-body.connexion { background: #000000; color: #F2F3EF; margin: 0; padding: 0; }
+   arrondis. Code de connexion en six cases par le script du portail. Cadre
+   sans ligne de bordure (demande de l'utilisateur du 2026-11-19). */
+body.connexion { background: #000000; color: #F2F3EF; padding: 32px; }
 body.connexion :focus-visible { outline-color: #A7B58E; }
 .cadre-connexion {
   display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  min-height: 100vh; background: #000000;
+  max-width: 1360px; min-height: calc(100vh - 64px); margin: 0 auto; padding: 10px;
+  background: #000000; border: 0;
 }
 .colonne-connexion { display: flex; align-items: center; justify-content: center; padding: 56px 40px; }
 .connexion-boite { width: 100%; max-width: 380px; }
@@ -192,8 +192,8 @@ body.connexion .message-erreur { color: #F08A8A; background: rgba(229, 83, 75, 0
 .separateur { display: flex; align-items: center; gap: 12px; margin: 32px 0 16px; font-size: 12px; color: #9DA197; }
 .separateur::before, .separateur::after { content: ""; flex: 1; height: 1px; background: #2A2C2E; }
 .connexion-pied { margin: 0; font-size: 13px; line-height: 1.6; text-align: center; color: #9DA197; }
-.illustration-connexion { position: relative; min-height: 520px; overflow: hidden; background: #000000; }
-.illustration-connexion img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
+.illustration-connexion { position: relative; min-height: 520px; overflow: hidden; border-radius: 14px; background: #000000; }
+.illustration-connexion img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center bottom; }
 body.connexion [hidden] { display: none !important; }
 /* Code en six cases (statique/code-connexion-*.js) */
 .chiffres-code { min-width: 0; margin: 0 0 4px; padding: 0; border: 0; border-radius: 0; }
@@ -232,7 +232,8 @@ body.connexion .chiffres-code.faux input { background: #2A0F0F; border-color: #E
 .page-simple { max-width: 560px; margin: 0 auto; padding: 64px 16px; }
 
 @media (max-width: 860px) {
-  .cadre-connexion { grid-template-columns: 1fr; }
+  body.connexion { padding: 12px; }
+  .cadre-connexion { grid-template-columns: 1fr; min-height: calc(100vh - 24px); }
   .illustration-connexion { display: none; }
   .colonne-connexion { padding: 40px 20px; }
 }
