@@ -6,8 +6,9 @@
 //
 // Six chiffres saisis : le formulaire part au serveur, qui seul vérifie le
 // code. Réponse en redirection (seule réponse d'un code accepté) : cases
-// vertes, avis, puis ouverture du portail. Toute autre réponse : cases
-// rouges et message du serveur ; l'étape encore valable, les cases se vident,
+// vertes, avis lu par les lecteurs d'écran, puis ouverture du portail. Toute
+// autre réponse : cases rouges et message du serveur (lu de même, invisible à
+// l'écran) ; l'étape encore valable, les cases se vident,
 // sinon retour à la connexion. Les codes de secours passent par le champ
 // unique, rendu par « Utiliser un code de secours ».
 
@@ -59,7 +60,6 @@
   avis.className = "avis-code";
   avis.setAttribute("role", "status");
   avis.setAttribute("aria-live", "polite");
-  avis.hidden = true;
 
   const bascule = document.createElement("p");
   bascule.className = "bascule-code";
@@ -78,16 +78,18 @@
   champ.autofocus = false;
   cases[0].focus();
 
-  // ----- Avis -----
+  // ----- Avis : invisible à l'écran (choix de l'utilisateur, la couleur
+  // des bordures suffit à la vue), lu par les lecteurs d'écran. La zone reste
+  // en place pour que chaque nouveau texte soit annoncé. -----
 
   function montrer(etat, texte) {
     avis.className = "avis-code avis-code-" + etat;
     avis.textContent = texte;
-    avis.hidden = false;
   }
 
   function cacher() {
-    avis.hidden = true;
+    avis.className = "avis-code";
+    avis.textContent = "";
   }
 
   // ----- Envoi -----

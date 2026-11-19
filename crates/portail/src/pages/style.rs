@@ -150,7 +150,10 @@ legend { padding: 0 6px; }
    (docs/marque/propositions-2026-11-19-portail) : noir pur, vert sauge,
    colonnes fixes en points (image servie par le portail), champs pleins
    arrondis. Code de connexion en six cases par le script du portail. Cadre
-   sans ligne de bordure (demande de l'utilisateur du 2026-11-19). */
+   sans ligne de bordure (demande de l'utilisateur du 2026-11-19). Petits
+   textes en gris #8E8E93 (systemGray d'Apple, 6,4:1 sur le noir), surtitre en
+   sauge ; code faux ou juste montré par la seule bordure des cases, rouge et
+   vert d'Apple (proposition C de planche-code-gris, 2026-11-19). */
 body.connexion { background: #000000; color: #F2F3EF; padding: 32px; }
 body.connexion :focus-visible { outline-color: #A7B58E; }
 .cadre-connexion {
@@ -164,13 +167,13 @@ body.connexion :focus-visible { outline-color: #A7B58E; }
 .connexion-symbole .symbole { width: 52px; height: 52px; }
 .surtitre { color: #A7B58E; font-weight: 600; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 10px; }
 body.connexion h1 { font-family: "Inter", system-ui, sans-serif; font-weight: 600; font-size: 28px; color: #F2F3EF; margin: 0 0 10px; }
-body.connexion .texte { color: #9DA197; font-size: 14px; line-height: 1.6; margin: 0 0 32px; }
+body.connexion .texte { color: #8E8E93; font-size: 14px; line-height: 1.6; margin: 0 0 32px; }
 body.connexion .champ { gap: 8px; margin-bottom: 18px; }
-body.connexion .champ label { color: #F2F3EF; font-size: 13px; }
+body.connexion .champ label { color: #8E8E93; font-size: 13px; }
 .saisie { position: relative; }
 .saisie svg {
   position: absolute; left: 15px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%);
-  fill: none; stroke: #9DA197; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; pointer-events: none;
+  fill: none; stroke: #8E8E93; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; pointer-events: none;
 }
 body.connexion input[type="text"], body.connexion input[type="password"] {
   height: 48px; padding: 0 16px 0 44px; font-size: 15px; color: #F2F3EF;
@@ -187,42 +190,40 @@ body.connexion input:focus { outline: none; background: #1D1F21; border-color: #
 .bouton-sauge:focus-visible { outline: 2px solid #BCC9A4; outline-offset: 3px; }
 body.connexion .message-erreur { color: #F08A8A; background: rgba(229, 83, 75, 0.1); border-color: rgba(229, 83, 75, 0.38); border-radius: 9px; }
 .connexion-retour { margin: 20px 0 0; text-align: center; font-size: 14px; }
-.connexion-retour a { color: #F2F3EF; text-decoration-color: #9DA197; text-underline-offset: 3px; }
-.connexion-retour a:hover { color: #FFFFFF; }
-.separateur { display: flex; align-items: center; gap: 12px; margin: 32px 0 16px; font-size: 12px; color: #9DA197; }
+.connexion-retour a { color: #8E8E93; text-decoration: none; }
+.connexion-retour a:hover { color: #F2F3EF; }
+.separateur { display: flex; align-items: center; gap: 12px; margin: 32px 0 16px; font-size: 12px; color: #8E8E93; }
 .separateur::before, .separateur::after { content: ""; flex: 1; height: 1px; background: #2A2C2E; }
-.connexion-pied { margin: 0; font-size: 13px; line-height: 1.6; text-align: center; color: #9DA197; }
+.connexion-pied { margin: 0; font-size: 13px; line-height: 1.6; text-align: center; color: #8E8E93; }
 .illustration-connexion { position: relative; min-height: 520px; overflow: hidden; border-radius: 14px; background: #000000; }
 .illustration-connexion img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center bottom; }
 body.connexion [hidden] { display: none !important; }
 /* Code en six cases (statique/code-connexion-*.js) */
 .chiffres-code { min-width: 0; margin: 0 0 4px; padding: 0; border: 0; border-radius: 0; }
-.chiffres-code legend { margin-bottom: 10px; padding: 0; font-size: 13px; font-weight: 500; color: #F2F3EF; }
+.chiffres-code legend { margin-bottom: 10px; padding: 0; font-size: 13px; font-weight: 500; color: #8E8E93; }
 .chiffres { display: flex; align-items: center; gap: 8px; }
 body.connexion .chiffres input[type="text"] {
   flex: 1 1 0; width: 0; min-width: 0; height: 58px; padding: 0; text-align: center;
   font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; caret-color: #A7B58E;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
+  border-width: 1.5px; transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
 }
 .chiffres-tiret { flex: 0 0 10px; height: 2px; background: #2A2C2E; }
 .chiffres-code.verification input { border-color: #A7B58E; animation: code-attente 0.9s ease-in-out infinite; }
-body.connexion .chiffres-code.juste input { background: #10220F; border-color: #5FBF63; box-shadow: 0 0 0 4px rgba(95, 191, 99, 0.18); }
-body.connexion .chiffres-code.faux input { background: #2A0F0F; border-color: #E5534B; box-shadow: 0 0 0 4px rgba(229, 83, 75, 0.18); }
+body.connexion .chiffres-code.juste input { background: #17181A; border-color: #30D158; box-shadow: none; }
+body.connexion .chiffres-code.faux input { background: #17181A; border-color: #FF453A; box-shadow: none; }
 .chiffres-code.faux .chiffres { animation: code-secousse 0.42s ease-in-out; }
 @keyframes code-attente { 0%, 100% { background: #17181A; } 50% { background: #23261F; } }
 @keyframes code-secousse {
   0%, 100% { transform: translateX(0); } 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); }
   60% { transform: translateX(-4px); } 80% { transform: translateX(2px); }
 }
-.avis-code { margin: 14px 0 0; padding: 11px 14px; font-size: 14px; font-weight: 500; border: 1px solid transparent; border-radius: 9px; }
-.avis-code-ok { color: #9FD3A0; background: rgba(95, 191, 99, 0.1); border-color: rgba(95, 191, 99, 0.38); }
-.avis-code-erreur { color: #F08A8A; background: rgba(229, 83, 75, 0.1); border-color: rgba(229, 83, 75, 0.38); }
+/* Avis du code : lu par les lecteurs d'écran, invisible à l'écran. */
+.avis-code { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .bascule-code { margin: 20px 0 0; text-align: center; }
 .lien-code {
-  padding: 0; font: inherit; font-size: 14px; color: #F2F3EF; background: none; border: 0; cursor: pointer;
-  text-decoration: underline; text-decoration-color: #9DA197; text-underline-offset: 3px;
+  padding: 0; font: inherit; font-size: 14px; color: #8E8E93; background: none; border: 0; cursor: pointer;
 }
-.lien-code:hover { color: #FFFFFF; }
+.lien-code:hover { color: #F2F3EF; }
 @media (prefers-reduced-motion: reduce) {
   .chiffres-code.verification input, .chiffres-code.faux .chiffres { animation: none; }
   body.connexion .chiffres input[type="text"] { transition: none; }
