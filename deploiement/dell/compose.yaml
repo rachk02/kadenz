@@ -1,0 +1,140 @@
+# Portail des licences et relais de Kadenz sur le Dell (serveur maison).
+# Procédure : docs/deploiement-vps.md, section 7, « Trousse du Dell ».
+#
+# Toujours lancé avec le fichier de réglages hors dépôt :
+#   docker compose -f deploiement/dell/compose.yaml --env-file /etc/kadenz/kadenz.env ...
+# Aucune valeur secrète dans ce fichier ni dans le dépôt : la clé du portail
+# est un fichier de l'hôte, monté en lecture seule.
+#
+# Tout est publié sur 127.0.0.1 seulement. L'ouverture vers Internet (Funnel)
+# est une étape à part, sur accord de l'utilisateur.
+
+name: kadenz
+
+x-durci: &durci
+  restart: unless-stopped
+  # Le portail et le relais ne traitent pas SIGTERM (Dockerfile) : init
+  # obligatoire, sinon « docker stop » attend 10 secondes puis tue.
+  init: true
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  portail:
+    <<: *durci
+    # Image marquée par le commit construit : KADENZ_REV obligatoire, jamais
+    # « latest ».
+    image: kadenz-portail:${KADENZ_REV:?KADENZ_REV manquant}
+    build:
+      context: ../..
+      dockerfile: crates/portail/Dockerfile
+    # --mandataire : adresse vue par le conteneur pour une connexion venue de
+    # l'hôte (docker-proxy, ou tailscaled pour Funnel), soit la passerelle du
+    # réseau « portail ». Valeur à confirmer à l'essai.
+    command:
+      - --cle
+      - /run/secrets/cle_portail
+      - --mandataire
+      - ${PASSERELLE_PORTAIL:?PASSERELLE_PORTAIL manquant}
+    volumes:
+      - portail-donnees:/donnees
+      # Clé du portail : fichier de l'hôte, hors dépôt et hors sauvegardes,
+      # propriétaire 10001:10001, mode 400 (le portail refuse une clé lisible
+      # par d'autres). Absent : refus de démarrer, aucun dossier créé à sa place.
+      - type: bind
+        source: ${CLE_PORTAIL:?CLE_PORTAIL manquant}
+        target: /run/secrets/cle_portail
+        read_only: true
+        bind:
+          create_host_path: false
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    ports:
+      - "127.0.0.1:47382:47382"
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/kadenz-portail", "sante"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    pids_limit: 256
+    mem_limit: 512m
+    cpus: 1
+    networks: [portail]
+
+  relais:
+    <<: *durci
+    image: kadenz-relais:${KADENZ_REV:?KADENZ_REV manquant}
+    build:
+      context: ../..
+      dockerfile: crates/relais/Dockerfile
+    volumes:
+      - relais-donnees:/donnees
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    ports:
+      - "127.0.0.1:47381:47381"
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/kadenz-relais", "sante", "--dossier", "/donnees"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    # Un fil par connexion et un second par session : le cgroup compte les
+    # fils comme des PID (docs/deploiement-vps.md, section 3).
+    pids_limit: 6400
+    ulimits:
+      nofile:
+        soft: 16384
+        hard: 16384
+    mem_limit: 512m
+    cpus: 1
+    networks: [relais]
+
+  # Outil de sauvegarde : sqlite3 sous l'uid du portail (10001), sans réseau.
+  # Jamais démarré avec les services ; lancé par le crochet de sauvegarde
+  # (docker compose run --rm outil-sqlite ...).
+  outil-sqlite:
+    profiles: [outils]
+    image: kadenz-outil-sqlite:${KADENZ_REV:?KADENZ_REV manquant}
+    build:
+      context: outil-sqlite
+    user: "10001:10001"
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=256m
+    # .timeout : attend jusqu'à 10 secondes une écriture en cours du portail.
+    entrypoint: ["sqlite3", "-batch", "-bail", "-cmd", ".timeout 10000"]
+    volumes:
+      # En écriture : une base en mode WAL demande son fichier -shm. Sous
+      # l'uid 10001, les fichiers -wal et -shm restent ceux du portail.
+      - portail-donnees:/donnees
+      - type: bind
+        source: ${KADENZ_SAUVEGARDES:?KADENZ_SAUVEGARDES manquant}/depot
+        target: /depot
+        bind:
+          create_host_path: false
+
+networks:
+  # Sous-réseau et passerelle fixés : la passerelle est l'adresse donnée à
+  # --mandataire. Pas de « internal: true » : il couperait la publication du
+  # port.
+  portail:
+    ipam:
+      config:
+        - subnet: ${RESEAU_PORTAIL:?RESEAU_PORTAIL manquant}
+          gateway: ${PASSERELLE_PORTAIL:?PASSERELLE_PORTAIL manquant}
+  relais: {}
+
+volumes:
+  portail-donnees: {}
+  relais-donnees: {}

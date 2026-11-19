@@ -1,0 +1,8 @@
+[Unit]
+Description=Santé des conteneurs de Kadenz (alerte au changement d'état)
+After=docker.service
+Wants=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/kadenz-sante

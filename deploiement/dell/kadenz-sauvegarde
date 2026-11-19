@@ -1,0 +1,72 @@
+#!/bin/sh
+# Crochet de sauvegarde de Kadenz sur le Dell, à installer dans
+# /usr/local/sbin/kadenz-sauvegarde et à appeler depuis /usr/local/sbin/sauvegarde
+# avant la ligne « restic backup », qui doit couvrir $KADENZ_SAUVEGARDES.
+# Procédure : docs/deploiement-vps.md, section 7, « Trousse du Dell ».
+#
+# Prend des copies cohérentes, jamais une copie à chaud des fichiers :
+# - base du portail par VACUUM INTO, sous l'uid du portail, puis
+#   PRAGMA integrity_check sur la copie ;
+# - journal du portail exporté (journal-exporter), ajouté au fichier
+#   journal.jsonl, puis chaîne vérifiée (journal-verifier) ;
+# - identité TLS du relais : certificat et clé, les deux.
+#
+# Code de sortie 1 et alerte au moindre échec. Aucune valeur secrète ici.
+
+set -eu
+
+SOURCE=${KADENZ_SOURCE:-/opt/kadenz/source}
+REGLAGES=${KADENZ_ENV:-/etc/kadenz/kadenz.env}
+SORTIE=${KADENZ_SAUVEGARDES:-/var/backups/kadenz}
+ALERTE=${ALERTE:-/usr/local/sbin/alerte}
+
+kz() {
+    docker compose -f "$SOURCE/deploiement/dell/compose.yaml" --env-file "$REGLAGES" "$@"
+}
+
+# Forme d'appel de l'alerte supposée : un seul argument, le message. À
+# vérifier sur le Dell (première étape de l'essai).
+echec() {
+    echo "kadenz-sauvegarde : $1" >&2
+    "$ALERTE" "Kadenz, sauvegarde en échec : $1" || true
+    exit 1
+}
+
+umask 077
+install -d -m 700 "$SORTIE" "$SORTIE/portail" "$SORTIE/relais"
+# Dépôt intermédiaire de l'outil sqlite3, qui tourne sous l'uid 10001.
+install -d -m 700 -o 10001 -g 10001 "$SORTIE/depot"
+rm -f "$SORTIE/depot/portail.sqlite" "$SORTIE/depot/relais.crt" "$SORTIE/depot/relais.cle"
+
+# 1. Base du portail.
+kz run --rm -T outil-sqlite /donnees/portail.sqlite "VACUUM INTO '/depot/portail.sqlite';" \
+    || echec "copie de la base du portail impossible"
+verdict=$(kz run --rm -T outil-sqlite /depot/portail.sqlite "PRAGMA integrity_check;") \
+    || echec "contrôle de la copie de la base du portail impossible"
+[ "$verdict" = "ok" ] || echec "copie de la base du portail endommagée : $verdict"
+mv -f "$SORTIE/depot/portail.sqlite" "$SORTIE/portail/portail.sqlite"
+
+# 2. Journal du portail : entrées après la dernière déjà exportée.
+journal="$SORTIE/portail/journal.jsonl"
+depuis=0
+if [ -s "$journal" ]; then
+    depuis=$(tail -n 1 "$journal" | grep -o '"id":[0-9]*' | tail -n 1 | cut -d: -f2)
+fi
+kz exec -T portail kadenz-portail --dossier /donnees journal-exporter --depuis "${depuis:-0}" \
+    > "$SORTIE/portail/journal.nouveau" \
+    || echec "export du journal du portail impossible"
+cat "$SORTIE/portail/journal.nouveau" >> "$journal"
+rm -f "$SORTIE/portail/journal.nouveau"
+kz exec -T portail kadenz-portail --dossier /donnees journal-verifier > /dev/null \
+    || echec "chaîne du journal du portail rompue ou illisible (journal-verifier)"
+
+# 3. Identité TLS du relais : sans elle, l'empreinte change et chaque serveur
+# d'entreprise doit la réapprendre.
+kz cp relais:/donnees/relais.crt "$SORTIE/depot/relais.crt" \
+    || echec "copie du certificat du relais impossible"
+kz cp relais:/donnees/relais.cle "$SORTIE/depot/relais.cle" \
+    || echec "copie de la clé du relais impossible"
+chmod 600 "$SORTIE/depot/relais.crt" "$SORTIE/depot/relais.cle"
+mv -f "$SORTIE/depot/relais.crt" "$SORTIE/depot/relais.cle" "$SORTIE/relais/"
+
+echo "kadenz-sauvegarde : copies prêtes dans $SORTIE"

@@ -9,5 +9,8 @@ docs
 !docs/marque/web/favicon.svg
 docs_of_interest
 installateur
+# Trousse de déploiement : inutile aux images, et sans elle un changement du
+# compose ne refait pas la compilation.
+deploiement
 **/*.sqlite
 **/*.kzs

@@ -1,0 +1,48 @@
+#!/bin/sh
+# Santé des conteneurs de Kadenz sur le Dell, à installer dans
+# /usr/local/sbin/kadenz-sante ; lancé toutes les 5 minutes par
+# kadenz-sante.timer. Procédure : docs/deploiement-vps.md, section 7.
+#
+# « restart: unless-stopped » ne redémarre pas un conteneur « unhealthy » :
+# cette alerte est la seule réaction. Une alerte au changement d'état
+# seulement (panne, puis retour), pas à chaque passage.
+
+set -u
+
+SOURCE=${KADENZ_SOURCE:-/opt/kadenz/source}
+REGLAGES=${KADENZ_ENV:-/etc/kadenz/kadenz.env}
+ETAT=${KADENZ_ETAT_SANTE:-/var/lib/kadenz-sante}
+ALERTE=${ALERTE:-/usr/local/sbin/alerte}
+
+kz() {
+    docker compose -f "$SOURCE/deploiement/dell/compose.yaml" --env-file "$REGLAGES" "$@"
+}
+
+umask 077
+mkdir -p "$ETAT"
+
+for service in portail relais; do
+    id=$(kz ps -a -q "$service" 2>/dev/null | head -n 1)
+    if [ -z "$id" ]; then
+        etat=absent
+    else
+        # Sans sonde, ou conteneur arrêté : l'état du conteneur.
+        etat=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$id" 2>/dev/null) \
+            || etat=absent
+    fi
+    # Démarrage en cours : rien à dire encore.
+    [ "$etat" = "starting" ] && continue
+    avant=$(cat "$ETAT/$service" 2>/dev/null || echo healthy)
+    [ "$etat" = "$avant" ] && continue
+    if [ "$etat" = "healthy" ]; then
+        message="Kadenz : $service de nouveau en bonne santé"
+    else
+        message="Kadenz : $service en panne ($etat)"
+    fi
+    # Forme d'appel supposée : un seul argument, le message (à vérifier sur
+    # le Dell). Alerte en échec : état non noté, nouvel essai au passage
+    # suivant.
+    if "$ALERTE" "$message"; then
+        echo "$etat" > "$ETAT/$service"
+    fi
+done

@@ -1,3 +1,5 @@
 # Fichiers lus sous Linux (images du relais et du portail) : fins de ligne LF.
 crates/relais/Dockerfile text eol=lf
 crates/portail/Dockerfile text eol=lf
+# Trousse du Dell : scripts, unités systemd et compose lus sous Linux.
+deploiement/** text eol=lf

@@ -25,6 +25,10 @@
 # Santé : « kadenz-portail sante » interroge /sante en local (l'image n'a pas
 # curl).
 #
+# Profil de compilation : release par défaut. --build-arg PROFIL=dev construit
+# une image d'essai, qui lit KADENZ_PORTAIL_CLE (clé d'essai) ; jamais en
+# service, toujours sous une étiquette à part (deploiement/dell/compose.essai.yaml).
+#
 # Images épinglées par empreinte, les mêmes que pour le relais
 # (crates/relais/Dockerfile, vérifiées le 2026-11-15).
 
@@ -33,14 +37,18 @@ WORKDIR /source
 # Deux compilations en parallèle au plus, comme sur le poste de développement
 # (docker build --build-arg CARGO_BUILD_JOBS=N pour changer).
 ARG CARGO_BUILD_JOBS=2
+ARG PROFIL=release
 COPY . .
-RUN cargo build --locked --release -p kadenz-portail --bin kadenz-portail
+# Le profil dev écrit dans target/debug, les autres dans target/<profil>.
+RUN cargo build --locked --profile "$PROFIL" -p kadenz-portail --bin kadenz-portail \
+    && case "$PROFIL" in dev) sortie=debug ;; *) sortie="$PROFIL" ;; esac \
+    && cp "target/$sortie/kadenz-portail" /kadenz-portail
 
 FROM debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
 RUN groupadd --system --gid 10001 kadenz \
     && useradd --system --uid 10001 --gid 10001 --home-dir /donnees --shell /usr/sbin/nologin kadenz \
     && mkdir /donnees && chown 10001:10001 /donnees && chmod 700 /donnees
-COPY --from=construction /source/target/release/kadenz-portail /usr/local/bin/kadenz-portail
+COPY --from=construction /kadenz-portail /usr/local/bin/kadenz-portail
 USER 10001:10001
 VOLUME /donnees
 EXPOSE 47382

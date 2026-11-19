@@ -7,6 +7,7 @@
 | 0.3 | 2026-11-18 | Lot R1 du relais écrit (pas encore compilé ni commité) : les quatre défauts du relais passent en « corrigé dans R1 » ; sonde de santé `kadenz-relais sante` ; propriétaire de `/donnees` ; adresses vues par le relais derrière docker-proxy, à vérifier avant la mise en ligne. |
 | 0.4 | 2026-11-19 | Section 7 : variante sur le Dell avec Tailscale, sans nom de domaine (décision de l'utilisateur du 2026-11-19). Funnel vérifié dans sa documentation : le portail y passe, le relais non dans son protocole actuel ; trois pistes pour le relais, à trancher. |
 | 0.5 | 2026-11-19 | `--mandataire` prend l'adresse du mandataire de confiance (lot D1 de kadenz-3a) : Caddy à adresse fixe sur le réseau « console » (paramètres `RESEAU_CONSOLE` et `IP_CADDY_CONSOLE`), adresse de tailscaled à relever sur le Dell pour Funnel ; sonde de santé du portail. |
+| 0.6 | 2026-11-19 | Section 7 : trousse du Dell écrite par kadenz-3a à la demande de kadenz-cc (`deploiement/dell/`) : compose durci sur 127.0.0.1, image d'essai du portail, crochet de sauvegarde, sonde de santé et alerte, procédure ; étape Funnel sur accord de l'utilisateur. Rien n'est lancé. Section 5 : le portail a désormais un `busy_timeout`. |
 
 Statut : **proposé**. Le VPS, son prestataire, le nom de domaine et la mise en service restent à la décision de l'utilisateur (décisions 16 et 69 du cahier de la phase 2). Le relais et le portail y iront une fois leur implémentation finie (décision de l'utilisateur du 2026-11-18). Pour l'instant, ni domaine ni VPS : hébergement sur le Dell avec Tailscale, et Vercel au besoin (décision du 2026-11-19, section 7). Rien ici n'a été essayé sur un VPS ; chaque fichier est à relire et à essayer d'abord sur une machine d'essai.
 
@@ -310,7 +311,7 @@ iptables -I DOCKER-USER 6 -j DROP
 | Caddyfile, compose.yaml, `.env`, règles `DOCKER-USER` | dossier du déploiement | reconstruire le service à l'identique |
 
 - Base du portail : copie cohérente par l'API de sauvegarde de SQLite (`.backup`), pas par une copie de fichier pendant que le portail écrit (mode WAL, `crates/portail/src/base.rs`). Deux pièges relevés par OpenCode : lancée en root sur le volume, la commande crée des fichiers `-wal` et `-shm` appartenant à root, que le portail ne pourra plus ouvrir ; la lancer avec l'uid du conteneur, ou conteneur arrêté. Et restic ne sauvegarde pas le volume en direct, seulement le fichier produit par `.backup`, après un `PRAGMA integrity_check` sur la copie.
-- Le portail n'a pas de `busy_timeout` (réponse 5, défaut 13) : une sauvegarde qui tombe pendant une écriture peut échouer et doit être relancée par le script, en attendant la correction.
+- Le portail attend désormais 5 secondes une écriture en cours (`PRAGMA busy_timeout = 5000`, `crates/portail/src/base.rs`, défaut 13 de la réponse 5 corrigé) ; l'outil de sauvegarde attend de son côté jusqu'à 10 secondes (`.timeout`, trousse du Dell, section 7).
 - La base n'est pas chiffrée au repos : la copie part chiffrée, hors du VPS. L'utilisateur emploie déjà restic vers OneDrive pour son serveur maison ; la même méthode convient, avec un dépôt restic propre au VPS et un mot de passe gardé hors du VPS. La destination reste à son choix.
 - Relais : après chaque restauration, comparer l'empreinte affichée au démarrage à celle réglée sur les serveurs d'entreprise (une restauration qui oublie le certificat ou la clé en crée une nouvelle sans prévenir).
 - La clé du portail n'entre pas dans ces sauvegardes : elle a sa copie hors ligne chez l'éditeur.
@@ -366,3 +367,79 @@ Pour les essais internes, la piste C suffit et ne demande rien. Pour des clients
 - Docker sur le Dell : mêmes réglages de conteneurs que la section 3 (sans root, `cap_drop: ALL`, lecture seule, `pids_limit` et `ulimits` du relais, rotation des journaux) ; les règles `DOCKER-USER` de la section 4 ne s'appliquent qu'aux ports publiés, et rien n'est publié vers Internet si tout passe par Funnel.
 - Sauvegardes de la section 5 : le Dell a déjà restic vers OneDrive ; la base du portail et l'identité du relais y entrent avec les mêmes précautions (`.backup` avec l'uid du conteneur, certificat **et** clé du relais).
 - Sondes : `kadenz-relais sante --dossier /donnees` dans le conteneur ; ntfy et healthchecks.io déjà en place sur le Dell.
+
+### Trousse du Dell (`deploiement/dell/`)
+
+Écrite le 2026-11-19 à la demande de kadenz-cc, **rien n'est lancé** : ni construction, ni démarrage, ni Funnel. L'essai sur le Dell est conduit par kadenz-cc, avec une clé d'essai et tout sur 127.0.0.1. Aucun secret dans le dépôt, qui est public : ni sujet ntfy, ni adresse de veille, ni mot de passe restic, ni adresse Tailscale, ni nom ts.net.
+
+| Fichier | Rôle |
+|---|---|
+| `compose.yaml` | portail et relais : images marquées par le commit (`KADENZ_REV`, obligatoire), racine en lecture seule, `cap_drop: ALL`, `no-new-privileges`, `init`, volumes nommés, ports publiés sur `127.0.0.1` seulement, sondes de santé, journaux bornés, `restart: unless-stopped` ; clé du portail montée en lecture seule depuis un fichier de l'hôte ; service `outil-sqlite` (profil `outils`) pour les sauvegardes |
+| `compose.essai.yaml` | essai seulement : image du portail construite avec le profil `dev`, étiquette `essai-<commit>`, `KADENZ_PORTAIL_CLE` (seule une version de développement lit cette variable) |
+| `kadenz.env.exemple` | modèle de `/etc/kadenz/kadenz.env`, sans valeur secrète |
+| `outil-sqlite/Dockerfile` | sqlite3 sur la même image de base épinglée, sous l'uid 10001 |
+| `kadenz-sauvegarde` | crochet appelé par `/usr/local/sbin/sauvegarde` avant restic |
+| `kadenz-sante`, `kadenz-sante.service`, `kadenz-sante.timer` | santé des conteneurs toutes les 5 minutes, alerte au changement d'état |
+
+Le Dockerfile du portail prend un argument `PROFIL` (`release` par défaut) ; celui du relais ne change pas : le relais reste en version optimisée, y compris à l'essai.
+
+#### Choix et limites
+
+- Clé du portail : fichier de l'hôte, propriétaire `10001:10001`, mode 400, hors des dossiers sauvegardés par restic (`/etc`, `/home`, `/root`, `/usr/local`...), d'où `/srv/kadenz/cle/` dans le modèle. Le montage est en lecture seule ; un fichier absent fait refuser le démarrage au lieu de créer un dossier vide à sa place.
+- `--mandataire` reçoit la passerelle du réseau `portail`, à sous-réseau fixé (`RESEAU_PORTAIL`, `PASSERELLE_PORTAIL`) : une connexion venue de l'hôte, par docker-proxy ou par tailscaled, arrive avec cette adresse. Conséquence : tout programme local du Dell peut aussi fournir un `X-Forwarded-For` cru par le portail ; accepté sur le Dell, à revoir si d'autres services y tournent. Valeur à confirmer à l'essai.
+- Sauvegarde de la base : jamais de copie à chaud du fichier. `VACUUM INTO` par l'outil sqlite3, sous l'uid du portail (les fichiers `-wal` et `-shm` restent les siens), sans réseau ; puis `PRAGMA integrity_check` sur la copie, qui doit répondre `ok`.
+- Journal : `journal-exporter --depuis <dernier id exporté>` dans le conteneur en service, ajouté à `journal.jsonl` ; puis `journal-verifier`, dont l'échec déclenche une alerte.
+- Relais : certificat **et** clé copiés (`relais.crt`, `relais.cle`).
+- Santé : `restart: unless-stopped` ne redémarre pas un conteneur « unhealthy » ; l'alerte de `kadenz-sante` est la seule réaction. Une alerte à la panne, une au retour, pas à chaque passage ; un conteneur absent ou arrêté compte comme une panne.
+- `/usr/local/sbin/alerte` est appelé avec un seul argument, le message : **forme supposée**, à vérifier sur le Dell (étape 1). Variables `ALERTE`, `KADENZ_SOURCE`, `KADENZ_ENV`, `KADENZ_SAUVEGARDES` pour adapter les chemins sans modifier les scripts.
+- Construction sur le Dell : 3,2 Go de mémoire, d'où `CARGO_BUILD_JOBS=1`.
+
+#### Procédure
+
+Tout se fait en root (`sudo -i`), depuis `/opt/kadenz/source` : les chemins `deploiement/dell/...` y sont relatifs. Raccourcis utilisés plus bas :
+
+```sh
+kz()  { docker compose -f /opt/kadenz/source/deploiement/dell/compose.yaml --env-file /etc/kadenz/kadenz.env "$@"; }
+kze() { docker compose -f /opt/kadenz/source/deploiement/dell/compose.yaml \
+          -f /opt/kadenz/source/deploiement/dell/compose.essai.yaml --env-file /etc/kadenz/kadenz.env "$@"; }
+```
+
+1. **Lire l'existant** : `/usr/local/sbin/alerte` (forme d'appel) et `/usr/local/sbin/sauvegarde` (où placer le crochet, ligne `restic backup`). Ajuster l'appel dans `kadenz-sauvegarde` et `kadenz-sante` si la forme diffère.
+2. **Source** dans `/opt/kadenz/source`, au commit voulu. La façon dont le Dell obtient le code reste à la décision de l'utilisateur (plan de découpage des dépôts). Vérifier que l'arbre est propre (`git status --porcelain` vide) et noter `git rev-parse --short=12 HEAD`.
+3. **Réglages** : copier `kadenz.env.exemple` dans `/etc/kadenz/kadenz.env` (root, 600) ; `KADENZ_REV` = le commit noté à l'étape 2, sinon l'étiquette ment ; choisir un sous-réseau libre (`docker network ls`, `docker network inspect`, `ip route`) pour `RESEAU_PORTAIL` et sa première adresse pour `PASSERELLE_PORTAIL`.
+4. **Clé d'essai** (jamais la clé de production) : paire Ed25519 neuve, la clé privée dans un fichier réservé à l'uid 10001, la clé publique affichée pour `CLE_PUBLIQUE_ESSAI` ; `CLE_PORTAIL=/srv/kadenz/essai/cle-portail.hex`.
+
+   ```sh
+   install -d -m 700 -o 10001 -g 10001 /srv/kadenz/essai
+   ( umask 077; d=$(mktemp -d)
+     openssl genpkey -algorithm ed25519 -out "$d/essai.pem"
+     openssl pkey -in "$d/essai.pem" -outform DER | tail -c 32 | od -An -tx1 | tr -d ' \n' > /srv/kadenz/essai/cle-portail.hex
+     openssl pkey -in "$d/essai.pem" -pubout -outform DER | tail -c 32 | od -An -tx1 | tr -d ' \n'; echo
+     rm -rf "$d" )
+   chown 10001:10001 /srv/kadenz/essai/cle-portail.hex && chmod 400 /srv/kadenz/essai/cle-portail.hex
+   ```
+
+   Une dérivation fausse se voit tout de suite : le portail refuse de démarrer avec une clé dont la moitié publique n'est pas celle attendue.
+5. **Construction** : `kze build --build-arg CARGO_BUILD_JOBS=1 portail relais`, puis `kz --profile outils build outil-sqlite`. Vérifier les étiquettes : `docker image ls 'kadenz-*'`.
+6. **Démarrage** : `kze up -d portail relais` ; `kz ps` doit montrer les deux services `healthy` en moins d'une minute, ports sur `127.0.0.1` seulement (`ss -ltnp | grep -E '4738[12]'`).
+7. **Compte éditeur d'essai** : `kz exec -it portail kadenz-portail --dossier /donnees creer-editeur essai-dell "Essai Dell"`, mot de passe de 15 caractères au moins choisi par la personne qui conduit l'essai, jamais noté dans le dépôt.
+8. **Console par tunnel** : depuis le PC, `ssh -L 47382:127.0.0.1:47382 dell`, puis `http://localhost:47382` dans le navigateur. Les cookies de la console sont `Secure` avec le préfixe `__Host-` : en HTTP, seul un nom `localhost` peut les recevoir, à vérifier à l'essai. Se connecter, puis relever dans le journal de la console l'adresse notée pour cette connexion : c'est l'adresse vue par le portail (attendue : `PASSERELLE_PORTAIL`).
+9. **Sauvegarde** :
+   - `install -m 755 deploiement/dell/kadenz-sauvegarde /usr/local/sbin/kadenz-sauvegarde` ;
+   - le lancer à la main, puis vérifier `/var/backups/kadenz/portail/portail.sqlite`, `journal.jsonl` (une ligne JSON par entrée) et `/var/backups/kadenz/relais/relais.crt` et `relais.cle` ; un second lancement n'ajoute que les entrées nouvelles du journal ;
+   - dans `/usr/local/sbin/sauvegarde`, appeler `/usr/local/sbin/kadenz-sauvegarde` avant restic et ajouter `/var/backups/kadenz` à la ligne `restic backup` ;
+   - essai de restauration de la base : `kz stop portail` ; copier `portail.sqlite` de la sauvegarde dans `/var/backups/kadenz/depot/`, propriétaire 10001 ; `kz run --rm -T --entrypoint sh outil-sqlite -c 'rm -f /donnees/portail.sqlite-wal /donnees/portail.sqlite-shm && cp /depot/portail.sqlite /donnees/portail.sqlite'` ; `kze up -d portail` ; se reconnecter et vérifier la chaîne du journal (`kz exec -T portail kadenz-portail --dossier /donnees journal-verifier`).
+10. **Alerte** :
+    - `install -m 755 deploiement/dell/kadenz-sante /usr/local/sbin/kadenz-sante` ; `install -m 644 deploiement/dell/kadenz-sante.service deploiement/dell/kadenz-sante.timer /etc/systemd/system/` ; `systemctl daemon-reload && systemctl enable --now kadenz-sante.timer` ;
+    - essai : `kz stop relais`, une alerte « relais en panne » dans les 5 minutes ; `kz start relais`, une alerte de retour ; aucune alerte entre les deux.
+11. **Fin de l'essai** : `kze down` (les volumes restent ; `kze down -v` les efface), retirer `/srv/kadenz/essai` et l'image `kadenz-portail:essai-*`.
+
+#### Ouverture par Funnel : sur accord de l'utilisateur
+
+Étape écrite, **à ne faire que sur accord explicite de l'utilisateur** : elle ouvre la console à Internet et demande un changement dans son compte Tailscale. Jamais avec l'image d'essai ni la clé d'essai.
+
+1. Prérequis côté compte (utilisateur) : MagicDNS, certificats HTTPS du tailnet, attribut `funnel` pour le Dell dans la politique du tailnet.
+2. Portail en service avec la clé de production (fichier mis en place par l'utilisateur), image release.
+3. `tailscale funnel --bg --https=443 http://127.0.0.1:47382` ; vérifier avec `tailscale funnel status`. Syntaxe à confirmer par `tailscale funnel --help` sur le Dell.
+4. Se connecter depuis une adresse extérieure et relever dans le journal l'adresse notée : l'adresse réelle du client si tailscaled transmet `X-Forwarded-For`, sinon la passerelle, et alors le frein de connexion compte toutes les requêtes comme une seule adresse.
+5. Retour en arrière : `tailscale funnel --https=443 off`.

@@ -1,0 +1,18 @@
+# Essai seulement, jamais en service : portail de développement qui accepte
+# une clé d'essai à la place de la clé embarquée.
+#
+#   docker compose -f deploiement/dell/compose.yaml -f deploiement/dell/compose.essai.yaml \
+#     --env-file /etc/kadenz/kadenz.env ...
+#
+# Seule une version de développement lit KADENZ_PORTAIL_CLE (cles_portail(),
+# crates/licence/src/entreprise.rs) : l'image d'essai est donc construite avec
+# le profil « dev », sous une étiquette à part. Jamais la clé de production.
+
+services:
+  portail:
+    image: kadenz-portail:essai-${KADENZ_REV:?KADENZ_REV manquant}
+    build:
+      args:
+        PROFIL: dev
+    environment:
+      KADENZ_PORTAIL_CLE: ${CLE_PUBLIQUE_ESSAI:?CLE_PUBLIQUE_ESSAI manquant}
