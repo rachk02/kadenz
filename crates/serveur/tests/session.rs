@@ -703,7 +703,31 @@ fn attente_apres_des_echecs_d_inscription() {
 
 #[test]
 fn decouverte_du_serveur() {
-    let serveur = demarrer("decouverte", Duration::from_secs(5), 8);
+    // Le port TCP libre choisi par le système peut tomber dans une plage
+    // réservée à l'UDP par Windows (voir l'essai du port UDP pris) : la
+    // découverte y serait impossible. Le port vient donc d'un port UDP libre
+    // choisi par le système, rendu juste avant le démarrage ; un port refusé
+    // en TCP ou en UDP fait réessayer.
+    let mut essais = 0;
+    let serveur = loop {
+        essais += 1;
+        assert!(essais <= 20, "aucun port libre en TCP et en UDP trouvé");
+        let port = std::net::UdpSocket::bind(("127.0.0.1", 0))
+            .unwrap()
+            .local_addr()
+            .unwrap()
+            .port();
+        let mut config = Config::nouvelle(dossier("decouverte"));
+        config.adresse = SocketAddr::from(([127, 0, 0, 1], port));
+        config.controle_droits = false;
+        config.cles_portail = vec![cle_portail().verifying_key()];
+        match Serveur::demarrer(config) {
+            Ok(serveur) if serveur.avertissement().is_none() => break serveur,
+            Ok(serveur) => serveur.arreter(),
+            Err(kadenz_serveur::ErreurDemarrage::Ecoute(_)) => {}
+            Err(e) => panic!("{e}"),
+        }
+    };
     let trouves = kadenz_client::decouvrir_vers(serveur.adresse(), Duration::from_secs(1));
     assert_eq!(trouves.len(), 1);
     assert_eq!(trouves[0].0, serveur.adresse());
@@ -827,23 +851,18 @@ fn empreinte_presentee_sans_confiance() {
 
 #[test]
 fn demarrage_sans_decouverte_si_le_port_udp_est_pris() {
-    // Le port UDP est pris avant le démarrage (décision 44). Le numéro vient
-    // d'un port TCP libre : Windows réserve des plages au TCP seul (Hyper-V,
-    // WinNAT), où un port UDP libre au hasard ne pourrait pas écouter en TCP.
-    // Un port repris entre-temps par un autre programme fait réessayer.
+    // Le port UDP est pris avant le démarrage (décision 44). Windows réserve
+    // des plages de ports au TCP seul ou à l'UDP seul (Hyper-V, WinNAT :
+    // `netsh int ipv4 show excludedportrange`), par blocs de 100 qui changent
+    // avec le temps. Le numéro vient donc d'un port UDP libre choisi par le
+    // système, qui évite les plages réservées à l'UDP ; un port refusé en TCP
+    // (plage réservée au TCP, ou repris entre-temps) fait réessayer.
     let dossier = dossier("udp-pris");
     let mut essais = 0;
     let (serveur, _pris) = loop {
         essais += 1;
-        assert!(essais <= 10, "aucun port TCP et UDP libre trouvé");
-        let port = std::net::TcpListener::bind(("127.0.0.1", 0))
-            .unwrap()
-            .local_addr()
-            .unwrap()
-            .port();
-        let Ok(pris) = std::net::UdpSocket::bind(("127.0.0.1", port)) else {
-            continue;
-        };
+        assert!(essais <= 20, "aucun port TCP et UDP libre trouvé");
+        let pris = std::net::UdpSocket::bind(("127.0.0.1", 0)).unwrap();
         let mut config = Config::nouvelle(dossier.clone());
         config.adresse = pris.local_addr().unwrap();
         config.controle_droits = false;
