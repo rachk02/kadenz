@@ -5,7 +5,7 @@
 use maud::{Markup, html};
 
 use super::{Cadre, Rubrique, erreur_formulaire, jeton, libelle_role, page, titre};
-use crate::{Compte, Role};
+use crate::{Compte, LONGUEUR_MIN_MOT_DE_PASSE, Role};
 
 pub fn comptes(c: &Cadre, comptes: &[Compte], erreur: Option<&str>) -> Markup {
     let contenu = html! {
@@ -83,8 +83,8 @@ pub fn comptes(c: &Cadre, comptes: &[Compte], erreur: Option<&str>) -> Markup {
                     div.champ {
                         label for="mot_de_passe" { "Mot de passe provisoire" }
                         input #mot_de_passe type="password" name="mot_de_passe" required
-                            minlength="10" autocomplete="new-password";
-                        p.aide { "10 caractères au moins. Transmettez-le au revendeur par un canal sûr ; il pourra le changer après sa connexion." }
+                            minlength=(LONGUEUR_MIN_MOT_DE_PASSE) autocomplete="new-password";
+                        p.aide { (LONGUEUR_MIN_MOT_DE_PASSE) " caractères au moins, pas un mot de passe courant. Transmettez-le au revendeur par un canal sûr ; il pourra le changer après sa connexion." }
                     }
                     div.actions {
                         button.bouton.bouton-principal type="submit" { "Créer le revendeur" }

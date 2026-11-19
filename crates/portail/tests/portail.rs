@@ -24,7 +24,7 @@ use kadenz_stockage::installation::{self, InstallationInitiale};
 use kadenz_stockage::parametres::Parametres;
 use kadenz_stockage::{abonnement, synchro};
 
-const MOT_DE_PASSE: &str = "motdepasse12";
+const MOT_DE_PASSE: &str = "phrase-de-passe-essai-12";
 const ENTREPRISE_A: &str = "01a1dfaf-e51a-747a-92f6-37b52b38b16b";
 const ENTREPRISE_B: &str = "01a1dfaf-e51a-747a-92f6-37b52b38b16c";
 
@@ -319,17 +319,101 @@ fn connexions_freinees() {
             Err(ErreurPortail::Identifiants)
         );
     }
-    // Même le bon mot de passe attend, depuis cette adresse ou pour cet
-    // identifiant.
+    // Depuis cette adresse, même le bon mot de passe attend, pour tout compte.
     assert!(matches!(
-        p.connecter("editeur", MOT_DE_PASSE, "10.0.0.2"),
+        p.connecter("editeur", MOT_DE_PASSE, "10.0.0.1"),
         Err(ErreurPortail::Freine(_))
     ));
     assert!(matches!(
         p.connecter("rev-a", MOT_DE_PASSE, "10.0.0.1"),
         Err(ErreurPortail::Freine(_))
     ));
+    // Le titulaire qui se connecte d'ailleurs n'est pas bloqué par les
+    // échecs d'un tiers (défaut 5 de la relecture d'OpenCode).
+    assert!(p.connecter("editeur", MOT_DE_PASSE, "10.0.0.2").is_ok());
     assert!(p.connecter("rev-a", MOT_DE_PASSE, "10.0.0.3").is_ok());
+    drop(p);
+    let _ = std::fs::remove_dir_all(d);
+}
+
+/// Une attaque répartie sur beaucoup d'adresses finit par freiner
+/// l'identifiant lui-même, pour une minute au plus.
+#[test]
+fn identifiant_freine_apres_une_attaque_repartie() {
+    let (p, d, ..) = portail("frein-reparti", "2026-11-15");
+    for k in 0..50 {
+        let adresse = format!("10.1.{}.{}", k / 200, k % 200);
+        assert_eq!(
+            p.connecter("editeur", "mauvais", &adresse).map(|r| r.1),
+            Err(ErreurPortail::Identifiants)
+        );
+    }
+    match p.connecter("editeur", MOT_DE_PASSE, "10.9.9.9") {
+        Err(ErreurPortail::Freine(s)) => assert!(s <= 60, "{s}"),
+        autre => panic!("attendu un frein, reçu {:?}", autre.map(|r| r.1)),
+    }
+    drop(p);
+    let _ = std::fs::remove_dir_all(d);
+}
+
+/// Le frein est gardé dans la base : un redémarrage du portail ne l'efface pas.
+#[test]
+fn frein_garde_apres_un_redemarrage() {
+    let (p, d, ..) = portail("frein-garde", "2026-11-15");
+    for _ in 0..5 {
+        let _ = p.connecter("editeur", "mauvais", "10.0.0.7");
+    }
+    drop(p);
+    let p = Portail::ouvrir(&d, cle_essai()).unwrap();
+    assert!(matches!(
+        p.connecter("editeur", MOT_DE_PASSE, "10.0.0.7"),
+        Err(ErreurPortail::Freine(_))
+    ));
+    drop(p);
+    let _ = std::fs::remove_dir_all(d);
+}
+
+/// Le verrou de la base n'est pas tenu pendant Argon2 (défaut 1) : une
+/// lecture de la base pendant une connexion répond sans attendre la fin du
+/// hachage.
+#[test]
+fn base_libre_pendant_le_hachage() {
+    let (p, d, editeur, ..) = portail("hachage", "2026-11-15");
+    let debut = std::time::Instant::now();
+    let (jeton, _) = p.connecter("editeur", MOT_DE_PASSE, "10.0.0.1").unwrap();
+    let une_connexion = debut.elapsed();
+    let p2 = p.clone();
+    let fil = std::thread::spawn(move || p2.connecter("rev-a", MOT_DE_PASSE, "10.0.0.2"));
+    // Laisse au fil le temps d'entrer dans le hachage.
+    std::thread::sleep(une_connexion / 4);
+    let debut = std::time::Instant::now();
+    assert!(p.session(&jeton).is_some());
+    assert!(p.comptes(&editeur).is_ok());
+    let lecture = debut.elapsed();
+    assert!(fil.join().unwrap().is_ok());
+    assert!(
+        lecture < une_connexion / 2,
+        "lecture {lecture:?} contre une connexion {une_connexion:?}"
+    );
+    drop(p);
+    let _ = std::fs::remove_dir_all(d);
+}
+
+/// Deux connexions en même temps réussissent toutes les deux.
+#[test]
+fn connexions_simultanees() {
+    let (p, d, ..) = portail("simultanees", "2026-11-15");
+    let fils: Vec<_> = ["editeur", "rev-a", "rev-b"]
+        .into_iter()
+        .enumerate()
+        .map(|(k, id)| {
+            let p = p.clone();
+            std::thread::spawn(move || p.connecter(id, MOT_DE_PASSE, &format!("10.0.1.{k}")))
+        })
+        .collect();
+    for fil in fils {
+        assert!(fil.join().unwrap().is_ok());
+    }
     drop(p);
     let _ = std::fs::remove_dir_all(d);
 }
@@ -440,6 +524,9 @@ fn routes_sessions_et_jetons() {
     assert_eq!(r.statut, 303);
     assert_eq!(r.entete("location"), Some("/connexion"));
     assert_eq!(requete(a, "GET", "/connexion", None, "").statut, 200);
+    // Santé : sans session, réponse « ok ».
+    let r = requete(a, "GET", "/sante", None, "");
+    assert_eq!((r.statut, r.corps.as_str()), (200, "ok"));
 
     // Mauvais mot de passe, puis le bon.
     let r = requete(
@@ -544,6 +631,11 @@ fn programme_refuse_une_cle_inconnue() {
     std::fs::create_dir_all(&d).unwrap();
     let fichier = d.join("cle.hex");
     std::fs::write(&fichier, kadenz_licence::en_hex(&cle_essai().to_bytes())).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&fichier, std::fs::Permissions::from_mode(0o600)).unwrap();
+    }
     let sortie = std::process::Command::new(env!("CARGO_BIN_EXE_kadenz-portail"))
         .args([
             "--dossier",
@@ -557,6 +649,61 @@ fn programme_refuse_une_cle_inconnue() {
         .unwrap();
     assert!(!sortie.status.success());
     assert!(String::from_utf8_lossy(&sortie.stderr).contains("pas une clé du portail reconnue"));
+    let _ = std::fs::remove_dir_all(d);
+}
+
+/// Sous Unix, un fichier de clé lisible par le groupe ou par tous est refusé
+/// avant d'être lu.
+#[cfg(unix)]
+#[test]
+fn programme_refuse_une_cle_lisible_par_d_autres() {
+    use std::os::unix::fs::PermissionsExt;
+    let d = dossier("cle-ouverte");
+    std::fs::create_dir_all(&d).unwrap();
+    let fichier = d.join("cle.hex");
+    std::fs::write(&fichier, kadenz_licence::en_hex(&cle_essai().to_bytes())).unwrap();
+    std::fs::set_permissions(&fichier, std::fs::Permissions::from_mode(0o644)).unwrap();
+    let sortie = std::process::Command::new(env!("CARGO_BIN_EXE_kadenz-portail"))
+        .args([
+            "--dossier",
+            d.to_str().unwrap(),
+            "--cle",
+            fichier.to_str().unwrap(),
+            "--ecoute",
+            "127.0.0.1:0",
+        ])
+        .output()
+        .unwrap();
+    assert!(!sortie.status.success());
+    assert!(String::from_utf8_lossy(&sortie.stderr).contains("chmod 400"));
+    let _ = std::fs::remove_dir_all(d);
+}
+
+/// « kadenz-portail sante » : succès contre un portail qui répond, échec sur
+/// un port fermé.
+#[test]
+fn programme_sante() {
+    let d = dossier("sante");
+    let p = Portail::ouvrir(&d, cle_essai()).unwrap();
+    let lance = web::lancer(
+        p,
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        ConfigWeb::default(),
+    )
+    .unwrap();
+    let adresse = lance.adresse().to_string();
+    let sante = |cible: &str| {
+        std::process::Command::new(env!("CARGO_BIN_EXE_kadenz-portail"))
+            .args(["sante", "--ecoute", cible])
+            .output()
+            .unwrap()
+    };
+    assert!(sante(&adresse).status.success());
+    // Port libéré juste avant : personne n'y écoute.
+    let libre = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let ferme = libre.local_addr().unwrap().to_string();
+    drop(libre);
+    assert!(!sante(&ferme).status.success());
     let _ = std::fs::remove_dir_all(d);
 }
 
@@ -710,9 +857,19 @@ fn activation_freinee() {
         p.activer(&demande(&faux, ENTREPRISE_A), "10.0.0.9"),
         Err(ErreurPortail::Freine(_))
     ));
-    // Même entreprise depuis une autre adresse : freinée aussi.
+    // Même entreprise depuis une autre adresse : pas freinée par les échecs
+    // de la première (un tiers ne bloque pas l'activation d'un client).
     assert!(matches!(
         p.activer(&demande(&faux, ENTREPRISE_A), "10.0.0.10"),
+        Err(ErreurPortail::Validation(_))
+    ));
+    // Identifiants d'entreprise inventés : seule l'adresse est freinée, aucune
+    // clé n'est créée pour un texte qui n'est pas un identifiant.
+    for k in 0..5 {
+        let _ = p.activer(&demande(&faux, &format!("pas-un-uuid-{k}")), "10.0.0.11");
+    }
+    assert!(matches!(
+        p.activer(&demande(&faux, ENTREPRISE_B), "10.0.0.11"),
         Err(ErreurPortail::Freine(_))
     ));
     let _ = std::fs::remove_dir_all(&d);
@@ -992,4 +1149,58 @@ fn pages_des_codes_a_vendre() {
     );
     lance.arreter();
     let _ = std::fs::remove_dir_all(&d);
+}
+
+// ----- Mots de passe (lot D1) -----
+
+#[test]
+fn mot_de_passe_long_et_pas_courant() {
+    let (p, d, editeur, ..) = portail("mots-de-passe", "2026-11-15");
+    // Trop court (14 caractères), puis courant (liste embarquée, majuscules
+    // ignorées) : refusés.
+    for refuse in ["quatorze-carac", "123456789987654321", "1QAZ2WSX3EDC4RFV"] {
+        assert!(
+            matches!(
+                p.creer_revendeur(&editeur, "rev-z", "Revendeur Z", refuse),
+                Err(ErreurPortail::Validation(_))
+            ),
+            "{refuse}"
+        );
+    }
+    assert!(
+        p.creer_revendeur(&editeur, "rev-z", "Revendeur Z", "quinze-caracter")
+            .is_ok()
+    );
+    drop(p);
+    let _ = std::fs::remove_dir_all(d);
+}
+
+/// Changer son mot de passe ferme toutes les sessions du compte et en rend
+/// une nouvelle ; l'ancien mot de passe ne sert plus.
+#[test]
+fn changement_de_mot_de_passe_ferme_les_sessions() {
+    let (p, d, ..) = portail("changement", "2026-11-15");
+    let (premiere, editeur) = p.connecter("editeur", MOT_DE_PASSE, "10.0.2.1").unwrap();
+    let (seconde, _) = p.connecter("editeur", MOT_DE_PASSE, "10.0.2.2").unwrap();
+    let (autre, _) = p.connecter("rev-a", MOT_DE_PASSE, "10.0.2.3").unwrap();
+    let nouveau = "nouvelle-phrase-de-passe-34";
+    assert!(matches!(
+        p.changer_mot_de_passe(&editeur, "mauvais-ancien-mot", nouveau, nouveau),
+        Err(ErreurPortail::Validation(_))
+    ));
+    let neuve = p
+        .changer_mot_de_passe(&editeur, MOT_DE_PASSE, nouveau, nouveau)
+        .unwrap();
+    assert!(p.session(&premiere).is_none());
+    assert!(p.session(&seconde).is_none());
+    assert!(p.session(&neuve).is_some());
+    assert!(p.session(&autre).is_some());
+    assert_eq!(
+        p.connecter("editeur", MOT_DE_PASSE, "10.0.2.4")
+            .map(|r| r.1),
+        Err(ErreurPortail::Identifiants)
+    );
+    assert!(p.connecter("editeur", nouveau, "10.0.2.5").is_ok());
+    drop(p);
+    let _ = std::fs::remove_dir_all(d);
 }

@@ -126,7 +126,23 @@ DROP TABLE licence_emise;
 ALTER TABLE licence_emise_nouvelle RENAME TO licence_emise;
 CREATE INDEX licence_entreprise ON licence_emise (entreprise);
 ",
+    // 3 vers 4 : frein des connexions et des activations gardé dans la base
+    // (lot D1, docs/spec-portail.md, section 9), pour survivre à un
+    // redémarrage. Dates en secondes depuis 1970 (UTC).
+    TABLE_FREIN,
 ];
+
+/// Table du frein (`frein.rs`) : une ligne par clé, échecs comptés, fin de
+/// l'attente en cours, dernier échec.
+pub(crate) const TABLE_FREIN: &str = "
+CREATE TABLE frein (
+    cle TEXT PRIMARY KEY,
+    echecs INTEGER NOT NULL CHECK (echecs > 0),
+    jusqua INTEGER,
+    derniere INTEGER NOT NULL
+);
+CREATE INDEX frein_derniere ON frein (derniere);
+";
 
 /// Dernière version du schéma.
 pub(crate) const VERSION: i64 = VERSION_DEPART + MIGRATIONS.len() as i64;
@@ -143,7 +159,11 @@ pub(crate) fn ouvrir(dossier: &Path) -> rusqlite::Result<Connection> {
     let chemin = dossier.join("portail.sqlite");
     let conn = Connection::open(&chemin)?;
     restreindre(&chemin, 0o600);
-    conn.execute_batch("PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;")?;
+    // busy_timeout : une sauvegarde à chaud (`.backup`) ou un autre lecteur
+    // ne fait pas échouer une écriture, qui attend jusqu'à 5 secondes.
+    conn.execute_batch(
+        "PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;",
+    )?;
     migrer(&conn)?;
     Ok(conn)
 }

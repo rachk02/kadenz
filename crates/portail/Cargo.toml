@@ -18,6 +18,10 @@ serde_json.workspace = true
 axum = { version = "0.8.9", default-features = false, features = ["tokio", "http1", "form"] }
 tokio = { version = "1.54.1", features = ["rt-multi-thread", "net", "sync"] }
 maud = "0.27.0"
+# Effacement de la clé et du mot de passe lus (déjà dans l'arbre, par ed25519-dalek).
+zeroize = "1.9.1"
+# Saisie sans écho du mot de passe de `creer-editeur`.
+rpassword = "=7.5.4"
 
 [dev-dependencies]
 kadenz-stockage.workspace = true

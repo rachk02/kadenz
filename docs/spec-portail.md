@@ -4,6 +4,7 @@
 |---|---|---|
 | 0.1 | 2026-11-15 | Forme proposée par kadenz-34 et kadenz-8e après les décisions 60 et 61 de l'utilisateur : programme, données, rôles, émission, journal, sécurité, essais. Rien n'est codé. |
 | 0.2 | 2026-11-19 | Décisions de l'utilisateur du 2026-11-19 (section 8) : pages maud gardées, dépôt à part privé, hébergement sur le Dell. Relecture d'OpenCode et ordre des lots de durcissement D1 et D2 (section 9). |
+| 0.3 | 2026-11-19 | Lot D1 livré (section 9) ; mots de passe de 15 caractères et liste de mots de passe compromis ; option `--mandataire <adresse>` ; sous-commande `sante`. |
 
 Statut : **proposé**. Les choix marqués « proposé » restent à confirmer par l'utilisateur ; les décisions citées sont celles du cahier de la phase 2.
 
@@ -18,7 +19,9 @@ Statut : **proposé**. Les choix marqués « proposé » restent à confirmer pa
 - Un seul programme Rust, `kadenz-portail` (crate `crates/portail`), qui sert des pages HTML simples rendues sur le serveur : formulaires, aucun framework JavaScript. Bibliothèques : axum et tokio pour le HTTP, maud pour les pages (gabarits vérifiés à la compilation, échappement automatique), argon2 pour les mots de passe (choix de kadenz-34 et kadenz-8e).
 - Il dépend de `kadenz-licence` (et de `kadenz-domaine` pour les modules), jamais de `kadenz-stockage` : le chiffrement de la base et des clés de `kadenz-stockage` repose sur la protection des données de Windows, et le portail tourne sous Linux. Il se construira dans un conteneur comme le relais ; cette construction sous Linux n'est pas encore essayée (SQLite de l'espace de travail remplacé par SQLite3 Multiple Ciphers, favicon repris de `docs/` malgré le `.dockerignore`), elle fait partie de F9c.
 - Lancement : `kadenz-portail --dossier <dossier> --cle <fichier> [--ecoute 127.0.0.1:47382]`. Le fichier de clé est la clé privée du portail en hexadécimal, au format de `kadenz-editeur`. Le programme refuse de démarrer sans `--cle` ; il ne prend jamais une clé d'essai à la place.
-- `kadenz-portail --dossier <dossier> creer-editeur <identifiant>` crée un compte éditeur, mot de passe lu sur l'entrée standard. C'est la seule façon de créer un compte éditeur.
+- `kadenz-portail --dossier <dossier> creer-editeur <identifiant> <nom>` crée un compte éditeur, mot de passe saisi sans écho (ou lu sur l'entrée standard quand elle n'est pas un terminal). C'est la seule façon de créer un compte éditeur.
+- `kadenz-portail sante [--ecoute <adresse:port>]` interroge `/sante` du portail local : code de sortie 0 si le portail répond 200 (vérification de santé de Docker, l'image n'a pas curl).
+- `--mandataire <adresse>` : adresse IP du mandataire de confiance ; pour ses requêtes seulement, l'adresse du client est lue dans la dernière valeur de `X-Forwarded-For` (section 9).
 - Écoute en HTTP sur `127.0.0.1` par défaut. Sur le VPS, le TLS est assuré par un mandataire devant le portail (Caddy, certificats automatiques ; proposé).
 - Exemple de développement `portail_essai` : le même programme avec la clé d'essai du banc (`banc_essai`), pour les essais ; jamais livré.
 
@@ -49,7 +52,7 @@ Base SQLite dans le dossier du portail (proposé : protégée par les droits du 
 
 ## 6. Sécurité
 
-- Mots de passe : argon2id, 10 caractères au moins (proposé).
+- Mots de passe : argon2id, 15 caractères au moins, et refus des mots de passe compromis de la liste embarquée (lot D1, section 9).
 - Session : jeton aléatoire de 32 octets, dans un cookie de session du navigateur `HttpOnly`, `Secure`, `SameSite=Strict`, gardé côté portail ; fin après 8 heures sans activité (proposé), à la déconnexion et à l'arrêt du portail.
 - Chaque formulaire porte un jeton anti-falsification de la session, vérifié avant toute écriture.
 - Connexions freinées : après 5 échecs par identifiant ou par adresse, attente de 5 secondes doublée à chaque échec jusqu'à 15 minutes, comme les sessions du serveur ; chaque échec est noté au journal.
@@ -73,7 +76,7 @@ Base SQLite dans le dossier du portail (proposé : protégée par les droits du 
 
 ## 9. Durcissement (relecture d'OpenCode, docs/securite/echanges-opencode.md)
 
-Ordre décidé entre sessions le 2026-11-19 : D1, puis L8 (codes de la ligne V1, docs/spec-codes-licence.md), puis D2, puis la chaîne de hachage du journal et la double authentification des éditeurs, avant toute mise en service.
+Ordre décidé entre sessions le 2026-11-19 : D1 (livré le 2026-11-19), puis L8 (codes de la ligne V1, docs/spec-codes-licence.md), puis D2, puis la chaîne de hachage du journal et la double authentification des éditeurs, avant toute mise en service.
 
 - D1, indépendant des pages :
   - verrou de la base relâché pendant Argon2 ;
@@ -87,5 +90,12 @@ Ordre décidé entre sessions le 2026-11-19 : D1, puis L8 (codes de la ligne V1,
   - fichier de clé : droits vérifiés au démarrage, effacement de la mémoire ;
   - sous-commande de santé ;
   - images du portail et du relais avec l'utilisateur 10001, sans binaire ni clé d'essai.
+- D1, ce qui est en place :
+  - Argon2 passe par une porte de 2 places, hors du verrou de la base ; sous le verrou, avant d'ouvrir la session, le compte doit être encore actif avec la même empreinte. Un compte inconnu est vérifié contre une empreinte factice.
+  - Frein en base (table `frein`, schéma 4), avec 3 clés pour une connexion : adresse, identifiant depuis l'adresse (5 échecs, attente doublée jusqu'à 15 minutes), identifiant seul (50 échecs, 1 minute au plus). Les clés d'une activation suivent le même modèle, avec l'entreprise seulement si son identifiant est valide. Les lignes sans échec depuis un jour sont purgées, et 10 000 lignes sans attente sont gardées au plus ; une attente en cours n'est jamais retirée.
+  - `X-Forwarded-For` n'est lu que pour une connexion venue de l'adresse donnée par `--mandataire`, et sa dernière valeur doit être une adresse IP. Tailscale remplace cet en-tête par l'adresse source réelle (`addProxyForwardedHeaders`, `ipn/ipnlocal/serve.go`), et Caddy y ajoute la sienne en dernier. Reste à relever à l'essai sur le Dell l'adresse du mandataire vue par le conteneur (sans doute la passerelle du réseau Docker).
+  - Mots de passe : 15 caractères, 72 mots de passe compromis refusés (ceux de 15 caractères ou plus parmi les 100 000 de la liste xato de SecLists, licence MIT ; provenance dans `crates/portail/donnees/mots-de-passe-compromis-SOURCE.txt`). Un changement de mot de passe ferme toutes les sessions du compte et en ouvre une nouvelle. Une session dure 12 heures au plus.
+  - Fichier de clé refusé sous Unix s'il est lisible par le groupe ou par tous ; texte de la clé effacé de la mémoire après lecture. `busy_timeout` de 5 secondes.
+  - Images du portail et du relais : utilisateur 10001, sans binaire ni clé d'essai, avec `HEALTHCHECK`. Elles n'ont pas encore été construites ; elles le seront sur le Dell, avec une clé d'essai.
 - D2, sur les pages maud : jeton ou contrôle d'origine sur `POST /connexion`, cookie `__Host-` avec durée absolue et rotation, CSP avec `script-src 'none'` et `object-src 'none'`.
 - À garder : échappement maud, SQL paramétré, jeton anti-falsification en temps constant sur les autres `POST`, empreinte des codes, clé inconnue refusée.

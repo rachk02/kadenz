@@ -8,7 +8,7 @@
 //! `spawn_blocking`, pour ne jamais bloquer un fil de tokio.
 
 use std::collections::HashMap;
-use std::net::{SocketAddr, TcpListener as StdListener};
+use std::net::{IpAddr, SocketAddr, TcpListener as StdListener};
 use std::thread::JoinHandle;
 
 use axum::Router;
@@ -42,9 +42,14 @@ const ROBOTS: &str = "User-agent: *\nDisallow: /\n";
 /// Réglages des routes.
 #[derive(Clone, Default)]
 pub struct ConfigWeb {
-    /// Le portail est derrière un mandataire (VPS) : l'adresse du client est
-    /// lue dans le dernier `X-Forwarded-For`, pour freiner par adresse.
-    pub mandataire: bool,
+    /// Adresse du mandataire de confiance (Caddy, ou tailscaled pour Funnel) :
+    /// pour une requête qui vient de lui, et de lui seul, l'adresse du client
+    /// est lue dans la dernière valeur de `X-Forwarded-For`, pour freiner par
+    /// adresse. Funnel remplace cet en-tête par l'adresse source réelle
+    /// (`addProxyForwardedHeaders`, ipn/ipnlocal/serve.go de Tailscale) ;
+    /// Caddy y ajoute la sienne en dernier. Une requête d'une autre adresse
+    /// garde son adresse de connexion, quel que soit l'en-tête envoyé.
+    pub mandataire: Option<IpAddr>,
 }
 
 #[derive(Clone)]
@@ -103,6 +108,12 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
         .route(
             "/robots.txt",
             get(|| async { statique("text/plain; charset=utf-8", ROBOTS.as_bytes(), false) }),
+        )
+        // Santé (vérification de Docker, « kadenz-portail sante ») : hors des
+        // sessions et du frein, ne dit rien d'autre que « ok ».
+        .route(
+            "/sante",
+            get(|| async { statique("text/plain; charset=utf-8", b"ok", false) }),
         )
         .fallback(introuvable)
         .layer(map_response(entetes))
@@ -256,7 +267,14 @@ fn page_erreur(c: Option<&Connecte>, e: &ErreurPortail) -> Response {
     let (statut, texte) = match e {
         ErreurPortail::Interdit => (StatusCode::FORBIDDEN, e.to_string()),
         ErreurPortail::Introuvable => (StatusCode::NOT_FOUND, "page introuvable".to_string()),
-        ErreurPortail::Interne(_) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+        // Le détail (base, signature) va dans les traces, jamais dans la page.
+        ErreurPortail::Interne(detail) => {
+            eprintln!("erreur interne : {detail}");
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "erreur interne du portail : réessayez plus tard".to_string(),
+            )
+        }
         _ => (StatusCode::BAD_REQUEST, e.to_string()),
     };
     let cadre = c.map(|c| c.cadre(None));
@@ -271,17 +289,26 @@ fn champ<'a>(champs: &'a Champs, nom: &str) -> &'a str {
 }
 
 fn adresse_client(etat: &Etat, entetes: &HeaderMap, pair: SocketAddr) -> String {
-    if etat.config.mandataire
-        && let Some(transmis) = entetes
-            .get("x-forwarded-for")
-            .and_then(|v| v.to_str().ok())
+    adresse_selon(etat.config.mandataire, entetes, pair).to_string()
+}
+
+/// Adresse du client : la dernière valeur de `X-Forwarded-For`, seulement si
+/// la connexion vient du mandataire de confiance et que la valeur est une
+/// adresse IP ; sinon l'adresse de connexion.
+fn adresse_selon(mandataire: Option<IpAddr>, entetes: &HeaderMap, pair: SocketAddr) -> IpAddr {
+    let pair_ip = pair.ip().to_canonical();
+    if mandataire.map(|m| m.to_canonical()) == Some(pair_ip)
+        && let Some(transmise) = entetes
+            .get_all("x-forwarded-for")
+            .iter()
+            .filter_map(|v| v.to_str().ok())
+            .next_back()
             .and_then(|v| v.rsplit(',').next())
-            .map(str::trim)
-            .filter(|v| !v.is_empty())
+            .and_then(|v| v.trim().parse::<IpAddr>().ok())
     {
-        return transmis.to_string();
+        return transmise.to_canonical();
     }
-    pair.ip().to_string()
+    pair_ip
 }
 
 fn cookie_session(jeton: &str) -> String {
@@ -878,7 +905,15 @@ async fn mot_de_passe(
     match bloquant(move || portail.changer_mot_de_passe(&compte, &ancien, &nouveau, &confirmation))
         .await
     {
-        Ok(()) => rediriger("/?m=mot_de_passe"),
+        // Les autres sessions du compte sont fermées ; celle-ci est remplacée.
+        Ok(jeton) => (
+            StatusCode::SEE_OTHER,
+            [
+                (LOCATION, "/?m=mot_de_passe".to_string()),
+                (SET_COOKIE, cookie_session(&jeton)),
+            ],
+        )
+            .into_response(),
         Err(ErreurPortail::Validation(m)) => html(
             StatusCode::UNPROCESSABLE_ENTITY,
             pages::mot_de_passe(&c.cadre(None), Some(&m)),
@@ -982,4 +1017,72 @@ pub fn lancer(portail: Portail, ecoute: SocketAddr, config: ConfigWeb) -> std::i
         arret: Some(arret),
         fil: Some(fil),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn entetes(valeurs: &[&str]) -> HeaderMap {
+        let mut h = HeaderMap::new();
+        for v in valeurs {
+            h.append("x-forwarded-for", HeaderValue::from_str(v).unwrap());
+        }
+        h
+    }
+
+    fn ip(texte: &str) -> IpAddr {
+        texte.parse().unwrap()
+    }
+
+    #[test]
+    fn x_forwarded_for_seulement_depuis_le_mandataire() {
+        let mandataire = Some(ip("127.0.0.1"));
+        let par_mandataire: SocketAddr = "127.0.0.1:50000".parse().unwrap();
+        let direct: SocketAddr = "203.0.113.9:50000".parse().unwrap();
+        // Par le mandataire : la dernière valeur, celle qu'il a posée.
+        assert_eq!(
+            adresse_selon(
+                mandataire,
+                &entetes(&["1.1.1.1, 198.51.100.7"]),
+                par_mandataire
+            ),
+            ip("198.51.100.7")
+        );
+        assert_eq!(
+            adresse_selon(
+                mandataire,
+                &entetes(&["1.1.1.1", "198.51.100.7"]),
+                par_mandataire
+            ),
+            ip("198.51.100.7")
+        );
+        // En-tête forgé par un client qui joint le port directement : ignoré.
+        assert_eq!(
+            adresse_selon(mandataire, &entetes(&["198.51.100.7"]), direct),
+            ip("203.0.113.9")
+        );
+        // Sans mandataire configuré : toujours l'adresse de connexion.
+        assert_eq!(
+            adresse_selon(None, &entetes(&["198.51.100.7"]), par_mandataire),
+            ip("127.0.0.1")
+        );
+        // Valeur qui n'est pas une adresse : l'adresse de connexion.
+        assert_eq!(
+            adresse_selon(mandataire, &entetes(&["n'importe quoi"]), par_mandataire),
+            ip("127.0.0.1")
+        );
+        // Adresse IPv4 vue en IPv6 (écoute double pile) : reconnue.
+        let mappe: SocketAddr = "[::ffff:127.0.0.1]:50000".parse().unwrap();
+        assert_eq!(
+            adresse_selon(mandataire, &entetes(&["198.51.100.7"]), mappe),
+            ip("198.51.100.7")
+        );
+    }
+
+    #[test]
+    fn erreur_interne_sans_detail() {
+        let reponse = page_erreur(None, &ErreurPortail::Interne("secret de la base".into()));
+        assert_eq!(reponse.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    }
 }

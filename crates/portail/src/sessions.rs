@@ -1,17 +1,26 @@
-//! Sessions du portail (spécification du portail, section 6) : jeton
+//! Sessions du portail (spécification du portail, sections 6 et 9) : jeton
 //! aléatoire de 32 octets gardé ici, en mémoire ; fin après 8 heures sans
-//! activité, à la déconnexion, ou quand le compte est désactivé. Un arrêt du
-//! portail ferme toutes les sessions.
+//! activité ou 12 heures après l'ouverture quoi qu'il arrive, à la
+//! déconnexion, au changement de mot de passe, ou quand le compte est
+//! désactivé. Un arrêt du portail ferme toutes les sessions.
 
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
 const INACTIVITE: Duration = Duration::from_secs(8 * 3600);
+const DUREE_MAX: Duration = Duration::from_secs(12 * 3600);
 
 struct Session {
     compte: i64,
     csrf: String,
+    ouverte: Instant,
     derniere: Instant,
+}
+
+impl Session {
+    fn valable(&self) -> bool {
+        self.derniere.elapsed() <= INACTIVITE && self.ouverte.elapsed() <= DUREE_MAX
+    }
 }
 
 #[derive(Default)]
@@ -35,6 +44,7 @@ impl Sessions {
             Session {
                 compte,
                 csrf: alea(),
+                ouverte: Instant::now(),
                 derniere: Instant::now(),
             },
         );
@@ -45,7 +55,7 @@ impl Sessions {
     /// est prolongée.
     pub(crate) fn toucher(&mut self, jeton: &str) -> Option<(i64, String)> {
         let session = self.ouvertes.get_mut(jeton)?;
-        if session.derniere.elapsed() > INACTIVITE {
+        if !session.valable() {
             self.ouvertes.remove(jeton);
             return None;
         }
@@ -63,7 +73,29 @@ impl Sessions {
     }
 
     fn purger(&mut self) {
-        self.ouvertes
-            .retain(|_, s| s.derniere.elapsed() <= INACTIVITE);
+        self.ouvertes.retain(|_, s| s.valable());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn duree_absolue_et_fermeture_par_compte() {
+        let mut sessions = Sessions::default();
+        let jeton = sessions.ouvrir(7);
+        let autre = sessions.ouvrir(7);
+        let tiers = sessions.ouvrir(8);
+        assert!(sessions.toucher(&jeton).is_some());
+        // Ouverte depuis plus de 12 heures, même active : finie.
+        let vieille = Instant::now().checked_sub(DUREE_MAX + Duration::from_secs(1));
+        if let Some(vieille) = vieille {
+            sessions.ouvertes.get_mut(&jeton).unwrap().ouverte = vieille;
+            assert!(sessions.toucher(&jeton).is_none());
+        }
+        sessions.fermer_compte(7);
+        assert!(sessions.toucher(&autre).is_none());
+        assert!(sessions.toucher(&tiers).is_some());
     }
 }

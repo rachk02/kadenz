@@ -17,7 +17,7 @@ mod sessions;
 pub mod web;
 
 use std::path::Path;
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, Condvar, LazyLock, Mutex, MutexGuard};
 
 use argon2::Argon2;
 use argon2::password_hash::phc::PasswordHash;
@@ -30,11 +30,17 @@ use kadenz_licence::entreprise::{self as lic, Emetteur, Formule, LicenceEntrepri
 use rusqlite::{Connection, OptionalExtension, params};
 use sha2::{Digest, Sha256};
 
-use frein::Frein;
 use sessions::Sessions;
 
-/// Longueur minimale d'un mot de passe du portail.
-pub const LONGUEUR_MIN_MOT_DE_PASSE: usize = 10;
+/// Longueur minimale d'un mot de passe du portail (lignes directrices du
+/// NIST, SP 800-63B : 15 caractères pour un mot de passe seul facteur).
+pub const LONGUEUR_MIN_MOT_DE_PASSE: usize = 15;
+
+/// Mots de passe compromis refusés, un par ligne : ceux de 15 caractères ou
+/// plus parmi les 100 000 plus courants de la liste « ten million passwords »
+/// (SecLists, licence MIT ; provenance et licence dans
+/// `donnees/mots-de-passe-compromis-SOURCE.txt`).
+const MOTS_DE_PASSE_COMPROMIS: &str = include_str!("../donnees/mots-de-passe-compromis.txt");
 
 /// Horloge du portail (date UTC du jour), remplaçable dans les essais.
 pub type Horloge = Arc<dyn Fn() -> NaiveDate + Send + Sync>;
@@ -366,14 +372,57 @@ fn refus<T>(message: &str) -> Resultat<T> {
     Err(ErreurPortail::Validation(message.into()))
 }
 
-/// Ordre des verrous, partout : la base d'abord, puis le frein ou les
-/// sessions ; jamais la base pendant que le frein ou les sessions sont tenus.
+/// Ordre des verrous, partout : la base d'abord, puis les sessions ; jamais
+/// la base pendant que les sessions sont tenues. Le hachage des mots de passe
+/// (Argon2, environ 19 Mio et une fraction de seconde chacun) ne se fait
+/// jamais sous le verrou de la base : il passe par la porte `hachage`, qui en
+/// limite le nombre simultané.
 struct Interieur {
     conn: Mutex<Connection>,
     cle: SigningKey,
     horloge: Horloge,
-    frein: Mutex<Frein>,
     sessions: Mutex<Sessions>,
+    hachage: Porte,
+}
+
+/// Hachages Argon2 simultanés au plus : le serveur maison a 2 cœurs et
+/// 3,2 Go ; sans limite, des connexions en rafale épuiseraient la mémoire.
+const HACHAGES_SIMULTANES: usize = 2;
+
+/// Porte à places comptées : `passer` attend une place libre, le temps de la
+/// fonction donnée.
+struct Porte {
+    libres: Mutex<usize>,
+    signal: Condvar,
+}
+
+impl Porte {
+    fn new(places: usize) -> Porte {
+        Porte {
+            libres: Mutex::new(places),
+            signal: Condvar::new(),
+        }
+    }
+
+    fn passer<T>(&self, f: impl FnOnce() -> T) -> T {
+        {
+            let mut libres = verrou(&self.libres);
+            while *libres == 0 {
+                libres = self.signal.wait(libres).unwrap_or_else(|e| e.into_inner());
+            }
+            *libres -= 1;
+        }
+        // La place est rendue même si `f` panique.
+        struct Rendre<'a>(&'a Porte);
+        impl Drop for Rendre<'_> {
+            fn drop(&mut self) {
+                *verrou(&self.0.libres) += 1;
+                self.0.signal.notify_one();
+            }
+        }
+        let _rendre = Rendre(self);
+        f()
+    }
 }
 
 /// Le portail : base, clé de signature, sessions. Clonable à bas coût.
@@ -395,14 +444,37 @@ fn hacher(mot_de_passe: &str) -> Resultat<String> {
         .map_err(|e| ErreurPortail::Interne(e.to_string()))
 }
 
-fn mot_de_passe_correct(mot_de_passe: &str, hache: &str) -> bool {
-    PasswordHash::new(hache)
-        .map(|h| {
-            Argon2::default()
-                .verify_password(mot_de_passe.as_bytes(), &h)
-                .is_ok()
-        })
-        .unwrap_or(false)
+/// Empreinte d'un mot de passe aléatoire, mêmes réglages qu'un vrai compte :
+/// vérifiée quand le compte n'existe pas ou que son empreinte est illisible,
+/// pour que le temps de réponse ne dise pas si un identifiant existe.
+static EMPREINTE_FACTICE: LazyLock<String> = LazyLock::new(|| {
+    hacher(&sessions::alea()).expect("hachage Argon2 d'un mot de passe aléatoire")
+});
+
+/// Vérifie un mot de passe ; sans empreinte (compte inconnu), vérifie contre
+/// l'empreinte factice et répond non, en prenant le même temps.
+fn mot_de_passe_correct(mot_de_passe: &str, hache: Option<&str>) -> bool {
+    let verifier = |empreinte: &str| {
+        PasswordHash::new(empreinte)
+            .map(|h| {
+                Argon2::default()
+                    .verify_password(mot_de_passe.as_bytes(), &h)
+                    .is_ok()
+            })
+            .ok()
+    };
+    match hache.and_then(verifier) {
+        Some(correct) => correct,
+        None => {
+            let _ = verifier(&EMPREINTE_FACTICE);
+            false
+        }
+    }
+}
+
+/// Secondes depuis 1970 (UTC), pour le frein.
+fn secondes() -> i64 {
+    Utc::now().timestamp()
 }
 
 fn valider_mot_de_passe(mot_de_passe: &str) -> Resultat<()> {
@@ -410,6 +482,15 @@ fn valider_mot_de_passe(mot_de_passe: &str) -> Resultat<()> {
         return Err(ErreurPortail::Validation(format!(
             "mot de passe trop court : {LONGUEUR_MIN_MOT_DE_PASSE} caractères au moins"
         )));
+    }
+    let minuscules = mot_de_passe.to_lowercase();
+    if MOTS_DE_PASSE_COMPROMIS
+        .lines()
+        .any(|l| l.trim().to_lowercase() == minuscules)
+    {
+        return refus(
+            "mot de passe trop courant, déjà publié dans des listes de mots de passe volés : choisissez-en un autre",
+        );
     }
     Ok(())
 }
@@ -807,9 +888,21 @@ impl Portail {
             conn: Mutex::new(conn),
             cle,
             horloge,
-            frein: Mutex::new(Frein::default()),
             sessions: Mutex::new(Sessions::default()),
+            hachage: Porte::new(HACHAGES_SIMULTANES),
         })))
+    }
+
+    /// Hache un mot de passe hors du verrou de la base, par la porte.
+    fn hacher(&self, mot_de_passe: &str) -> Resultat<String> {
+        self.0.hachage.passer(|| hacher(mot_de_passe))
+    }
+
+    /// Vérifie un mot de passe hors du verrou de la base, par la porte.
+    fn verifier(&self, mot_de_passe: &str, hache: Option<&str>) -> bool {
+        self.0
+            .hachage
+            .passer(|| mot_de_passe_correct(mot_de_passe, hache))
     }
 
     fn conn(&self) -> MutexGuard<'_, Connection> {
@@ -835,8 +928,10 @@ impl Portail {
         nom: &str,
         mot_de_passe: &str,
     ) -> Resultat<Compte> {
+        valider_mot_de_passe(mot_de_passe)?;
+        let hache = self.hacher(mot_de_passe)?;
         let conn = self.conn();
-        let compte = creer_compte(&conn, Role::Editeur, identifiant, nom, mot_de_passe)?;
+        let compte = creer_compte(&conn, Role::Editeur, identifiant, nom, &hache)?;
         noter(
             &conn,
             Some(compte.id),
@@ -855,9 +950,14 @@ impl Portail {
         nom: &str,
         mot_de_passe: &str,
     ) -> Resultat<Compte> {
+        // Droit contrôlé avant le hachage (aucun calcul pour un non-éditeur),
+        // puis de nouveau sous le verrou.
+        exiger_editeur(&self.conn(), acteur)?;
+        valider_mot_de_passe(mot_de_passe)?;
+        let hache = self.hacher(mot_de_passe)?;
         let conn = self.conn();
         let acteur = exiger_editeur(&conn, acteur)?;
-        let compte = creer_compte(&conn, Role::Revendeur, identifiant, nom, mot_de_passe)?;
+        let compte = creer_compte(&conn, Role::Revendeur, identifiant, nom, &hache)?;
         noter(
             &conn,
             Some(acteur.id),
@@ -921,32 +1021,44 @@ impl Portail {
         Ok(Compte { actif, ..cible })
     }
 
-    /// Change le mot de passe du compte connecté.
+    /// Change le mot de passe du compte connecté. Toutes les sessions du
+    /// compte finissent (une session volée ne survit pas au changement) ; le
+    /// jeton d'une nouvelle session est rendu pour la personne qui l'a changé.
     pub fn changer_mot_de_passe(
         &self,
         acteur: &Compte,
         ancien: &str,
         nouveau: &str,
         confirmation: &str,
-    ) -> Resultat<()> {
-        let conn = self.conn();
-        let acteur = relire(&conn, acteur)?;
-        let hache: String = conn.query_row(
-            "SELECT mot_de_passe FROM compte WHERE id = ?1",
-            [acteur.id],
-            |r| r.get(0),
-        )?;
-        if !mot_de_passe_correct(ancien, &hache) {
+    ) -> Resultat<String> {
+        let (acteur, hache) = {
+            let conn = self.conn();
+            let acteur = relire(&conn, acteur)?;
+            let hache: String = conn.query_row(
+                "SELECT mot_de_passe FROM compte WHERE id = ?1",
+                [acteur.id],
+                |r| r.get(0),
+            )?;
+            (acteur, hache)
+        };
+        if !self.verifier(ancien, Some(&hache)) {
             return refus("mot de passe actuel incorrect");
         }
         if nouveau != confirmation {
             return refus("les deux nouveaux mots de passe diffèrent");
         }
         valider_mot_de_passe(nouveau)?;
-        conn.execute(
-            "UPDATE compte SET mot_de_passe = ?1 WHERE id = ?2",
-            params![hacher(nouveau)?, acteur.id],
+        let nouvelle = self.hacher(nouveau)?;
+        let conn = self.conn();
+        // Empreinte changée entre la vérification et l'écriture (autre
+        // changement en même temps) : refus, rien n'est écrit.
+        let ecrites = conn.execute(
+            "UPDATE compte SET mot_de_passe = ?1 WHERE id = ?2 AND mot_de_passe = ?3 AND actif = 1",
+            params![nouvelle, acteur.id, hache],
         )?;
+        if ecrites != 1 {
+            return refus("mot de passe changé entre-temps : recommencez");
+        }
         noter(
             &conn,
             Some(acteur.id),
@@ -954,7 +1066,9 @@ impl Portail {
             Some(&acteur.identifiant),
             "",
         )?;
-        Ok(())
+        let mut sessions = verrou(&self.0.sessions);
+        sessions.fermer_compte(acteur.id);
+        Ok(sessions.ouvrir(acteur.id))
     }
 
     // ----- Connexion et sessions -----
@@ -968,29 +1082,48 @@ impl Portail {
         adresse: &str,
     ) -> Resultat<(String, Compte)> {
         let identifiant = identifiant.trim().to_ascii_lowercase();
-        let cles = vec![format!("id:{identifiant}"), format!("ip:{adresse}")];
-        if let Some(attente) = verrou(&self.0.frein).attente(&cles) {
-            return Err(ErreurPortail::Freine(attente));
-        }
-        let conn = self.conn();
-        let trouve = conn
-            .query_row(
+        let cles = frein::cles_connexion(&identifiant, adresse);
+        // Frein, puis lecture du compte, sous le verrou ; vérification du mot
+        // de passe hors du verrou ; puis, de nouveau sous le verrou, le compte
+        // doit être encore actif avec la même empreinte (un changement de mot
+        // de passe ou une désactivation pendant la vérification l'emporte).
+        let trouve = {
+            let conn = self.conn();
+            if let Some(attente) = frein::attente(&conn, &cles, secondes())? {
+                return Err(ErreurPortail::Freine(attente));
+            }
+            conn.query_row(
                 &format!(
                     "SELECT {COLONNES_COMPTE}, mot_de_passe FROM compte WHERE identifiant = ?1"
                 ),
                 [&identifiant],
                 |r| Ok((compte_depuis(r)?, r.get::<_, String>(5)?)),
             )
-            .optional()?;
+            .optional()?
+        };
+        let correct = self.verifier(mot_de_passe, trouve.as_ref().map(|t| t.1.as_str()));
+        let conn = self.conn();
+        let encore_valable = |compte: &Compte, hache: &str| -> Resultat<bool> {
+            Ok(conn
+                .query_row(
+                    "SELECT actif = 1 AND mot_de_passe = ?2 FROM compte WHERE id = ?1",
+                    params![compte.id, hache],
+                    |r| r.get::<_, bool>(0),
+                )
+                .optional()?
+                .unwrap_or(false))
+        };
         match trouve {
-            Some((compte, hache)) if compte.actif && mot_de_passe_correct(mot_de_passe, &hache) => {
-                verrou(&self.0.frein).reussite(&cles);
+            Some((compte, hache))
+                if correct && compte.actif && encore_valable(&compte, &hache)? =>
+            {
+                frein::reussite(&conn, &cles)?;
                 noter(&conn, Some(compte.id), "connexion", None, adresse)?;
                 let jeton = verrou(&self.0.sessions).ouvrir(compte.id);
                 Ok((jeton, compte))
             }
             trouve => {
-                verrou(&self.0.frein).echec(&cles);
+                frein::echec(&conn, &cles, secondes())?;
                 let details = format!("identifiant {identifiant}, adresse {adresse}");
                 noter(
                     &conn,
@@ -1027,7 +1160,7 @@ impl Portail {
 
     pub fn deconnecter(&self, jeton: &str) {
         // Verrou des sessions relâché avant de prendre la base (ordre des
-        // verrous : base, puis frein ou sessions).
+        // verrous : base, puis sessions).
         let fermee = verrou(&self.0.sessions).fermer(jeton);
         if let Some((compte, _)) = fermee {
             let _ = noter(&self.conn(), Some(compte), "deconnexion", None, "");
@@ -1501,19 +1634,17 @@ impl Portail {
     /// la même licence est rendue. Les refus sont freinés comme les connexions.
     pub fn activer(&self, demande: &DemandeActivation, adresse: &str) -> Resultat<Activation> {
         let entreprise_demandee = demande.entreprise.trim().to_ascii_lowercase();
-        let cles = vec![
-            format!("activation:ip:{adresse}"),
-            format!("activation:ent:{entreprise_demandee}"),
-        ];
+        let entreprise_valide = valider_uuid(&entreprise_demandee).ok();
+        let cles = frein::cles_activation(entreprise_valide.as_deref(), adresse);
         let conn = self.conn();
-        if let Some(attente) = verrou(&self.0.frein).attente(&cles) {
+        if let Some(attente) = frein::attente(&conn, &cles, secondes())? {
             return Err(ErreurPortail::Freine(attente));
         }
         let resultat = self.activer_sans_frein(&conn, demande, adresse);
         match &resultat {
-            Ok(_) => verrou(&self.0.frein).reussite(&cles),
+            Ok(_) => frein::reussite(&conn, &cles)?,
             Err(ErreurPortail::Validation(modele)) => {
-                verrou(&self.0.frein).echec(&cles);
+                frein::echec(&conn, &cles, secondes())?;
                 let details = format!(
                     "entreprise {entreprise_demandee}, adresse {adresse}, version {} : {modele}",
                     demande.version.trim()
@@ -1707,11 +1838,10 @@ fn creer_compte(
     role: Role,
     identifiant: &str,
     nom: &str,
-    mot_de_passe: &str,
+    hache: &str,
 ) -> Resultat<Compte> {
     let identifiant = valider_identifiant(identifiant)?.to_ascii_lowercase();
     let nom = valider_texte(nom, "nom", 120)?;
-    valider_mot_de_passe(mot_de_passe)?;
     let existe: bool = conn.query_row(
         "SELECT EXISTS (SELECT 1 FROM compte WHERE identifiant = ?1)",
         [&identifiant],
@@ -1722,7 +1852,7 @@ fn creer_compte(
     }
     conn.execute(
         "INSERT INTO compte (identifiant, nom, role, mot_de_passe, cree_le) VALUES (?1, ?2, ?3, ?4, ?5)",
-        params![identifiant, nom, role.code(), hacher(mot_de_passe)?, maintenant()],
+        params![identifiant, nom, role.code(), hache, maintenant()],
     )?;
     Ok(Compte {
         id: conn.last_insert_rowid(),

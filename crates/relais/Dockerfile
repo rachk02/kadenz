@@ -4,13 +4,14 @@
 # nécessaire à la résolution, seul kadenz-relais est compilé) :
 #   docker build -f crates/relais/Dockerfile -t kadenz-relais .
 #
-# Deux programmes dans l'image :
-# - /usr/local/bin/kadenz-relais : le relais, licences vérifiées avec la clé
-#   du portail (programme par défaut) ;
-# - /usr/local/bin/relais_essai : le relais d'essai, qui accepte la clé du
-#   banc d'essai (exemple de développement, pour l'essai F8c seulement).
+# Un seul programme dans l'image, /usr/local/bin/kadenz-relais, qui vérifie
+# les licences avec la clé du portail. Ni le relais d'essai ni la clé du banc
+# d'essai n'y entrent (lot D1, docs/spec-portail.md, section 9).
 #
-# Données (identité TLS, traces) dans /donnees, à garder dans un volume.
+# Données (identité TLS, traces) dans /donnees, à garder dans un volume. Le
+# dossier appartient à l'utilisateur kadenz d'uid et de gid fixes, 10001 : le
+# relais le met en 700 au démarrage et refuse de démarrer s'il ne peut pas
+# (lot R1). Santé : « kadenz-relais sante --dossier /donnees ».
 #
 # Lancer avec --init : le relais ne traite pas SIGTERM, et sans processus
 # d'initialisation « docker stop » attend 10 secondes avant de le tuer
@@ -27,14 +28,16 @@ WORKDIR /source
 # (docker build --build-arg CARGO_BUILD_JOBS=N pour changer).
 ARG CARGO_BUILD_JOBS=2
 COPY . .
-RUN cargo build --locked --release -p kadenz-relais --bin kadenz-relais --example relais_essai
+RUN cargo build --locked --release -p kadenz-relais --bin kadenz-relais
 
 FROM debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
-RUN useradd --system --home-dir /donnees --shell /usr/sbin/nologin kadenz \
-    && mkdir /donnees && chown kadenz /donnees
+RUN groupadd --system --gid 10001 kadenz \
+    && useradd --system --uid 10001 --gid 10001 --home-dir /donnees --shell /usr/sbin/nologin kadenz \
+    && mkdir /donnees && chown 10001:10001 /donnees && chmod 700 /donnees
 COPY --from=construction /source/target/release/kadenz-relais /usr/local/bin/kadenz-relais
-COPY --from=construction /source/target/release/examples/relais_essai /usr/local/bin/relais_essai
-USER kadenz
+USER 10001:10001
 VOLUME /donnees
 EXPOSE 47381
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD ["/usr/local/bin/kadenz-relais", "sante", "--dossier", "/donnees"]
 ENTRYPOINT ["/usr/local/bin/kadenz-relais", "--dossier", "/donnees", "--ecoute", "0.0.0.0:47381"]
