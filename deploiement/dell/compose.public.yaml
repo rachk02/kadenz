@@ -15,7 +15,9 @@
 
 services:
   portail:
-    # --mandataire : l'adresse fixe de cloudflared sur le réseau « console ».
+    # --mandataire : l'adresse fixe de cloudflared sur le réseau « console » ;
+    # l'adresse du client est lue dans CF-Connecting-IP (vérifié par OpenCode
+    # dans la documentation de Cloudflare), pour ses requêtes seulement.
     # La publication sur 127.0.0.1 reste (administration par ssh -L) : ces
     # connexions viennent de la passerelle du réseau « portail », qui n'est
     # pas le mandataire, et gardent l'adresse du pair.
@@ -24,13 +26,15 @@ services:
       - /run/secrets/cle_portail
       - --mandataire
       - ${IP_TUNNEL:?IP_TUNNEL manquant}
+      - --entete-client
+      - cf-connecting-ip
     networks:
       portail: {}
       console: {}
 
   tunnel:
-    # Image officielle épinglée par empreinte, à relever à la mise en service :
-    # cloudflare/cloudflared:<version>@sha256:<empreinte>.
+    # Image officielle épinglée par empreinte (kadenz.env.exemple), utilisateur
+    # 65532:65532, point d'entrée cloudflared (relevés sur le Dell).
     image: ${IMAGE_CLOUDFLARED:?IMAGE_CLOUDFLARED manquant}
     restart: unless-stopped
     init: true
@@ -47,7 +51,7 @@ services:
       - /run/secrets/jeton_tunnel
     volumes:
       # Jeton du tunnel : fichier de l'hôte, hors dépôt et hors sauvegardes,
-      # propriétaire l'uid de l'image (relevé sur le Dell), mode 400.
+      # propriétaire 65532 (utilisateur de l'image), mode 400.
       - type: bind
         source: ${JETON_TUNNEL:?JETON_TUNNEL manquant}
         target: /run/secrets/jeton_tunnel

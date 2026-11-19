@@ -1,13 +1,15 @@
 //! Portail des licences de Kadenz (jalon F9).
 //!
 //! Usage :
-//! - `kadenz-portail --dossier <dossier> --cle <fichier> [--ecoute <adresse:port>] [--mandataire <adresse>]` :
+//! - `kadenz-portail --dossier <dossier> --cle <fichier> [--ecoute <adresse:port>] [--mandataire <adresse> [--entete-client <en-tête>]]` :
 //!   lance le portail. Le fichier de clé contient la clé privée du portail
 //!   en hexadécimal (format de `kadenz-editeur`) ; sans lui, le portail ne
 //!   démarre pas. Écoute par défaut sur `127.0.0.1:47382`.
 //!   `--mandataire <adresse>` : adresse IP du mandataire de confiance (Caddy,
-//!   ou tailscaled pour Funnel) ; pour ses requêtes seulement, l'adresse du
-//!   client est lue dans `X-Forwarded-For`.
+//!   tailscaled pour Funnel, ou cloudflared) ; pour ses requêtes seulement,
+//!   l'adresse du client est lue dans l'en-tête donné par `--entete-client` :
+//!   `x-forwarded-for` (défaut, dernière valeur) ou `cf-connecting-ip`
+//!   (derrière Cloudflare Tunnel).
 //! - `kadenz-portail sante [--ecoute <adresse:port>]` : interroge `/sante` du
 //!   portail local (vérification de santé de Docker, l'image n'a pas curl) ;
 //!   code de sortie 0 si le portail répond 200.
@@ -39,7 +41,7 @@ const ECOUTE_PAR_DEFAUT: ([u8; 4], u16) = ([127, 0, 0, 1], 47382);
 
 fn usage() -> ExitCode {
     eprintln!(
-        "usage : kadenz-portail --dossier <dossier> --cle <fichier> [--ecoute <adresse:port>] [--mandataire <adresse>]\n\
+        "usage : kadenz-portail --dossier <dossier> --cle <fichier> [--ecoute <adresse:port>] [--mandataire <adresse> [--entete-client x-forwarded-for|cf-connecting-ip]]\n\
          \x20       kadenz-portail --dossier <dossier> creer-editeur <identifiant> <nom>\n\
          \x20       kadenz-portail --dossier <dossier> retirer-double-authentification <identifiant>\n\
          \x20       kadenz-portail --dossier <dossier> journal-verifier\n\
@@ -139,6 +141,15 @@ fn main() -> ExitCode {
                 Some(a) => config.mandataire = Some(a),
                 None => return usage(),
             },
+            "--entete-client" => {
+                match arguments
+                    .next()
+                    .and_then(|a| web::EnteteClient::depuis_option(&a))
+                {
+                    Some(e) => config.entete_client = e,
+                    None => return usage(),
+                }
+            }
             "sante" => sante = true,
             "journal-verifier" => verifier = true,
             "retirer-double-authentification" => match arguments.next() {

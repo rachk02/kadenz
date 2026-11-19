@@ -58,17 +58,42 @@ const POLICE_SPACE: &[u8] = include_bytes!("../../app/ui/polices/SpaceGrotesk-Bo
 const FAVICON: &[u8] = include_bytes!("../../../docs/marque/web/favicon.svg");
 const ROBOTS: &str = "User-agent: *\nDisallow: /\n";
 
+/// En-tête qui porte l'adresse du client, posé par le mandataire.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum EnteteClient {
+    /// `X-Forwarded-For`, dernière valeur : Caddy y ajoute l'adresse du
+    /// client en dernier, Funnel le remplace par l'adresse source réelle
+    /// (`addProxyForwardedHeaders`, ipn/ipnlocal/serve.go de Tailscale).
+    /// Défaut, pour l'essai local.
+    #[default]
+    XForwardedFor,
+    /// `CF-Connecting-IP`, une seule valeur : derrière Cloudflare Tunnel
+    /// (vérifié par OpenCode dans la documentation de Cloudflare).
+    CfConnectingIp,
+}
+
+impl EnteteClient {
+    /// Valeur de l'option `--entete-client`.
+    pub fn depuis_option(texte: &str) -> Option<EnteteClient> {
+        match texte {
+            "x-forwarded-for" => Some(EnteteClient::XForwardedFor),
+            "cf-connecting-ip" => Some(EnteteClient::CfConnectingIp),
+            _ => None,
+        }
+    }
+}
+
 /// Réglages des routes.
 #[derive(Clone, Default)]
 pub struct ConfigWeb {
-    /// Adresse du mandataire de confiance (Caddy, ou tailscaled pour Funnel) :
-    /// pour une requête qui vient de lui, et de lui seul, l'adresse du client
-    /// est lue dans la dernière valeur de `X-Forwarded-For`, pour freiner par
-    /// adresse. Funnel remplace cet en-tête par l'adresse source réelle
-    /// (`addProxyForwardedHeaders`, ipn/ipnlocal/serve.go de Tailscale) ;
-    /// Caddy y ajoute la sienne en dernier. Une requête d'une autre adresse
-    /// garde son adresse de connexion, quel que soit l'en-tête envoyé.
+    /// Adresse du mandataire de confiance (Caddy, tailscaled pour Funnel, ou
+    /// cloudflared) : pour une requête qui vient de lui, et de lui seul,
+    /// l'adresse du client est lue dans l'en-tête `entete_client`, pour
+    /// freiner par adresse. Une requête d'une autre adresse garde son adresse
+    /// de connexion, quel que soit l'en-tête envoyé.
     pub mandataire: Option<IpAddr>,
+    /// En-tête lu pour les requêtes du mandataire.
+    pub entete_client: EnteteClient,
 }
 
 #[derive(Clone)]
@@ -348,26 +373,51 @@ fn champ<'a>(champs: &'a Champs, nom: &str) -> &'a str {
 }
 
 fn adresse_client(etat: &Etat, entetes: &HeaderMap, pair: SocketAddr) -> String {
-    adresse_selon(etat.config.mandataire, entetes, pair).to_string()
+    adresse_selon(
+        etat.config.mandataire,
+        etat.config.entete_client,
+        entetes,
+        pair,
+    )
+    .to_string()
 }
 
-/// Adresse du client : la dernière valeur de `X-Forwarded-For`, seulement si
-/// la connexion vient du mandataire de confiance et que la valeur est une
-/// adresse IP ; sinon l'adresse de connexion.
-fn adresse_selon(mandataire: Option<IpAddr>, entetes: &HeaderMap, pair: SocketAddr) -> IpAddr {
+/// Adresse du client, seulement si la connexion vient du mandataire de
+/// confiance et que la valeur lue est une adresse IP ; sinon l'adresse de
+/// connexion.
+/// - `X-Forwarded-For` : la dernière valeur, celle que le mandataire a posée.
+/// - `CF-Connecting-IP` : une valeur unique ; plusieurs en-têtes, ou une
+///   liste, ne viennent pas de Cloudflare et sont ignorés.
+fn adresse_selon(
+    mandataire: Option<IpAddr>,
+    entete: EnteteClient,
+    entetes: &HeaderMap,
+    pair: SocketAddr,
+) -> IpAddr {
     let pair_ip = pair.ip().to_canonical();
-    if mandataire.map(|m| m.to_canonical()) == Some(pair_ip)
-        && let Some(transmise) = entetes
+    if mandataire.map(|m| m.to_canonical()) != Some(pair_ip) {
+        return pair_ip;
+    }
+    let transmise = match entete {
+        EnteteClient::XForwardedFor => entetes
             .get_all("x-forwarded-for")
             .iter()
             .filter_map(|v| v.to_str().ok())
             .next_back()
             .and_then(|v| v.rsplit(',').next())
-            .and_then(|v| v.trim().parse::<IpAddr>().ok())
-    {
-        return transmise.to_canonical();
-    }
-    pair_ip
+            .and_then(|v| v.trim().parse::<IpAddr>().ok()),
+        EnteteClient::CfConnectingIp => {
+            let mut valeurs = entetes.get_all("cf-connecting-ip").iter();
+            match (valeurs.next(), valeurs.next()) {
+                (Some(v), None) => v
+                    .to_str()
+                    .ok()
+                    .and_then(|v| v.trim().parse::<IpAddr>().ok()),
+                _ => None,
+            }
+        }
+    };
+    transmise.map_or(pair_ip, |ip| ip.to_canonical())
 }
 
 /// Cookie de session : sans `Max-Age`, il disparaît à la fermeture du
@@ -1322,11 +1372,78 @@ mod tests {
     use super::*;
 
     fn entetes(valeurs: &[&str]) -> HeaderMap {
+        entetes_nommes("x-forwarded-for", valeurs)
+    }
+
+    fn entetes_nommes(nom: &'static str, valeurs: &[&str]) -> HeaderMap {
         let mut h = HeaderMap::new();
         for v in valeurs {
-            h.append("x-forwarded-for", HeaderValue::from_str(v).unwrap());
+            h.append(nom, HeaderValue::from_str(v).unwrap());
         }
         h
+    }
+
+    /// `X-Forwarded-For`, en-tête par défaut.
+    fn adresse_xff(mandataire: Option<IpAddr>, entetes: &HeaderMap, pair: SocketAddr) -> IpAddr {
+        adresse_selon(mandataire, EnteteClient::XForwardedFor, entetes, pair)
+    }
+
+    /// Derrière Cloudflare Tunnel : `CF-Connecting-IP`, du mandataire
+    /// seulement, valeur unique ; `X-Forwarded-For` n'est plus lu.
+    #[test]
+    fn cf_connecting_ip_seulement_depuis_le_mandataire() {
+        let cf = EnteteClient::CfConnectingIp;
+        let mandataire = Some(ip("172.31.0.2"));
+        let par_mandataire: SocketAddr = "172.31.0.2:50000".parse().unwrap();
+        let direct: SocketAddr = "172.30.0.1:50000".parse().unwrap();
+        let un = entetes_nommes("cf-connecting-ip", &["198.51.100.7"]);
+        assert_eq!(
+            adresse_selon(mandataire, cf, &un, par_mandataire),
+            ip("198.51.100.7")
+        );
+        // IPv6 du client.
+        assert_eq!(
+            adresse_selon(
+                mandataire,
+                cf,
+                &entetes_nommes("cf-connecting-ip", &["2001:db8::7"]),
+                par_mandataire
+            ),
+            ip("2001:db8::7")
+        );
+        // Connexion d'une autre adresse (127.0.0.1 publié, passerelle) : ignoré.
+        assert_eq!(adresse_selon(mandataire, cf, &un, direct), ip("172.30.0.1"));
+        // X-Forwarded-For seul : non lu dans ce mode.
+        assert_eq!(
+            adresse_selon(mandataire, cf, &entetes(&["198.51.100.7"]), par_mandataire),
+            ip("172.31.0.2")
+        );
+        // Deux en-têtes, une liste, ou une valeur qui n'est pas une adresse :
+        // l'adresse de connexion.
+        for valeurs in [
+            &["198.51.100.7", "203.0.113.1"][..],
+            &["198.51.100.7, 203.0.113.1"][..],
+            &["n'importe quoi"][..],
+        ] {
+            assert_eq!(
+                adresse_selon(
+                    mandataire,
+                    cf,
+                    &entetes_nommes("cf-connecting-ip", valeurs),
+                    par_mandataire
+                ),
+                ip("172.31.0.2"),
+                "{valeurs:?}"
+            );
+        }
+        // Option de la ligne de commande.
+        assert_eq!(EnteteClient::depuis_option("cf-connecting-ip"), Some(cf));
+        assert_eq!(
+            EnteteClient::depuis_option("x-forwarded-for"),
+            Some(EnteteClient::XForwardedFor)
+        );
+        assert_eq!(EnteteClient::depuis_option("CF-Connecting-IP"), None);
+        assert_eq!(EnteteClient::default(), EnteteClient::XForwardedFor);
     }
 
     fn ip(texte: &str) -> IpAddr {
@@ -1340,7 +1457,7 @@ mod tests {
         let direct: SocketAddr = "203.0.113.9:50000".parse().unwrap();
         // Par le mandataire : la dernière valeur, celle qu'il a posée.
         assert_eq!(
-            adresse_selon(
+            adresse_xff(
                 mandataire,
                 &entetes(&["1.1.1.1, 198.51.100.7"]),
                 par_mandataire
@@ -1348,7 +1465,7 @@ mod tests {
             ip("198.51.100.7")
         );
         assert_eq!(
-            adresse_selon(
+            adresse_xff(
                 mandataire,
                 &entetes(&["1.1.1.1", "198.51.100.7"]),
                 par_mandataire
@@ -1357,23 +1474,23 @@ mod tests {
         );
         // En-tête forgé par un client qui joint le port directement : ignoré.
         assert_eq!(
-            adresse_selon(mandataire, &entetes(&["198.51.100.7"]), direct),
+            adresse_xff(mandataire, &entetes(&["198.51.100.7"]), direct),
             ip("203.0.113.9")
         );
         // Sans mandataire configuré : toujours l'adresse de connexion.
         assert_eq!(
-            adresse_selon(None, &entetes(&["198.51.100.7"]), par_mandataire),
+            adresse_xff(None, &entetes(&["198.51.100.7"]), par_mandataire),
             ip("127.0.0.1")
         );
         // Valeur qui n'est pas une adresse : l'adresse de connexion.
         assert_eq!(
-            adresse_selon(mandataire, &entetes(&["n'importe quoi"]), par_mandataire),
+            adresse_xff(mandataire, &entetes(&["n'importe quoi"]), par_mandataire),
             ip("127.0.0.1")
         );
         // Adresse IPv4 vue en IPv6 (écoute double pile) : reconnue.
         let mappe: SocketAddr = "[::ffff:127.0.0.1]:50000".parse().unwrap();
         assert_eq!(
-            adresse_selon(mandataire, &entetes(&["198.51.100.7"]), mappe),
+            adresse_xff(mandataire, &entetes(&["198.51.100.7"]), mappe),
             ip("198.51.100.7")
         );
     }
