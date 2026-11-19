@@ -35,14 +35,15 @@ for service in portail relais; do
     avant=$(cat "$ETAT/$service" 2>/dev/null || echo healthy)
     [ "$etat" = "$avant" ] && continue
     if [ "$etat" = "healthy" ]; then
-        message="Kadenz : $service de nouveau en bonne santé"
+        message="de nouveau en bonne santé"
+        priorite=3
     else
-        message="Kadenz : $service en panne ($etat)"
+        message="en panne ($etat)"
+        priorite=4
     fi
-    # Forme d'appel supposée : un seul argument, le message (à vérifier sur
-    # le Dell). Alerte en échec : état non noté, nouvel essai au passage
-    # suivant.
-    if "$ALERTE" "$message"; then
+    # Alerte du Dell : alerte "titre" "message" [priorité 1 à 5]. Alerte en
+    # échec : état non noté, nouvel essai au passage suivant.
+    if "$ALERTE" "Kadenz, $service" "$message" "$priorite"; then
         echo "$etat" > "$ETAT/$service"
     fi
 done

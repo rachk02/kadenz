@@ -8,6 +8,7 @@
 | 0.4 | 2026-11-19 | Section 7 : variante sur le Dell avec Tailscale, sans nom de domaine (décision de l'utilisateur du 2026-11-19). Funnel vérifié dans sa documentation : le portail y passe, le relais non dans son protocole actuel ; trois pistes pour le relais, à trancher. |
 | 0.5 | 2026-11-19 | `--mandataire` prend l'adresse du mandataire de confiance (lot D1 de kadenz-3a) : Caddy à adresse fixe sur le réseau « console » (paramètres `RESEAU_CONSOLE` et `IP_CADDY_CONSOLE`), adresse de tailscaled à relever sur le Dell pour Funnel ; sonde de santé du portail. |
 | 0.6 | 2026-11-19 | Section 7 : trousse du Dell écrite par kadenz-3a à la demande de kadenz-cc (`deploiement/dell/`) : compose durci sur 127.0.0.1, image d'essai du portail, crochet de sauvegarde, sonde de santé et alerte, procédure ; étape Funnel sur accord de l'utilisateur. Rien n'est lancé. Section 5 : le portail a désormais un `busy_timeout`. |
+| 0.7 | 2026-11-19 | Trousse du Dell : forme d'appel de `/usr/local/sbin/alerte` et place du crochet dans `/usr/local/sbin/sauvegarde`, relevées sur le Dell par kadenz-cc. |
 
 Statut : **proposé**. Le VPS, son prestataire, le nom de domaine et la mise en service restent à la décision de l'utilisateur (décisions 16 et 69 du cahier de la phase 2). Le relais et le portail y iront une fois leur implémentation finie (décision de l'utilisateur du 2026-11-18). Pour l'instant, ni domaine ni VPS : hébergement sur le Dell avec Tailscale, et Vercel au besoin (décision du 2026-11-19, section 7). Rien ici n'a été essayé sur un VPS ; chaque fichier est à relire et à essayer d'abord sur une machine d'essai.
 
@@ -391,7 +392,7 @@ Le Dockerfile du portail prend un argument `PROFIL` (`release` par défaut) ; ce
 - Journal : `journal-exporter --depuis <dernier id exporté>` dans le conteneur en service, ajouté à `journal.jsonl` ; puis `journal-verifier`, dont l'échec déclenche une alerte.
 - Relais : certificat **et** clé copiés (`relais.crt`, `relais.cle`).
 - Santé : `restart: unless-stopped` ne redémarre pas un conteneur « unhealthy » ; l'alerte de `kadenz-sante` est la seule réaction. Une alerte à la panne, une au retour, pas à chaque passage ; un conteneur absent ou arrêté compte comme une panne.
-- `/usr/local/sbin/alerte` est appelé avec un seul argument, le message : **forme supposée**, à vérifier sur le Dell (étape 1). Variables `ALERTE`, `KADENZ_SOURCE`, `KADENZ_ENV`, `KADENZ_SAUVEGARDES` pour adapter les chemins sans modifier les scripts.
+- `/usr/local/sbin/alerte` prend `alerte "titre" "message" [priorité 1 à 5]`, priorité 3 par défaut, titre préfixé par le nom de la machine (relevé sur le Dell par kadenz-cc). Titres « Kadenz, sauvegarde » et « Kadenz, <service> » ; priorité 4 pour un échec ou une panne, 3 pour un retour. Variables `ALERTE`, `KADENZ_SOURCE`, `KADENZ_ENV`, `KADENZ_SAUVEGARDES` pour adapter les chemins sans modifier les scripts.
 - Construction sur le Dell : 3,2 Go de mémoire, d'où `CARGO_BUILD_JOBS=1`.
 
 #### Procédure
@@ -404,7 +405,7 @@ kze() { docker compose -f /opt/kadenz/source/deploiement/dell/compose.yaml \
           -f /opt/kadenz/source/deploiement/dell/compose.essai.yaml --env-file /etc/kadenz/kadenz.env "$@"; }
 ```
 
-1. **Lire l'existant** : `/usr/local/sbin/alerte` (forme d'appel) et `/usr/local/sbin/sauvegarde` (où placer le crochet, ligne `restic backup`). Ajuster l'appel dans `kadenz-sauvegarde` et `kadenz-sante` si la forme diffère.
+1. **Relire l'existant** : `/usr/local/sbin/alerte` (forme d'appel ci-dessus) et `/usr/local/sbin/sauvegarde` (fonction `echec`, commentaire « Données à sauvegarder », ligne `restic backup --one-file-system --tag auto` sur deux lignes, au 2026-11-19). Si l'un a changé, ajuster les scripts de la trousse.
 2. **Source** dans `/opt/kadenz/source`, au commit voulu. La façon dont le Dell obtient le code reste à la décision de l'utilisateur (plan de découpage des dépôts). Vérifier que l'arbre est propre (`git status --porcelain` vide) et noter `git rev-parse --short=12 HEAD`.
 3. **Réglages** : copier `kadenz.env.exemple` dans `/etc/kadenz/kadenz.env` (root, 600) ; `KADENZ_REV` = le commit noté à l'étape 2, sinon l'étiquette ment ; choisir un sous-réseau libre (`docker network ls`, `docker network inspect`, `ip route`) pour `RESEAU_PORTAIL` et sa première adresse pour `PASSERELLE_PORTAIL`.
 4. **Clé d'essai** (jamais la clé de production) : paire Ed25519 neuve, la clé privée dans un fichier réservé à l'uid 10001, la clé publique affichée pour `CLE_PUBLIQUE_ESSAI` ; `CLE_PORTAIL=/srv/kadenz/essai/cle-portail.hex`.
@@ -427,7 +428,7 @@ kze() { docker compose -f /opt/kadenz/source/deploiement/dell/compose.yaml \
 9. **Sauvegarde** :
    - `install -m 755 deploiement/dell/kadenz-sauvegarde /usr/local/sbin/kadenz-sauvegarde` ;
    - le lancer à la main, puis vérifier `/var/backups/kadenz/portail/portail.sqlite`, `journal.jsonl` (une ligne JSON par entrée) et `/var/backups/kadenz/relais/relais.crt` et `relais.cle` ; un second lancement n'ajoute que les entrées nouvelles du journal ;
-   - dans `/usr/local/sbin/sauvegarde`, appeler `/usr/local/sbin/kadenz-sauvegarde` avant restic et ajouter `/var/backups/kadenz` à la ligne `restic backup` ;
+   - dans `/usr/local/sbin/sauvegarde`, juste avant la ligne `restic backup`, ajouter `/usr/local/sbin/kadenz-sauvegarde || echec "kadenz-sauvegarde a échoué"`, puis ajouter `/var/backups/kadenz` aux dossiers de la ligne `restic backup` ;
    - essai de restauration de la base : `kz stop portail` ; copier `portail.sqlite` de la sauvegarde dans `/var/backups/kadenz/depot/`, propriétaire 10001 ; `kz run --rm -T --entrypoint sh outil-sqlite -c 'rm -f /donnees/portail.sqlite-wal /donnees/portail.sqlite-shm && cp /depot/portail.sqlite /donnees/portail.sqlite'` ; `kze up -d portail` ; se reconnecter et vérifier la chaîne du journal (`kz exec -T portail kadenz-portail --dossier /donnees journal-verifier`).
 10. **Alerte** :
     - `install -m 755 deploiement/dell/kadenz-sante /usr/local/sbin/kadenz-sante` ; `install -m 644 deploiement/dell/kadenz-sante.service deploiement/dell/kadenz-sante.timer /etc/systemd/system/` ; `systemctl daemon-reload && systemctl enable --now kadenz-sante.timer` ;
