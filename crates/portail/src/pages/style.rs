@@ -146,30 +146,65 @@ legend { padding: 0 6px; }
   background: var(--brume);
 }
 
-/* Connexion */
-.page-connexion { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); background: #FFFFFF; }
-.connexion-marque { background: var(--nuit); color: #FFFFFF; padding: 40px; display: flex; flex-direction: column; justify-content: space-between; }
-.connexion-marque .symbole { width: 44px; height: 44px; }
-.connexion-titre { font-family: "Space Grotesk", "Inter", sans-serif; font-weight: 700; font-size: 30px; line-height: 1.2; margin: 0 0 12px; color: #FFFFFF; }
-.connexion-texte { color: var(--clair-sur-nuit); margin: 0; max-width: 360px; }
-.trois-temps { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
-.trois-temps span { display: block; height: 3px; background: #FFFFFF; }
-.trois-temps span:nth-child(1) { width: 56px; }
-.trois-temps span:nth-child(2) { width: 66px; }
-.trois-temps span:nth-child(3) { width: 56px; margin-left: 20px; background: var(--ambre); }
-.connexion-formulaire { display: flex; align-items: center; justify-content: center; padding: 40px 16px; }
-.connexion-boite { width: 100%; max-width: 360px; }
-.surtitre { color: var(--indigo); font-weight: 600; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 8px; }
-.connexion-boite h1 { margin-bottom: 8px; }
-.connexion-boite .bouton { width: 100%; margin-top: 8px; }
+/* Connexion : thème « piliers », adopté par l'utilisateur le 2026-11-19
+   (docs/marque/propositions-2026-11-19-portail) : noir pur, vert sauge,
+   colonnes fixes en points (image servie par le portail), champs pleins
+   arrondis. Aucun script. */
+body.connexion { background: #000000; color: #F2F3EF; padding: 32px; }
+body.connexion :focus-visible { outline-color: #A7B58E; }
+.cadre-connexion {
+  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  max-width: 1360px; min-height: calc(100vh - 64px); margin: 0 auto; padding: 10px;
+  background: #000000; border: 1px solid #1A1A1A; border-radius: 20px;
+}
+.colonne-connexion { display: flex; align-items: center; justify-content: center; padding: 56px 40px; }
+.connexion-boite { width: 100%; max-width: 380px; }
+.connexion-symbole { display: flex; justify-content: center; margin-bottom: 44px; }
+.connexion-symbole .symbole { width: 52px; height: 52px; }
+.surtitre { color: #A7B58E; font-weight: 600; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 10px; }
+body.connexion h1 { font-family: "Inter", system-ui, sans-serif; font-weight: 600; font-size: 28px; color: #F2F3EF; margin: 0 0 10px; }
+body.connexion .texte { color: #9DA197; font-size: 14px; line-height: 1.6; margin: 0 0 32px; }
+body.connexion .champ { gap: 8px; margin-bottom: 18px; }
+body.connexion .champ label { color: #F2F3EF; font-size: 13px; }
+.saisie { position: relative; }
+.saisie svg {
+  position: absolute; left: 15px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%);
+  fill: none; stroke: #9DA197; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; pointer-events: none;
+}
+body.connexion input[type="text"], body.connexion input[type="password"] {
+  height: 48px; padding: 0 16px 0 44px; font-size: 15px; color: #F2F3EF;
+  background: #17181A; border: 1px solid #17181A; border-radius: 9px;
+}
+body.connexion input:hover { background: #1D1F21; border-color: #2A2C2E; }
+body.connexion input:focus { outline: none; background: #1D1F21; border-color: #A7B58E; box-shadow: 0 0 0 4px rgba(167, 181, 142, 0.16); }
+.bouton-sauge {
+  display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 18px;
+  font: inherit; font-size: 15px; font-weight: 600; color: #0E1209; background: #A7B58E;
+  border: 0; border-radius: 9px; cursor: pointer;
+}
+.bouton-sauge:hover { background: #BCC9A4; }
+.bouton-sauge:focus-visible { outline: 2px solid #BCC9A4; outline-offset: 3px; }
+body.connexion .message-erreur { color: #F08A8A; background: rgba(229, 83, 75, 0.1); border-color: rgba(229, 83, 75, 0.38); border-radius: 9px; }
+.connexion-retour { margin: 20px 0 0; text-align: center; font-size: 14px; }
+.connexion-retour a { color: #F2F3EF; text-decoration-color: #9DA197; text-underline-offset: 3px; }
+.connexion-retour a:hover { color: #FFFFFF; }
+.separateur { display: flex; align-items: center; gap: 12px; margin: 32px 0 16px; font-size: 12px; color: #9DA197; }
+.separateur::before, .separateur::after { content: ""; flex: 1; height: 1px; background: #2A2C2E; }
+.connexion-pied { margin: 0; font-size: 13px; line-height: 1.6; text-align: center; color: #9DA197; }
+.illustration-connexion { position: relative; min-height: 520px; overflow: hidden; border-radius: 14px; background: #000000; }
+.illustration-connexion img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center bottom; }
 
 /* Page d'erreur sans compte */
 .page-simple { max-width: 560px; margin: 0 auto; padding: 64px 16px; }
 
+@media (max-width: 860px) {
+  body.connexion { padding: 12px; }
+  .cadre-connexion { grid-template-columns: 1fr; min-height: calc(100vh - 24px); }
+  .illustration-connexion { display: none; }
+  .colonne-connexion { padding: 40px 20px; }
+}
+
 @media (max-width: 760px) {
-  .page-connexion { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-  .connexion-formulaire { align-items: flex-start; padding-top: 32px; }
-  .connexion-marque { padding: 24px 16px; gap: 24px; }
   .rangee { grid-template-columns: 1fr; }
   .grille-fiche { grid-template-columns: 1fr; gap: 2px; }
   .grille-fiche dd { margin-bottom: 10px; }

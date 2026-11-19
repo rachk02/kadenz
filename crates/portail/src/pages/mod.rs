@@ -62,6 +62,11 @@ enum Rubrique {
 /// Symbole de la marque, en blanc, posé sur le bandeau Nuit.
 const SYMBOLE: &str = r##"<svg class="symbole" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-hidden="true"><path fill="#FFFFFF" d="M16 16 L120 16 L120 120 L16 120 Z M136 120 L136 14.44 A105.56 105.56 0 0 1 241.56 120 Z M16 136 L120 240 L16 240 Z M134.44 188 A53.56 53.56 0 1 1 241.56 188 A53.56 53.56 0 1 1 134.44 188 Z"/></svg>"##;
 
+/// Colonnes de la page de connexion (SVG de points, 47 Ko, tiré de
+/// docs/marque/propositions-2026-11-19-portail/piliers.js) ; l'empreinte dans
+/// le nom permet un cache long. Servi par `web.rs`.
+pub const IMAGE_PILIERS: &str = "/piliers-caae728454.svg";
+
 /// En-tête HTML commun : titre, feuille de style, aucune indexation.
 fn tete(titre: &str) -> Markup {
     html! {

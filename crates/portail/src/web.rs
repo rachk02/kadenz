@@ -60,6 +60,7 @@ const POLICE_INTER: &[u8] = include_bytes!("../../app/ui/polices/Inter-Regular.t
 const POLICE_INTER_DEMI: &[u8] = include_bytes!("../../app/ui/polices/Inter-SemiBold.ttf");
 const POLICE_SPACE: &[u8] = include_bytes!("../../app/ui/polices/SpaceGrotesk-Bold.ttf");
 const FAVICON: &[u8] = include_bytes!("../../../docs/marque/web/favicon.svg");
+const PILIERS: &[u8] = include_bytes!("../statique/piliers-caae728454.svg");
 const ROBOTS: &str = "User-agent: *\nDisallow: /\n";
 
 /// Taille maximale d'un corps de requête. Le plus gros formulaire (une
@@ -164,6 +165,10 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
         .route(
             "/favicon.svg",
             get(|| async { statique("image/svg+xml", FAVICON, true) }),
+        )
+        .route(
+            pages::IMAGE_PILIERS,
+            get(|| async { statique("image/svg+xml", PILIERS, true) }),
         )
         .route(
             "/robots.txt",

@@ -292,6 +292,35 @@
     });
   }
 
+  // Export en SVG pour le portail (?svg) : la même trame sur 800 x 900,
+  // chaque point en trait de longueur nulle, coordonnées relatives.
+  if (parametres.has("svg")) {
+    largeur = 800;
+    hauteur = 900;
+    placer();
+    const traces = ["", "", ""];
+    const derniers = [null, null, null];
+    for (const p of points) {
+      const x = Math.round(p.hx);
+      const y = Math.round(p.hy);
+      const d = derniers[p.teinte];
+      traces[p.teinte] += d ? "m" + (x - d[0]) + " " + (y - d[1]) + "h0" : "M" + x + " " + y + "h0";
+      derniers[p.teinte] = [x, y];
+    }
+    const opacites = ["0.42", "0.68", "0.95"];
+    let svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 900" preserveAspectRatio="xMidYMax slice">' +
+      '<g fill="none" stroke="#E2E6DC" stroke-width="1.7" stroke-linecap="square">';
+    for (let i = 0; i < 3; i += 1) {
+      svg += '<path stroke-opacity="' + opacites[i] + '" d="' + traces[i] + '"/>';
+    }
+    svg += "</g></svg>";
+    const sortie = document.createElement("pre");
+    sortie.id = "svg-sortie";
+    sortie.textContent = svg;
+    document.body.appendChild(sortie);
+    return;
+  }
+
   dimensionner();
   if (window.ResizeObserver) {
     new ResizeObserver(dimensionner).observe(panneau);
