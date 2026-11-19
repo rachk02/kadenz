@@ -603,6 +603,24 @@ fn valider_poste(poste: &str) -> Resultat<String> {
     Ok(poste)
 }
 
+/// Refus pendant une attente du frein : une entrée au journal au plus par
+/// clé et par attente (`frein::refus_a_noter`). Un journal en échec ne
+/// change pas la réponse : le refus reste un refus.
+fn noter_refus_freine(
+    conn: &Connection,
+    cles: &[frein::Cle],
+    action: &str,
+    qui: &str,
+    attente: u64,
+) {
+    if let Ok(true) = frein::refus_a_noter(conn, cles, secondes()) {
+        let details = format!(
+            "{qui}, attente de {attente} s ; les refus suivants de cette attente ne sont pas notés"
+        );
+        let _ = noter(conn, None, action, None, &details);
+    }
+}
+
 /// Double authentification active pour ce compte.
 fn double_active(conn: &Connection, compte: i64) -> Resultat<bool> {
     Ok(conn.query_row(
@@ -1259,6 +1277,13 @@ impl Portail {
         let trouve = {
             let conn = self.conn();
             if let Some(attente) = frein::attente(&conn, &cles, secondes())? {
+                noter_refus_freine(
+                    &conn,
+                    &cles,
+                    "connexion_freinee",
+                    &format!("identifiant {identifiant}, adresse {adresse}"),
+                    attente,
+                );
                 return Err(ErreurPortail::Freine(attente));
             }
             conn.query_row(
@@ -1362,6 +1387,13 @@ impl Portail {
         let cles = frein::cles_connexion(&identifiant, adresse);
         let conn = self.conn();
         if let Some(attente) = frein::attente(&conn, &cles, secondes())? {
+            noter_refus_freine(
+                &conn,
+                &cles,
+                "code_freine",
+                &format!("identifiant {identifiant}, adresse {adresse}"),
+                attente,
+            );
             return Err(ErreurPortail::Freine(attente));
         }
         let saisi = normaliser_code(code);
@@ -2221,6 +2253,17 @@ impl Portail {
         let cles = frein::cles_activation(titulaire, adresse);
         let conn = self.conn();
         if let Some(attente) = frein::attente(&conn, &cles, secondes())? {
+            let titulaire = match &poste_valide {
+                Some(p) => format!("poste {p}"),
+                None => format!("entreprise {entreprise_demandee}"),
+            };
+            noter_refus_freine(
+                &conn,
+                &cles,
+                "activation_freinee",
+                &format!("{titulaire}, adresse {adresse}"),
+                attente,
+            );
             return Err(ErreurPortail::Freine(attente));
         }
         let resultat = self.activer_sans_frein(&conn, demande, adresse);

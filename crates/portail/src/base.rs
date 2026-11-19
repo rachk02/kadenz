@@ -187,6 +187,12 @@ CREATE TABLE code_secours (
 );
 CREATE INDEX code_secours_compte ON code_secours (compte);
 ",
+    // 7 vers 8 : refus du frein notés au journal (spécification du portail,
+    // section 9) : `signale` garde la fin de l'attente dont un refus est déjà
+    // noté, pour une seule entrée par clé et par attente.
+    "
+ALTER TABLE frein ADD COLUMN signale INTEGER;
+",
 ];
 
 /// Version du schéma qui crée la chaîne du journal.

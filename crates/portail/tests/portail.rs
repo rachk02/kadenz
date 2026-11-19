@@ -373,6 +373,42 @@ fn frein_garde_apres_un_redemarrage() {
     let _ = std::fs::remove_dir_all(d);
 }
 
+/// Refus pendant l'attente du frein : une seule entrée au journal par
+/// attente, puis une nouvelle à l'attente suivante (remarque de kadenz-74).
+#[test]
+fn refus_du_frein_au_journal() {
+    let (p, d, editeur, ..) = portail("frein-journal", "2026-11-15");
+    let freinees = |p: &Portail| {
+        p.journal(&editeur)
+            .unwrap()
+            .into_iter()
+            .filter(|j| j.action == "connexion_freinee")
+            .count()
+    };
+    for _ in 0..5 {
+        let _ = p.connecter("editeur", "mauvais", "10.0.0.9");
+    }
+    assert_eq!(freinees(&p), 0);
+    for _ in 0..4 {
+        assert!(matches!(
+            p.connecter("editeur", MOT_DE_PASSE, "10.0.0.9"),
+            Err(ErreurPortail::Freine(_))
+        ));
+    }
+    assert_eq!(freinees(&p), 1);
+    let j = p
+        .journal(&editeur)
+        .unwrap()
+        .into_iter()
+        .find(|j| j.action == "connexion_freinee")
+        .unwrap();
+    assert!(j.details.contains("10.0.0.9"), "{}", j.details);
+    // Chaîne intacte.
+    assert_eq!(p.verifier_journal().unwrap().rupture, None);
+    drop(p);
+    let _ = std::fs::remove_dir_all(d);
+}
+
 /// Le verrou de la base n'est pas tenu pendant Argon2 (défaut 1) : une
 /// lecture de la base pendant une connexion répond sans attendre la fin du
 /// hachage.

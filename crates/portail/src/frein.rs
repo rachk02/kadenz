@@ -128,6 +128,27 @@ pub(crate) fn attente(
     Ok(plus_longue)
 }
 
+/// Refus pendant une attente : vrai si l'une des clés en attente n'a pas
+/// encore de refus noté pour cette attente, qui est alors marquée. Le
+/// journal reçoit ainsi au plus une entrée par clé et par attente : une
+/// attaque en force reste visible sans noyer le journal.
+pub(crate) fn refus_a_noter(
+    conn: &Connection,
+    cles: &[Cle],
+    maintenant: i64,
+) -> rusqlite::Result<bool> {
+    let mut nouveau = false;
+    for cle in cles {
+        let marquees = conn.execute(
+            "UPDATE frein SET signale = jusqua
+             WHERE cle = ?1 AND jusqua > ?2 AND (signale IS NULL OR signale <> jusqua)",
+            params![cle.texte, maintenant],
+        )?;
+        nouveau |= marquees > 0;
+    }
+    Ok(nouveau)
+}
+
 /// Compte un échec pour chaque clé, puis borne la table.
 pub(crate) fn echec(conn: &Connection, cles: &[Cle], maintenant: i64) -> rusqlite::Result<()> {
     for cle in cles {
