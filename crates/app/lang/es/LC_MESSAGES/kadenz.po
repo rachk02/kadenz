@@ -4765,3 +4765,50 @@ msgstr "Escriba el código de activación recibido del editor o del distribuidor
 
 msgid "cette licence mènerait l'abonnement au {}, avant son échéance actuelle du {} : licence gardée"
 msgstr "esta licencia llevaría la suscripción al {}, antes de su vencimiento actual del {}: licencia conservada"
+
+# Édition monoposte, lot M2 : démarrage, assistant, inscription automatique (2026-11-19)
+
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, Kadenz reste en lecture seule jusqu'à l'activation d'un code, dans les Paramètres, rubrique « Abonnement »."
+msgstr "Introduzca el código de licencia recibido con la suscripción. Se activa en línea, en el portal de Kadenz, al pasar el paso Empresa: se necesita una conexión a Internet. Sin código, Kadenz queda en solo lectura hasta la activación de un código, en Parámetros, sección «Suscripción»."
+
+msgid "Sauvegarde chiffrée chaque jour, Kadenz ouvert, et à chaque fermeture. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr."
+msgstr "Copia de seguridad cifrada cada día, con Kadenz abierto, y en cada cierre. Sin esta contraseña no se puede restaurar ninguna copia, y el editor no puede recuperarla: anótela en un lugar seguro."
+
+msgid "Licence : aucune pour l'instant, lecture seule"
+msgstr "Licencia: ninguna por ahora, solo lectura"
+
+msgid "Réessayer"
+msgstr "Reintentar"
+
+msgid "Kadenz est déjà ouvert sous ce compte Windows. Fermez l'autre fenêtre de Kadenz, puis relancez."
+msgstr "Kadenz ya está abierto con esta cuenta de Windows. Cierre la otra ventana de Kadenz y vuelva a iniciarlo."
+
+msgid "Les droits du dossier des données de Kadenz ne sont pas ceux attendus, ou n'ont pas pu être posés. Le détail est dans le fichier erreurs.log."
+msgstr "Los permisos de la carpeta de datos de Kadenz no son los esperados o no se pudieron establecer. El detalle está en el archivo erreurs.log."
+
+msgid "Le dossier des données appartient au serveur de l'édition multiposte : l'édition monoposte ne l'ouvre pas."
+msgstr "La carpeta de datos pertenece al servidor de la edición multipuesto: la edición monopuesto no la abre."
+
+msgid "Le certificat de Kadenz sur cet ordinateur est illisible. Le détail est dans le fichier erreurs.log."
+msgstr "El certificado de Kadenz en este equipo no se puede leer. El detalle está en el archivo erreurs.log."
+
+msgid "Kadenz n'a pas pu démarrer sur cet ordinateur. Le détail est dans le fichier erreurs.log."
+msgstr "Kadenz no pudo iniciarse en este equipo. El detalle está en el archivo erreurs.log."
+
+msgid "le serveur de Kadenz est arrêté"
+msgstr "el servidor de Kadenz está detenido"
+
+msgid "le serveur de Kadenz ne répond pas"
+msgstr "el servidor de Kadenz no responde"
+
+msgid "Démarrage de Kadenz..."
+msgstr "Iniciando Kadenz..."
+
+msgid "La copie des données de ce poste est incomplète. Le détail est dans le fichier erreurs.log."
+msgstr "La copia de los datos de este puesto está incompleta. El detalle está en el archivo erreurs.log."
+
+msgid "La copie des données de ce poste appartient à un autre serveur que celui de cet ordinateur : elle n'est pas ouverte, et rien n'est effacé. Le détail est dans le fichier erreurs.log."
+msgstr "La copia de los datos de este puesto pertenece a un servidor distinto del de este equipo: no se abre y no se borra nada. El detalle está en el archivo erreurs.log."
+
+msgid "Inscription de ce poste..."
+msgstr "Registrando este puesto..."

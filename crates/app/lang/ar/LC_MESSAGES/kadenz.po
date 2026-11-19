@@ -4765,3 +4765,50 @@ msgstr "اكتب رمز التفعيل الذي تلقيته من الناشر �
 
 msgid "cette licence mènerait l'abonnement au {}, avant son échéance actuelle du {} : licence gardée"
 msgstr "هذا الترخيص سيجعل انتهاء الاشتراك في {}، قبل تاريخ انتهائه الحالي {}: تم الإبقاء على الترخيص"
+
+# Édition monoposte, lot M2 : démarrage, assistant, inscription automatique (2026-11-19)
+
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, Kadenz reste en lecture seule jusqu'à l'activation d'un code, dans les Paramètres, rubrique « Abonnement »."
+msgstr "أدخل رمز الترخيص المستلم مع الاشتراك. يُفعَّل عبر الإنترنت لدى بوابة Kadenz عند تجاوز خطوة المؤسسة: يلزم اتصال بالإنترنت. بدون رمز، يبقى Kadenz للقراءة فقط إلى أن يُفعَّل رمز من الإعدادات، قسم «الاشتراك»."
+
+msgid "Sauvegarde chiffrée chaque jour, Kadenz ouvert, et à chaque fermeture. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr."
+msgstr "نسخة احتياطية مشفرة كل يوم أثناء فتح Kadenz، وعند كل إغلاق. بدون كلمة المرور هذه لا يمكن استعادة أي نسخة احتياطية، ولا يستطيع الناشر استرجاعها: احفظها في مكان آمن."
+
+msgid "Licence : aucune pour l'instant, lecture seule"
+msgstr "الترخيص: لا يوجد حاليًا، للقراءة فقط"
+
+msgid "Réessayer"
+msgstr "إعادة المحاولة"
+
+msgid "Kadenz est déjà ouvert sous ce compte Windows. Fermez l'autre fenêtre de Kadenz, puis relancez."
+msgstr "Kadenz مفتوح بالفعل ضمن حساب Windows هذا. أغلق نافذة Kadenz الأخرى، ثم أعد التشغيل."
+
+msgid "Les droits du dossier des données de Kadenz ne sont pas ceux attendus, ou n'ont pas pu être posés. Le détail est dans le fichier erreurs.log."
+msgstr "أذونات مجلد بيانات Kadenz ليست كما هو متوقع، أو تعذر ضبطها. التفاصيل في الملف erreurs.log."
+
+msgid "Le dossier des données appartient au serveur de l'édition multiposte : l'édition monoposte ne l'ouvre pas."
+msgstr "مجلد البيانات يخص خادم إصدار تعدد الأجهزة: إصدار الجهاز الواحد لا يفتحه."
+
+msgid "Le certificat de Kadenz sur cet ordinateur est illisible. Le détail est dans le fichier erreurs.log."
+msgstr "شهادة Kadenz على هذا الحاسوب غير مقروءة. التفاصيل في الملف erreurs.log."
+
+msgid "Kadenz n'a pas pu démarrer sur cet ordinateur. Le détail est dans le fichier erreurs.log."
+msgstr "تعذر تشغيل Kadenz على هذا الحاسوب. التفاصيل في الملف erreurs.log."
+
+msgid "le serveur de Kadenz est arrêté"
+msgstr "خادم Kadenz متوقف"
+
+msgid "le serveur de Kadenz ne répond pas"
+msgstr "خادم Kadenz لا يستجيب"
+
+msgid "Démarrage de Kadenz..."
+msgstr "جارٍ تشغيل Kadenz..."
+
+msgid "La copie des données de ce poste est incomplète. Le détail est dans le fichier erreurs.log."
+msgstr "نسخة بيانات هذا الجهاز غير مكتملة. التفاصيل في الملف erreurs.log."
+
+msgid "La copie des données de ce poste appartient à un autre serveur que celui de cet ordinateur : elle n'est pas ouverte, et rien n'est effacé. Le détail est dans le fichier erreurs.log."
+msgstr "نسخة بيانات هذا الجهاز تخص خادمًا غير خادم هذا الحاسوب: لا تُفتح ولا يُحذف شيء. التفاصيل في الملف erreurs.log."
+
+msgid "Inscription de ce poste..."
+msgstr "جارٍ تسجيل هذا الجهاز..."

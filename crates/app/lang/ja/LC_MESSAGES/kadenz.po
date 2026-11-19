@@ -4765,3 +4765,50 @@ msgstr "発行元または販売店から受け取ったアクティベーショ
 
 msgid "cette licence mènerait l'abonnement au {}, avant son échéance actuelle du {} : licence gardée"
 msgstr "このライセンスではサブスクリプションの期限が {} になり、現在の期限 {} より前になります：ライセンスは維持されました"
+
+# Édition monoposte, lot M2 : démarrage, assistant, inscription automatique (2026-11-19)
+
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, Kadenz reste en lecture seule jusqu'à l'activation d'un code, dans les Paramètres, rubrique « Abonnement »."
+msgstr "サブスクリプションで受け取ったライセンスコードを入力してください。会社のステップを進むときに Kadenz ポータルでオンライン認証されるため、インターネット接続が必要です。コードがない場合、設定の「サブスクリプション」でコードを有効にするまで、Kadenz は読み取り専用になります。"
+
+msgid "Sauvegarde chiffrée chaque jour, Kadenz ouvert, et à chaque fermeture. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr."
+msgstr "Kadenz を開いている間は毎日、また終了するたびに、暗号化されたバックアップを作成します。このパスワードがないとバックアップは復元できず、発行元も復旧できません。安全な場所に控えてください。"
+
+msgid "Licence : aucune pour l'instant, lecture seule"
+msgstr "ライセンス：現在なし、読み取り専用"
+
+msgid "Réessayer"
+msgstr "再試行"
+
+msgid "Kadenz est déjà ouvert sous ce compte Windows. Fermez l'autre fenêtre de Kadenz, puis relancez."
+msgstr "Kadenz はこの Windows アカウントですでに開いています。もう一方の Kadenz ウィンドウを閉じてから、もう一度起動してください。"
+
+msgid "Les droits du dossier des données de Kadenz ne sont pas ceux attendus, ou n'ont pas pu être posés. Le détail est dans le fichier erreurs.log."
+msgstr "Kadenz のデータフォルダーのアクセス権が想定と異なるか、設定できませんでした。詳細は erreurs.log ファイルにあります。"
+
+msgid "Le dossier des données appartient au serveur de l'édition multiposte : l'édition monoposte ne l'ouvre pas."
+msgstr "データフォルダーは複数端末版のサーバーのものです。単一端末版では開きません。"
+
+msgid "Le certificat de Kadenz sur cet ordinateur est illisible. Le détail est dans le fichier erreurs.log."
+msgstr "このコンピューター上の Kadenz の証明書を読み取れません。詳細は erreurs.log ファイルにあります。"
+
+msgid "Kadenz n'a pas pu démarrer sur cet ordinateur. Le détail est dans le fichier erreurs.log."
+msgstr "このコンピューターで Kadenz を起動できませんでした。詳細は erreurs.log ファイルにあります。"
+
+msgid "le serveur de Kadenz est arrêté"
+msgstr "Kadenz のサーバーは停止しています"
+
+msgid "le serveur de Kadenz ne répond pas"
+msgstr "Kadenz のサーバーが応答しません"
+
+msgid "Démarrage de Kadenz..."
+msgstr "Kadenz を起動しています..."
+
+msgid "La copie des données de ce poste est incomplète. Le détail est dans le fichier erreurs.log."
+msgstr "この端末のデータのコピーが不完全です。詳細は erreurs.log ファイルにあります。"
+
+msgid "La copie des données de ce poste appartient à un autre serveur que celui de cet ordinateur : elle n'est pas ouverte, et rien n'est effacé. Le détail est dans le fichier erreurs.log."
+msgstr "この端末のデータのコピーは、このコンピューターのものとは別のサーバーに属しています。開かれず、何も削除されません。詳細は erreurs.log ファイルにあります。"
+
+msgid "Inscription de ce poste..."
+msgstr "この端末を登録しています..."

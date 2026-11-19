@@ -4765,3 +4765,50 @@ msgstr "Yayıncıdan veya bayiden aldığınız etkinleştirme kodunu yazın. Ka
 
 msgid "cette licence mènerait l'abonnement au {}, avant son échéance actuelle du {} : licence gardée"
 msgstr "bu lisans aboneliğin bitiş tarihini {} yapar, bu da mevcut bitiş tarihi olan {} tarihinden öncedir: lisans korundu"
+
+# Édition monoposte, lot M2 : démarrage, assistant, inscription automatique (2026-11-19)
+
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, Kadenz reste en lecture seule jusqu'à l'activation d'un code, dans les Paramètres, rubrique « Abonnement »."
+msgstr "Abonelikle aldığınız lisans kodunu girin. Kod, Şirket adımı geçilirken Kadenz portalında çevrimiçi etkinleştirilir: İnternet bağlantısı gerekir. Kod olmadan Kadenz, Ayarlar, “Abonelik” bölümünden bir kod etkinleştirilene kadar salt okunur kalır."
+
+msgid "Sauvegarde chiffrée chaque jour, Kadenz ouvert, et à chaque fermeture. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr."
+msgstr "Kadenz açıkken her gün ve her kapanışta şifreli yedekleme. Bu parola olmadan hiçbir yedek geri yüklenemez ve yayıncı onu kurtaramaz: güvenli bir yere not edin."
+
+msgid "Licence : aucune pour l'instant, lecture seule"
+msgstr "Lisans: şimdilik yok, salt okunur"
+
+msgid "Réessayer"
+msgstr "Yeniden dene"
+
+msgid "Kadenz est déjà ouvert sous ce compte Windows. Fermez l'autre fenêtre de Kadenz, puis relancez."
+msgstr "Kadenz bu Windows hesabında zaten açık. Diğer Kadenz penceresini kapatın, sonra yeniden başlatın."
+
+msgid "Les droits du dossier des données de Kadenz ne sont pas ceux attendus, ou n'ont pas pu être posés. Le détail est dans le fichier erreurs.log."
+msgstr "Kadenz veri klasörünün izinleri beklenen izinler değil ya da ayarlanamadı. Ayrıntılar erreurs.log dosyasında."
+
+msgid "Le dossier des données appartient au serveur de l'édition multiposte : l'édition monoposte ne l'ouvre pas."
+msgstr "Veri klasörü çok istasyonlu sürümün sunucusuna ait: tek istasyonlu sürüm onu açmaz."
+
+msgid "Le certificat de Kadenz sur cet ordinateur est illisible. Le détail est dans le fichier erreurs.log."
+msgstr "Bu bilgisayardaki Kadenz sertifikası okunamıyor. Ayrıntılar erreurs.log dosyasında."
+
+msgid "Kadenz n'a pas pu démarrer sur cet ordinateur. Le détail est dans le fichier erreurs.log."
+msgstr "Kadenz bu bilgisayarda başlatılamadı. Ayrıntılar erreurs.log dosyasında."
+
+msgid "le serveur de Kadenz est arrêté"
+msgstr "Kadenz sunucusu durduruldu"
+
+msgid "le serveur de Kadenz ne répond pas"
+msgstr "Kadenz sunucusu yanıt vermiyor"
+
+msgid "Démarrage de Kadenz..."
+msgstr "Kadenz başlatılıyor..."
+
+msgid "La copie des données de ce poste est incomplète. Le détail est dans le fichier erreurs.log."
+msgstr "Bu istasyonun veri kopyası eksik. Ayrıntılar erreurs.log dosyasında."
+
+msgid "La copie des données de ce poste appartient à un autre serveur que celui de cet ordinateur : elle n'est pas ouverte, et rien n'est effacé. Le détail est dans le fichier erreurs.log."
+msgstr "Bu istasyonun veri kopyası bu bilgisayarınkinden başka bir sunucuya ait: açılmaz ve hiçbir şey silinmez. Ayrıntılar erreurs.log dosyasında."
+
+msgid "Inscription de ce poste..."
+msgstr "Bu istasyon kaydediliyor..."

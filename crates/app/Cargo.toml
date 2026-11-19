@@ -17,6 +17,8 @@ kadenz-export.workspace = true
 kadenz-protocole.workspace = true
 kadenz-client.workspace = true
 kadenz-poste.workspace = true
+# Serveur intégré de l'édition monoposte (docs/spec-monoposte.md).
+kadenz-serveur.workspace = true
 base64.workspace = true
 hayro.workspace = true
 slint.workspace = true

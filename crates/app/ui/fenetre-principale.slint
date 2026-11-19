@@ -26,11 +26,15 @@ import { ChampSuspenduUi, SuspendueUi, SuspenduesApi } from "suspendues.slint";
 import { AccesDistantApi, PosteDistantUi } from "acces-distant.slint";
 import { EcranDemarrageImpossible, SauvegardesApi } from "sauvegardes.slint";
 import { ApercuApi, FenetreApercu, PageApercuUi } from "apercu.slint";
+import { DonneesAssistant, EcranAssistant } from "assistant.slint";
+import { EcranAttente, MonoposteApi } from "monoposte.slint";
 
-export { AbonnementApi, AccesDistantApi, ActivationUi, ApercuApi, CodeCourtUi, CodeSaisi, PageApercuUi, PosteDistantUi, ChampSuspenduUi, ConnexionApi, DocumentAValiderUi, LigneResumeUi, ServeurApi, SuspendueUi, SuspenduesApi, Affichage, Alerte, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, StockApi, LigneInventaireUi, ProduitStockUi, ComptabiliteApi, CompteComptableUi, TiersApi, UtilisateursApi }
+export { DonneesAssistant, MonoposteApi, AbonnementApi, AccesDistantApi, ActivationUi, ApercuApi, CodeCourtUi, CodeSaisi, PageApercuUi, PosteDistantUi, ChampSuspenduUi, ConnexionApi, DocumentAValiderUi, LigneResumeUi, ServeurApi, SuspendueUi, SuspenduesApi, Affichage, Alerte, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, StockApi, LigneInventaireUi, ProduitStockUi, ComptabiliteApi, CompteComptableUi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
-export enum Ecran { demarrage-impossible, presentation, inscription, connexion, application }
+// Édition monoposte : `attente` (démarrage du serveur intégré, inscription du
+// poste) et `assistant` (création de l'entreprise sur ce serveur).
+export enum Ecran { demarrage-impossible, presentation, inscription, connexion, application, assistant, attente }
 
 export component FenetrePrincipale inherits Window {
     in-out property <Ecran> ecran: Ecran.demarrage-impossible;
@@ -103,6 +107,7 @@ export component FenetrePrincipale inherits Window {
 
     if root.ecran == Ecran.demarrage-impossible: EcranDemarrageImpossible {
         message: root.message-demarrage;
+        restauration: !MonoposteApi.actif;
         choisir-fichier => {
             root.choisir-sauvegarde-demarrage()
         }
@@ -117,8 +122,10 @@ export component FenetrePrincipale inherits Window {
     if root.ecran == Ecran.presentation: EcranPresentation {
         version-logiciel: root.version-logiciel;
         depuis-a-propos: root.presentation-depuis-a-propos;
+        monoposte: MonoposteApi.actif;
         terminer => {
-            root.ecran = root.presentation-depuis-a-propos ? Ecran.application : Ecran.inscription;
+            root.ecran = root.presentation-depuis-a-propos ? Ecran.application
+                : MonoposteApi.actif ? Ecran.assistant : Ecran.inscription;
             root.presentation-depuis-a-propos = false;
         }
     }
@@ -126,6 +133,25 @@ export component FenetrePrincipale inherits Window {
     if root.ecran == Ecran.inscription: EcranInscription {
         version-logiciel: root.version-logiciel;
     }
+
+    if root.ecran == Ecran.assistant: EcranAssistant {
+        serveur: true;
+        monoposte: true;
+        defaut-taux-tva: MonoposteApi.defaut-taux-tva;
+        defaut-taux-remise: MonoposteApi.defaut-taux-remise;
+        defaut-taux-retenue: MonoposteApi.defaut-taux-retenue;
+        defaut-modes-paiement: MonoposteApi.defaut-modes-paiement;
+        defaut-dossier-sauvegardes: MonoposteApi.defaut-dossier-sauvegardes;
+        defaut-heure-sauvegardes: MonoposteApi.defaut-heure-sauvegardes;
+        choisir-dossier-sauvegardes(actuel) => {
+            MonoposteApi.choisir-dossier-sauvegardes(actuel)
+        }
+        terminer(donnees) => {
+            MonoposteApi.terminer(donnees)
+        }
+    }
+
+    if root.ecran == Ecran.attente: EcranAttente { }
 
     if root.ecran == Ecran.connexion: EcranConnexion {
         nom-entreprise: root.nom-entreprise;

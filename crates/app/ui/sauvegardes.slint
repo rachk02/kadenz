@@ -458,6 +458,9 @@ export component RestaurationFichier inherits VerticalLayout {
 // sauvegarde (fichier et mot de passe) ou ouvrir le dossier des données.
 export component EcranDemarrageImpossible inherits Rectangle {
     in property <string> message;
+    // Faux en monoposte jusqu'au lot M4 : la restauration ici vise la base V1,
+    // et non celle du serveur intégré.
+    in property <bool> restauration: true;
     callback choisir-fichier() -> string;
     callback restaurer-fichier(chemin: string, mot-de-passe: string) -> Retour;
     callback ouvrir-dossier-donnees();
@@ -485,7 +488,18 @@ export component EcranDemarrageImpossible inherits Rectangle {
             }
         }
 
-        RestaurationFichier {
+        if !root.restauration: HorizontalLayout {
+            alignment: center;
+
+            Bouton {
+                text: @tr("Ouvrir le dossier des données");
+                clicked => {
+                    root.ouvrir-dossier-donnees();
+                }
+            }
+        }
+
+        if root.restauration: RestaurationFichier {
             centre: true;
             question: @tr("Restaurer cette sauvegarde ? La base actuelle est mise de côté, jamais effacée.");
             choisir-fichier => {

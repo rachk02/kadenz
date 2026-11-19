@@ -4765,3 +4765,50 @@ msgstr "请输入从发行商或经销商处收到的激活码。Kadenz 向门�
 
 msgid "cette licence mènerait l'abonnement au {}, avant son échéance actuelle du {} : licence gardée"
 msgstr "此许可证会将订阅到期日改为 {}，早于当前到期日 {}：已保留原许可证"
+
+# Édition monoposte, lot M2 : démarrage, assistant, inscription automatique (2026-11-19)
+
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, Kadenz reste en lecture seule jusqu'à l'activation d'un code, dans les Paramètres, rubrique « Abonnement »."
+msgstr "请输入随订阅收到的许可证代码。离开“企业”步骤时，它会在 Kadenz 门户在线激活：需要连接互联网。没有代码时，Kadenz 保持只读，直到在设置的“订阅”栏目中激活代码。"
+
+msgid "Sauvegarde chiffrée chaque jour, Kadenz ouvert, et à chaque fermeture. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr."
+msgstr "Kadenz 打开期间每天备份一次，每次关闭时也备份，备份均已加密。没有此密码，任何备份都无法恢复，发行方也无法找回：请记在安全的地方。"
+
+msgid "Licence : aucune pour l'instant, lecture seule"
+msgstr "许可证：暂无，只读"
+
+msgid "Réessayer"
+msgstr "重试"
+
+msgid "Kadenz est déjà ouvert sous ce compte Windows. Fermez l'autre fenêtre de Kadenz, puis relancez."
+msgstr "Kadenz 已在此 Windows 账户下打开。请关闭另一个 Kadenz 窗口，然后重新启动。"
+
+msgid "Les droits du dossier des données de Kadenz ne sont pas ceux attendus, ou n'ont pas pu être posés. Le détail est dans le fichier erreurs.log."
+msgstr "Kadenz 数据文件夹的权限与预期不符，或无法设置。详情见 erreurs.log 文件。"
+
+msgid "Le dossier des données appartient au serveur de l'édition multiposte : l'édition monoposte ne l'ouvre pas."
+msgstr "该数据文件夹属于多工作站版的服务器：单工作站版不会打开它。"
+
+msgid "Le certificat de Kadenz sur cet ordinateur est illisible. Le détail est dans le fichier erreurs.log."
+msgstr "此计算机上的 Kadenz 证书无法读取。详情见 erreurs.log 文件。"
+
+msgid "Kadenz n'a pas pu démarrer sur cet ordinateur. Le détail est dans le fichier erreurs.log."
+msgstr "Kadenz 无法在此计算机上启动。详情见 erreurs.log 文件。"
+
+msgid "le serveur de Kadenz est arrêté"
+msgstr "Kadenz 服务器已停止"
+
+msgid "le serveur de Kadenz ne répond pas"
+msgstr "Kadenz 服务器没有响应"
+
+msgid "Démarrage de Kadenz..."
+msgstr "正在启动 Kadenz..."
+
+msgid "La copie des données de ce poste est incomplète. Le détail est dans le fichier erreurs.log."
+msgstr "此工作站的数据副本不完整。详情见 erreurs.log 文件。"
+
+msgid "La copie des données de ce poste appartient à un autre serveur que celui de cet ordinateur : elle n'est pas ouverte, et rien n'est effacé. Le détail est dans le fichier erreurs.log."
+msgstr "此工作站的数据副本属于另一台服务器，而不是此计算机上的服务器：不会打开，也不会删除任何内容。详情见 erreurs.log 文件。"
+
+msgid "Inscription de ce poste..."
+msgstr "正在注册此工作站..."

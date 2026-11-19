@@ -56,6 +56,10 @@ export component EcranAssistant inherits Rectangle {
 
     // Fenêtre d'administration du serveur (voir l'en-tête).
     in property <bool> serveur: false;
+    // Édition monoposte (docs/spec-monoposte.md, section 3) : avec `serveur`, le
+    // même parcours sur le serveur intégré à l'application ; seuls des textes
+    // changent (pas de service, un seul poste).
+    in property <bool> monoposte: false;
     // Réglage proposé pour les sauvegardes du serveur, et choix d'un dossier
     // (rend le dossier choisi, ou le dossier actuel si le choix est abandonné).
     in property <string> defaut-dossier-sauvegardes;
@@ -285,7 +289,9 @@ export component EcranAssistant inherits Rectangle {
 
                         Text {
                             horizontal-alignment: Theme.debut;
-                            text: root.serveur
+                            text: root.monoposte
+                                ? @tr("Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, Kadenz reste en lecture seule jusqu'à l'activation d'un code, dans les Paramètres, rubrique « Abonnement ».")
+                                : root.serveur
                                 ? @tr("Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, le serveur reste en lecture seule et un seul poste peut s'inscrire.")
                                 : @tr("La licence est liée à ce poste. Transmettez l'identifiant ci-dessous pour recevoir la clé, puis collez-la ici. Sans clé, seul le socle est disponible : tiers, produits, factures, avoirs et administration. La clé peut aussi être saisie plus tard, dans les Paramètres.");
                             font-size: 15px;
@@ -598,7 +604,9 @@ export component EcranAssistant inherits Rectangle {
 
                         Text {
                             horizontal-alignment: Theme.debut;
-                            text: @tr("Sauvegarde chiffrée chaque jour et à l'arrêt du service. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr.");
+                            text: root.monoposte
+                                ? @tr("Sauvegarde chiffrée chaque jour, Kadenz ouvert, et à chaque fermeture. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr.")
+                                : @tr("Sauvegarde chiffrée chaque jour et à l'arrêt du service. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr.");
                             font-size: 15px;
                             color: Theme.texte-secondaire;
                             wrap: word-wrap;
@@ -672,6 +680,7 @@ export component EcranAssistant inherits Rectangle {
                         Text {
                             horizontal-alignment: Theme.debut;
                             text: root.resume-licence != "" ? @tr("Licence : {}", root.resume-licence)
+                                : root.monoposte ? @tr("Licence : aucune pour l'instant, lecture seule")
                                 : root.serveur ? @tr("Licence : aucune pour l'instant, serveur en lecture seule")
                                 : @tr("Licence : aucune clé, socle seul");
                             color: Theme.texte;

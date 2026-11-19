@@ -20,6 +20,7 @@ mod imprimante;
 mod instance;
 mod licence;
 mod maj;
+mod monoposte;
 mod paiements;
 mod pdf;
 mod pilotage;
@@ -348,6 +349,10 @@ pub(crate) fn ouvrir_session(f: &FenetrePrincipale, etat: &mut Etat, utilisateur
     f.set_page(Page::TableauDeBord);
     afficher_session(f, etat);
     maj::verifier_apres_connexion(f, gere_parametres(etat), relie::logiciel_de(etat));
+    // Monoposte : reprise de la base V1 proposée à l'Admin après l'inscription.
+    if let Some(u) = etat.utilisateur.as_ref() {
+        monoposte::apres_connexion(f, u);
+    }
 }
 
 /// Compte, droits ou entreprise changés sur un autre poste (poste relié) :
@@ -663,11 +668,20 @@ fn main() -> Result<(), slint::PlatformError> {
         }
     };
 
-    // Poste relié : la copie du serveur ; la base V1 reste intacte (décision 45).
-    let demarrage = match kadenz_stockage::poste_relie::copie(&dossier_donnees()) {
-        Some(copie) => kadenz_stockage::poste_relie::ouvrir_copie(&copie)
-            .and_then(|conn| demarrer(&fenetre, conn)),
-        None => kadenz_stockage::ouvrir(&chemin).and_then(|conn| demarrer(&fenetre, conn)),
+    // Édition monoposte : serveur intégré démarré hors du fil de l'interface,
+    // puis assistant, inscription automatique ou copie du poste (monoposte.rs).
+    // La base V1 n'est pas ouverte.
+    let integre: monoposte::Integre = Rc::default();
+    let demarrage = if monoposte::edition_monoposte() {
+        monoposte::lancer(&fenetre, integre.clone(), Rc::new(demarrer.clone()));
+        Ok(())
+    } else {
+        // Poste relié : la copie du serveur ; la base V1 reste intacte (décision 45).
+        match kadenz_stockage::poste_relie::copie(&dossier_donnees()) {
+            Some(copie) => kadenz_stockage::poste_relie::ouvrir_copie(&copie)
+                .and_then(|conn| demarrer(&fenetre, conn)),
+            None => kadenz_stockage::ouvrir(&chemin).and_then(|conn| demarrer(&fenetre, conn)),
+        }
     };
     if let Err(erreur) = demarrage {
         // L'emplacement des données ne s'affiche pas : il va dans erreurs.log.
@@ -701,6 +715,12 @@ fn main() -> Result<(), slint::PlatformError> {
         if !serveur::inscrit(&e.conn) {
             sauvegardes::sauvegarder_a_la_fermeture(&e);
         }
+    }
+    // Monoposte : serveur intégré arrêté après le synchroniseur ; son arrêt fait
+    // la sauvegarde si un mot de passe est choisi, puis rend le verrou du
+    // dossier. Voile et délai borné : lot M3.
+    if let Some(serveur) = integre.borrow_mut().take() {
+        serveur.arreter();
     }
     resultat
 }

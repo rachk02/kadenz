@@ -1,0 +1,75 @@
+// Édition monoposte (docs/spec-monoposte.md, sections 2 et 3) : le serveur de
+// l'entreprise tourne dans le processus de l'application. Au premier lancement,
+// l'assistant installe l'entreprise sur ce serveur intégré, puis le poste s'y
+// inscrit seul, sans code saisi.
+import { Bouton, MessageErreur, Theme, Titre } from "composants.slint";
+import { DonneesAssistant } from "assistant.slint";
+
+export global MonoposteApi {
+    // Vrai dans l'édition monoposte : la présentation mène à l'assistant.
+    in property <bool> actif: false;
+
+    // Valeurs proposées par l'assistant (étapes « Taux et paiements » et
+    // « Sauvegardes »), lues sur le serveur intégré.
+    in property <string> defaut-taux-tva;
+    in property <string> defaut-taux-remise;
+    in property <string> defaut-taux-retenue;
+    in property <string> defaut-modes-paiement;
+    in property <string> defaut-dossier-sauvegardes;
+    in property <string> defaut-heure-sauvegardes;
+
+    // Écran d'attente : texte de l'étape en cours, ou erreur avec « Réessayer ».
+    in property <string> attente;
+    in property <string> erreur;
+
+    callback choisir-dossier-sauvegardes(actuel: string) -> string;
+    // Message d'erreur, ou chaîne vide si l'installation a réussi.
+    callback terminer(DonneesAssistant) -> string;
+    callback reessayer();
+}
+
+// Démarrage du serveur intégré, puis inscription du poste : quelques secondes.
+export component EcranAttente inherits Rectangle {
+    background: Theme.fond;
+
+    VerticalLayout {
+        alignment: center;
+        padding: 24px;
+        spacing: 16px;
+
+        Titre {
+            text: "Kadenz";
+            horizontal-alignment: center;
+        }
+
+        if MonoposteApi.erreur == "": Text {
+            text: MonoposteApi.attente;
+            horizontal-alignment: center;
+            color: Theme.texte-secondaire;
+            wrap: word-wrap;
+        }
+
+        if MonoposteApi.erreur != "": HorizontalLayout {
+            alignment: center;
+
+            MessageErreur {
+                width: min(560px, root.width - 48px);
+                text: MonoposteApi.erreur;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+            }
+        }
+
+        if MonoposteApi.erreur != "": HorizontalLayout {
+            alignment: center;
+
+            Bouton {
+                text: @tr("Réessayer");
+                primary: true;
+                clicked => {
+                    MonoposteApi.reessayer();
+                }
+            }
+        }
+    }
+}
