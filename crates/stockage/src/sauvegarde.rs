@@ -11,6 +11,12 @@
 //!   [`crate::sauvegarder`]) et nommée `kadenz-<genre>-AAAAMMJJ-HHMMSS.kzs` ;
 //!   seuls les fichiers de ce motif sont listés ou supprimés, le dossier peut
 //!   contenir autre chose sans risque.
+//! - Une sauvegarde s'écrit d'abord sous son nom suivi de `.partiel`, que la
+//!   liste ne reconnaît pas, puis est renommée : dans un dossier synchronisé
+//!   (Documents redirigé vers OneDrive, par exemple), elle n'apparaît sous son
+//!   nom que complète. Le reste d'une écriture interrompue (processus tué) est
+//!   ignoré, puis effacé par une sauvegarde suivante dès qu'il a plus de
+//!   [`AGE_PARTIEL_ORPHELIN`] ; plus jeune, il peut être une écriture en cours.
 //! - Seules les [`AUTOMATIQUES_GARDEES`] dernières sauvegardes automatiques sont
 //!   conservées ; les manuelles et celles d'avant restauration ne sont jamais
 //!   supprimées.
@@ -19,6 +25,7 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use chrono::{Local, NaiveDateTime};
 use kadenz_domaine::role::Droit;
@@ -38,6 +45,18 @@ const EXTENSION: &str = "kzs";
 const FICHIER_REGLAGE: &str = "sauvegarde.reglage";
 /// Horodatage des noms de fichiers : triable, sans caractère interdit par Windows.
 const FORMAT_DATE: &str = "%Y%m%d-%H%M%S";
+/// Suffixe d'une sauvegarde en cours d'écriture, ajouté après `.kzs`.
+const SUFFIXE_PARTIEL: &str = ".partiel";
+/// Fichiers que SQLite peut laisser à côté d'un fichier partiel.
+const ANNEXES_PARTIEL: [&str; 3] = ["-journal", "-wal", "-shm"];
+/// Âge à partir duquel un fichier partiel est tenu pour le reste d'une
+/// écriture interrompue, et effacé.
+///
+/// Pas d'effacement immédiat : le dossier des sauvegardes peut être un dossier
+/// réseau partagé entre plusieurs postes, et un partiel récent peut être la
+/// sauvegarde en cours d'un autre poste. Une heure dépasse de loin la durée
+/// d'une sauvegarde, dont le fichier est écrit sans pause.
+pub const AGE_PARTIEL_ORPHELIN: Duration = Duration::from_secs(3600);
 
 /// Réglage des sauvegardes.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -300,7 +319,9 @@ fn nom_libre(dossier: &Path, genre: Genre) -> PathBuf {
             1 => dossier.join(format!("{racine}.{EXTENSION}")),
             _ => dossier.join(format!("{racine}-{rang}.{EXTENSION}")),
         };
-        if !chemin.exists() {
+        // Libre aussi de tout fichier partiel : une écriture en cours ailleurs
+        // garde son nom.
+        if !chemin.exists() && !avec_suffixe_brut(&chemin, SUFFIXE_PARTIEL).exists() {
             return chemin;
         }
         rang += 1;
@@ -314,12 +335,55 @@ fn ecrire(
     genre: Genre,
 ) -> Resultat<PathBuf> {
     fs::create_dir_all(dossier)?;
+    effacer_partiels_orphelins(dossier);
     let chemin = nom_libre(dossier, genre);
-    if let Err(e) = sauvegarder(conn, &chemin, mot_de_passe) {
-        let _ = fs::remove_file(&chemin);
+    let partiel = avec_suffixe_brut(&chemin, SUFFIXE_PARTIEL);
+    // `sauvegarder` ferme le fichier avant de rendre la main : Windows refuse
+    // de renommer un fichier ouvert.
+    let ecrite = sauvegarder(conn, &partiel, mot_de_passe)
+        .and_then(|()| fs::rename(&partiel, &chemin).map_err(Erreur::from));
+    if let Err(e) = ecrite {
+        let _ = fs::remove_file(&partiel);
+        for annexe in ANNEXES_PARTIEL {
+            let _ = fs::remove_file(avec_suffixe_brut(&partiel, annexe));
+        }
         return Err(e);
     }
     Ok(chemin)
+}
+
+/// Vrai pour un fichier partiel de sauvegarde ou l'une de ses annexes SQLite :
+/// `<nom de sauvegarde>.partiel`, suivi au plus de `-journal`, `-wal` ou `-shm`.
+fn est_partiel(nom: &str) -> bool {
+    nom.split_once(&format!(".{EXTENSION}{SUFFIXE_PARTIEL}"))
+        .is_some_and(|(corps, reste)| {
+            (reste.is_empty() || ANNEXES_PARTIEL.contains(&reste))
+                && analyser_nom(&format!("{corps}.{EXTENSION}")).is_some()
+        })
+}
+
+/// Efface les fichiers partiels de plus de [`AGE_PARTIEL_ORPHELIN`]. Sans
+/// erreur : un fichier qui ne s'efface pas (encore ouvert, par exemple) reste
+/// pour une prochaine fois.
+fn effacer_partiels_orphelins(dossier: &Path) {
+    let Ok(entrees) = fs::read_dir(dossier) else {
+        return;
+    };
+    for entree in entrees.flatten() {
+        if !entree.file_name().to_str().is_some_and(est_partiel) {
+            continue;
+        }
+        let orphelin = entree
+            .metadata()
+            .ok()
+            .filter(|m| m.is_file())
+            .and_then(|m| m.modified().ok())
+            .and_then(|date| date.elapsed().ok())
+            .is_some_and(|age| age >= AGE_PARTIEL_ORPHELIN);
+        if orphelin {
+            let _ = fs::remove_file(entree.path());
+        }
+    }
 }
 
 fn mot_de_passe_requis(reglage: &Reglage) -> Resultat<&str> {
@@ -733,6 +797,102 @@ mod tests {
         assert!(matches!(r, Err(Erreur::Interdit(Droit::SauvegarderBase))));
         let r = sauvegarde_manuelle(&conn, &vente, &reglage(&dossier));
         assert!(matches!(r, Err(Erreur::Interdit(Droit::SauvegarderBase))));
+    }
+
+    #[test]
+    fn partiels_reconnus() {
+        for partiel in [
+            "kadenz-auto-20261112-143005.kzs.partiel",
+            "kadenz-manuelle-20261112-143005-3.kzs.partiel",
+            "kadenz-avant-restauration-20261112-143005.kzs.partiel-journal",
+            "kadenz-auto-20261112-143005.kzs.partiel-wal",
+            "kadenz-auto-20261112-143005.kzs.partiel-shm",
+        ] {
+            assert!(est_partiel(partiel), "{partiel}");
+            assert_eq!(
+                analyser_nom(partiel),
+                None,
+                "{partiel} n'est pas une sauvegarde"
+            );
+        }
+        for autre in [
+            "kadenz-auto-20261112-143005.kzs",
+            "kadenz-auto-20261112-143005.kzs.partiel-autre",
+            "kadenz-auto-20261112-143005.kzs.partielx",
+            "notes.kzs.partiel",
+            "kadenz-auto-notes.kzs.partiel",
+            "kadenz.sqlite.partiel",
+        ] {
+            assert!(!est_partiel(autre), "{autre}");
+        }
+    }
+
+    /// Écriture sous un nom partiel puis renommage ; restes d'une écriture
+    /// tuée ignorés par la liste, effacés seulement s'ils sont anciens.
+    #[test]
+    fn ecriture_par_fichier_partiel() {
+        let dossier = dossier_essai("partiel");
+        let (_, conn, admin) = base_avec_admin(&dossier);
+        let reglage = reglage(&dossier);
+        fs::create_dir_all(&reglage.dossier).unwrap();
+        let dans_le_dossier = |nom: &str| reglage.dossier.join(nom);
+        let ancien = dans_le_dossier("kadenz-auto-20261101-101010.kzs.partiel");
+        let ancien_journal = dans_le_dossier("kadenz-auto-20261101-101010.kzs.partiel-journal");
+        let recent = dans_le_dossier("kadenz-manuelle-20261101-101011.kzs.partiel");
+        let etranger = dans_le_dossier("notes.kzs.partiel");
+        for fichier in [&ancien, &ancien_journal, &recent, &etranger] {
+            fs::write(fichier, "reste d'une écriture tuée").unwrap();
+        }
+        let vieux = std::time::SystemTime::now() - AGE_PARTIEL_ORPHELIN * 2;
+        for fichier in [&ancien, &ancien_journal, &etranger] {
+            fs::File::options()
+                .write(true)
+                .open(fichier)
+                .unwrap()
+                .set_modified(vieux)
+                .unwrap();
+        }
+        assert!(
+            liste_sauvegardes(&reglage.dossier).unwrap().is_empty(),
+            "un fichier partiel n'est pas une sauvegarde"
+        );
+
+        let faite = sauvegarde_manuelle(&conn, &admin, &reglage).unwrap();
+        assert!(!ancien.exists(), "reste ancien effacé");
+        assert!(!ancien_journal.exists(), "annexe ancienne effacée");
+        assert!(
+            recent.exists(),
+            "reste récent gardé : écriture peut-être en cours"
+        );
+        assert!(etranger.exists(), "fichier hors du motif jamais touché");
+        let mut noms: Vec<String> = fs::read_dir(&reglage.dossier)
+            .unwrap()
+            .map(|e| e.unwrap().file_name().into_string().unwrap())
+            .collect();
+        noms.sort();
+        let mut attendus = vec![
+            nom_fichier(&faite),
+            nom_fichier(&recent),
+            nom_fichier(&etranger),
+        ];
+        attendus.sort();
+        assert_eq!(
+            noms, attendus,
+            "aucun fichier partiel laissé par l'écriture"
+        );
+        let liste = liste_sauvegardes(&reglage.dossier).unwrap();
+        assert_eq!(liste.len(), 1);
+        assert_eq!(liste[0].chemin, faite);
+        assert_eq!(liste[0].genre, Genre::Manuelle);
+        ouvrir_sauvegarde(&faite, MOT_DE_PASSE).unwrap();
+
+        // Écriture en échec (mot de passe trop court) : ni sauvegarde ni partiel.
+        let court = Reglage {
+            mot_de_passe: Some("court".into()),
+            ..reglage.clone()
+        };
+        assert!(sauvegarde_manuelle(&conn, &admin, &court).is_err());
+        assert_eq!(fs::read_dir(&reglage.dossier).unwrap().count(), 3);
     }
 
     #[test]

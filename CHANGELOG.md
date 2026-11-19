@@ -15,6 +15,7 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 - À l'échéance d'une licence datée, retour au socle (tiers, produits, factures, avoirs, administration), sans lecture seule ; les données des modules sont gardées. Le message de l'état est daté : « Licence échue le JJ/MM/AAAA : socle seul ».
 - La date retenue pour l'échéance ne recule jamais (horloge, dernière date vue, date d'émission).
 - Le texte « Transmettez l'identifiant » disparaît ; l'identifiant du poste reste affiché, pour le support.
+- Sauvegardes : chaque sauvegarde s'écrit d'abord sous un nom provisoire (`.kzs.partiel`) puis est renommée, si bien qu'un dossier synchronisé (Documents redirigé vers OneDrive, par exemple) ne la reçoit sous son nom que complète. Le reste d'une écriture interrompue n'apparaît pas dans la liste et est effacé par une sauvegarde suivante après une heure.
 
 ### Corrigé
 - Saisie du code en majuscules : une lettre tapée après la même lettre ne décale plus la suite de la saisie.
