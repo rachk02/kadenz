@@ -4752,3 +4752,11 @@ msgstr "このコードはこのソフトウェア用ではありません：サ
 
 msgid "ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer"
 msgstr "このコードは既に別の端末で有効化されています：販売店に解除を依頼してください"
+msgid "Code d'activation"
+msgstr "アクティベーションコード"
+
+msgid "Activer le code"
+msgstr "コードを有効化"
+
+msgid "Tapez le code d'activation reçu de l'éditeur ou du revendeur. Kadenz demande la licence au portail, la vérifie, puis le serveur l'applique à tous les postes de l'entreprise. Une connexion à Internet est nécessaire."
+msgstr "発行元または販売店から受け取ったアクティベーションコードを入力してください。Kadenz がポータルにライセンスを要求して検証し、サーバーが企業のすべての端末に適用します。インターネット接続が必要です。"

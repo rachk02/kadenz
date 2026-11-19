@@ -4752,3 +4752,11 @@ msgstr "bu kod bu yazılım için değil: aboneliğinizde belirtilen ürün grub
 
 msgid "ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer"
 msgstr "bu kod zaten başka bir iş istasyonunda etkin: bayinizden serbest bırakmasını isteyin"
+msgid "Code d'activation"
+msgstr "Etkinleştirme kodu"
+
+msgid "Activer le code"
+msgstr "Kodu etkinleştir"
+
+msgid "Tapez le code d'activation reçu de l'éditeur ou du revendeur. Kadenz demande la licence au portail, la vérifie, puis le serveur l'applique à tous les postes de l'entreprise. Une connexion à Internet est nécessaire."
+msgstr "Yayıncıdan veya bayiden aldığınız etkinleştirme kodunu yazın. Kadenz lisansı portaldan ister ve doğrular, ardından sunucu onu şirketin tüm iş istasyonlarına uygular. İnternet bağlantısı gereklidir."

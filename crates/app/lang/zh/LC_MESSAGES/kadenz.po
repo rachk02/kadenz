@@ -4752,3 +4752,11 @@ msgstr "此代码不适用于本软件：请核对订阅上注明的产品系列
 
 msgid "ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer"
 msgstr "此代码已在另一台工作站上激活：请联系您的经销商将其释放"
+msgid "Code d'activation"
+msgstr "激活码"
+
+msgid "Activer le code"
+msgstr "激活代码"
+
+msgid "Tapez le code d'activation reçu de l'éditeur ou du revendeur. Kadenz demande la licence au portail, la vérifie, puis le serveur l'applique à tous les postes de l'entreprise. Une connexion à Internet est nécessaire."
+msgstr "请输入从发行商或经销商处收到的激活码。Kadenz 向门户申请许可证并进行验证，然后由服务器将其应用到企业的所有工作站。需要连接互联网。"

@@ -3,9 +3,8 @@
 
 mod abonnement;
 mod acces_distant;
-// Activation des codes de licence courts : branchée par KadenzAdmin ; l'application
-// la branchera avec la rubrique « Abonnement » (L5 bis).
-#[allow(dead_code)]
+// Activation des codes de licence courts : étape Licence de KadenzAdmin et
+// rubrique « Abonnement » du poste (L5 bis, relie.rs).
 mod activation_ui;
 mod administration;
 mod apercu;

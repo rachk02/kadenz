@@ -4,8 +4,8 @@
 // lecture seule (permanent). Le serveur juge de l'état ; le poste montre le
 // dernier état reçu. Textes construits et traduits par l'application.
 import { ScrollView } from "std-widgets.slint";
-import { Alerte, Bouton, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
-import { SaisieCle } from "licence.slint";
+import { Bouton, ChampCode, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { ActivationUi } from "licence.slint";
 
 export struct LigneAbonnementUi {
     libelle: string,
@@ -25,7 +25,9 @@ export global AbonnementApi {
     // Le compte gère les paramètres : le bandeau ouvre la rubrique, et la
     // rubrique permet de saisir une nouvelle licence.
     in property <bool> peut-ouvrir;
-    // Nouvelle licence envoyée au serveur, qui la vérifie et l'applique.
+    // Nouvelle licence envoyée au serveur, qui la vérifie et l'applique ;
+    // appelée par l'application une fois le code activé au portail
+    // (ActivationUi), jamais par l'écran.
     callback renouveler(cle: string) -> Retour;
 }
 
@@ -117,10 +119,72 @@ component LigneAbonnement inherits GridLayout {
     }
 }
 
-export component PageAbonnement inherits ScrollView {
-    property <string> cle;
-    property <Retour> retour;
+// Renouvellement par code (décision 74, docs/spec-codes-licence.md, section 5),
+// pour un compte qui gère les paramètres : l'application demande la licence au
+// portail, la vérifie, puis la fait enregistrer par le serveur. ActivationUi
+// rend l'état (1 en cours, 2 licence enregistrée, 3 refus) et le message.
+component RenouvellementCode inherits VerticalLayout {
+    property <bool> en-cours: ActivationUi.etat == 1;
+    spacing: 12px;
 
+    function activer() {
+        if (champ.valide && !root.en-cours) {
+            ActivationUi.activer(champ.code, "");
+        }
+    }
+
+    changed en-cours => {
+        if (!root.en-cours && ActivationUi.etat == 2) {
+            champ.vider();
+        }
+    }
+
+    // Pas de message d'une visite précédente de la rubrique.
+    init => {
+        if (!root.en-cours) {
+            ActivationUi.etat = 0;
+            ActivationUi.message = "";
+        }
+    }
+
+    Text {
+        horizontal-alignment: Theme.debut;
+        text: @tr("Tapez le code d'activation reçu de l'éditeur ou du revendeur. Kadenz demande la licence au portail, la vérifie, puis le serveur l'applique à tous les postes de l'entreprise. Une connexion à Internet est nécessaire.");
+        color: Theme.texte-secondaire;
+        wrap: word-wrap;
+    }
+
+    champ := ChampCode {
+        libelle: @tr("Code d'activation");
+        lecture-seule: root.en-cours;
+        valide-entree => {
+            root.activer();
+        }
+    }
+
+    Rangee {
+        spacing: 8px;
+        alignment: start;
+
+        Bouton {
+            text: root.en-cours ? @tr("Activation de la licence…") : @tr("Activer le code");
+            primary: true;
+            enabled: champ.valide && !root.en-cours;
+            clicked => {
+                root.activer();
+            }
+        }
+    }
+
+    if ActivationUi.message != "": Text {
+        horizontal-alignment: Theme.debut;
+        text: ActivationUi.message;
+        color: ActivationUi.etat == 3 ? Theme.erreur : Theme.texte;
+        wrap: word-wrap;
+    }
+}
+
+export component PageAbonnement inherits ScrollView {
     VerticalLayout {
         padding: 24px;
         spacing: 12px;
@@ -157,37 +221,6 @@ export component PageAbonnement inherits ScrollView {
             wrap: word-wrap;
         }
 
-        if AbonnementApi.peut-ouvrir: Text {
-            horizontal-alignment: Theme.debut;
-            text: @tr("Collez la nouvelle licence reçue de l'éditeur ou du revendeur : le serveur la vérifie et l'applique à tous les postes de l'entreprise.");
-            color: Theme.texte-secondaire;
-            wrap: word-wrap;
-        }
-
-        if AbonnementApi.peut-ouvrir: SaisieCle {
-            cle <=> root.cle;
-        }
-
-        if AbonnementApi.peut-ouvrir: Rangee {
-            spacing: 8px;
-            alignment: start;
-
-            Bouton {
-                text: @tr("Enregistrer la licence");
-                primary: true;
-                clicked => {
-                    root.retour = AbonnementApi.renouveler(root.cle);
-                    Alerte.retour(root.retour);
-                    if (root.retour.ok) {
-                        root.cle = "";
-                    }
-                }
-            }
-        }
-
-        MessageRetour {
-            erreurs-seules: true;
-            retour: root.retour;
-        }
+        if AbonnementApi.peut-ouvrir: RenouvellementCode { }
     }
 }

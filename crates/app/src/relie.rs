@@ -15,8 +15,8 @@ use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 use crate::referentiels::{retour_erreur, retour_ok};
 use crate::traduction::{tr, trf};
 use crate::{
-    AbonnementApi, Alerte, ConnexionApi, DocumentAValiderUi, Etat, EtatPartage, FenetrePrincipale,
-    Retour, ServeurApi,
+    AbonnementApi, ActivationUi, Alerte, ConnexionApi, DocumentAValiderUi, Etat, EtatPartage,
+    FenetrePrincipale, Retour, ServeurApi,
 };
 
 thread_local! {
@@ -374,6 +374,73 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 Ok(_) => retour_ok(tr("Licence enregistrée par le serveur.")),
                 Err(e) => retour_erreur(texte_erreur(&e)),
             }
+        });
+
+    brancher_activation(fenetre, etat);
+}
+
+/// Renouvellement par code dans la rubrique « Abonnement » (L5 bis,
+/// docs/spec-codes-licence.md, section 5) : le portail est appelé dans un fil
+/// à part avec l'identifiant de l'entreprise du poste relié et sa raison
+/// sociale ; la licence reçue, vérifiée par `activation_ui::activer`, suit
+/// ensuite le chemin d'une licence collée (`AbonnementApi.renouveler`), dans
+/// la boucle de l'interface, même si la rubrique a été quittée entre-temps.
+fn brancher_activation(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
+    let (fa, e) = (fenetre.as_weak(), etat.clone());
+    fenetre
+        .global::<ActivationUi>()
+        .on_activer(move |code, client| {
+            let Some(f) = fa.upgrade() else {
+                return;
+            };
+            let ui = f.global::<ActivationUi>();
+            let (entreprise, client) = {
+                let etat = e.borrow();
+                let entreprise = kadenz_stockage::poste_relie::lire(&etat.conn)
+                    .ok()
+                    .flatten()
+                    .map(|p| p.entreprise);
+                let client = if client.is_empty() {
+                    kadenz_stockage::entreprise::lire(&etat.conn)
+                        .ok()
+                        .flatten()
+                        .map(|en| en.nom)
+                        .unwrap_or_default()
+                } else {
+                    client.to_string()
+                };
+                (entreprise, client)
+            };
+            let Some(entreprise) = entreprise else {
+                ui.set_message(texte_erreur(&ErreurPoste::HorsConnexion).into());
+                ui.set_etat(3);
+                return;
+            };
+            ui.set_message(SharedString::new());
+            ui.set_etat(1);
+            let (code, fa) = (code.to_string(), fa.clone());
+            std::thread::spawn(move || {
+                let resultat = crate::activation_ui::activer(&code, &entreprise, &client);
+                let _ = slint::invoke_from_event_loop(move || {
+                    let Some(f) = fa.upgrade() else {
+                        return;
+                    };
+                    let ui = f.global::<ActivationUi>();
+                    match resultat {
+                        Ok((texte, _)) => {
+                            ui.set_licence(texte.clone().into());
+                            let retour =
+                                f.global::<AbonnementApi>().invoke_renouveler(texte.into());
+                            ui.set_message(retour.message);
+                            ui.set_etat(if retour.ok { 2 } else { 3 });
+                        }
+                        Err(m) => {
+                            ui.set_message(crate::activation_ui::message(&m).into());
+                            ui.set_etat(3);
+                        }
+                    }
+                });
+            });
         });
 }
 

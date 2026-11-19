@@ -15,7 +15,7 @@ import { PageTableauDeBord, PilotageApi } from "pilotage.slint";
 import { LigneInventaireUi, PageStock, ProduitStockUi, StockApi } from "stock.slint";
 import { ComptabiliteApi, CompteComptableUi, PageComptabilite } from "comptabilite.slint";
 import { ImpressionApi } from "impression.slint";
-import { LicenceApi } from "licence.slint";
+import { ActivationUi, LicenceApi } from "licence.slint";
 import { AbonnementApi, BandeauAbonnement } from "abonnement.slint";
 import { BandeauSauvegarde, DocumentAValiderUi, LigneResumeUi, ServeurApi } from "serveur.slint";
 import { ConnexionApi } from "etat-connexion.slint";
@@ -27,7 +27,7 @@ import { AccesDistantApi, PosteDistantUi } from "acces-distant.slint";
 import { EcranDemarrageImpossible, SauvegardesApi } from "sauvegardes.slint";
 import { ApercuApi, FenetreApercu, PageApercuUi } from "apercu.slint";
 
-export { AbonnementApi, AccesDistantApi, ApercuApi, CodeCourtUi, CodeSaisi, PageApercuUi, PosteDistantUi, ChampSuspenduUi, ConnexionApi, DocumentAValiderUi, LigneResumeUi, ServeurApi, SuspendueUi, SuspenduesApi, Affichage, Alerte, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, StockApi, LigneInventaireUi, ProduitStockUi, ComptabiliteApi, CompteComptableUi, TiersApi, UtilisateursApi }
+export { AbonnementApi, AccesDistantApi, ActivationUi, ApercuApi, CodeCourtUi, CodeSaisi, PageApercuUi, PosteDistantUi, ChampSuspenduUi, ConnexionApi, DocumentAValiderUi, LigneResumeUi, ServeurApi, SuspendueUi, SuspenduesApi, Affichage, Alerte, Droits, Ecriture, Menu, Modules, Theme, EntrepriseApi, FacturesApi, ImportApi, ImpressionApi, LicenceApi, MiseAJourApi, PaiementsApi, ParametresApi, PilotageApi, ProduitsApi, ReglagesApi, SauvegardesApi, StockApi, LigneInventaireUi, ProduitStockUi, ComptabiliteApi, CompteComptableUi, TiersApi, UtilisateursApi }
 
 // Écran courant, choisi par l'application au démarrage puis au fil des actions.
 export enum Ecran { demarrage-impossible, presentation, inscription, connexion, application }

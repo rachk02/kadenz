@@ -4752,3 +4752,11 @@ msgstr "this code is not for this software: check the range shown on your subscr
 
 msgid "ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer"
 msgstr "this code is already activated on another workstation: ask your reseller to release it"
+msgid "Code d'activation"
+msgstr "Activation code"
+
+msgid "Activer le code"
+msgstr "Activate the code"
+
+msgid "Tapez le code d'activation reçu de l'éditeur ou du revendeur. Kadenz demande la licence au portail, la vérifie, puis le serveur l'applique à tous les postes de l'entreprise. Une connexion à Internet est nécessaire."
+msgstr "Type the activation code received from the publisher or the reseller. Kadenz requests the license from the portal and verifies it, then the server applies it to all of the company's workstations. An Internet connection is required."
