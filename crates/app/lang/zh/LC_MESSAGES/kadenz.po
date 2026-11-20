@@ -3932,8 +3932,11 @@ msgstr "远程访问中继"
 msgid "Adresse et empreinte du relais de l'éditeur, par lequel passent les postes hors du bureau. Le service s'y connecte seul quand l'accès à distance est activé depuis un poste, avec un compte Admin (Paramètres, rubrique « Accès à distance »)."
 msgstr "发行方中继的地址和指纹，办公室外的工作站通过它连接。在工作站上用 Admin 账户启用远程访问后，服务会自动连接到中继（设置，“远程访问”栏目）。"
 
-msgid "Adresse du relais (hôte:port)"
-msgstr "中继地址（主机:端口）"
+msgid "Adresse du relais (wss://hôte ou hôte:port)"
+msgstr "中继地址（wss://主机 或 主机:端口）"
+
+msgid "Relais derrière Cloudflare Tunnel : wss://hôte. ws:// n'est permis que vers cette machine (127.0.0.1 ou localhost), pour les essais."
+msgstr "位于 Cloudflare Tunnel 之后的中继：wss://主机。ws:// 仅允许指向本机（127.0.0.1 或 localhost），用于测试。"
 
 msgid "Empreinte du relais"
 msgstr "中继指纹"
@@ -3960,6 +3963,9 @@ msgstr "中继端口无效：应为 1 到 65535"
 
 msgid "empreinte du relais invalide : 64 caractères hexadécimaux attendus"
 msgstr "中继指纹无效：应为 64 个十六进制字符"
+
+msgid "adresse WebSocket du relais invalide : wss://hôte[:port] attendu, ws:// seulement vers 127.0.0.1 ou localhost"
+msgstr "中继 WebSocket 地址无效：应为 wss://主机[:端口]，ws:// 仅限 127.0.0.1 或 localhost"
 
 msgid "Relais non enregistré : {}."
 msgstr "中继未保存：{}。"

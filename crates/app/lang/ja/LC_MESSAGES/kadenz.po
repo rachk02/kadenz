@@ -3932,8 +3932,11 @@ msgstr "リモートアクセスのリレー"
 msgid "Adresse et empreinte du relais de l'éditeur, par lequel passent les postes hors du bureau. Le service s'y connecte seul quand l'accès à distance est activé depuis un poste, avec un compte Admin (Paramètres, rubrique « Accès à distance »)."
 msgstr "社外の端末が経由する、発行元のリレーのアドレスとフィンガープリントです。Admin アカウントで端末からリモートアクセスを有効にすると、サービスが自動的に接続します（設定、「リモートアクセス」）。"
 
-msgid "Adresse du relais (hôte:port)"
-msgstr "リレーのアドレス（ホスト:ポート）"
+msgid "Adresse du relais (wss://hôte ou hôte:port)"
+msgstr "リレーのアドレス（wss://ホスト または ホスト:ポート）"
+
+msgid "Relais derrière Cloudflare Tunnel : wss://hôte. ws:// n'est permis que vers cette machine (127.0.0.1 ou localhost), pour les essais."
+msgstr "Cloudflare Tunnel 経由のリレー：wss://ホスト。ws:// はこのマシン（127.0.0.1 または localhost）へのテスト用にのみ使えます。"
 
 msgid "Empreinte du relais"
 msgstr "リレーのフィンガープリント"
@@ -3960,6 +3963,9 @@ msgstr "リレーのポートが無効です：1〜65535"
 
 msgid "empreinte du relais invalide : 64 caractères hexadécimaux attendus"
 msgstr "リレーのフィンガープリントが無効です：16進数64文字が必要です"
+
+msgid "adresse WebSocket du relais invalide : wss://hôte[:port] attendu, ws:// seulement vers 127.0.0.1 ou localhost"
+msgstr "リレーの WebSocket アドレスが無効です：wss://ホスト[:ポート] の形式で入力してください。ws:// は 127.0.0.1 または localhost のみ"
 
 msgid "Relais non enregistré : {}."
 msgstr "リレーは保存されませんでした：{}。"

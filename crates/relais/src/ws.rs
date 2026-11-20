@@ -96,9 +96,10 @@ impl AdresseWs {
         }
     }
 
+    /// Adresse de la requête d'ouverture ; port par défaut omis, pour que
+    /// l'en-tête `Host` soit le nom seul, comme pour un navigateur.
     fn url(&self) -> String {
-        let schema = if self.chiffree { "wss" } else { "ws" };
-        format!("{schema}://{}:{}/", self.hote, self.port)
+        format!("{}/", self.texte())
     }
 }
 
@@ -172,7 +173,9 @@ where
 
 /// Configuration TLS vers Cloudflare : racines du magasin du système (elles
 /// suivent ses mises à jour et les autorités ajoutées par une entreprise),
-/// fournisseur ring, TLS 1.3. Gardée une fois construite.
+/// fournisseur ring, versions par défaut de rustls (TLS 1.2 et 1.3 : un proxy
+/// d'inspection d'entreprise ne parle souvent que 1.2 ; la protection reste
+/// le TLS 1.3 épinglé du relais, à l'intérieur). Gardée une fois construite.
 fn config_tls() -> Result<Arc<ClientConfig>, ErreurRelais> {
     static CONFIG: OnceLock<Arc<ClientConfig>> = OnceLock::new();
     if let Some(c) = CONFIG.get() {
@@ -187,7 +190,7 @@ fn config_tls() -> Result<Arc<ClientConfig>, ErreurRelais> {
         ));
     }
     let mut config = ClientConfig::builder_with_provider(crate::tls::fournisseur())
-        .with_protocol_versions(&[&rustls::version::TLS13])
+        .with_safe_default_protocol_versions()
         .map_err(|e| ErreurRelais::Injoignable(e.to_string()))?
         .with_root_certificates(racines)
         .with_no_client_auth();
@@ -290,7 +293,12 @@ fn paire_locale(delai: Duration) -> Result<(TcpStream, TcpStream), ErreurRelais>
     let fin = Instant::now() + delai;
     loop {
         match ecoute.accept() {
-            Ok((pont, pair)) if pair == attendu => return Ok((local, pont)),
+            Ok((pont, pair)) if pair == attendu => {
+                // Sous Windows, la connexion acceptée hérite du mode non
+                // bloquant de l'écoute : rendue bloquante, comme `local`.
+                pont.set_nonblocking(false).map_err(injoignable)?;
+                return Ok((local, pont));
+            }
             Ok((etranger, _)) => drop(etranger),
             Err(e) if e.kind() == io::ErrorKind::WouldBlock => {
                 if Instant::now() >= fin {
@@ -595,5 +603,31 @@ mod essais_passerelle {
         tokio::task::spawn_blocking(move || drop(passerelle))
             .await
             .unwrap();
+    }
+}
+
+/// Essai à la main, par le réseau : `cargo test -p kadenz-relais -- --ignored`.
+#[cfg(test)]
+mod essais_cloudflare {
+    use super::*;
+
+    /// Ouverture TLS vers Cloudflare avec les racines du système, par le nom
+    /// du portail, servi par le même tunnel. Le portail n'est pas une
+    /// passerelle : il répond par un statut HTTP (redirection ou refus),
+    /// preuve que la chaîne de certificats, le SNI et l'aiguillage par `Host`
+    /// jusqu'à cloudflared fonctionnent. Une erreur TLS ou de certificat ferait
+    /// échouer l'essai.
+    #[test]
+    #[ignore = "réseau : passe par Cloudflare"]
+    fn tls_vers_cloudflare() {
+        let adresse = AdresseWs::lire("wss://licences.mcarre.dev").unwrap();
+        match ouvrir(&adresse, Duration::from_secs(15)) {
+            Err(ErreurRelais::Injoignable(e)) => {
+                eprintln!("réponse du portail : {e}");
+                assert!(e.starts_with("HTTP error"), "{e}");
+            }
+            Err(autre) => panic!("{autre}"),
+            Ok(_) => panic!("le portail a accepté une WebSocket"),
+        }
     }
 }

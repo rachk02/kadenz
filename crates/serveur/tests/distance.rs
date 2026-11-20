@@ -405,3 +405,119 @@ fn relais_regle_par_la_fenetre_pendant_le_recul() {
     let _ = std::fs::remove_dir_all(dossier_serveur);
     let _ = std::fs::remove_dir_all(dossier_relais);
 }
+
+/// Relais par WebSocket (docs/spec-relais-websocket.md) : adresse `ws://`
+/// réglée dans la fenêtre du serveur, connexion de contrôle, sessions du
+/// serveur et du poste distant, tout par la passerelle du relais ; serveur
+/// coupé puis rallumé, réenregistré seul par la même adresse.
+#[test]
+fn poste_distant_par_websocket() {
+    let dossier_relais = dossier("relais-ws");
+    let mut config = ConfigRelais::nouvelle(
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        dossier_relais.clone(),
+        vec![cle_portail().verifying_key()],
+    );
+    config.traces = None;
+    config.ecoute_ws = Some(SocketAddr::from(([127, 0, 0, 1], 0)));
+    let relais = Relais::demarrer(config).unwrap();
+    let adresse_relais = format!("ws://127.0.0.1:{}", relais.adresse_ws().unwrap().port());
+
+    let dossier_serveur = dossier("serveur-ws");
+    let serveur = demarrer(&dossier_serveur);
+    let empreinte_serveur = serveur.empreinte().to_string();
+    let (entreprise, admin_uid) = installer(&serveur);
+    let poste = poste_inscrit(&serveur, "Poste distant");
+
+    // Fenêtre du serveur : adresses WebSocket admises et refusées.
+    let empreinte_relais = relais.empreinte().to_string();
+    {
+        let adresse = adresse_relais.clone();
+        let empreinte = empreinte_relais.clone();
+        serveur
+            .base(move |c| {
+                for refusee in [
+                    "ws://relais.exemple.fr",
+                    "wss://relais.exemple.fr/chemin",
+                    "wss://relais.exemple.fr:0",
+                    "wss://",
+                ] {
+                    assert_eq!(
+                        admin::regler_relais(c, Some((refusee, &empreinte))),
+                        Err(admin::MODELES_ERREUR_RELAIS[3].to_string()),
+                        "{refusee}"
+                    );
+                }
+                assert_eq!(
+                    admin::regler_relais(c, Some(("wss://relais.exemple.fr", "abc"))),
+                    Err(admin::MODELES_ERREUR_RELAIS[2].to_string())
+                );
+                admin::regler_relais(c, Some(("wss://Relais.Exemple.fr:443/", &empreinte)))
+                    .unwrap();
+                assert_eq!(
+                    admin::lire_relais(c).unwrap().unwrap().adresse,
+                    "wss://relais.exemple.fr"
+                );
+                admin::regler_relais(c, Some((&adresse, &empreinte))).unwrap();
+                assert_eq!(admin::lire_relais(c).unwrap().unwrap().adresse, adresse);
+            })
+            .unwrap();
+    }
+
+    let (mut local, _) = Client::connecter(
+        &serveur.adresse().to_string(),
+        &empreinte_serveur,
+        &poste,
+        DELAI,
+    )
+    .unwrap();
+    local.connexion("admin", MOT_DE_PASSE).unwrap();
+    local.autoriser_distance(&poste.empreinte(), true).unwrap();
+    let etat = local.regler_acces_distant(true).unwrap();
+    assert_eq!(etat.relais.as_deref(), Some(adresse_relais.as_str()));
+    attendre(|| relais.entreprises() == vec![entreprise.clone()]);
+
+    let (mut distant, bienvenue) = Client::connecter_par_relais(
+        &adresse_relais,
+        &entreprise,
+        &empreinte_serveur,
+        &poste,
+        DELAI,
+    )
+    .unwrap();
+    assert_eq!(bienvenue.relais.as_deref(), Some(adresse_relais.as_str()));
+    distant.connexion("admin", MOT_DE_PASSE).unwrap();
+    let issue = distant
+        .envoyer(&creer_tiers(
+            &entreprise,
+            &poste.empreinte(),
+            &admin_uid,
+            "Client par WebSocket",
+        ))
+        .unwrap();
+    assert!(matches!(issue, Issue::Acceptee { .. }), "{issue:?}");
+
+    // Serveur coupé puis rallumé : réenregistré seul, le poste revient.
+    drop(local);
+    drop(distant);
+    serveur.arreter();
+    attendre(|| relais.entreprises().is_empty());
+    let serveur = demarrer(&dossier_serveur);
+    attendre(|| relais.entreprises() == vec![entreprise.clone()]);
+    let (mut distant, _) = Client::connecter_par_relais(
+        &adresse_relais,
+        &entreprise,
+        &empreinte_serveur,
+        &poste,
+        DELAI,
+    )
+    .unwrap();
+    distant.connexion("admin", MOT_DE_PASSE).unwrap();
+    assert!(!distant.changements(0, 500).unwrap().0.is_empty());
+
+    drop(distant);
+    serveur.arreter();
+    relais.arreter();
+    let _ = std::fs::remove_dir_all(dossier_serveur);
+    let _ = std::fs::remove_dir_all(dossier_relais);
+}

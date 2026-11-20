@@ -761,7 +761,7 @@ component Tableau inherits ScrollView {
 
             Text {
                 horizontal-alignment: Theme.debut;
-                text: @tr("Adresse et empreinte du relais de l'éditeur, par lequel passent les postes hors du bureau. Le service s'y connecte seul quand l'accès à distance est activé depuis un poste, avec un compte Admin (Paramètres, rubrique « Accès à distance »).");
+                text: @tr("Adresse et empreinte du relais de l'éditeur, par lequel passent les postes hors du bureau. Le service s'y connecte seul quand l'accès à distance est activé depuis un poste, avec un compte Admin (Paramètres, rubrique « Accès à distance »).") + " " + @tr("Relais derrière Cloudflare Tunnel : wss://hôte. ws:// n'est permis que vers cette machine (127.0.0.1 ou localhost), pour les essais.");
                 color: Theme.texte-secondaire;
                 wrap: word-wrap;
             }
@@ -771,7 +771,7 @@ component Tableau inherits ScrollView {
 
                 Champ {
                     horizontal-stretch: 1;
-                    libelle: @tr("Adresse du relais (hôte:port)");
+                    libelle: @tr("Adresse du relais (wss://hôte ou hôte:port)");
                     valeur <=> AdminApi.relais-adresse;
                 }
 

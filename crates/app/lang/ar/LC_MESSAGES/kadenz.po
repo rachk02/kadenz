@@ -3932,8 +3932,11 @@ msgstr "مرحّل الوصول عن بُعد"
 msgid "Adresse et empreinte du relais de l'éditeur, par lequel passent les postes hors du bureau. Le service s'y connecte seul quand l'accès à distance est activé depuis un poste, avec un compte Admin (Paramètres, rubrique « Accès à distance »)."
 msgstr "عنوان وبصمة مرحّل الناشر، الذي تمر عبره الأجهزة خارج المكتب. تتصل الخدمة به تلقائيًا عند تفعيل الوصول عن بُعد من جهاز بحساب Admin (الإعدادات، قسم « الوصول عن بُعد »)."
 
-msgid "Adresse du relais (hôte:port)"
-msgstr "عنوان المرحّل (المضيف:المنفذ)"
+msgid "Adresse du relais (wss://hôte ou hôte:port)"
+msgstr "عنوان المرحّل (wss://المضيف أو المضيف:المنفذ)"
+
+msgid "Relais derrière Cloudflare Tunnel : wss://hôte. ws:// n'est permis que vers cette machine (127.0.0.1 ou localhost), pour les essais."
+msgstr "مرحّل خلف Cloudflare Tunnel: wss://المضيف. لا يُسمح بـ ws:// إلا نحو هذا الجهاز (127.0.0.1 أو localhost)، للتجارب."
 
 msgid "Empreinte du relais"
 msgstr "بصمة المرحّل"
@@ -3960,6 +3963,9 @@ msgstr "منفذ المرحّل غير صالح: من 1 إلى 65535"
 
 msgid "empreinte du relais invalide : 64 caractères hexadécimaux attendus"
 msgstr "بصمة المرحّل غير صالحة: المتوقع 64 حرفًا ست عشريًا"
+
+msgid "adresse WebSocket du relais invalide : wss://hôte[:port] attendu, ws:// seulement vers 127.0.0.1 ou localhost"
+msgstr "عنوان WebSocket للمرحّل غير صالح: المتوقع wss://المضيف[:المنفذ]، و ws:// فقط نحو 127.0.0.1 أو localhost"
 
 msgid "Relais non enregistré : {}."
 msgstr "لم يُحفظ المرحّل: {}."

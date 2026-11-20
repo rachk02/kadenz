@@ -24,6 +24,24 @@ const DELAI_RELAIS: Duration = Duration::from_secs(10);
 /// Reconnexion après un échec : 5 secondes doublées jusqu'à 5 minutes.
 const ATTENTE_MIN: Duration = Duration::from_secs(5);
 const ATTENTE_MAX: Duration = Duration::from_secs(300);
+
+/// Attente tirée entre 80 et 120 % de `attente` : les serveurs coupés ensemble
+/// (déploiement de Cloudflare, redémarrage du relais) ne reviennent pas tous
+/// à la même seconde (docs/spec-relais-websocket.md, section 7). Le hasard
+/// vient des clés de hachage tirées par la bibliothèque standard, mêlées à
+/// l'heure : il n'a rien à protéger, seulement à étaler.
+fn tirage(attente: Duration) -> Duration {
+    use std::hash::{BuildHasher, Hasher};
+    let mut h = std::collections::hash_map::RandomState::new().build_hasher();
+    h.write_u128(
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0),
+    );
+    let part = (h.finish() % 4001) as f64 / 10000.0;
+    attente.mul_f64(0.8 + part)
+}
 /// Relecture du réglage pendant que la connexion de contrôle est ouverte, et
 /// pendant l'attente d'une reconnexion : un réglage écrit par la fenêtre du
 /// serveur est pris sans attendre la fin du recul.
@@ -261,7 +279,7 @@ pub(crate) fn veiller(contexte: Arc<Contexte>, identite: Identite) {
         match Controle::enregistrer(&enregistrement, DELAI_RELAIS) {
             Err(e) => {
                 contexte.distance.noter(false, Some(message(&e)));
-                attendre_reprise(&contexte, attente, vu, &relais, &licence);
+                attendre_reprise(&contexte, tirage(attente), vu, &relais, &licence);
                 attente = (attente * 2).min(ATTENTE_MAX);
             }
             Ok(controle) => {
@@ -334,4 +352,23 @@ fn servir(
     }
     controle.fermer();
     contexte.distance.noter(false, None);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tirage_entre_80_et_120_pour_cent() {
+        let base = Duration::from_secs(10);
+        let tirages: Vec<Duration> = (0..200).map(|_| tirage(base)).collect();
+        assert!(
+            tirages
+                .iter()
+                .all(|t| *t >= Duration::from_secs(8) && *t <= Duration::from_secs(12))
+        );
+        // Étalées : au moins un tirage sous 9,5 s et un au-dessus de 10,5 s.
+        assert!(tirages.iter().any(|t| *t < Duration::from_millis(9500)));
+        assert!(tirages.iter().any(|t| *t > Duration::from_millis(10500)));
+    }
 }

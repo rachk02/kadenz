@@ -3932,8 +3932,11 @@ msgstr "Relé de acceso remoto"
 msgid "Adresse et empreinte du relais de l'éditeur, par lequel passent les postes hors du bureau. Le service s'y connecte seul quand l'accès à distance est activé depuis un poste, avec un compte Admin (Paramètres, rubrique « Accès à distance »)."
 msgstr "Dirección y huella del relé del editor, por el que pasan los puestos fuera de la oficina. El servicio se conecta a él por sí solo cuando el acceso remoto se activa desde un puesto con una cuenta Admin (Parámetros, sección «Acceso remoto»)."
 
-msgid "Adresse du relais (hôte:port)"
-msgstr "Dirección del relé (host:puerto)"
+msgid "Adresse du relais (wss://hôte ou hôte:port)"
+msgstr "Dirección del relé (wss://host o host:puerto)"
+
+msgid "Relais derrière Cloudflare Tunnel : wss://hôte. ws:// n'est permis que vers cette machine (127.0.0.1 ou localhost), pour les essais."
+msgstr "Relé detrás de Cloudflare Tunnel: wss://host. ws:// solo se permite hacia esta máquina (127.0.0.1 o localhost), para pruebas."
 
 msgid "Empreinte du relais"
 msgstr "Huella del relé"
@@ -3960,6 +3963,9 @@ msgstr "puerto del relé no válido: de 1 a 65535"
 
 msgid "empreinte du relais invalide : 64 caractères hexadécimaux attendus"
 msgstr "huella del relé no válida: se esperan 64 caracteres hexadecimales"
+
+msgid "adresse WebSocket du relais invalide : wss://hôte[:port] attendu, ws:// seulement vers 127.0.0.1 ou localhost"
+msgstr "dirección WebSocket del relé no válida: se espera wss://host[:puerto], ws:// solo hacia 127.0.0.1 o localhost"
 
 msgid "Relais non enregistré : {}."
 msgstr "Relé no guardado: {}."

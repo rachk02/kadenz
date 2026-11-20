@@ -4,8 +4,9 @@
 |---|---|---|
 | 0.1 | 2026-11-19 | Conception proposée par kadenz-e6, à la demande de kadenz-dd, après la décision de l'utilisateur (« on y va ») : faire passer le relais par le Cloudflare Tunnel, aucun port ne pouvant être ouvert sur la box. Limites de Cloudflare vérifiées par OpenCode dans la documentation officielle. Rien n'est codé. |
 | 0.2 | 2026-11-20 | Lot 1 codé dans `kadenz-relais` (kadenz-e6, accord de kadenz-dd) : `ws.rs` (adresse, pont local, passerelle), `tcp_vers`, options `--ecoute-ws` et `--mandataire`, essais. Adresse sans chemin (`wss://hôte[:port]`). Racines du magasin du système retenues. Versions des bibliothèques relevées. |
+| 0.3 | 2026-11-20 | Lot 2 (kadenz-e6) : `regler_relais` accepte `wss://`, tirage de plus ou moins 20 % sur l'attente de reprise du serveur, essai de bout en bout par `ws://` dans `crates/serveur/tests/distance.rs`. Corrections du lot 1 après relecture : TLS 1.2 et 1.3 sur le tronçon Cloudflare, en-tête `Host` sans le port par défaut, pont local bloquant. Section 7 vérifiée ; risques et essais restants listés. Libellé et aide de KadenzAdmin. Ouverture TLS vers Cloudflare essayée une fois (`licences.mcarre.dev`) : réponse HTTP du portail, aucune erreur TLS. |
 
-Statut : **lot 1 codé** (relais, pont et passerelle) ; KadenzAdmin, reconnexion et trousse du Dell à venir. Complète la section 7 de `docs/spec-synchronisation.md` (accès à distance par le relais) sans en changer le protocole.
+Statut : **lots 1 et 2 codés** (relais, pont, passerelle, réglage dans KadenzAdmin, reconnexion) ; trousse du Dell faite par kadenz-dd (cc6ce9a), rien n'est déployé. Complète la section 7 de `docs/spec-synchronisation.md` (accès à distance par le relais) sans en changer le protocole.
 
 ## 1. Principe
 
@@ -36,7 +37,7 @@ KadenzAdmin ne se connecte pas au relais : il ne fait que régler l'adresse et l
 
 - Aucune bibliothèque WebSocket dans l'arbre aujourd'hui. `tokio` y est déjà (1.54.1, par le portail et axum).
 - **Retenu** : `tokio-tungstenite` 0.30.0 (fonction `handshake` seule) avec `tokio` 1.54.1 : exécuteur à un fil pour chaque pont du client, deux fils pour la passerelle du relais. La raison est la copie en duplex intégral : un flux TLS ou WebSocket bloquant ne se partage pas entre deux fils, alors qu'un flux asynchrone se sépare en lecture et écriture.
-- TLS vers Cloudflare côté client : `tokio-rustls` 0.26.6 (fournisseur ring, comme le reste de l'arbre, sans aws-lc), TLS 1.3, avec les racines du magasin du système (`rustls-native-certs` 0.8.5), pour suivre les autorités ajoutées par une entreprise (proxy d'inspection TLS) ; l'épinglage du relais, à l'intérieur, reste la vraie protection. Retenu au codage du lot 1 plutôt que les racines de Mozilla intégrées (`webpki-roots`).
+- TLS vers Cloudflare côté client : `tokio-rustls` 0.26.6 (fournisseur ring, comme le reste de l'arbre, sans aws-lc), versions par défaut de rustls (TLS 1.2 et 1.3 : un proxy d'inspection d'entreprise ne parle souvent que 1.2 ; la protection reste le TLS 1.3 épinglé du relais, à l'intérieur), avec les racines du magasin du système (`rustls-native-certs` 0.8.5), pour suivre les autorités ajoutées par une entreprise (proxy d'inspection TLS) ; l'épinglage du relais, à l'intérieur, reste la vraie protection. Retenu au codage du lot 1 plutôt que les racines de Mozilla intégrées (`webpki-roots`).
 - `futures-util` 0.3.34 (`sink`, `std`) pour séparer la WebSocket en envoi et réception.
 - Taille ajoutée aux programmes Windows (poste, service) : à mesurer à la compilation.
 
@@ -57,7 +58,7 @@ KadenzAdmin ne se connecte pas au relais : il ne fait que régler l'adresse et l
 ## 7. Reconnexion
 
 - **Connexion de contrôle** : la reprise existe déjà (`distance.rs`, attente de 5 secondes doublée jusqu'à 5 minutes). À ajouter : un tirage aléatoire de plus ou moins 20 % sur chaque attente, pour que les serveurs coupés ensemble par un déploiement de Cloudflare ne reviennent pas tous à la même seconde. La reprise d'état est faite par le protocole lui-même : réenregistrement avec la licence et la liste des postes autorisés.
-- Après une coupure, l'ancienne connexion de contrôle peut rester vue par le relais jusqu'à 45 secondes (silence) : le refus `deja_enregistree` doit être traité comme passager, avec la même attente, et non comme une erreur de réglage. À vérifier dans `distance.rs` et à couvrir par un essai.
+- Après une coupure, l'ancienne connexion de contrôle peut rester vue par le relais jusqu'à 45 secondes (silence). **Vérifié** : un enregistrement avec le même certificat de serveur remplace l'ancien et coupe sa connexion (`relais.rs`, `controle`) ; `deja_enregistree` ne vise qu'un autre certificat et ne gêne donc pas la reprise. L'essai `poste_distant_par_websocket` coupe et rallume le serveur.
 - **Sessions d'un poste** : une coupure ferme la session, comme une coupure du réseau aujourd'hui ; le poste rouvre une session au prochain échange, et la synchronisation reprend où elle en était (opérations gardées et rejouées par le poste). Le même tirage aléatoire s'applique à ses attentes. À vérifier par un essai de coupure au milieu d'une synchronisation.
 
 ## 8. Compatibilité
@@ -66,6 +67,8 @@ KadenzAdmin ne se connecte pas au relais : il ne fait que régler l'adresse et l
 - Format de l'adresse : `regler_relais` (KadenzAdmin) accepte en plus `wss://hôte[:port]`, sans chemin ni espace, port de 1 à 65535, 443 par défaut. `ws://` sans chiffrement est refusé, sauf vers `127.0.0.1` et `localhost` pour les essais et le banc.
 - Postes déjà installés (1.0.0) : ils reçoivent l'adresse dans `Bienvenue` et n'ont que le TCP. Une adresse `wss://` leur donne « relais injoignable », sans autre effet ; le bureau reste essayé en premier. L'accès à distance n'est pas en service aujourd'hui (port fermé), aucun usage n'est donc cassé. Il faut la nouvelle version du poste et du serveur pour passer par le tunnel.
 - Le protocole du relais garde sa version (`VERSION = 1`) : le transport ne change pas les trames.
+- Demi-fermeture : une fin de lecture d'un côté du pont ferme toute la WebSocket. Seul `fermer` du serveur (`crates/serveur/src/lib.rs`) ferme en écriture puis lit encore ; ce qu'il lit alors est jeté, rien n'est donc perdu par ce chemin.
+- KadenzAdmin : libellé « Adresse du relais (wss://hôte ou hôte:port) », et l'aide rappelle que `ws://` n'est permis que vers la machine elle-même (décision de kadenz-dd et kadenz-e6, six langues).
 
 ## 9. Trousse du Dell (kadenz-dd)
 
@@ -90,3 +93,11 @@ KadenzAdmin ne se connecte pas au relais : il ne fait que régler l'adresse et l
 - Ping : pas de coupure sur une session muette de plus de 2 minutes.
 - Limites : message texte refusé, message de plus de 64 Kio refusé.
 - De bout en bout sur le Dell, après la route du tunnel : poste hors du réseau, par `wss://relais.mcarre.dev`.
+
+Faits (lots 1 et 2) : adresses admises et refusées (relais et `regler_relais`) ; pont local ; passerelle (en-tête cru seulement du mandataire, chemin `/` seul, message texte qui ferme) ; santé, enregistrement et sessions par `ws://127.0.0.1` avec 300 Kio dans les deux sens ; serveur réel coupé puis rallumé par `ws://` ; tirage de l'attente ; essai `#[ignore]` d'ouverture TLS vers Cloudflare (`ws::essais_cloudflare`, à lancer à la main).
+
+Restent : session muette de plus de 2 minutes (le ping devra être réglable pour l'essai) ; message de plus de 64 Kio refusé ; deux postes comptés séparément par le frein à travers la passerelle ; coupure de la WebSocket au milieu d'une session ; taille ajoutée aux programmes Windows, à mesurer.
+
+## 12. Risques
+
+- Racines TLS sous Windows : `rustls-native-certs` lit les autorités déjà présentes dans le magasin ; Windows n'y ajoute une racine manquante qu'à la demande d'un programme qui passe par CryptoAPI. Un poste neuf qui n'a jamais vu la racine de Cloudflare pourrait la refuser. Parade si le cas se présente : `rustls-platform-verifier` (vérification par Windows lui-même), à décider avec kadenz-dd.

@@ -3932,8 +3932,11 @@ msgstr "Remote access relay"
 msgid "Adresse et empreinte du relais de l'éditeur, par lequel passent les postes hors du bureau. Le service s'y connecte seul quand l'accès à distance est activé depuis un poste, avec un compte Admin (Paramètres, rubrique « Accès à distance »)."
 msgstr "Address and fingerprint of the publisher's relay, through which workstations outside the office connect. The service connects to it on its own when remote access is enabled from a workstation with an Admin account (Settings, “Remote access” section)."
 
-msgid "Adresse du relais (hôte:port)"
-msgstr "Relay address (host:port)"
+msgid "Adresse du relais (wss://hôte ou hôte:port)"
+msgstr "Relay address (wss://host or host:port)"
+
+msgid "Relais derrière Cloudflare Tunnel : wss://hôte. ws:// n'est permis que vers cette machine (127.0.0.1 ou localhost), pour les essais."
+msgstr "Relay behind Cloudflare Tunnel: wss://host. ws:// is only allowed to this machine (127.0.0.1 or localhost), for testing."
 
 msgid "Empreinte du relais"
 msgstr "Relay fingerprint"
@@ -3960,6 +3963,9 @@ msgstr "invalid relay port: from 1 to 65535"
 
 msgid "empreinte du relais invalide : 64 caractères hexadécimaux attendus"
 msgstr "invalid relay fingerprint: 64 hexadecimal characters expected"
+
+msgid "adresse WebSocket du relais invalide : wss://hôte[:port] attendu, ws:// seulement vers 127.0.0.1 ou localhost"
+msgstr "invalid relay WebSocket address: wss://host[:port] expected, ws:// only to 127.0.0.1 or localhost"
 
 msgid "Relais non enregistré : {}."
 msgstr "Relay not saved: {}."

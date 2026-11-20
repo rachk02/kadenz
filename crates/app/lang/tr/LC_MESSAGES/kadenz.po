@@ -3932,8 +3932,11 @@ msgstr "Uzaktan erişim aktarıcısı"
 msgid "Adresse et empreinte du relais de l'éditeur, par lequel passent les postes hors du bureau. Le service s'y connecte seul quand l'accès à distance est activé depuis un poste, avec un compte Admin (Paramètres, rubrique « Accès à distance »)."
 msgstr "Ofis dışındaki istasyonların geçtiği yayıncı aktarıcısının adresi ve parmak izi. Uzaktan erişim bir istasyondan Admin hesabıyla etkinleştirildiğinde hizmet ona kendiliğinden bağlanır (Ayarlar, « Uzaktan erişim » bölümü)."
 
-msgid "Adresse du relais (hôte:port)"
-msgstr "Aktarıcı adresi (ana makine:bağlantı noktası)"
+msgid "Adresse du relais (wss://hôte ou hôte:port)"
+msgstr "Aktarıcı adresi (wss://ana makine veya ana makine:bağlantı noktası)"
+
+msgid "Relais derrière Cloudflare Tunnel : wss://hôte. ws:// n'est permis que vers cette machine (127.0.0.1 ou localhost), pour les essais."
+msgstr "Cloudflare Tunnel arkasındaki aktarıcı: wss://ana makine. ws:// yalnızca bu makineye (127.0.0.1 veya localhost), denemeler için izinlidir."
 
 msgid "Empreinte du relais"
 msgstr "Aktarıcı parmak izi"
@@ -3960,6 +3963,9 @@ msgstr "geçersiz aktarıcı bağlantı noktası: 1 ile 65535 arası"
 
 msgid "empreinte du relais invalide : 64 caractères hexadécimaux attendus"
 msgstr "geçersiz aktarıcı parmak izi: 64 onaltılık karakter bekleniyor"
+
+msgid "adresse WebSocket du relais invalide : wss://hôte[:port] attendu, ws:// seulement vers 127.0.0.1 ou localhost"
+msgstr "geçersiz aktarıcı WebSocket adresi: wss://ana makine[:bağlantı noktası] bekleniyor, ws:// yalnızca 127.0.0.1 veya localhost için"
 
 msgid "Relais non enregistré : {}."
 msgstr "Aktarıcı kaydedilmedi: {}."
