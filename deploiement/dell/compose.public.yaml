@@ -10,7 +10,13 @@
 # vers http://portail:47382 sont réglés dans le compte Cloudflare de
 # l'utilisateur (tunnel géré à distance) ; aucun nom ni jeton ici.
 #
-# Le relais n'y passe pas : un tunnel HTTP ne porte pas son protocole TCP.
+# Le relais y passe en WebSocket (docs/spec-relais-websocket.md) : sa
+# passerelle écoute en HTTP simple sur le réseau interne « tunnel-relais »,
+# et la route relais.mcarre.dev vers http://relais:47383 est réglée dans le
+# compte Cloudflare. Le flux du relais, TLS épinglé compris, passe tel quel
+# dans la WebSocket. Exige une image du relais qui connaît --ecoute-ws
+# (commit 453c3f5 ou plus récent) : une image plus ancienne refuserait
+# l'option et le relais ne démarrerait pas.
 
 services:
   portail:
@@ -34,6 +40,20 @@ services:
     networks:
       portail: {}
       console: {}
+
+  relais:
+    # Le point d'entrée de l'image donne déjà --dossier et --ecoute 0.0.0.0:47381
+    # (crates/relais/Dockerfile) ; ces options s'y ajoutent. --mandataire :
+    # l'adresse fixe de cloudflared sur « tunnel-relais » ; CF-Connecting-IP
+    # n'est cru que sur les requêtes d'ouverture venues de lui.
+    command:
+      - --ecoute-ws
+      - 0.0.0.0:47383
+      - --mandataire
+      - ${IP_TUNNEL_RELAIS:?IP_TUNNEL_RELAIS manquant}
+    networks:
+      relais: {}
+      tunnel-relais: {}
 
   tunnel:
     # Image officielle épinglée par empreinte (kadenz.env.exemple), utilisateur
@@ -80,7 +100,9 @@ services:
     networks:
       console:
         ipv4_address: ${IP_TUNNEL:?IP_TUNNEL manquant}
-      # Sortie vers Cloudflare : le réseau « console », interne, n'en a pas.
+      tunnel-relais:
+        ipv4_address: ${IP_TUNNEL_RELAIS:?IP_TUNNEL_RELAIS manquant}
+      # Sortie vers Cloudflare : les réseaux internes n'en ont pas.
       sortie: {}
 
 networks:
@@ -90,4 +112,11 @@ networks:
     ipam:
       config:
         - subnet: ${RESEAU_CONSOLE:?RESEAU_CONSOLE manquant}
+  # Interne : seuls le relais et cloudflared s'y trouvent ; distinct de
+  # « console », pour que le portail et le relais ne se voient pas.
+  tunnel-relais:
+    internal: true
+    ipam:
+      config:
+        - subnet: ${RESEAU_TUNNEL_RELAIS:?RESEAU_TUNNEL_RELAIS manquant}
   sortie: {}
