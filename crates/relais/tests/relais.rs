@@ -736,3 +736,30 @@ fn frein_par_poste_derriere_le_mandataire() {
     r.arreter();
     let _ = std::fs::remove_dir_all(d);
 }
+
+/// Essai à la main, par le réseau, contre le relais en service derrière
+/// Cloudflare (docs/spec-relais-websocket.md) :
+/// `KADENZ_EMPREINTE_RELAIS=<empreinte> cargo test -p kadenz-relais --test relais
+/// relais_en_service_par_cloudflare -- --ignored --nocapture`.
+///
+/// Rien n'est enregistré : la sonde de santé ouvre la WebSocket, fait la
+/// poignée de main TLS épinglée avec le relais à travers elle, reçoit le défi
+/// et ferme. Puis la même ouverture avec une autre empreinte doit être
+/// refusée : l'épinglage tient de bout en bout à travers Cloudflare.
+#[test]
+#[ignore = "réseau : relais en service derrière Cloudflare"]
+fn relais_en_service_par_cloudflare() {
+    let adresse =
+        std::env::var("KADENZ_ADRESSE_RELAIS").unwrap_or_else(|_| "wss://relais.mcarre.dev".into());
+    let empreinte = std::env::var("KADENZ_EMPREINTE_RELAIS")
+        .expect("KADENZ_EMPREINTE_RELAIS : empreinte du relais en service");
+    let delai = Duration::from_secs(15);
+    let debut = std::time::Instant::now();
+    kadenz_relais::controle::verifier_sante(&adresse, &empreinte, delai).unwrap();
+    eprintln!("santé par {adresse} : défi reçu en {:?}", debut.elapsed());
+    assert_eq!(
+        kadenz_relais::controle::verifier_sante(&adresse, &"00".repeat(32), delai),
+        Err(ErreurRelais::CertificatDifferent)
+    );
+    eprintln!("autre empreinte : refusée (certificat différent)");
+}
