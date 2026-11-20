@@ -5,6 +5,7 @@
 | 0.1 | 2026-11-19 | Conception proposée par kadenz-e6, à la demande de kadenz-dd, après la décision de l'utilisateur (« on y va ») : faire passer le relais par le Cloudflare Tunnel, aucun port ne pouvant être ouvert sur la box. Limites de Cloudflare vérifiées par OpenCode dans la documentation officielle. Rien n'est codé. |
 | 0.2 | 2026-11-20 | Lot 1 codé dans `kadenz-relais` (kadenz-e6, accord de kadenz-dd) : `ws.rs` (adresse, pont local, passerelle), `tcp_vers`, options `--ecoute-ws` et `--mandataire`, essais. Adresse sans chemin (`wss://hôte[:port]`). Racines du magasin du système retenues. Versions des bibliothèques relevées. |
 | 0.3 | 2026-11-20 | Lot 2 (kadenz-e6) : `regler_relais` accepte `wss://`, tirage de plus ou moins 20 % sur l'attente de reprise du serveur, essai de bout en bout par `ws://` dans `crates/serveur/tests/distance.rs`. Corrections du lot 1 après relecture : TLS 1.2 et 1.3 sur le tronçon Cloudflare, en-tête `Host` sans le port par défaut, pont local bloquant. Section 7 vérifiée ; risques et essais restants listés. Libellé et aide de KadenzAdmin. Ouverture TLS vers Cloudflare essayée une fois (`licences.mcarre.dev`) : réponse HTTP du portail, aucune erreur TLS. |
+| 0.4 | 2026-11-20 | Quatre essais restants faits (kadenz-e6, à la demande de kadenz-dd) : coupure de toutes les WebSocket en pleine série d'écritures, message de plus de 64 Kio des deux côtés, frein par poste derrière le mandataire (avec contre-épreuve), ping et silence. Délais des WebSocket réglables (`DelaisWs`, `Config.delais_ws`) pour les essais. Code 303 de l'essai vers Cloudflare relevé par kadenz-dd (curl). |
 
 Statut : **lots 1 et 2 codés** (relais, pont, passerelle, réglage dans KadenzAdmin, reconnexion) ; trousse du Dell faite par kadenz-dd (cc6ce9a), rien n'est déployé. Complète la section 7 de `docs/spec-synchronisation.md` (accès à distance par le relais) sans en changer le protocole.
 
@@ -96,7 +97,13 @@ KadenzAdmin ne se connecte pas au relais : il ne fait que régler l'adresse et l
 
 Faits (lots 1 et 2) : adresses admises et refusées (relais et `regler_relais`) ; pont local ; passerelle (en-tête cru seulement du mandataire, chemin `/` seul, message texte qui ferme) ; santé, enregistrement et sessions par `ws://127.0.0.1` avec 300 Kio dans les deux sens ; serveur réel coupé puis rallumé par `ws://` ; tirage de l'attente ; essai `#[ignore]` d'ouverture TLS vers Cloudflare (`ws::essais_cloudflare`, à lancer à la main).
 
-Restent : session muette de plus de 2 minutes (le ping devra être réglable pour l'essai) ; message de plus de 64 Kio refusé ; deux postes comptés séparément par le frein à travers la passerelle ; coupure de la WebSocket au milieu d'une session ; taille ajoutée aux programmes Windows, à mesurer.
+Faits ensuite (0.4) :
+- coupure de toutes les WebSocket (contrôle du serveur et session du poste) pendant la onzième de trente écritures d'un poste distant, par un mandataire coupable devant la passerelle : serveur réenregistré, poste revenu par le relais, file vidée, chacune des trente écritures présente une fois et une seule au serveur (`crates/poste/tests/synchroniseur.rs`, `coupure_des_websocket_en_pleine_session`) ;
+- message de 70 Kio : la passerelle ferme sans rien transmettre au relais et sert les suivantes ; le pont du client ferme sa connexion locale sans rien rendre ; aucune panique ;
+- frein : 220 connexions d'un poste en une seconde environ, une partie refusée ; un second poste derrière le même mandataire, ouvert aussitôt, passe. Contre-épreuve : sans `--mandataire`, le second est refusé avec le premier ;
+- ping et silence, délais raccourcis (100 ms et 400 ms) : un pair qui répond aux pings garde une session muette ouverte 1,5 seconde ; un pair muet est coupé entre 400 ms et 3 secondes.
+
+Reste : la taille ajoutée aux programmes Windows, à mesurer avec une construction optimisée (avec l'image du Dell, décision de kadenz-dd).
 
 ## 12. Risques
 

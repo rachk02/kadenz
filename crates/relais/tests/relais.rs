@@ -659,3 +659,80 @@ fn ecoute_websocket_sans_boucle_locale_refusee() {
     }
     let _ = std::fs::remove_dir_all(d);
 }
+
+/// Frein derrière la passerelle (docs/spec-relais-websocket.md, section 5) :
+/// deux postes derrière le même mandataire sont comptés chacun sur son
+/// `CF-Connecting-IP`. Le premier dépasse la rafale permise et voit des
+/// connexions refusées ; le second, ouvert juste après, passe encore. Comptés
+/// sur l'adresse de cloudflared, il aurait été refusé avec le premier.
+#[test]
+fn frein_par_poste_derriere_le_mandataire() {
+    use futures_util::StreamExt;
+    use tokio_tungstenite::WebSocketStream;
+    use tokio_tungstenite::tungstenite::Message;
+    use tokio_tungstenite::tungstenite::client::IntoClientRequest;
+
+    let d = dossier("ws-frein");
+    let mut config = Config::nouvelle(
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        d.clone(),
+        vec![cle_portail().verifying_key()],
+    );
+    config.traces = None;
+    config.ecoute_ws = Some(SocketAddr::from(([127, 0, 0, 1], 0)));
+    config.mandataire = Some(std::net::IpAddr::from([127, 0, 0, 1]));
+    let r = Relais::demarrer(config).unwrap();
+    let ws = r.adresse_ws().unwrap();
+
+    async fn ouvrir(
+        ws: SocketAddr,
+        client: &'static str,
+    ) -> WebSocketStream<tokio::net::TcpStream> {
+        let mut requete = format!("ws://{ws}/").into_client_request().unwrap();
+        requete
+            .headers_mut()
+            .insert("cf-connecting-ip", client.parse().unwrap());
+        let tcp = tokio::net::TcpStream::connect(ws).await.unwrap();
+        tokio_tungstenite::client_async(requete, tcp)
+            .await
+            .unwrap()
+            .0
+    }
+    /// Fermée par le relais : la passerelle a rendu la fermeture. Une
+    /// connexion admise attend ses trames d'ouverture et ne dit rien.
+    async fn fermee(ws: &mut WebSocketStream<tokio::net::TcpStream>) -> bool {
+        matches!(
+            tokio::time::timeout(Duration::from_millis(5), ws.next()).await,
+            Ok(None | Some(Ok(Message::Close(_))) | Some(Err(_)))
+        )
+    }
+
+    let execution = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    execution.block_on(async move {
+        // 220 connexions en une seconde environ : la rafale (160) et le rythme
+        // (16 par seconde) en admettent moins. Le second poste s'ouvre aussitôt
+        // après, seau du premier vide : compté avec lui, il serait refusé.
+        let mut premier = Vec::new();
+        for _ in 0..220 {
+            premier.push(ouvrir(ws, "203.0.113.1").await);
+        }
+        let mut second = ouvrir(ws, "203.0.113.2").await;
+        tokio::time::sleep(Duration::from_millis(300)).await;
+        assert!(
+            !fermee(&mut second).await,
+            "second poste compté avec le premier"
+        );
+        let mut refusees = 0;
+        for w in premier.iter_mut() {
+            if fermee(w).await {
+                refusees += 1;
+            }
+        }
+        assert!(refusees > 0, "aucune connexion du premier poste freinée");
+    });
+    r.arreter();
+    let _ = std::fs::remove_dir_all(d);
+}

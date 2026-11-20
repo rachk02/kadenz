@@ -37,6 +37,23 @@ use crate::{ErreurRelais, injoignable};
 pub const PING: Duration = Duration::from_secs(30);
 /// Rien reçu pendant ce temps, pas même un pong : connexion fermée.
 pub const SANS_NOUVELLES: Duration = Duration::from_secs(90);
+
+/// Délais d'une WebSocket : [`PING`] et [`SANS_NOUVELLES`] par défaut ; les
+/// essais les raccourcissent.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DelaisWs {
+    pub ping: Duration,
+    pub sans_nouvelles: Duration,
+}
+
+impl Default for DelaisWs {
+    fn default() -> DelaisWs {
+        DelaisWs {
+            ping: PING,
+            sans_nouvelles: SANS_NOUVELLES,
+        }
+    }
+}
 /// Taille des messages envoyés, comme le tampon de copie du relais.
 const MORCEAU: usize = 16 * 1024;
 /// Taille d'un message ou d'une trame reçus, au plus.
@@ -118,16 +135,16 @@ fn config_ws() -> WebSocketConfig {
 // ----- Copie dans les deux sens -----
 
 /// Copie entre une WebSocket et une connexion TCP, jusqu'à la fermeture de
-/// l'une ou de l'autre. Ping toutes les 30 secondes ; rien reçu pendant 90
-/// secondes, message texte, trame trop grande : fin.
-async fn pomper<S>(ws: WebSocketStream<S>, tcp: &mut tokio::net::TcpStream)
+/// l'une ou de l'autre. Ping à chaque `delais.ping` ; rien reçu pendant
+/// `delais.sans_nouvelles`, message texte, trame trop grande : fin.
+async fn pomper<S>(ws: WebSocketStream<S>, tcp: &mut tokio::net::TcpStream, delais: DelaisWs)
 where
     S: AsyncRead + AsyncWrite + Unpin,
 {
     let (mut envoi, mut reception) = ws.split();
     let (mut lecture, mut ecriture) = tcp.split();
     let mut tampon = vec![0u8; MORCEAU];
-    let mut battement = tokio::time::interval(PING);
+    let mut battement = tokio::time::interval(delais.ping);
     battement.set_missed_tick_behavior(MissedTickBehavior::Delay);
     battement.tick().await;
     let mut recu = Instant::now();
@@ -158,7 +175,7 @@ where
                 }
             },
             _ = battement.tick() => {
-                if recu.elapsed() > SANS_NOUVELLES
+                if recu.elapsed() > delais.sans_nouvelles
                     || envoi.send(Message::Ping(Bytes::new())).await.is_err()
                 {
                     break;
@@ -272,7 +289,7 @@ where
         .spawn(move || {
             execution.block_on(async move {
                 if let Ok(mut pont) = tokio::net::TcpStream::from_std(pont) {
-                    pomper(ws, &mut pont).await;
+                    pomper(ws, &mut pont, DelaisWs::default()).await;
                 }
             });
         })
@@ -333,6 +350,7 @@ impl Passerelle {
         ecoute: SocketAddr,
         relais: SocketAddr,
         mandataire: Option<IpAddr>,
+        delais: DelaisWs,
         clients: Clients,
     ) -> Result<Passerelle, String> {
         if relais.ip() != IpAddr::V4(Ipv4Addr::LOCALHOST) {
@@ -364,7 +382,7 @@ impl Passerelle {
                 let clients = clients.clone();
                 tokio::spawn(async move {
                     let _place = place;
-                    servir(flux, pair, relais, mandataire, clients).await;
+                    servir(flux, pair, relais, mandataire, delais, clients).await;
                 });
             }
         });
@@ -392,6 +410,7 @@ async fn servir(
     pair: SocketAddr,
     relais: SocketAddr,
     mandataire: Option<IpAddr>,
+    delais: DelaisWs,
     clients: Clients,
 ) {
     let _ = flux.set_nodelay(true);
@@ -439,7 +458,7 @@ async fn servir(
     let connexion = timeout(OUVERTURE, prise.connect(relais)).await;
     if let Ok(Ok(mut tcp)) = connexion {
         let _ = tcp.set_nodelay(true);
-        pomper(ws, &mut tcp).await;
+        pomper(ws, &mut tcp, delais).await;
         retirer(&clients, port);
         drop(tcp);
     } else {
@@ -523,7 +542,13 @@ mod essais_passerelle {
         let passerelle = tokio::task::spawn_blocking({
             let clients = clients.clone();
             move || {
-                Passerelle::demarrer((Ipv4Addr::LOCALHOST, 0).into(), cible, mandataire, clients)
+                Passerelle::demarrer(
+                    (Ipv4Addr::LOCALHOST, 0).into(),
+                    cible,
+                    mandataire,
+                    DelaisWs::default(),
+                    clients,
+                )
             }
         })
         .await
@@ -589,6 +614,7 @@ mod essais_passerelle {
                 (Ipv4Addr::LOCALHOST, 0).into(),
                 cible,
                 None,
+                DelaisWs::default(),
                 Clients::default(),
             )
         })
@@ -629,5 +655,152 @@ mod essais_cloudflare {
             Err(autre) => panic!("{autre}"),
             Ok(_) => panic!("le portail a accepté une WebSocket"),
         }
+    }
+}
+
+#[cfg(test)]
+mod essais_limites {
+    use super::*;
+
+    async fn passerelle(delais: DelaisWs) -> (Passerelle, tokio::net::TcpListener) {
+        let faux_relais = tokio::net::TcpListener::bind((Ipv4Addr::LOCALHOST, 0))
+            .await
+            .unwrap();
+        let cible = faux_relais.local_addr().unwrap();
+        let p = tokio::task::spawn_blocking(move || {
+            Passerelle::demarrer(
+                (Ipv4Addr::LOCALHOST, 0).into(),
+                cible,
+                None,
+                delais,
+                Clients::default(),
+            )
+        })
+        .await
+        .unwrap()
+        .unwrap();
+        (p, faux_relais)
+    }
+
+    async fn client(p: &Passerelle) -> WebSocketStream<tokio::net::TcpStream> {
+        let tcp = tokio::net::TcpStream::connect(p.adresse()).await.unwrap();
+        tokio_tungstenite::client_async(format!("ws://{}/", p.adresse()), tcp)
+            .await
+            .unwrap()
+            .0
+    }
+
+    /// Lit jusqu'à la fin du flux (5 secondes au plus) ; rend ce qui restait.
+    async fn fin_du_flux(arrivee: &mut tokio::net::TcpStream) -> Vec<u8> {
+        let mut reste = Vec::new();
+        timeout(Duration::from_secs(5), arrivee.read_to_end(&mut reste))
+            .await
+            .unwrap()
+            .unwrap();
+        reste
+    }
+
+    async fn fermer(p: Passerelle) {
+        tokio::task::spawn_blocking(move || drop(p)).await.unwrap();
+    }
+
+    /// Message de plus de 64 Kio reçu par la passerelle : connexion fermée
+    /// sans rien transmettre au relais, sans panique ; la passerelle sert
+    /// toujours les suivantes.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn message_trop_grand_refuse_par_la_passerelle() {
+        let (p, faux_relais) = passerelle(DelaisWs::default()).await;
+        let mut ws = client(&p).await;
+        let (mut arrivee, _) = faux_relais.accept().await.unwrap();
+        let _ = ws
+            .send(Message::Binary(Bytes::from(vec![7u8; 70 * 1024])))
+            .await;
+        assert!(fin_du_flux(&mut arrivee).await.is_empty());
+
+        let mut suivante = client(&p).await;
+        let (mut arrivee, _) = faux_relais.accept().await.unwrap();
+        suivante
+            .send(Message::Binary(Bytes::from_static(b"ok")))
+            .await
+            .unwrap();
+        let mut lu = [0u8; 2];
+        arrivee.read_exact(&mut lu).await.unwrap();
+        assert_eq!(&lu, b"ok");
+        fermer(p).await;
+    }
+
+    /// Message de plus de 64 Kio reçu par le pont du client : la connexion
+    /// locale se ferme sans rien rendre, sans panique.
+    #[test]
+    fn message_trop_grand_refuse_par_le_pont() {
+        use std::io::Read;
+        let ecoute = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
+        let port = ecoute.local_addr().unwrap().port();
+        let faux_relais = thread::spawn(move || {
+            let execution = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap();
+            execution.block_on(async move {
+                ecoute.set_nonblocking(true).unwrap();
+                let ecoute = tokio::net::TcpListener::from_std(ecoute).unwrap();
+                let (tcp, _) = ecoute.accept().await.unwrap();
+                let mut ws = tokio_tungstenite::accept_async(tcp).await.unwrap();
+                let _ = ws
+                    .send(Message::Binary(Bytes::from(vec![7u8; 70 * 1024])))
+                    .await;
+                while let Some(Ok(_)) = ws.next().await {}
+            });
+        });
+        let adresse = AdresseWs::lire(&format!("ws://127.0.0.1:{port}")).unwrap();
+        let mut local = ouvrir(&adresse, Duration::from_secs(5)).unwrap();
+        local
+            .set_read_timeout(Some(Duration::from_secs(5)))
+            .unwrap();
+        let mut reste = Vec::new();
+        local.read_to_end(&mut reste).unwrap();
+        assert!(reste.is_empty());
+        faux_relais.join().unwrap();
+    }
+
+    /// Délais raccourcis (ping 100 ms, silence 400 ms) : un pair qui lit, et
+    /// répond donc aux pings, garde une session muette ouverte bien au-delà
+    /// du silence ; un pair qui ne répond plus est coupé après le silence.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn ping_garde_ouverte_et_silence_coupe() {
+        let delais = DelaisWs {
+            ping: Duration::from_millis(100),
+            sans_nouvelles: Duration::from_millis(400),
+        };
+        let (p, faux_relais) = passerelle(delais).await;
+
+        let ws = client(&p).await;
+        let (mut arrivee, _) = faux_relais.accept().await.unwrap();
+        let (mut envoi, mut reception) = ws.split();
+        let lecteur =
+            tokio::spawn(async move { while let Some(Ok(_)) = reception.next().await {} });
+        tokio::time::sleep(Duration::from_millis(1500)).await;
+        envoi
+            .send(Message::Binary(Bytes::from_static(b"encore")))
+            .await
+            .unwrap();
+        let mut lu = [0u8; 6];
+        timeout(Duration::from_secs(2), arrivee.read_exact(&mut lu))
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(&lu, b"encore");
+
+        let _muet = client(&p).await;
+        let (mut arrivee, _) = faux_relais.accept().await.unwrap();
+        let debut = Instant::now();
+        assert!(fin_du_flux(&mut arrivee).await.is_empty());
+        let duree = debut.elapsed();
+        assert!(
+            duree >= Duration::from_millis(400) && duree < Duration::from_secs(3),
+            "{duree:?}"
+        );
+        lecteur.abort();
+        fermer(p).await;
     }
 }

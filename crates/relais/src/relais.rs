@@ -20,7 +20,7 @@ use crate::frein::{Cle, Frein};
 use crate::preuve::{self, ROLE_POSTE, ROLE_SERVEUR, empreinte};
 use crate::tls::{Canal, fournisseur, identite_relais};
 use crate::trames::{self, TAILLE_EN_CLAIR, Trame};
-use crate::ws::{Clients, Passerelle};
+use crate::ws::{Clients, DelaisWs, Passerelle};
 use crate::{VERSION, motif};
 
 /// Sessions en attente de mise en relation, par entreprise et en tout.
@@ -66,6 +66,9 @@ pub struct Config {
     /// Adresse de cloudflared : seules ses WebSocket font croire l'en-tête
     /// `CF-Connecting-IP` pour le frein.
     pub mandataire: Option<IpAddr>,
+    /// Ping et silence des WebSocket de la passerelle (raccourcis par les
+    /// essais).
+    pub delais_ws: DelaisWs,
 }
 
 /// Date UTC du jour, `AAAA-MM-JJ`.
@@ -100,6 +103,7 @@ impl Config {
             lanceur: lanceur_ordinaire(),
             ecoute_ws: None,
             mandataire: None,
+            delais_ws: DelaisWs::default(),
         }
     }
 }
@@ -367,6 +371,7 @@ impl Relais {
                     ecoute_ws,
                     cible,
                     config.mandataire,
+                    config.delais_ws,
                     etat.clients_ws.clone(),
                 )?)
             }

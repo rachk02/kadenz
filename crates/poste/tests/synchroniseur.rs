@@ -1718,3 +1718,178 @@ fn poste_hors_du_bureau_par_le_relais() {
     relais.arreter();
     let _ = std::fs::remove_dir_all(dossier_relais);
 }
+
+/// Mandataire TCP qu'on peut couper, devant la passerelle WebSocket du
+/// relais : simule une coupure côté Cloudflare (déploiement, cloudflared
+/// arrêté), qui ferme d'un coup toutes les WebSocket en cours.
+struct Coupeur {
+    adresse: SocketAddr,
+    ouvertes: Arc<Mutex<Vec<std::net::TcpStream>>>,
+}
+
+impl Coupeur {
+    fn lancer(cible: SocketAddr) -> Coupeur {
+        let ecoute = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let adresse = ecoute.local_addr().unwrap();
+        let ouvertes = Arc::new(Mutex::new(Vec::new()));
+        let liste = ouvertes.clone();
+        thread::spawn(move || {
+            for flux in ecoute.incoming() {
+                let Ok(entree) = flux else { continue };
+                let Ok(sortie) = std::net::TcpStream::connect(cible) else {
+                    continue;
+                };
+                let (e2, s2) = (entree.try_clone().unwrap(), sortie.try_clone().unwrap());
+                liste
+                    .lock()
+                    .unwrap()
+                    .extend([entree.try_clone().unwrap(), sortie.try_clone().unwrap()]);
+                thread::spawn(move || copier_flux(entree, s2));
+                thread::spawn(move || copier_flux(sortie, e2));
+            }
+        });
+        Coupeur { adresse, ouvertes }
+    }
+
+    /// Coupe toutes les connexions en cours ; rend leur nombre.
+    fn couper(ouvertes: &Mutex<Vec<std::net::TcpStream>>) -> usize {
+        let mut liste = ouvertes.lock().unwrap();
+        let nombre = liste.len() / 2;
+        for t in liste.drain(..) {
+            let _ = t.shutdown(std::net::Shutdown::Both);
+        }
+        nombre
+    }
+}
+
+fn copier_flux(mut de: std::net::TcpStream, mut vers: std::net::TcpStream) {
+    let _ = std::io::copy(&mut de, &mut vers);
+    let _ = vers.shutdown(std::net::Shutdown::Write);
+}
+
+/// Relais par WebSocket (docs/spec-relais-websocket.md, section 7) : toutes
+/// les WebSocket sont coupées en pleine série d'écritures d'un poste distant
+/// (contrôle du serveur et session du poste). Le serveur se réenregistre, le
+/// poste revient par le relais et vide sa file : chaque écriture arrive au
+/// serveur une fois, ni perdue ni doublée.
+#[test]
+fn coupure_des_websocket_en_pleine_session() {
+    let b = banc("ws-coupure", true);
+    let dossier_relais = dossier("ws-coupure-relais");
+    let mut config_relais = kadenz_relais::relais::Config::nouvelle(
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        dossier_relais.clone(),
+        vec![cle_portail().verifying_key()],
+    );
+    config_relais.traces = None;
+    config_relais.ecoute_ws = Some(SocketAddr::from(([127, 0, 0, 1], 0)));
+    let relais = kadenz_relais::relais::Relais::demarrer(config_relais).unwrap();
+    let coupeur = Coupeur::lancer(relais.adresse_ws().unwrap());
+    let adresse_relais = format!("ws://{}", coupeur.adresse);
+    let empreinte_relais = relais.empreinte().to_string();
+    let empreinte_poste = b.identite.empreinte();
+    {
+        let adresse = adresse_relais.clone();
+        b.serveur
+            .base(move |c| {
+                admin::regler_relais(c, Some((&adresse, &empreinte_relais))).unwrap();
+                kadenz_stockage::distance::autoriser(c, &empreinte_poste, true, None).unwrap();
+                kadenz_stockage::distance::activer(c, true, None).unwrap();
+            })
+            .unwrap();
+    }
+    attendre("serveur enregistré", || !relais.entreprises().is_empty());
+
+    // Au bureau, le poste apprend l'adresse du relais ; puis il en sort.
+    let (s, _e) = demarrer(&b.copie);
+    attendre("connexion directe", || s.etat() == EtatConnexion::Connecte);
+    s.connecter("admin", MOT_DE_PASSE).unwrap();
+    attendre("relais appris", || {
+        let conn = poste_relie::ouvrir_copie(&b.copie).unwrap();
+        kadenz_stockage::distance::relais_du_poste(&conn).unwrap() == Some(adresse_relais.clone())
+    });
+    s.arreter();
+    {
+        let conn = poste_relie::ouvrir_copie(&b.copie).unwrap();
+        let mut poste = poste_relie::lire(&conn).unwrap().unwrap();
+        poste.adresse = "127.0.0.1:1".into();
+        poste_relie::garder(&conn, &poste).unwrap();
+    }
+    let (s, _e) = demarrer(&b.copie);
+    attendre("connexion par le relais", || {
+        s.etat() == EtatConnexion::Connecte && s.distant()
+    });
+    s.connecter("admin", MOT_DE_PASSE).unwrap();
+
+    // Écritures en série ; la coupure part dès la dixième rendue, pendant la
+    // onzième.
+    let ouvertes = coupeur.ouvertes.clone();
+    let faites = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let coupure = {
+        let faites = faites.clone();
+        thread::spawn(move || {
+            while faites.load(std::sync::atomic::Ordering::SeqCst) < 10 {
+                thread::sleep(Duration::from_millis(1));
+            }
+            Coupeur::couper(&ouvertes)
+        })
+    };
+    let mut uids = Vec::new();
+    for i in 0..30 {
+        let uid = synchro::nouvel_uid();
+        let issue = s
+            .ecrire(Action::CreerTiers {
+                uid: uid.clone(),
+                fiche: fiche(&format!("Client coupure {i:02}")),
+            })
+            .unwrap();
+        assert!(
+            matches!(issue, Issue::Acceptee { .. } | Issue::EnFile),
+            "{issue:?}"
+        );
+        uids.push(uid);
+        faites.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    }
+    assert!(coupure.join().unwrap() >= 2, "rien n'a été coupé");
+
+    attendre("serveur réenregistré", || {
+        !relais.entreprises().is_empty()
+    });
+    attendre("retour par le relais", || {
+        s.etat() == EtatConnexion::Connecte && s.distant()
+    });
+    assert!(s.vider(Duration::from_secs(30)));
+    attendre("file envoyée", || s.file() == 0);
+
+    let (comptes, presents) = b
+        .serveur
+        .base(move |c| {
+            let mut requete = c
+                .prepare(
+                    "SELECT nom, COUNT(*) FROM tiers WHERE nom LIKE 'Client coupure %' GROUP BY nom",
+                )
+                .unwrap();
+            let comptes: Vec<(String, i64)> = requete
+                .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))
+                .unwrap()
+                .map(Result::unwrap)
+                .collect();
+            let presents = uids
+                .iter()
+                .filter(|u| synchro::id_de(c, Entite::Tiers, u).unwrap().is_some())
+                .count();
+            (comptes, presents)
+        })
+        .unwrap();
+    assert_eq!(presents, 30, "écritures perdues");
+    assert_eq!(comptes.len(), 30, "{comptes:?}");
+    assert!(
+        comptes.iter().all(|(_, n)| *n == 1),
+        "doublées : {comptes:?}"
+    );
+
+    s.arreter();
+    b.serveur.arreter();
+    relais.arreter();
+    let _ = std::fs::remove_dir_all(dossier_relais);
+}
