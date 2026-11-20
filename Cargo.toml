@@ -88,6 +88,15 @@ rcgen = { version = "0.14.10", default-features = false, features = ["ring"] }
 rustls-webpki = { version = "0.103.16", default-features = false, features = ["ring", "std"] }
 windows-service = "0.8.1"
 ureq = { version = "3.5.1", default-features = false, features = ["native-tls-no-default"] }
+# Phase 2 (relais par Cloudflare Tunnel, docs/spec-relais-websocket.md) :
+# WebSocket sur tokio, TLS vers Cloudflare par rustls avec le fournisseur ring
+# et les racines du magasin du système ; aucune fonction par défaut, pour ne
+# pas tirer aws-lc.
+tokio = { version = "1.54.1", default-features = false }
+tokio-tungstenite = { version = "0.30.0", default-features = false, features = ["handshake"] }
+tokio-rustls = { version = "0.26.6", default-features = false, features = ["ring"] }
+rustls-native-certs = "0.8.5"
+futures-util = { version = "0.3.34", default-features = false, features = ["sink", "std"] }
 
 # Argon2 non optimisé met plusieurs secondes par hachage : on optimise les
 # dépendances même en mode debug pour que connexion et tests restent rapides.

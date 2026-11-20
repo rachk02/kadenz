@@ -3,8 +3,9 @@
 | Version | Date | Changement |
 |---|---|---|
 | 0.1 | 2026-11-19 | Conception proposée par kadenz-e6, à la demande de kadenz-dd, après la décision de l'utilisateur (« on y va ») : faire passer le relais par le Cloudflare Tunnel, aucun port ne pouvant être ouvert sur la box. Limites de Cloudflare vérifiées par OpenCode dans la documentation officielle. Rien n'est codé. |
+| 0.2 | 2026-11-20 | Lot 1 codé dans `kadenz-relais` (kadenz-e6, accord de kadenz-dd) : `ws.rs` (adresse, pont local, passerelle), `tcp_vers`, options `--ecoute-ws` et `--mandataire`, essais. Adresse sans chemin (`wss://hôte[:port]`). Racines du magasin du système retenues. Versions des bibliothèques relevées. |
 
-Statut : **proposé**. Complète la section 7 de `docs/spec-synchronisation.md` (accès à distance par le relais) sans en changer le protocole.
+Statut : **lot 1 codé** (relais, pont et passerelle) ; KadenzAdmin, reconnexion et trousse du Dell à venir. Complète la section 7 de `docs/spec-synchronisation.md` (accès à distance par le relais) sans en changer le protocole.
 
 ## 1. Principe
 
@@ -26,7 +27,7 @@ KadenzAdmin ne se connecte pas au relais : il ne fait que régler l'adresse et l
 
 ## 3. Où se branche le transport
 
-- **Sous les trames et sous le TLS du relais**, dans `tcp_vers`. Une adresse `hôte:port` garde le TCP direct, inchangé. Une adresse `wss://hôte[:port][/chemin]` ouvre la WebSocket, puis rend un `TcpStream` local relié à elle (voir ci-dessous). `poste::ouvrir`, `ouvrir_session` et `canal_epingle` continuent de recevoir un `TcpStream` et ne changent pas, pas plus que leurs appelants : délais, `try_clone`, `shutdown`, épinglage.
+- **Sous les trames et sous le TLS du relais**, dans `tcp_vers`. Une adresse `hôte:port` garde le TCP direct, inchangé. Une adresse `wss://hôte[:port]` (sans chemin : la passerelle ne sert que `/`) ouvre la WebSocket, puis rend un `TcpStream` local relié à elle (voir ci-dessous). `poste::ouvrir`, `ouvrir_session` et `canal_epingle` continuent de recevoir un `TcpStream` et ne changent pas, pas plus que leurs appelants : délais, `try_clone`, `shutdown`, épinglage.
 - **Pont local côté client** : `tcp_vers` ouvre une écoute sur `127.0.0.1:0`, se connecte à elle, et confie l'autre bout à un fil qui fait la copie dans les deux sens entre cette connexion locale et la WebSocket. Le pont accepte une seule connexion, celle qu'il vient d'ouvrir (adresse et port vérifiés), puis ferme son écoute. Fermeture d'un côté : fermeture de l'autre.
 - **Passerelle côté relais**, dans le même programme `kadenz-relais` : pour chaque WebSocket acceptée, une connexion TCP vers le port 47381 du relais lui-même (`127.0.0.1`), et la même copie. Le relais ne voit qu'une connexion de plus, avec son frein, ses limites et ses délais ; son code de mise en relation ne change pas.
 - Alternative écartée : rendre le cœur du relais générique sur le type de flux (aujourd'hui `TcpStream` partout, avec `peek`, `try_clone` et des délais de lecture) ; plus de code touché et un risque de régression sur le chemin TCP.
@@ -34,9 +35,9 @@ KadenzAdmin ne se connecte pas au relais : il ne fait que régler l'adresse et l
 ## 4. Bibliothèques
 
 - Aucune bibliothèque WebSocket dans l'arbre aujourd'hui. `tokio` y est déjà (1.54.1, par le portail et axum).
-- **Proposé** : `tokio-tungstenite` (et `tungstenite`) avec `tokio` en exécuteur à un fil, sur les deux côtés. La raison est la copie en duplex intégral : un flux TLS ou WebSocket bloquant ne se partage pas entre deux fils, alors qu'un flux asynchrone se sépare en lecture et écriture.
-- TLS vers Cloudflare côté client : `tokio-rustls` avec les racines du magasin de Windows (`rustls-native-certs`), pour suivre les autorités ajoutées par une entreprise (proxy d'inspection TLS) ; l'épinglage du relais, à l'intérieur, reste la vraie protection. À trancher : racines de Mozilla intégrées (`webpki-roots`), plus prévisibles mais aveugles à ces proxys.
-- Versions exactes et licences relevées au moment du codage ; ajout au `Cargo.lock` vérifié par `cargo deny` s'il est en place.
+- **Retenu** : `tokio-tungstenite` 0.30.0 (fonction `handshake` seule) avec `tokio` 1.54.1 : exécuteur à un fil pour chaque pont du client, deux fils pour la passerelle du relais. La raison est la copie en duplex intégral : un flux TLS ou WebSocket bloquant ne se partage pas entre deux fils, alors qu'un flux asynchrone se sépare en lecture et écriture.
+- TLS vers Cloudflare côté client : `tokio-rustls` 0.26.6 (fournisseur ring, comme le reste de l'arbre, sans aws-lc), TLS 1.3, avec les racines du magasin du système (`rustls-native-certs` 0.8.5), pour suivre les autorités ajoutées par une entreprise (proxy d'inspection TLS) ; l'épinglage du relais, à l'intérieur, reste la vraie protection. Retenu au codage du lot 1 plutôt que les racines de Mozilla intégrées (`webpki-roots`).
+- `futures-util` 0.3.34 (`sink`, `std`) pour séparer la WebSocket en envoi et réception.
 - Taille ajoutée aux programmes Windows (poste, service) : à mesurer à la compilation.
 
 ## 5. Adresse du client et frein
@@ -50,7 +51,7 @@ KadenzAdmin ne se connecte pas au relais : il ne fait que régler l'adresse et l
 - **Ping WebSocket toutes les 30 secondes**, des deux côtés (pont du client et passerelle du relais), pour l'inactivité de Cloudflare, dont la valeur n'est pas publiée pour le plan gratuit. Les pings ne passent pas dans le flux : le délai d'inactivité des sessions du relais (600 secondes) garde son sens. Pas de pong pendant 90 secondes : connexion fermée.
 - Le battement de la connexion de contrôle (15 secondes, silence de 45 secondes) reste ; il suffit déjà pour elle.
 - **Messages binaires de 16 Kio au plus** à l'envoi, comme le tampon de copie du relais ; à la réception, message refusé au-delà de 64 Kio et trame au-delà de 64 Kio (réglages de `tungstenite`). Les messages texte sont refusés.
-- Ouverture de la WebSocket : 10 secondes pour la poignée de main HTTP ; requête d'ouverture limitée au chemin réglé et à la méthode GET.
+- Ouverture de la WebSocket : 10 secondes pour la poignée de main HTTP ; requête d'ouverture limitée au chemin `/` (404 sinon) et à la méthode GET.
 - Limites du relais inchangées (4096 connexions, 256 attentes, 64 sessions reliées par entreprise) : chaque WebSocket compte comme une connexion. La passerelle refuse au-delà de 4096 WebSocket ouvertes.
 
 ## 7. Reconnexion
@@ -62,7 +63,7 @@ KadenzAdmin ne se connecte pas au relais : il ne fait que régler l'adresse et l
 ## 8. Compatibilité
 
 - Le TCP direct reste : adresse `hôte:port`, pour un relais joignable sans tunnel (VPS, réseau local, essais).
-- Format de l'adresse : `regler_relais` (KadenzAdmin) accepte en plus `wss://hôte[:port][/chemin]`, sans espace, port de 1 à 65535, 443 par défaut. `ws://` sans chiffrement est refusé, sauf vers `127.0.0.1` et `localhost` pour les essais et le banc.
+- Format de l'adresse : `regler_relais` (KadenzAdmin) accepte en plus `wss://hôte[:port]`, sans chemin ni espace, port de 1 à 65535, 443 par défaut. `ws://` sans chiffrement est refusé, sauf vers `127.0.0.1` et `localhost` pour les essais et le banc.
 - Postes déjà installés (1.0.0) : ils reçoivent l'adresse dans `Bienvenue` et n'ont que le TCP. Une adresse `wss://` leur donne « relais injoignable », sans autre effet ; le bureau reste essayé en premier. L'accès à distance n'est pas en service aujourd'hui (port fermé), aucun usage n'est donc cassé. Il faut la nouvelle version du poste et du serveur pour passer par le tunnel.
 - Le protocole du relais garde sa version (`VERSION = 1`) : le transport ne change pas les trames.
 

@@ -538,3 +538,124 @@ fn sante_avec_autre_empreinte_refusee() {
     r.arreter();
     let _ = std::fs::remove_dir_all(d);
 }
+
+/// Relais d'essai avec, en plus, une écoute WebSocket locale.
+fn relais_ws(nom: &str) -> (Relais, PathBuf, String) {
+    let d = dossier(nom);
+    let mut config = Config::nouvelle(
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        d.clone(),
+        vec![cle_portail().verifying_key()],
+    );
+    config.battement = Duration::from_millis(200);
+    config.silence = Duration::from_secs(2);
+    config.ecoute_ws = Some(SocketAddr::from(([127, 0, 0, 1], 0)));
+    let r = Relais::demarrer(config).unwrap();
+    let ws = format!("ws://127.0.0.1:{}", r.adresse_ws().unwrap().port());
+    (r, d, ws)
+}
+
+/// Passage par WebSocket (docs/spec-relais-websocket.md) : enregistrement du
+/// serveur, sessions du serveur et du poste, et sonde de santé, tous par
+/// `ws://`, sans rien changer au-dessus du transport.
+#[test]
+fn poste_relie_par_websocket() {
+    let (r, d, adresse) = relais_ws("websocket");
+    let serveur = identite("serveur");
+    let poste_autorise = identite("poste");
+    let lic = licence(ENTREPRISE, 30);
+
+    kadenz_relais::controle::verifier_sante(&adresse, r.empreinte(), DELAI).unwrap();
+
+    let controle = Controle::enregistrer(
+        &enregistrement(
+            &adresse,
+            r.empreinte(),
+            &lic,
+            &serveur,
+            vec![poste_autorise.empreinte()],
+        ),
+        DELAI,
+    )
+    .unwrap();
+    assert_eq!(r.entreprises(), vec![ENTREPRISE.to_string()]);
+    let echo = ServeurEcho::lancer(controle, adresse.clone());
+
+    let tcp = poste::ouvrir(
+        &adresse,
+        ENTREPRISE,
+        &poste_autorise.certificat,
+        &poste_autorise.cle,
+        DELAI,
+    )
+    .unwrap();
+    // 300 Kio dans un sens pendant qu'on les relit dans l'autre : plusieurs
+    // messages de 16 Kio, à travers deux ponts et le relais.
+    let envoi: Vec<u8> = (0..300 * 1024).map(|i| (i * 7 % 251) as u8).collect();
+    let attendu = envoi.clone();
+    let mut ecriture = tcp.try_clone().unwrap();
+    let fil = thread::spawn(move || ecriture.write_all(&envoi).unwrap());
+    let mut lu = vec![0u8; attendu.len()];
+    let mut lecture = tcp;
+    lecture.read_exact(&mut lu).unwrap();
+    fil.join().unwrap();
+    assert!(lu == attendu);
+
+    // Un poste non autorisé est refusé de la même façon.
+    let intrus = identite("intrus");
+    assert_eq!(
+        refus(poste::ouvrir(
+            &adresse,
+            ENTREPRISE,
+            &intrus.certificat,
+            &intrus.cle,
+            DELAI
+        )),
+        motif::POSTE_NON_AUTORISE
+    );
+    drop(lecture);
+    echo.arreter();
+    r.arreter();
+    let _ = std::fs::remove_dir_all(d);
+}
+
+/// Adresses WebSocket mal formées : refusées sans rien ouvrir ; `ws://` vers
+/// une autre machine que la machine locale n'est pas admis.
+#[test]
+fn adresse_websocket_invalide() {
+    let poste_autorise = identite("poste");
+    for adresse in ["ws://relais.exemple.fr", "wss://relais.exemple.fr/chemin"] {
+        match poste::ouvrir(
+            adresse,
+            ENTREPRISE,
+            &poste_autorise.certificat,
+            &poste_autorise.cle,
+            DELAI,
+        ) {
+            Err(ErreurRelais::Injoignable(e)) => assert_eq!(e, "adresse WebSocket invalide"),
+            autre => panic!("{adresse} : {:?}", autre.map(|_| ())),
+        }
+    }
+}
+
+/// La passerelle demande un relais qui écoute en 0.0.0.0 ou 127.0.0.1.
+#[test]
+fn ecoute_websocket_sans_boucle_locale_refusee() {
+    let d = dossier("ws-refus");
+    let mut config = Config::nouvelle(
+        SocketAddr::from(([127, 0, 0, 2], 0)),
+        d.clone(),
+        vec![cle_portail().verifying_key()],
+    );
+    config.ecoute_ws = Some(SocketAddr::from(([127, 0, 0, 1], 0)));
+    // 127.0.0.2 n'est pas joignable partout (macOS) : seul compte le refus.
+    if let Err(e) = Relais::demarrer(config) {
+        assert!(
+            e.contains("0.0.0.0 ou 127.0.0.1") || e.contains("impossible"),
+            "{e}"
+        );
+    } else {
+        panic!("relais démarré avec une écoute WebSocket sur 127.0.0.2");
+    }
+    let _ = std::fs::remove_dir_all(d);
+}

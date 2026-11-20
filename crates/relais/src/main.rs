@@ -1,16 +1,21 @@
 //! Programme du relais (jalon F8), pour Linux dans un conteneur.
 //!
 //! Usage : `kadenz-relais [--dossier <dossier>] [--ecoute <adresse:port>]
-//! [--sans-traces]`. Par défaut, dossier `./donnees-relais`, écoute sur
-//! `0.0.0.0:47381`, traces dans `<dossier>/traces`. L'empreinte affichée au
-//! lancement se règle dans la fenêtre du serveur de chaque entreprise.
+//! [--ecoute-ws <adresse:port> [--mandataire <adresse>]] [--sans-traces]`.
+//! Par défaut, dossier `./donnees-relais`, écoute sur `0.0.0.0:47381`,
+//! traces dans `<dossier>/traces`. L'empreinte affichée au lancement se règle
+//! dans la fenêtre du serveur de chaque entreprise.
+//!
+//! `--ecoute-ws` ouvre en plus une écoute WebSocket en HTTP simple, pour
+//! cloudflared (docs/spec-relais-websocket.md) ; `--mandataire` donne
+//! l'adresse de cloudflared, seule à faire croire `CF-Connecting-IP`.
 //!
 //! Santé (sonde du conteneur, lot R1) : `kadenz-relais sante [--dossier
 //! <dossier>] [--adresse <hôte:port>]` se connecte au relais (par défaut
 //! `127.0.0.1:47381`) avec l'empreinte du certificat du dossier, sans rien
 //! créer ; code de sortie 0 si le relais répond, 1 sinon.
 
-use std::net::SocketAddr;
+use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
 use std::process::ExitCode;
 use std::time::Duration;
@@ -27,6 +32,8 @@ fn main() -> ExitCode {
     let mut dossier = PathBuf::from("donnees-relais");
     let mut ecoute = SocketAddr::from(([0, 0, 0, 0], PORT_PAR_DEFAUT));
     let mut traces = true;
+    let mut ecoute_ws: Option<SocketAddr> = None;
+    let mut mandataire: Option<IpAddr> = None;
     while let Some(argument) = arguments.next() {
         match argument.as_str() {
             "--dossier" => match arguments.next() {
@@ -37,9 +44,20 @@ fn main() -> ExitCode {
                 Some(a) => ecoute = a,
                 None => return usage(),
             },
+            "--ecoute-ws" => match arguments.next().and_then(|a| a.parse().ok()) {
+                Some(a) => ecoute_ws = Some(a),
+                None => return usage(),
+            },
+            "--mandataire" => match arguments.next().and_then(|a| a.parse().ok()) {
+                Some(a) => mandataire = Some(a),
+                None => return usage(),
+            },
             "--sans-traces" => traces = false,
             _ => return usage(),
         }
+    }
+    if mandataire.is_some() && ecoute_ws.is_none() {
+        return usage();
     }
     let cles = kadenz_licence::entreprise::cles_portail();
     if cles.is_empty() {
@@ -50,6 +68,8 @@ fn main() -> ExitCode {
     if !traces {
         config.traces = None;
     }
+    config.ecoute_ws = ecoute_ws;
+    config.mandataire = mandataire;
     let relais = match Relais::demarrer(config) {
         Ok(r) => r,
         Err(e) => {
@@ -58,6 +78,9 @@ fn main() -> ExitCode {
         }
     };
     println!("Relais Kadenz à l'écoute sur {}", relais.adresse());
+    if let Some(a) = relais.adresse_ws() {
+        println!("WebSocket à l'écoute sur {a}");
+    }
     println!("Empreinte du relais : {}", relais.empreinte());
     loop {
         std::thread::park();
@@ -98,7 +121,7 @@ fn sante(mut arguments: impl Iterator<Item = String>) -> ExitCode {
 
 fn usage() -> ExitCode {
     eprintln!(
-        "usage : kadenz-relais [--dossier <dossier>] [--ecoute <adresse:port>] [--sans-traces]\n\
+        "usage : kadenz-relais [--dossier <dossier>] [--ecoute <adresse:port>] [--ecoute-ws <adresse:port> [--mandataire <adresse>]] [--sans-traces]\n\
          \x20       kadenz-relais sante [--dossier <dossier>] [--adresse <hôte:port>]"
     );
     ExitCode::FAILURE

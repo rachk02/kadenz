@@ -5,7 +5,7 @@
 
 use std::collections::{HashMap, HashSet};
 use std::io::{self, Read, Write};
-use std::net::{Shutdown, SocketAddr, TcpListener, TcpStream};
+use std::net::{IpAddr, Ipv4Addr, Shutdown, SocketAddr, TcpListener, TcpStream};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, mpsc};
@@ -20,6 +20,7 @@ use crate::frein::{Cle, Frein};
 use crate::preuve::{self, ROLE_POSTE, ROLE_SERVEUR, empreinte};
 use crate::tls::{Canal, fournisseur, identite_relais};
 use crate::trames::{self, TAILLE_EN_CLAIR, Trame};
+use crate::ws::{Clients, Passerelle};
 use crate::{VERSION, motif};
 
 /// Sessions en attente de mise en relation, par entreprise et en tout.
@@ -58,6 +59,13 @@ pub struct Config {
     /// Lance un fil ; les essais le remplacent pour simuler la limite de
     /// fils d'un conteneur.
     pub lanceur: Lanceur,
+    /// Écoute des WebSocket (passage par Cloudflare Tunnel,
+    /// docs/spec-relais-websocket.md) ; `None` : TCP seulement. Le relais
+    /// doit alors écouter sur `0.0.0.0` ou `127.0.0.1`.
+    pub ecoute_ws: Option<SocketAddr>,
+    /// Adresse de cloudflared : seules ses WebSocket font croire l'en-tête
+    /// `CF-Connecting-IP` pour le frein.
+    pub mandataire: Option<IpAddr>,
 }
 
 /// Date UTC du jour, `AAAA-MM-JJ`.
@@ -90,6 +98,8 @@ impl Config {
             silence: SILENCE,
             date_utc: Arc::new(aujourdhui_utc),
             lanceur: lanceur_ordinaire(),
+            ecoute_ws: None,
+            mandataire: None,
         }
     }
 }
@@ -216,9 +226,27 @@ struct Etat {
     frein: Mutex<Frein>,
     /// Refus de connexion comptés depuis la dernière ligne de trace.
     refus: Mutex<(Instant, HashMap<&'static str, u64>)>,
+    /// Adresse des clients des WebSocket, par port local de la passerelle.
+    clients_ws: Clients,
 }
 
 impl Etat {
+    /// Adresse retenue pour le frein : celle du client d'une WebSocket quand
+    /// la connexion vient de la passerelle (retirée de la table au passage),
+    /// celle du pair sinon.
+    fn adresse_du_client(&self, pair: SocketAddr) -> IpAddr {
+        if pair.ip().to_canonical().is_loopback()
+            && let Some(ip) = self
+                .clients_ws
+                .lock()
+                .ok()
+                .and_then(|mut c| c.remove(&pair.port()))
+        {
+            return ip;
+        }
+        pair.ip()
+    }
+
     /// Compte un refus de connexion ; une ligne de résumé par minute au plus.
     fn compter_refus(&self, motif: &'static str) {
         let Ok(mut refus) = self.refus.lock() else {
@@ -275,6 +303,7 @@ pub struct Relais {
     empreinte: String,
     etat: Arc<Etat>,
     ecoute: Option<JoinHandle<()>>,
+    passerelle: Option<Passerelle>,
 }
 
 impl Relais {
@@ -320,7 +349,28 @@ impl Relais {
                     .unwrap_or_else(Instant::now),
                 HashMap::new(),
             )),
+            clients_ws: Clients::default(),
         });
+        // La passerelle rejoint le relais en 127.0.0.1 : l'écoute TCP doit
+        // le permettre.
+        let passerelle = match config.ecoute_ws {
+            None => None,
+            Some(ecoute_ws) => {
+                let ip = adresse.ip();
+                if !(ip.is_unspecified() || ip == IpAddr::V4(Ipv4Addr::LOCALHOST)) {
+                    return Err(format!(
+                        "écoute WebSocket : le relais doit écouter sur 0.0.0.0 ou 127.0.0.1, pas {ip}"
+                    ));
+                }
+                let cible = SocketAddr::from((Ipv4Addr::LOCALHOST, adresse.port()));
+                Some(Passerelle::demarrer(
+                    ecoute_ws,
+                    cible,
+                    config.mandataire,
+                    etat.clients_ws.clone(),
+                )?)
+            }
+        };
         let fil = {
             let etat = etat.clone();
             thread::Builder::new()
@@ -333,11 +383,17 @@ impl Relais {
             empreinte: identite.empreinte(),
             etat,
             ecoute: Some(fil),
+            passerelle,
         })
     }
 
     pub fn adresse(&self) -> SocketAddr {
         self.adresse
+    }
+
+    /// Adresse de l'écoute des WebSocket, si elle est ouverte.
+    pub fn adresse_ws(&self) -> Option<SocketAddr> {
+        self.passerelle.as_ref().map(Passerelle::adresse)
     }
 
     /// Empreinte du certificat du relais, à régler sur les serveurs.
@@ -361,6 +417,7 @@ impl Relais {
 
     fn fermer(&mut self) {
         self.etat.arret.store(true, Ordering::SeqCst);
+        self.passerelle = None;
         let _ = TcpStream::connect_timeout(&self.adresse, Duration::from_secs(1));
         if let Some(fil) = self.ecoute.take() {
             let _ = fil.join();
@@ -404,7 +461,7 @@ fn ecouter(ecoute: TcpListener, etat: Arc<Etat>) {
             cle: None,
         };
         if let Ok(pair) = tcp.peer_addr() {
-            let cle = Cle::de(pair.ip());
+            let cle = Cle::de(etat.adresse_du_client(pair));
             let decision = etat
                 .frein
                 .lock()

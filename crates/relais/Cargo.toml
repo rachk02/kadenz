@@ -17,3 +17,8 @@ sha2.workspace = true
 getrandom.workspace = true
 chrono.workspace = true
 ed25519-dalek.workspace = true
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "net", "time", "io-util", "sync", "macros"] }
+tokio-tungstenite.workspace = true
+tokio-rustls.workspace = true
+rustls-native-certs.workspace = true
+futures-util.workspace = true

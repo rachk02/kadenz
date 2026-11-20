@@ -20,6 +20,7 @@ pub mod preuve;
 pub mod relais;
 mod tls;
 pub mod trames;
+pub mod ws;
 
 use std::fmt;
 
@@ -85,12 +86,26 @@ pub(crate) fn injoignable(e: std::io::Error) -> ErreurRelais {
     ErreurRelais::Injoignable(e.to_string())
 }
 
-/// Connexion TCP vers `adresse` (`hôte:port`), délais posés.
+/// Connexion vers le relais à `adresse`, délais posés : TCP direct pour
+/// `hôte:port`, WebSocket pour `wss://hôte[:port]` (ou `ws://` en local),
+/// rendue sous la forme d'un `TcpStream` local relié à elle ([`ws`]).
 pub(crate) fn tcp_vers(
     adresse: &str,
     delai: std::time::Duration,
 ) -> Result<std::net::TcpStream, ErreurRelais> {
     use std::net::{TcpStream, ToSocketAddrs};
+    if let Some(a) = ws::AdresseWs::lire(adresse) {
+        let tcp = ws::ouvrir(&a, delai)?;
+        tcp.set_read_timeout(Some(delai)).map_err(injoignable)?;
+        tcp.set_write_timeout(Some(delai)).map_err(injoignable)?;
+        tcp.set_nodelay(true).map_err(injoignable)?;
+        return Ok(tcp);
+    }
+    if ws::ressemble(adresse) {
+        return Err(ErreurRelais::Injoignable(
+            "adresse WebSocket invalide".into(),
+        ));
+    }
     let adresses: Vec<_> = adresse.to_socket_addrs().map_err(injoignable)?.collect();
     let mut derniere = ErreurRelais::Injoignable("adresse sans résultat".into());
     for a in adresses {
