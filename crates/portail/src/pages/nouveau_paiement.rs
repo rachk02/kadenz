@@ -4,7 +4,7 @@
 
 use maud::{Markup, html};
 
-use super::{Cadre, Rubrique, chemin_entreprise, erreur_formulaire, jeton, page, titre};
+use super::{Cadre, Rubrique, chemin_entreprise, erreur_formulaire, jeton, page_formulaire, titre};
 use crate::{Entreprise, Mode};
 
 pub fn nouveau_paiement(c: &Cadre, e: &Entreprise, erreur: Option<&str>) -> Markup {
@@ -73,5 +73,5 @@ pub fn nouveau_paiement(c: &Cadre, e: &Entreprise, erreur: Option<&str>) -> Mark
             }
         }
     };
-    page(c, "Enregistrer un paiement", Rubrique::Entreprises, contenu)
+    page_formulaire(c, "Enregistrer un paiement", Rubrique::Entreprises, contenu)
 }

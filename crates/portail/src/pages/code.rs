@@ -7,7 +7,7 @@ use maud::{Markup, html};
 
 use super::{
     Cadre, Rubrique, chemin_entreprise, erreur_formulaire, heure, jeton, libelle_formule,
-    liste_modules, page, titre,
+    liste_modules, page, page_formulaire, titre,
 };
 use crate::{CODES_PAR_TIRAGE, CodeActivation, CodeCree, EtatCode, Gamme};
 use kadenz_domaine::module::Module;
@@ -80,7 +80,7 @@ pub fn code_cree(c: &Cadre, cree: &CodeCree) -> Markup {
             }
         }
     };
-    page(c, "Code d'activation", Rubrique::Entreprises, contenu)
+    page_formulaire(c, "Code d'activation", Rubrique::Entreprises, contenu)
 }
 
 pub fn code(c: &Cadre, code: &CodeActivation) -> Markup {
@@ -252,5 +252,5 @@ pub fn codes_crees(c: &Cadre, codes: &[CodeCree]) -> Markup {
             }
         }
     };
-    page(c, "Codes tirés", Rubrique::Codes, contenu)
+    page_formulaire(c, "Codes tirés", Rubrique::Codes, contenu)
 }

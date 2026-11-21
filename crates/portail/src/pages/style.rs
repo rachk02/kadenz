@@ -265,4 +265,134 @@ body.connexion .codes-tires .code-activation { font-size: 15px; letter-spacing: 
   .compte-nom { text-align: left; }
   th, td { padding: 8px 10px; }
 }
+
+/* Console : pages d'un compte connecté au thème de la connexion, noir
+   profond et vert sauge (demande de l'utilisateur du 2026-11-21, « mêmes
+   couleurs, sans la limite, tout fluide »). Page pleine largeur, en-tête en
+   pilules, cartes #17181A, champs pleins, pied ; pages à formulaire en écran
+   partagé avec les colonnes de la connexion à gauche. Tout est rangé sous
+   body.console : la connexion et les pages piliers ne changent pas. */
+body.console { background: #000000; color: #F2F3EF; color-scheme: dark; overflow-x: clip; min-height: 100vh; display: flex; flex-direction: column; }
+body.console :focus-visible { outline: 2px solid #A7B58E; outline-offset: 2px; }
+body.console ::selection { background: #A7B58E; color: #0E1209; }
+body.console a { color: #F2F3EF; text-decoration-color: rgba(242, 243, 239, 0.32); text-underline-offset: 3px; }
+body.console a:hover { color: #A7B58E; text-decoration-color: currentColor; }
+body.console h1, body.console h2 { font-family: "Inter", system-ui, sans-serif; color: #F2F3EF; }
+body.console h1 { font-weight: 400; font-size: clamp(34px, 4.2vw, 60px); line-height: 1.05; letter-spacing: -0.03em; }
+body.console h2 { font-weight: 600; font-size: 18px; letter-spacing: -0.01em; margin: 40px 0 14px; }
+body.console strong { color: #F2F3EF; font-weight: 600; }
+
+/* En-tête en pilules */
+body.console .bandeau { position: sticky; top: 0; z-index: 10; background: linear-gradient(#000000 55%, rgba(0, 0, 0, 0)); color: #F2F3EF; view-transition-name: bandeau; }
+body.console .bandeau-interieur { max-width: none; padding: 14px clamp(16px, 3vw, 40px); gap: 8px; flex-wrap: nowrap; }
+body.console .marque, body.console .menu, body.console .compte-nom { background: #17181A; border-radius: 999px; }
+body.console .marque { padding: 7px 16px 7px 10px; gap: 8px; color: #F2F3EF; flex: none; }
+body.console .marque:hover { color: #F2F3EF; background: #1D1F21; }
+body.console .symbole { width: 22px; height: 22px; }
+body.console .marque-nom { font-family: "Inter", system-ui, sans-serif; font-weight: 600; font-size: 14px; }
+body.console .menu { padding: 4px; gap: 2px; flex-wrap: nowrap; margin: 0 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+body.console .menu-lien { color: #8E8E93; padding: 7px 14px; border-radius: 999px; font-size: 14px; white-space: nowrap; text-decoration: none; transition: color 0.2s ease, background-color 0.2s ease; }
+body.console .menu-lien:hover { color: #F2F3EF; background: #1D1F21; }
+body.console .menu-lien[aria-current="page"] { color: #F2F3EF; background: #2A2C2E; }
+body.console .compte { margin-left: 0; gap: 6px; flex: none; }
+body.console .compte-nom { flex-direction: row; align-items: baseline; gap: 8px; padding: 9px 16px; font-size: 14px; color: #F2F3EF; text-decoration: none; }
+body.console .compte-nom:hover { color: #F2F3EF; background: #1D1F21; text-decoration: none; }
+body.console .compte-role { color: #8E8E93; font-size: 13px; }
+
+/* Boutons */
+body.console .bouton { border: 0; border-radius: 999px; padding: 10px 18px; background: #17181A; color: #F2F3EF; text-decoration: none; transition: background-color 0.2s ease, color 0.2s ease; }
+body.console .bouton:hover { background: #2A2C2E; color: #F2F3EF; }
+body.console .bouton-principal { background: #A7B58E; color: #0E1209; }
+body.console .bouton-principal:hover { background: #BCC9A4; color: #0E1209; }
+body.console .bouton-petit { padding: 6px 12px; font-size: 13px; }
+
+/* Contenu pleine largeur */
+body.console .contenu { flex: 1 0 auto; width: 100%; max-width: none; margin: 0; padding: 8px clamp(16px, 3vw, 40px) 64px; }
+body.console .titre-page { align-items: flex-end; margin: clamp(28px, 5vw, 72px) 0 clamp(24px, 3vw, 40px); }
+body.console .sous-titre, body.console .texte, body.console .vide, body.console .aide { color: #8E8E93; }
+body.console .texte { font-size: 15px; line-height: 1.6; max-width: 720px; }
+body.console .carte { background: #17181A; border: 0; border-radius: 14px; overflow: hidden; }
+body.console .carte-interieur { padding: clamp(18px, 2.4vw, 28px); }
+body.console .message { border-radius: 9px; font-weight: 500; color: #F2F3EF; }
+body.console .message-ok { border-color: #30D158; background: rgba(48, 209, 88, 0.1); }
+body.console .message-erreur { border-color: #FF453A; background: rgba(255, 69, 58, 0.1); }
+
+/* Tableaux */
+body.console th, body.console td { border-bottom: 1px solid #2A2C2E; padding: 14px 18px; }
+body.console th { background: transparent; color: #8E8E93; font-weight: 500; }
+body.console tbody tr { transition: background-color 0.2s ease; }
+body.console tbody tr:hover td { background: #1D1F21; }
+body.console .identifiant { color: #8E8E93; }
+body.console .etat { border-radius: 999px; padding: 3px 10px; font-weight: 500; }
+body.console .etat-ok { color: #30D158; border-color: rgba(48, 209, 88, 0.38); background: rgba(48, 209, 88, 0.1); }
+body.console .etat-attente { color: #A7B58E; border-color: rgba(167, 181, 142, 0.4); background: rgba(167, 181, 142, 0.1); }
+body.console .etat-neutre { color: #8E8E93; border-color: #2A2C2E; background: transparent; }
+
+/* Fiches et formulaires */
+body.console .grille-fiche dt { color: #8E8E93; }
+body.console .grille-fiche dd { color: #F2F3EF; font-weight: 500; }
+body.console .champ { gap: 8px; margin-bottom: 18px; }
+body.console .champ label, body.console .legende { color: #8E8E93; font-size: 13px; font-weight: 500; }
+body.console input[type="text"], body.console input[type="password"], body.console input[type="number"], body.console input[type="date"], body.console select, body.console textarea {
+  min-height: 48px; padding: 0 16px; font-size: 15px; color: #F2F3EF;
+  background: #1D1F21; border: 1px solid #1D1F21; border-radius: 9px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+body.console textarea { padding: 14px 16px; }
+body.console input:hover, body.console select:hover, body.console textarea:hover { border-color: #2A2C2E; }
+body.console input:focus, body.console select:focus, body.console textarea:focus { outline: none; border-color: #A7B58E; box-shadow: 0 0 0 4px rgba(167, 181, 142, 0.16); }
+body.console fieldset { border: 1px solid #2A2C2E; border-radius: 9px; }
+body.console .case input { accent-color: #A7B58E; min-height: 0; }
+body.console .code-activation { color: #F2F3EF; }
+body.console .licence-texte { background: #1D1F21; }
+body.console .actions { margin-top: 18px; }
+body.console .formulaire > p.aide { margin-bottom: 18px; }
+
+/* Écran partagé des pages à formulaire : contenu à plat, sans carte. */
+body.console .contenu-partage { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(24px, 5vw, 88px); align-items: start; padding-top: 8px; }
+body.console .panneau-illustration { position: sticky; top: 80px; height: calc(100vh - 104px); min-height: 480px; overflow: hidden; border-radius: 14px; background: #000000; }
+body.console .panneau-illustration img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center bottom; }
+body.console .colonne-formulaire { min-width: 0; max-width: 620px; padding-bottom: 24px; }
+body.console .colonne-formulaire .titre-page { margin-top: clamp(24px, 6vh, 72px); }
+body.console .colonne-formulaire h1 { font-size: clamp(30px, 3vw, 44px); }
+body.console .colonne-formulaire .carte { background: transparent; border-radius: 0; overflow: visible; }
+body.console .colonne-formulaire .carte-interieur { padding: 0; }
+body.console .colonne-formulaire input[type="text"], body.console .colonne-formulaire input[type="number"], body.console .colonne-formulaire input[type="date"], body.console .colonne-formulaire select, body.console .colonne-formulaire textarea { background: #17181A; border-color: #17181A; }
+body.console .colonne-formulaire input:focus, body.console .colonne-formulaire select:focus, body.console .colonne-formulaire textarea:focus { background: #1D1F21; border-color: #A7B58E; }
+body.console .colonne-formulaire .bouton-principal { min-height: 48px; padding: 0 24px; border-radius: 9px; }
+body.console .colonne-formulaire .codes-tires li { padding: 12px 16px; background: #17181A; border-radius: 9px; }
+
+/* Pied */
+body.console .pied-console { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px 48px; padding: 40px clamp(16px, 3vw, 40px) 48px; color: #8E8E93; font-size: 14px; line-height: 1.6; }
+body.console .pied-marque { display: flex; gap: 16px; align-items: flex-start; max-width: 460px; }
+body.console .pied-marque .symbole { width: 32px; height: 32px; flex: none; }
+body.console .pied-marque p { margin: 0; }
+body.console .pied-marque strong { display: block; }
+body.console .pied-liens { display: grid; grid-template-columns: repeat(2, auto); gap: 6px 40px; align-content: start; }
+body.console .pied-liens a { color: #F2F3EF; text-decoration: none; }
+body.console .pied-liens a:hover { color: #A7B58E; }
+
+/* Fluidité : fondu entre les pages (CSS seul) et apparition du contenu. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  body.console .contenu { animation: console-apparition 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+}
+@keyframes console-apparition { from { opacity: 0; transform: translateY(14px); } }
+
+@media (max-width: 860px) {
+  body.console .bandeau-interieur { flex-wrap: wrap; }
+  body.console .menu { order: 3; flex: 1 1 100%; margin: 0; }
+  body.console .compte { margin-left: auto; width: auto; }
+  body.console .menu { flex-wrap: wrap; justify-content: center; border-radius: 20px; overflow-x: visible; }
+  body.console .menu-lien { padding: 7px 11px; }
+  body.console .contenu-partage { grid-template-columns: 1fr; gap: 24px; }
+  body.console .panneau-illustration { position: relative; top: auto; height: 180px; min-height: 0; }
+  body.console .colonne-formulaire { max-width: none; }
+  body.console .colonne-formulaire .titre-page { margin-top: 8px; }
+}
+@media (max-width: 480px) {
+  body.console .marque-nom, body.console .compte-role { display: none; }
+  body.console .compte-nom { padding: 9px 14px; }
+  body.console .titre-page { align-items: flex-start; }
+}
 "#;

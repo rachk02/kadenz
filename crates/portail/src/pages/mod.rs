@@ -106,15 +106,32 @@ fn tete_avec(titre: &str, en_plus: Markup) -> Markup {
     }
 }
 
-/// Page d'un compte connecté : bandeau, menu selon le rôle, message,
-/// contenu.
+/// Page de consultation d'un compte connecté : bandeau, menu selon le rôle,
+/// message, contenu, pied (thème noir et sauge de la connexion, 2026-11-21).
 fn page(c: &Cadre, titre: &str, rubrique: Rubrique, contenu: Markup) -> Markup {
+    page_console(c, titre, rubrique, false, contenu)
+}
+
+/// Page à formulaire d'un compte connecté : même bandeau et même pied ; à
+/// gauche un grand panneau des colonnes de la connexion, à droite le
+/// contenu (écran partagé, demande de l'utilisateur du 2026-11-21).
+fn page_formulaire(c: &Cadre, titre: &str, rubrique: Rubrique, contenu: Markup) -> Markup {
+    page_console(c, titre, rubrique, true, contenu)
+}
+
+fn page_console(
+    c: &Cadre,
+    titre: &str,
+    rubrique: Rubrique,
+    partage: bool,
+    contenu: Markup,
+) -> Markup {
     let editeur = c.compte.role == Role::Editeur;
     html! {
         (DOCTYPE)
         html lang="fr" {
             (tete(titre))
-            body {
+            body.console {
                 header.bandeau {
                     div.bandeau-interieur {
                         a.marque href="/" {
@@ -138,16 +155,48 @@ fn page(c: &Cadre, titre: &str, rubrique: Rubrique, contenu: Markup) -> Markup {
                             }
                             form.deconnexion method="post" action="/deconnexion" {
                                 (jeton(c))
-                                button.bouton.bouton-sombre type="submit" { "Se déconnecter" }
+                                button.bouton.bouton-principal type="submit" { "Se déconnecter" }
                             }
                         }
                     }
                 }
-                main.contenu {
-                    @if let Some(m) = c.message {
-                        (message(m.ok, &m.texte))
+                @if partage {
+                    main.contenu.contenu-partage {
+                        div.panneau-illustration aria-hidden="true" {
+                            img src=(IMAGE_PILIERS) alt="" width="800" height="900" decoding="async";
+                        }
+                        div.colonne-formulaire {
+                            @if let Some(m) = c.message {
+                                (message(m.ok, &m.texte))
+                            }
+                            (contenu)
+                        }
                     }
-                    (contenu)
+                } @else {
+                    main.contenu {
+                        @if let Some(m) = c.message {
+                            (message(m.ok, &m.texte))
+                        }
+                        (contenu)
+                    }
+                }
+                footer.pied-console {
+                    div.pied-marque {
+                        (PreEscaped(SYMBOLE))
+                        p {
+                            strong { "Portail des licences" }
+                            "Enregistrement des paiements et émission des licences d'abonnement Kadenz, pour l'éditeur et ses revendeurs."
+                        }
+                    }
+                    nav.pied-liens aria-label="Rubriques" {
+                        a href="/" { "Entreprises" }
+                        a href="/codes" { "Codes à vendre" }
+                        @if editeur {
+                            a href="/comptes" { "Revendeurs" }
+                        }
+                        a href="/journal" { "Journal" }
+                        a href="/mot-de-passe" { "Changer de mot de passe" }
+                    }
                 }
             }
         }

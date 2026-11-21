@@ -7,7 +7,7 @@ use maud::{Markup, html};
 
 use super::{
     Cadre, Rubrique, chemin_entreprise, date, erreur_formulaire, jeton, libelle_formule, montant,
-    page, titre,
+    page_formulaire, titre,
 };
 use crate::{Entreprise, Paiement, Proposition};
 use kadenz_domaine::module::Module;
@@ -76,7 +76,7 @@ pub fn emission(
             }
         }
     };
-    page(
+    page_formulaire(
         c,
         "Tirer le code d'activation",
         Rubrique::Entreprises,

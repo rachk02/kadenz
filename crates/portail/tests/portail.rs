@@ -652,7 +652,19 @@ fn routes_sessions_et_jetons() {
             && cookie.contains("SameSite=Strict")
     );
     let session = morceau_cookie(&cookie);
-    assert_eq!(requete(a, "GET", "/", Some(&session), "").statut, 200);
+    let accueil = requete(a, "GET", "/", Some(&session), "");
+    assert_eq!(accueil.statut, 200);
+
+    // Thème de la console (2026-11-21) : page de consultation pleine largeur
+    // avec son pied ; page à formulaire en écran partagé, colonnes à gauche.
+    assert!(accueil.corps.contains("<body class=\"console\">"));
+    assert!(accueil.corps.contains("class=\"pied-console\""));
+    assert!(!accueil.corps.contains("contenu-partage"));
+    let formulaire = requete(a, "GET", "/entreprises/nouvelle", Some(&session), "").corps;
+    assert!(formulaire.contains("class=\"contenu contenu-partage\""));
+    assert!(formulaire.contains("class=\"panneau-illustration\" aria-hidden=\"true\""));
+    assert_eq!(formulaire.matches("<h1>").count(), 1);
+    assert!(!formulaire.contains("style="));
 
     // Formulaire sans jeton ou avec un faux : refusé, rien n'est écrit.
     let corps = format!("identifiant={ENTREPRISE_A}&client=Client");

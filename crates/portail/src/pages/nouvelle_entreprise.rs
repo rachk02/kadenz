@@ -5,7 +5,7 @@
 
 use maud::{Markup, html};
 
-use super::{Cadre, Rubrique, erreur_formulaire, jeton, page, titre};
+use super::{Cadre, Rubrique, erreur_formulaire, jeton, page_formulaire, titre};
 use crate::Compte;
 
 pub fn nouvelle_entreprise(c: &Cadre, revendeurs: &[Compte], erreur: Option<&str>) -> Markup {
@@ -51,5 +51,5 @@ pub fn nouvelle_entreprise(c: &Cadre, revendeurs: &[Compte], erreur: Option<&str
             }
         }
     };
-    page(c, "Nouvelle entreprise", Rubrique::Entreprises, contenu)
+    page_formulaire(c, "Nouvelle entreprise", Rubrique::Entreprises, contenu)
 }

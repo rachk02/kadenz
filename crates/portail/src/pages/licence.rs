@@ -4,7 +4,8 @@
 use maud::{Markup, html};
 
 use super::{
-    Cadre, Rubrique, chemin_entreprise, date, libelle_formule, liste_modules, page, titre,
+    Cadre, Rubrique, chemin_entreprise, date, libelle_formule, liste_modules, page_formulaire,
+    titre,
 };
 use crate::LicenceEmise;
 
@@ -44,5 +45,5 @@ pub fn licence(c: &Cadre, l: &LicenceEmise) -> Markup {
             }
         }
     };
-    page(c, "Licence émise", Rubrique::Entreprises, contenu)
+    page_formulaire(c, "Licence émise", Rubrique::Entreprises, contenu)
 }
