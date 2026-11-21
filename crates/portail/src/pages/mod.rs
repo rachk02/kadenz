@@ -136,23 +136,30 @@ fn tete_avec(titre: &str, en_plus: Markup) -> Markup {
 /// Page de consultation d'un compte connecté : bandeau, menu selon le rôle,
 /// message, contenu, pied (thème noir et sauge de la connexion, 2026-11-21).
 fn page(c: &Cadre, titre: &str, rubrique: Rubrique, contenu: Markup) -> Markup {
-    page_console(c, titre, rubrique, false, contenu)
+    page_console(c, titre, rubrique, Mise::Simple, contenu)
 }
 
 /// Page à formulaire d'un compte connecté : même bandeau et même pied ; à
 /// gauche un grand panneau des colonnes de la connexion, à droite le
 /// contenu (écran partagé, demande de l'utilisateur du 2026-11-21).
 fn page_formulaire(c: &Cadre, titre: &str, rubrique: Rubrique, contenu: Markup) -> Markup {
-    page_console(c, titre, rubrique, true, contenu)
+    page_console(c, titre, rubrique, Mise::Partage, contenu)
 }
 
-fn page_console(
-    c: &Cadre,
-    titre: &str,
-    rubrique: Rubrique,
-    partage: bool,
-    contenu: Markup,
-) -> Markup {
+/// Page au gabarit plein écran (Entreprises) : les sections de la maquette
+/// vont d'un bord à l'autre ; le message éventuel reste en haut.
+fn page_pleine(c: &Cadre, titre: &str, rubrique: Rubrique, contenu: Markup) -> Markup {
+    page_console(c, titre, rubrique, Mise::Pleine, contenu)
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Mise {
+    Simple,
+    Partage,
+    Pleine,
+}
+
+fn page_console(c: &Cadre, titre: &str, rubrique: Rubrique, mise: Mise, contenu: Markup) -> Markup {
     html! {
         (DOCTYPE)
         html lang="fr" {
@@ -160,7 +167,14 @@ fn page_console(
             body.inverted.console {
                 (coque::couverture())
                 (coque::entete(c, rubrique))
-                @if partage {
+                @if mise == Mise::Pleine {
+                    main.pleine {
+                        @if let Some(m) = c.message {
+                            div.contenu.contenu-message { (message(m.ok, &m.texte)) }
+                        }
+                        (contenu)
+                    }
+                } @else if mise == Mise::Partage {
                     main.contenu.contenu-partage {
                         div.panneau-illustration aria-hidden="true" {
                             canvas.panneau-fond data-motif="C" data-cadre="plein" data-decalage="0.4" aria-hidden="true" {}

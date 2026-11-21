@@ -352,6 +352,13 @@ body.console .panneau-illustration { background: #000000; }
 body.console .panneau-illustration canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 body.console .panneau-fond { opacity: 0.45; }
 body.console .footer { margin-top: clamp(64px, 10vw, 140px); }
+/* Page Entreprises au gabarit plein écran : sections de bord à bord, puis la
+   liste complète ; le message éventuel passe au-dessus du diaporama. */
+body.console main.pleine { flex: 1 0 auto; width: 100%; }
+body.console .contenu-message { position: relative; z-index: 5; padding-bottom: 0; }
+body.console .liste-entreprises { padding: clamp(64px, 8vw, 120px) clamp(16px, 3vw, 40px) 0; }
+body.console .liste-tete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+body.console .liste-tete h2 { margin: 0; font-size: clamp(28px, 3.2vw, 44px); font-weight: 500; letter-spacing: -0.02em; }
 
 @media (max-width: 860px) {
   body.console .contenu-partage { grid-template-columns: 1fr; gap: 24px; }

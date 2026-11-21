@@ -682,6 +682,32 @@ fn routes_sessions_et_jetons() {
     assert!(!accueil.corps.contains("Diatype"));
     // Aucune entreprise : le lien reste simple, sans panneau ni exemple.
     assert!(!accueil.corps.contains("data-mega-cle=\"entreprises\""));
+    // Page Entreprises au gabarit : sections de la maquette, état vide, aucun
+    // exemple, aucun trou resté, aucun style en ligne, un seul titre h1.
+    for section in [
+        "<section class=\"section hero inverted\"",
+        "<section class=\"section intro inverted\"",
+        "<section id=\"product-grid\"",
+        "<section class=\"section drift inverted\"",
+        "<section class=\"section-light hd\"",
+        "id=\"liste\"",
+    ] {
+        assert!(accueil.corps.contains(section), "{section}");
+    }
+    assert!(
+        accueil
+            .corps
+            .contains("data-caption=\"Aucune entreprise pour l&#39;instant\"")
+            || accueil
+                .corps
+                .contains("data-caption=\"Aucune entreprise pour l'instant\"")
+    );
+    assert!(accueil.corps.contains("Aucune entreprise directe."));
+    assert!(!accueil.corps.contains("data-slideshow=\"thumb\""));
+    assert!(!accueil.corps.contains('⟦'));
+    assert!(!accueil.corps.contains("Exemple"));
+    assert!(!accueil.corps.contains("style="));
+    assert_eq!(accueil.corps.matches("<h1").count(), 1);
     for &(chemin, type_contenu, _) in kadenz_portail::pages::gabarit::FICHIERS {
         let f = requete(a, "GET", chemin, None, "");
         assert_eq!(f.statut, 200, "{chemin}");
@@ -736,6 +762,12 @@ fn routes_sessions_et_jetons() {
     assert!(accueil.contains("data-mega-cle=\"entreprises\""));
     assert!(accueil.contains("<span class=\"mega-title\">Client</span>"));
     assert!(accueil.contains(&format!("href=\"/entreprises/{ENTREPRISE_A}\"")));
+    // La grille et le diaporama prennent l'entreprise créée.
+    assert!(accueil.contains("data-caption=\"Client\""));
+    assert!(accueil.contains(&format!("href=\"/entreprises/{ENTREPRISE_A}/paiement\"")));
+    assert!(accueil.contains("data-hp-counts=\"{&quot;toutes&quot;:&quot;001&quot;"));
+    assert!(!accueil.contains('⟦'));
+    assert!(!accueil.contains("style="));
     assert_eq!(
         requete(
             a,

@@ -161,6 +161,8 @@ pub(super) fn tete_coque() -> Markup {
         script src=(gabarit::JS_GSAP) defer {}
         script src=(gabarit::JS_SCROLLTRIGGER) defer {}
         script src=(gabarit::JS_SPLITTEXT) defer {}
+        script src=(gabarit::JS_OBSERVER) defer {}
+        script src=(gabarit::JS_CUSTOMEASE) defer {}
         script src=(gabarit::JS_LENIS) defer {}
         script src=(gabarit::JS_COQUE) defer {}
     }

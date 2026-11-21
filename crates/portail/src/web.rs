@@ -633,12 +633,21 @@ async fn accueil(State(etat): State<Etat>, entetes: HeaderMap, uri: Uri) -> Resp
     };
     let portail = etat.portail.clone();
     let compte = c.compte.clone();
-    match bloquant(move || portail.entreprises(&compte)).await {
-        Ok(liste) => {
+    // Le journal et sa chaîne ne servent qu'aux sections du gabarit : une
+    // lecture en échec les laisse vides, la liste des entreprises reste.
+    let lu = bloquant(move || {
+        let liste = portail.entreprises(&compte)?;
+        let journal = portail.journal(&compte).unwrap_or_default();
+        let chaine = portail.chaine_du_journal(&compte).ok().flatten();
+        Ok::<_, ErreurPortail>((liste, journal, chaine))
+    })
+    .await;
+    match lu {
+        Ok((liste, journal, chaine)) => {
             let m = message_de(&uri);
             html(
                 StatusCode::OK,
-                pages::entreprises(&c.cadre(m.as_ref()), &liste),
+                pages::entreprises(&c.cadre(m.as_ref()), &liste, &journal, chaine.as_ref()),
             )
         }
         Err(e) => page_erreur(Some(&c), &e),
