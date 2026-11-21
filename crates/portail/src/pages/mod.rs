@@ -5,7 +5,7 @@
 //! unique servie en `/style.css`. Les signatures sont fixées par les routes de `web.rs` ;
 //! chaque page reçoit des données déjà filtrées selon le rôle du compte.
 
-use maud::{DOCTYPE, Markup, PreEscaped, html};
+use maud::{DOCTYPE, Markup, html};
 
 use crate::{Compte, Message, Role};
 use kadenz_domaine::module::Module;
@@ -14,11 +14,13 @@ use kadenz_licence::entreprise::Formule;
 mod code;
 mod comptes;
 mod connexion;
+mod coque;
 mod double;
 mod emission;
 mod entreprises;
 mod erreur;
 mod fiche_entreprise;
+pub mod gabarit;
 mod journal;
 mod licence;
 mod mot_de_passe;
@@ -29,6 +31,7 @@ mod style;
 pub use code::{code, code_cree, codes, codes_crees};
 pub use comptes::comptes;
 pub use connexion::{code_connexion, connexion};
+pub use coque::{Menus, menus};
 pub use double::{codes_secours, double_active, mise_en_place};
 pub use emission::emission;
 pub use entreprises::entreprises;
@@ -47,6 +50,8 @@ pub struct Cadre<'a> {
     pub compte: &'a Compte,
     pub csrf: &'a str,
     pub message: Option<&'a Message>,
+    /// Listes du méga-menu et du menu mobile.
+    pub menus: &'a Menus,
 }
 
 /// Rubrique active du menu.
@@ -148,44 +153,19 @@ fn page_console(
     partage: bool,
     contenu: Markup,
 ) -> Markup {
-    let editeur = c.compte.role == Role::Editeur;
     html! {
         (DOCTYPE)
         html lang="fr" {
-            (tete(titre))
-            body.console {
-                header.bandeau {
-                    div.bandeau-interieur {
-                        a.marque href="/" {
-                            (PreEscaped(SYMBOLE))
-                            span.marque-nom { "Portail des licences" }
-                        }
-                        nav.menu aria-label="Menu" {
-                            (lien_menu("/", "Entreprises", rubrique == Rubrique::Entreprises))
-                            (lien_menu("/codes", "Codes à vendre", rubrique == Rubrique::Codes))
-                            @if editeur {
-                                (lien_menu("/comptes", "Revendeurs", rubrique == Rubrique::Comptes))
-                            }
-                            (lien_menu("/journal", "Journal", rubrique == Rubrique::Journal))
-                        }
-                        div.compte {
-                            a.compte-nom
-                                href="/mot-de-passe"
-                                title="Changer de mot de passe" {
-                                (c.compte.nom)
-                                span.compte-role { (libelle_role(c.compte.role)) }
-                            }
-                            form.deconnexion method="post" action="/deconnexion" {
-                                (jeton(c))
-                                button.bouton.bouton-principal type="submit" { "Se déconnecter" }
-                            }
-                        }
-                    }
-                }
+            (tete_avec(titre, coque::tete_coque()))
+            body.inverted.console {
+                (coque::couverture())
+                (coque::entete(c, rubrique))
                 @if partage {
                     main.contenu.contenu-partage {
                         div.panneau-illustration aria-hidden="true" {
-                            img src=(IMAGE_PILIERS) alt="" width="800" height="900" decoding="async";
+                            canvas.panneau-fond data-motif="C" data-cadre="plein" data-decalage="0.4" aria-hidden="true" {}
+                            canvas.panneau-pierre data-motif="P" data-forme=(forme_du_panneau(titre))
+                                data-cadre="plein" data-decalage="0.9" aria-hidden="true" {}
                         }
                         div.colonne-formulaire {
                             @if let Some(m) = c.message {
@@ -202,33 +182,17 @@ fn page_console(
                         (contenu)
                     }
                 }
-                footer.pied-console {
-                    div.pied-marque {
-                        (PreEscaped(SYMBOLE))
-                        p {
-                            strong { "Portail des licences" }
-                            "Enregistrement des paiements et émission des licences d'abonnement Kadenz, pour l'éditeur et ses revendeurs."
-                        }
-                    }
-                    nav.pied-liens aria-label="Rubriques" {
-                        a href="/" { "Entreprises" }
-                        a href="/codes" { "Codes à vendre" }
-                        @if editeur {
-                            a href="/comptes" { "Revendeurs" }
-                        }
-                        a href="/journal" { "Journal" }
-                        a href="/mot-de-passe" { "Changer de mot de passe" }
-                    }
-                }
+                (coque::pied(c))
+                (coque::scripts_fin())
             }
         }
     }
 }
 
-fn lien_menu(href: &str, texte: &str, actif: bool) -> Markup {
-    html! {
-        a.menu-lien href=(href) aria-current=[actif.then_some("page")] { (texte) }
-    }
+/// Forme de la pierre du panneau d'une page à formulaire, fixe pour une page.
+fn forme_du_panneau(titre: &str) -> &'static str {
+    const FORMES: [&str; 4] = ["fronton", "arche", "chapiteau", "colonne"];
+    FORMES[titre.len() % FORMES.len()]
 }
 
 /// Champ caché du jeton anti-falsification, sur chaque formulaire POST.

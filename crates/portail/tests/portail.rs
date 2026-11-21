@@ -667,15 +667,43 @@ fn routes_sessions_et_jetons() {
     let accueil = requete(a, "GET", "/", Some(&session), "");
     assert_eq!(accueil.statut, 200);
 
-    // Thème de la console (2026-11-21) : page de consultation pleine largeur
-    // avec son pied ; page à formulaire en écran partagé, colonnes à gauche.
-    assert!(accueil.corps.contains("<body class=\"console\">"));
-    assert!(accueil.corps.contains("class=\"pied-console\""));
+    // Coque animée du gabarit (2026-11-21) : couverture de transition,
+    // en-tête en pilules, pied au C Tournant, feuille et scripts du gabarit ;
+    // page à formulaire en écran partagé, panneau animé à gauche.
+    assert!(accueil.corps.contains("<body class=\"inverted console\">"));
+    assert!(accueil.corps.contains("<div class=\"pt\""));
+    assert!(
+        accueil
+            .corps
+            .contains("<header class=\"navigation inverted\"")
+    );
+    assert!(accueil.corps.contains("<footer class=\"footer inverted\""));
     assert!(!accueil.corps.contains("contenu-partage"));
+    assert!(!accueil.corps.contains("Diatype"));
+    // Aucune entreprise : le lien reste simple, sans panneau ni exemple.
+    assert!(!accueil.corps.contains("data-mega-cle=\"entreprises\""));
+    for &(chemin, type_contenu, _) in kadenz_portail::pages::gabarit::FICHIERS {
+        let f = requete(a, "GET", chemin, None, "");
+        assert_eq!(f.statut, 200, "{chemin}");
+        assert_eq!(f.entete("content-type"), Some(type_contenu), "{chemin}");
+        assert_eq!(
+            f.entete("cache-control"),
+            Some("public, max-age=31536000, immutable")
+        );
+    }
+    let gsap = kadenz_portail::pages::gabarit::JS_GSAP;
+    let coque = kadenz_portail::pages::gabarit::JS_COQUE;
+    assert!(
+        accueil
+            .corps
+            .contains(&format!("<script src=\"{gsap}\" defer>"))
+    );
+    assert!(accueil.corps.find(gsap) < accueil.corps.find(coque));
     let formulaire = requete(a, "GET", "/entreprises/nouvelle", Some(&session), "").corps;
     assert!(formulaire.contains("class=\"contenu contenu-partage\""));
     assert!(formulaire.contains("class=\"panneau-illustration\" aria-hidden=\"true\""));
-    assert_eq!(formulaire.matches("<h1>").count(), 1);
+    assert!(formulaire.contains("data-motif=\"P\""));
+    assert_eq!(formulaire.matches("<h1").count(), 1);
     assert!(!formulaire.contains("style="));
 
     // Formulaire sans jeton ou avec un faux : refusé, rien n'est écrit.
@@ -703,6 +731,11 @@ fn routes_sessions_et_jetons() {
         r.entete("location"),
         Some(format!("/entreprises/{ENTREPRISE_A}?m=entreprise").as_str())
     );
+    // Le menu se construit depuis les vraies données : l'entreprise créée.
+    let accueil = requete(a, "GET", "/", Some(&session), "").corps;
+    assert!(accueil.contains("data-mega-cle=\"entreprises\""));
+    assert!(accueil.contains("<span class=\"mega-title\">Client</span>"));
+    assert!(accueil.contains(&format!("href=\"/entreprises/{ENTREPRISE_A}\"")));
     assert_eq!(
         requete(
             a,

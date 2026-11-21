@@ -282,23 +282,6 @@ body.console h1 { font-weight: 400; font-size: clamp(34px, 4.2vw, 60px); line-he
 body.console h2 { font-weight: 600; font-size: 18px; letter-spacing: -0.01em; margin: 40px 0 14px; }
 body.console strong { color: #F2F3EF; font-weight: 600; }
 
-/* En-tête en pilules */
-body.console .bandeau { position: sticky; top: 0; z-index: 10; background: linear-gradient(#000000 55%, rgba(0, 0, 0, 0)); color: #F2F3EF; view-transition-name: bandeau; }
-body.console .bandeau-interieur { max-width: none; padding: 14px clamp(16px, 3vw, 40px); gap: 8px; flex-wrap: nowrap; }
-body.console .marque, body.console .menu, body.console .compte-nom { background: #17181A; border-radius: 999px; }
-body.console .marque { padding: 7px 16px 7px 10px; gap: 8px; color: #F2F3EF; flex: none; }
-body.console .marque:hover { color: #F2F3EF; background: #1D1F21; }
-body.console .symbole { width: 22px; height: 22px; }
-body.console .marque-nom { font-family: "Inter", system-ui, sans-serif; font-weight: 600; font-size: 14px; }
-body.console .menu { padding: 4px; gap: 2px; flex-wrap: nowrap; margin: 0 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
-body.console .menu-lien { color: #8E8E93; padding: 7px 14px; border-radius: 999px; font-size: 14px; white-space: nowrap; text-decoration: none; transition: color 0.2s ease, background-color 0.2s ease; }
-body.console .menu-lien:hover { color: #F2F3EF; background: #1D1F21; }
-body.console .menu-lien[aria-current="page"] { color: #F2F3EF; background: #2A2C2E; }
-body.console .compte { margin-left: 0; gap: 6px; flex: none; }
-body.console .compte-nom { flex-direction: row; align-items: baseline; gap: 8px; padding: 9px 16px; font-size: 14px; color: #F2F3EF; text-decoration: none; }
-body.console .compte-nom:hover { color: #F2F3EF; background: #1D1F21; text-decoration: none; }
-body.console .compte-role { color: #8E8E93; font-size: 13px; }
-
 /* Boutons */
 body.console .bouton { border: 0; border-radius: 999px; padding: 10px 18px; background: #17181A; color: #F2F3EF; text-decoration: none; transition: background-color 0.2s ease, color 0.2s ease; }
 body.console .bouton:hover { background: #2A2C2E; color: #F2F3EF; }
@@ -362,37 +345,21 @@ body.console .colonne-formulaire input:focus, body.console .colonne-formulaire s
 body.console .colonne-formulaire .bouton-principal { min-height: 48px; padding: 0 24px; border-radius: 9px; }
 body.console .colonne-formulaire .codes-tires li { padding: 12px 16px; background: #17181A; border-radius: 9px; }
 
-/* Pied */
-body.console .pied-console { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px 48px; padding: 40px clamp(16px, 3vw, 40px) 48px; color: #8E8E93; font-size: 14px; line-height: 1.6; }
-body.console .pied-marque { display: flex; gap: 16px; align-items: flex-start; max-width: 460px; }
-body.console .pied-marque .symbole { width: 32px; height: 32px; flex: none; }
-body.console .pied-marque p { margin: 0; }
-body.console .pied-marque strong { display: block; }
-body.console .pied-liens { display: grid; grid-template-columns: repeat(2, auto); gap: 6px 40px; align-content: start; }
-body.console .pied-liens a { color: #F2F3EF; text-decoration: none; }
-body.console .pied-liens a:hover { color: #A7B58E; }
-
-/* Fluidité : fondu entre les pages (CSS seul) et apparition du contenu. */
-@media (prefers-reduced-motion: no-preference) {
-  @view-transition { navigation: auto; }
-  body.console .contenu { animation: console-apparition 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
-}
-@keyframes console-apparition { from { opacity: 0; transform: translateY(14px); } }
+/* Coque animée (gabarit, 2026-11-21) : l'en-tête est posé au-dessus du
+   contenu ; panneau des pages à formulaire animé (C Tournant et pierre). */
+body.console .contenu { padding-top: calc(var(--nav-h, 64px) + 40px); }
+body.console .panneau-illustration { background: #000000; }
+body.console .panneau-illustration canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+body.console .panneau-fond { opacity: 0.45; }
+body.console .footer { margin-top: clamp(64px, 10vw, 140px); }
 
 @media (max-width: 860px) {
-  body.console .bandeau-interieur { flex-wrap: wrap; }
-  body.console .menu { order: 3; flex: 1 1 100%; margin: 0; }
-  body.console .compte { margin-left: auto; width: auto; }
-  body.console .menu { flex-wrap: wrap; justify-content: center; border-radius: 20px; overflow-x: visible; }
-  body.console .menu-lien { padding: 7px 11px; }
   body.console .contenu-partage { grid-template-columns: 1fr; gap: 24px; }
   body.console .panneau-illustration { position: relative; top: auto; height: 180px; min-height: 0; }
   body.console .colonne-formulaire { max-width: none; }
   body.console .colonne-formulaire .titre-page { margin-top: 8px; }
 }
 @media (max-width: 480px) {
-  body.console .marque-nom, body.console .compte-role { display: none; }
-  body.console .compte-nom { padding: 9px 14px; }
   body.console .titre-page { align-items: flex-start; }
 }
 "#;

@@ -229,6 +229,7 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
             "/sante",
             get(|| async { statique("text/plain; charset=utf-8", b"ok", false) }),
         )
+        .merge(routes_gabarit())
         .fallback(introuvable)
         // Du plus intérieur au plus extérieur : limite lue par les
         // extracteurs, refus sur Content-Length avant toute lecture, panique
@@ -361,6 +362,7 @@ struct Connecte {
     compte: Compte,
     csrf: String,
     limitee: bool,
+    menus: pages::Menus,
 }
 
 impl Connecte {
@@ -369,6 +371,7 @@ impl Connecte {
             compte: &self.compte,
             csrf: &self.csrf,
             message,
+            menus: &self.menus,
         }
     }
 }
@@ -376,17 +379,46 @@ impl Connecte {
 async fn connecte(etat: &Etat, entetes: &HeaderMap) -> Option<Connecte> {
     let jeton = jeton_du_cookie(entetes)?;
     let portail = etat.portail.clone();
-    let (compte, csrf, limitee) = bloquant(move || {
+    let (compte, csrf, limitee, menus) = bloquant(move || {
         let (compte, csrf) = portail.session(&jeton)?;
         let limitee = portail.mise_en_place_exigee(&compte);
-        Some((compte, csrf, limitee))
+        let menus = menus_du_compte(&portail, &compte);
+        Some((compte, csrf, limitee, menus))
     })
     .await?;
     Some(Connecte {
         compte,
         csrf,
         limitee,
+        menus,
     })
+}
+
+/// Listes du menu des pages du compte : entreprises visibles, revendeurs
+/// (éditeur), dernières actions du journal. Une lecture en échec laisse la
+/// liste vide (lien simple, sans panneau).
+fn menus_du_compte(portail: &Portail, compte: &Compte) -> pages::Menus {
+    let entreprises = portail.entreprises(compte).unwrap_or_default();
+    let revendeurs = if compte.role == crate::Role::Editeur {
+        portail.revendeurs(compte).unwrap_or_default()
+    } else {
+        Vec::new()
+    };
+    let journal = portail.journal(compte).unwrap_or_default();
+    pages::menus(&entreprises, &revendeurs, &journal)
+}
+
+/// Fichiers du gabarit animé (`pages::gabarit`, généré) : nom à empreinte,
+/// cache long.
+fn routes_gabarit() -> Router<Etat> {
+    let mut routes = Router::new();
+    for &(chemin, type_contenu, octets) in pages::gabarit::FICHIERS {
+        routes = routes.route(
+            chemin,
+            get(move || async move { statique(type_contenu, octets, true) }),
+        );
+    }
+    routes
 }
 
 /// Comparaison en temps constant des jetons anti-falsification.

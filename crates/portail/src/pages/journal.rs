@@ -90,7 +90,7 @@ fn court(cible: &str) -> String {
 }
 
 /// Libellé d'un code d'action ; un code inconnu s'affiche tel quel.
-fn libelle_action(code: &str) -> &str {
+pub(super) fn libelle_action(code: &str) -> &str {
     match code {
         "editeur_cree" => "Compte éditeur créé",
         "compte_cree" => "Revendeur créé",
