@@ -83,6 +83,28 @@ pub const DESCRIPTION: &str = "Portail des licences Kadenz : enregistrement des 
 /// sans lui, le champ unique reste. Même règle d'empreinte que l'image.
 pub const SCRIPT_CODE: &str = "/code-connexion-bd47a7a773.js";
 
+/// Empreinte FNV-1a 32 bits d'un texte, calculée à la compilation.
+const fn empreinte(octets: &[u8]) -> u32 {
+    let mut h: u32 = 0x811c_9dc5;
+    let mut i = 0;
+    while i < octets.len() {
+        h ^= octets[i] as u32;
+        h = h.wrapping_mul(0x0100_0193);
+        i += 1;
+    }
+    h
+}
+
+/// Empreinte du texte de la feuille de style : chaque changement du CSS
+/// change l'adresse de la feuille, que le navigateur recharge aussitôt malgré
+/// son cache (la route `/style.css` ignore la requête).
+pub const EMPREINTE_STYLE: u32 = empreinte(STYLE.as_bytes());
+
+/// Adresse de la feuille de style, avec son empreinte.
+pub fn lien_style() -> String {
+    format!("/style.css?v={EMPREINTE_STYLE:08x}")
+}
+
 /// En-tête HTML commun : titre, feuille de style, aucune indexation.
 fn tete(titre: &str) -> Markup {
     tete_avec(titre, html! {})
@@ -101,7 +123,7 @@ fn tete_avec(titre: &str, en_plus: Markup) -> Markup {
             title { (titre) " | Portail des licences Kadenz" }
             (en_plus)
             link rel="icon" href=(FAVICON) type="image/svg+xml";
-            link rel="stylesheet" href="/style.css";
+            link rel="stylesheet" href=(lien_style());
         }
     }
 }

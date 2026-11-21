@@ -607,10 +607,22 @@ fn routes_sessions_et_jetons() {
 "
     ));
     assert!(!r.corps.contains("Sitemap"));
+    assert!(r.corps.contains("Allow: /style.css\n"));
     let connexion = requete(a, "GET", "/connexion", None, "");
     assert!(connexion.corps.contains("content=\"noindex, nofollow\""));
     assert!(connexion.corps.contains("name=\"description\""));
     assert_eq!(connexion.entete("x-robots-tag"), Some("noindex, nofollow"));
+    // Feuille de style à empreinte : un CSS changé est rechargé malgré le cache.
+    let lien = kadenz_portail::pages::lien_style();
+    assert!(lien.starts_with("/style.css?v=") && lien.len() == "/style.css?v=".len() + 8);
+    assert!(connexion.corps.contains(&format!("href=\"{lien}\"")));
+    assert!(!connexion.corps.contains("href=\"/style.css\""));
+    let feuille = requete(a, "GET", &lien, None, "");
+    assert_eq!(feuille.statut, 200);
+    assert_eq!(
+        feuille.entete("content-type"),
+        Some("text/css; charset=utf-8")
+    );
     // Sans adresse publique, aucun aperçu de partage.
     assert!(!connexion.corps.contains("og:image"));
     let image = requete(a, "GET", kadenz_portail::pages::IMAGE_PARTAGE, None, "");

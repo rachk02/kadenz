@@ -70,10 +70,11 @@ const PARTAGE: &[u8] = include_bytes!("../statique/partage-9405c98b03.png");
 /// l'utilisateur du 2026-11-19). Seule la page de connexion, et ce qu'il faut
 /// pour la rendre, peut être lue : un robot y trouve le `noindex` (une page
 /// interdite de lecture peut être indexée sans son contenu, sur la foi des
-/// liens). `$` limite la règle à `/connexion` même, pas `/connexion/code`.
+/// liens). `$` limite la règle à `/connexion` même, pas `/connexion/code` ;
+/// la feuille de style, sans `$`, garde son empreinte en requête.
 static ROBOTS: LazyLock<String> = LazyLock::new(|| {
     format!(
-        "User-agent: *\nDisallow: /\nAllow: /connexion$\nAllow: /style.css$\nAllow: /police/\nAllow: {}$\nAllow: {}$\nAllow: {}$\n",
+        "User-agent: *\nDisallow: /\nAllow: /connexion$\nAllow: /style.css\nAllow: /police/\nAllow: {}$\nAllow: {}$\nAllow: {}$\n",
         pages::FAVICON,
         pages::IMAGE_PILIERS,
         pages::IMAGE_PARTAGE
