@@ -360,6 +360,13 @@ body.console .etiquettes-page { margin: 0 0 clamp(24px, 4vw, 48px); color: rgba(
 body.console .vide-etat { display: flex; align-items: center; gap: 16px; padding: 20px 16px; }
 body.console .vide-etat canvas { width: 56px; height: 56px; flex: none; display: block; }
 body.console .vide-etat .vide { padding: 0; }
+/* Boutons et champs du gabarit : police de la page (Inter). Bouton animé
+   (dérive du code d'activation) : texte centré dans sa case, que la couche
+   de survol élargit, et même graisse que les autres boutons sauge. */
+body.console main :is(button, input, select, textarea) { font-family: inherit; }
+body.console .button-animated, body.console .button-animated::after { font-family: inherit; font-weight: 600; }
+body.console .button-animated { color: #0E1209; }
+body.console .button-animated-inner { justify-content: center; text-align: center; }
 body.console .bloc-formulaire { align-items: stretch; padding-top: 0; margin: clamp(40px, 6vw, 72px) 0 clamp(32px, 5vw, 56px); }
 body.console .bloc-formulaire .panneau-illustration { position: relative; top: auto; height: auto; min-height: 440px; }
 body.console .bloc-formulaire .colonne-formulaire h2 { margin-top: 0; }
