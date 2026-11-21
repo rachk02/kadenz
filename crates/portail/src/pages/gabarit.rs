@@ -17,7 +17,7 @@ pub const JS_SPLITTEXT: &str = "/gabarit/splittext-5e519ea247.js";
 pub const JS_OBSERVER: &str = "/gabarit/observer-697c7e96ae.js";
 pub const JS_CUSTOMEASE: &str = "/gabarit/customease-1cb1622270.js";
 pub const JS_LENIS: &str = "/gabarit/lenis-67f0fe0cfc.js";
-pub const JS_COQUE: &str = "/gabarit/coque-8d8abf0403.js";
+pub const JS_COQUE: &str = "/gabarit/coque-9bcea489d0.js";
 pub const LICENCE_LENIS: &str = "/gabarit/lenis-licence-7d1896b31f.txt";
 
 /// Fichiers servis par le portail : adresse, type, contenu.
@@ -95,7 +95,7 @@ pub const FICHIERS: &[(&str, &str, &[u8])] = &[
     (
         JS_COQUE,
         "text/javascript; charset=utf-8",
-        include_bytes!("../../statique/gabarit/coque-8d8abf0403.js"),
+        include_bytes!("../../statique/gabarit/coque-9bcea489d0.js"),
     ),
     (
         LICENCE_LENIS,

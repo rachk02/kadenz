@@ -355,6 +355,11 @@ body.console .footer { margin-top: clamp(64px, 10vw, 140px); }
 /* Page Entreprises au gabarit plein écran : sections de bord à bord, puis la
    liste complète ; le message éventuel passe au-dessus du diaporama. */
 body.console main.pleine { flex: 1 0 auto; width: 100%; }
+/* Étape C : étiquettes du gabarit en haut des pages, état vide illustré. */
+body.console .etiquettes-page { margin: 0 0 clamp(24px, 4vw, 48px); color: rgba(255, 255, 255, 0.56); }
+body.console .vide-etat { display: flex; align-items: center; gap: 16px; padding: 20px 16px; }
+body.console .vide-etat canvas { width: 56px; height: 56px; flex: none; display: block; }
+body.console .vide-etat .vide { padding: 0; }
 body.console .contenu-message { position: relative; z-index: 5; padding-bottom: 0; }
 body.console .liste-entreprises { padding: clamp(64px, 8vw, 120px) clamp(16px, 3vw, 40px) 0; }
 body.console .liste-tete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }

@@ -12,7 +12,7 @@
 use maud::{Markup, PreEscaped, html};
 
 use super::journal::libelle_action;
-use super::{Cadre, Rubrique, chemin_entreprise, date, gabarit as g, heure};
+use super::{Cadre, Rubrique, chemin_entreprise, date, gabarit as g, heure, vide};
 use crate::{Action, EtatChaine, Role, VueEntreprise};
 
 /// Entreprises montrées dans le diaporama du haut.
@@ -554,9 +554,9 @@ fn liste_complete(editeur: bool, liste: &[VueEntreprise]) -> Markup {
                     "Les entreprises qui vous sont rattachées. Ouvrez une entreprise pour enregistrer un paiement et émettre sa licence."
                 }
             }
-            div.carte {
+            div.carte data-reveal="fade" {
                 @if liste.is_empty() {
-                    p.vide { "Aucune entreprise pour l'instant." }
+                    (vide("Aucune entreprise pour l'instant."))
                 } @else {
                     div.tableau-cadre {
                         table {

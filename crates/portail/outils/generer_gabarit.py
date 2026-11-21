@@ -140,7 +140,7 @@ def coque_js() -> bytes:
     )
     prelude = (
         "(() => {\n"
-        "  if (!window.gsap) return;\n"
+        "  if (!window.gsap) return void document.documentElement.classList.add(`rv-ready`);\n"
         "  var oi = window.gsap, M5 = window.gsap, $4 = window.ScrollTrigger, P6 = window.SplitText, Te3 = window.Lenis,\n"
         "    j5 = window.Observer, Y5 = window.CustomEase;\n"
         "  oi.registerPlugin($4, P6, j5, Y5), Y5.create(`slideshow-wipe`, `0.6, 0.08, 0.02, 0.99`);\n"

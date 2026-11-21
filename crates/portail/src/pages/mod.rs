@@ -182,6 +182,7 @@ fn page_console(c: &Cadre, titre: &str, rubrique: Rubrique, mise: Mise, contenu:
                                 data-cadre="plein" data-decalage="0.9" aria-hidden="true" {}
                         }
                         div.colonne-formulaire {
+                            (etiquettes_de_page(c, rubrique))
                             @if let Some(m) = c.message {
                                 (message(m.ok, &m.texte))
                             }
@@ -190,6 +191,7 @@ fn page_console(c: &Cadre, titre: &str, rubrique: Rubrique, mise: Mise, contenu:
                     }
                 } @else {
                     main.contenu {
+                        (etiquettes_de_page(c, rubrique))
                         @if let Some(m) = c.message {
                             (message(m.ok, &m.texte))
                         }
@@ -266,8 +268,36 @@ fn erreur_formulaire(erreur: Option<&str>) -> Markup {
 fn titre(texte: &str, actions: Markup) -> Markup {
     html! {
         div.titre-page {
-            h1 { (texte) }
+            h1 data-reveal="title" { (texte) }
             div.titre-actions { (actions) }
+        }
+    }
+}
+
+/// Ligne d'étiquettes du gabarit en haut d'une page du compte : rubrique,
+/// portail, compte connecté.
+fn etiquettes_de_page(c: &Cadre, rubrique: Rubrique) -> Markup {
+    let libelle = match rubrique {
+        Rubrique::Entreprises => "Entreprises",
+        Rubrique::Codes => "Codes à vendre",
+        Rubrique::Comptes => "Revendeurs",
+        Rubrique::Journal => "Journal",
+    };
+    html! {
+        div.section-meta.etiquettes-page aria-hidden="true" {
+            span.label-small { (libelle) }
+            span.label-small { "Portail des licences" }
+            span.label-small { (c.compte.nom) }
+        }
+    }
+}
+
+/// État vide d'une liste : un petit motif de la marque et la phrase.
+fn vide(texte: &str) -> Markup {
+    html! {
+        div.vide-etat {
+            canvas data-motif="A2" data-cadre="vignette" data-piece="quart" data-decalage="0" aria-hidden="true" {}
+            p.vide { (texte) }
         }
     }
 }

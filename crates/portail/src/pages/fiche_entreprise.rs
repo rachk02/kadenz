@@ -6,6 +6,7 @@ use maud::{Markup, html};
 
 use super::{
     Cadre, Rubrique, chemin_entreprise, date, libelle_formule, liste_modules, montant, page, titre,
+    vide,
 };
 use crate::FicheEntreprise;
 
@@ -17,7 +18,7 @@ pub fn fiche_entreprise(c: &Cadre, f: &FicheEntreprise) -> Markup {
             a.bouton href="/" { "Retour aux entreprises" }
             a.bouton.bouton-principal href={ (chemin) "/paiement" } { "Enregistrer un paiement" }
         }))
-        div.carte {
+        div.carte data-reveal="fade" {
             div.carte-interieur {
                 dl.grille-fiche {
                     dt { "Identifiant de l'entreprise" }
@@ -44,9 +45,9 @@ pub fn fiche_entreprise(c: &Cadre, f: &FicheEntreprise) -> Markup {
         }
 
         h2 { "Paiements" }
-        div.carte {
+        div.carte data-reveal="fade" {
             @if f.paiements.is_empty() {
-                p.vide { "Aucun paiement enregistré. Enregistrez le paiement reçu, puis tirez le code d'activation." }
+                (vide("Aucun paiement enregistré. Enregistrez le paiement reçu, puis tirez le code d'activation."))
             } @else {
                 div.tableau-cadre {
                     table {
@@ -89,9 +90,9 @@ pub fn fiche_entreprise(c: &Cadre, f: &FicheEntreprise) -> Markup {
         }
 
         h2 { "Licences émises" }
-        div.carte {
+        div.carte data-reveal="fade" {
             @if f.licences.is_empty() {
-                p.vide { "Aucune licence émise pour cette entreprise." }
+                (vide("Aucune licence émise pour cette entreprise."))
             } @else {
                 div.tableau-cadre {
                     table {

@@ -4,7 +4,7 @@
 
 use maud::{Markup, html};
 
-use super::{Cadre, Rubrique, erreur_formulaire, jeton, libelle_role, page, titre};
+use super::{Cadre, Rubrique, erreur_formulaire, jeton, libelle_role, page, titre, vide};
 use crate::{Compte, LONGUEUR_MIN_MOT_DE_PASSE, Role};
 
 pub fn comptes(c: &Cadre, comptes: &[Compte], erreur: Option<&str>) -> Markup {
@@ -13,9 +13,9 @@ pub fn comptes(c: &Cadre, comptes: &[Compte], erreur: Option<&str>) -> Markup {
         p.texte {
             "Un revendeur ne voit que les entreprises qui lui sont rattachées. Son nom est repris comme émetteur dans les licences qu'il émet. Un compte désactivé ne peut plus se connecter et ses sessions sont fermées."
         }
-        div.carte {
+        div.carte data-reveal="fade" {
             @if comptes.is_empty() {
-                p.vide { "Aucun compte." }
+                (vide("Aucun compte."))
             } @else {
                 div.tableau-cadre {
                     table {
@@ -64,7 +64,7 @@ pub fn comptes(c: &Cadre, comptes: &[Compte], erreur: Option<&str>) -> Markup {
         }
 
         h2 { "Nouveau revendeur" }
-        div.carte {
+        div.carte data-reveal="fade" {
             div.carte-interieur {
                 form.formulaire method="post" action="/comptes" {
                     (jeton(c))

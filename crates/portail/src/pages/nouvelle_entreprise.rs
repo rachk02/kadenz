@@ -13,7 +13,7 @@ pub fn nouvelle_entreprise(c: &Cadre, revendeurs: &[Compte], erreur: Option<&str
         (titre("Nouvelle entreprise", html! {
             a.bouton href="/" { "Retour aux entreprises" }
         }))
-        div.carte {
+        div.carte data-reveal="fade" {
             div.carte-interieur {
                 form.formulaire method="post" action="/entreprises/nouvelle" {
                     (jeton(c))

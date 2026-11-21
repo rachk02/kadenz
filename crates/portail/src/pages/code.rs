@@ -7,7 +7,7 @@ use maud::{Markup, html};
 
 use super::{
     Cadre, Rubrique, chemin_entreprise, erreur_formulaire, heure, jeton, libelle_formule,
-    liste_modules, page, page_formulaire, titre,
+    liste_modules, page, page_formulaire, titre, vide,
 };
 use crate::{CODES_PAR_TIRAGE, CodeActivation, CodeCree, EtatCode, Gamme};
 use kadenz_domaine::module::Module;
@@ -67,7 +67,7 @@ fn grille(code: &CodeActivation) -> Markup {
 pub fn code_cree(c: &Cadre, cree: &CodeCree) -> Markup {
     let contenu = html! {
         (titre("Code d'activation", retour(&cree.fiche)))
-        div.carte {
+        div.carte data-reveal="fade" {
             div.carte-interieur {
                 div.champ {
                     label for="code" { "Code à remettre au client" }
@@ -91,7 +91,7 @@ pub fn code(c: &Cadre, code: &CodeActivation) -> Markup {
     };
     let contenu = html! {
         (titre("Code d'activation", retour(code)))
-        div.carte {
+        div.carte data-reveal="fade" {
             div.carte-interieur {
                 (grille(code))
                 p.aide { "Le code en clair n'est pas gardé par le portail : seule sa fin reste visible." }
@@ -129,7 +129,7 @@ pub fn code(c: &Cadre, code: &CodeActivation) -> Markup {
 pub fn codes(c: &Cadre, liste: &[CodeActivation], erreur: Option<&str>) -> Markup {
     let contenu = html! {
         (titre("Codes à vendre", html! {}))
-        div.carte {
+        div.carte data-reveal="fade" {
             div.carte-interieur {
                 form.formulaire method="post" action="/codes" {
                     (jeton(c))
@@ -182,9 +182,9 @@ pub fn codes(c: &Cadre, liste: &[CodeActivation], erreur: Option<&str>) -> Marku
             }
         }
         h2 { "Codes tirés" }
-        div.carte {
+        div.carte data-reveal="fade" {
             @if liste.is_empty() {
-                p.vide { "Aucun code à vendre pour l'instant." }
+                (vide("Aucun code à vendre pour l'instant."))
             } @else {
                 div.tableau-cadre {
                     table {
@@ -232,7 +232,7 @@ pub fn codes_crees(c: &Cadre, codes: &[CodeCree]) -> Markup {
     let premier = codes.first().map(|k| &k.fiche);
     let contenu = html! {
         (titre("Codes tirés", html! { a.bouton href="/codes" { "Retour aux codes à vendre" } }))
-        div.carte {
+        div.carte data-reveal="fade" {
             div.carte-interieur {
                 @if let Some(f) = premier {
                     p.aide {

@@ -6,7 +6,7 @@
  * avant ce fichier, depuis leurs fichiers officiels (voir MENTIONS-gabarit.md).
  */
 (() => {
-  if (!window.gsap) return;
+  if (!window.gsap) return void document.documentElement.classList.add(`rv-ready`);
   var oi = window.gsap, M5 = window.gsap, $4 = window.ScrollTrigger, P6 = window.SplitText, Te3 = window.Lenis,
     j5 = window.Observer, Y5 = window.CustomEase;
   oi.registerPlugin($4, P6, j5, Y5), Y5.create(`slideshow-wipe`, `0.6, 0.08, 0.02, 0.99`);

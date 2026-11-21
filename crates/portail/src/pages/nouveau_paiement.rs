@@ -14,7 +14,7 @@ pub fn nouveau_paiement(c: &Cadre, e: &Entreprise, erreur: Option<&str>) -> Mark
             a.bouton href=(chemin) { "Retour à l'entreprise" }
         }))
         p.texte { "Client : " strong { (e.client) } ". Le paiement enregistré sert ensuite à émettre une seule licence." }
-        div.carte {
+        div.carte data-reveal="fade" {
             div.carte-interieur {
                 form.formulaire method="post" action={ (chemin) "/paiement" } {
                     (jeton(c))

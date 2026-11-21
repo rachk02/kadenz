@@ -24,7 +24,7 @@ pub fn emission(
         (titre("Tirer le code d'activation", html! {
             a.bouton href=(chemin) { "Retour à l'entreprise" }
         }))
-        div.carte {
+        div.carte data-reveal="fade" {
             div.carte-interieur {
                 dl.grille-fiche {
                     dt { "Client" }
@@ -44,7 +44,7 @@ pub fn emission(
             }
         }
         h2 { "Code d'activation" }
-        div.carte {
+        div.carte data-reveal="fade" {
             div.carte-interieur {
                 form.formulaire method="post" action={ "/paiements/" (p.id) "/licence" } {
                     (jeton(c))

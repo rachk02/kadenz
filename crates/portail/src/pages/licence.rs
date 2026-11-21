@@ -15,7 +15,7 @@ pub fn licence(c: &Cadre, l: &LicenceEmise) -> Markup {
         (titre("Licence émise", html! {
             a.bouton href=(chemin) { "Retour à l'entreprise" }
         }))
-        div.carte {
+        div.carte data-reveal="fade" {
             div.carte-interieur {
                 div.champ {
                     label for="texte" { "Texte de la licence" }

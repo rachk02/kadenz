@@ -3,7 +3,7 @@
 
 use maud::{Markup, html};
 
-use super::{Cadre, Rubrique, heure, page, titre};
+use super::{Cadre, Rubrique, heure, page, titre, vide};
 use crate::{Action, EtatChaine, Role};
 
 /// `chaine` : état de la chaîne de hachage, pour l'éditeur seulement.
@@ -18,7 +18,7 @@ pub fn journal(c: &Cadre, actions: &[Action], chaine: Option<&EtatChaine>) -> Ma
             }
         }
         @if let Some(e) = chaine {
-            div.carte {
+            div.carte data-reveal="fade" {
                 div.carte-interieur {
                     dl.grille-fiche {
                         dt { "Chaîne du journal" }
@@ -40,9 +40,9 @@ pub fn journal(c: &Cadre, actions: &[Action], chaine: Option<&EtatChaine>) -> Ma
                 }
             }
         }
-        div.carte {
+        div.carte data-reveal="fade" {
             @if actions.is_empty() {
-                p.vide { "Aucune action enregistrée." }
+                (vide("Aucune action enregistrée."))
             } @else {
                 div.tableau-cadre {
                     table {
