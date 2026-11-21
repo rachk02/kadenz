@@ -56,8 +56,6 @@ enum Rubrique {
     Codes,
     Comptes,
     Journal,
-    MotDePasse,
-    Aucune,
 }
 
 /// Symbole de la marque, en blanc, posé sur le bandeau Nuit.
@@ -100,7 +98,7 @@ fn tete_avec(titre: &str, en_plus: Markup) -> Markup {
             meta name="viewport" content="width=device-width, initial-scale=1";
             meta name="robots" content="noindex, nofollow";
             meta name="theme-color" content="#000000";
-            title { (titre) " - Portail des licences Kadenz" }
+            title { (titre) " | Portail des licences Kadenz" }
             (en_plus)
             link rel="icon" href=(FAVICON) type="image/svg+xml";
             link rel="stylesheet" href="/style.css";
@@ -134,7 +132,6 @@ fn page(c: &Cadre, titre: &str, rubrique: Rubrique, contenu: Markup) -> Markup {
                         div.compte {
                             a.compte-nom
                                 href="/mot-de-passe"
-                                aria-current=[(rubrique == Rubrique::MotDePasse).then_some("page")]
                                 title="Changer de mot de passe" {
                                 (c.compte.nom)
                                 span.compte-role { (libelle_role(c.compte.role)) }
@@ -177,6 +174,33 @@ fn message(ok: bool, texte: &str) -> Markup {
     };
     html! {
         p class=(classe) role=(if ok { "status" } else { "alert" }) { (texte) }
+    }
+}
+
+/// Retour d'une action du compte, en tête d'une page du thème piliers (en
+/// tête de `page`, pour les autres pages).
+fn message_du_cadre(c: &Cadre) -> Markup {
+    html! {
+        @if let Some(m) = c.message {
+            (message(m.ok, &m.texte))
+        }
+    }
+}
+
+/// Bas d'une page du thème piliers pour un compte connecté, qui n'a pas le
+/// bandeau : retour à l'accueil (sauf à la mise en place de la double
+/// authentification, où l'accueil renvoie ici) et déconnexion.
+fn pied_compte(c: &Cadre, avec_retour: bool) -> Markup {
+    html! {
+        div.pied-compte {
+            @if avec_retour {
+                a href="/" { "Retour aux entreprises" }
+            }
+            form.deconnexion method="post" action="/deconnexion" {
+                (jeton(c))
+                button.lien-code type="submit" { "Se déconnecter" }
+            }
+        }
     }
 }
 

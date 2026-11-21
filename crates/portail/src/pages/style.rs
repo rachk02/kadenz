@@ -229,14 +229,32 @@ body.connexion .chiffres-code.faux input { background: #17181A; border-color: #F
   body.connexion .chiffres input[type="text"] { transition: none; }
 }
 
-/* Page d'erreur sans compte */
-.page-simple { max-width: 560px; margin: 0 auto; padding: 64px 16px; }
+/* Pages du compte au thème piliers (2026-11-20) : erreur, double
+   authentification, mot de passe. Mêmes champs, bouton sauge et couleurs que
+   la connexion ; clé et codes de secours à chasse fixe sur fond de champ. */
+.connexion-boite-large { max-width: 460px; }
+a.bouton-sauge, a.bouton-sauge:hover { color: #0E1209; text-decoration: none; }
+body.connexion input[type="text"].sans-icone { padding-left: 16px; }
+body.connexion input.code-activation[type="text"] { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 15px; letter-spacing: 0.04em; }
+body.connexion .aide { color: #8E8E93; font-size: 13px; line-height: 1.6; }
+body.connexion .texte strong { color: #F2F3EF; font-weight: 600; }
+body.connexion .message-ok { color: #30D158; background: rgba(48, 209, 88, 0.1); border-color: rgba(48, 209, 88, 0.38); border-radius: 9px; }
+body.connexion .codes-tires { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 8px; padding: 0; }
+body.connexion .codes-tires li { padding: 12px 4px; text-align: center; background: #17181A; border-radius: 9px; }
+body.connexion .codes-tires .code-activation { font-size: 15px; letter-spacing: 0.04em; color: #F2F3EF; }
+.pied-compte { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 24px; margin: 20px 0 0; font-size: 14px; }
+.pied-compte a { color: #8E8E93; text-decoration: none; }
+.pied-compte a:hover { color: #F2F3EF; }
 
 @media (max-width: 860px) {
   body.connexion { padding: 12px; }
   .cadre-connexion { grid-template-columns: 1fr; min-height: calc(100vh - 24px); }
   .illustration-connexion { display: none; }
   .colonne-connexion { padding: 40px 20px; }
+}
+/* Clé de la double authentification (8 groupes) entière sur un téléphone. */
+@media (max-width: 480px) {
+  body.connexion input.code-activation[type="text"] { padding: 0 10px; font-size: 11.5px; letter-spacing: 0; }
 }
 
 @media (max-width: 760px) {

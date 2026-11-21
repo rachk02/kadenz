@@ -1,9 +1,11 @@
-//! Page d'erreur (accès refusé, introuvable, jeton invalide...) : dans le
-//! cadre du compte s'il est connecté, seule sinon.
+//! Page d'erreur (accès refusé, introuvable, jeton invalide...) : même
+//! page, au thème piliers, avec ou sans compte.
 
-use maud::{DOCTYPE, Markup, html};
+use maud::Markup;
+use maud::html;
 
-use super::{Cadre, Rubrique, page, tete, titre};
+use super::connexion::cadre_large;
+use super::{Cadre, message_du_cadre, tete};
 
 pub fn erreur(c: Option<&Cadre>, statut: u16, texte: &str) -> Markup {
     let intitule = match statut {
@@ -22,27 +24,17 @@ pub fn erreur(c: Option<&Cadre>, statut: u16, texte: &str) -> Markup {
     } else {
         texte
     };
-    let corps = html! {
-        (titre(intitule, html! {}))
-        p.texte { (texte) }
-        div.actions {
-            @if c.is_some() {
-                a.bouton.bouton-principal href="/" { "Retour aux entreprises" }
+    cadre_large(
+        tete(intitule),
+        html! {
+            h1 { (intitule) }
+            p.texte { (texte) }
+            @if let Some(c) = c {
+                (message_du_cadre(c))
+                a.bouton-sauge href="/" { "Retour aux entreprises" }
             } @else {
-                a.bouton.bouton-principal href="/connexion" { "Se connecter" }
-            }
-        }
-    };
-    match c {
-        Some(c) => page(c, intitule, Rubrique::Aucune, corps),
-        None => html! {
-            (DOCTYPE)
-            html lang="fr" {
-                (tete(intitule))
-                body {
-                    main.page-simple { (corps) }
-                }
+                a.bouton-sauge href="/connexion" { "Se connecter" }
             }
         },
-    }
+    )
 }

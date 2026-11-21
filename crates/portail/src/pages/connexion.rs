@@ -3,6 +3,9 @@
 //! 2026-11-19 : formulaire à gauche, colonnes en points à droite (image
 //! servie par le portail, masquée sous 860 px). Seul script : le code en
 //! six cases de la seconde étape, qui garde son champ unique sans lui.
+//! Le même cadre sert aux pages du compte étendues au thème le 2026-11-20
+//! (erreur, double authentification, mot de passe), en colonne plus large
+//! ([`cadre_large`]).
 
 use maud::{DOCTYPE, Markup, PreEscaped, html};
 
@@ -10,9 +13,9 @@ use super::{
     DESCRIPTION, IMAGE_PARTAGE, IMAGE_PILIERS, SCRIPT_CODE, SYMBOLE, message, tete, tete_avec,
 };
 
-const ICONE_IDENTIFIANT: &str = r#"<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>"#;
-const ICONE_MOT_DE_PASSE: &str = r#"<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></svg>"#;
-const ICONE_CODE: &str = r#"<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>"#;
+pub(super) const ICONE_IDENTIFIANT: &str = r#"<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>"#;
+pub(super) const ICONE_MOT_DE_PASSE: &str = r#"<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></svg>"#;
+pub(super) const ICONE_CODE: &str = r#"<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>"#;
 
 /// Balises de la page de connexion : description, et aperçu des liens
 /// partagés quand l'adresse publique du portail est connue (`og:url` et
@@ -41,8 +44,9 @@ fn balises_connexion(adresse_publique: Option<&str>) -> Markup {
     }
 }
 
-/// Cadre commun des deux pages : formulaire, pied, colonnes.
-fn cadre(tete_page: Markup, contenu: Markup) -> Markup {
+/// Cadre des pages du thème piliers : symbole, contenu dans la colonne de
+/// gauche (`classe` : largeur de la boîte), colonnes en points à droite.
+fn cadre_commun(tete_page: Markup, classe: &str, contenu: Markup) -> Markup {
     html! {
         (DOCTYPE)
         html lang="fr" {
@@ -50,13 +54,9 @@ fn cadre(tete_page: Markup, contenu: Markup) -> Markup {
             body.connexion {
                 div.cadre-connexion {
                     main.colonne-connexion {
-                        div.connexion-boite {
+                        div class=(classe) {
                             div.connexion-symbole { (PreEscaped(SYMBOLE)) }
                             (contenu)
-                            div.separateur aria-hidden="true" { "kadenz" }
-                            p.connexion-pied {
-                                "Enregistrement des paiements et émission des licences d'abonnement Kadenz, pour l'éditeur et ses revendeurs."
-                            }
                         }
                     }
                     div.illustration-connexion aria-hidden="true" {
@@ -66,6 +66,28 @@ fn cadre(tete_page: Markup, contenu: Markup) -> Markup {
             }
         }
     }
+}
+
+/// Cadre des deux pages de connexion : formulaire, pied, colonnes.
+fn cadre(tete_page: Markup, contenu: Markup) -> Markup {
+    cadre_commun(
+        tete_page,
+        "connexion-boite",
+        html! {
+            (contenu)
+            div.separateur aria-hidden="true" { "kadenz" }
+            p.connexion-pied {
+                "Enregistrement des paiements et émission des licences d'abonnement Kadenz, pour l'éditeur et ses revendeurs."
+            }
+        },
+    )
+}
+
+/// Cadre des pages du compte au thème piliers (erreur, double
+/// authentification, mot de passe) : même décor, colonne plus large pour
+/// leurs textes plus longs, ni séparateur ni pied.
+pub(super) fn cadre_large(tete_page: Markup, contenu: Markup) -> Markup {
+    cadre_commun(tete_page, "connexion-boite connexion-boite-large", contenu)
 }
 
 /// Page de connexion ; `jeton` est le jeton anti-falsification de la
