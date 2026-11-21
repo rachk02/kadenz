@@ -176,11 +176,7 @@ fn page_console(c: &Cadre, titre: &str, rubrique: Rubrique, mise: Mise, contenu:
                     }
                 } @else if mise == Mise::Partage {
                     main.contenu.contenu-partage {
-                        div.panneau-illustration aria-hidden="true" {
-                            canvas.panneau-fond data-motif="C" data-cadre="plein" data-decalage="0.4" aria-hidden="true" {}
-                            canvas.panneau-pierre data-motif="P" data-forme=(forme_du_panneau(titre))
-                                data-cadre="plein" data-decalage="0.9" aria-hidden="true" {}
-                        }
+                        (panneau(forme_du_panneau(titre)))
                         div.colonne-formulaire {
                             (etiquettes_de_page(c, rubrique))
                             @if let Some(m) = c.message {
@@ -201,6 +197,29 @@ fn page_console(c: &Cadre, titre: &str, rubrique: Rubrique, mise: Mise, contenu:
                 (coque::pied(c))
                 (coque::scripts_fin())
             }
+        }
+    }
+}
+
+/// Panneau animé d'un formulaire : C Tournant en fond, pierre devant.
+fn panneau(forme: &str) -> Markup {
+    html! {
+        div.panneau-illustration aria-hidden="true" {
+            canvas.panneau-fond data-motif="C" data-cadre="plein" data-decalage="0.4" aria-hidden="true" {}
+            canvas.panneau-pierre data-motif="P" data-forme=(forme)
+                data-cadre="plein" data-decalage="0.9" aria-hidden="true" {}
+        }
+    }
+}
+
+/// Formulaire posé dans une page de consultation (Codes à vendre,
+/// Revendeurs) : même écran partagé que les pages à formulaire, le panneau
+/// animé à gauche, le formulaire à droite.
+fn bloc_formulaire(forme: &str, contenu: Markup) -> Markup {
+    html! {
+        div.contenu-partage.bloc-formulaire {
+            (panneau(forme))
+            div.colonne-formulaire { (contenu) }
         }
     }
 }

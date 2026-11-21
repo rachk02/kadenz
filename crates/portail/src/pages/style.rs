@@ -360,6 +360,12 @@ body.console .etiquettes-page { margin: 0 0 clamp(24px, 4vw, 48px); color: rgba(
 body.console .vide-etat { display: flex; align-items: center; gap: 16px; padding: 20px 16px; }
 body.console .vide-etat canvas { width: 56px; height: 56px; flex: none; display: block; }
 body.console .vide-etat .vide { padding: 0; }
+body.console .bloc-formulaire { align-items: stretch; padding-top: 0; margin: clamp(40px, 6vw, 72px) 0 clamp(32px, 5vw, 56px); }
+body.console .bloc-formulaire .panneau-illustration { position: relative; top: auto; height: auto; min-height: 440px; }
+body.console .bloc-formulaire .colonne-formulaire h2 { margin-top: 0; }
+@media (max-width: 860px) {
+  body.console .bloc-formulaire .panneau-illustration { min-height: 0; height: 180px; }
+}
 body.console .contenu-message { position: relative; z-index: 5; padding-bottom: 0; }
 body.console .liste-entreprises { padding: clamp(64px, 8vw, 120px) clamp(16px, 3vw, 40px) 0; }
 body.console .liste-tete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }

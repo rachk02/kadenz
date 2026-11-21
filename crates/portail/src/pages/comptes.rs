@@ -4,7 +4,9 @@
 
 use maud::{Markup, html};
 
-use super::{Cadre, Rubrique, erreur_formulaire, jeton, libelle_role, page, titre, vide};
+use super::{
+    Cadre, Rubrique, bloc_formulaire, erreur_formulaire, jeton, libelle_role, page, titre, vide,
+};
 use crate::{Compte, LONGUEUR_MIN_MOT_DE_PASSE, Role};
 
 pub fn comptes(c: &Cadre, comptes: &[Compte], erreur: Option<&str>) -> Markup {
@@ -63,6 +65,7 @@ pub fn comptes(c: &Cadre, comptes: &[Compte], erreur: Option<&str>) -> Markup {
             }
         }
 
+        (bloc_formulaire("escalier", html! {
         h2 { "Nouveau revendeur" }
         div.carte data-reveal="fade" {
             div.carte-interieur {
@@ -92,6 +95,7 @@ pub fn comptes(c: &Cadre, comptes: &[Compte], erreur: Option<&str>) -> Markup {
                 }
             }
         }
+        }))
     };
     page(c, "Revendeurs", Rubrique::Comptes, contenu)
 }

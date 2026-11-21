@@ -6,8 +6,8 @@
 use maud::{Markup, html};
 
 use super::{
-    Cadre, Rubrique, chemin_entreprise, erreur_formulaire, heure, jeton, libelle_formule,
-    liste_modules, page, page_formulaire, titre, vide,
+    Cadre, Rubrique, bloc_formulaire, chemin_entreprise, erreur_formulaire, heure, jeton,
+    libelle_formule, liste_modules, page, page_formulaire, titre, vide,
 };
 use crate::{CODES_PAR_TIRAGE, CodeActivation, CodeCree, EtatCode, Gamme};
 use kadenz_domaine::module::Module;
@@ -129,6 +129,7 @@ pub fn code(c: &Cadre, code: &CodeActivation) -> Markup {
 pub fn codes(c: &Cadre, liste: &[CodeActivation], erreur: Option<&str>) -> Markup {
     let contenu = html! {
         (titre("Codes à vendre", html! {}))
+        (bloc_formulaire("amphore", html! {
         div.carte data-reveal="fade" {
             div.carte-interieur {
                 form.formulaire method="post" action="/codes" {
@@ -181,6 +182,7 @@ pub fn codes(c: &Cadre, liste: &[CodeActivation], erreur: Option<&str>) -> Marku
                 }
             }
         }
+        }))
         h2 { "Codes tirés" }
         div.carte data-reveal="fade" {
             @if liste.is_empty() {

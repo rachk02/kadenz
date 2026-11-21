@@ -1803,6 +1803,13 @@ fn pages_des_codes_a_vendre() {
     let page = requete(a, "GET", "/codes", Some(&session), "");
     assert_eq!(page.statut, 200);
     assert!(page.corps.contains("Aucun code à vendre"));
+    // Gabarit (étape C) : étiquettes de page, formulaire à colonne animée,
+    // état vide illustré, un seul titre h1, aucun style en ligne.
+    assert!(page.corps.contains("class=\"section-meta etiquettes-page\""));
+    assert!(page.corps.contains("class=\"contenu-partage bloc-formulaire\""));
+    assert!(page.corps.contains("class=\"vide-etat\""));
+    assert_eq!(page.corps.matches("<h1").count(), 1);
+    assert!(!page.corps.contains("style="));
     let jeton = csrf(&page.corps);
 
     // Saisie refusée : la page revient avec son message.
