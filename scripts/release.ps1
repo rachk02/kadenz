@@ -110,8 +110,18 @@ $tag = "v$Version"
 function Etape([string]$texte) { Write-Host "==> $texte" }
 
 function Executer([string]$exe, [string[]]$arguments) {
-    & $exe @arguments
-    if ($LASTEXITCODE -ne 0) { throw "échec : $exe $($arguments -join ' ')" }
+    # Les commandes natives écrivent sur stderr même en réussite (git fetch,
+    # cargo). Avec $ErrorActionPreference = 'Stop', Windows PowerShell traite
+    # cette sortie comme une erreur terminating ; on la tolère ici et on ne
+    # juge que le code de sortie.
+    $precedent = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        & $exe @arguments
+        if ($LASTEXITCODE -ne 0) { throw "échec : $exe $($arguments -join ' ')" }
+    } finally {
+        $ErrorActionPreference = $precedent
+    }
 }
 
 # Mode essai : jamais publié, jamais avec le vrai certificat.
