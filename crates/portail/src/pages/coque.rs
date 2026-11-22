@@ -386,10 +386,10 @@ pub(super) fn pied(c: &Cadre) -> Markup {
                     div.footer-block data-astro-cid-jo6i4kqk {
                         div data-astro-cid-jo6i4kqk { "Polices" }
                         div.muted data-astro-cid-jo6i4kqk {
-                            span.footer-link-small data-astro-cid-jo6i4kqk { "Inter" }
+                            span.footer-link-small data-astro-cid-jo6i4kqk { "ABC Diatype" }
                             span.subtle data-astro-cid-jo6i4kqk { "," }
                             " "
-                            span.footer-link-small data-astro-cid-jo6i4kqk { "Geist Mono" }
+                            span.footer-link-small data-astro-cid-jo6i4kqk { "ABC Diatype Mono" }
                         }
                     }
                 }

@@ -11,9 +11,10 @@
 //! l'adresse de cloudflared, seule à faire croire `CF-Connecting-IP`.
 //!
 //! Santé (sonde du conteneur, lot R1) : `kadenz-relais sante [--dossier
-//! <dossier>] [--adresse <hôte:port>]` se connecte au relais (par défaut
-//! `127.0.0.1:47381`) avec l'empreinte du certificat du dossier, sans rien
-//! créer ; code de sortie 0 si le relais répond, 1 sinon.
+//! <dossier>] [--adresse <hôte:port>] [--ws <hôte:port>]` se connecte au relais
+//! (par défaut `127.0.0.1:47381`) avec l'empreinte du certificat du dossier,
+//! puis, si `--ws` est donné, ouvre une WebSocket sur la passerelle. Sans rien
+//! créer ; code de sortie 0 si les deux répondent, 1 sinon.
 
 use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
@@ -90,6 +91,7 @@ fn main() -> ExitCode {
 fn sante(mut arguments: impl Iterator<Item = String>) -> ExitCode {
     let mut dossier = PathBuf::from("donnees-relais");
     let mut adresse = format!("127.0.0.1:{PORT_PAR_DEFAUT}");
+    let mut websocket: Option<String> = None;
     while let Some(argument) = arguments.next() {
         match argument.as_str() {
             "--dossier" => match arguments.next() {
@@ -98,6 +100,10 @@ fn sante(mut arguments: impl Iterator<Item = String>) -> ExitCode {
             },
             "--adresse" => match arguments.next() {
                 Some(a) => adresse = a,
+                None => return usage(),
+            },
+            "--ws" => match arguments.next() {
+                Some(a) => websocket = Some(a),
                 None => return usage(),
             },
             _ => return usage(),
@@ -110,19 +116,32 @@ fn sante(mut arguments: impl Iterator<Item = String>) -> ExitCode {
             return ExitCode::FAILURE;
         }
     };
-    match kadenz_relais::controle::verifier_sante(&adresse, &empreinte, Duration::from_secs(5)) {
-        Ok(()) => ExitCode::SUCCESS,
-        Err(e) => {
+    if let Err(e) =
+        kadenz_relais::controle::verifier_sante(&adresse, &empreinte, Duration::from_secs(5))
+    {
+        eprintln!("santé : {e}");
+        return ExitCode::FAILURE;
+    }
+    if let Some(adresse_ws) = websocket {
+        let cible: SocketAddr = match adresse_ws.parse() {
+            Ok(a) => a,
+            Err(e) => {
+                eprintln!("santé : adresse WebSocket invalide : {e}");
+                return ExitCode::FAILURE;
+            }
+        };
+        if let Err(e) = kadenz_relais::ws::verifier_sante(cible, Duration::from_secs(5)) {
             eprintln!("santé : {e}");
-            ExitCode::FAILURE
+            return ExitCode::FAILURE;
         }
     }
+    ExitCode::SUCCESS
 }
 
 fn usage() -> ExitCode {
     eprintln!(
         "usage : kadenz-relais [--dossier <dossier>] [--ecoute <adresse:port>] [--ecoute-ws <adresse:port> [--mandataire <adresse>]] [--sans-traces]\n\
-         \x20       kadenz-relais sante [--dossier <dossier>] [--adresse <hôte:port>]"
+         \x20       kadenz-relais sante [--dossier <dossier>] [--adresse <hôte:port>] [--ws <hôte:port>]"
     );
     ExitCode::FAILURE
 }

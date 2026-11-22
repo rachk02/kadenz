@@ -89,6 +89,11 @@ param(
 
     [switch]$Essai,
 
+    # Publication non signée, explicitement décidée par l'utilisateur le
+    # 2026-11-21 sans certificat de signature de code disponible. Sans ce
+    # commutateur, une publication réelle refuse tout fichier non signé.
+    [switch]$SansCertificat,
+
     [string]$CertificatEssai = '',
 
     [string]$MotDePasseEssai = ''
@@ -113,6 +118,8 @@ function Executer([string]$exe, [string[]]$arguments) {
 if ($Essai -and -not $Simulation) { throw "-Essai n'existe qu'avec -Simulation : une release d'essai n'est jamais publiée" }
 if ($CertificatEssai -and -not $Essai) { throw "-CertificatEssai n'existe qu'avec -Essai" }
 if ($Essai -and $Certificat) { throw "-Essai n'utilise jamais le vrai certificat : passer -CertificatEssai" }
+if ($SansCertificat -and $Certificat) { throw "-SansCertificat et -Certificat s'excluent" }
+if ($SansCertificat -and $CertificatEssai) { throw "-SansCertificat et -CertificatEssai s'excluent" }
 
 Etape "Contrôle du dépôt"
 if (-not (Test-Path -PathType Leaf $CleMaj)) { throw "clé privée de mise à jour introuvable : $CleMaj" }
@@ -140,6 +147,15 @@ if (-not $Essai -and $changelog -notmatch "(?m)^## \[$([regex]::Escape($Version)
     throw "aucune section ## [$Version] dans CHANGELOG.md"
 }
 
+# Sans adresse, l'activation répond « indisponible » sur tous les postes :
+# crates/maj/src/activation.rs:66-74. Refuser une release plutôt que de livrer
+# des postes incapables d'activer un code.
+Etape "Contrôle de l'adresse du portail"
+$urlPortail = (Get-Content -Raw (Join-Path $racine 'crates\maj\portail-url.txt')).Trim()
+if ($urlPortail -notmatch '^https://[A-Za-z0-9.-]+(?::[0-9]+)?/?$') {
+    throw "crates/maj/portail-url.txt doit contenir une adresse https, trouvé : « $urlPortail »"
+}
+
 if ($Essai) {
     Etape "Format, Clippy, tests : non lancés (essai)"
 } else {
@@ -152,8 +168,12 @@ if ($Essai) {
 Etape "Compilation release"
 Executer $cargo @('build', '--release', '-p', 'kadenz')
 Etape "Installateur"
-if (-not $Certificat -and -not $Simulation) {
+if (-not $Certificat -and -not $Simulation -and -not $SansCertificat) {
     throw "publication refusée sans -Certificat : les fichiers livrés doivent être signés"
+}
+if ($SansCertificat) {
+    Write-Host "    ATTENTION : publication non signée, décision de l'utilisateur du 2026-11-21."
+    Write-Host "    Les antivirus peuvent classer l'installateur comme dangereux (décision du 2026-11-11)."
 }
 $signature = if ($CertificatEssai) {
     @{ CertificatEssai = $CertificatEssai; MotDePasseEssai = $MotDePasseEssai }

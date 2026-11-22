@@ -9,10 +9,14 @@
 //! La clé privée ne vit que chez l'éditeur, hors du dépôt ; seul l'outil
 //! `kadenz-editeur` s'en sert, pour émettre les clés.
 //!
-//! Rotation (cahier de la phase 2, pont V1, règle c) : l'application accepte
-//! une liste de clés publiques, l'actuelle et la suivante. Une licence porte
-//! l'identifiant de la clé qui l'a signée (champ `cle`) ; une licence sans ce
-//! champ, émise avant le pont, est vérifiée par la clé actuelle.
+//! Rotation (cahier de la phase 2, pont V1, règle c) : [`cles_publiques`]
+//! expose l'actuelle et la suivante, mais [`verifier`] n'accepte aujourd'hui
+//! que la clé actuelle pour une licence perpétuelle. La suivante est la clé du
+//! portail (décision 29) : l'accepter pour du perpétuel permettrait au portail
+//! en ligne de signer des licences sans échéance. Une rotation doit donc être
+//! une décision explicite, avec une nouvelle version des postes. Une licence
+//! porte l'identifiant de la clé qui l'a signée (champ `cle`) ; une licence sans
+//! ce champ, émise avant le pont, est vérifiée par la clé actuelle.
 
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;

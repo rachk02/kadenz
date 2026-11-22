@@ -1,21 +1,22 @@
 import { LineEdit } from "std-widgets.slint";
 
-// Polices de la marque (docs/marque), SIL Open Font License 1.1 : Inter pour le texte,
-// Space Grotesk (Bold) pour les titres. Instances statiques réduites au latin, embarquées dans
-// l'exécutable. Les titres demandés en 800 prennent le Bold, graisse la plus forte de Space Grotesk.
-import "polices/Inter-Regular.ttf";
-import "polices/Inter-Medium.ttf";
-import "polices/Inter-SemiBold.ttf";
-import "polices/Inter-Bold.ttf";
-import "polices/SpaceGrotesk-Bold.ttf";
+// Polices de la marque (docs/marque), ABC Diatype sous licence commerciale
+// Dinamo : Regular pour le texte, Medium pour le medium, Bold pour le gras et
+// les titres ; ABC Diatype Mono pour les codes et les clés. Polices embarquées
+// dans l'exécutable. Les titres demandés en 800 prennent le Bold, graisse la
+// plus forte de Diatype.
+import "polices/ABCDiatype-Regular.otf";
+import "polices/ABCDiatype-Medium.otf";
+import "polices/ABCDiatype-Bold.otf";
+import "polices/ABCDiatypeMono-Regular.otf";
 
 export global Theme {
-    // Interface en chinois : Inter et Space Grotesk n'ont pas les idéogrammes, et la police
+    // Interface en chinois : Diatype n'a pas les idéogrammes, et la police
     // de secours choisie par Windows est japonaise, sans les caractères simplifiés.
     // Microsoft YaHei, livrée avec Windows, couvre le chinois simplifié et le latin.
     in property <bool> chinois: false;
-    out property <string> police-texte: root.chinois ? "Microsoft YaHei UI" : root.rtl ? "Segoe UI" : "Inter";
-    out property <string> police-titre: root.chinois ? "Microsoft YaHei UI" : root.rtl ? "Segoe UI" : "Space Grotesk";
+    out property <string> police-texte: root.chinois ? "Microsoft YaHei UI" : root.rtl ? "Segoe UI" : "ABC Diatype";
+    out property <string> police-titre: root.chinois ? "Microsoft YaHei UI" : root.rtl ? "Segoe UI" : "ABC Diatype";
 
     // Sens de lecture, déduit de la traduction : seul ar.po traduit « ltr » par « rtl ».
     // De droite à gauche, les écrans sont mis en miroir : rangées inversées (Rangee),
@@ -994,7 +995,7 @@ export component ChampCode inherits VerticalLayout {
             vertical-alignment: center;
             horizontal-alignment: left;
             text: "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX";
-            font-family: "Consolas";
+            font-family: "ABC Diatype Mono";
             font-size: 15px;
             color: Theme.texte-desactive;
         }
@@ -1007,7 +1008,7 @@ export component ChampCode inherits VerticalLayout {
             horizontal-alignment: left;
             single-line: true;
             read-only: root.lecture-seule;
-            font-family: "Consolas";
+            font-family: "ABC Diatype Mono";
             font-size: 15px;
             color: Theme.texte;
             selection-background-color: Theme.accent-survol;

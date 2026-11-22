@@ -136,7 +136,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
     api.on_verifier(move |cle| {
         let poste = e.borrow().poste.clone();
         let cle: String = cle.chars().filter(|c| !c.is_whitespace()).collect();
-        match kadenz_licence::verifier(&cle, &poste) {
+        match kadenz_stockage::licence::verifier_pour_poste(&cle, &poste) {
             Ok(l) => VerificationUi {
                 ok: true,
                 message: trf(

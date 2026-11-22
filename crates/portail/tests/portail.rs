@@ -636,7 +636,7 @@ fn routes_sessions_et_jetons() {
     assert_eq!(r.entete("x-robots-tag"), Some("noindex, nofollow"));
     assert_eq!(r.entete("x-content-type-options"), Some("nosniff"));
     assert_eq!(
-        requete(a, "GET", "/police/inter-regular.ttf", None, "").statut,
+        requete(a, "GET", "/police/diatype-regular.woff2", None, "").statut,
         200
     );
 
@@ -679,7 +679,7 @@ fn routes_sessions_et_jetons() {
     );
     assert!(accueil.corps.contains("<footer class=\"footer inverted\""));
     assert!(!accueil.corps.contains("contenu-partage"));
-    assert!(!accueil.corps.contains("Diatype"));
+    assert!(accueil.corps.contains("ABC Diatype"));
     // Aucune entreprise : le lien reste simple, sans panneau ni exemple.
     assert!(!accueil.corps.contains("data-mega-cle=\"entreprises\""));
     // Page Entreprises au gabarit : sections de la maquette, état vide, aucun
@@ -1805,8 +1805,14 @@ fn pages_des_codes_a_vendre() {
     assert!(page.corps.contains("Aucun code à vendre"));
     // Gabarit (étape C) : étiquettes de page, formulaire à colonne animée,
     // état vide illustré, un seul titre h1, aucun style en ligne.
-    assert!(page.corps.contains("class=\"section-meta etiquettes-page\""));
-    assert!(page.corps.contains("class=\"contenu-partage bloc-formulaire\""));
+    assert!(
+        page.corps
+            .contains("class=\"section-meta etiquettes-page\"")
+    );
+    assert!(
+        page.corps
+            .contains("class=\"contenu-partage bloc-formulaire\"")
+    );
     assert!(page.corps.contains("class=\"vide-etat\""));
     assert_eq!(page.corps.matches("<h1").count(), 1);
     assert!(!page.corps.contains("style="));

@@ -17,7 +17,7 @@ Statut : **proposé, relu par kadenz-cc, en attente de l'utilisateur**. Rien ne 
 - Liens actuels entre crates :
   - `kadenz-portail` dépend de `kadenz-licence` et de `kadenz-domaine` (`Module`, `MessageCompose`). `kadenz-domaine` n'a aucune dépendance, et `kadenz-licence` n'utilise pas rusqlite.
   - Deux essais du portail utilisent les crates de l'application, en dépendance d'essai : `licence_acceptee_par_un_serveur` (`kadenz-stockage`) et `client_d_activation_contre_le_portail` (`kadenz-maj`).
-  - Le portail inclut à la compilation les polices `crates/app/ui/polices/{Inter-Regular,Inter-SemiBold,SpaceGrotesk-Bold}.ttf` et `docs/marque/web/favicon.svg`. Il inclut aussi `crates/portail/donnees/mots-de-passe-compromis.txt`, déjà dans le crate.
+  - Le portail inclut à la compilation ses webfonts `crates/portail/statique/polices/{ABCDiatype-Regular,ABCDiatype-Bold,ABCDiatypeMono-Regular}.woff2` et `ABCDiatype-Medium.woff` (ABC Diatype, licence commerciale Dinamo, dont le document doit accompagner les fichiers) et `docs/marque/web/favicon.svg`. Il inclut aussi `crates/portail/donnees/mots-de-passe-compromis.txt`, déjà dans le crate.
   - `kadenz-relais` est une dépendance normale de `kadenz-client`, `kadenz-poste` et `kadenz-serveur`.
   - Le correctif `[patch.crates-io] libsqlite3-sys = vendor/...` de la racine s'applique aujourd'hui au portail : sa base est compilée avec SQLite3 Multiple Ciphers, sans être chiffrée.
 
@@ -38,11 +38,11 @@ Part dans `kadenz-portail`, avec son historique :
 |---|---|
 | `crates/portail/` (sources, essais, exemple, `donnees/`, `Dockerfile`) | racine du dépôt |
 | `docs/spec-portail.md` | `docs/spec-portail.md` |
-| `crates/app/ui/polices/Inter-Regular.ttf`, `Inter-SemiBold.ttf`, `SpaceGrotesk-Bold.ttf` | `ressources/polices/` |
-| `crates/app/ui/polices/OFL-Inter.txt`, `OFL-SpaceGrotesk.txt` (la licence OFL doit accompagner les polices) | `ressources/polices/` |
+| `crates/portail/statique/polices/*.woff2` et `ABCDiatype-Medium.woff` | `ressources/polices/` |
+| Le document de licence Dinamo (la licence commerciale doit accompagner les polices) | `ressources/polices/` |
 | `docs/marque/web/favicon.svg` | `ressources/favicon.svg` |
 
-Les polices et le favicon sont **copiés** : ils restent aussi dans Kadenz, où l'application et la marque s'en servent.
+Les polices et le favicon sont **copiés** : le favicon reste aussi dans Kadenz, où la marque s'en sert ; les quatre OTF d'ABC Diatype restent dans `crates/app/ui/polices/` pour l'application et les PDF, tandis que les versions web servies par le portail sont dans `crates/portail/statique/polices/`.
 
 Reste dans Kadenz :
 - `docs/spec-codes-licence.md`, qui couvre aussi `kadenz-licence` et l'activation côté application. Le dépôt du portail y renvoie.

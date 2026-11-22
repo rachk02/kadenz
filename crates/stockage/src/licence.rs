@@ -22,6 +22,23 @@ use crate::{Erreur, Resultat};
 
 const CLE: &str = "licence.cle";
 
+/// Vérifie une clé collée exactement comme le fait l'enregistrement : la
+/// clé V1 locale pour le perpétuel, la clé du portail pour le daté. L'aperçu
+/// de l'assistant appelle cette fonction, pour ne jamais annoncer « valide »
+/// une clé que le stockage refuserait ensuite.
+pub fn verifier_pour_poste(cle: &str, poste: &str) -> Result<Licence, MessageCompose> {
+    let publique = kadenz_licence::cle_publique()?;
+    verifier_selon_poste(cle, poste, std::slice::from_ref(&publique))
+}
+
+fn verifier_selon_poste(
+    cle: &str,
+    poste: &str,
+    perpetuelles: &[VerifyingKey],
+) -> Result<Licence, MessageCompose> {
+    kadenz_licence::verifier_selon(cle, poste, perpetuelles, &kadenz_licence::cles_datees())
+}
+
 /// État de la licence du poste.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EtatLicence {
@@ -98,7 +115,7 @@ fn etat_avec(conn: &Connection, poste: &str, publique: &VerifyingKey) -> Resulta
     Ok(match cle_enregistree(conn)? {
         None => EtatLicence::Absente,
         Some(cle) if cle.trim().is_empty() => EtatLicence::Absente,
-        Some(cle) => match kadenz_licence::verifier_avec(&cle, poste, publique) {
+        Some(cle) => match verifier_selon_poste(&cle, poste, std::slice::from_ref(publique)) {
             Ok(l) => EtatLicence::Valide(l),
             Err(e) => EtatLicence::Invalide(e),
         },
@@ -144,7 +161,7 @@ fn enregistrer_avec(
 ) -> Resultat<EtatLicence> {
     exiger_droit(conn, acteur, Droit::GererParametres)?;
     let cle: String = cle.chars().filter(|c| !c.is_whitespace()).collect();
-    let licence = kadenz_licence::verifier_avec(&cle, poste, publique)?;
+    let licence = verifier_selon_poste(&cle, poste, std::slice::from_ref(publique))?;
     conn.execute(
         "INSERT INTO parametre_systeme (cle, valeur) VALUES (?1, ?2)
          ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur",

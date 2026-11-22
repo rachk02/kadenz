@@ -54,6 +54,11 @@ services:
     networks:
       relais: {}
       tunnel-relais: {}
+    # La sonde de base ne teste que le TCP 47381. Ici, vérifier aussi que la
+    # passerelle 47383 accepte encore les WebSocket, sinon le tunnel reste
+    # « healthy » alors que les postes distants ne peuvent plus se connecter.
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/kadenz-relais", "sante", "--dossier", "/donnees", "--ws", "127.0.0.1:47383"]
 
   tunnel:
     # Image officielle épinglée par empreinte (kadenz.env.exemple), utilisateur

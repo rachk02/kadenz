@@ -213,9 +213,11 @@ La pièce du module est pleine, les trois autres sont au trait : Ventes (carré 
 
 ## Typographie
 
-- **Inter** (400, 500, 600, 700) : texte, interface, montants en chiffres tabulaires. SIL Open Font License 1.1.
-- **Space Grotesk** (Bold 700) : titres de l'application et des documents PDF (`crates/pdf`, choix de l'utilisateur du 2026-11-12), choisie par l'utilisateur le 2026-11-12 après comparaison avec Manrope, IBM Plex Sans, Kobe et Platform. SIL Open Font License 1.1, sans nom réservé ; instance statique réduite au latin, chiffres tabulaires conservés.
-- Point ouvert : le mot du logo utilise Space Grotesk sans retouche ; un dessin de lettres propre à Kadenz reste à l'étude.
+- **ABC Diatype** (Regular 400, Medium 500, Bold 700) : texte, interface, titres de l'application et des documents PDF (`crates/pdf`), montants en chiffres tabulaires. Licence commerciale Dinamo ; le document de licence doit accompagner les fichiers. Police de la marque depuis le 2026-11-21, en remplacement d'Inter et de Space Grotesk.
+- **ABC Diatype Mono** (Regular 400) : codes d'activation, clés de licence, empreintes et syntaxe à chasse fixe. Même licence.
+- Fichiers : OTF pour l'application (Slint) et les PDF (krilla) dans `crates/app/ui/polices/` ; versions web compressées fournies par l'utilisateur dans `crates/portail/statique/polices/` (trois WOFF2 et un WOFF pour le Medium). Les fichiers d'origine ne sont pas modifiés.
+- Historique : **Inter** (400, 500, 600, 700) pour le texte et **Space Grotesk** (Bold 700) pour les titres, sous SIL Open Font License 1.1, jusqu'au 2026-11-21. Diatype n'a pas de SemiBold : les graisses 600 passent à 500. Elle n'a ni espace fine insécable (U+202F) ni trait d'union insécable (U+2011), déjà notés au cahier des charges (section 12) ; ni italique, ce qui rejoint la règle de la marque.
+- Point ouvert : le mot du logo est vectorisé en tracés, repris de Space Grotesk sans retouche ; un dessin de lettres propre à Kadenz reste à l'étude.
 
 ## À ne pas faire
 

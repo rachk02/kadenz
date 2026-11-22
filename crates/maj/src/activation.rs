@@ -20,9 +20,9 @@ use ureq::tls::{RootCerts, TlsConfig, TlsProvider};
 
 use crate::VERSION;
 
-/// Adresse du portail (par exemple `https://portail.exemple`), sans `/` final.
-/// Vide tant que le nom de domaine n'est pas choisi (décision 72) : l'activation
-/// répond alors qu'elle est indisponible.
+/// Adresse du portail, sans `/` final : le domaine public retenu est
+/// `licences.mcarre.dev`, déjà en service. Un fichier vide rendrait l'activation
+/// indisponible ; `scripts/release.ps1` refuse une release dans ce cas.
 const ADRESSE_PORTAIL: &str = include_str!("../portail-url.txt");
 
 /// Variable des versions de développement : adresse d'un portail d'essai

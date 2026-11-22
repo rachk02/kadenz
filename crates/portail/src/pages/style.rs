@@ -1,11 +1,21 @@
-//! Feuille de style du portail, servie en `/style.css` : couleurs et polices
-//! de la marque (docs/marque/README.md), angles de 4 px au plus, aucune
-//! italique, aucune ressource externe.
+//! Feuille de style du portail, servie en `/style.css` : couleurs de la
+//! marque (docs/marque/README.md) et police ABC Diatype, angles de 4 px au
+//! plus, aucune italique, aucune ressource externe.
 
 pub const STYLE: &str = r#"
-@font-face { font-family: "Inter"; font-weight: 400; font-style: normal; font-display: swap; src: url("/police/inter-regular.ttf") format("truetype"); }
-@font-face { font-family: "Inter"; font-weight: 600; font-style: normal; font-display: swap; src: url("/police/inter-semibold.ttf") format("truetype"); }
-@font-face { font-family: "Space Grotesk"; font-weight: 700; font-style: normal; font-display: swap; src: url("/police/space-grotesk-bold.ttf") format("truetype"); }
+@font-face { font-family: "ABC Diatype"; font-weight: 400; font-style: normal; font-display: swap; src: url("/police/diatype-regular.woff2") format("woff2"); }
+@font-face { font-family: "ABC Diatype"; font-weight: 500; font-style: normal; font-display: swap; src: url("/police/diatype-medium.woff") format("woff"); }
+@font-face { font-family: "ABC Diatype"; font-weight: 700; font-style: normal; font-display: swap; src: url("/police/diatype-bold.woff2") format("woff2"); }
+@font-face { font-family: "ABC Diatype Mono"; font-weight: 400; font-style: normal; font-display: swap; src: url("/police/diatype-mono-regular.woff2") format("woff2"); }
+
+/* Coque animée des pages du compte (gabarit généré) : ses variables pointaient
+   vers Inter, qui n'est plus servie. Mêmes familles que le reste du portail ;
+   `html:root` l'emporte sur le `:root` du gabarit quel que soit l'ordre. */
+html:root {
+  --font-heading: "ABC Diatype", system-ui, sans-serif;
+  --font-body: "ABC Diatype", system-ui, sans-serif;
+  --font-label: "ABC Diatype Mono", ui-monospace, monospace;
+}
 
 :root {
   --indigo: #2D3A8C;
@@ -32,7 +42,7 @@ body {
   margin: 0;
   background: var(--brume);
   color: var(--encre);
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: "ABC Diatype", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 15px;
   line-height: 1.5;
 }
@@ -41,7 +51,7 @@ a { color: var(--indigo); }
 a:hover { color: var(--indigo-survol); }
 :focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
 
-h1, h2 { font-family: "Space Grotesk", "Inter", system-ui, sans-serif; font-weight: 700; color: var(--encre); letter-spacing: -0.01em; }
+h1, h2 { font-family: "ABC Diatype", system-ui, sans-serif; font-weight: 700; color: var(--encre); letter-spacing: -0.01em; }
 h1 { font-size: 26px; margin: 0; line-height: 1.25; }
 h2 { font-size: 18px; margin: 28px 0 12px; }
 
@@ -54,13 +64,13 @@ h2 { font-size: 18px; margin: 28px 0 12px; }
 .marque { display: flex; align-items: center; gap: 10px; color: #FFFFFF; text-decoration: none; }
 .marque:hover { color: #FFFFFF; }
 .symbole { width: 28px; height: 28px; display: block; }
-.marque-nom { font-family: "Space Grotesk", "Inter", sans-serif; font-weight: 700; font-size: 17px; }
+.marque-nom { font-family: "ABC Diatype", sans-serif; font-weight: 700; font-size: 17px; }
 .menu { display: flex; gap: 4px; flex-wrap: wrap; }
-.menu-lien { color: var(--clair-sur-nuit); text-decoration: none; padding: 6px 10px; border-radius: 4px; font-weight: 600; }
+.menu-lien { color: var(--clair-sur-nuit); text-decoration: none; padding: 6px 10px; border-radius: 4px; font-weight: 500; }
 .menu-lien:hover { color: #FFFFFF; background: rgba(255, 255, 255, 0.08); }
 .menu-lien[aria-current="page"] { color: #FFFFFF; background: rgba(255, 255, 255, 0.14); }
 .compte { margin-left: auto; display: flex; align-items: center; gap: 12px; }
-.compte-nom { color: #FFFFFF; text-decoration: none; font-weight: 600; display: flex; flex-direction: column; line-height: 1.2; text-align: right; }
+.compte-nom { color: #FFFFFF; text-decoration: none; font-weight: 500; display: flex; flex-direction: column; line-height: 1.2; text-align: right; }
 .compte-nom:hover { color: #FFFFFF; text-decoration: underline; }
 .compte-role { color: var(--clair-sur-nuit); font-weight: 400; font-size: 13px; }
 .deconnexion { margin: 0; }
@@ -77,14 +87,14 @@ h2 { font-size: 18px; margin: 28px 0 12px; }
 .carte-interieur { padding: 20px; }
 
 /* Messages */
-.message { border: 1px solid; border-radius: 4px; padding: 10px 14px; margin: 0 0 20px; font-weight: 600; }
+.message { border: 1px solid; border-radius: 4px; padding: 10px 14px; margin: 0 0 20px; font-weight: 500; }
 .message-ok { color: var(--succes); border-color: var(--succes); background: var(--succes-fond); }
 .message-erreur { color: var(--erreur); border-color: var(--erreur); background: var(--erreur-fond); }
 
 /* Boutons */
 .bouton {
   display: inline-flex; align-items: center; justify-content: center;
-  font: inherit; font-weight: 600; font-size: 14px; line-height: 1.2;
+  font: inherit; font-weight: 500; font-size: 14px; line-height: 1.2;
   padding: 9px 16px; border-radius: 4px; border: 1px solid var(--trait);
   background: #FFFFFF; color: var(--encre); text-decoration: none; cursor: pointer;
   white-space: nowrap;
@@ -100,15 +110,15 @@ h2 { font-size: 18px; margin: 28px 0 12px; }
 .tableau-cadre { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 10px 16px; border-bottom: 1px solid var(--trait); vertical-align: middle; }
-th { font-size: 13px; font-weight: 600; color: var(--ardoise); background: var(--brume); white-space: nowrap; }
+th { font-size: 13px; font-weight: 500; color: var(--ardoise); background: var(--brume); white-space: nowrap; }
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover td { background: #FAFBFD; }
 td.nombre, th.nombre { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 td.court { white-space: nowrap; }
 .identifiant.identifiant-court { word-break: normal; white-space: nowrap; }
 td.details { overflow-wrap: anywhere; min-width: 260px; }
-.identifiant { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 13px; color: var(--ardoise); word-break: break-all; }
-.etat { display: inline-block; font-size: 13px; font-weight: 600; padding: 2px 8px; border-radius: 4px; border: 1px solid; white-space: nowrap; }
+.identifiant { font-family: "ABC Diatype Mono", ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 13px; color: var(--ardoise); word-break: break-all; }
+.etat { display: inline-block; font-size: 13px; font-weight: 500; padding: 2px 8px; border-radius: 4px; border: 1px solid; white-space: nowrap; }
 .etat-ok { color: var(--succes); border-color: var(--succes); background: var(--succes-fond); }
 .etat-attente { color: var(--indigo); border-color: var(--indigo); background: var(--indigo-pale); }
 .etat-neutre { color: var(--ardoise); border-color: var(--trait); background: var(--brume); }
@@ -116,12 +126,12 @@ td.details { overflow-wrap: anywhere; min-width: 260px; }
 /* Fiche */
 .grille-fiche { display: grid; grid-template-columns: minmax(160px, 220px) 1fr; gap: 10px 24px; margin: 0; }
 .grille-fiche dt { color: var(--ardoise); }
-.grille-fiche dd { margin: 0; font-weight: 600; word-break: break-word; }
+.grille-fiche dd { margin: 0; font-weight: 500; word-break: break-word; }
 
 /* Formulaires */
 .formulaire { max-width: 640px; }
 .champ { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
-.champ label, .legende { font-weight: 600; font-size: 14px; }
+.champ label, .legende { font-weight: 500; font-size: 14px; }
 .aide { color: var(--ardoise); font-size: 13px; margin: 0; }
 .rangee { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
 input[type="text"], input[type="password"], input[type="number"], input[type="date"], select, textarea {
@@ -139,9 +149,9 @@ legend { padding: 0 6px; }
 
 /* Licence */
 .codes-tires { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; }
-.code-activation { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 20px; letter-spacing: 0.06em; }
+.code-activation { font-family: "ABC Diatype Mono", ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 20px; letter-spacing: 0.06em; }
 .licence-texte {
-  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 13px;
+  font-family: "ABC Diatype Mono", ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 13px;
   width: 100%; min-height: 140px; resize: vertical; word-break: break-all;
   background: var(--brume);
 }
@@ -165,8 +175,8 @@ body.connexion :focus-visible { outline-color: #A7B58E; }
 .connexion-boite { width: 100%; max-width: 380px; }
 .connexion-symbole { display: flex; justify-content: center; margin-bottom: 44px; }
 .connexion-symbole .symbole { width: 52px; height: 52px; }
-.surtitre { color: #A7B58E; font-weight: 600; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 10px; }
-body.connexion h1 { font-family: "Inter", system-ui, sans-serif; font-weight: 600; font-size: 28px; color: #F2F3EF; margin: 0 0 10px; }
+.surtitre { color: #A7B58E; font-weight: 500; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 10px; }
+body.connexion h1 { font-family: "ABC Diatype", system-ui, sans-serif; font-weight: 500; font-size: 28px; color: #F2F3EF; margin: 0 0 10px; }
 body.connexion .texte { color: #8E8E93; font-size: 14px; line-height: 1.6; margin: 0 0 32px; }
 body.connexion .champ { gap: 8px; margin-bottom: 18px; }
 body.connexion .champ label { color: #8E8E93; font-size: 13px; }
@@ -183,7 +193,7 @@ body.connexion input:hover { background: #1D1F21; border-color: #2A2C2E; }
 body.connexion input:focus { outline: none; background: #1D1F21; border-color: #A7B58E; box-shadow: 0 0 0 4px rgba(167, 181, 142, 0.16); }
 .bouton-sauge {
   display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 18px;
-  font: inherit; font-size: 15px; font-weight: 600; color: #0E1209; background: #A7B58E;
+  font: inherit; font-size: 15px; font-weight: 500; color: #0E1209; background: #A7B58E;
   border: 0; border-radius: 9px; cursor: pointer;
 }
 .bouton-sauge:hover { background: #BCC9A4; }
@@ -204,7 +214,7 @@ body.connexion [hidden] { display: none !important; }
 .chiffres { display: flex; align-items: center; gap: 8px; }
 body.connexion .chiffres input[type="text"] {
   flex: 1 1 0; width: 0; min-width: 0; height: 58px; padding: 0; text-align: center;
-  font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; caret-color: #A7B58E;
+  font-size: 24px; font-weight: 500; font-variant-numeric: tabular-nums; caret-color: #A7B58E;
   border-width: 1.5px; transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
 }
 .chiffres-tiret { flex: 0 0 10px; height: 2px; background: #2A2C2E; }
@@ -235,9 +245,9 @@ body.connexion .chiffres-code.faux input { background: #17181A; border-color: #F
 .connexion-boite-large { max-width: 460px; }
 a.bouton-sauge, a.bouton-sauge:hover { color: #0E1209; text-decoration: none; }
 body.connexion input[type="text"].sans-icone { padding-left: 16px; }
-body.connexion input.code-activation[type="text"] { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 15px; letter-spacing: 0.04em; }
+body.connexion input.code-activation[type="text"] { font-family: "ABC Diatype Mono", ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 15px; letter-spacing: 0.04em; }
 body.connexion .aide { color: #8E8E93; font-size: 13px; line-height: 1.6; }
-body.connexion .texte strong { color: #F2F3EF; font-weight: 600; }
+body.connexion .texte strong { color: #F2F3EF; font-weight: 500; }
 body.connexion .message-ok { color: #30D158; background: rgba(48, 209, 88, 0.1); border-color: rgba(48, 209, 88, 0.38); border-radius: 9px; }
 body.connexion .codes-tires { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 8px; padding: 0; }
 body.connexion .codes-tires li { padding: 12px 4px; text-align: center; background: #17181A; border-radius: 9px; }
@@ -277,10 +287,10 @@ body.console :focus-visible { outline: 2px solid #A7B58E; outline-offset: 2px; }
 body.console ::selection { background: #A7B58E; color: #0E1209; }
 body.console a { color: #F2F3EF; text-decoration-color: rgba(242, 243, 239, 0.32); text-underline-offset: 3px; }
 body.console a:hover { color: #A7B58E; text-decoration-color: currentColor; }
-body.console h1, body.console h2 { font-family: "Inter", system-ui, sans-serif; color: #F2F3EF; }
+body.console h1, body.console h2 { font-family: "ABC Diatype", system-ui, sans-serif; color: #F2F3EF; }
 body.console h1 { font-weight: 400; font-size: clamp(34px, 4.2vw, 60px); line-height: 1.05; letter-spacing: -0.03em; }
-body.console h2 { font-weight: 600; font-size: 18px; letter-spacing: -0.01em; margin: 40px 0 14px; }
-body.console strong { color: #F2F3EF; font-weight: 600; }
+body.console h2 { font-weight: 500; font-size: 18px; letter-spacing: -0.01em; margin: 40px 0 14px; }
+body.console strong { color: #F2F3EF; font-weight: 500; }
 
 /* Boutons */
 body.console .bouton { border: 0; border-radius: 999px; padding: 10px 18px; background: #17181A; color: #F2F3EF; text-decoration: none; transition: background-color 0.2s ease, color 0.2s ease; }
@@ -360,11 +370,11 @@ body.console .etiquettes-page { margin: 0 0 clamp(24px, 4vw, 48px); color: rgba(
 body.console .vide-etat { display: flex; align-items: center; gap: 16px; padding: 20px 16px; }
 body.console .vide-etat canvas { width: 56px; height: 56px; flex: none; display: block; }
 body.console .vide-etat .vide { padding: 0; }
-/* Boutons et champs du gabarit : police de la page (Inter). Bouton animé
+/* Boutons et champs du gabarit : police de la page (ABC Diatype). Bouton animé
    (dérive du code d'activation) : texte centré dans sa case, que la couche
    de survol élargit, et même graisse que les autres boutons sauge. */
 body.console main :is(button, input, select, textarea) { font-family: inherit; }
-body.console .button-animated, body.console .button-animated::after { font-family: inherit; font-weight: 600; }
+body.console .button-animated, body.console .button-animated::after { font-family: inherit; font-weight: 500; }
 body.console .button-animated { color: #0E1209; }
 body.console .button-animated-inner { justify-content: center; text-align: center; }
 body.console .bloc-formulaire { align-items: stretch; padding-top: 0; margin: clamp(40px, 6vw, 72px) 0 clamp(32px, 5vw, 56px); }

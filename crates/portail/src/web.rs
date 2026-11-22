@@ -58,9 +58,11 @@ pub const COOKIE_ETAPE: &str = "__Host-kadenz_etape";
 /// Durée du cookie d'étape, en secondes (celle de l'étape du portail).
 const DUREE_COOKIE_ETAPE: u32 = 300;
 
-const POLICE_INTER: &[u8] = include_bytes!("../../app/ui/polices/Inter-Regular.ttf");
-const POLICE_INTER_DEMI: &[u8] = include_bytes!("../../app/ui/polices/Inter-SemiBold.ttf");
-const POLICE_SPACE: &[u8] = include_bytes!("../../app/ui/polices/SpaceGrotesk-Bold.ttf");
+const POLICE_DIATYPE: &[u8] = include_bytes!("../statique/polices/ABCDiatype-Regular.woff2");
+const POLICE_DIATYPE_MEDIUM: &[u8] = include_bytes!("../statique/polices/ABCDiatype-Medium.woff");
+const POLICE_DIATYPE_BOLD: &[u8] = include_bytes!("../statique/polices/ABCDiatype-Bold.woff2");
+const POLICE_DIATYPE_MONO: &[u8] =
+    include_bytes!("../statique/polices/ABCDiatypeMono-Regular.woff2");
 const FAVICON: &[u8] = include_bytes!("../statique/favicon-portail-6c6118946e.svg");
 const PILIERS: &[u8] = include_bytes!("../statique/piliers-ff8f49030c.svg");
 const SCRIPT_CODE: &[u8] = include_bytes!("../statique/code-connexion-bd47a7a773.js");
@@ -186,16 +188,20 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
             get(|| async { statique("text/css; charset=utf-8", pages::STYLE.as_bytes(), false) }),
         )
         .route(
-            "/police/inter-regular.ttf",
-            get(|| async { statique("font/ttf", POLICE_INTER, true) }),
+            "/police/diatype-regular.woff2",
+            get(|| async { statique("font/woff2", POLICE_DIATYPE, true) }),
         )
         .route(
-            "/police/inter-semibold.ttf",
-            get(|| async { statique("font/ttf", POLICE_INTER_DEMI, true) }),
+            "/police/diatype-medium.woff",
+            get(|| async { statique("font/woff", POLICE_DIATYPE_MEDIUM, true) }),
         )
         .route(
-            "/police/space-grotesk-bold.ttf",
-            get(|| async { statique("font/ttf", POLICE_SPACE, true) }),
+            "/police/diatype-bold.woff2",
+            get(|| async { statique("font/woff2", POLICE_DIATYPE_BOLD, true) }),
+        )
+        .route(
+            "/police/diatype-mono-regular.woff2",
+            get(|| async { statique("font/woff2", POLICE_DIATYPE_MONO, true) }),
         )
         .route(
             pages::FAVICON,

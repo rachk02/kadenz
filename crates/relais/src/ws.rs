@@ -64,6 +64,31 @@ const OUVERTURE: Duration = Duration::from_secs(10);
 /// plafond de connexions du relais).
 const WEBSOCKETS_MAX: usize = 4096;
 
+/// Sonde de la passerelle : la sonde TCP du relais ne voit pas si le port
+/// WebSocket a cessé d'accepter (tâche tombée, places épuisées). Ouvre une
+/// WebSocket locale et vérifie la poignée de main, sans envoyer de trame.
+pub fn verifier_sante(adresse: SocketAddr, delai: Duration) -> Result<(), String> {
+    let execution = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| format!("sonde WebSocket : runtime impossible : {e}"))?;
+    execution.block_on(async move {
+        let url = format!("ws://{adresse}/");
+        let ouverture = async {
+            let flux = tokio::net::TcpStream::connect(adresse)
+                .await
+                .map_err(|e| format!("sonde WebSocket : connexion à {adresse} impossible : {e}"))?;
+            tokio_tungstenite::client_async(url.as_str(), flux)
+                .await
+                .map_err(|e| format!("sonde WebSocket : poignée de main refusée : {e}"))?;
+            Ok(())
+        };
+        timeout(delai, ouverture)
+            .await
+            .map_err(|_| format!("sonde WebSocket : délai dépassé sur {adresse}"))?
+    })
+}
+
 /// Adresse WebSocket d'un relais : `wss://hôte[:port]`, ou `ws://` vers
 /// `127.0.0.1` et `localhost` seulement (essais, banc).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -342,6 +367,21 @@ pub(crate) struct Passerelle {
     execution: Option<tokio::runtime::Runtime>,
 }
 
+/// Limite globale d'ouverture, avant le sémaphore : derrière Cloudflare, les
+/// adresses client ne sont connues qu'après la poignée de main, donc un flot
+/// réparti pourrait occuper les 4096 places avant que le frein du relais ne
+/// voie qui que ce soit. La rafale laisse passer une entreprise qui se
+/// reconnecte d'un coup, le rythme borne ensuite l'occupation des places ;
+/// le frein par adresse reste la première barrière, côté relais.
+const RAFALE_WS: f64 = 1024.0;
+const PAR_SECONDE_WS: f64 = 256.0;
+
+#[derive(Debug)]
+struct Debit {
+    jetons: f64,
+    vu: Instant,
+}
+
 impl Passerelle {
     /// Écoute des WebSocket sur `ecoute` ; chacune est rouverte en TCP vers
     /// `relais`, en 127.0.0.1 (la table des clients n'a de sens que là).
@@ -370,12 +410,30 @@ impl Passerelle {
             .map_err(|e| format!("écoute WebSocket sur {ecoute} impossible : {e}"))?;
         let adresse = ecouteur.local_addr().map_err(|e| e.to_string())?;
         let places = Arc::new(Semaphore::new(WEBSOCKETS_MAX));
+        let debit = Arc::new(Mutex::new(Debit {
+            jetons: RAFALE_WS,
+            vu: Instant::now(),
+        }));
         execution.spawn(async move {
             loop {
                 let Ok((flux, pair)) = ecouteur.accept().await else {
                     tokio::time::sleep(Duration::from_millis(50)).await;
                     continue;
                 };
+                // Admis seulement au rythme global, avant de consommer une place.
+                {
+                    let Ok(mut debit) = debit.lock() else {
+                        continue;
+                    };
+                    let maintenant = Instant::now();
+                    let ecoule = maintenant.saturating_duration_since(debit.vu).as_secs_f64();
+                    debit.jetons = (debit.jetons + ecoule * PAR_SECONDE_WS).min(RAFALE_WS);
+                    debit.vu = maintenant;
+                    if debit.jetons < 1.0 {
+                        continue;
+                    }
+                    debit.jetons -= 1.0;
+                }
                 let Ok(place) = places.clone().try_acquire_owned() else {
                     continue;
                 };

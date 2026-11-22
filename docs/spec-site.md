@@ -32,7 +32,7 @@ Statut : **proposé**. Les décisions citées sont celles du cahier de la phase 
 - Le site ne présente comme disponible que ce qui est publié. Aujourd'hui, seule la version 0.2.2 (pont V1) est publiée ; le multiposte, le serveur, l'accès à distance, le stock et l'export SYSCOHADA sont codés et essayés à l'écran, mais pas publiés. Tant que la 1.0.0 n'est pas sortie, ces fonctions sont soit absentes du site, soit présentées comme à venir, au choix de l'utilisateur.
 - La présentation existante (`docs/presentation/kadenz-presentation.html`) date de la V1 : sa section « La suite : plusieurs postes, un serveur » décrit ce qui est maintenant fait. Elle sert de source à mettre à jour avec l'accord de l'utilisateur, pas de texte à recopier.
 - Les fonctions citées sont relevées dans le cahier des charges, les cahiers et le code ; chaque affirmation du site doit pouvoir être montrée dans l'application.
-- Marque : logo, symbole, couleurs (Indigo, Nuit, Ambre) et police du mot (Space Grotesk 600) de `docs/marque/README.md`. Aucune italique, angles de 4 px au plus (préférence de l'utilisateur pour les interfaces web).
+- Marque : logo, symbole, couleurs (Indigo, Nuit, Ambre) et texte en ABC Diatype de `docs/marque/README.md` (le mot du logo est vectorisé). Aucune italique, angles de 4 px au plus (préférence de l'utilisateur pour les interfaces web).
 
 ## 4. Pages et adresses
 

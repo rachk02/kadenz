@@ -115,7 +115,7 @@ impl Police {
     }
 }
 
-/// Les polices de la marque (SIL Open Font License 1.1), embarquées.
+/// Les polices de la marque (ABC Diatype, licence commerciale Dinamo), embarquées.
 pub struct Polices {
     pub texte: Police,
     pub texte_moyen: Police,
@@ -129,12 +129,14 @@ impl Polices {
             Police::depuis_octets(octets).expect("police embarquée lisible")
         };
         Polices {
-            texte: charger(include_bytes!("../../app/ui/polices/Inter-Regular.ttf")),
-            texte_moyen: charger(include_bytes!("../../app/ui/polices/Inter-Medium.ttf")),
-            texte_gras: charger(include_bytes!("../../app/ui/polices/Inter-SemiBold.ttf")),
-            // Space Grotesk Bold, comme les titres de l'application (choix de
-            // l'utilisateur du 2026-11-12, docs/marque).
-            titre: charger(include_bytes!("../../app/ui/polices/SpaceGrotesk-Bold.ttf")),
+            texte: charger(include_bytes!(
+                "../../app/ui/polices/ABCDiatype-Regular.otf"
+            )),
+            texte_moyen: charger(include_bytes!("../../app/ui/polices/ABCDiatype-Medium.otf")),
+            texte_gras: charger(include_bytes!("../../app/ui/polices/ABCDiatype-Bold.otf")),
+            // ABC Diatype Bold, comme les titres de l'application (police de la
+            // marque depuis le 2026-11-21).
+            titre: charger(include_bytes!("../../app/ui/polices/ABCDiatype-Bold.otf")),
         }
     }
 }
@@ -168,7 +170,7 @@ mod tests {
     }
 
     #[test]
-    fn titres_en_space_grotesk() {
+    fn titres_en_diatype() {
         let t = &Polices::embarquees().titre;
         for c in "ÀÂÄÇÉÈÊËÎÏÔÖÙÛÜŸŒÆàâäçéèêëîïôöùûüÿœæ°€%0123456789'’«»\u{00A0}".chars()
         {
@@ -178,7 +180,7 @@ mod tests {
                 c as u32
             );
         }
-        // Absents de Space Grotesk, l'espace fine insécable (U+202F, acceptée à
+        // Absents de Diatype, l'espace fine insécable (U+202F, acceptée à
         // la saisie) et le trait d'union insécable (U+2011) sont tracés par le
         // façonnage avec un glyphe voisin (espace, tiret U+2010), comme le fait
         // HarfBuzz : jamais de glyphe vide (0), et le texte d'origine reste

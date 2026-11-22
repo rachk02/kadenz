@@ -75,12 +75,12 @@ component ZoneLibre inherits VerticalLayout {
         text: root.libelle;
     }
 
-    // Police à chasse fixe : la syntaxe s'affiche telle quelle (Inter dessine
-    // « -> » en flèche).
+    // Police à chasse fixe : la syntaxe s'affiche telle quelle (Diatype dessine
+    // « -> » en flèche par ligature, Diatype Mono le laisse tel quel).
     saisie := TextEdit {
         height: 120px;
         wrap: word-wrap;
-        font-family: "Consolas";
+        font-family: "ABC Diatype Mono";
         edited => {
             root.modifie();
         }
@@ -123,7 +123,7 @@ component Aide inherits Rangee {
         width: 140px;
         horizontal-alignment: Theme.debut;
         text: root.syntaxe;
-        font-family: "Consolas";
+        font-family: "ABC Diatype Mono";
         font-size: 12px;
         color: Theme.texte;
     }
