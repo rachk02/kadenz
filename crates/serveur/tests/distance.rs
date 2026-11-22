@@ -248,7 +248,8 @@ fn poste_distant_par_le_relais() {
     );
 
     // Poste non coché : refusé par le relais, et pas de relais dans son
-    // accueil en réseau local.
+    // accueil en réseau local. Un refus n'est pas une adresse injoignable :
+    // le motif est distinct et traduit à l'écran.
     assert!(matches!(
         Client::connecter_par_relais(
             &adresse_relais,
@@ -257,7 +258,8 @@ fn poste_distant_par_le_relais() {
             &autre,
             DELAI
         ),
-        Err(ErreurClient::Injoignable(_))
+        Err(ErreurClient::RelaisRefuse { motif })
+            if motif == kadenz_relais::motif::POSTE_NON_AUTORISE
     ));
     let (_, accueil_autre) = Client::connecter(
         &serveur.adresse().to_string(),
@@ -280,7 +282,8 @@ fn poste_distant_par_le_relais() {
             &poste,
             DELAI
         ),
-        Err(ErreurClient::Injoignable(_))
+        Err(ErreurClient::RelaisRefuse { motif })
+            if motif == kadenz_relais::motif::POSTE_NON_AUTORISE
     ));
     local.autoriser_distance(&poste.empreinte(), true).unwrap();
 
@@ -298,7 +301,8 @@ fn poste_distant_par_le_relais() {
             &poste,
             DELAI
         ),
-        Err(ErreurClient::Injoignable(_))
+        Err(ErreurClient::RelaisRefuse { motif })
+            if motif == kadenz_relais::motif::SERVEUR_INJOIGNABLE
     ));
     assert!(debut.elapsed() < Duration::from_secs(2));
 

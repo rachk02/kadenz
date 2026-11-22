@@ -4838,3 +4838,9 @@ msgstr "Yedeklemeyi beklemeden kapat"
 
 msgid "Installation en cours…"
 msgstr "Kuruluyor…"
+
+msgid "abonnement échu : l'accès à distance demande un abonnement actif"
+msgstr "abonelik süresi doldu: uzaktan erişim etkin bir abonelik gerektirir"
+
+msgid "refus du relais : {}"
+msgstr "aktarıcı reddetti: {}"

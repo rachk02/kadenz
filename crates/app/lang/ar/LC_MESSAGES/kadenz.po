@@ -4838,3 +4838,9 @@ msgstr "الإغلاق دون انتظار النسخ الاحتياطي"
 
 msgid "Installation en cours…"
 msgstr "جارٍ التثبيت…"
+
+msgid "abonnement échu : l'accès à distance demande un abonnement actif"
+msgstr "انتهى الاشتراك: يتطلب الوصول عن بُعد اشتراكًا نشطًا"
+
+msgid "refus du relais : {}"
+msgstr "رفض المرحّل: {}"

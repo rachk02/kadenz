@@ -33,6 +33,10 @@ use sha2::{Digest, Sha256};
 /// reconnu à l'empreinte de son certificat.
 pub const NOM_TLS: &str = "kadenz-serveur";
 
+/// Motifs de refus du relais, tels que [`ErreurClient::RelaisRefuse`] les
+/// porte : l'interface les traduit sans dépendre de `kadenz-relais`.
+pub use kadenz_relais::motif;
+
 /// Fournisseur cryptographique commun aux postes et au serveur (ring).
 pub fn fournisseur() -> Arc<CryptoProvider> {
     Arc::new(rustls::crypto::ring::default_provider())
@@ -102,6 +106,13 @@ pub enum ErreurClient {
         logiciel: Option<String>,
     },
     PosteNonInscrit,
+    /// Refus du relais (`kadenz_relais::motif`) : poste retiré, licence
+    /// d'abonnement refusée ou échue, sessions en trop. Ce n'est pas une
+    /// adresse injoignable, donc l'interface ne renvoie pas le poste vers une
+    /// autre adresse et peut dire ce que le relais reproche.
+    RelaisRefuse {
+        motif: String,
+    },
     /// Identifiant ou mot de passe refusé ; attente imposée avant le prochain essai.
     CompteRefuse {
         attente_secondes: u64,
@@ -140,6 +151,7 @@ impl fmt::Display for ErreurClient {
             ErreurClient::PosteNonInscrit => {
                 f.write_str("ce poste n'est pas inscrit sur le serveur")
             }
+            ErreurClient::RelaisRefuse { motif } => write!(f, "refus du relais : {motif}"),
             ErreurClient::CompteRefuse { attente_secondes } => write!(
                 f,
                 "identifiant ou mot de passe incorrect (nouvel essai dans {attente_secondes} s)"
@@ -445,7 +457,12 @@ impl Client {
             &identite.cle,
             delai,
         )
-        .map_err(|e| ErreurClient::Injoignable(e.to_string()))?;
+        .map_err(|e| match e {
+            kadenz_relais::ErreurRelais::Refus { motif, .. } => {
+                ErreurClient::RelaisRefuse { motif }
+            }
+            autre => ErreurClient::Injoignable(autre.to_string()),
+        })?;
         let injoignable = |e: io::Error| ErreurClient::Injoignable(e.to_string());
         tcp.set_read_timeout(Some(delai)).map_err(injoignable)?;
         tcp.set_write_timeout(Some(delai)).map_err(injoignable)?;

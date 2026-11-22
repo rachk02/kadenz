@@ -4838,3 +4838,9 @@ msgstr "バックアップを待たずに終了"
 
 msgid "Installation en cours…"
 msgstr "インストールしています…"
+
+msgid "abonnement échu : l'accès à distance demande un abonnement actif"
+msgstr "サブスクリプションは期限切れです：リモートアクセスには有効なサブスクリプションが必要です"
+
+msgid "refus du relais : {}"
+msgstr "リレーによる拒否: {}"

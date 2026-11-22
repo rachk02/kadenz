@@ -37,7 +37,9 @@ RUN groupadd --system --gid 10001 kadenz \
 COPY --from=construction /source/target/release/kadenz-relais /usr/local/bin/kadenz-relais
 USER 10001:10001
 VOLUME /donnees
-EXPOSE 47381
+# 47381 : relais (TCP, TLS épinglé). 47383 : passerelle WebSocket du tunnel
+# (crates/relais/src/ws.rs), seulement quand --ecoute-ws est donné.
+EXPOSE 47381 47383
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD ["/usr/local/bin/kadenz-relais", "sante", "--dossier", "/donnees"]
 ENTRYPOINT ["/usr/local/bin/kadenz-relais", "--dossier", "/donnees", "--ecoute", "0.0.0.0:47381"]

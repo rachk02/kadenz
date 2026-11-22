@@ -4838,3 +4838,9 @@ msgstr "Close without waiting for the backup"
 
 msgid "Installation en cours…"
 msgstr "Installing…"
+
+msgid "abonnement échu : l'accès à distance demande un abonnement actif"
+msgstr "subscription expired: remote access requires an active subscription"
+
+msgid "refus du relais : {}"
+msgstr "relay refused: {}"

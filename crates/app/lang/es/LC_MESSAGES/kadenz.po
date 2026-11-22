@@ -4838,3 +4838,9 @@ msgstr "Cerrar sin esperar la copia de seguridad"
 
 msgid "Installation en cours…"
 msgstr "Instalando…"
+
+msgid "abonnement échu : l'accès à distance demande un abonnement actif"
+msgstr "suscripción vencida: el acceso remoto requiere una suscripción activa"
+
+msgid "refus du relais : {}"
+msgstr "el relé rechazó: {}"

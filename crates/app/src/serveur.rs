@@ -61,6 +61,18 @@ pub(crate) fn texte_erreur_client(e: &ErreurClient) -> String {
             "le serveur est plus ancien que ce poste : mettez d'abord à jour le serveur, depuis sa fenêtre d'administration",
         ),
         ErreurClient::PosteNonInscrit => tr("ce poste n'est pas inscrit sur le serveur"),
+        ErreurClient::RelaisRefuse { motif } => match motif.as_str() {
+            kadenz_client::motif::POSTE_NON_AUTORISE => {
+                tr("ce poste n'est pas inscrit sur le serveur")
+            }
+            kadenz_client::motif::LICENCE_REFUSEE => {
+                tr("licence d'abonnement refusée par le relais")
+            }
+            kadenz_client::motif::LICENCE_ECHUE => {
+                tr("abonnement échu : l'accès à distance demande un abonnement actif")
+            }
+            _ => trf("refus du relais : {}", &[motif]),
+        },
         ErreurClient::CompteRefuse { attente_secondes } => trf(
             "identifiant ou mot de passe incorrect (nouvel essai dans {} s)",
             &[attente_secondes],

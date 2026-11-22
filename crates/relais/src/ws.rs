@@ -21,7 +21,7 @@ use futures_util::{SinkExt, StreamExt};
 use rustls::ClientConfig;
 use rustls::pki_types::ServerName;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
-use tokio::sync::Semaphore;
+use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 use tokio::time::{MissedTickBehavior, timeout};
 use tokio_rustls::TlsConnector;
 use tokio_tungstenite::WebSocketStream;
@@ -38,12 +38,19 @@ pub const PING: Duration = Duration::from_secs(30);
 /// Rien reçu pendant ce temps, pas même un pong : connexion fermée.
 pub const SANS_NOUVELLES: Duration = Duration::from_secs(90);
 
-/// Délais d'une WebSocket : [`PING`] et [`SANS_NOUVELLES`] par défaut ; les
-/// essais les raccourcissent.
+/// Délai, après la poignée de main, pour recevoir la première trame utile du
+/// pair. Le relais parle le premier (défi), donc un client qui a ouvert une
+/// WebSocket sans rien envoyer au-delà de ce délai n'est pas un poste : il
+/// occupait une place pour rien.
+pub const PREMIERE_TRAME: Duration = Duration::from_secs(20);
+
+/// Délais d'une WebSocket : [`PING`], [`SANS_NOUVELLES`] et [`PREMIERE_TRAME`]
+/// par défaut ; les essais les raccourcissent.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DelaisWs {
     pub ping: Duration,
     pub sans_nouvelles: Duration,
+    pub premiere_trame: Duration,
 }
 
 impl Default for DelaisWs {
@@ -51,6 +58,7 @@ impl Default for DelaisWs {
         DelaisWs {
             ping: PING,
             sans_nouvelles: SANS_NOUVELLES,
+            premiere_trame: PREMIERE_TRAME,
         }
     }
 }
@@ -63,6 +71,11 @@ const OUVERTURE: Duration = Duration::from_secs(10);
 /// WebSocket ouvertes en même temps sur la passerelle, au plus (comme le
 /// plafond de connexions du relais).
 const WEBSOCKETS_MAX: usize = 4096;
+/// Poignées de main en cours, au plus. Elles ne consomment pas encore une des
+/// 4096 places : une inondation de clients qui ouvrent TCP sans envoyer leur
+/// requête HTTP ne doit pas priver les sessions établies. Chacune est coupée
+/// par [`OUVERTURE`].
+const OUVERTURES_EN_COURS: usize = 512;
 
 /// Sonde de la passerelle : la sonde TCP du relais ne voit pas si le port
 /// WebSocket a cessé d'accepter (tâche tombée, places épuisées). Ouvre une
@@ -161,9 +174,16 @@ fn config_ws() -> WebSocketConfig {
 
 /// Copie entre une WebSocket et une connexion TCP, jusqu'à la fermeture de
 /// l'une ou de l'autre. Ping à chaque `delais.ping` ; rien reçu pendant
-/// `delais.sans_nouvelles`, message texte, trame trop grande : fin.
-async fn pomper<S>(ws: WebSocketStream<S>, tcp: &mut tokio::net::TcpStream, delais: DelaisWs)
-where
+/// `delais.sans_nouvelles`, message texte, trame trop grande : fin. Avec
+/// `premiere` (côté passerelle), la première trame binaire du pair doit
+/// arriver dans ce délai, sinon la connexion est coupée : une WebSocket
+/// muette n'occupe pas une place pendant 90 secondes.
+async fn pomper<S>(
+    ws: WebSocketStream<S>,
+    tcp: &mut tokio::net::TcpStream,
+    delais: DelaisWs,
+    premiere: Option<Duration>,
+) where
     S: AsyncRead + AsyncWrite + Unpin,
 {
     let (mut envoi, mut reception) = ws.split();
@@ -173,6 +193,9 @@ where
     battement.set_missed_tick_behavior(MissedTickBehavior::Delay);
     battement.tick().await;
     let mut recu = Instant::now();
+    // Échéance fixe : la recréer à chaque tour ne la décale pas.
+    let echeance = premiere.map(|d| tokio::time::Instant::from_std(Instant::now() + d));
+    let mut premiere_attendue = echeance.is_some();
     loop {
         tokio::select! {
             lu = lecture.read(&mut tampon) => match lu {
@@ -191,6 +214,7 @@ where
                 recu = Instant::now();
                 match message {
                     Some(Ok(Message::Binary(octets))) => {
+                        premiere_attendue = false;
                         if ecriture.write_all(&octets).await.is_err() {
                             break;
                         }
@@ -205,7 +229,12 @@ where
                 {
                     break;
                 }
-            }
+            },
+            _ = tokio::time::sleep_until(echeance.unwrap_or_else(tokio::time::Instant::now)),
+                if premiere_attendue =>
+            {
+                break;
+            },
         }
     }
     let _ = ecriture.shutdown().await;
@@ -314,7 +343,7 @@ where
         .spawn(move || {
             execution.block_on(async move {
                 if let Ok(mut pont) = tokio::net::TcpStream::from_std(pont) {
-                    pomper(ws, &mut pont, DelaisWs::default()).await;
+                    pomper(ws, &mut pont, DelaisWs::default(), None).await;
                 }
             });
         })
@@ -410,16 +439,32 @@ impl Passerelle {
             .map_err(|e| format!("écoute WebSocket sur {ecoute} impossible : {e}"))?;
         let adresse = ecouteur.local_addr().map_err(|e| e.to_string())?;
         let places = Arc::new(Semaphore::new(WEBSOCKETS_MAX));
+        let ouvertures = Arc::new(Semaphore::new(OUVERTURES_EN_COURS));
         let debit = Arc::new(Mutex::new(Debit {
             jetons: RAFALE_WS,
             vu: Instant::now(),
         }));
         execution.spawn(async move {
+            // Résumé des refus, une ligne par minute au plus, pour qu'une
+            // inondation ne remplisse pas les journaux du Dell.
+            let mut depuis = Instant::now();
+            let mut refuses_debit = 0u64;
+            let mut refuses_ouvertures = 0u64;
             loop {
                 let Ok((flux, pair)) = ecouteur.accept().await else {
                     tokio::time::sleep(Duration::from_millis(50)).await;
                     continue;
                 };
+                if depuis.elapsed() >= Duration::from_secs(60) {
+                    if refuses_debit > 0 || refuses_ouvertures > 0 {
+                        eprintln!(
+                            "passerelle refus_connexions debit={refuses_debit} ouvertures={refuses_ouvertures}"
+                        );
+                    }
+                    depuis = Instant::now();
+                    refuses_debit = 0;
+                    refuses_ouvertures = 0;
+                }
                 // Admis seulement au rythme global, avant de consommer une place.
                 {
                     let Ok(mut debit) = debit.lock() else {
@@ -430,17 +475,31 @@ impl Passerelle {
                     debit.jetons = (debit.jetons + ecoule * PAR_SECONDE_WS).min(RAFALE_WS);
                     debit.vu = maintenant;
                     if debit.jetons < 1.0 {
+                        refuses_debit += 1;
                         continue;
                     }
                     debit.jetons -= 1.0;
                 }
-                let Ok(place) = places.clone().try_acquire_owned() else {
+                // Poignée de main en cours : une place à part, rendue dès
+                // qu'elle est faite (la session prend ensuite une place
+                // durable).
+                let Ok(en_cours) = ouvertures.clone().try_acquire_owned() else {
+                    refuses_ouvertures += 1;
                     continue;
                 };
                 let clients = clients.clone();
+                let places = places.clone();
                 tokio::spawn(async move {
-                    let _place = place;
-                    servir(flux, pair, relais, mandataire, delais, clients).await;
+                    servir(
+                        flux,
+                        pair,
+                        relais,
+                        mandataire,
+                        delais,
+                        clients,
+                        Ouverture { places, en_cours },
+                    )
+                    .await;
                 });
             }
         });
@@ -463,6 +522,13 @@ impl Drop for Passerelle {
     }
 }
 
+/// Poignée de main en cours : la place à part qu'elle occupe, et le plafond
+/// des places durables qu'elle prendra une fois la poignée de main faite.
+struct Ouverture {
+    places: Arc<Semaphore>,
+    en_cours: OwnedSemaphorePermit,
+}
+
 async fn servir(
     flux: tokio::net::TcpStream,
     pair: SocketAddr,
@@ -470,7 +536,9 @@ async fn servir(
     mandataire: Option<IpAddr>,
     delais: DelaisWs,
     clients: Clients,
+    ouverture: Ouverture,
 ) {
+    let Ouverture { places, en_cours } = ouverture;
     let _ = flux.set_nodelay(true);
     let du_mandataire = mandataire == Some(pair.ip());
     let mut client = pair.ip();
@@ -499,6 +567,12 @@ async fn servir(
     let Ok(Ok(ws)) = timeout(OUVERTURE, ouverture).await else {
         return;
     };
+    // Poignée de main faite : la place « en cours » est rendue, la session
+    // prend une place durable, refusée si les 4096 sont déjà prises.
+    drop(en_cours);
+    let Ok(_place) = places.try_acquire_owned() else {
+        return;
+    };
     let Ok(prise) = tokio::net::TcpSocket::new_v4() else {
         return;
     };
@@ -516,7 +590,7 @@ async fn servir(
     let connexion = timeout(OUVERTURE, prise.connect(relais)).await;
     if let Ok(Ok(mut tcp)) = connexion {
         let _ = tcp.set_nodelay(true);
-        pomper(ws, &mut tcp, delais).await;
+        pomper(ws, &mut tcp, delais, Some(delais.premiere_trame)).await;
         retirer(&clients, port);
         drop(tcp);
     } else {
@@ -829,6 +903,7 @@ mod essais_limites {
         let delais = DelaisWs {
             ping: Duration::from_millis(100),
             sans_nouvelles: Duration::from_millis(400),
+            premiere_trame: Duration::from_secs(20),
         };
         let (p, faux_relais) = passerelle(delais).await;
 
@@ -860,5 +935,37 @@ mod essais_limites {
         );
         lecteur.abort();
         fermer(p).await;
+    }
+
+    /// WebSocket ouverte sans jamais envoyer de trame : la passerelle coupe
+    /// après `premiere_trame`, sans attendre le silence de 90 secondes.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn premiere_trame_absente_coupee() {
+        let delais = DelaisWs {
+            ping: Duration::from_secs(30),
+            sans_nouvelles: Duration::from_secs(90),
+            premiere_trame: Duration::from_millis(300),
+        };
+        let (p, faux_relais) = passerelle(delais).await;
+        let _ws = client(&p).await;
+        let (mut arrivee, _) = faux_relais.accept().await.unwrap();
+        let debut = Instant::now();
+        assert!(fin_du_flux(&mut arrivee).await.is_empty());
+        let duree = debut.elapsed();
+        assert!(
+            duree >= Duration::from_millis(300) && duree < Duration::from_secs(3),
+            "{duree:?}"
+        );
+        fermer(p).await;
+    }
+
+    /// Les plafonds restent dans l'ordre voulu : les poignées de main en cours
+    /// ne peuvent pas prendre toutes les places, et le délai de première trame
+    /// reste plus court que le silence.
+    #[test]
+    fn limites_coherentes() {
+        const { assert!(OUVERTURES_EN_COURS < WEBSOCKETS_MAX) };
+        // Durée : pas d'évaluation en constante (l'opérateur n'est pas const).
+        assert!(PREMIERE_TRAME < SANS_NOUVELLES);
     }
 }

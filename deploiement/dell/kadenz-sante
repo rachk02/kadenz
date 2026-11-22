@@ -12,15 +12,49 @@
 # comptent comme en panne. tunnel (compose.public.yaml) n'est surveillé que
 # s'il existe : un conteneur arrêté reste listé, seul un retrait volontaire
 # (docker compose down ou rm) le fait sortir de la surveillance.
+#
+# Si le tunnel est en service, les noms publics sont aussi sondés de bout en
+# bout (section « routes publiques » plus bas).
 
 set -u
 
 PROJET=${KADENZ_PROJET:-kadenz}
 ETAT=${KADENZ_ETAT_SANTE:-/var/lib/kadenz-sante}
 ALERTE=${ALERTE:-/usr/local/sbin/alerte}
+PORTAIL_PUBLIC=${KADENZ_PORTAIL_PUBLIC:-https://licences.mcarre.dev/}
+RELAIS_PUBLIC=${KADENZ_RELAIS_PUBLIC:-https://relais.mcarre.dev/}
 
 umask 077
 mkdir -p "$ETAT"
+
+# Alerte au changement d'état seulement, pour une sonde qui n'est pas un
+# conteneur : « healthy », ou le texte de la panne.
+signaler() {
+    sig_service=$1
+    sig_etat=$2
+    sig_avant=$(cat "$ETAT/$sig_service" 2>/dev/null || echo healthy)
+    [ "$sig_etat" = "$sig_avant" ] && return 0
+    if [ "$sig_etat" = healthy ]; then
+        sig_message="de nouveau en bonne santé"
+        sig_priorite=3
+    else
+        sig_message=$sig_etat
+        sig_priorite=4
+    fi
+    if "$ALERTE" "Kadenz, $sig_service" "$sig_message" "$sig_priorite"; then
+        echo "$sig_etat" > "$ETAT/$sig_service"
+    fi
+}
+
+# Code HTTP d'une URL, 000 si rien ne répond.
+code_http() {
+    code_delai=$1
+    shift
+    curl -s -o /dev/null --max-time "$code_delai" -w '%{http_code}' "$@" \
+        </dev/null 2>/dev/null
+}
+
+tunnel_present=
 
 for service in portail relais tunnel; do
     # Entrée standard fermée : un appel docker ne lit pas la suite d'un script
@@ -42,6 +76,11 @@ for service in portail relais tunnel; do
         etat=$(docker inspect -f '{{if not .State.Running}}{{.State.Status}}{{else if .State.Health}}{{.State.Health.Status}}{{else}}healthy{{end}}' "$id" 2>/dev/null </dev/null) \
             || etat=absent
     fi
+    # Tunnel en marche : les routes publiques seront sondées après la boucle.
+    # Arrêté, ses propres alertes suffisent.
+    if [ "$service" = "tunnel" ] && [ "$etat" = "healthy" ]; then
+        tunnel_present=1
+    fi
     # Démarrage en cours : rien à dire encore.
     [ "$etat" = "starting" ] && continue
     avant=$(cat "$ETAT/$service" 2>/dev/null || echo healthy)
@@ -59,3 +98,34 @@ for service in portail relais tunnel; do
         echo "$etat" > "$ETAT/$service"
     fi
 done
+
+# ----- Routes publiques : ce que voit un client de l'extérieur -----
+# Les états ci-dessus ne disent rien du tunnel : cloudflared arrêté, route
+# retirée du compte Cloudflare ou passerelle muette laissent portail et relais
+# « healthy » en local. Ces sondes passent par les noms publics.
+#
+# Codes attendus aujourd'hui :
+# - portail : 303 sur « / » (redirection vers la connexion) ;
+# - relais : 101 sur une ouverture WebSocket. Une requête GET simple donne 502,
+#   la passerelle ne répondant qu'aux ouvertures WebSocket ; c'est le
+#   comportement sain, pas une panne.
+# Une ouverture WebSocket réussie reste ouverte : curl y attend son délai, d'où
+# les 5 secondes ; le code est déjà relevé quand il expire.
+if [ -n "$tunnel_present" ]; then
+    route_code=$(code_http 10 "$PORTAIL_PUBLIC")
+    if [ "$route_code" = "303" ]; then
+        signaler route-portail healthy
+    else
+        signaler route-portail "en panne (portail public : $route_code au lieu de 303)"
+    fi
+    route_code=$(code_http 5 \
+        -H 'Connection: Upgrade' -H 'Upgrade: websocket' \
+        -H 'Sec-WebSocket-Version: 13' \
+        -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' \
+        "$RELAIS_PUBLIC")
+    if [ "$route_code" = "101" ]; then
+        signaler route-relais healthy
+    else
+        signaler route-relais "en panne (relais public : $route_code au lieu de 101)"
+    fi
+fi

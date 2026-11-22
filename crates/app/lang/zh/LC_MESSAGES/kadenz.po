@@ -4838,3 +4838,9 @@ msgstr "不等待备份直接关闭"
 
 msgid "Installation en cours…"
 msgstr "正在安装…"
+
+msgid "abonnement échu : l'accès à distance demande un abonnement actif"
+msgstr "订阅已到期：远程访问需要有效的订阅"
+
+msgid "refus du relais : {}"
+msgstr "中继拒绝：{}"
