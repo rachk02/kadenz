@@ -2,6 +2,15 @@
 
 Format : une section par version, la plus récente en haut. Numérotation [SemVer](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORRECTIF`, tag Git `vMAJEUR.MINEUR.CORRECTIF`.
 
+## [1.0.2] - 2026-11-22
+
+Version corrective de la 1.0.1, sans édition monoposte : les lots M4 et M5 de `docs/spec-monoposte.md` ne sont pas livrés. Les installateurs restent non signés, conformément à la décision de l'utilisateur du 2026-11-21 ; Windows SmartScreen affichera un avertissement à l'installation.
+
+### Corrigé
+- Relais WebSocket : au plus 512 poignées de main en cours, sur des places distinctes des 4096 sessions ; une WebSocket qui n'envoie aucune trame dans les 20 secondes qui suivent la poignée de main est coupée ; les refus de la passerelle sont résumés en une ligne de journal par minute. Le Dockerfile annonce aussi le port 47383.
+- Accès distant : un refus du relais (poste non autorisé, licence refusée ou échue, sessions en trop) n'est plus présenté comme un serveur injoignable ; le motif est traduit dans les six langues de l'interface.
+- Dell : `kadenz-sante` sonde les noms publics de bout en bout quand le tunnel est en service (portail en 303, relais en 101 sur une ouverture WebSocket).
+
 ## [1.0.1] - 2026-11-22
 
 Version corrective de la 1.0.0, sans édition monoposte : les lots M4 et M5 de `docs/spec-monoposte.md` ne sont pas livrés. Les installateurs restent non signés, conformément à la décision de l'utilisateur du 2026-11-21 ; Windows SmartScreen affichera un avertissement à l'installation.
