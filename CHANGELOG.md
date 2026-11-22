@@ -2,6 +2,13 @@
 
 Format : une section par version, la plus récente en haut. Numérotation [SemVer](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORRECTIF`, tag Git `vMAJEUR.MINEUR.CORRECTIF`.
 
+## [0.2.4] - 2026-11-22
+
+Republication de la ligne V1 à la suite de la 1.0.2, à la demande de l'utilisateur. Le durcissement du relais WebSocket et la traduction des refus du relais ne concernent que la génération v2 : cette branche n'a ni crate `kadenz-relais` ni crate `kadenz-client`, et son code est identique à celui de la 0.2.3. Les installateurs restent non signés, conformément à la décision de l'utilisateur du 2026-11-21 ; Windows SmartScreen affichera un avertissement à l'installation.
+
+### Note
+- Numéro de version aligné avec la ligne 1.0.x ; aucun changement fonctionnel sur cette branche.
+
 ## [0.2.3] - 2026-11-22
 
 ### Ajouté
