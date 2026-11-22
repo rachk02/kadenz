@@ -46,11 +46,13 @@ signaler() {
     fi
 }
 
-# Code HTTP d'une URL, 000 si rien ne répond.
+# Code HTTP d'une URL, 000 si rien ne répond. HTTP/1.1 est imposé : en HTTP/2,
+# curl n'envoie pas la requête de mise à niveau WebSocket et Cloudflare répond
+# 502 au GET simple (vérifié sur le Dell le 2026-11-22 10:42).
 code_http() {
     code_delai=$1
     shift
-    curl -s -o /dev/null --max-time "$code_delai" -w '%{http_code}' "$@" \
+    curl -s -o /dev/null --http1.1 --max-time "$code_delai" -w '%{http_code}' "$@" \
         </dev/null 2>/dev/null
 }
 
