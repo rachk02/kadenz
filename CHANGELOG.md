@@ -2,6 +2,15 @@
 
 Format : une section par version, la plus récente en haut. Numérotation [SemVer](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORRECTIF`, tag Git `vMAJEUR.MINEUR.CORRECTIF`.
 
+## [1.0.1] - 2026-11-22
+
+Version corrective de la 1.0.0, sans édition monoposte : les lots M4 et M5 de `docs/spec-monoposte.md` ne sont pas livrés. Les installateurs restent non signés, conformément à la décision de l'utilisateur du 2026-11-21 ; Windows SmartScreen affichera un avertissement à l'installation.
+
+### Corrigé
+- Polices : ABC Diatype remplace Inter et Space Grotesk dans le portail (webfonts WOFF2 et WOFF), l'application et les PDF ; le document de licence Dinamo doit accompagner les fichiers.
+- Activation : l'adresse du portail est configurée et vérifiée à la release, l'aperçu d'une clé utilise le même chemin de vérification que son enregistrement, et le code de gamme V1 reste réservé à la ligne 0.2.x.
+- Relais WebSocket : la sonde de santé ouvre aussi une WebSocket locale dans le déploiement public, et une limite globale d'ouverture borne l'occupation des 4096 places avant que les adresses client ne soient connues.
+
 ## [1.0.0] - 2026-11-17
 
 Première version de la phase 2 : serveur chez le client, postes reliés, travail hors connexion, accès à distance, stock et export comptable SYSCOHADA. Les installateurs ne sont pas signés : Windows SmartScreen affiche un avertissement à l'installation. Les postes en 0.2.2 (pont V1) ne proposent pas cette version : elle s'installe séparément.
