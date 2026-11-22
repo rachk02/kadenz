@@ -115,6 +115,13 @@ if ($changelog -notmatch "(?m)^## \[$([regex]::Escape($Version))\]") {
     throw "aucune section ## [$Version] dans CHANGELOG.md"
 }
 
+# Sans adresse, l'activation répond « indisponible » sur tous les postes V1.
+Etape "Contrôle de l'adresse du portail"
+$urlPortail = (Get-Content -Raw (Join-Path $racine 'crates\maj\portail-url.txt')).Trim()
+if ($urlPortail -notmatch '^https://[A-Za-z0-9.-]+(?::[0-9]+)?/?$') {
+    throw "crates/maj/portail-url.txt doit contenir une adresse https, trouvé : « $urlPortail »"
+}
+
 Etape "Format, Clippy, tests"
 Executer $cargo @('fmt', '--all', '--check')
 Executer $cargo @('clippy', '--workspace', '--all-targets', '--', '-D', 'warnings')
