@@ -69,6 +69,9 @@ param(
 
     [string]$Certificat = '',
 
+    # Publication non signée, décidée par l'utilisateur le 2026-11-21.
+    [switch]$SansCertificat,
+
     [ValidateRange(1, 64)]
     [int]$Jobs = 1
 )
@@ -86,8 +89,16 @@ $tag = "v$Version"
 function Etape([string]$texte) { Write-Host "==> $texte" }
 
 function Executer([string]$exe, [string[]]$arguments) {
-    & $exe @arguments
-    if ($LASTEXITCODE -ne 0) { throw "échec : $exe $($arguments -join ' ')" }
+    # cargo et git écrivent sur stderr même en réussite ; Windows PowerShell
+    # traite cette sortie comme une erreur avec $ErrorActionPreference = 'Stop'.
+    $precedent = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        & $exe @arguments
+        if ($LASTEXITCODE -ne 0) { throw "échec : $exe $($arguments -join ' ')" }
+    } finally {
+        $ErrorActionPreference = $precedent
+    }
 }
 
 Etape "Contrôle du dépôt"
@@ -130,8 +141,12 @@ Executer $cargo @('test', '--workspace')
 Etape "Compilation release"
 Executer $cargo @('build', '--release', '-p', 'kadenz')
 Etape "Installateur"
-if (-not $Certificat -and -not $Simulation) {
+if ($SansCertificat -and $Certificat) { throw "-SansCertificat et -Certificat s'excluent" }
+if (-not $Certificat -and -not $Simulation -and -not $SansCertificat) {
     throw "publication refusée sans -Certificat : les fichiers livrés doivent être signés"
+}
+if ($SansCertificat) {
+    Write-Host "    ATTENTION : publication non signée, décision de l'utilisateur du 2026-11-21."
 }
 & (Join-Path $PSScriptRoot '..\installateur\construire.ps1') -SansCompilation -Certificat $Certificat
 if ($LASTEXITCODE -ne 0) { throw "échec de la construction de l'installateur" }

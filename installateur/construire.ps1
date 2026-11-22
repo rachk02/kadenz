@@ -45,8 +45,16 @@ $racine = Split-Path -Parent $PSScriptRoot
 Set-Location $racine
 
 function Executer([string]$exe, [string[]]$arguments) {
-    & $exe @arguments
-    if ($LASTEXITCODE -ne 0) { throw "échec : $exe $($arguments -join ' ')" }
+    # cargo et wix écrivent sur stderr même en réussite ; Windows PowerShell
+    # traite cette sortie comme une erreur avec $ErrorActionPreference = 'Stop'.
+    $precedent = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        & $exe @arguments
+        if ($LASTEXITCODE -ne 0) { throw "échec : $exe $($arguments -join ' ')" }
+    } finally {
+        $ErrorActionPreference = $precedent
+    }
 }
 
 $signtool = $null

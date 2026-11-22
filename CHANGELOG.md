@@ -2,7 +2,7 @@
 
 Format : une section par version, la plus récente en haut. Numérotation [SemVer](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORRECTIF`, tag Git `vMAJEUR.MINEUR.CORRECTIF`.
 
-## [0.2.3] - date à poser à la publication
+## [0.2.3] - 2026-11-22
 
 ### Ajouté
 - Activation par code : la licence se donne par un code d'activation de 25 caractères (`XXXXX-XXXXX-XXXXX-XXXXX-XXXXX`), mis en forme pendant la saisie et contrôlé sur le poste avant tout envoi. Le code est activé auprès du portail Kadenz au passage de l'étape Entreprise de l'assistant, ou depuis Paramètres > Licence (bouton « Renouveler » ou « Activer un code »), avec la raison sociale et l'identifiant du poste ; une connexion à Internet est alors nécessaire. La licence reçue est vérifiée sur le poste avant d'être enregistrée.
