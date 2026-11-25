@@ -2211,8 +2211,8 @@ msgstr "License"
 msgid "Système"
 msgstr "System"
 
-msgid "Windows, mono-poste."
-msgstr "Windows, single workstation."
+msgid "Windows."
+msgstr "Windows."
 
 msgid "Langues"
 msgstr "Languages"
@@ -2220,8 +2220,8 @@ msgstr "Languages"
 msgid "Données de ce poste"
 msgstr "Data on this computer"
 
-msgid "Les données restent sur ce poste, dans une base locale SQLite."
-msgstr "Data stays on this computer, in a local SQLite database."
+msgid "Les données de l'entreprise sont gardées par le serveur ; ce poste en garde une copie locale."
+msgstr "The company's data is kept by the server; this computer keeps a local copy."
 
 msgid "Impression"
 msgstr "Printing"

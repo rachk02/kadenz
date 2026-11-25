@@ -2211,8 +2211,8 @@ msgstr "许可证"
 msgid "Système"
 msgstr "系统"
 
-msgid "Windows, mono-poste."
-msgstr "Windows，单机。"
+msgid "Windows."
+msgstr "Windows."
 
 msgid "Langues"
 msgstr "语言"
@@ -2220,8 +2220,8 @@ msgstr "语言"
 msgid "Données de ce poste"
 msgstr "本机数据"
 
-msgid "Les données restent sur ce poste, dans une base locale SQLite."
-msgstr "数据保存在本机的本地 SQLite 数据库中。"
+msgid "Les données de l'entreprise sont gardées par le serveur ; ce poste en garde une copie locale."
+msgstr "公司数据由服务器保管，这台电脑保留一份本地副本。"
 
 msgid "Impression"
 msgstr "打印"

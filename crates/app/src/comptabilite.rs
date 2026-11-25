@@ -525,9 +525,10 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
     let vue: VuePartagee = Rc::default();
     let api = fenetre.global::<ComptabiliteApi>();
 
-    let (f, v) = (fenetre.as_weak(), vue.clone());
+    let (f, e, v) = (fenetre.as_weak(), etat.clone(), vue.clone());
     api.on_ouvrir(move || {
         let Some(f) = f.upgrade() else { return };
+        let etat = e.borrow();
         let mut vue = v.borrow_mut();
         *vue = Vue {
             mois: mois_proposes(aujourdhui()),
@@ -540,6 +541,13 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         api.set_mois(ModelRc::new(VecModel::from(libelles)));
         // Le mois précédent : le dernier mois entièrement passé, celui qu'on exporte.
         api.set_mois_courant(2);
+        // L'onglet Journal s'initialise avant cet appel, quand la liste des mois est encore
+        // vide : sans ce calcul, le journal restait vide jusqu'à un nouveau choix du mois.
+        if let Ok((periode, mois)) = periode_choisie(&vue, 2, "", "") {
+            vue.periode = Some(periode);
+            vue.mois_choisi = mois;
+            afficher_journal(&f, &etat, &mut vue);
+        }
     });
 
     let (f, e, v) = (fenetre.as_weak(), etat.clone(), vue.clone());

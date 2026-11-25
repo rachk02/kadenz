@@ -2211,8 +2211,8 @@ msgstr "Lisans"
 msgid "Système"
 msgstr "Sistem"
 
-msgid "Windows, mono-poste."
-msgstr "Windows, tek bilgisayar."
+msgid "Windows."
+msgstr "Windows."
 
 msgid "Langues"
 msgstr "Diller"
@@ -2220,8 +2220,8 @@ msgstr "Diller"
 msgid "Données de ce poste"
 msgstr "Bu bilgisayardaki veriler"
 
-msgid "Les données restent sur ce poste, dans une base locale SQLite."
-msgstr "Veriler bu bilgisayarda, yerel bir SQLite veritabanında kalır."
+msgid "Les données de l'entreprise sont gardées par le serveur ; ce poste en garde une copie locale."
+msgstr "Şirket verilerini sunucu saklar; bu bilgisayar yerel bir kopyasını tutar."
 
 msgid "Impression"
 msgstr "Yazdırma"

@@ -2211,8 +2211,8 @@ msgstr "ライセンス"
 msgid "Système"
 msgstr "システム"
 
-msgid "Windows, mono-poste."
-msgstr "Windows、単一端末。"
+msgid "Windows."
+msgstr "Windows."
 
 msgid "Langues"
 msgstr "言語"
@@ -2220,8 +2220,8 @@ msgstr "言語"
 msgid "Données de ce poste"
 msgstr "このパソコンのデータ"
 
-msgid "Les données restent sur ce poste, dans une base locale SQLite."
-msgstr "データはこのパソコンのローカル SQLite データベースに保存されます。"
+msgid "Les données de l'entreprise sont gardées par le serveur ; ce poste en garde une copie locale."
+msgstr "会社のデータはサーバーが保管し、このパソコンはそのローカルコピーを保持します。"
 
 msgid "Impression"
 msgstr "印刷"

@@ -2211,8 +2211,8 @@ msgstr "الترخيص"
 msgid "Système"
 msgstr "النظام"
 
-msgid "Windows, mono-poste."
-msgstr "Windows، جهاز واحد."
+msgid "Windows."
+msgstr "Windows."
 
 msgid "Langues"
 msgstr "اللغات"
@@ -2220,8 +2220,8 @@ msgstr "اللغات"
 msgid "Données de ce poste"
 msgstr "بيانات هذا الجهاز"
 
-msgid "Les données restent sur ce poste, dans une base locale SQLite."
-msgstr "تبقى البيانات على هذا الجهاز، في قاعدة بيانات SQLite محلية."
+msgid "Les données de l'entreprise sont gardées par le serveur ; ce poste en garde une copie locale."
+msgstr "يحتفظ الخادم ببيانات الشركة، ويحتفظ هذا الجهاز بنسخة محلية منها."
 
 msgid "Impression"
 msgstr "الطباعة"
