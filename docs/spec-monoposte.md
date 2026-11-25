@@ -211,7 +211,7 @@ Chaque lot est compilé et essayé dans son propre tour.
 | M1 | Serveur configurable : portée des clés, mode de droits « compte courant », verrou du dossier, port repris ou réécrit. Livré (606aa2e). | `kadenz-stockage`, `kadenz-serveur` |
 | M2 | Démarrage de l'application en monoposte, assistant, inscription automatique, reprise d'une installation interrompue. Livré (f8c8908). | `kadenz-app` (`.po` communs) |
 | M3 | Fermeture et sauvegarde. Livré : part du serveur (d430fe1, 25e48b5), part de l'application (1d4eea1). | `kadenz-app`, `kadenz-poste`, `kadenz-serveur` |
-| M4 | Rubrique « Sauvegardes » et restauration en monoposte, rubriques cachées, conduite « copie présente, serveur neuf » de la section 3.2 | `kadenz-app` (`.po` communs) |
+| M4 | Rubrique « Sauvegardes » et restauration en monoposte, rubriques cachées, conduite « copie présente, serveur neuf » de la section 3.2. Livré en partie (2026-11-25) : écran « Démarrage impossible » avec restauration d'une sauvegarde du serveur et « Repartir à neuf » (copie mise de côté), cas « serveur neuf, copie présente » et « autre empreinte ». Reste : rubrique « Sauvegardes » des Paramètres et rubriques cachées. | `kadenz-app` (`.po` communs) |
 | M5 | Marque d'édition et installateur monoposte, après la décision de la section 6. Désinstallation avec la copie dans `%LOCALAPPDATA%\Kadenz` (section 2.3) ; mise à jour qui attend la fin du processus (section 4). | `installateur/` |
 
 Partage arrêté entre kadenz-74 et kadenz-3a (2026-11-19), sans fichier touché par les deux :

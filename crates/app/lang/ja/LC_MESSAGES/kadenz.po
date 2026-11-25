@@ -4889,3 +4889,18 @@ msgstr "このWord文書にはヘッダーもフッターもありません。"
 
 msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...)."
 msgstr "文書から取り込んだテキストです。内容を確認し、固定のデータを変数（{nom}、{adresse}など）に置き換えてください。"
+
+msgid "Repartir à neuf"
+msgstr "最初からやり直す"
+
+msgid "Repartir à neuf ? La copie des données de ce poste est mise de côté, renommée avec la date, et jamais effacée."
+msgstr "最初からやり直しますか？このパソコンのデータのコピーは、日付を付けた名前に変更して別に保管され、削除されません。"
+
+msgid "Confirmer"
+msgstr "確認"
+
+msgid "La copie des données de ce poste n'a pas pu être mise de côté. Le détail est dans le fichier erreurs.log."
+msgstr "このパソコンのデータのコピーを別に保管できませんでした。詳細はerreurs.logファイルにあります。"
+
+msgid "Le dossier du serveur de Kadenz est vide, alors qu'une copie des données de ce poste existe. Restaurez une sauvegarde du serveur, ou repartez à neuf : la copie est alors mise de côté, jamais effacée."
+msgstr "Kadenzのサーバーフォルダーは空ですが、このパソコンのデータのコピーが存在します。サーバーのバックアップを復元するか、最初からやり直してください。やり直す場合、コピーは別に保管され、削除されません。"

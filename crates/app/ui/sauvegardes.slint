@@ -461,6 +461,11 @@ export component EcranDemarrageImpossible inherits Rectangle {
     // Faux en monoposte jusqu'au lot M4 : la restauration ici vise la base V1,
     // et non celle du serveur intégré.
     in property <bool> restauration: true;
+    // Monoposte : « Repartir à neuf » met la copie du poste de côté (jamais
+    // effacée) et recommence sur le serveur intégré, après confirmation.
+    in property <bool> repartir: false;
+    property <bool> confirmer-repartir: false;
+    callback repartir-a-neuf();
     callback choisir-fichier() -> string;
     callback restaurer-fichier(chemin: string, mot-de-passe: string) -> Retour;
     callback ouvrir-dossier-donnees();
@@ -485,6 +490,55 @@ export component EcranDemarrageImpossible inherits Rectangle {
                 text: root.message;
                 horizontal-alignment: center;
                 wrap: word-wrap;
+            }
+        }
+
+        if root.repartir && !root.confirmer-repartir: HorizontalLayout {
+            alignment: center;
+
+            Bouton {
+                text: @tr("Repartir à neuf");
+                clicked => {
+                    root.confirmer-repartir = true;
+                }
+            }
+        }
+
+        if root.repartir && root.confirmer-repartir: VerticalLayout {
+            alignment: center;
+            spacing: 12px;
+
+            HorizontalLayout {
+                alignment: center;
+
+                Text {
+                    width: min(560px, root.width - 48px);
+                    horizontal-alignment: center;
+                    text: @tr("Repartir à neuf ? La copie des données de ce poste est mise de côté, renommée avec la date, et jamais effacée.");
+                    color: Theme.texte;
+                    wrap: word-wrap;
+                }
+            }
+
+            HorizontalLayout {
+                alignment: center;
+                spacing: 8px;
+
+                Bouton {
+                    text: @tr("Confirmer");
+                    primary: true;
+                    clicked => {
+                        root.confirmer-repartir = false;
+                        root.repartir-a-neuf();
+                    }
+                }
+
+                Bouton {
+                    text: @tr("Annuler");
+                    clicked => {
+                        root.confirmer-repartir = false;
+                    }
+                }
             }
         }
 

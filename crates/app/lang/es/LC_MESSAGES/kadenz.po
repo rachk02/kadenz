@@ -4889,3 +4889,18 @@ msgstr "Este documento Word no tiene encabezado ni pie de página."
 
 msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...)."
 msgstr "Texto tomado del documento: revíselo y sustituya los datos fijos por variables ({nom}, {adresse}...)."
+
+msgid "Repartir à neuf"
+msgstr "Empezar de nuevo"
+
+msgid "Repartir à neuf ? La copie des données de ce poste est mise de côté, renommée avec la date, et jamais effacée."
+msgstr "¿Empezar de nuevo? La copia de los datos de este equipo se aparta, se renombra con la fecha y nunca se borra."
+
+msgid "Confirmer"
+msgstr "Confirmar"
+
+msgid "La copie des données de ce poste n'a pas pu être mise de côté. Le détail est dans le fichier erreurs.log."
+msgstr "No se pudo apartar la copia de los datos de este equipo. Los detalles están en el archivo erreurs.log."
+
+msgid "Le dossier du serveur de Kadenz est vide, alors qu'une copie des données de ce poste existe. Restaurez une sauvegarde du serveur, ou repartez à neuf : la copie est alors mise de côté, jamais effacée."
+msgstr "La carpeta del servidor de Kadenz está vacía, pero existe una copia de los datos de este equipo. Restaure una copia de seguridad del servidor o empiece de nuevo: la copia se aparta y nunca se borra."

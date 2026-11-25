@@ -4889,3 +4889,18 @@ msgstr "此Word文档没有页眉和页脚。"
 
 msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...)."
 msgstr "已从文档导入文字：请检查，并将固定数据替换为变量（{nom}、{adresse}等）。"
+
+msgid "Repartir à neuf"
+msgstr "重新开始"
+
+msgid "Repartir à neuf ? La copie des données de ce poste est mise de côté, renommée avec la date, et jamais effacée."
+msgstr "重新开始？此电脑数据的副本将被单独保存，并在名称中加上日期，绝不会被删除。"
+
+msgid "Confirmer"
+msgstr "确认"
+
+msgid "La copie des données de ce poste n'a pas pu être mise de côté. Le détail est dans le fichier erreurs.log."
+msgstr "无法单独保存此电脑数据的副本。详情见erreurs.log文件。"
+
+msgid "Le dossier du serveur de Kadenz est vide, alors qu'une copie des données de ce poste existe. Restaurez une sauvegarde du serveur, ou repartez à neuf : la copie est alors mise de côté, jamais effacée."
+msgstr "Kadenz服务器文件夹为空，但存在此电脑数据的副本。请恢复服务器备份，或重新开始：副本将被单独保存，绝不会被删除。"

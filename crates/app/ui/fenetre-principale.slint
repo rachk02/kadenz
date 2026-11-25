@@ -50,6 +50,8 @@ export component FenetrePrincipale inherits Window {
     // Présentation revue depuis « À propos » : elle ramène à l'application.
     property <bool> presentation-depuis-a-propos;
     in property <string> message-demarrage;
+    // Monoposte : l'écran propose aussi « Repartir à neuf » (copie mise de côté).
+    in property <bool> repartir-propose;
     in property <string> nom-entreprise;
     in property <string> version-logiciel;
     in property <string> utilisateur-nom;
@@ -66,6 +68,7 @@ export component FenetrePrincipale inherits Window {
     // Démarrage impossible : restaurer une sauvegarde ou ouvrir le dossier des données.
     callback choisir-sauvegarde-demarrage() -> string;
     callback restaurer-au-demarrage(string, string) -> Retour;
+    callback repartir-a-neuf();
     callback ouvrir-dossier-donnees();
 
     // Page affichée ; le menu (global Menu) est construit par l'application à chaque connexion.
@@ -107,7 +110,11 @@ export component FenetrePrincipale inherits Window {
 
     if root.ecran == Ecran.demarrage-impossible: EcranDemarrageImpossible {
         message: root.message-demarrage;
-        restauration: !MonoposteApi.actif;
+        restauration: true;
+        repartir: root.repartir-propose;
+        repartir-a-neuf => {
+            root.repartir-a-neuf();
+        }
         choisir-fichier => {
             root.choisir-sauvegarde-demarrage()
         }

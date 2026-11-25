@@ -14,6 +14,12 @@
 //! Le serveur démarre hors du fil de l'interface, derrière l'écran d'attente ;
 //! l'installation et l'inscription aussi.
 //!
+//! Démarrage impossible (lot M4) : l'écran propose de restaurer une sauvegarde
+//! du serveur (serveur arrêté, restauration sur le dossier fermé, redémarrage,
+//! puis la reprise normale), et, quand une copie du poste existe sans serveur
+//! qui lui corresponde, « Repartir à neuf » : la copie est mise de côté,
+//! renommée avec la date, jamais effacée.
+//!
 //! Fermeture (lot M3) : voile, vidage borné de la file d'envoi, puis arrêt du
 //! serveur intégré, qui fait la sauvegarde d'arrêt ; la fenêtre se ferme
 //! ensuite. La copie du poste est dans `%LOCALAPPDATA%\Kadenz`, avec le
@@ -30,6 +36,7 @@ use kadenz_client::{Client, ErreurClient, Identite, Inscrit};
 use kadenz_domaine::lettres::Orthographe;
 use kadenz_domaine::role::Role;
 use kadenz_domaine::saisie;
+use kadenz_serveur::admin::EtatService;
 use kadenz_serveur::{Config, ErreurDemarrage, Serveur, admin, sauvegardes};
 use kadenz_stockage::comptes::{self, EtatInstallation, NouvelUtilisateur, Utilisateur};
 use kadenz_stockage::entreprise::Entreprise;
@@ -154,8 +161,135 @@ fn message_erreur(e: &ErreurDemarrage) -> String {
 }
 
 fn impossible(f: &FenetrePrincipale, message: String) {
+    f.set_repartir_propose(false);
     f.set_message_demarrage(crate::phrase(message));
     f.set_ecran(Ecran::DemarrageImpossible);
+}
+
+/// « Démarrage impossible » avec « Repartir à neuf » : une copie du poste existe
+/// sans que le serveur intégré lui corresponde.
+fn impossible_avec_repartir(f: &FenetrePrincipale, message: String) {
+    impossible(f, message);
+    f.set_repartir_propose(true);
+}
+
+/// Met de côté la copie du poste : renommée avec la date, jamais effacée (ses
+/// fichiers annexes SQLite suivent).
+fn mettre_la_copie_de_cote(copie: &Path) -> std::io::Result<PathBuf> {
+    let date = chrono::Local::now().format("%Y%m%d-%H%M%S");
+    let nom = copie
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let nom_cible = format!("{nom}.avant-{date}");
+    let cible = copie.with_file_name(&nom_cible);
+    std::fs::rename(copie, &cible)?;
+    for suffixe in ["-wal", "-shm", "-journal"] {
+        let annexe = copie.with_file_name(format!("{nom}{suffixe}"));
+        if annexe.exists() {
+            std::fs::rename(
+                &annexe,
+                copie.with_file_name(format!("{nom_cible}{suffixe}")),
+            )?;
+        }
+    }
+    Ok(cible)
+}
+
+/// Restaure une sauvegarde du serveur sur son dossier, serveur fermé.
+fn restaurer_dossier(dossier: &Path, sauvegarde: &Path, mot_de_passe: &str) -> Result<(), String> {
+    let preparee = admin::preparer_restauration(dossier, sauvegarde, mot_de_passe)?;
+    admin::restaurer_si(dossier, &preparee, EtatService::NonInstalle).map(|_| ())
+}
+
+/// Écran « Démarrage impossible », bouton « Restaurer » : le serveur intégré
+/// s'arrête (sauvegarde d'arrêt comprise), la sauvegarde est restaurée sur le
+/// dossier fermé, le serveur redémarre, puis le démarrage reprend comme au
+/// lancement. En cas d'échec de la restauration, le serveur redémarre sur la
+/// base en place.
+fn restaurer_sauvegarde(f: &FenetrePrincipale, chemin: &str, mot_de_passe: &str) -> crate::Retour {
+    let Some(c) = contexte() else {
+        return crate::referentiels::retour_erreur(tr("le serveur de Kadenz est arrêté"));
+    };
+    let serveur = c.integre.borrow_mut().take();
+    if let Some(serveur) = serveur {
+        serveur.arreter();
+    }
+    let resultat = restaurer_dossier(&c.dossier, Path::new(chemin), mot_de_passe);
+    match Serveur::demarrer(Config::monoposte(c.dossier.clone())) {
+        Ok(serveur) => {
+            *c.integre.borrow_mut() = Some(serveur);
+            match resultat {
+                Ok(()) => {
+                    serveur_demarre(f);
+                    crate::referentiels::retour_ok("sauvegarde restaurée")
+                }
+                Err(e) => {
+                    crate::consigner_erreur(&format!("Restauration du serveur intégré : {e}"));
+                    crate::referentiels::retour_erreur(e)
+                }
+            }
+        }
+        Err(e) => {
+            crate::consigner_erreur(&format!("Redémarrage du serveur intégré : {e}"));
+            impossible(f, message_erreur(&e));
+            crate::referentiels::retour_erreur(message_erreur(&e))
+        }
+    }
+}
+
+/// « Repartir à neuf » : la copie du poste est mise de côté, puis le démarrage
+/// reprend sur le serveur intégré (assistant si le serveur est neuf, sinon
+/// nouvelle inscription du poste).
+fn repartir_a_neuf(f: &FenetrePrincipale) {
+    let Some(c) = contexte() else { return };
+    if let Some(copie) = poste_relie::copie(&dossier_copie()) {
+        match mettre_la_copie_de_cote(&copie) {
+            Ok(cible) => crate::consigner_erreur(&format!(
+                "Copie du poste mise de côté : {}",
+                cible.display()
+            )),
+            Err(e) => {
+                crate::consigner_erreur(&format!("Copie du poste non mise de côté : {e}"));
+                impossible(
+                    f,
+                    tr(
+                        "La copie des données de ce poste n'a pas pu être mise de côté. Le détail est dans le fichier erreurs.log.",
+                    ),
+                );
+                return;
+            }
+        }
+    }
+    f.set_repartir_propose(false);
+    if c.integre.borrow().is_none() {
+        impossible(
+            f,
+            tr(
+                "Kadenz n'a pas pu démarrer sur cet ordinateur. Le détail est dans le fichier erreurs.log.",
+            ),
+        );
+        return;
+    }
+    serveur_demarre(f);
+}
+
+/// Choix d'un fichier de sauvegarde du serveur, en partant de son dossier.
+fn choisir_sauvegarde(f: &FenetrePrincipale) -> SharedString {
+    let mut boite = rfd::FileDialog::new()
+        .set_title(tr("Choisir une sauvegarde"))
+        .add_filter(tr("Sauvegardes Kadenz"), &["kzs"])
+        .set_parent(&f.window().window_handle());
+    if let Some(c) = contexte() {
+        let dossier = sauvegardes::lire_reglage(&c.dossier).dossier;
+        if dossier.is_dir() {
+            boite = boite.set_directory(&dossier);
+        }
+    }
+    match boite.pick_file() {
+        Some(chemin) => chemin.display().to_string().into(),
+        None => SharedString::new(),
+    }
 }
 
 fn attendre(f: &FenetrePrincipale, texte: String) {
@@ -311,6 +445,25 @@ fn brancher(f: &FenetrePrincipale) {
         }
     });
 
+    let fa = f.as_weak();
+    f.on_choisir_sauvegarde_demarrage(move || match fa.upgrade() {
+        Some(f) => choisir_sauvegarde(&f),
+        None => SharedString::new(),
+    });
+
+    let fa = f.as_weak();
+    f.on_restaurer_au_demarrage(move |chemin, mot_de_passe| match fa.upgrade() {
+        Some(f) => restaurer_sauvegarde(&f, &chemin, &mot_de_passe),
+        None => crate::Retour::default(),
+    });
+
+    let fa = f.as_weak();
+    f.on_repartir_a_neuf(move || {
+        if let Some(f) = fa.upgrade() {
+            repartir_a_neuf(&f);
+        }
+    });
+
     // Démarrage impossible : le dossier des données est celui du serveur.
     f.on_ouvrir_dossier_donnees(|| {
         if let Some(c) = contexte() {
@@ -408,6 +561,19 @@ pub(crate) fn arreter_a_la_sortie() {
 fn serveur_demarre(f: &FenetrePrincipale) {
     let Some(c) = contexte() else { return };
     match sur_le_serveur(&c, |conn| comptes::etat_installation(conn)) {
+        Ok(Ok(EtatInstallation::AssistantRequis))
+            if poste_relie::copie(&dossier_copie()).is_some() =>
+        {
+            // Dossier du serveur perdu, copie du poste gardée : l'assistant
+            // créerait une entreprise vide (spécification, section 3.2).
+            crate::consigner_erreur("Serveur intégré sans entreprise, copie du poste présente");
+            impossible_avec_repartir(
+                f,
+                tr(
+                    "Le dossier du serveur de Kadenz est vide, alors qu'une copie des données de ce poste existe. Restaurez une sauvegarde du serveur, ou repartez à neuf : la copie est alors mise de côté, jamais effacée.",
+                ),
+            );
+        }
         Ok(Ok(EtatInstallation::AssistantRequis)) => {
             preparer_assistant(f, &c);
             f.set_ecran(Ecran::Presentation);
@@ -479,7 +645,7 @@ fn ouvrir_poste(f: &FenetrePrincipale, c: &Contexte, copie: &Path) {
             "Copie du poste liée au serveur {}, serveur intégré {empreinte}",
             poste.empreinte_serveur
         ));
-        impossible(
+        impossible_avec_repartir(
             f,
             tr(
                 "La copie des données de ce poste appartient à un autre serveur que celui de cet ordinateur : elle n'est pas ouverte, et rien n'est effacé. Le détail est dans le fichier erreurs.log.",
@@ -915,5 +1081,37 @@ mod tests {
             "dossier d'essai resté : {}",
             dossier.display()
         );
+    }
+
+    /// « Repartir à neuf » : la copie est renommée avec la date et garde son
+    /// contenu, annexes SQLite comprises ; rien n'est effacé. Chemins accentués.
+    #[test]
+    fn la_copie_est_mise_de_cote_sans_rien_effacer() {
+        let dossier = std::env::temp_dir().join(format!("kadenz-côté-été-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dossier);
+        std::fs::create_dir_all(&dossier).unwrap();
+        let copie = dossier.join("copie.db");
+        std::fs::write(&copie, b"donnees d'ete").unwrap();
+        std::fs::write(dossier.join("copie.db-wal"), b"annexe").unwrap();
+
+        let cible = mettre_la_copie_de_cote(&copie).unwrap();
+        assert!(!copie.exists());
+        assert!(!dossier.join("copie.db-wal").exists());
+        let nom = cible.file_name().unwrap().to_string_lossy().into_owned();
+        assert!(nom.starts_with("copie.db.avant-"), "{nom}");
+        assert_eq!(std::fs::read(&cible).unwrap(), b"donnees d'ete");
+        let annexe = dossier.join(format!("{nom}-wal"));
+        assert_eq!(std::fs::read(annexe).unwrap(), b"annexe");
+        let _ = std::fs::remove_dir_all(&dossier);
+    }
+
+    #[test]
+    fn restauration_d_une_sauvegarde_introuvable_refusee() {
+        let dossier = std::env::temp_dir().join(format!("kadenz-restau-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dossier);
+        std::fs::create_dir_all(&dossier).unwrap();
+        let erreur = restaurer_dossier(&dossier, &dossier.join("absente.kzs"), "mdp").unwrap_err();
+        assert!(erreur.contains("introuvable"), "{erreur}");
+        let _ = std::fs::remove_dir_all(&dossier);
     }
 }

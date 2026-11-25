@@ -4889,3 +4889,18 @@ msgstr "This Word document has neither a header nor a footer."
 
 msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...)."
 msgstr "Text taken from the document: check it and replace fixed data with variables ({nom}, {adresse}...)."
+
+msgid "Repartir à neuf"
+msgstr "Start afresh"
+
+msgid "Repartir à neuf ? La copie des données de ce poste est mise de côté, renommée avec la date, et jamais effacée."
+msgstr "Start afresh? The copy of this computer's data is set aside, renamed with the date, and never deleted."
+
+msgid "Confirmer"
+msgstr "Confirm"
+
+msgid "La copie des données de ce poste n'a pas pu être mise de côté. Le détail est dans le fichier erreurs.log."
+msgstr "The copy of this computer's data could not be set aside. The details are in the erreurs.log file."
+
+msgid "Le dossier du serveur de Kadenz est vide, alors qu'une copie des données de ce poste existe. Restaurez une sauvegarde du serveur, ou repartez à neuf : la copie est alors mise de côté, jamais effacée."
+msgstr "The Kadenz server folder is empty, yet a copy of this computer's data exists. Restore a server backup, or start afresh: the copy is then set aside, never deleted."
