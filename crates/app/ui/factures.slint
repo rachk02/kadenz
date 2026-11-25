@@ -3,11 +3,11 @@
 // Tous les calculs et les contrôles sont faits par l'application, qui fournit aussi
 // les textes propres au type : cet écran ne fait qu'afficher et transmettre la saisie.
 
-import { LineEdit, ScrollView } from "std-widgets.slint";
+import { ScrollView } from "std-widgets.slint";
 import { ListeDeroulante } from "liste-deroulante.slint";
 import { TableauDonnees } from "tableau.slint";
 import { ConnexionApi } from "etat-connexion.slint";
-import { Alerte, Bouton, Champ, ChampNombre, Confirmation, Droits, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Champ, ChampLigne, ChampNombre, Confirmation, Droits, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 
 export struct LigneFactureUi {
     // 0 pour une ligne libre, sans produit d'origine.
@@ -328,7 +328,7 @@ component Registre inherits VerticalLayout {
         flex-wrap: FlexboxLayoutWrap.wrap;
         cross-axis-alignment: CrossAxisAlignment.center;
 
-        recherche := LineEdit {
+        recherche := ChampLigne {
             placeholder-text: FacturesApi.textes.recherche;
             edited => {
                 root.filtrer();
@@ -352,7 +352,7 @@ component Registre inherits VerticalLayout {
             }
         }
 
-        du := LineEdit {
+        du := ChampLigne {
             width: 120px;
             placeholder-text: @tr("Du JJ/MM/AAAA");
             edited => {
@@ -360,7 +360,7 @@ component Registre inherits VerticalLayout {
             }
         }
 
-        au := LineEdit {
+        au := ChampLigne {
             width: 120px;
             placeholder-text: @tr("Au JJ/MM/AAAA");
             edited => {
@@ -787,7 +787,7 @@ component Fiche inherits ScrollView {
                 Rangee {
                     spacing: 8px;
 
-                    if root.fiche.client-modifiable: recherche-client := LineEdit {
+                    if root.fiche.client-modifiable: recherche-client := ChampLigne {
                         width: 160px;
                         text <=> root.filtre-client;
                         placeholder-text: FacturesApi.textes.filtrer-tiers;
@@ -1032,7 +1032,7 @@ component Fiche inherits ScrollView {
         for ligne[i] in FacturesApi.lignes: Rangee {
             spacing: 8px;
 
-            LineEdit {
+            ChampLigne {
                 width: 120px;
                 text <=> ligne.reference;
                 read-only: !Ecriture.permise || !root.fiche.modifiable;
@@ -1042,7 +1042,7 @@ component Fiche inherits ScrollView {
                 }
             }
 
-            LineEdit {
+            ChampLigne {
                 horizontal-stretch: 1;
                 text <=> ligne.designation;
                 read-only: !Ecriture.permise || !root.fiche.modifiable;
@@ -1157,7 +1157,7 @@ component Fiche inherits ScrollView {
             for ligne[i] in FacturesApi.lignes: Rangee {
                 spacing: 8px;
 
-                LineEdit {
+                ChampLigne {
                     width: 120px;
                     text <=> ligne.reference;
                     read-only: !Ecriture.permise || !root.fiche.modifiable || root.fiche.lignes-verrouillees;
@@ -1166,7 +1166,7 @@ component Fiche inherits ScrollView {
                     }
                 }
 
-                LineEdit {
+                ChampLigne {
                     horizontal-stretch: 1;
                     text <=> ligne.designation;
                     read-only: !Ecriture.permise || !root.fiche.modifiable || root.fiche.lignes-verrouillees;
@@ -1192,7 +1192,7 @@ component Fiche inherits ScrollView {
                     color: Theme.texte;
                 }
 
-                LineEdit {
+                ChampLigne {
                     width: 180px;
                     text <=> ligne.observations;
                     read-only: !Ecriture.permise || !root.fiche.modifiable;
@@ -1261,7 +1261,7 @@ component Fiche inherits ScrollView {
         if Ecriture.permise && root.fiche.modifiable && !root.fiche.lignes-verrouillees: Rangee {
             spacing: 8px;
 
-            recherche-produit := LineEdit {
+            recherche-produit := ChampLigne {
                 width: 200px;
                 placeholder-text: @tr("Filtrer les produits");
                 edited(texte) => {

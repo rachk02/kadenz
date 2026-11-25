@@ -2,10 +2,10 @@
 // période choisie, repris de la page « Tableau de bord » de l'Excel. Les
 // graphiques sont des chemins dont la géométrie est calculée en Rust
 // (graphiques.rs), dans un repère fixe ajusté ici à la taille de l'élément.
-import { LineEdit, ScrollView } from "std-widgets.slint";
+import { ScrollView } from "std-widgets.slint";
 import { ListeDeroulante } from "liste-deroulante.slint";
 import { BandeauTableau } from "bandeaux.slint";
-import { MessageRetour, Rangee, Retour, Section, Theme } from "composants.slint";
+import { ChampLigne, MessageRetour, Rangee, Retour, Section, Theme } from "composants.slint";
 
 // Secteur d'un anneau, avec sa ligne de légende.
 export struct SecteurUi {
@@ -638,7 +638,7 @@ export component PageTableauDeBord inherits ScrollView {
                 }
             }
 
-            du := LineEdit {
+            du := ChampLigne {
                 width: 120px;
                 placeholder-text: @tr("Du JJ/MM/AAAA");
                 edited => {
@@ -646,7 +646,7 @@ export component PageTableauDeBord inherits ScrollView {
                 }
             }
 
-            au := LineEdit {
+            au := ChampLigne {
                 width: 120px;
                 placeholder-text: @tr("Au JJ/MM/AAAA");
                 edited => {

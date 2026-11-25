@@ -6,8 +6,8 @@
 // serveur. Un poste relié montre son serveur et peut tester la connexion.
 // Les appels au réseau tournent hors du fil de l'interface : les résultats
 // arrivent par les propriétés (occupe, retour, trouves...).
-import { ScrollView, TextEdit } from "std-widgets.slint";
-import { Alerte, Bouton, Champ, Confirmation, Droits, Ecriture, MessageRetour, Retour, Section, Theme, Titre } from "composants.slint";
+import { ScrollView } from "std-widgets.slint";
+import { Alerte, Bouton, Champ, Confirmation, Droits, Ecriture, MessageRetour, Retour, Section, Theme, Titre, ZoneTexte } from "composants.slint";
 
 export struct ServeurTrouveUi {
     machine: string,
@@ -150,7 +150,7 @@ export component InscriptionPoste inherits VerticalLayout {
             color: Theme.texte-secondaire;
         }
 
-        TextEdit {
+        ZoneTexte {
             text <=> root.code;
             font-family: "ABC Diatype Mono";
             font-size: 12px;

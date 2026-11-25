@@ -3,10 +3,10 @@
 // clôture d'un mois, état de la TVA collectée. Les écritures sont calculées sur la
 // copie de ce poste ; la clôture se fait en ligne et le serveur recompte le mois.
 
-import { LineEdit, ScrollView, TabWidget } from "std-widgets.slint";
+import { ScrollView, TabWidget } from "std-widgets.slint";
 import { ListeDeroulante } from "liste-deroulante.slint";
 import { TableauDonnees } from "tableau.slint";
-import { Alerte, Bouton, Case, Champ, Confirmation, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Case, Champ, ChampLigne, Confirmation, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 import { ConnexionApi } from "etat-connexion.slint";
 
 // Compte choisi pour un usage : libellé de l'usage, compte saisi, compte proposé par
@@ -118,7 +118,7 @@ component OngletJournal inherits VerticalLayout {
         }
 
         // Présent en période libre seulement : un champ masqué garderait sa place.
-        if root.libre: LineEdit {
+        if root.libre: ChampLigne {
             width: 150px;
             text <=> root.du-texte;
             placeholder-text: @tr("Du JJ/MM/AAAA");
@@ -128,7 +128,7 @@ component OngletJournal inherits VerticalLayout {
         }
 
         // Présent en période libre seulement : un champ masqué garderait sa place.
-        if root.libre: LineEdit {
+        if root.libre: ChampLigne {
             width: 150px;
             text <=> root.au-texte;
             placeholder-text: @tr("Au JJ/MM/AAAA");
@@ -273,7 +273,7 @@ component OngletTva inherits VerticalLayout {
     Rangee {
         spacing: 8px;
 
-        annee := LineEdit {
+        annee := ChampLigne {
             width: 120px;
             placeholder-text: @tr("Année AAAA");
             edited => {

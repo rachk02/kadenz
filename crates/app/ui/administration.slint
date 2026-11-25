@@ -1,9 +1,9 @@
 // Écrans d'administration : fiche entreprise et logos, paramètres système
 // (cahier des charges, sections 5.1 et 5.4).
 
-import { ScrollView, TextEdit } from "std-widgets.slint";
+import { ScrollView } from "std-widgets.slint";
 import { ListeDeroulante } from "liste-deroulante.slint";
-import { Alerte, Bouton, Champ, Confirmation, Ecriture, MessageRetour, Modules, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Champ, Confirmation, Ecriture, MessageRetour, Modules, Rangee, Retour, Section, Theme, Titre, ZoneTexte } from "composants.slint";
 
 export struct FicheEntrepriseUi {
     nom: string,
@@ -831,7 +831,7 @@ export component PageParametres inherits ScrollView {
                                 wrap: word-wrap;
                             }
 
-                            avant-relance := TextEdit {
+                            avant-relance := ZoneTexte {
                                 height: 110px;
                                 wrap: word-wrap;
                             }
@@ -848,7 +848,7 @@ export component PageParametres inherits ScrollView {
                                 wrap: word-wrap;
                             }
 
-                            apres-relance := TextEdit {
+                            apres-relance := ZoneTexte {
                                 height: 110px;
                                 wrap: word-wrap;
                             }

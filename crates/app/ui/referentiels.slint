@@ -1,10 +1,9 @@
 // Écrans des référentiels Tiers et Produits (cahier des charges, sections 5.2 et 5.3).
 // Une liste filtrable et triable à gauche, la fiche sélectionnée à droite.
 
-import { LineEdit } from "std-widgets.slint";
 import { ListeDeroulante } from "liste-deroulante.slint";
 import { TableauDonnees } from "tableau.slint";
-import { Alerte, Bouton, Case, Champ, Confirmation, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Case, Champ, ChampLigne, Confirmation, Droits, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 import { ImportApi } from "import.slint";
 import { ConnexionApi } from "etat-connexion.slint";
 
@@ -211,7 +210,7 @@ export component PageTiers inherits VerticalLayout {
         flex-wrap: FlexboxLayoutWrap.wrap;
         cross-axis-alignment: CrossAxisAlignment.center;
 
-        recherche := LineEdit {
+        recherche := ChampLigne {
             placeholder-text: @tr("Rechercher : nom, téléphone, localisation, adresse, IFU");
             edited => {
                 root.filtrer();
@@ -468,7 +467,7 @@ export component PageProduits inherits VerticalLayout {
         flex-wrap: FlexboxLayoutWrap.wrap;
         cross-axis-alignment: CrossAxisAlignment.center;
 
-        recherche := LineEdit {
+        recherche := ChampLigne {
             placeholder-text: @tr("Rechercher : désignation ou référence");
             edited => {
                 root.filtrer();

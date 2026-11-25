@@ -4,10 +4,10 @@
 // serveur ; ce poste montre celui de sa copie, à la dernière synchronisation.
 // Sans le droit « Voir la valeur du stock », les colonnes de valeur sont absentes.
 
-import { LineEdit, ListView, TabWidget } from "std-widgets.slint";
+import { ListView, TabWidget } from "std-widgets.slint";
 import { ListeDeroulante } from "liste-deroulante.slint";
 import { TableauDonnees } from "tableau.slint";
-import { Alerte, Bouton, Case, Champ, ChampNombre, Confirmation, Droits, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Case, Champ, ChampLigne, ChampNombre, Confirmation, Droits, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
 import { ConnexionApi } from "etat-connexion.slint";
 
 // Produit choisi dans l'état du stock, pour l'ajustement.
@@ -138,7 +138,7 @@ component OngletEtat inherits VerticalLayout {
         flex-wrap: FlexboxLayoutWrap.wrap;
         cross-axis-alignment: CrossAxisAlignment.center;
 
-        recherche := LineEdit {
+        recherche := ChampLigne {
             placeholder-text: @tr("Rechercher : désignation ou référence");
             edited => {
                 root.filtrer();
@@ -152,7 +152,7 @@ component OngletEtat inherits VerticalLayout {
             }
         }
 
-        au := LineEdit {
+        au := ChampLigne {
             width: 150px;
             placeholder-text: @tr("Au JJ/MM/AAAA");
             edited => {
@@ -372,7 +372,7 @@ component OngletMouvements inherits VerticalLayout {
             }
         }
 
-        du := LineEdit {
+        du := ChampLigne {
             width: 130px;
             placeholder-text: @tr("Du JJ/MM/AAAA");
             edited => {
@@ -380,7 +380,7 @@ component OngletMouvements inherits VerticalLayout {
             }
         }
 
-        au := LineEdit {
+        au := ChampLigne {
             width: 130px;
             placeholder-text: @tr("Au JJ/MM/AAAA");
             edited => {

@@ -1,4 +1,4 @@
-import { LineEdit } from "std-widgets.slint";
+import { TextEdit } from "std-widgets.slint";
 
 // Polices de la marque (docs/marque), ABC Diatype sous licence commerciale
 // Dinamo : Regular pour le texte, Medium pour le medium, Bold pour le gras et
@@ -239,6 +239,119 @@ export component ChampNombre inherits Rectangle {
     }
 }
 
+// Champ de saisie d'une ligne, à la place du LineEdit standard de Slint. Ses
+// couleurs viennent de Theme (fond Theme.champ, contour Theme.bordure-champ à 3 : 1
+// au moins, contour de 2 px au focus), et non de la palette du style de Slint :
+// le LineEdit standard se dessinait en blanc sur blanc, avec un contour presque
+// invisible, en mode clair (champs invisibles vus sur un autre poste, 2026-11-25).
+// Même interface que le LineEdit : text, placeholder-text, read-only, enabled,
+// input-type, horizontal-alignment, font-size, has-focus, edited, accepted,
+// select-all() ; focus() vient de forward-focus.
+export component ChampLigne inherits Rectangle {
+    in-out property <string> text <=> saisie.text;
+    in property <bool> read-only: false;
+    in property <bool> enabled: true;
+    in property <string> placeholder-text;
+    in property <InputType> input-type: InputType.text;
+    in property <TextHorizontalAlignment> horizontal-alignment: Theme.debut;
+    in property <length> font-size: 14px;
+    out property <bool> has-focus: saisie.has-focus;
+    callback edited(string);
+    callback accepted(string);
+
+    public function select-all() {
+        saisie.select-all();
+    }
+
+    public function copy() {
+        saisie.copy();
+    }
+
+    min-width: 40px;
+    min-height: 32px;
+    preferred-height: 32px;
+    horizontal-stretch: 1;
+    vertical-stretch: 0;
+    border-radius: 4px;
+    border-width: (saisie.has-focus && root.enabled) ? 2px : 1px;
+    border-color: (saisie.has-focus && root.enabled) ? Theme.focus : Theme.bordure-champ;
+    background: root.enabled ? Theme.champ : Theme.fond-lateral;
+    clip: true;
+    forward-focus: saisie;
+
+    if saisie.text == "": Text {
+        x: 10px;
+        width: parent.width - 20px;
+        height: parent.height;
+        vertical-alignment: center;
+        horizontal-alignment: root.horizontal-alignment;
+        text: root.placeholder-text;
+        font-size: root.font-size;
+        color: Theme.texte-secondaire;
+        overflow: elide;
+    }
+
+    saisie := TextInput {
+        x: 10px;
+        width: parent.width - 20px;
+        height: parent.height;
+        vertical-alignment: center;
+        horizontal-alignment: root.horizontal-alignment;
+        single-line: true;
+        input-type: root.input-type;
+        read-only: root.read-only;
+        enabled: root.enabled;
+        font-size: root.font-size;
+        color: root.enabled ? Theme.texte : Theme.texte-secondaire;
+        selection-background-color: Theme.accent;
+        selection-foreground-color: Theme.texte-sur-accent;
+        accessible-role: text-input;
+        accessible-value: self.text;
+        accessible-placeholder-text: root.placeholder-text;
+        edited => {
+            root.edited(self.text);
+        }
+        accepted => {
+            root.accepted(self.text);
+        }
+    }
+}
+
+// Zone de saisie de plusieurs lignes : le TextEdit standard dans un cadre aux
+// couleurs de Theme, pour que la zone se voie en mode clair comme en mode sombre
+// (voir ChampLigne). Mêmes propriétés que le TextEdit : text, wrap,
+// font-family, font-size, read-only, edited.
+export component ZoneTexte inherits Rectangle {
+    in-out property <string> text <=> editeur.text;
+    in property <bool> read-only: false;
+    in property <bool> enabled: true;
+    in property <TextWrap> wrap: TextWrap.word-wrap;
+    in property <string> font-family;
+    in property <length> font-size: 14px;
+    callback edited(string);
+
+    min-height: 60px;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: editeur.has-focus ? Theme.focus : Theme.bordure-champ;
+    background: root.enabled ? Theme.champ : Theme.fond-lateral;
+
+    editeur := TextEdit {
+        x: 1px;
+        y: 1px;
+        width: parent.width - 2px;
+        height: parent.height - 2px;
+        wrap: root.wrap;
+        read-only: root.read-only;
+        enabled: root.enabled;
+        font-family: root.font-family;
+        font-size: root.font-size;
+        edited(texte) => {
+            root.edited(texte);
+        }
+    }
+}
+
 // Champ de saisie avec son libellé au-dessus.
 export component Champ inherits VerticalLayout {
     in property <string> libelle;
@@ -257,7 +370,7 @@ export component Champ inherits VerticalLayout {
         horizontal-alignment: Theme.debut;
     }
 
-    saisie := LineEdit {
+    saisie := ChampLigne {
         horizontal-alignment: Theme.debut;
         input-type: root.secret ? InputType.password : InputType.text;
         read-only: root.lecture-seule;
@@ -949,7 +1062,7 @@ export global CodeCourtUi {
 
 // Champ d'un code de licence court, aux couleurs du thème : majuscules, tirets placés
 // tout seuls, collage accepté (avec ou sans tirets, espaces, retours à la ligne). Un
-// TextInput et non un LineEdit : il faut replacer le curseur après chaque mise en forme.
+// TextInput et non un ChampLigne : il faut replacer le curseur après chaque mise en forme.
 export component ChampCode inherits VerticalLayout {
     in property <string> libelle;
     in property <bool> lecture-seule: false;

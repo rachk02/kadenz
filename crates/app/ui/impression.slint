@@ -1,9 +1,9 @@
 // Réglages d'impression (jalon J8b) : gabarit A4, marges, en-tête et pied de
 // page en contenu libre avec variables de l'entreprise, aperçu en direct sur une
 // facture d'exemple, feuille de calibrage. Au droit « Gérer les paramètres ».
-import { ScrollView, TextEdit } from "std-widgets.slint";
+import { ScrollView } from "std-widgets.slint";
 import { ListeDeroulante } from "liste-deroulante.slint";
-import { Alerte, Bouton, Case, Champ, Confirmation, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre } from "composants.slint";
+import { Alerte, Bouton, Case, Champ, Confirmation, Ecriture, MessageRetour, Rangee, Retour, Section, Theme, Titre, ZoneTexte } from "composants.slint";
 
 export struct MiseEnPageUi {
     gabarit: int,
@@ -84,7 +84,7 @@ component ZoneLibre inherits VerticalLayout {
 
     // Police à chasse fixe : la syntaxe s'affiche telle quelle (Diatype dessine
     // « -> » en flèche par ligature, Diatype Mono le laisse tel quel).
-    saisie := TextEdit {
+    saisie := ZoneTexte {
         height: 120px;
         wrap: word-wrap;
         font-family: "ABC Diatype Mono";

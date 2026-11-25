@@ -1,9 +1,8 @@
 // Pages du module Paiements (section 8) : registre des règlements, suivi des
 // bons de commande non payés et relances des factures échues.
-import { LineEdit } from "std-widgets.slint";
 import { ListeDeroulante } from "liste-deroulante.slint";
 import { TableauDonnees } from "tableau.slint";
-import { Bouton, MessageRetour, Rangee, Retour, Theme, Titre } from "composants.slint";
+import { Bouton, ChampLigne, MessageRetour, Rangee, Retour, Theme, Titre } from "composants.slint";
 import { ConnexionApi } from "etat-connexion.slint";
 
 // Ligne des totaux du registre : total d'un sens (en gras) ou sous-total d'un mode.
@@ -108,7 +107,7 @@ export component PageReglements inherits VerticalLayout {
             }
         }
 
-        du := LineEdit {
+        du := ChampLigne {
             width: 120px;
             placeholder-text: @tr("Du JJ/MM/AAAA");
             edited => {
@@ -116,7 +115,7 @@ export component PageReglements inherits VerticalLayout {
             }
         }
 
-        au := LineEdit {
+        au := ChampLigne {
             width: 120px;
             placeholder-text: @tr("Au JJ/MM/AAAA");
             edited => {
@@ -219,7 +218,7 @@ export component PageSuiviFournisseurs inherits VerticalLayout {
         }
     }
 
-    recherche := LineEdit {
+    recherche := ChampLigne {
         placeholder-text: @tr("Rechercher : numéro, fournisseur");
         edited => {
             PaiementsApi.filtrer-fournisseurs(self.text);
@@ -294,7 +293,7 @@ export component PageRelances inherits VerticalLayout {
         }
     }
 
-    recherche := LineEdit {
+    recherche := ChampLigne {
         placeholder-text: @tr("Rechercher : numéro, client");
         edited => {
             root.ligne = -1;
