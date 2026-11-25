@@ -28,6 +28,7 @@ Les numéros renvoient aux sections du manuel (par exemple 5.6 : chapitre 5, sec
 - Code d'inscription d'un poste : 13.2, 13.4
 - Comptabilité : 9.1, 9.2
 - Comptes comptables : 9.1
+- Comptes utilisateurs : 10.2, 10.3, 10.4
 - Conflit (opérations suspendues) : 13.6
 - Connexion (indicateur) : 13.3
 - Connexion à Kadenz (identifiant et mot de passe) : 2.3
@@ -38,12 +39,15 @@ Les numéros renvoient aux sections du manuel (par exemple 5.6 : chapitre 5, sec
 ## D
 
 - Dépannage : 15.2, 15.3
+- Dernier administrateur : 10.5
+- Désactivation d'un compte : 10.4
 - Désinstallation : 1.7
 - Devis : 4.2
 - Documents de vente : 4.1
 - Dossier d'export : 8.3
 - Dossier des sauvegardes : 11.2
 - Doublon (import) : 7.2
+- Droits par rôle : 10.6
 
 ## E
 
@@ -71,6 +75,7 @@ Les numéros renvoient aux sections du manuel (par exemple 5.6 : chapitre 5, sec
 
 ## I
 
+- Identifiant de connexion : 10.3
 - Impayé (état de paiement) : 6.1
 - Import de produits : 7.2
 - Import de tiers : 7.3
@@ -101,6 +106,7 @@ Les numéros renvoient aux sections du manuel (par exemple 5.6 : chapitre 5, sec
 - Modes de paiement : 6.2, 6.8
 - Modules : 12.5
 - Montant en lettres : 8.2
+- Mot de passe (réinitialisation) : 10.4
 - Mot de passe des sauvegardes : 11.3
 - Mouvements de stock : 5.4
 
@@ -133,6 +139,7 @@ Les numéros renvoient aux sections du manuel (par exemple 5.6 : chapitre 5, sec
 - Rendu logiciel : 15.3
 - Réparation : 1.7
 - Restauration d'une sauvegarde : 11.5, 11.6
+- Rôles : 10.1, 10.4
 
 ## S
 
