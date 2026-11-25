@@ -1070,3 +1070,4 @@
 [2026-11-25 03:55:24] Correction - CI aleatoire (d0901df) : essais de decouverte UDP sans port libre apres 20 essais sous Windows ; limite portee a 100 essais (crates/serveur/tests/session.rs).
 [2026-11-25 04:14:03] Suivi - Installateurs 1.0.2 construits avec le vrai exe (KadenzSetup et KadenzMonoposteSetup, 19 Mo) ; extraction administrative du MSI monoposte : kadenz.exe, edition-monoposte, LISEZMOI, notes, licences, modeles CSV. Essai d installation reelle non fait (apres le dernier jalon).
 [2026-11-25 04:15:02] Correction - CI aleatoire (02f9fb9) : essai tentative_qui_traine_sans_bloquer_le_fil, ecriture en file bornee a 1 s ; borne portee a 3 s (DELAI vaut 5 s, le blocage reste detecte).
+[2026-11-25 04:31:29] Correction - CI aleatoire (92ef698) : essai base_libre_pendant_le_hachage (mesure relative), meilleure de trois mesures.

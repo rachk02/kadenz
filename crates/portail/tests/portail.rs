@@ -418,15 +418,21 @@ fn base_libre_pendant_le_hachage() {
     let debut = std::time::Instant::now();
     let (jeton, _) = p.connecter("editeur", MOT_DE_PASSE, "10.0.0.1").unwrap();
     let une_connexion = debut.elapsed();
-    let p2 = p.clone();
-    let fil = std::thread::spawn(move || p2.connecter("rev-a", MOT_DE_PASSE, "10.0.0.2"));
-    // Laisse au fil le temps d'entrer dans le hachage.
-    std::thread::sleep(une_connexion / 4);
-    let debut = std::time::Instant::now();
-    assert!(p.session(&jeton).is_some());
-    assert!(p.comptes(&editeur).is_ok());
-    let lecture = debut.elapsed();
-    assert!(fil.join().unwrap().is_ok());
+    // Meilleure de trois mesures : un verrou tenu pendant le hachage rend la
+    // lecture lente à chaque fois, alors qu'un processeur chargé (CI) ne ralentit
+    // qu'une mesure isolée.
+    let mut lecture = std::time::Duration::MAX;
+    for _ in 0..3 {
+        let p2 = p.clone();
+        let fil = std::thread::spawn(move || p2.connecter("rev-a", MOT_DE_PASSE, "10.0.0.2"));
+        // Laisse au fil le temps d'entrer dans le hachage.
+        std::thread::sleep(une_connexion / 4);
+        let debut = std::time::Instant::now();
+        assert!(p.session(&jeton).is_some());
+        assert!(p.comptes(&editeur).is_ok());
+        lecture = lecture.min(debut.elapsed());
+        assert!(fil.join().unwrap().is_ok());
+    }
     assert!(
         lecture < une_connexion / 2,
         "lecture {lecture:?} contre une connexion {une_connexion:?}"
