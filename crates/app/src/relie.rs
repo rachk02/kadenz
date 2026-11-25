@@ -152,26 +152,19 @@ pub(crate) fn appliquer_modules(f: &FenetrePrincipale, conn: &kadenz_stockage::C
 }
 
 /// Bandeau des sauvegardes du serveur (décision 56) ; vide si tout va bien.
+/// Sauvegardes sur le même disque que la base : plus de bandeau (demande de
+/// l'utilisateur, 2026-11-25) ; seul l'oubli du mot de passe reste signalé.
 pub(crate) fn texte_sauvegarde(avertissement: Option<AvertissementSauvegarde>) -> String {
-    // Monoposte : pas de fenêtre du serveur, les sauvegardes se règlent dans les Paramètres.
-    if crate::monoposte::edition_monoposte() {
-        return match avertissement {
-            None => String::new(),
-            Some(AvertissementSauvegarde::SansMotDePasse) => tr(
-                "Aucune sauvegarde n'est faite : le mot de passe des sauvegardes n'est pas réglé. Réglez-le dans les Paramètres, rubrique « Sauvegardes ».",
-            ),
-            Some(AvertissementSauvegarde::MemeDisque) => tr(
-                "Les sauvegardes sont sur le même disque que la base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans les Paramètres, rubrique « Sauvegardes ».",
-            ),
-        };
-    }
     match avertissement {
-        None => String::new(),
+        None | Some(AvertissementSauvegarde::MemeDisque) => String::new(),
+        // Monoposte : pas de fenêtre du serveur, les sauvegardes se règlent dans les Paramètres.
+        Some(AvertissementSauvegarde::SansMotDePasse) if crate::monoposte::edition_monoposte() => {
+            tr(
+                "Aucune sauvegarde n'est faite : le mot de passe des sauvegardes n'est pas réglé. Réglez-le dans les Paramètres, rubrique « Sauvegardes ».",
+            )
+        }
         Some(AvertissementSauvegarde::SansMotDePasse) => tr(
             "Le serveur ne fait aucune sauvegarde : leur mot de passe n'est pas réglé. Réglez-le dans la fenêtre du serveur, sur sa machine.",
-        ),
-        Some(AvertissementSauvegarde::MemeDisque) => tr(
-            "Les sauvegardes du serveur sont sur le même disque que sa base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans la fenêtre du serveur.",
         ),
     }
 }
