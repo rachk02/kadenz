@@ -13,6 +13,7 @@
 use std::collections::HashMap;
 use std::io;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener, TcpStream};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -20,13 +21,14 @@ use std::time::{Duration, Instant};
 use futures_util::{SinkExt, StreamExt};
 use rustls::ClientConfig;
 use rustls::pki_types::ServerName;
+use subtle::ConstantTimeEq;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 use tokio::time::{MissedTickBehavior, timeout};
 use tokio_rustls::TlsConnector;
 use tokio_tungstenite::WebSocketStream;
 use tokio_tungstenite::tungstenite::handshake::server::{ErrorResponse, Request, Response};
-use tokio_tungstenite::tungstenite::http::StatusCode;
+use tokio_tungstenite::tungstenite::http::{HeaderMap, StatusCode};
 use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
 use tokio_tungstenite::tungstenite::{Bytes, Message};
 
@@ -76,6 +78,37 @@ const WEBSOCKETS_MAX: usize = 4096;
 /// requête HTTP ne doit pas priver les sessions établies. Chacune est coupée
 /// par [`OUVERTURE`].
 const OUVERTURES_EN_COURS: usize = 512;
+
+/// En-tête posé par une règle de transformation Cloudflare sur le nom
+/// `relais.mcarre.dev` (`docs/spec-relais-websocket.md`). Un client qui
+/// l'envoie lui-même est écrasé par la règle « Set static » de Cloudflare.
+/// Le relais n'accepte qu'une seule valeur et la compare en temps constant.
+pub const EN_TETE_SECRET: &str = "x-kadenz-secret";
+
+/// Vérifie l'en-tête de secret sur une poignée de main. Une valeur absente,
+/// multiple ou différente est refusée ; la comparaison ne révèle pas où porte
+/// le désaccord.
+fn secret_valide(entetes: &HeaderMap, attendu: &[u8]) -> bool {
+    let mut valeurs = entetes.get_all(EN_TETE_SECRET).iter();
+    let Some(premiere) = valeurs.next() else {
+        return false;
+    };
+    if valeurs.next().is_some() {
+        return false;
+    }
+    let saisi = premiere.as_bytes();
+    saisi.len() == attendu.len() && bool::from(saisi.ct_eq(attendu))
+}
+
+/// Décision complète : sans secret configuré, tout passe ; avec un secret,
+/// les pairs locaux sont exemptés (sonde de santé), les autres doivent le
+/// porter une seule fois.
+fn autoriser_secret(secret: Option<&[u8]>, pair: IpAddr, entetes: &HeaderMap) -> bool {
+    match secret {
+        None => true,
+        Some(attendu) => pair.is_loopback() || secret_valide(entetes, attendu),
+    }
+}
 
 /// Sonde de la passerelle : la sonde TCP du relais ne voit pas si le port
 /// WebSocket a cessé d'accepter (tâche tombée, places épuisées). Ouvre une
@@ -415,12 +448,15 @@ impl Passerelle {
     /// Écoute des WebSocket sur `ecoute` ; chacune est rouverte en TCP vers
     /// `relais`, en 127.0.0.1 (la table des clients n'a de sens que là).
     /// `mandataire` : seule adresse dont l'en-tête `CF-Connecting-IP` est cru.
+    /// `secret` : secret posé par Cloudflare, exigé de toute WebSocket venant
+    /// d'un pair non local ; `None` garde le comportement d'avant le durcissement.
     pub(crate) fn demarrer(
         ecoute: SocketAddr,
         relais: SocketAddr,
         mandataire: Option<IpAddr>,
         delais: DelaisWs,
         clients: Clients,
+        secret: Option<Arc<[u8]>>,
     ) -> Result<Passerelle, String> {
         if relais.ip() != IpAddr::V4(Ipv4Addr::LOCALHOST) {
             return Err(format!(
@@ -444,6 +480,7 @@ impl Passerelle {
             jetons: RAFALE_WS,
             vu: Instant::now(),
         }));
+        let refuses_secret = Arc::new(AtomicU64::new(0));
         execution.spawn(async move {
             // Résumé des refus, une ligne par minute au plus, pour qu'une
             // inondation ne remplisse pas les journaux du Dell.
@@ -456,9 +493,10 @@ impl Passerelle {
                     continue;
                 };
                 if depuis.elapsed() >= Duration::from_secs(60) {
-                    if refuses_debit > 0 || refuses_ouvertures > 0 {
+                    let refuses_secret = refuses_secret.swap(0, Ordering::Relaxed);
+                    if refuses_debit > 0 || refuses_ouvertures > 0 || refuses_secret > 0 {
                         eprintln!(
-                            "passerelle refus_connexions debit={refuses_debit} ouvertures={refuses_ouvertures}"
+                            "passerelle refus_connexions debit={refuses_debit} ouvertures={refuses_ouvertures} secret={refuses_secret}"
                         );
                     }
                     depuis = Instant::now();
@@ -489,6 +527,8 @@ impl Passerelle {
                 };
                 let clients = clients.clone();
                 let places = places.clone();
+                let secret = secret.clone();
+                let refuses_secret = refuses_secret.clone();
                 tokio::spawn(async move {
                     servir(
                         flux,
@@ -497,7 +537,12 @@ impl Passerelle {
                         mandataire,
                         delais,
                         clients,
-                        Ouverture { places, en_cours },
+                        Ouverture {
+                            places,
+                            en_cours,
+                            secret,
+                            refuses_secret,
+                        },
                     )
                     .await;
                 });
@@ -527,6 +572,8 @@ impl Drop for Passerelle {
 struct Ouverture {
     places: Arc<Semaphore>,
     en_cours: OwnedSemaphorePermit,
+    secret: Option<Arc<[u8]>>,
+    refuses_secret: Arc<AtomicU64>,
 }
 
 async fn servir(
@@ -538,7 +585,12 @@ async fn servir(
     clients: Clients,
     ouverture: Ouverture,
 ) {
-    let Ouverture { places, en_cours } = ouverture;
+    let Ouverture {
+        places,
+        en_cours,
+        secret,
+        refuses_secret,
+    } = ouverture;
     let _ = flux.set_nodelay(true);
     let du_mandataire = mandataire == Some(pair.ip());
     let mut client = pair.ip();
@@ -549,6 +601,14 @@ async fn servir(
         if requete.uri().path() != "/" {
             let mut refus = ErrorResponse::new(None);
             *refus.status_mut() = StatusCode::NOT_FOUND;
+            return Err(refus);
+        }
+        // La sonde locale (`sante --ws`) vient de 127.0.0.1 dans le conteneur :
+        // elle n'a pas le secret, et ne peut pas venir de l'extérieur du conteneur.
+        if !autoriser_secret(secret.as_deref(), pair.ip(), requete.headers()) {
+            refuses_secret.fetch_add(1, Ordering::Relaxed);
+            let mut refus = ErrorResponse::new(None);
+            *refus.status_mut() = StatusCode::FORBIDDEN;
             return Err(refus);
         }
         if du_mandataire
@@ -656,6 +716,36 @@ mod tests {
         local.read_exact(&mut lu).unwrap();
         assert_eq!(&lu, b"retour");
     }
+
+    #[test]
+    fn secret_exige_pour_un_pair_distant() {
+        use tokio_tungstenite::tungstenite::http::{HeaderName, HeaderValue};
+        let secret: &[u8] = b"secret-de-essai";
+        let nom: HeaderName = EN_TETE_SECRET.parse().unwrap();
+        let distant: IpAddr = "203.0.113.7".parse().unwrap();
+        let local: IpAddr = IpAddr::V4(Ipv4Addr::LOCALHOST);
+        let vides = HeaderMap::new();
+
+        assert!(autoriser_secret(None, distant, &vides));
+        assert!(autoriser_secret(Some(secret), local, &vides));
+        assert!(!autoriser_secret(Some(secret), distant, &vides));
+
+        let mut bons = HeaderMap::new();
+        bons.insert(nom.clone(), HeaderValue::from_bytes(secret).unwrap());
+        assert!(autoriser_secret(Some(secret), distant, &bons));
+
+        let mut mauvais = HeaderMap::new();
+        mauvais.insert(nom.clone(), HeaderValue::from_static("autre-secret"));
+        assert!(!autoriser_secret(Some(secret), distant, &mauvais));
+
+        let mut courts = HeaderMap::new();
+        courts.insert(nom.clone(), HeaderValue::from_static("court"));
+        assert!(!autoriser_secret(Some(secret), distant, &courts));
+
+        let mut doubles = bons;
+        doubles.append(nom, HeaderValue::from_bytes(secret).unwrap());
+        assert!(!autoriser_secret(Some(secret), distant, &doubles));
+    }
 }
 
 #[cfg(test)]
@@ -680,6 +770,7 @@ mod essais_passerelle {
                     mandataire,
                     DelaisWs::default(),
                     clients,
+                    None,
                 )
             }
         })
@@ -736,6 +827,37 @@ mod essais_passerelle {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn sonde_locale_passe_sans_secret() {
+        let faux_relais = tokio::net::TcpListener::bind((Ipv4Addr::LOCALHOST, 0))
+            .await
+            .unwrap();
+        let cible = faux_relais.local_addr().unwrap();
+        let secret: Arc<[u8]> = Arc::from(&b"secret-de-essai"[..]);
+        let passerelle = tokio::task::spawn_blocking(move || {
+            Passerelle::demarrer(
+                (Ipv4Addr::LOCALHOST, 0).into(),
+                cible,
+                None,
+                DelaisWs::default(),
+                Clients::default(),
+                Some(secret),
+            )
+        })
+        .await
+        .unwrap()
+        .unwrap();
+        let demande = format!("ws://{}/", passerelle.adresse());
+        let tcp = tokio::net::TcpStream::connect(passerelle.adresse())
+            .await
+            .unwrap();
+        let (ws, _) = tokio_tungstenite::client_async(demande, tcp).await.unwrap();
+        drop(ws);
+        tokio::task::spawn_blocking(move || drop(passerelle))
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn autre_chemin_refuse() {
         let faux_relais = tokio::net::TcpListener::bind((Ipv4Addr::LOCALHOST, 0))
             .await
@@ -748,6 +870,7 @@ mod essais_passerelle {
                 None,
                 DelaisWs::default(),
                 Clients::default(),
+                None,
             )
         })
         .await
@@ -806,6 +929,7 @@ mod essais_limites {
                 None,
                 delais,
                 Clients::default(),
+                None,
             )
         })
         .await

@@ -22,3 +22,5 @@ tokio-tungstenite.workspace = true
 tokio-rustls.workspace = true
 rustls-native-certs.workspace = true
 futures-util.workspace = true
+# Comparaison en temps constant du secret injecté par Cloudflare (jalon WSS).
+subtle = "2.6.1"

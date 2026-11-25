@@ -66,6 +66,10 @@ pub struct Config {
     /// Adresse de cloudflared : seules ses WebSocket font croire l'en-tête
     /// `CF-Connecting-IP` pour le frein.
     pub mandataire: Option<IpAddr>,
+    /// Secret posé par Cloudflare sur la route du relais, exigé en plus de
+    /// l'adresse du mandataire pour faire croire `CF-Connecting-IP`. `None` :
+    /// aucun secret exigé (fonctionnement d'avant le durcissement).
+    pub secret_ws: Option<Arc<[u8]>>,
     /// Ping et silence des WebSocket de la passerelle (raccourcis par les
     /// essais).
     pub delais_ws: DelaisWs,
@@ -103,6 +107,7 @@ impl Config {
             lanceur: lanceur_ordinaire(),
             ecoute_ws: None,
             mandataire: None,
+            secret_ws: None,
             delais_ws: DelaisWs::default(),
         }
     }
@@ -373,6 +378,7 @@ impl Relais {
                     config.mandataire,
                     config.delais_ws,
                     etat.clients_ws.clone(),
+                    config.secret_ws.clone(),
                 )?)
             }
         };
