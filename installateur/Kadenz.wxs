@@ -37,6 +37,12 @@
     <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="Une version plus récente de Kadenz est déjà installée." />
     <MediaTemplate EmbedCab="yes" />
 
+    <!-- Kadenz ouvert pendant une mise à jour ou une désinstallation : l'installateur lui
+         demande de se fermer (message de fermeture de fenêtre, sans tuer le processus), puis
+         attend sa fin. Sans cela, kadenz.exe resterait verrouillé et le remplacement attendrait
+         un redémarrage. -->
+    <util:CloseApplication Id="FermerKadenz" Target="kadenz.exe" CloseMessage="yes" RebootPrompt="no" TerminateProcess="0" Timeout="15" />
+
     <Icon Id="kadenz.ico" SourceFile="$(var.Icone)" />
     <Property Id="ARPPRODUCTICON" Value="kadenz.ico" />
     <Property Id="ARPNOMODIFY" Value="1" />

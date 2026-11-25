@@ -6,6 +6,9 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 
 Numérotation : Kadenz reste en 0.x (décision du 2026-11-25) ; la phase 2 suit en 0.3.x, le troisième chiffre pouvant monter jusqu'à 65535 (limite des installateurs MSI).
 
+### Modifié
+- Installateur : une mise à jour ou une désinstallation demande à Kadenz, s'il est ouvert, de se fermer (sans forcer l'arrêt) au lieu d'attendre un redémarrage.
+
 ### Corrigé
 - Champs de saisie parfois invisibles : les champs et zones de texte prennent maintenant les couleurs de Kadenz (fond, contour net, contour renforcé au focus) au lieu de celles du style Slint ; vérifié en mode clair. La cause exacte sur le poste où le défaut a été vu n'est pas confirmée.
 - Accès à distance : un réglage écrit par la fenêtre du serveur pendant le recul est repris en 500 ms au plus (2 s auparavant).
