@@ -63,7 +63,7 @@ pub struct TextesPdf {
     /// Libellé du bloc tiers : « Client » ou « Fournisseur ».
     pub libelle_tiers: String,
     /// Début de la phrase du montant, ex. « Arrêté la présente facture à la somme de » ;
-    /// suivie de « <lettres> francs (<chiffres>) FCFA. » (modèle de l'outil Excel).
+    /// suivie de « <lettres> francs (<chiffres>) FCFA TTC. » (« hors TVA » si la TVA est à zéro) (modèle de l'outil Excel).
     pub phrase_somme: String,
     /// Libellé du signataire, ex. « LA COMPTABILITE » ; vide pour aucun.
     pub signataire: String,

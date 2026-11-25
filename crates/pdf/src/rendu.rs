@@ -92,15 +92,26 @@ fn taux(p: Pourcentage) -> String {
 }
 
 /// Phrase du montant en lettres, sur le modèle de l'outil Excel d'origine :
-/// « {phrase} {lettres} francs ({chiffres}) FCFA. » ; sans phrase, les lettres
+/// « {phrase} {lettres} francs ({chiffres}) FCFA TTC. » (« hors TVA » quand la TVA
+/// du document est à zéro) ; sans phrase, les lettres
 /// seules suivies des chiffres.
-fn phrase_somme(phrase: &str, lettres: &str, ttc: Montant) -> String {
-    let fin = format!("{lettres} francs ({}) FCFA.", montant(ttc));
+fn phrase_somme(phrase: &str, lettres: &str, ttc: Montant, sans_tva: bool) -> String {
+    let fin = format!(
+        "{lettres} francs ({}) FCFA {}.",
+        montant(ttc),
+        mention_tva(sans_tva)
+    );
     if phrase.trim().is_empty() {
         fin
     } else {
         format!("{} {fin}", phrase.trim())
     }
+}
+
+/// Mention qui suit le montant à payer : « hors TVA » quand aucune TVA n'est
+/// facturée, « TTC » dans le cas contraire (décision du 2026-11-25).
+fn mention_tva(sans_tva: bool) -> &'static str {
+    if sans_tva { "hors TVA" } else { "TTC" }
 }
 
 /// Surface de tracé, ou rien quand on ne fait que mesurer.
@@ -989,6 +1000,7 @@ impl<'d> Moteur<'d> {
                         t.retenue,
                         format!("{} ({})", l.libelle(), taux(d.taux.retenue)),
                     ),
+                    LigneTotal::Ttc if t.tva == 0 => (t.ttc, "Montant hors TVA".to_owned()),
                     LigneTotal::Ttc => (t.ttc, l.libelle().to_owned()),
                 };
                 let masquee = b.masquer_zero
@@ -1117,7 +1129,12 @@ impl<'d> Moteur<'d> {
         // « Arrêté le présent ... à la somme de <lettres> francs (<chiffres>) FCFA. »
         if b.montant_en_lettres && !d.montant_en_lettres.is_empty() {
             bas += 12.0;
-            let phrase = phrase_somme(&d.textes.phrase_somme, &d.montant_en_lettres, d.totaux.ttc);
+            let phrase = phrase_somme(
+                &d.textes.phrase_somme,
+                &d.montant_en_lettres,
+                d.totaux.ttc,
+                d.totaux.tva == 0,
+            );
             bas += self.paragraphe(
                 t,
                 &p.texte_gras,
@@ -1424,11 +1441,15 @@ mod tests {
             phrase_somme(
                 "Arrêté la présente facture à la somme de",
                 "Mille deux cents",
-                1_200
+                1_200,
+                false
             ),
-            "Arrêté la présente facture à la somme de Mille deux cents francs (1\u{a0}200) FCFA."
+            "Arrêté la présente facture à la somme de Mille deux cents francs (1\u{a0}200) FCFA TTC."
         );
-        assert_eq!(phrase_somme(" ", "Cent", 100), "Cent francs (100) FCFA.");
+        assert_eq!(
+            phrase_somme(" ", "Cent", 100, true),
+            "Cent francs (100) FCFA hors TVA."
+        );
     }
 
     #[test]

@@ -9,6 +9,8 @@ Numérotation : Kadenz reste en 0.x (décision du 2026-11-25) ; la phase 2 suit 
 ### Corrigé
 - Mises à jour : l'application lit désormais les versions sur le dépôt public `rachk02/kadenz-releases` (le dépôt du code est privé et répondait 404, ce qui rendait toute mise à jour invisible). Les installateurs et manifestes signés se publient dans ce dépôt (`gh release create --repo rachk02/kadenz-releases`).
 
+- PDF : quand la TVA d'un document est à zéro, la ligne du total s'intitule « Montant hors TVA » et la somme en lettres se termine par « FCFA hors TVA. » ; sinon « Montant TTC » et « FCFA TTC. »
+
 ### Ajouté
 - Diagnostic : un plantage de l'application écrit sa cause, son lieu et la pile dans `journaux\plantage.log` (dossier des données) ; le rendu logiciel se force par `--rendu-logiciel`, par un fichier `rendu-logiciel` dans le dossier des données ou par `KADENZ_RENDU=logiciel` (champs invisibles sur certains pilotes graphiques).
 
