@@ -1071,3 +1071,4 @@
 [2026-11-25 04:14:03] Suivi - Installateurs 1.0.2 construits avec le vrai exe (KadenzSetup et KadenzMonoposteSetup, 19 Mo) ; extraction administrative du MSI monoposte : kadenz.exe, edition-monoposte, LISEZMOI, notes, licences, modeles CSV. Essai d installation reelle non fait (apres le dernier jalon).
 [2026-11-25 04:15:02] Correction - CI aleatoire (02f9fb9) : essai tentative_qui_traine_sans_bloquer_le_fil, ecriture en file bornee a 1 s ; borne portee a 3 s (DELAI vaut 5 s, le blocage reste detecte).
 [2026-11-25 04:31:29] Correction - CI aleatoire (92ef698) : essai base_libre_pendant_le_hachage (mesure relative), meilleure de trois mesures.
+[2026-11-25 04:32:14] Suivi - bornes de temps des essais (synchroniseur vider, relais injoignable) portees de 2 s a 4 s contre les aleas de la CI.

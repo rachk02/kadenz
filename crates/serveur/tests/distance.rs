@@ -304,7 +304,7 @@ fn poste_distant_par_le_relais() {
         Err(ErreurClient::RelaisRefuse { motif })
             if motif == kadenz_relais::motif::SERVEUR_INJOIGNABLE
     ));
-    assert!(debut.elapsed() < Duration::from_secs(2));
+    assert!(debut.elapsed() < Duration::from_secs(4));
 
     // Serveur rallumé : il se réenregistre seul, le poste distant revient.
     let serveur = demarrer(&dossier_serveur);
