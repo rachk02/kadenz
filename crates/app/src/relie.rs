@@ -153,6 +153,18 @@ pub(crate) fn appliquer_modules(f: &FenetrePrincipale, conn: &kadenz_stockage::C
 
 /// Bandeau des sauvegardes du serveur (décision 56) ; vide si tout va bien.
 pub(crate) fn texte_sauvegarde(avertissement: Option<AvertissementSauvegarde>) -> String {
+    // Monoposte : pas de fenêtre du serveur, les sauvegardes se règlent dans les Paramètres.
+    if crate::monoposte::edition_monoposte() {
+        return match avertissement {
+            None => String::new(),
+            Some(AvertissementSauvegarde::SansMotDePasse) => tr(
+                "Aucune sauvegarde n'est faite : le mot de passe des sauvegardes n'est pas réglé. Réglez-le dans les Paramètres, rubrique « Sauvegardes ».",
+            ),
+            Some(AvertissementSauvegarde::MemeDisque) => tr(
+                "Les sauvegardes sont sur le même disque que la base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans les Paramètres, rubrique « Sauvegardes ».",
+            ),
+        };
+    }
     match avertissement {
         None => String::new(),
         Some(AvertissementSauvegarde::SansMotDePasse) => tr(

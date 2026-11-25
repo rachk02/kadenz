@@ -4904,3 +4904,9 @@ msgstr "Bu bilgisayarın verilerinin kopyası ayrıca saklanamadı. Ayrıntılar
 
 msgid "Le dossier du serveur de Kadenz est vide, alors qu'une copie des données de ce poste existe. Restaurez une sauvegarde du serveur, ou repartez à neuf : la copie est alors mise de côté, jamais effacée."
 msgstr "Kadenz sunucu klasörü boş, ancak bu bilgisayarın verilerinin bir kopyası var. Sunucu yedeğini geri yükleyin veya sıfırdan başlayın: kopya ayrıca saklanır, asla silinmez."
+
+msgid "Aucune sauvegarde n'est faite : le mot de passe des sauvegardes n'est pas réglé. Réglez-le dans les Paramètres, rubrique « Sauvegardes »."
+msgstr "Hiçbir yedekleme yapılmıyor: yedek parolası ayarlanmamış. Ayarlar'da \"Yedeklemeler\" bölümünden belirleyin."
+
+msgid "Les sauvegardes sont sur le même disque que la base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans les Paramètres, rubrique « Sauvegardes »."
+msgstr "Yedekler veritabanıyla aynı diskte: bu diskin arızalanması hepsini kaybettirir. Ayarlar'da \"Yedeklemeler\" bölümünden başka bir klasör seçin."

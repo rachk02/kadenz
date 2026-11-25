@@ -4904,3 +4904,9 @@ msgstr "No se pudo apartar la copia de los datos de este equipo. Los detalles es
 
 msgid "Le dossier du serveur de Kadenz est vide, alors qu'une copie des données de ce poste existe. Restaurez une sauvegarde du serveur, ou repartez à neuf : la copie est alors mise de côté, jamais effacée."
 msgstr "La carpeta del servidor de Kadenz está vacía, pero existe una copia de los datos de este equipo. Restaure una copia de seguridad del servidor o empiece de nuevo: la copia se aparta y nunca se borra."
+
+msgid "Aucune sauvegarde n'est faite : le mot de passe des sauvegardes n'est pas réglé. Réglez-le dans les Paramètres, rubrique « Sauvegardes »."
+msgstr "No se hace ninguna copia de seguridad: la contraseña de las copias no está definida. Defínala en Ajustes, apartado «Copias de seguridad»."
+
+msgid "Les sauvegardes sont sur le même disque que la base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans les Paramètres, rubrique « Sauvegardes »."
+msgstr "Las copias de seguridad están en el mismo disco que la base de datos: una avería de ese disco las perdería todas. Elija otra carpeta en Ajustes, apartado «Copias de seguridad»."

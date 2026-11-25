@@ -1072,3 +1072,4 @@
 [2026-11-25 04:15:02] Correction - CI aleatoire (02f9fb9) : essai tentative_qui_traine_sans_bloquer_le_fil, ecriture en file bornee a 1 s ; borne portee a 3 s (DELAI vaut 5 s, le blocage reste detecte).
 [2026-11-25 04:31:29] Correction - CI aleatoire (92ef698) : essai base_libre_pendant_le_hachage (mesure relative), meilleure de trois mesures.
 [2026-11-25 04:32:14] Suivi - bornes de temps des essais (synchroniseur vider, relais injoignable) portees de 2 s a 4 s contre les aleas de la CI.
+[2026-11-25 05:08:15] Correction - Essai a l ecran (assistant, connexion, Parametres, theme clair, monoposte) : champs et zones de texte lisibles. Alerte de sauvegarde du poste relie parlait de la fenetre du serveur, absente en monoposte : textes propres a l edition monoposte (rubrique Sauvegardes des Parametres), 2 textes traduits en 6 langues.

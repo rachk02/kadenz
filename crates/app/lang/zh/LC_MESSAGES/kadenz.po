@@ -4904,3 +4904,9 @@ msgstr "无法单独保存此电脑数据的副本。详情见erreurs.log文件�
 
 msgid "Le dossier du serveur de Kadenz est vide, alors qu'une copie des données de ce poste existe. Restaurez une sauvegarde du serveur, ou repartez à neuf : la copie est alors mise de côté, jamais effacée."
 msgstr "Kadenz服务器文件夹为空，但存在此电脑数据的副本。请恢复服务器备份，或重新开始：副本将被单独保存，绝不会被删除。"
+
+msgid "Aucune sauvegarde n'est faite : le mot de passe des sauvegardes n'est pas réglé. Réglez-le dans les Paramètres, rubrique « Sauvegardes »."
+msgstr "当前没有进行任何备份：尚未设置备份密码。请在“设置”的“备份”栏目中设置。"
+
+msgid "Les sauvegardes sont sur le même disque que la base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans les Paramètres, rubrique « Sauvegardes »."
+msgstr "备份与数据库在同一个磁盘上：该磁盘一旦损坏，备份将全部丢失。请在“设置”的“备份”栏目中选择其他文件夹。"

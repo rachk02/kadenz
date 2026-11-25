@@ -4904,3 +4904,9 @@ msgstr "このパソコンのデータのコピーを別に保管できません
 
 msgid "Le dossier du serveur de Kadenz est vide, alors qu'une copie des données de ce poste existe. Restaurez une sauvegarde du serveur, ou repartez à neuf : la copie est alors mise de côté, jamais effacée."
 msgstr "Kadenzのサーバーフォルダーは空ですが、このパソコンのデータのコピーが存在します。サーバーのバックアップを復元するか、最初からやり直してください。やり直す場合、コピーは別に保管され、削除されません。"
+
+msgid "Aucune sauvegarde n'est faite : le mot de passe des sauvegardes n'est pas réglé. Réglez-le dans les Paramètres, rubrique « Sauvegardes »."
+msgstr "バックアップは行われていません。バックアップのパスワードが設定されていません。設定の「バックアップ」で設定してください。"
+
+msgid "Les sauvegardes sont sur le même disque que la base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans les Paramètres, rubrique « Sauvegardes »."
+msgstr "バックアップがデータベースと同じディスクにあります。このディスクが故障するとすべて失われます。設定の「バックアップ」で別のフォルダーを選んでください。"
