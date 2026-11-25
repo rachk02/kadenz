@@ -4,6 +4,8 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 
 ## [Non publié]
 
+## [0.3.1] - 2026-11-25
+
 ### Ajouté
 
 - Essai gratuit de 30 jours à l'installation sans code d'abonnement, pour le monoposte comme pour le serveur : tous les modules et la saisie sont permis, avec un bandeau qui annonce la fin de l'essai ; ensuite Kadenz passe en lecture seule jusqu'à l'activation d'un code.
