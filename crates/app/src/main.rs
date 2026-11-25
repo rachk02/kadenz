@@ -628,12 +628,14 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
 }
 
 fn main() -> Result<(), slint::PlatformError> {
-    // Journal de plantage et choix du rendu, avant toute fenêtre.
-    diagnostic::installer(&dossier_donnees());
     // Base déjà ouverte par une autre instance : sa fenêtre revient au premier plan.
     if !instance::prendre(&chemin_base()) {
         return Ok(());
     }
+    // Journal de plantage, garde du démarrage et choix du rendu, avant toute fenêtre
+    // (après la prise de l'instance : un second lancement ne doit pas passer pour
+    // un démarrage inachevé).
+    diagnostic::installer(&dossier_donnees());
     let fenetre = FenetrePrincipale::new()?;
     // Interface en français au démarrage, quelle que soit la langue de Windows, jusqu'à
     // la connexion d'un compte (voir traduction::choisir_demarrage).
@@ -723,7 +725,12 @@ fn main() -> Result<(), slint::PlatformError> {
     fenetre
         .global::<CodeCourtUi>()
         .on_formater(|precedent, nouveau| code_saisie::formater(&precedent, &nouveau));
+    // Fenêtre tenue trois secondes : le démarrage a abouti (garde du démarrage).
+    slint::Timer::single_shot(std::time::Duration::from_secs(3), || {
+        diagnostic::demarrage_reussi(&dossier_donnees());
+    });
     let resultat = fenetre.run();
+    diagnostic::demarrage_reussi(&dossier_donnees());
     // Fenêtre fermée : sauvegarde automatique de la base ouverte.
     // Poste relié : synchroniseur arrêté, et pas de sauvegarde de la copie, les
     // données sont sauvegardées sur le serveur (décision 47).

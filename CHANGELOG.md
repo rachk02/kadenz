@@ -7,6 +7,7 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 Numérotation : Kadenz reste en 0.x (décision du 2026-11-25) ; la phase 2 suit en 0.3.x, le troisième chiffre pouvant monter jusqu'à 65535 (limite des installateurs MSI).
 
 ### Modifié
+- Démarrage : si le lancement précédent n'a pas abouti avant l'affichage de la fenêtre (pilote graphique, fermeture brutale), Kadenz passe seul au rendu logiciel, l'écrit dans `journaux\plantage.log` et le garde (fichier `rendu-logiciel` à supprimer pour revenir au rendu par défaut).
 - Installateur : une mise à jour ou une désinstallation demande à Kadenz, s'il est ouvert, de se fermer (sans forcer l'arrêt) au lieu d'attendre un redémarrage.
 
 ### Corrigé
