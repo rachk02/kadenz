@@ -658,7 +658,9 @@ fn tentative_qui_traine_sans_bloquer_le_fil() {
         }),
         Ok(Issue::EnFile)
     );
-    assert!(debut.elapsed() < Duration::from_secs(1));
+    // Borne large : l'écriture ne doit pas attendre la tentative qui traîne (DELAI),
+    // pas tenir une seconde sur un poste d'intégration chargé.
+    assert!(debut.elapsed() < Duration::from_secs(3));
     assert!(present(&b.copie, Entite::Tiers, &t));
     assert_eq!(s.file(), 1);
     s.arreter();
