@@ -28,7 +28,9 @@ Le fichier `deploiement/dell/compose.public.yaml` du dépôt est déjà corrigé
 
 Coupure attendue : quelques secondes, le temps du redémarrage du tunnel.
 
-## Action 2 (durcissement, plus tard) : secret de la passerelle `--secret-ws`
+## Action 2 : secret de la passerelle `--secret-ws` (faite le 2026-11-25)
+
+Active sur le Dell le 2026-11-25 avec l'accord de l'utilisateur. Il a fallu reconstruire l'image du relais (l'ancienne ne connaissait pas l'option) : `kadenz-relais:43a411971ab1`, révision propre au relais (`KADENZ_REV_RELAIS`), portail inchangé. Vérifié : accès public en 101 par Cloudflare, 403 sans le secret depuis un pair non local. Retour arrière : copier les fichiers `.avant-secret` de `/opt/kadenz/source/deploiement/dell` et `/etc/kadenz/kadenz.env`, retirer `KADENZ_REV_RELAIS`, `kadenz-compose up -d relais`. Les étapes suivantes sont gardées pour mémoire.
 
 Elle empêche de joindre le relais autrement que par Cloudflare. **L'ordre compte** : une fois
 l'option posée, une règle Cloudflare absente ou fausse coupe toutes les sessions distantes.
