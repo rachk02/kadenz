@@ -218,6 +218,21 @@ B;2
         assert_eq!(cellule_en_texte(&Data::String("Pelle".into())), "Pelle");
     }
 
+    /// Les modèles livrés dans le dossier `modeles` de l'installation : le CSV et
+    /// le classeur Excel de chaque type ont les mêmes en-têtes, et l'import les lit.
+    #[test]
+    fn modeles_livres_lisibles_en_csv_et_en_excel() {
+        let dossier =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../installateur/contenu/modeles");
+        for nom in ["modele-tiers", "modele-produits"] {
+            let csv = lire_fichier(&dossier.join(format!("{nom}.csv"))).unwrap();
+            let xlsx = lire_fichier(&dossier.join(format!("{nom}.xlsx"))).unwrap();
+            assert!(!csv.entetes.is_empty(), "{nom} : en-têtes absents");
+            assert_eq!(csv.entetes, xlsx.entetes, "{nom} : en-têtes différents");
+            assert!(xlsx.lignes.is_empty(), "{nom} : le modèle doit être vide");
+        }
+    }
+
     #[test]
     fn extension_inconnue() {
         assert!(lire_fichier(Path::new("produits.pdf")).is_err());

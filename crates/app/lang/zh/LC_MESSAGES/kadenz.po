@@ -4884,8 +4884,8 @@ msgstr "Word文档"
 msgid "Ce document Word n'a ni en-tête ni pied de page."
 msgstr "此Word文档没有页眉和页脚。"
 
-msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...)."
-msgstr "已从文档导入文字：请检查，并将固定数据替换为变量（{nom}、{adresse}等）。"
+msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...). Les images du document deviennent {logo} et {logo2} : ce sont les logos enregistrés pour l'entreprise qui s'impriment."
+msgstr "已从文档导入文字：请检查，并将固定数据替换为变量（{nom}、{adresse}等）。文档中的图片会变为 {logo} 和 {logo2}，打印的是为公司登记的标志。"
 
 msgid "Repartir à neuf"
 msgstr "重新开始"

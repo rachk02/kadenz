@@ -7,8 +7,9 @@ images y sont intégrées, il n'a besoin d'aucune autre bibliothèque.
 Contenu du dossier
   kadenz.exe              le programme
   LISEZMOI.txt            ce fichier
-  Notes de version.txt    l'historique des versions
-  Licences-tierces.txt    les composants libres utilisés par Kadenz
+  docs\                   documentation :
+    Notes de version.txt    l'historique des versions
+    Licences-tierces.txt    les composants libres utilisés par Kadenz
   modeles\                fichiers d'exemple pour l'import (voir plus bas)
 
 Où sont vos données
@@ -18,10 +19,10 @@ Où sont vos données
 
 Importer des fiches (Excel ou CSV)
   Dans Kadenz, ouvrez l'import et cliquez sur le bouton rond « i » : il
-  décrit les colonnes attendues. Le dossier modeles contient deux fichiers
-  CSV prêts à remplir, avec les bons noms de colonnes :
-    modele-tiers.csv        clients et fournisseurs
-    modele-produits.csv     produits et services
+  décrit les colonnes attendues. Le dossier modeles contient des fichiers
+  prêts à remplir, avec les bons noms de colonnes, en CSV et en Excel :
+    modele-tiers.csv / .xlsx       clients et fournisseurs
+    modele-produits.csv / .xlsx    produits et services
   Ouvrez-les avec Excel, ajoutez vos lignes sous la première, puis
   enregistrez au format CSV ou Excel.
 

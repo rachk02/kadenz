@@ -4884,8 +4884,8 @@ msgstr "Documento Word"
 msgid "Ce document Word n'a ni en-tête ni pied de page."
 msgstr "Este documento Word no tiene encabezado ni pie de página."
 
-msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...)."
-msgstr "Texto tomado del documento: revíselo y sustituya los datos fijos por variables ({nom}, {adresse}...)."
+msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...). Les images du document deviennent {logo} et {logo2} : ce sont les logos enregistrés pour l'entreprise qui s'impriment."
+msgstr "Texto tomado del documento: revíselo y sustituya los datos fijos por variables ({nom}, {adresse}...). Las imágenes del documento pasan a ser {logo} y {logo2}: se imprimen los logotipos registrados para la empresa."
 
 msgid "Repartir à neuf"
 msgstr "Empezar de nuevo"

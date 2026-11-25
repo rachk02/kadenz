@@ -4,6 +4,11 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 
 ## [Non publié]
 
+### Ajouté
+
+- Reprise d'un document Word : les images de l'en-tête et du pied deviennent les lignes {logo} et {logo2}, qui impriment les logos enregistrés pour l'entreprise.
+- Dossier d'installation : sous-dossier docs (notes de version, licences des composants) et modèles d'import Excel (.xlsx) à côté des modèles CSV.
+
 ## [0.3.1] - 2026-11-25
 
 ### Ajouté

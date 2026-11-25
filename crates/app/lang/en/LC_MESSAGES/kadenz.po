@@ -4884,8 +4884,8 @@ msgstr "Word document"
 msgid "Ce document Word n'a ni en-tête ni pied de page."
 msgstr "This Word document has neither a header nor a footer."
 
-msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...)."
-msgstr "Text taken from the document: check it and replace fixed data with variables ({nom}, {adresse}...)."
+msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...). Les images du document deviennent {logo} et {logo2} : ce sont les logos enregistrés pour l'entreprise qui s'impriment."
+msgstr "Text taken from the document: check it and replace fixed data with variables ({nom}, {adresse}...). The document's images become {logo} and {logo2}: the logos saved for the company are printed there."
 
 msgid "Repartir à neuf"
 msgstr "Start afresh"

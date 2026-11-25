@@ -253,7 +253,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 api.set_docx_entete(z.entete.into());
                 api.set_docx_pied(z.pied.into());
                 api.set_message_docx(
-                    tr("Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...).")
+                    tr("Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...). Les images du document deviennent {logo} et {logo2} : ce sont les logos enregistrés pour l'entreprise qui s'impriment.")
                         .into(),
                 );
                 api.set_docx_version(api.get_docx_version() + 1);

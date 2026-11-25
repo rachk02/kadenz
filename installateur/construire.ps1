@@ -184,7 +184,9 @@ $communes += @('-d', "Extension=$baf")
 $contenu = Join-Path $sortie 'contenu'
 if (Test-Path $contenu) { Remove-Item -Recurse -Force $contenu }
 Copy-Item (Join-Path $PSScriptRoot 'contenu') $contenu -Recurse
-Copy-Item (Join-Path $racine 'CHANGELOG.md') (Join-Path $contenu 'Notes de version.txt')
+# Sous-dossier docs : notes de version, licences des composants, puis le manuel quand il sera livré.
+New-Item -ItemType Directory (Join-Path $contenu 'docs') | Out-Null
+Copy-Item (Join-Path $racine 'CHANGELOG.md') (Join-Path $contenu 'docs\Notes de version.txt')
 # cargo tree plutôt que cargo metadata : ConvertFrom-Json de Windows PowerShell 5.1 refuse un JSON de plus de 2 Mo.
 $arbre = & cargo tree --workspace --locked -e normal,build --target all --prefix none --format '{p}|{l}|{r}' --manifest-path (Join-Path $racine 'Cargo.toml') 2>$null
 $composants = $arbre | Where-Object { $_.Trim() -and $_ -notmatch ' \(\w:|^\S+ v\S+ \(/' } | ForEach-Object { $_ -replace ' \(\*\)$', '' } | Sort-Object -Unique
@@ -200,7 +202,7 @@ $licences += $composants | ForEach-Object {
     $depot = if ($p[2]) { $p[2] } else { 'https://crates.io' }
     "$($p[0]) : $lic ($depot)"
 }
-[System.IO.File]::WriteAllLines((Join-Path $contenu 'Licences-tierces.txt'), $licences, [System.Text.UTF8Encoding]::new($true))
+[System.IO.File]::WriteAllLines((Join-Path $contenu 'docs\Licences-tierces.txt'), $licences, [System.Text.UTF8Encoding]::new($true))
 
 # Deux éditions, un seul programme (docs/spec-monoposte.md, section 6) : le
 # monoposte ajoute la marque « edition-monoposte » à côté de kadenz.exe. Leurs

@@ -4884,8 +4884,8 @@ msgstr "مستند Word"
 msgid "Ce document Word n'a ni en-tête ni pied de page."
 msgstr "ليس لهذا المستند رأس صفحة ولا تذييل."
 
-msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...)."
-msgstr "تم أخذ النص من المستند: راجعه واستبدل البيانات الثابتة بمتغيرات ({nom}، {adresse}...)."
+msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...). Les images du document deviennent {logo} et {logo2} : ce sont les logos enregistrés pour l'entreprise qui s'impriment."
+msgstr "تم أخذ النص من المستند: راجعه واستبدل البيانات الثابتة بمتغيرات ({nom}، {adresse}...). تتحول صور المستند إلى {logo} و{logo2}: تُطبع الشعارات المسجلة للشركة."
 
 msgid "Repartir à neuf"
 msgstr "البدء من جديد"

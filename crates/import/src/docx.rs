@@ -135,7 +135,10 @@ fn valeur_val(e: &BytesStart<'_>) -> Option<String> {
 }
 
 /// Convertit le XML d'une partie Word en lignes de markup (une par paragraphe
-/// non vide ; un saut de ligne forcé coupe la ligne).
+/// non vide ; un saut de ligne forcé coupe la ligne). Une image du paragraphe
+/// (logo) devient une ligne `{logo}`, puis `{logo2}` pour la suivante : l'image
+/// du document n'est pas copiée, c'est le logo de l'entreprise qui s'imprime à
+/// cette place. Au-delà de deux images, les suivantes sont ignorées.
 fn xml_vers_markup(xml: &str) -> String {
     let mut lecteur = Reader::from_str(xml);
     let mut lignes: Vec<String> = Vec::new();
@@ -144,6 +147,8 @@ fn xml_vers_markup(xml: &str) -> String {
     let mut dans_ppr = false;
     let mut dans_texte = false;
     let mut gras = false;
+    let mut image = false;
+    let mut logos = 0;
 
     let finir = |segments: &mut Vec<Segment>, centre: bool, lignes: &mut Vec<String>| {
         if let Some(l) = rendre_ligne(segments, centre) {
@@ -158,7 +163,11 @@ fn xml_vers_markup(xml: &str) -> String {
                 "p" => {
                     segments.clear();
                     centre = false;
+                    image = false;
                 }
+                // `pict` double souvent `drawing` (contenu de secours) : un seul
+                // repère par paragraphe suffit.
+                "drawing" | "pict" => image = true,
                 "pPr" => dans_ppr = true,
                 "r" => gras = false,
                 "b" if !dans_ppr => gras = !coupe(&e),
@@ -167,6 +176,7 @@ fn xml_vers_markup(xml: &str) -> String {
                 _ => {}
             },
             Ok(Event::Empty(e)) => match e.local_name().as_ref() {
+                "drawing" | "pict" => image = true,
                 "b" if !dans_ppr => gras = !coupe(&e),
                 "jc" if dans_ppr => centre = valeur_val(&e).as_deref() == Some("center"),
                 "tab" => segments.push(Segment {
@@ -199,7 +209,19 @@ fn xml_vers_markup(xml: &str) -> String {
                 }
             }
             Ok(Event::End(e)) => match e.local_name().as_ref() {
-                "p" => finir(&mut segments, centre, &mut lignes),
+                "p" => {
+                    if image && logos < 2 {
+                        logos += 1;
+                        let nom = if logos == 1 { "{logo}" } else { "{logo2}" };
+                        lignes.push(if centre {
+                            format!("-> {nom}")
+                        } else {
+                            nom.to_string()
+                        });
+                    }
+                    image = false;
+                    finir(&mut segments, centre, &mut lignes);
+                }
                 "pPr" => dans_ppr = false,
                 "t" => dans_texte = false,
                 _ => {}
@@ -264,6 +286,24 @@ mod tests {
             z.entete,
             "-> **Établissements Ouédraogo & Fils**\nŒuvre d'été « façon » n° 5 – 12 500 € à Ouagadougou, près d'Élie"
         );
+    }
+
+    #[test]
+    fn une_image_devient_le_logo_de_l_entreprise() {
+        let entete = r#"<w:hdr xmlns:w="w"><w:p><w:r><w:drawing><a:blip/></w:drawing></w:r></w:p><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:pict/></w:r><w:r><w:t>ACME</w:t></w:r></w:p><w:p><w:r><w:drawing/></w:r></w:p><w:p><w:r><w:t>fin</w:t></w:r></w:p></w:hdr>"#;
+        let z = lire_zones(&docx(Some(entete), None)).unwrap();
+        // Troisième image ignorée ; le logo reste seul sur sa ligne, avant le texte.
+        assert_eq!(
+            z.entete,
+            "{logo}
+-> {logo2}
+-> ACME
+fin"
+        );
+        // Le markup produit est accepté par les zones d'impression.
+        for ligne in z.entete.lines() {
+            assert!(!ligne.is_empty());
+        }
     }
 
     #[test]

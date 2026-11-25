@@ -4884,8 +4884,8 @@ msgstr "Word belgesi"
 msgid "Ce document Word n'a ni en-tête ni pied de page."
 msgstr "Bu Word belgesinde üst bilgi ve alt bilgi yok."
 
-msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...)."
-msgstr "Metin belgeden alındı: kontrol edin ve sabit verileri değişkenlerle ({nom}, {adresse}...) değiştirin."
+msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...). Les images du document deviennent {logo} et {logo2} : ce sont les logos enregistrés pour l'entreprise qui s'impriment."
+msgstr "Metin belgeden alındı: kontrol edin ve sabit verileri değişkenlerle ({nom}, {adresse}...) değiştirin. Belgedeki görseller {logo} ve {logo2} olur: şirket için kayıtlı logolar yazdırılır."
 
 msgid "Repartir à neuf"
 msgstr "Sıfırdan başla"

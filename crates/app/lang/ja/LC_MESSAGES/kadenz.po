@@ -4884,8 +4884,8 @@ msgstr "Word文書"
 msgid "Ce document Word n'a ni en-tête ni pied de page."
 msgstr "このWord文書にはヘッダーもフッターもありません。"
 
-msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...)."
-msgstr "文書から取り込んだテキストです。内容を確認し、固定のデータを変数（{nom}、{adresse}など）に置き換えてください。"
+msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...). Les images du document deviennent {logo} et {logo2} : ce sont les logos enregistrés pour l'entreprise qui s'impriment."
+msgstr "文書から取り込んだテキストです。内容を確認し、固定のデータを変数（{nom}、{adresse}など）に置き換えてください。文書内の画像は {logo} と {logo2} になり、会社に登録されたロゴが印刷されます。"
 
 msgid "Repartir à neuf"
 msgstr "最初からやり直す"
