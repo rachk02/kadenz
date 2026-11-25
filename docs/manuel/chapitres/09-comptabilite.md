@@ -59,7 +59,7 @@ Les documents annulés sont absents du journal.
 
 ![Journal d'octobre](../captures/09-comptabilite/04-journal-octobre.png)
 
-> **Astuce** À l'ouverture de la page, la liste peut apparaître vide. Rechoisissez le mois dans la liste pour afficher ses écritures.
+> **Astuce** Dans la version 0.3.1, le journal pouvait apparaître vide à l'ouverture de la page : rechoisissez le mois dans la liste pour afficher ses écritures. Les versions suivantes l'affichent directement.
 
 ### Un export provisoire
 

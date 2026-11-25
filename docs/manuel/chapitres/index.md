@@ -5,7 +5,7 @@ Les numéros renvoient aux sections du manuel (par exemple 5.6 : chapitre 5, sec
 ## A
 
 - Abonnement : 12.1, 12.2, 12.3, 12.4
-- Accès à distance : 14.1, 14.2, 14.3, 14.4
+- Accès à distance : 14.1, 14.2, 14.3, 14.4, 14.5
 - Activation (code d') : 12.3
 - Administration du serveur (fenêtre) : 13.4
 - Ajustement de stock : 5.5
@@ -38,6 +38,8 @@ Les numéros renvoient aux sections du manuel (par exemple 5.6 : chapitre 5, sec
 
 ## D
 
+- Demander de l'aide : 15.1
+- Démarrage impossible : 15.5
 - Dépannage : 15.2, 15.3
 - Dernier administrateur : 10.5
 - Désactivation d'un compte : 10.4
@@ -52,6 +54,7 @@ Les numéros renvoient aux sections du manuel (par exemple 5.6 : chapitre 5, sec
 ## E
 
 - Échéance : 6.6
+- Écran principal : 2.4
 - En-tête des documents : 8.4
 - Entreprise (informations) : 8.1
 - Erreurs (journal) : 15.4
@@ -79,10 +82,14 @@ Les numéros renvoient aux sections du manuel (par exemple 5.6 : chapitre 5, sec
 - Impayé (état de paiement) : 6.1
 - Import de produits : 7.2
 - Import de tiers : 7.3
+- Importer des listes existantes : 3.3
 - Impression : 8.4, 8.5
 - Indicateur de connexion : 13.3
 - Installateurs (deux éditions) : 1.1
+- Installation (ce qu'il faut) : 1.2
+- Installation (contenu) : 1.4
 - Installation de Kadenz : 1.3
+- Installation sans écran : 1.8
 - Inventaire : 5.6
 
 ## J
@@ -120,6 +127,7 @@ Les numéros renvoient aux sections du manuel (par exemple 5.6 : chapitre 5, sec
 
 ## P
 
+- Paiement d'un fournisseur : 6.4
 - Paiements (états) : 6.1
 - Palette du mode sombre : 2.1
 - Partiel (état de paiement) : 6.1
@@ -132,6 +140,7 @@ Les numéros renvoient aux sections du manuel (par exemple 5.6 : chapitre 5, sec
 
 - Raccourcis clavier : 15.7
 - Réception d'un bon de commande : 5.2
+- Registre des documents : 4.6
 - Registre des règlements : 6.3
 - Règlement (saisie) : 6.2
 - Relais (accès à distance) : 13.4, 14.1

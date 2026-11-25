@@ -52,7 +52,7 @@ Elle n'a pas d'échéance, ou son échéance n'est pas dépassée, ou elle est s
 
 ### Le journal comptable est vide
 
-À l'ouverture de la page **Comptabilité**, rechoisissez le mois dans la liste (chapitre 09, section 9.2).
+Dans la version 0.3.1, à l'ouverture de la page **Comptabilité**, rechoisissez le mois dans la liste ; les versions suivantes affichent le journal directement (chapitre 09, section 9.2).
 
 ### Un export ne contient pas les bons comptes
 
