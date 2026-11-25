@@ -44,6 +44,22 @@ const DATE_VUE: &str = "abonnement.date_vue";
 const EMISSION_VUE: &str = "abonnement.emission_vue";
 /// Dernier état reçu du serveur, sur un poste.
 const RECU: &str = "abonnement.recu";
+/// Date de début de l'essai gratuit (installation sans licence).
+const ESSAI_DEBUT: &str = "abonnement.essai_debut";
+/// Durée de l'essai gratuit, en jours (décision de l'utilisateur du 2026-11-25).
+pub const DUREE_ESSAI_JOURS: i64 = 30;
+/// Postes permis pendant l'essai : l'édition à plusieurs postes peut s'essayer à
+/// plusieurs ; l'édition à un poste n'en inscrit de toute façon qu'un.
+pub const POSTES_ESSAI: u32 = 5;
+
+/// Démarre l'essai gratuit à l'installation sans licence. Sans effet si un essai a
+/// déjà commencé : il ne se relance pas.
+pub fn demarrer_essai(conn: &Connection, horloge: NaiveDate) -> Resultat<()> {
+    if lire(conn, ESSAI_DEBUT)?.is_none() {
+        ecrire(conn, ESSAI_DEBUT, &en_texte(horloge))?;
+    }
+    Ok(())
+}
 
 /// Table temporaire de l'état de la connexion ; vide, rien n'est bloqué (base
 /// d'un poste, tests).
@@ -212,7 +228,24 @@ fn evaluer(
         erreur: None,
     };
     let modules = match verifiee {
-        None => Vec::new(),
+        None => {
+            // Sans licence : essai gratuit tant que ses 30 jours ne sont pas passés ;
+            // ensuite l'état reste « absent » (lecture seule).
+            let fin = lire(conn, ESSAI_DEBUT)?
+                .as_deref()
+                .and_then(date)
+                .map(|d| d + chrono::Duration::days(DUREE_ESSAI_JOURS));
+            match fin {
+                Some(fin) if (fin - aujourdhui).num_days() >= 0 => {
+                    let jours = (fin - aujourdhui).num_days();
+                    abonnement.statut = Statut::Essai;
+                    abonnement.jours_restants = Some(jours);
+                    abonnement.avertissement = Avertissement::pour(jours);
+                    Module::TOUS.to_vec()
+                }
+                _ => Vec::new(),
+            }
+        }
         Some(Err(m)) => {
             abonnement.statut = Statut::Invalide;
             abonnement.erreur = Some(Refus {
@@ -285,6 +318,7 @@ pub const POSTES_SANS_ABONNEMENT_ACTIF: u32 = 1;
 pub fn postes_permis(abonnement: &Abonnement) -> u32 {
     match (abonnement.statut, &abonnement.licence) {
         (Statut::Actif, Some(licence)) => licence.postes,
+        (Statut::Essai, _) => POSTES_ESSAI,
         _ => POSTES_SANS_ABONNEMENT_ACTIF,
     }
 }
@@ -427,6 +461,46 @@ mod tests {
             &cle_portail(),
         )
         .unwrap()
+    }
+
+    #[test]
+    fn essai_gratuit_de_trente_jours_sans_licence() {
+        let conn = ouvrir_en_memoire().unwrap();
+        let admin = compte(&conn, "admin", Role::Admin);
+        let cles = [cle_portail().verifying_key()];
+        // Sans essai démarré : lecture seule, un poste.
+        let a = appliquer_avec(&conn, j("2026-11-25"), &cles).unwrap();
+        assert_eq!(a.statut, Statut::Absent);
+        assert!(a.lecture_seule());
+        // Essai démarré le 25 novembre : 30 jours, tous les modules, saisie permise.
+        demarrer_essai(&conn, j("2026-11-25")).unwrap();
+        let a = appliquer_avec(&conn, j("2026-11-25"), &cles).unwrap();
+        assert_eq!(a.statut, Statut::Essai);
+        assert_eq!(a.jours_restants, Some(30));
+        assert!(!a.lecture_seule());
+        assert_eq!(postes_permis(&a), POSTES_ESSAI);
+        assert!(exiger_ecriture(&conn).is_ok());
+        // Un second démarrage ne relance pas l'essai.
+        demarrer_essai(&conn, j("2026-12-20")).unwrap();
+        let a = appliquer_avec(&conn, j("2026-12-24"), &cles).unwrap();
+        assert_eq!((a.statut, a.jours_restants), (Statut::Essai, Some(1)));
+        // Dernier jour (le 25 décembre) encore permis, puis lecture seule.
+        let a = appliquer_avec(&conn, j("2026-12-25"), &cles).unwrap();
+        assert_eq!((a.statut, a.jours_restants), (Statut::Essai, Some(0)));
+        let a = appliquer_avec(&conn, j("2026-12-26"), &cles).unwrap();
+        assert_eq!(a.statut, Statut::Absent);
+        assert!(a.lecture_seule());
+        assert!(matches!(
+            exiger_ecriture(&conn),
+            Err(Erreur::LectureSeule { .. })
+        ));
+        // Reculer l'horloge ne rend pas l'essai : la date retenue ne recule pas.
+        let a = appliquer_avec(&conn, j("2026-11-30"), &cles).unwrap();
+        assert_eq!(a.statut, Statut::Absent);
+        // Une licence prend le relais de l'essai.
+        let cle = licence(&conn, "2027-12-31", "2026-12-26");
+        let a = enregistrer_avec(&conn, &admin, &cle, j("2026-12-26"), &cles).unwrap();
+        assert_eq!(a.statut, Statut::Actif);
     }
 
     #[test]

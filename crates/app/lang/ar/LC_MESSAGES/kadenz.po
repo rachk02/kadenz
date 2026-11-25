@@ -3057,9 +3057,6 @@ msgstr "ترخيص الاشتراك مرتبط بالمؤسسة. أرسل الم
 msgid "Identifiant de l'entreprise"
 msgstr "معرّف المؤسسة"
 
-msgid "Licence : aucune pour l'instant, serveur en lecture seule"
-msgstr "الترخيص: لا يوجد حاليًا، الخادم في وضع القراءة فقط"
-
 msgid "Copié."
 msgstr "تم النسخ."
 
@@ -4750,8 +4747,8 @@ msgstr "جارٍ تفعيل الترخيص…"
 msgid "Le code de licence est incomplet ou erroné : corrigez-le, ou videz le champ pour continuer sans licence."
 msgstr "رمز الترخيص غير مكتمل أو خاطئ: صحّحه، أو أفرغ الحقل للمتابعة دون ترخيص."
 
-msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, le serveur reste en lecture seule et un seul poste peut s'inscrire."
-msgstr "أدخل رمز الترخيص الذي تلقيته مع الاشتراك. يُفعَّل عبر الإنترنت لدى بوابة Kadenz عند تجاوز خطوة الشركة: يلزم اتصال بالإنترنت. بدون رمز، يبقى الخادم للقراءة فقط ولا يمكن تسجيل إلا جهاز واحد."
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, le serveur démarre par un essai gratuit de 30 jours ; ensuite il reste en lecture seule et un seul poste peut s'inscrire."
+msgstr "أدخل رمز الترخيص الذي تلقيته مع الاشتراك. يُفعَّل عبر الإنترنت لدى بوابة Kadenz عند تجاوز خطوة الشركة: يلزم اتصال بالإنترنت. بدون رمز، يبدأ الخادم بتجربة مجانية مدتها 30 يومًا؛ وبعدها يبقى للقراءة فقط ولا يمكن تسجيل إلا جهاز واحد."
 
 msgid "ce code ne sert pas à ce logiciel : vérifiez la gamme indiquée sur votre abonnement"
 msgstr "هذا الرمز لا يصلح لهذا البرنامج: تحقق من الفئة المذكورة في اشتراكك"
@@ -4774,14 +4771,14 @@ msgstr "هذا الترخيص سيجعل انتهاء الاشتراك في {}،
 
 # Édition monoposte, lot M2 : démarrage, assistant, inscription automatique (2026-11-19)
 
-msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, Kadenz reste en lecture seule jusqu'à l'activation d'un code, dans les Paramètres, rubrique « Abonnement »."
-msgstr "أدخل رمز الترخيص المستلم مع الاشتراك. يُفعَّل عبر الإنترنت لدى بوابة Kadenz عند تجاوز خطوة المؤسسة: يلزم اتصال بالإنترنت. بدون رمز، يبقى Kadenz للقراءة فقط إلى أن يُفعَّل رمز من الإعدادات، قسم «الاشتراك»."
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, Kadenz démarre par un essai gratuit de 30 jours ; ensuite il reste en lecture seule jusqu'à l'activation d'un code, dans les Paramètres, rubrique « Abonnement »."
+msgstr "أدخل رمز الترخيص المستلم مع الاشتراك. يُفعَّل عبر الإنترنت لدى بوابة Kadenz عند تجاوز خطوة المؤسسة: يلزم اتصال بالإنترنت. بدون رمز، يبدأ Kadenz بتجربة مجانية مدتها 30 يومًا؛ وبعدها يبقى للقراءة فقط إلى أن يُفعَّل رمز من الإعدادات، قسم «الاشتراك»."
 
 msgid "Sauvegarde chiffrée chaque jour, Kadenz ouvert, et à chaque fermeture. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr."
 msgstr "نسخة احتياطية مشفرة كل يوم أثناء فتح Kadenz، وعند كل إغلاق. بدون كلمة المرور هذه لا يمكن استعادة أي نسخة احتياطية، ولا يستطيع الناشر استرجاعها: احفظها في مكان آمن."
 
-msgid "Licence : aucune pour l'instant, lecture seule"
-msgstr "الترخيص: لا يوجد حاليًا، للقراءة فقط"
+msgid "Licence : aucune pour l'instant, essai gratuit de 30 jours"
+msgstr "الترخيص: لا يوجد حاليًا، تجربة مجانية لمدة 30 يومًا"
 
 msgid "Réessayer"
 msgstr "إعادة المحاولة"
@@ -4910,3 +4907,21 @@ msgstr "لا تُجرى أي نسخة احتياطية: كلمة مرور الن
 
 msgid "Les sauvegardes sont sur le même disque que la base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans les Paramètres, rubrique « Sauvegardes »."
 msgstr "النسخ الاحتياطية على القرص نفسه الذي توجد عليه قاعدة البيانات: عطل هذا القرص سيفقدها كلها. اختر مجلدًا آخر في الإعدادات، قسم «النسخ الاحتياطية»."
+
+msgid "Essai gratuit"
+msgstr "تجربة مجانية"
+
+msgid "Essai gratuit : il se termine aujourd'hui. Kadenz passera en lecture seule dès demain sans code d'abonnement."
+msgstr "التجربة المجانية: تنتهي اليوم. سيصبح Kadenz للقراءة فقط ابتداءً من الغد بدون رمز اشتراك."
+
+msgid "Essai gratuit : il se termine demain. Kadenz passera ensuite en lecture seule sans code d'abonnement."
+msgstr "التجربة المجانية: تنتهي غدًا. بعدها سيصبح Kadenz للقراءة فقط بدون رمز اشتراك."
+
+msgid "Essai gratuit : {} jours restants. Ensuite Kadenz passera en lecture seule sans code d'abonnement."
+msgstr "التجربة المجانية: بقي {} يومًا. بعدها سيصبح Kadenz للقراءة فقط بدون رمز اشتراك."
+
+msgid "Pour activer un code : Paramètres, rubrique « Abonnement »."
+msgstr "لتفعيل رمز: الإعدادات، قسم «الاشتراك»."
+
+msgid "Adressez-vous à l'administrateur pour activer un code d'abonnement."
+msgstr "اطلب من المسؤول تفعيل رمز اشتراك."

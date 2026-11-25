@@ -220,12 +220,18 @@ pub fn installer(
     init: &InstallationInitiale,
     licence: Option<&str>,
 ) -> Result<Utilisateur, Erreur> {
-    installer_avec(
+    let admin = installer_avec(
         conn,
         init,
         licence,
         &kadenz_licence::entreprise::cles_portail(),
-    )
+    )?;
+    // Sans licence : l'essai gratuit de 30 jours commence (décision de l'utilisateur du
+    // 2026-11-25). Les essais qui passent par `installer_avec` restent sans essai.
+    if licence.is_none() {
+        abonnement::demarrer_essai(conn, abonnement::horloge())?;
+    }
+    Ok(admin)
 }
 
 #[doc(hidden)]

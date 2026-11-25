@@ -583,6 +583,9 @@ struct Contexte {
     distance: distance::Distance,
     /// Version du protocole parlée ([`Config::version_protocole`]).
     version: u32,
+    /// Serveur intégré du monoposte (portée `Compte`) : un poste au plus, quel que
+    /// soit l'abonnement ou l'essai gratuit.
+    un_poste: bool,
 }
 
 /// Rend sa place à la connexion quand la session se termine.
@@ -665,6 +668,7 @@ impl Serveur {
             dossier: config.dossier.clone(),
             distance: distance::Distance::default(),
             version: config.version_protocole,
+            un_poste: config.portee == Portee::Compte,
         });
         contexte.distance.rafraichir(&contexte.base);
         let relais = {
@@ -1117,13 +1121,15 @@ fn inscrire(contexte: &Contexte, poste: &str, ip: &str, secret: String) -> Repon
     }
     let poste = poste.to_string();
     let cles_portail = contexte.cles.clone();
+    let un_poste = contexte.un_poste;
     let resultat = contexte.base.executer(move |c| {
         let a = abonnement::appliquer_avec(c, abonnement::horloge(), &cles_portail)?;
+        let permis = abonnement::postes_permis(&a);
         inscription::consommer(
             c,
             &secret,
             &poste,
-            abonnement::postes_permis(&a),
+            if un_poste { permis.min(1) } else { permis },
             chrono::Utc::now(),
         )
     });

@@ -3057,9 +3057,6 @@ msgstr "サブスクリプションのライセンスは企業に紐づきます
 msgid "Identifiant de l'entreprise"
 msgstr "企業の識別子"
 
-msgid "Licence : aucune pour l'instant, serveur en lecture seule"
-msgstr "ライセンス：現在なし、サーバーは閲覧専用"
-
 msgid "Copié."
 msgstr "コピーしました。"
 
@@ -4750,8 +4747,8 @@ msgstr "ライセンスを有効化しています…"
 msgid "Le code de licence est incomplet ou erroné : corrigez-le, ou videz le champ pour continuer sans licence."
 msgstr "ライセンスコードが不完全か誤っています。修正するか、欄を空にしてライセンスなしで続行してください。"
 
-msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, le serveur reste en lecture seule et un seul poste peut s'inscrire."
-msgstr "サブスクリプションと一緒に受け取ったライセンスコードを入力してください。「会社」の手順を終えるときに Kadenz ポータルでオンライン有効化されます。インターネット接続が必要です。コードがない場合、サーバーは読み取り専用のままで、登録できる端末は 1 台だけです。"
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, le serveur démarre par un essai gratuit de 30 jours ; ensuite il reste en lecture seule et un seul poste peut s'inscrire."
+msgstr "サブスクリプションと一緒に受け取ったライセンスコードを入力してください。「会社」の手順を終えるときに Kadenz ポータルでオンライン有効化されます。インターネット接続が必要です。コードがない場合、サーバーは 30 日間の無料トライアルで始まり、その後は読み取り専用になり、登録できる端末は 1 台だけです。"
 
 msgid "ce code ne sert pas à ce logiciel : vérifiez la gamme indiquée sur votre abonnement"
 msgstr "このコードはこのソフトウェア用ではありません：サブスクリプションに記載されたエディションを確認してください"
@@ -4774,14 +4771,14 @@ msgstr "このライセンスではサブスクリプションの期限が {} �
 
 # Édition monoposte, lot M2 : démarrage, assistant, inscription automatique (2026-11-19)
 
-msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, Kadenz reste en lecture seule jusqu'à l'activation d'un code, dans les Paramètres, rubrique « Abonnement »."
-msgstr "サブスクリプションで受け取ったライセンスコードを入力してください。会社のステップを進むときに Kadenz ポータルでオンライン認証されるため、インターネット接続が必要です。コードがない場合、設定の「サブスクリプション」でコードを有効にするまで、Kadenz は読み取り専用になります。"
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, Kadenz démarre par un essai gratuit de 30 jours ; ensuite il reste en lecture seule jusqu'à l'activation d'un code, dans les Paramètres, rubrique « Abonnement »."
+msgstr "サブスクリプションで受け取ったライセンスコードを入力してください。会社のステップを進むときに Kadenz ポータルでオンライン認証されるため、インターネット接続が必要です。コードがない場合、Kadenz は 30 日間の無料トライアルで始まり、その後は設定の「サブスクリプション」でコードを有効にするまで読み取り専用になります。"
 
 msgid "Sauvegarde chiffrée chaque jour, Kadenz ouvert, et à chaque fermeture. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr."
 msgstr "Kadenz を開いている間は毎日、また終了するたびに、暗号化されたバックアップを作成します。このパスワードがないとバックアップは復元できず、発行元も復旧できません。安全な場所に控えてください。"
 
-msgid "Licence : aucune pour l'instant, lecture seule"
-msgstr "ライセンス：現在なし、読み取り専用"
+msgid "Licence : aucune pour l'instant, essai gratuit de 30 jours"
+msgstr "ライセンス：現在なし、30 日間の無料トライアル"
 
 msgid "Réessayer"
 msgstr "再試行"
@@ -4910,3 +4907,21 @@ msgstr "バックアップは行われていません。バックアップのパ
 
 msgid "Les sauvegardes sont sur le même disque que la base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans les Paramètres, rubrique « Sauvegardes »."
 msgstr "バックアップがデータベースと同じディスクにあります。このディスクが故障するとすべて失われます。設定の「バックアップ」で別のフォルダーを選んでください。"
+
+msgid "Essai gratuit"
+msgstr "無料トライアル"
+
+msgid "Essai gratuit : il se termine aujourd'hui. Kadenz passera en lecture seule dès demain sans code d'abonnement."
+msgstr "無料トライアル：本日で終了します。購読コードがない場合、Kadenzは明日から閲覧専用になります。"
+
+msgid "Essai gratuit : il se termine demain. Kadenz passera ensuite en lecture seule sans code d'abonnement."
+msgstr "無料トライアル：明日で終了します。その後、購読コードがない場合、Kadenzは閲覧専用になります。"
+
+msgid "Essai gratuit : {} jours restants. Ensuite Kadenz passera en lecture seule sans code d'abonnement."
+msgstr "無料トライアル：残り{}日です。その後、購読コードがない場合、Kadenzは閲覧専用になります。"
+
+msgid "Pour activer un code : Paramètres, rubrique « Abonnement »."
+msgstr "コードを有効にするには：設定の「サブスクリプション」へ。"
+
+msgid "Adressez-vous à l'administrateur pour activer un code d'abonnement."
+msgstr "管理者に購読コードの有効化を依頼してください。"

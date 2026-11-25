@@ -205,10 +205,12 @@ $licences += $composants | ForEach-Object {
 # Deux éditions, un seul programme (docs/spec-monoposte.md, section 6) : le
 # monoposte ajoute la marque « edition-monoposte » à côté de kadenz.exe. Leurs
 # paquets partagent le code de mise à niveau (l'une remplace l'autre), leurs
-# installateurs ont chacun leur nom et leur code.
+# installateurs ont chacun leur nom et leur code. Noms commerciaux (décision du
+# 2026-11-25) : « Kadenz » pour le monoposte, « Kadenz Entreprise » pour le
+# multiposte ; les noms de fichiers ne changent pas.
 $editions = @(
-    @{ Nom = 'multiposte'; Msi = 'Kadenz.msi'; Setup = "KadenzSetup-$version.exe"; Bundle = 'Kadenz'; Code = '39f20fc0-e088-4792-85bb-29b2cc47d5ef' },
-    @{ Nom = 'monoposte'; Msi = 'KadenzMonoposte.msi'; Setup = "KadenzMonoposteSetup-$version.exe"; Bundle = 'Kadenz monoposte'; Code = '5d7c3a1e-8b24-4f6a-9c0d-2e1f7a3b4c58' }
+    @{ Nom = 'multiposte'; Msi = 'Kadenz.msi'; Setup = "KadenzSetup-$version.exe"; Bundle = 'Kadenz Entreprise'; Code = '39f20fc0-e088-4792-85bb-29b2cc47d5ef' },
+    @{ Nom = 'monoposte'; Msi = 'KadenzMonoposte.msi'; Setup = "KadenzMonoposteSetup-$version.exe"; Bundle = 'Kadenz'; Code = '5d7c3a1e-8b24-4f6a-9c0d-2e1f7a3b4c58' }
 )
 $contenuBase = $contenu
 foreach ($edition in $editions) {

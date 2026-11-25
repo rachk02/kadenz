@@ -3057,9 +3057,6 @@ msgstr "Abonelik lisansı şirkete bağlıdır. Lisansı almak için aşağıdak
 msgid "Identifiant de l'entreprise"
 msgstr "Şirket kimliği"
 
-msgid "Licence : aucune pour l'instant, serveur en lecture seule"
-msgstr "Lisans: şimdilik yok, sunucu salt okunur"
-
 msgid "Copié."
 msgstr "Kopyalandı."
 
@@ -4750,8 +4747,8 @@ msgstr "Lisans etkinleştiriliyor…"
 msgid "Le code de licence est incomplet ou erroné : corrigez-le, ou videz le champ pour continuer sans licence."
 msgstr "Lisans kodu eksik veya hatalı: düzeltin ya da lisanssız devam etmek için alanı boşaltın."
 
-msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, le serveur reste en lecture seule et un seul poste peut s'inscrire."
-msgstr "Abonelikle birlikte aldığınız lisans kodunu girin. Şirket adımını geçtiğinizde Kadenz portalında çevrimiçi etkinleştirilir: İnternet bağlantısı gerekir. Kod olmadan sunucu salt okunur kalır ve yalnızca bir iş istasyonu kaydolabilir."
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, le serveur démarre par un essai gratuit de 30 jours ; ensuite il reste en lecture seule et un seul poste peut s'inscrire."
+msgstr "Abonelikle birlikte aldığınız lisans kodunu girin. Şirket adımını geçtiğinizde Kadenz portalında çevrimiçi etkinleştirilir: İnternet bağlantısı gerekir. Kod olmadan sunucu 30 günlük ücretsiz denemeyle başlar; ardından salt okunur kalır ve yalnızca bir iş istasyonu kaydolabilir."
 
 msgid "ce code ne sert pas à ce logiciel : vérifiez la gamme indiquée sur votre abonnement"
 msgstr "bu kod bu yazılım için değil: aboneliğinizde belirtilen ürün grubunu kontrol edin"
@@ -4774,14 +4771,14 @@ msgstr "bu lisans aboneliğin bitiş tarihini {} yapar, bu da mevcut bitiş tari
 
 # Édition monoposte, lot M2 : démarrage, assistant, inscription automatique (2026-11-19)
 
-msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, Kadenz reste en lecture seule jusqu'à l'activation d'un code, dans les Paramètres, rubrique « Abonnement »."
-msgstr "Abonelikle aldığınız lisans kodunu girin. Kod, Şirket adımı geçilirken Kadenz portalında çevrimiçi etkinleştirilir: İnternet bağlantısı gerekir. Kod olmadan Kadenz, Ayarlar, “Abonelik” bölümünden bir kod etkinleştirilene kadar salt okunur kalır."
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, Kadenz démarre par un essai gratuit de 30 jours ; ensuite il reste en lecture seule jusqu'à l'activation d'un code, dans les Paramètres, rubrique « Abonnement »."
+msgstr "Abonelikle aldığınız lisans kodunu girin. Kod, Şirket adımı geçilirken Kadenz portalında çevrimiçi etkinleştirilir: İnternet bağlantısı gerekir. Kod olmadan Kadenz 30 günlük ücretsiz denemeyle başlar; ardından Ayarlar, “Abonelik” bölümünden bir kod etkinleştirilene kadar salt okunur kalır."
 
 msgid "Sauvegarde chiffrée chaque jour, Kadenz ouvert, et à chaque fermeture. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr."
 msgstr "Kadenz açıkken her gün ve her kapanışta şifreli yedekleme. Bu parola olmadan hiçbir yedek geri yüklenemez ve yayıncı onu kurtaramaz: güvenli bir yere not edin."
 
-msgid "Licence : aucune pour l'instant, lecture seule"
-msgstr "Lisans: şimdilik yok, salt okunur"
+msgid "Licence : aucune pour l'instant, essai gratuit de 30 jours"
+msgstr "Lisans: şimdilik yok, 30 günlük ücretsiz deneme"
 
 msgid "Réessayer"
 msgstr "Yeniden dene"
@@ -4910,3 +4907,21 @@ msgstr "Hiçbir yedekleme yapılmıyor: yedek parolası ayarlanmamış. Ayarlar'
 
 msgid "Les sauvegardes sont sur le même disque que la base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans les Paramètres, rubrique « Sauvegardes »."
 msgstr "Yedekler veritabanıyla aynı diskte: bu diskin arızalanması hepsini kaybettirir. Ayarlar'da \"Yedeklemeler\" bölümünden başka bir klasör seçin."
+
+msgid "Essai gratuit"
+msgstr "Ücretsiz deneme"
+
+msgid "Essai gratuit : il se termine aujourd'hui. Kadenz passera en lecture seule dès demain sans code d'abonnement."
+msgstr "Ücretsiz deneme: bugün bitiyor. Abonelik kodu olmadan Kadenz yarından itibaren salt okunur olacak."
+
+msgid "Essai gratuit : il se termine demain. Kadenz passera ensuite en lecture seule sans code d'abonnement."
+msgstr "Ücretsiz deneme: yarın bitiyor. Ardından abonelik kodu olmadan Kadenz salt okunur olacak."
+
+msgid "Essai gratuit : {} jours restants. Ensuite Kadenz passera en lecture seule sans code d'abonnement."
+msgstr "Ücretsiz deneme: {} gün kaldı. Ardından abonelik kodu olmadan Kadenz salt okunur olacak."
+
+msgid "Pour activer un code : Paramètres, rubrique « Abonnement »."
+msgstr "Kodu etkinleştirmek için: Ayarlar, “Abonelik” bölümü."
+
+msgid "Adressez-vous à l'administrateur pour activer un code d'abonnement."
+msgstr "Yöneticiden bir abonelik kodu etkinleştirmesini isteyin."

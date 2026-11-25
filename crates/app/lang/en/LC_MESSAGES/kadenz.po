@@ -3057,9 +3057,6 @@ msgstr "The subscription licence is tied to the company. Send the identifier bel
 msgid "Identifiant de l'entreprise"
 msgstr "Company identifier"
 
-msgid "Licence : aucune pour l'instant, serveur en lecture seule"
-msgstr "Licence: none for now, server read-only"
-
 msgid "Copié."
 msgstr "Copied."
 
@@ -4750,8 +4747,8 @@ msgstr "Activating the license…"
 msgid "Le code de licence est incomplet ou erroné : corrigez-le, ou videz le champ pour continuer sans licence."
 msgstr "The license code is incomplete or incorrect: correct it, or clear the field to continue without a license."
 
-msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, le serveur reste en lecture seule et un seul poste peut s'inscrire."
-msgstr "Enter the license code received with the subscription. It is activated online, with the Kadenz portal, when you leave the Company step: an Internet connection is required. Without a code, the server stays read-only and only one workstation can register."
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, le serveur démarre par un essai gratuit de 30 jours ; ensuite il reste en lecture seule et un seul poste peut s'inscrire."
+msgstr "Enter the license code received with the subscription. It is activated online, with the Kadenz portal, when you leave the Company step: an Internet connection is required. Without a code, the server starts with a 30-day free trial; after that it stays read-only and only one workstation can register."
 
 msgid "ce code ne sert pas à ce logiciel : vérifiez la gamme indiquée sur votre abonnement"
 msgstr "this code is not for this software: check the range shown on your subscription"
@@ -4774,14 +4771,14 @@ msgstr "this license would bring the subscription to {}, before its current expi
 
 # Édition monoposte, lot M2 : démarrage, assistant, inscription automatique (2026-11-19)
 
-msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, Kadenz reste en lecture seule jusqu'à l'activation d'un code, dans les Paramètres, rubrique « Abonnement »."
-msgstr "Enter the license code received with the subscription. It is activated online, with the Kadenz portal, when you leave the Company step: an Internet connection is required. Without a code, Kadenz stays read-only until a code is activated, in Settings, “Subscription” section."
+msgid "Saisissez le code de licence reçu avec l'abonnement. Il est activé en ligne, auprès du portail de Kadenz, au passage de l'étape Entreprise : une connexion à Internet est nécessaire. Sans code, Kadenz démarre par un essai gratuit de 30 jours ; ensuite il reste en lecture seule jusqu'à l'activation d'un code, dans les Paramètres, rubrique « Abonnement »."
+msgstr "Enter the license code received with the subscription. It is activated online, with the Kadenz portal, when you leave the Company step: an Internet connection is required. Without a code, Kadenz starts with a 30-day free trial; after that it stays read-only until a code is activated, in Settings, “Subscription” section."
 
 msgid "Sauvegarde chiffrée chaque jour, Kadenz ouvert, et à chaque fermeture. Sans ce mot de passe, aucune sauvegarde ne peut être restaurée, et l'éditeur ne peut pas le retrouver : notez-le en lieu sûr."
 msgstr "Encrypted backup every day while Kadenz is open, and each time it is closed. Without this password, no backup can be restored, and the publisher cannot recover it: write it down somewhere safe."
 
-msgid "Licence : aucune pour l'instant, lecture seule"
-msgstr "License: none for now, read-only"
+msgid "Licence : aucune pour l'instant, essai gratuit de 30 jours"
+msgstr "License: none for now, 30-day free trial"
 
 msgid "Réessayer"
 msgstr "Try again"
@@ -4910,3 +4907,21 @@ msgstr "No backup is being made: the backup password is not set. Set it in Setti
 
 msgid "Les sauvegardes sont sur le même disque que la base : une panne de ce disque les perdrait toutes. Choisissez un autre dossier dans les Paramètres, rubrique « Sauvegardes »."
 msgstr "Backups are on the same disk as the database: a failure of that disk would lose them all. Choose another folder in Settings, under \"Backups\"."
+
+msgid "Essai gratuit"
+msgstr "Free trial"
+
+msgid "Essai gratuit : il se termine aujourd'hui. Kadenz passera en lecture seule dès demain sans code d'abonnement."
+msgstr "Free trial: it ends today. Kadenz will become read-only tomorrow without a subscription code."
+
+msgid "Essai gratuit : il se termine demain. Kadenz passera ensuite en lecture seule sans code d'abonnement."
+msgstr "Free trial: it ends tomorrow. Kadenz will then become read-only without a subscription code."
+
+msgid "Essai gratuit : {} jours restants. Ensuite Kadenz passera en lecture seule sans code d'abonnement."
+msgstr "Free trial: {} days left. After that, Kadenz will become read-only without a subscription code."
+
+msgid "Pour activer un code : Paramètres, rubrique « Abonnement »."
+msgstr "To activate a code: Settings, “Subscription” section."
+
+msgid "Adressez-vous à l'administrateur pour activer un code d'abonnement."
+msgstr "Ask the administrator to activate a subscription code."

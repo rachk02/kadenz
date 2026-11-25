@@ -88,6 +88,7 @@ pub(crate) fn vue(a: &Abonnement, recu_le: &str, gere: bool, poste: NaiveDate) -
 
     let etat = match a.statut {
         Statut::Actif => tr("Actif"),
+        Statut::Essai => tr("Essai gratuit"),
         Statut::Echu => tr("Échu : lecture seule"),
         Statut::Absent => tr("Aucun abonnement : lecture seule"),
         Statut::Invalide => tr("Licence refusée : lecture seule"),
@@ -149,6 +150,9 @@ pub(crate) fn vue(a: &Abonnement, recu_le: &str, gere: bool, poste: NaiveDate) -
         ));
         v.lignes.push((tr("Émise le"), date(&l.emise_le)));
     } else {
+        if let (Statut::Essai, Some(jours)) = (a.statut, a.jours_restants) {
+            v.lignes.push((tr("Jours restants"), jours.to_string()));
+        }
         v.lignes.push((
             tr("Postes"),
             if a.postes_utilises <= 1 {
@@ -199,14 +203,31 @@ pub(crate) fn vue(a: &Abonnement, recu_le: &str, gere: bool, poste: NaiveDate) -
                 ),
             }
         }
-        (Statut::Actif, _) => String::new(),
+        (Statut::Essai, Some(av)) if av.tous_les_comptes || gere => {
+            match a.jours_restants.unwrap_or_default() {
+                0 => tr(
+                    "Essai gratuit : il se termine aujourd'hui. Kadenz passera en lecture seule dès demain sans code d'abonnement.",
+                ),
+                1 => tr(
+                    "Essai gratuit : il se termine demain. Kadenz passera ensuite en lecture seule sans code d'abonnement.",
+                ),
+                jours => trf(
+                    "Essai gratuit : {} jours restants. Ensuite Kadenz passera en lecture seule sans code d'abonnement.",
+                    &[&jours],
+                ),
+            }
+        }
+        (Statut::Actif | Statut::Essai, _) => String::new(),
     };
     v.bandeau_grave = v.lecture_seule;
     if !v.bandeau.is_empty() {
-        v.bandeau_aide = if gere {
-            tr("Pour renouveler : Paramètres, rubrique « Abonnement ».")
-        } else {
-            tr("Adressez-vous à l'administrateur pour renouveler l'abonnement.")
+        v.bandeau_aide = match (a.statut == Statut::Essai, gere) {
+            (true, true) => tr("Pour activer un code : Paramètres, rubrique « Abonnement »."),
+            (true, false) => {
+                tr("Adressez-vous à l'administrateur pour activer un code d'abonnement.")
+            }
+            (false, true) => tr("Pour renouveler : Paramètres, rubrique « Abonnement »."),
+            (false, false) => tr("Adressez-vous à l'administrateur pour renouveler l'abonnement."),
         };
     }
     v

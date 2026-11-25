@@ -170,11 +170,12 @@ Fermeture de la session Windows ou arrêt de la machine : winit (0.30.13, `platf
 
 ## 7. Licence et noms
 
-**À trancher par l'utilisateur.**
+**Tranché par l'utilisateur le 2026-11-25** (noms et essai) ; prix, formule et modules restent à fixer.
 
+- Noms commerciaux : **Kadenz** (monoposte) et **Kadenz Entreprise** (serveur et plusieurs postes). Seuls les noms affichés des installateurs changent, pas les noms de fichiers.
+- Essai gratuit de 30 jours, pour les deux éditions, à l'installation sans code : tous les modules, saisie permise, ensuite lecture seule jusqu'à l'activation d'un code. Statut `essai` du protocole ; la date de début est gardée dans les paramètres système et ne se relance pas ; reculer l'horloge ne rend rien. Le monoposte n'inscrit qu'un poste, même pendant l'essai ; l'édition Entreprise en permet 5 pendant l'essai.
 - Licence de l'édition monoposte. Techniquement, un code de gamme `entreprise` à 1 poste suffit déjà : l'abonnement du serveur intégré porte `postes = 1`. Le portail n'a rien à changer. Restent à fixer le prix, la formule et les modules (grille de prix ouverte, décision 73).
-- Noms commerciaux des deux éditions.
-- Section 3.1 : essai ou socle gratuit, plutôt que la lecture seule sans licence.
+- Section 3.1 : essai de 30 jours retenu (voir ci-dessus).
 
 ## 8. Passage au multiposte (plus tard, non spécifié)
 

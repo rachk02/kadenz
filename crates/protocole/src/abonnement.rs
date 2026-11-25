@@ -40,6 +40,10 @@ pub enum Statut {
     /// Licence enregistrée mais refusée (signature, autre entreprise...).
     Invalide,
     Actif,
+    /// Essai gratuit en cours (30 jours depuis l'installation, sans licence) :
+    /// tous les modules, saisie permise ; `jours_restants` donne le temps restant.
+    /// L'essai fini, l'état redevient `Absent` (lecture seule).
+    Essai,
     /// Échéance passée : lecture seule dès le lendemain, sans délai de grâce
     /// (décision 21).
     Echu,
@@ -48,7 +52,7 @@ pub enum Statut {
 impl Statut {
     /// Absent et Invalide sont aussi en lecture seule (décision 40).
     pub fn lecture_seule(self) -> bool {
-        self != Statut::Actif
+        !matches!(self, Statut::Actif | Statut::Essai)
     }
 }
 

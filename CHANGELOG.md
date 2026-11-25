@@ -4,6 +4,11 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 
 ## [Non publié]
 
+### Ajouté
+
+- Essai gratuit de 30 jours à l'installation sans code d'abonnement, pour le monoposte comme pour le serveur : tous les modules et la saisie sont permis, avec un bandeau qui annonce la fin de l'essai ; ensuite Kadenz passe en lecture seule jusqu'à l'activation d'un code.
+- Noms commerciaux : l'installateur du monoposte s'appelle « Kadenz », celui du serveur et des postes « Kadenz Entreprise » (les noms de fichiers ne changent pas).
+
 ## [0.3.0] - 2026-11-25
 
 Numérotation : Kadenz reste en 0.x (décision du 2026-11-25) ; la phase 2 suit en 0.3.x, le troisième chiffre pouvant monter jusqu'à 65535 (limite des installateurs MSI).
