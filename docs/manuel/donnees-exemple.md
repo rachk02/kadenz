@@ -35,6 +35,24 @@ Règle de confidentialité : aucune capture ne doit montrer un nom d'utilisateur
 
 Valeurs par défaut de l'assistant, conservées : TVA 0 ; 18, remise 0 ; 5 ; 10 ; 15, retenue 0 ; 5 ; 10 ; 15, modes de paiement Espèce, Chèque, Virement bancaire, Carte bancaire, Moov money, Orange money, montant en lettres en orthographe traditionnelle.
 
+## Tiers (chapitre 03)
+
+| Nom | Type | Téléphone | Localisation | IFU |
+|---|---|---|---|---|
+| Boulangerie du Marché | Client | +226 70 00 00 01 | Ouagadougou | 0000001B |
+| Pharmacie de la Paix | Client | +226 70 00 00 02 | Bobo-Dioulasso | 0000002C |
+| Grossiste Central SA | Fournisseur | +226 70 00 00 03 | Ouagadougou | 0000003D |
+
+## Produits et services (chapitre 03)
+
+| Référence | Désignation | Prix (FCFA) | Sens | Nature | Suivi en stock |
+|---|---|---|---|---|---|
+| FAR-50 | Farine de blé 50 kg | 25 000 | Vente | Marchandise | oui |
+| SUC-25 | Sucre en poudre 25 kg | 18 000 | Vente | Marchandise | oui |
+| LIV-01 | Livraison en ville | 5 000 | Vente | Service | non |
+
+Règle ajoutée : les boîtes de sélection de fichier de Windows montrent les dossiers personnels de la personne qui capture. Ne jamais capturer une telle boîte ; pour un import, saisir le chemin d'un fichier modèle neutre dans un dossier de travail.
+
 ## Mode opératoire des captures
 
 - Lancer : `powershell -File docs\manuel\outils\lancer.ps1 -Edition monoposte -Nom vierge -Remise` (données isolées dans `%TEMP%\kadenz-manuel\vierge`).
