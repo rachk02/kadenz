@@ -257,6 +257,16 @@ mod tests {
     }
 
     #[test]
+    fn les_accents_et_symboles_francais_sont_conserves() {
+        let entete = r#"<w:hdr xmlns:w="w"><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>Établissements Ouédraogo &amp; Fils</w:t></w:r></w:p><w:p><w:r><w:t>Œuvre d'été « façon » n° 5 – 12 500 € à Ouagadougou, près d'Élie</w:t></w:r></w:p></w:hdr>"#;
+        let z = lire_zones(&docx(Some(entete), None)).unwrap();
+        assert_eq!(
+            z.entete,
+            "-> **Établissements Ouédraogo & Fils**\nŒuvre d'été « façon » n° 5 – 12 500 € à Ouagadougou, près d'Élie"
+        );
+    }
+
+    #[test]
     fn un_fichier_qui_n_est_pas_un_docx_est_refuse() {
         assert!(lire_zones(b"pas une archive").is_err());
     }

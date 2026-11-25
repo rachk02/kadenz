@@ -41,8 +41,20 @@ pub fn ecarts(sddl: &str) -> Vec<String> {
 }
 
 /// Écarts par rapport aux droits du serveur intégré du compte `sid`.
+///
+/// Le format SDDL abrège deux comptes par leur numéro de fin : « LA » pour
+/// l'administrateur intégré (fin -500, c'est le compte des serveurs de CI) et
+/// « LG » pour l'invité (fin -501). Le jeton donne l'identifiant long : les
+/// deux écritures désignent le même compte et sont acceptées.
 pub fn ecarts_compte(sddl: &str, sid: &str) -> Vec<String> {
-    ecarts_selon(sddl, &[sid, "SY"])
+    let abrege = if sid.ends_with("-500") {
+        "LA"
+    } else if sid.ends_with("-501") {
+        "LG"
+    } else {
+        sid
+    };
+    ecarts_selon(sddl, &[sid, abrege, "SY"])
 }
 
 fn ecarts_selon(sddl: &str, permis: &[&str]) -> Vec<String> {
@@ -299,6 +311,10 @@ mod tests {
         );
         // Droits du service vus par le serveur intégré : propriétaire et
         // Administrateurs en trop.
+        // Administrateur intégré : le SDDL le relit sous l'alias « LA ».
+        let admin = "S-1-5-21-1-2-3-500";
+        assert!(ecarts_compte("O:LAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;LA)", admin).is_empty());
+        assert!(!ecarts_compte("O:LAD:P(A;OICI;FA;;;LA)", sid).is_empty());
         assert_eq!(
             ecarts_compte(SDDL_SERVICE, sid),
             vec!["propriétaire BA".to_string(), "BA".to_string()]

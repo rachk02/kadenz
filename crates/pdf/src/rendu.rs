@@ -1435,6 +1435,27 @@ mod tests {
         assert!(generer(&avoir, &p).unwrap().starts_with(b"%PDF-"));
     }
 
+    /// Document dont tous les textes portent des accents et des symboles
+    /// français : le PDF se produit, avec ou sans montants, sur plusieurs pages.
+    #[test]
+    fn pdf_avec_accents_et_symboles_francais() {
+        let accents =
+            "Œuvre d'été « façon » n° 5 – Ça coûte 12\u{a0}500 € à Ouagadougou, près d'Élie";
+        let mut doc = document(40);
+        doc.textes.titre = "FACTURE PROFORMA RÉVISÉE".into();
+        doc.textes.libelle_tiers = "Client à facturer".into();
+        doc.reference = format!("Réf. d'origine : {accents}");
+        doc.montant_en_lettres = "Mille deux cent cinquante-six".into();
+        doc.entreprise.nom = "Établissements Ouédraogo & Fils".into();
+        for ligne in &mut doc.lignes {
+            ligne.designation = accents.into();
+        }
+        let p = Polices::embarquees();
+        assert!(generer(&doc, &p).unwrap().starts_with(b"%PDF-"));
+        doc.avec_montants = false;
+        assert!(generer(&doc, &p).unwrap().starts_with(b"%PDF-"));
+    }
+
     #[test]
     fn phrase_du_montant() {
         assert_eq!(

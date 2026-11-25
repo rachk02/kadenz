@@ -169,6 +169,24 @@ mod tests {
         assert_eq!(t.couper("", 10.0, 500.0), [""]);
     }
 
+    /// Chaque police du texte courant couvre les lettres accentuées du français
+    /// et ses symboles : un glyphe absent s'imprimerait en carré vide.
+    #[test]
+    fn toutes_les_polices_couvrent_le_francais() {
+        let p = Polices::embarquees();
+        let francais = "ÀÂÄÇÉÈÊËÎÏÔÖÙÛÜŸŒÆàâäçéèêëîïôöùûüÿœæ°€%&@#/()[]{}+-=<>:;,.!?'’\"«»–…\u{00A0}0123456789";
+        for (nom, police) in [
+            ("texte", &p.texte),
+            ("texte_moyen", &p.texte_moyen),
+            ("texte_gras", &p.texte_gras),
+            ("titre", &p.titre),
+        ] {
+            for c in francais.chars() {
+                assert!(police.couvre(c), "police {nom} : glyphe absent pour {c:?}");
+            }
+        }
+    }
+
     #[test]
     fn titres_en_diatype() {
         let t = &Polices::embarquees().titre;
