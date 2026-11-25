@@ -153,7 +153,7 @@ def document(titre, classe, feuilles, corps):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>{titre} - Portail des licences Kadenz</title>
+<title>{titre} | Portail des licences Kadenz</title>
 {liens}
 </head>
 <body class="{classe}">

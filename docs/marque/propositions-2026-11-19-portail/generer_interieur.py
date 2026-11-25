@@ -35,7 +35,7 @@ def page(titre, rubrique, contenu):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>{titre} - Portail des licences Kadenz (maquette, données d'exemple)</title>
+<title>{titre} | Portail des licences Kadenz (maquette, données d'exemple)</title>
 <link rel="stylesheet" href="identite.css">
 <link rel="stylesheet" href="interieur.css">
 </head>
