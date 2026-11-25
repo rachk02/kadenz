@@ -10,7 +10,9 @@ Le relais et le portail sont sains sur le Dell (aucun redémarrage de conteneur)
 pannes viennent du tunnel cloudflared : délais dépassés du transport QUIC les 23 et 24
 novembre, et coupures du Dell lui-même. Deux actions, indépendantes.
 
-## Action 1 (recommandée, simple) : passer cloudflared en HTTP/2
+## Action 1 : passer cloudflared en HTTP/2 (faite le 2026-11-25)
+
+Appliquée sur le Dell le 2026-11-25 avec l'accord de l'utilisateur : tunnel recréé seul, 4 connexions en http2, portail en 303, relais en 101. Retour arrière : copier `/opt/kadenz/source/deploiement/dell/compose.public.yaml.avant-http2` sur `compose.public.yaml`, puis `kadenz-compose up -d tunnel`. Les étapes suivantes sont gardées pour mémoire.
 
 Le fichier `deploiement/dell/compose.public.yaml` du dépôt est déjà corrigé (options
 `--protocol http2` du service `tunnel`). Pour l'appliquer sur le Dell :
