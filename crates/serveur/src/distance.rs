@@ -46,6 +46,10 @@ fn tirage(attente: Duration) -> Duration {
 /// pendant l'attente d'une reconnexion : un réglage écrit par la fenêtre du
 /// serveur est pris sans attendre la fin du recul.
 const RELECTURE: Duration = Duration::from_secs(2);
+/// Relecture plus rapprochée pendant le recul : la connexion de contrôle est
+/// fermée, un réglage de la fenêtre du serveur doit être repris vite (un essai
+/// sur Windows, où une connexion refusée met déjà 2 secondes, en dépendait).
+const RELECTURE_RECUL: Duration = Duration::from_millis(500);
 
 #[derive(Default)]
 struct Memoire {
@@ -215,7 +219,7 @@ fn dormir(contexte: &Contexte, duree: Duration, vu: u64) {
 /// Attente avant un nouvel essai d'enregistrement : finie plus tôt par une
 /// requête de l'Admin, ou par un réglage changé dans la base par la fenêtre du
 /// serveur (accès désactivé, autre relais, autre licence), relu toutes les
-/// 2 secondes.
+/// 500 millisecondes.
 fn attendre_reprise(contexte: &Contexte, duree: Duration, vu: u64, relais: &Relais, licence: &str) {
     let fin = Instant::now() + duree;
     loop {
@@ -223,7 +227,7 @@ fn attendre_reprise(contexte: &Contexte, duree: Duration, vu: u64, relais: &Rela
         if reste.is_zero() {
             return;
         }
-        dormir(contexte, RELECTURE.min(reste), vu);
+        dormir(contexte, RELECTURE_RECUL.min(reste), vu);
         if contexte.arret.load(Ordering::SeqCst)
             || contexte.distance.changements.load(Ordering::SeqCst) != vu
         {
