@@ -94,7 +94,7 @@ Sélectionnez une facture, puis :
 
 ![Lettre de relance](../captures/06-paiements/12-lettre-relance.png)
 
-La lettre reprend l'en-tête de votre entreprise, le client, la facture en retard, le nombre de jours de retard et le montant restant dû. Son texte se règle dans les paramètres d'administration de l'entreprise. Les boutons **Imprimer** et **Enregistrer en PDF** la sortent, **Fermer** revient à la liste. **Exporter en Excel** et **Imprimer la liste** sortent la liste des factures échues.
+La lettre reprend l'en-tête de votre entreprise, le client, la facture en retard, le nombre de jours de retard et le montant restant dû. Son texte se règle dans **Paramètres**, rubrique **Paiements** (section 6.8). Les boutons **Imprimer** et **Enregistrer en PDF** la sortent, **Fermer** revient à la liste. **Exporter en Excel** et **Imprimer la liste** sortent la liste des factures échues.
 
 ## 6.7 Le tableau de bord
 
@@ -121,7 +121,15 @@ Dans l'exemple, le chiffre d'affaires TTC atteint 1 047 014 FCFA : 643 454 FCFA 
 
 Plus bas, le tableau de bord affiche **Total des bons de commande**, **Payé aux fournisseurs** et **Reste dû aux fournisseurs** (ici 1 560 000, 600 000 et 960 000 FCFA). Une dernière ligne, **Produits en stock négatif**, compte les produits sous zéro : un clic dessus ouvre l'état du stock sur ces seuls produits (chapitre 05).
 
-## 6.8 À retenir
+## 6.8 Régler les modes de paiement et la lettre de relance
+
+La rubrique **Paiements** des **Paramètres** fixe la liste des **Modes de paiement**, séparés par des points-virgules, qui alimente le choix dans les règlements. Elle règle aussi la **Lettre de relance** : le **Titre imprimé**, l'**Objet**, le texte avant et après le tableau récapitulatif, et le **Signataire**.
+
+![Paramètres, rubrique Paiements](../captures/06-paiements/15-parametres-paiements.png)
+
+Dans l'objet et le texte, cinq champs sont remplacés à l'impression : `{numero}`, `{date}`, `{echeance}`, `{reste}` et `{retard}` (numéro, date, échéance, reste dû et jours de retard de la facture). Une ligne vide sépare deux paragraphes. **Texte par défaut de la lettre** rétablit le texte d'origine ; **Enregistrer** valide.
+
+## 6.9 À retenir
 
 - L'état Impayé, Partiel ou Payé se calcule seul à partir des règlements.
 - Un règlement ne peut dépasser le reste à payer ; on le corrige avec **Supprimer**.
