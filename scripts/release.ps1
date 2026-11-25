@@ -248,7 +248,7 @@ $drapeauLatest = if ($generation -eq 'v1') { '--latest' } else { '--latest=false
 # seule de la liste des releases.
 if ($generation -ne 'v1') {
     Etape "Règle des 25 releases"
-    $liste = gh release list --limit 100 --json tagName,createdAt,isDraft | ConvertFrom-Json
+    $liste = gh release list --repo rachk02/kadenz-releases --limit 100 --json tagName,createdAt,isDraft | ConvertFrom-Json
     if ($LASTEXITCODE -ne 0) { throw "liste des releases illisible (gh release list)" }
     $publiees = @($liste | Where-Object { -not $_.isDraft } | Sort-Object { [DateTime]$_.createdAt } -Descending)
     $depuisV1 = 0

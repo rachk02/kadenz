@@ -46,7 +46,7 @@ use ureq::tls::{RootCerts, TlsConfig, TlsProvider};
 
 /// Releases publiées, les plus récentes d'abord (par date de création : le tri
 /// par version est refait ici).
-const RELEASES: &str = "https://api.github.com/repos/rachk02/kadenz/releases?per_page=30";
+const RELEASES: &str = "https://api.github.com/repos/rachk02/kadenz-releases/releases?per_page=30";
 
 /// Version de cette application.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -657,7 +657,7 @@ mod tests {
             "tag_name": tag,
             "draft": false,
             "prerelease": false,
-            "html_url": format!("https://github.com/rachk02/kadenz/releases/tag/{tag}"),
+            "html_url": format!("https://github.com/rachk02/kadenz-releases/releases/tag/{tag}"),
             "body": "  Notes  ",
             "assets": actifs,
         })

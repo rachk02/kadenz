@@ -2,6 +2,16 @@
 
 Format : une section par version, la plus récente en haut. Numérotation [SemVer](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORRECTIF`, tag Git `vMAJEUR.MINEUR.CORRECTIF`.
 
+## [Non publié]
+
+Numérotation : Kadenz reste en 0.x (décision du 2026-11-25) ; la phase 2 suit en 0.3.x, le troisième chiffre pouvant monter jusqu'à 65535 (limite des installateurs MSI).
+
+### Corrigé
+- Mises à jour : l'application lit désormais les versions sur le dépôt public `rachk02/kadenz-releases` (le dépôt du code est privé et répondait 404, ce qui rendait toute mise à jour invisible). Les installateurs et manifestes signés se publient dans ce dépôt (`gh release create --repo rachk02/kadenz-releases`).
+
+### Ajouté
+- Diagnostic : un plantage de l'application écrit sa cause, son lieu et la pile dans `journaux\plantage.log` (dossier des données) ; le rendu logiciel se force par `--rendu-logiciel`, par un fichier `rendu-logiciel` dans le dossier des données ou par `KADENZ_RENDU=logiciel` (champs invisibles sur certains pilotes graphiques).
+
 ## [1.0.2] - 2026-11-22
 
 Version corrective de la 1.0.1, sans édition monoposte : les lots M4 et M5 de `docs/spec-monoposte.md` ne sont pas livrés. Les installateurs restent non signés, conformément à la décision de l'utilisateur du 2026-11-21 ; Windows SmartScreen affichera un avertissement à l'installation.
