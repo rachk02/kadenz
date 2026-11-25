@@ -7,6 +7,8 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 Numérotation : Kadenz reste en 0.x (décision du 2026-11-25) ; la phase 2 suit en 0.3.x, le troisième chiffre pouvant monter jusqu'à 65535 (limite des installateurs MSI).
 
 ### Corrigé
+- Champs de saisie parfois invisibles : les champs et zones de texte prennent maintenant les couleurs de Kadenz (fond, contour net, contour renforcé au focus) au lieu de celles du style Slint ; vérifié en mode clair. La cause exacte sur le poste où le défaut a été vu n'est pas confirmée.
+- Accès à distance : un réglage écrit par la fenêtre du serveur pendant le recul est repris en 500 ms au plus (2 s auparavant).
 - Mises à jour : l'application lit désormais les versions sur le dépôt public `rachk02/kadenz-releases` (le dépôt du code est privé et répondait 404, ce qui rendait toute mise à jour invisible). Les installateurs et manifestes signés se publient dans ce dépôt (`gh release create --repo rachk02/kadenz-releases`).
 
 - PDF : quand la TVA d'un document est à zéro, la ligne du total s'intitule « Montant hors TVA » et la somme en lettres se termine par « FCFA hors TVA. » ; sinon « Montant TTC » et « FCFA TTC. »
