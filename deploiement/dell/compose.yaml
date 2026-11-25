@@ -70,7 +70,9 @@ services:
 
   relais:
     <<: *durci
-    image: kadenz-relais:${KADENZ_REV:?KADENZ_REV manquant}
+    # KADENZ_REV_RELAIS (facultatif) : révision propre au relais, quand il est
+    # reconstruit seul ; sinon la révision commune KADENZ_REV.
+    image: kadenz-relais:${KADENZ_REV_RELAIS:-${KADENZ_REV:?KADENZ_REV manquant}}
     build:
       context: ../..
       dockerfile: crates/relais/Dockerfile

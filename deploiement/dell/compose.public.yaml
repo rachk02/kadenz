@@ -51,14 +51,13 @@ services:
       - 0.0.0.0:47383
       - --mandataire
       - ${IP_TUNNEL_RELAIS:?IP_TUNNEL_RELAIS manquant}
-    # Secret posé par Cloudflare (docs/spec-relais-websocket.md, section 9).
-    # Une fois la règle de transformation posée dans le compte Cloudflare,
-    # ajouter les deux éléments suivants à la liste `command` ci-dessus :
-    #       - --secret-ws
-    #       - /run/secrets/secret-ws
-    # puis ajouter au service `relais` :
-    #     volumes:
-    #       - ${SECRET_WS_HOTE:?SECRET_WS_HOTE manquant}:/run/secrets/secret-ws:ro
+      # Secret posé par Cloudflare (docs/spec-relais-websocket.md, section 9) :
+      # règle de transformation « Kadenz relais secret » du compte Cloudflare,
+      # activée le 2026-11-25. Sans la règle, toute session distante est refusée.
+      - --secret-ws
+      - /run/secrets/secret-ws
+    volumes:
+      - ${SECRET_WS_HOTE:?SECRET_WS_HOTE manquant}:/run/secrets/secret-ws:ro
     networks:
       relais: {}
       tunnel-relais: {}
