@@ -216,15 +216,22 @@ pub fn purger_a_valider(conn: &Connection) -> Resultat<bool> {
 /// ceux de la licence d'abonnement, ou le socle seul sans licence. À appeler
 /// après `ouvrir_copie` et à chaque abonnement reçu.
 pub fn appliquer_modules(conn: &Connection) -> Resultat<()> {
-    let modules: Vec<kadenz_domaine::module::Module> = crate::abonnement::dernier_recu(conn)?
-        .and_then(|(a, _)| a.licence)
-        .map(|l| {
-            l.modules
-                .iter()
-                .filter_map(|m| kadenz_domaine::module::Module::depuis_code(m))
-                .collect()
-        })
-        .unwrap_or_default();
+    use kadenz_domaine::module::Module;
+    use kadenz_protocole::abonnement::Statut;
+    // Essai gratuit : tous les modules, sans licence (docs/spec-monoposte.md, section 7).
+    let modules: Vec<Module> = match crate::abonnement::dernier_recu(conn)? {
+        Some((a, _)) if a.statut == Statut::Essai => Module::TOUS.to_vec(),
+        Some((a, _)) => a
+            .licence
+            .map(|l| {
+                l.modules
+                    .iter()
+                    .filter_map(|m| Module::depuis_code(m))
+                    .collect()
+            })
+            .unwrap_or_default(),
+        None => Vec::new(),
+    };
     crate::licence::remplir(conn, &modules)
 }
 
@@ -267,6 +274,32 @@ pub fn creer_copie(dossier: &Path, poste: &PosteRelie) -> Resultat<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn essai_gratuit_active_tous_les_modules_sur_le_poste() {
+        use kadenz_domaine::module::Module;
+        use kadenz_protocole::abonnement::{Abonnement, Statut};
+        let conn = crate::ouvrir_en_memoire().unwrap();
+        let recu = |statut| Abonnement {
+            statut,
+            aujourdhui: "2026-11-25".into(),
+            jours_restants: Some(30),
+            avertissement: None,
+            postes_utilises: 1,
+            licence: None,
+            erreur: None,
+        };
+        // Sans licence ni essai : le socle seul.
+        crate::abonnement::garder(&conn, &recu(Statut::Absent)).unwrap();
+        appliquer_modules(&conn).unwrap();
+        assert!(!crate::licence::module_actif(&conn, Module::Devis).unwrap());
+        // Essai gratuit : tous les modules, y compris les devis et le tableau de bord.
+        crate::abonnement::garder(&conn, &recu(Statut::Essai)).unwrap();
+        appliquer_modules(&conn).unwrap();
+        for m in Module::TOUS {
+            assert!(crate::licence::module_actif(&conn, m).unwrap(), "{m:?}");
+        }
+    }
 
     #[test]
     fn copie_creee_une_seule_fois() {

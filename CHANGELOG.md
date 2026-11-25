@@ -9,6 +9,10 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 - Reprise d'un document Word : les images de l'en-tête et du pied deviennent les lignes {logo} et {logo2}, qui impriment les logos enregistrés pour l'entreprise.
 - Dossier d'installation : sous-dossier docs (notes de version, licences des composants) et modèles d'import Excel (.xlsx) à côté des modèles CSV.
 
+### Corrigé
+
+- Essai gratuit : sur un poste relié (dont l'édition un poste), tous les modules sont maintenant actifs pendant l'essai ; ils restaient masqués (seuls Factures et Avoirs apparaissaient dans le menu Documents).
+
 ## [0.3.1] - 2026-11-25
 
 ### Ajouté
