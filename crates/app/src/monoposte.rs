@@ -197,9 +197,193 @@ fn mettre_la_copie_de_cote(copie: &Path) -> std::io::Result<PathBuf> {
 }
 
 /// Restaure une sauvegarde du serveur sur son dossier, serveur fermé.
+#[cfg(test)]
 fn restaurer_dossier(dossier: &Path, sauvegarde: &Path, mot_de_passe: &str) -> Result<(), String> {
     let preparee = admin::preparer_restauration(dossier, sauvegarde, mot_de_passe)?;
     admin::restaurer_si(dossier, &preparee, EtatService::NonInstalle).map(|_| ())
+}
+
+/// Ferme la session ouverte avant une restauration : synchroniseur arrêté (la
+/// file reste dans la copie), copie libérée, retour à l'écran de connexion.
+fn fermer_la_session(f: &FenetrePrincipale, etat: &crate::EtatPartage) {
+    let synchro = etat.borrow_mut().relie.take().map(|relie| relie.synchro);
+    if let Some(synchro) = synchro {
+        let _ = synchro.vider(DELAI_VIDAGE);
+        synchro.arreter();
+    }
+    let mut e = etat.borrow_mut();
+    if let Ok(provisoire) = kadenz_stockage::ouvrir_en_memoire() {
+        drop(std::mem::replace(&mut e.conn, provisoire));
+    }
+    crate::fermer_session(f, &mut e);
+}
+
+/// Rubrique « Sauvegardes » des Paramètres en monoposte (spécification, section
+/// 5) : elle règle, liste, déclenche et restaure les sauvegardes du serveur
+/// intégré, et non celles de la copie du poste.
+pub(crate) fn brancher_sauvegardes(f: &FenetrePrincipale, etat: &crate::EtatPartage) {
+    use crate::SauvegardesApi;
+    use crate::referentiels::{modele_lignes, retour_erreur, retour_ok};
+    use kadenz_stockage::sauvegarde::Genre;
+
+    let api = f.global::<SauvegardesApi>();
+    let chemins: Rc<RefCell<Vec<PathBuf>>> = Rc::default();
+
+    let afficher = {
+        let (fa, chemins) = (f.as_weak(), chemins.clone());
+        Rc::new(move || {
+            let (Some(f), Some(c)) = (fa.upgrade(), contexte()) else {
+                return;
+            };
+            let api = f.global::<SauvegardesApi>();
+            let r = sauvegardes::lire_reglage(&c.dossier);
+            api.set_dossier(r.dossier.display().to_string().into());
+            api.set_mot_de_passe_defini(r.mot_de_passe.is_some());
+            let liste = sauvegardes::liste(&c.dossier).unwrap_or_else(|e| {
+                crate::consigner_erreur(&format!("Liste des sauvegardes du serveur : {e}"));
+                Vec::new()
+            });
+            let lignes: Vec<Vec<String>> = liste
+                .iter()
+                .map(|s| {
+                    vec![
+                        s.date.format("%d/%m/%Y %H:%M:%S").to_string(),
+                        crate::sauvegardes::genre(&s.genre),
+                        crate::sauvegardes::taille(s.taille),
+                    ]
+                })
+                .collect();
+            *chemins.borrow_mut() = liste.into_iter().map(|s| s.chemin).collect();
+            api.set_lignes(modele_lignes(lignes));
+            api.set_ligne_courante(-1);
+        })
+    };
+
+    let a = afficher.clone();
+    api.on_ouvrir(move || a());
+
+    let (fa, e, a) = (f.as_weak(), etat.clone(), afficher.clone());
+    api.on_choisir_dossier(move || {
+        let (Some(f), Some(c)) = (fa.upgrade(), contexte()) else {
+            return crate::Retour::default();
+        };
+        if let Err(refus) = crate::sauvegardes::autorise(&e.borrow()) {
+            return refus;
+        }
+        let mut boite = rfd::FileDialog::new()
+            .set_title(tr("Dossier des sauvegardes"))
+            .set_parent(&f.window().window_handle());
+        let actuel = sauvegardes::lire_reglage(&c.dossier);
+        if actuel.dossier.is_dir() {
+            boite = boite.set_directory(&actuel.dossier);
+        }
+        let Some(dossier) = boite.pick_folder() else {
+            return crate::Retour::default();
+        };
+        let resultat = sauvegardes::enregistrer_reglage(&c.dossier, &dossier, actuel.heure, None);
+        a();
+        match resultat {
+            Ok(()) => retour_ok("dossier des sauvegardes enregistré"),
+            Err(e) => retour_erreur(e),
+        }
+    });
+
+    api.on_ouvrir_dossier(|| {
+        let Some(c) = contexte() else { return };
+        let dossier = sauvegardes::lire_reglage(&c.dossier).dossier;
+        let _ = std::fs::create_dir_all(&dossier);
+        let _ = std::process::Command::new("explorer").arg(&dossier).spawn();
+    });
+
+    let (e, a) = (etat.clone(), afficher.clone());
+    api.on_definir_mot_de_passe(move |mot_de_passe, confirmation| {
+        let Some(c) = contexte() else {
+            return crate::Retour::default();
+        };
+        if let Err(refus) = crate::sauvegardes::autorise(&e.borrow()) {
+            return refus;
+        }
+        if mot_de_passe != confirmation {
+            return retour_erreur("les deux mots de passe ne correspondent pas");
+        }
+        let actuel = sauvegardes::lire_reglage(&c.dossier);
+        let resultat = sauvegardes::enregistrer_reglage(
+            &c.dossier,
+            &actuel.dossier,
+            actuel.heure,
+            Some(&mot_de_passe),
+        );
+        a();
+        match resultat {
+            Ok(()) => retour_ok("mot de passe des sauvegardes enregistré"),
+            Err(e) => retour_erreur(e),
+        }
+    });
+
+    let (e, a) = (etat.clone(), afficher.clone());
+    api.on_sauvegarder(move || {
+        let Some(c) = contexte() else {
+            return crate::Retour::default();
+        };
+        if let Err(refus) = crate::sauvegardes::autorise(&e.borrow()) {
+            return refus;
+        }
+        let dossier = c.dossier.clone();
+        let resultat = sur_le_serveur(&c, move |conn| {
+            sauvegardes::sauvegarder(conn, &dossier, Genre::Manuelle)
+        });
+        a();
+        match resultat {
+            Ok(Ok(_)) => retour_ok("sauvegarde enregistrée"),
+            Ok(Err(e)) => retour_erreur(e),
+            Err(message) => retour_erreur(message.to_string()),
+        }
+    });
+
+    let ch = chemins.clone();
+    api.on_chemin(move |ligne| {
+        usize::try_from(ligne)
+            .ok()
+            .and_then(|l| ch.borrow().get(l).map(|p| p.display().to_string().into()))
+            .unwrap_or_default()
+    });
+
+    let (fa, e) = (f.as_weak(), etat.clone());
+    api.on_restaurer(move |ligne| {
+        let (Some(f), Some(c)) = (fa.upgrade(), contexte()) else {
+            return crate::Retour::default();
+        };
+        if let Err(refus) = crate::sauvegardes::autorise(&e.borrow()) {
+            return refus;
+        }
+        let Some(chemin) = usize::try_from(ligne)
+            .ok()
+            .and_then(|l| chemins.borrow().get(l).cloned())
+        else {
+            return retour_erreur("choisissez une sauvegarde dans la liste");
+        };
+        let Some(mot_de_passe) = sauvegardes::lire_reglage(&c.dossier).mot_de_passe else {
+            return retour_erreur("saisissez le mot de passe de la sauvegarde");
+        };
+        restaurer_sauvegarde(&f, &chemin.display().to_string(), &mot_de_passe, Some(&e))
+    });
+
+    let fa = f.as_weak();
+    api.on_choisir_fichier(move || match fa.upgrade() {
+        Some(f) => choisir_sauvegarde(&f),
+        None => SharedString::new(),
+    });
+
+    let (fa, e) = (f.as_weak(), etat.clone());
+    api.on_restaurer_fichier(move |chemin, mot_de_passe| {
+        let Some(f) = fa.upgrade() else {
+            return crate::Retour::default();
+        };
+        if let Err(refus) = crate::sauvegardes::autorise(&e.borrow()) {
+            return refus;
+        }
+        restaurer_sauvegarde(&f, &chemin, &mot_de_passe, Some(&e))
+    });
 }
 
 /// Écran « Démarrage impossible », bouton « Restaurer » : le serveur intégré
@@ -207,23 +391,37 @@ fn restaurer_dossier(dossier: &Path, sauvegarde: &Path, mot_de_passe: &str) -> R
 /// dossier fermé, le serveur redémarre, puis le démarrage reprend comme au
 /// lancement. En cas d'échec de la restauration, le serveur redémarre sur la
 /// base en place.
-fn restaurer_sauvegarde(f: &FenetrePrincipale, chemin: &str, mot_de_passe: &str) -> crate::Retour {
+fn restaurer_sauvegarde(
+    f: &FenetrePrincipale,
+    chemin: &str,
+    mot_de_passe: &str,
+    en_session: Option<&crate::EtatPartage>,
+) -> crate::Retour {
     let Some(c) = contexte() else {
         return crate::referentiels::retour_erreur(tr("le serveur de Kadenz est arrêté"));
     };
+    // Vérifiée d'abord, serveur en marche : un mot de passe faux ou un fichier
+    // illisible n'arrête rien et ne ferme pas la session.
+    let preparee = match admin::preparer_restauration(&c.dossier, Path::new(chemin), mot_de_passe) {
+        Ok(preparee) => preparee,
+        Err(e) => return crate::referentiels::retour_erreur(e),
+    };
+    if let Some(etat) = en_session {
+        fermer_la_session(f, etat);
+    }
     let serveur = c.integre.borrow_mut().take();
     if let Some(serveur) = serveur {
         serveur.arreter();
     }
-    let resultat = restaurer_dossier(&c.dossier, Path::new(chemin), mot_de_passe);
+    let resultat = admin::restaurer_si(&c.dossier, &preparee, EtatService::NonInstalle);
+    drop(preparee);
     match Serveur::demarrer(Config::monoposte(c.dossier.clone())) {
         Ok(serveur) => {
             *c.integre.borrow_mut() = Some(serveur);
+            // Restauration réussie ou non, le poste rouvre sur le serveur en place.
+            serveur_demarre(f);
             match resultat {
-                Ok(()) => {
-                    serveur_demarre(f);
-                    crate::referentiels::retour_ok("sauvegarde restaurée")
-                }
+                Ok(_) => crate::referentiels::retour_ok("sauvegarde restaurée"),
                 Err(e) => {
                     crate::consigner_erreur(&format!("Restauration du serveur intégré : {e}"));
                     crate::referentiels::retour_erreur(e)
@@ -453,7 +651,7 @@ fn brancher(f: &FenetrePrincipale) {
 
     let fa = f.as_weak();
     f.on_restaurer_au_demarrage(move |chemin, mot_de_passe| match fa.upgrade() {
-        Some(f) => restaurer_sauvegarde(&f, &chemin, &mot_de_passe),
+        Some(f) => restaurer_sauvegarde(&f, &chemin, &mot_de_passe, None),
         None => crate::Retour::default(),
     });
 
@@ -1103,6 +1301,62 @@ mod tests {
         let annexe = dossier.join(format!("{nom}-wal"));
         assert_eq!(std::fs::read(annexe).unwrap(), b"annexe");
         let _ = std::fs::remove_dir_all(&dossier);
+    }
+
+    /// Serveur intégré réel : sauvegarde, modification, arrêt, restauration sur
+    /// le dossier fermé, redémarrage. L'entreprise revient à son état d'avant,
+    /// noms accentués compris. Un mot de passe faux ne touche à rien.
+    #[test]
+    fn restauration_du_serveur_integre_depuis_une_sauvegarde() {
+        let racine = std::env::temp_dir().join(format!("kadenz-m4-été-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&racine);
+        let dossier = racine.join("Serveur");
+        let sauvegardes_dossier = racine.join("Sauvegardes");
+        let nom = |serveur: &Serveur| {
+            serveur
+                .base(|c| kadenz_stockage::entreprise::lire(c).map(|e| e.map(|e| e.nom)))
+                .unwrap()
+                .unwrap()
+                .unwrap_or_default()
+        };
+
+        let serveur = Serveur::demarrer(Config::monoposte(dossier.clone())).unwrap();
+        let mut donnees = donnees();
+        donnees.nom = "Établissements Ouédraogo & Fils".into();
+        let init = installation_depuis_assistant(&donnees).unwrap();
+        serveur
+            .base(move |c| admin::installer(c, &init, None).map(|_| ()))
+            .unwrap()
+            .unwrap();
+        sauvegardes::enregistrer_reglage(
+            &dossier,
+            &sauvegardes_dossier,
+            NaiveTime::from_hms_opt(12, 0, 0).unwrap(),
+            Some("motdepasse-sauvegarde"),
+        )
+        .unwrap();
+        let d = dossier.clone();
+        let fichier = serveur
+            .base(move |c| {
+                sauvegardes::sauvegarder(c, &d, kadenz_stockage::sauvegarde::Genre::Manuelle)
+            })
+            .unwrap()
+            .unwrap();
+        assert_eq!(nom(&serveur), "Établissements Ouédraogo & Fils");
+        serveur
+            .base(|c| c.execute("UPDATE entreprise SET nom = 'Modifiée' WHERE id = 1", []))
+            .unwrap()
+            .unwrap();
+        assert_eq!(nom(&serveur), "Modifiée");
+        serveur.arreter();
+
+        // Mot de passe faux : refusé, la base en place reste celle d'avant.
+        assert!(admin::preparer_restauration(&dossier, &fichier, "faux-mot-de-passe").is_err());
+        restaurer_dossier(&dossier, &fichier, "motdepasse-sauvegarde").unwrap();
+        let serveur = Serveur::demarrer(Config::monoposte(dossier.clone())).unwrap();
+        assert_eq!(nom(&serveur), "Établissements Ouédraogo & Fils");
+        serveur.arreter();
+        let _ = std::fs::remove_dir_all(&racine);
     }
 
     #[test]

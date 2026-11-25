@@ -276,7 +276,9 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     // Décision 47 : un poste inscrit sur un serveur ne fait pas de sauvegarde,
     // les données sont sauvegardées sur le serveur.
     let inscrit = relie || serveur::inscrit(&etat.conn);
-    if possede(Droit::SauvegarderBase) && !inscrit {
+    // Édition monoposte : exception à la décision 47, les sauvegardes du serveur
+    // intégré se règlent ici (spécification, section 5).
+    if possede(Droit::SauvegarderBase) && (!inscrit || monoposte::edition_monoposte()) {
         rubriques.push(Rubrique::Sauvegardes);
     }
     if gere {
@@ -290,7 +292,11 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
     // Phase 2 : inscription de ce poste sur le serveur de l'entreprise. Sur un
     // poste inscrit, la rubrique est ouverte à tous les comptes : elle montre
     // le serveur et les documents à valider au retour.
-    if gere || inscrit {
+    // Édition monoposte : le serveur est celui de la fenêtre, la rubrique n'a plus
+    // d'objet, sauf tant qu'une base V1 attend sa reprise (spécification,
+    // sections 3.0 et 5).
+    let serveur_visible = !monoposte::edition_monoposte() || chemin_base().is_file();
+    if (gere || inscrit) && serveur_visible {
         rubriques.push(Rubrique::Serveur);
         serveur::afficher(fenetre, &etat.conn);
     }
@@ -300,7 +306,7 @@ pub(crate) fn appliquer_droits(fenetre: &FenetrePrincipale, etat: &Etat) {
         .utilisateur
         .as_ref()
         .is_some_and(|u| u.role == Role::Admin);
-    if relie && admin {
+    if relie && admin && !monoposte::edition_monoposte() {
         rubriques.push(Rubrique::AccesDistant);
     }
     // Conflits et attentes (F6c) : chaque compte y voit ses conflits, l'Admin
@@ -467,6 +473,10 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
     impression::brancher(fenetre, &etat);
     licence::brancher(fenetre, &etat);
     sauvegardes::brancher(fenetre, &etat);
+    if monoposte::edition_monoposte() {
+        // Les sauvegardes sont celles du serveur intégré, pas celles de la copie.
+        monoposte::brancher_sauvegardes(fenetre, &etat);
+    }
     serveur::brancher(fenetre, &etat);
     reprise::brancher(fenetre, &etat);
     relie::brancher(fenetre, &etat);

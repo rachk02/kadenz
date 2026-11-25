@@ -35,7 +35,7 @@ fn reglage() -> Reglage {
     })
 }
 
-fn genre(g: &Genre) -> String {
+pub(crate) fn genre(g: &Genre) -> String {
     match g {
         // Le poste n'écrit jamais de sauvegarde d'arrêt : genre du serveur.
         Genre::Automatique | Genre::Arret => tr("Automatique"),
@@ -45,7 +45,7 @@ fn genre(g: &Genre) -> String {
 }
 
 /// Taille en kilo-octets, arrondie au-dessus : pas de séparateur décimal à traduire.
-fn taille(octets: u64) -> String {
+pub(crate) fn taille(octets: u64) -> String {
     trf("{} Ko", &[&octets.div_ceil(1024)])
 }
 
@@ -88,7 +88,7 @@ fn installation_neuve(etat: &Etat) -> Result<(), Retour> {
 }
 
 /// Le compte connecté peut-il sauvegarder et restaurer ?
-fn autorise(etat: &Etat) -> Result<(), Retour> {
+pub(crate) fn autorise(etat: &Etat) -> Result<(), Retour> {
     let Some(acteur) = &etat.utilisateur else {
         return Err(retour_erreur("aucune session ouverte"));
     };
