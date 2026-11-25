@@ -104,11 +104,11 @@ Après l'installation, l'écran de connexion s'affiche. Saisissez l'**Identifian
 
 ![Écran principal](../captures/02-premier-lancement/14-ecran-principal.png)
 
-Une fois connecté, vous arrivez sur la liste des **Factures**, vide pour l'instant.
+Une fois connecté, vous arrivez sur le **Tableau de bord** (chapitre 06, section 6.7), vide pour l'instant : les montants sont à 0 FCFA tant qu'aucune facture n'existe.
 
-- **Barre du haut** : le nom de l'entreprise, les menus **Documents**, **Paiements** et **Référentiels**, l'état de la connexion au serveur, **Paramètres** et le compte connecté avec son rôle.
+- **Barre du haut** : le nom de l'entreprise, le **Tableau de bord**, les menus **Documents**, **Paiements** et **Référentiels**, l'état de la connexion au serveur, **Paramètres** et le compte connecté avec son rôle.
 - **Bandeau d'essai** : « Essai gratuit : 30 jours restants. Ensuite Kadenz passera en lecture seule sans code d'abonnement. » Le bouton **Voir l'abonnement** ouvre la rubrique Abonnement des Paramètres. Ce bandeau d'essai disparaît quand un code d'abonnement est activé.
-- **Liste des factures** : une zone de recherche (numéro, client, libellé), un filtre **Tous les statuts**, une plage de dates, et les colonnes N°, Date, Client, Libellé, Montant TTC, Statut, Mode et Échéance.
-- **Actions** : **Nouvelle facture** et **Exporter en Excel**.
+- **Tableau de bord** : le chiffre d'affaires, la TVA, le total payé et le total impayé de la période, la répartition par état et par mode de paiement, la tendance des ventes, les meilleurs clients et les dernières factures, puis les achats.
+- **Les factures** se trouvent dans le menu **Documents** (chapitre 04).
 
 Vous êtes prêt à créer vos premiers clients et produits : c'est l'objet du chapitre suivant.
