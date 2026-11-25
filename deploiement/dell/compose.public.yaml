@@ -77,9 +77,14 @@ services:
     entrypoint: ["cloudflared"]
     # Tunnel géré à distance : la route vers le portail est dans le compte
     # Cloudflare. Métriques en local au conteneur seulement.
+    # Transport en HTTP/2 (TCP) et non en QUIC (UDP) : les coupures des 23 et 24
+    # novembre 2026 étaient des délais dépassés de QUIC ; HTTP/2 passe partout où
+    # le TCP 443 sort.
     command:
       - tunnel
       - --no-autoupdate
+      - --protocol
+      - http2
       - --metrics
       - 127.0.0.1:20241
       - run
