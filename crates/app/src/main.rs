@@ -10,6 +10,7 @@ mod administration;
 mod apercu;
 mod code_saisie;
 mod comptabilite;
+mod diagnostic;
 mod excel;
 mod factures;
 mod graphiques;
@@ -617,6 +618,8 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
 }
 
 fn main() -> Result<(), slint::PlatformError> {
+    // Journal de plantage et choix du rendu, avant toute fenêtre.
+    diagnostic::installer(&dossier_donnees());
     // Base déjà ouverte par une autre instance : sa fenêtre revient au premier plan.
     if !instance::prendre(&chemin_base()) {
         return Ok(());
