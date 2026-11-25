@@ -329,20 +329,22 @@ component OngletDroits inherits ScrollView {
                     horizontal-stretch: 1;
                 }
 
-                for autorise[j] in ligne.autorisations: Rangee {
+                // Case posée à la main (x, y) au milieu de la cellule, sans mise en page :
+                // dans des Rangee (FlexboxLayout) imbriquées, la hauteur de la ligne
+                // (libellé à la ligne) et celle de la Case se demandaient l'une à l'autre,
+                // et Slint s'arrêtait sur « Recursion detected » à l'ouverture de la page.
+                for autorise[j] in ligne.autorisations: Rectangle {
                     width: root.largeur-role;
-                    alignment: center;
 
-                    // Case au milieu de la hauteur de la ligne, qui grandit avec le libellé.
-                    VerticalLayout {
-                        alignment: center;
-
-                        Case {
-                            checked: autorise;
-                            enabled: !ligne.verrous[j];
-                            toggled => {
-                                UtilisateursApi.basculer-droit(i, j, self.checked);
-                            }
+                    Case {
+                        width: 18px;
+                        height: 24px;
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                        checked: autorise;
+                        enabled: !ligne.verrous[j];
+                        toggled => {
+                            UtilisateursApi.basculer-droit(i, j, self.checked);
                         }
                     }
                 }
