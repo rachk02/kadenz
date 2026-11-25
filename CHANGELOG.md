@@ -4,7 +4,11 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 
 ## [Non publié]
 
+## [0.3.0] - 2026-11-25
+
 Numérotation : Kadenz reste en 0.x (décision du 2026-11-25) ; la phase 2 suit en 0.3.x, le troisième chiffre pouvant monter jusqu'à 65535 (limite des installateurs MSI).
+
+Première publication sur le dépôt public `rachk02/kadenz-releases` (canal de mise à jour). Les versions 1.0.0 à 1.0.2, publiées avant la décision de rester en 0.x, sont renumérotées : cette version 0.3.0 contient tout leur contenu. Un poste qui a déjà une 1.0.x ne peut pas être mis à jour sur place vers un numéro plus bas : copier le dossier `%APPDATA%\Kadenz` à part, désinstaller la 1.0.x, installer la 0.3.0, puis remettre les fichiers si besoin (la désinstallation supprime ce dossier).
 
 ### Modifié
 - Démarrage : si le lancement précédent n'a pas abouti avant l'affichage de la fenêtre (pilote graphique, fermeture brutale), Kadenz passe seul au rendu logiciel, l'écrit dans `journaux\plantage.log` et le garde (fichier `rendu-logiciel` à supprimer pour revenir au rendu par défaut).

@@ -96,6 +96,10 @@ param(
     # commutateur, une publication réelle refuse tout fichier non signé.
     [switch]$SansCertificat,
 
+    # Au lieu de relancer format, Clippy et tests en local (demande de l'utilisateur
+    # du 2026-11-25), exige que la CI GitHub soit verte sur le commit publié.
+    [switch]$SansEssaisLocaux,
+
     [string]$CertificatEssai = '',
 
     [string]$MotDePasseEssai = ''
@@ -140,9 +144,9 @@ if ($Essai) {
 } else {
     if (git status --porcelain) { throw "l'arbre de travail n'est pas propre" }
     $branche = git rev-parse --abbrev-ref HEAD
-    if ($branche -ne 'main') { throw "la release se fait depuis main (branche actuelle : $branche)" }
     Executer git @('fetch', 'origin', 'main', '--tags')
-    if ((git rev-parse HEAD) -ne (git rev-parse origin/main)) { throw "main n'est pas à jour avec origin/main" }
+    # Depuis main, ou depuis une copie de travail propre (git worktree) exactement au commit de origin/main.
+    if ((git rev-parse HEAD) -ne (git rev-parse origin/main)) { throw "HEAD n'est pas à origin/main (branche actuelle : $branche)" }
     if (git tag --list $tag) { throw "le tag $tag existe déjà" }
 }
 
@@ -170,6 +174,13 @@ if ($urlPortail -notmatch '^https://[A-Za-z0-9.-]+(?::[0-9]+)?/?$') {
 
 if ($Essai) {
     Etape "Format, Clippy, tests : non lancés (essai)"
+} elseif ($SansEssaisLocaux) {
+    Etape "Essais locaux non relancés : CI verte exigée sur ce commit"
+    $sha = (git rev-parse HEAD).Trim()
+    $ci = gh run list --commit $sha --workflow ci.yml --json status,conclusion | ConvertFrom-Json
+    if (-not ($ci | Where-Object { $_.status -eq 'completed' -and $_.conclusion -eq 'success' })) {
+        throw "aucune exécution verte de la CI sur $sha : attendre la CI ou lancer les essais"
+    }
 } else {
     Etape "Format, Clippy, tests"
     Executer $cargo @('fmt', '--all', '--check')
@@ -284,7 +295,8 @@ Executer git @('push', 'origin', $tag)
 $notes = [regex]::Match($changelog, "(?ms)^## \[$([regex]::Escape($Version))\][^\n]*\n(.*?)(?=^## \[|\z)").Groups[1].Value.Trim()
 $fichierNotes = Join-Path ([System.IO.Path]::GetTempPath()) "kadenz-notes-$Version.md"
 Set-Content -Path $fichierNotes -Value $notes -Encoding utf8
-Executer gh (@('release', 'create', $tag) + $fichiersRelease + @('--title', "Kadenz $Version", '--notes-file', $fichierNotes, $drapeauLatest))
+# Le canal de mise à jour lit le dépôt public rachk02/kadenz-releases : la release y est créée.
+Executer gh (@('release', 'create', $tag, '--repo', 'rachk02/kadenz-releases') + $fichiersRelease + @('--title', "Kadenz $Version", '--notes-file', $fichierNotes, $drapeauLatest))
 Remove-Item $fichierNotes
 
 Etape "Release $tag publiée"
