@@ -711,7 +711,7 @@ fn decouverte_du_serveur() {
     let mut essais = 0;
     let serveur = loop {
         essais += 1;
-        assert!(essais <= 20, "aucun port libre en TCP et en UDP trouvé");
+        assert!(essais <= 100, "aucun port libre en TCP et en UDP trouvé");
         let port = std::net::UdpSocket::bind(("127.0.0.1", 0))
             .unwrap()
             .local_addr()
@@ -861,7 +861,7 @@ fn demarrage_sans_decouverte_si_le_port_udp_est_pris() {
     let mut essais = 0;
     let (serveur, _pris) = loop {
         essais += 1;
-        assert!(essais <= 20, "aucun port TCP et UDP libre trouvé");
+        assert!(essais <= 100, "aucun port TCP et UDP libre trouvé");
         let pris = std::net::UdpSocket::bind(("127.0.0.1", 0)).unwrap();
         let mut config = Config::nouvelle(dossier.clone());
         config.adresse = pris.local_addr().unwrap();
