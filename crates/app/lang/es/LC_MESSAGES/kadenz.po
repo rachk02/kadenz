@@ -4874,3 +4874,18 @@ msgstr "Las columnas desconocidas se ignoran. Los duplicados (ya en la base o m�
 
 msgid "Un aperçu ligne par ligne s'affiche avant tout enregistrement ; seules les lignes valides sont enregistrées."
 msgstr "Se muestra una vista previa fila por fila antes de guardar nada; solo se guardan las filas válidas."
+
+msgid "Reprendre d'un document Word (.docx)"
+msgstr "Tomar de un documento Word (.docx)"
+
+msgid "Choisir un document Word"
+msgstr "Elegir un documento Word"
+
+msgid "Document Word"
+msgstr "Documento Word"
+
+msgid "Ce document Word n'a ni en-tête ni pied de page."
+msgstr "Este documento Word no tiene encabezado ni pie de página."
+
+msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...)."
+msgstr "Texto tomado del documento: revíselo y sustituya los datos fijos por variables ({nom}, {adresse}...)."

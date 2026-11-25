@@ -4874,3 +4874,18 @@ msgstr "تُتجاهل الأعمدة غير المعروفة. وتُتجاهل 
 
 msgid "Un aperçu ligne par ligne s'affiche avant tout enregistrement ; seules les lignes valides sont enregistrées."
 msgstr "تظهر معاينة صفًا صفًا قبل أي حفظ؛ ولا تُحفظ إلا الصفوف الصحيحة."
+
+msgid "Reprendre d'un document Word (.docx)"
+msgstr "أخذ من مستند Word ‏(.docx)"
+
+msgid "Choisir un document Word"
+msgstr "اختيار مستند Word"
+
+msgid "Document Word"
+msgstr "مستند Word"
+
+msgid "Ce document Word n'a ni en-tête ni pied de page."
+msgstr "ليس لهذا المستند رأس صفحة ولا تذييل."
+
+msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...)."
+msgstr "تم أخذ النص من المستند: راجعه واستبدل البيانات الثابتة بمتغيرات ({nom}، {adresse}...)."

@@ -44,6 +44,13 @@ export global ImpressionApi {
     // Messages sous les champs, vides si la saisie est correcte.
     in property <string> erreur-entete;
     in property <string> erreur-pied;
+    // Reprise d'un document Word : texte repris (vide si le document n'a pas la
+    // zone), message sous le bouton, compteur qui signale une nouvelle reprise.
+    in property <string> docx-entete;
+    in property <string> docx-pied;
+    in property <string> message-docx;
+    in-out property <int> docx-version;
+    callback importer-docx();
     in property <string> erreur-marges;
     // Types proposés dans « Bas des documents » : ceux des modules activés par la
     // licence, avec leur rang dans l'ordre des types du domaine.
@@ -199,6 +206,17 @@ export component PageImpression inherits Rectangle {
         ImpressionApi.actualiser(root.saisie(), root.bas-saisi(), root.rang-type);
     }
 
+    property <int> version-docx: ImpressionApi.docx-version;
+    changed version-docx => {
+        if (ImpressionApi.docx-entete != "") {
+            entete.texte = ImpressionApi.docx-entete;
+        }
+        if (ImpressionApi.docx-pied != "") {
+            pied.texte = ImpressionApi.docx-pied;
+        }
+        root.actualiser();
+    }
+
     function saisie() -> MiseEnPageUi {
         return {
             gabarit: gabarit.current-index,
@@ -345,6 +363,26 @@ export component PageImpression inherits Rectangle {
                     modifie => {
                         root.actualiser();
                     }
+                }
+
+                Rangee {
+                    spacing: 8px;
+                    alignment: start;
+
+                    Bouton {
+                        text: @tr("Reprendre d'un document Word (.docx)");
+                        clicked => {
+                            ImpressionApi.importer-docx();
+                        }
+                    }
+                }
+
+                if ImpressionApi.message-docx != "": Text {
+                    horizontal-alignment: Theme.debut;
+                    text: ImpressionApi.message-docx;
+                    font-size: 12px;
+                    color: Theme.texte-secondaire;
+                    wrap: word-wrap;
                 }
 
                 VerticalLayout {

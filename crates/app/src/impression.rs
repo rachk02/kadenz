@@ -232,6 +232,36 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             .collect::<Vec<_>>(),
     )));
 
+    let f = fenetre.as_weak();
+    api.on_importer_docx(move || {
+        let Some(f) = f.upgrade() else { return };
+        let choix = rfd::FileDialog::new()
+            .set_title(tr("Choisir un document Word"))
+            .add_filter(tr("Document Word"), &["docx"])
+            .set_parent(&f.window().window_handle())
+            .pick_file();
+        let Some(chemin) = choix else { return };
+        let api = f.global::<ImpressionApi>();
+        let zones = std::fs::read(&chemin)
+            .map_err(|e| e.to_string())
+            .and_then(|octets| kadenz_import::docx::lire_zones(&octets));
+        match zones {
+            Ok(z) if z.entete.is_empty() && z.pied.is_empty() => {
+                api.set_message_docx(tr("Ce document Word n'a ni en-tête ni pied de page.").into());
+            }
+            Ok(z) => {
+                api.set_docx_entete(z.entete.into());
+                api.set_docx_pied(z.pied.into());
+                api.set_message_docx(
+                    tr("Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...).")
+                        .into(),
+                );
+                api.set_docx_version(api.get_docx_version() + 1);
+            }
+            Err(message) => api.set_message_docx(message.into()),
+        }
+    });
+
     let e = etat.clone();
     api.on_ouvrir(move || {
         let etat = e.borrow();

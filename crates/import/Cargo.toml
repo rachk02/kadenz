@@ -9,4 +9,6 @@ publish.workspace = true
 kadenz-domaine.workspace = true
 csv.workspace = true
 calamine.workspace = true
+quick-xml.workspace = true
+zip.workspace = true
 encoding_rs.workspace = true

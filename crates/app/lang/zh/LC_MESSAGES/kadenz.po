@@ -4874,3 +4874,18 @@ msgstr "未知列将被忽略。重复项（数据库中已有的，或文件中
 
 msgid "Un aperçu ligne par ligne s'affiche avant tout enregistrement ; seules les lignes valides sont enregistrées."
 msgstr "保存之前会逐行预览；只保存有效的行。"
+
+msgid "Reprendre d'un document Word (.docx)"
+msgstr "从Word文档（.docx）导入"
+
+msgid "Choisir un document Word"
+msgstr "选择Word文档"
+
+msgid "Document Word"
+msgstr "Word文档"
+
+msgid "Ce document Word n'a ni en-tête ni pied de page."
+msgstr "此Word文档没有页眉和页脚。"
+
+msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...)."
+msgstr "已从文档导入文字：请检查，并将固定数据替换为变量（{nom}、{adresse}等）。"

@@ -13,6 +13,7 @@ Numérotation : Kadenz reste en 0.x (décision du 2026-11-25) ; la phase 2 suit 
 
 ### Ajouté
 - Import des tiers et des produits : bouton rond « i » qui rouvre une fenêtre d'instructions (formats lus, première ligne, colonnes reconnues, doublons) ; la fenêtre s'ouvre au démarrage de l'import, avec la case « Ne plus afficher ce message » (fichier témoin `import-instructions-masquees` dans le dossier des données).
+- En-tête et pied de page : bouton « Reprendre d'un document Word (.docx) » dans les réglages d'impression ; le texte de l'en-tête et du pied du document est repris dans le markup des zones (gras, centrage, caractères spéciaux protégés), à compléter avec les variables de l'entreprise (`{nom}`, `{adresse}`...). Les images (logo) ne sont pas reprises : `{logo}` les remplace.
 - Diagnostic : un plantage de l'application écrit sa cause, son lieu et la pile dans `journaux\plantage.log` (dossier des données) ; le rendu logiciel se force par `--rendu-logiciel`, par un fichier `rendu-logiciel` dans le dossier des données ou par `KADENZ_RENDU=logiciel` (champs invisibles sur certains pilotes graphiques).
 
 ## [1.0.2] - 2026-11-22

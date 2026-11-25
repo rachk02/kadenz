@@ -6,4 +6,5 @@
 //! enregistre ensuite les fiches valides en une seule transaction.
 
 pub mod analyse;
+pub mod docx;
 pub mod lecture;

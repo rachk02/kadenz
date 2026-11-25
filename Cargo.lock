@@ -3264,6 +3264,8 @@ dependencies = [
  "csv",
  "encoding_rs",
  "kadenz-domaine",
+ "quick-xml 0.42.0",
+ "zip",
 ]
 
 [[package]]

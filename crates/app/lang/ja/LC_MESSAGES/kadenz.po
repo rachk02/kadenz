@@ -4874,3 +4874,18 @@ msgstr "未知の列は無視されます。重複（すでにデータベース
 
 msgid "Un aperçu ligne par ligne s'affiche avant tout enregistrement ; seules les lignes valides sont enregistrées."
 msgstr "保存の前に行ごとのプレビューが表示され、有効な行だけが保存されます。"
+
+msgid "Reprendre d'un document Word (.docx)"
+msgstr "Word文書（.docx）から取り込む"
+
+msgid "Choisir un document Word"
+msgstr "Word文書を選択"
+
+msgid "Document Word"
+msgstr "Word文書"
+
+msgid "Ce document Word n'a ni en-tête ni pied de page."
+msgstr "このWord文書にはヘッダーもフッターもありません。"
+
+msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...)."
+msgstr "文書から取り込んだテキストです。内容を確認し、固定のデータを変数（{nom}、{adresse}など）に置き換えてください。"

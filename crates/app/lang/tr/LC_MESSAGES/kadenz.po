@@ -4874,3 +4874,18 @@ msgstr "Bilinmeyen sütunlar yok sayılır. Yinelenenler (veritabanında zaten o
 
 msgid "Un aperçu ligne par ligne s'affiche avant tout enregistrement ; seules les lignes valides sont enregistrées."
 msgstr "Kaydetmeden önce satır satır bir önizleme gösterilir; yalnızca geçerli satırlar kaydedilir."
+
+msgid "Reprendre d'un document Word (.docx)"
+msgstr "Word belgesinden al (.docx)"
+
+msgid "Choisir un document Word"
+msgstr "Bir Word belgesi seçin"
+
+msgid "Document Word"
+msgstr "Word belgesi"
+
+msgid "Ce document Word n'a ni en-tête ni pied de page."
+msgstr "Bu Word belgesinde üst bilgi ve alt bilgi yok."
+
+msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...)."
+msgstr "Metin belgeden alındı: kontrol edin ve sabit verileri değişkenlerle ({nom}, {adresse}...) değiştirin."

@@ -4874,3 +4874,18 @@ msgstr "Unknown columns are ignored. Duplicates (already in the database or earl
 
 msgid "Un aperçu ligne par ligne s'affiche avant tout enregistrement ; seules les lignes valides sont enregistrées."
 msgstr "A row-by-row preview is shown before anything is saved; only valid rows are saved."
+
+msgid "Reprendre d'un document Word (.docx)"
+msgstr "Take from a Word document (.docx)"
+
+msgid "Choisir un document Word"
+msgstr "Choose a Word document"
+
+msgid "Document Word"
+msgstr "Word document"
+
+msgid "Ce document Word n'a ni en-tête ni pied de page."
+msgstr "This Word document has neither a header nor a footer."
+
+msgid "Texte repris du document : vérifiez-le et remplacez les données fixes par des variables ({nom}, {adresse}...)."
+msgstr "Text taken from the document: check it and replace fixed data with variables ({nom}, {adresse}...)."
