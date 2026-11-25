@@ -12,7 +12,7 @@
   avec UPGRADINGPRODUCTCODE renseigné : la suppression est alors sautée.
 
   Variables passées par construire.ps1 : Version, Exe (chemin de kadenz.exe),
-  Editeur, Icone.
+  Editeur, Icone, Contenu (dossier des fichiers livrés à côté de l'exécutable).
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
@@ -51,6 +51,10 @@
         <!-- Données supprimées à la désinstallation, jamais pendant une mise à jour. -->
         <util:RemoveFolderEx On="uninstall" Property="DOSSIERDONNEES" Condition="NOT UPGRADINGPRODUCTCODE" />
       </Component>
+      <!-- Fichiers livrés avec le programme : LISEZMOI, notes de version,
+           licences des composants libres et modèles d'import (sous-dossier
+           modeles), préparés par construire.ps1 dans le dossier Contenu. -->
+      <Files Directory="INSTALLFOLDER" Include="$(var.Contenu)\**" />
       <!-- Raccourcis pour tous les comptes du poste ; une valeur de registre
            sert de chemin clé à chaque composant. -->
       <Component Id="RaccourciMenu" Directory="ProgramMenuFolder" Condition="RACCOURCIMENU = &quot;1&quot;">

@@ -179,6 +179,30 @@ if ($LASTEXITCODE -ne 0) { throw "échec de la compilation de l'extension de l'a
 Signer $baf
 $communes += @('-d', "Extension=$baf")
 
+# Fichiers livrés à côté de kadenz.exe : LISEZMOI, modèles d'import (installateur\contenu),
+# historique des versions (CHANGELOG.md) et composants libres utilisés (cargo metadata).
+$contenu = Join-Path $sortie 'contenu'
+if (Test-Path $contenu) { Remove-Item -Recurse -Force $contenu }
+Copy-Item (Join-Path $PSScriptRoot 'contenu') $contenu -Recurse
+Copy-Item (Join-Path $racine 'CHANGELOG.md') (Join-Path $contenu 'Notes de version.txt')
+# cargo tree plutôt que cargo metadata : ConvertFrom-Json de Windows PowerShell 5.1 refuse un JSON de plus de 2 Mo.
+$arbre = & cargo tree --workspace --locked -e normal,build --target all --prefix none --format '{p}|{l}|{r}' --manifest-path (Join-Path $racine 'Cargo.toml') 2>$null
+$composants = $arbre | Where-Object { $_.Trim() -and $_ -notmatch ' \(\w:|^\S+ v\S+ \(/' } | ForEach-Object { $_ -replace ' \(\*\)$', '' } | Sort-Object -Unique
+$licences = @(
+    'Composants libres utilisés par Kadenz',
+    'Liste établie à la compilation depuis Cargo.lock : nom, version, licence déclarée',
+    'par l''auteur, dépôt. Le texte de chaque licence est publié dans le dépôt du composant.',
+    ''
+)
+$licences += $composants | ForEach-Object {
+    $p = $_ -split '\|', 3
+    $lic = if ($p[1]) { $p[1] } else { 'voir le dépôt' }
+    $depot = if ($p[2]) { $p[2] } else { 'https://crates.io' }
+    "$($p[0]) : $lic ($depot)"
+}
+[System.IO.File]::WriteAllLines((Join-Path $contenu 'Licences-tierces.txt'), $licences, [System.Text.UTF8Encoding]::new($true))
+$communes += @('-d', "Contenu=$contenu")
+
 Executer wix (@('build', (Join-Path $PSScriptRoot 'Kadenz.wxs'), '-ext', 'WixToolset.Util.wixext', '-d', "Exe=$exe", '-o', $msi) + $communes)
 # Contrôles ICE de Windows Installer. ICE43 et ICE57 sont écartés : ils supposent
 # une installation par compte (raccourcis du menu Démarrer et du bureau dans le

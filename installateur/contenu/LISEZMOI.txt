@@ -1,0 +1,36 @@
+KADENZ - gestion commerciale
+
+Ce dossier contient le programme (kadenz.exe) et quelques fichiers utiles.
+Kadenz est livré en un seul programme : les polices, les traductions et les
+images y sont intégrées, il n'a besoin d'aucune autre bibliothèque.
+
+Contenu du dossier
+  kadenz.exe              le programme
+  LISEZMOI.txt            ce fichier
+  Notes de version.txt    l'historique des versions
+  Licences-tierces.txt    les composants libres utilisés par Kadenz
+  modeles\                fichiers d'exemple pour l'import (voir plus bas)
+
+Où sont vos données
+  %APPDATA%\Kadenz        base de données, clé et journaux de votre compte.
+  La désinstallation supprime ce dossier ; faites d'abord une sauvegarde
+  (Paramètres, rubrique Sauvegardes).
+
+Importer des fiches (Excel ou CSV)
+  Dans Kadenz, ouvrez l'import et cliquez sur le bouton rond « i » : il
+  décrit les colonnes attendues. Le dossier modeles contient deux fichiers
+  CSV prêts à remplir, avec les bons noms de colonnes :
+    modele-tiers.csv        clients et fournisseurs
+    modele-produits.csv     produits et services
+  Ouvrez-les avec Excel, ajoutez vos lignes sous la première, puis
+  enregistrez au format CSV ou Excel.
+
+En cas de problème
+  Kadenz se ferme tout seul : ouvrez %APPDATA%\Kadenz\journaux\plantage.log.
+  La dernière entrée donne la cause. Transmettez ce fichier au support.
+  Des champs de saisie invisibles ou un affichage incomplet viennent le plus
+  souvent du pilote graphique. Créez alors un fichier vide nommé
+  rendu-logiciel dans %APPDATA%\Kadenz, puis relancez Kadenz : l'affichage
+  passe par le processeur, sans carte graphique. Supprimez ce fichier pour
+  revenir au mode normal.
+  Les erreurs courantes sont aussi notées dans %APPDATA%\Kadenz\erreurs.log.
