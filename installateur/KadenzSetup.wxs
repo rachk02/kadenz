@@ -9,14 +9,15 @@
   (lancé au clic sur Terminer, avec les droits du compte, sans élévation).
   Aucune licence n'est affichée : le dépôt n'en définit pas. Variables passées
   par construire.ps1 : Version, Msi (chemin de Kadenz.msi), Editeur, Icone,
-  Extension (chemin de kadenzbaf.dll).
+  Extension (chemin de kadenzbaf.dll), NomBundle et CodeBundle (nom affiché et
+  code de mise à niveau de l'installateur de l'édition construite).
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
-  <Bundle Name="Kadenz"
+  <Bundle Name="$(var.NomBundle)"
           Manufacturer="$(var.Editeur)"
           Version="$(var.Version)"
-          UpgradeCode="39f20fc0-e088-4792-85bb-29b2cc47d5ef"
+          UpgradeCode="$(var.CodeBundle)"
           IconSourceFile="$(var.Icone)">
     <BootstrapperApplication>
       <bal:WixStandardBootstrapperApplication Theme="hyperlinkSidebarLicense"

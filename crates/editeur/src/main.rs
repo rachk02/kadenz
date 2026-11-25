@@ -205,6 +205,7 @@ fn ecrire_manifeste(
     installateur: &str,
     depuis: &str,
     serveur: Option<&str>,
+    monoposte: Option<&str>,
 ) -> Result<(), String> {
     kadenz_licence::controler_cles_embarquees()?;
     let publique = kadenz_maj::cle_maj()
@@ -266,6 +267,26 @@ fn ecrire_manifeste(
             })
         }
     };
+    let monoposte = match monoposte {
+        None => None,
+        Some(fichier) => {
+            let chemin = Path::new(fichier);
+            let nom = chemin
+                .file_name()
+                .and_then(|n| n.to_str())
+                .ok_or("nom de l'installateur monoposte illisible")?;
+            if nom != format!("KadenzMonoposteSetup-{version}.exe") {
+                return Err(format!(
+                    "installateur monoposte {nom} : KadenzMonoposteSetup-{version}.exe attendu pour la version {version}"
+                ));
+            }
+            let octets = std::fs::read(chemin).map_err(|e| format!("{fichier} : {e}"))?;
+            Some(kadenz_maj::Installateur {
+                nom: nom.into(),
+                empreinte: Sha256::digest(&octets).into(),
+            })
+        }
+    };
     let manifeste = kadenz_maj::Manifeste {
         version,
         generation: kadenz_maj::GENERATION.into(),
@@ -273,6 +294,7 @@ fn ecrire_manifeste(
         installateur: nom.into(),
         empreinte: Sha256::digest(&octets).into(),
         serveur,
+        monoposte,
     };
     let json = manifeste.json();
     let signature = kadenz_maj::signer_manifeste(json.as_bytes(), &privee);
@@ -301,11 +323,25 @@ fn main() -> ExitCode {
         ["verifier", cle, poste] => verifier_cle(cle, poste),
         ["emettre", fichier, poste, client, liste] => emettre_cle(fichier, poste, client, liste),
         ["manifeste", fichier, installateur, depuis] => {
-            ecrire_manifeste(fichier, installateur, depuis, None)
+            ecrire_manifeste(fichier, installateur, depuis, None, None)
         }
         ["manifeste", fichier, installateur, depuis, serveur] => {
-            ecrire_manifeste(fichier, installateur, depuis, Some(serveur))
+            ecrire_manifeste(fichier, installateur, depuis, Some(serveur), None)
         }
+        [
+            "manifeste",
+            fichier,
+            installateur,
+            depuis,
+            serveur,
+            monoposte,
+        ] => ecrire_manifeste(
+            fichier,
+            installateur,
+            depuis,
+            Some(serveur),
+            Some(monoposte),
+        ),
         [
             "entreprise",
             fichier,

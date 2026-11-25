@@ -31,6 +31,7 @@
 //! illisible) est silencieuse.
 
 pub mod activation;
+pub mod edition;
 
 use std::fmt;
 use std::io::Read;
@@ -159,6 +160,9 @@ pub struct Manifeste {
     pub empreinte: [u8; 32],
     /// Installateur du serveur (phase 2) ; absent des manifestes de la V1.
     pub serveur: Option<Installateur>,
+    /// Installateur de l'édition monoposte (`KadenzMonoposteSetup-X.Y.Z.exe`) ;
+    /// absent des manifestes d'avant cette édition.
+    pub monoposte: Option<Installateur>,
 }
 
 impl Manifeste {
@@ -178,6 +182,12 @@ impl Manifeste {
                 "sha256": en_hex(&serveur.empreinte),
             });
         }
+        if let Some(monoposte) = &self.monoposte {
+            json["monoposte"] = serde_json::json!({
+                "installateur": monoposte.nom,
+                "sha256": en_hex(&monoposte.empreinte),
+            });
+        }
         json.to_string()
     }
 
@@ -193,6 +203,13 @@ impl Manifeste {
                 empreinte: lire_empreinte(s["sha256"].as_str()?)?,
             }),
         };
+        let monoposte = match &v["monoposte"] {
+            serde_json::Value::Null => None,
+            s => Some(Installateur {
+                nom: s["installateur"].as_str()?.to_owned(),
+                empreinte: lire_empreinte(s["sha256"].as_str()?)?,
+            }),
+        };
         Some(Manifeste {
             version: Version::lire(texte("version")?)?,
             generation: texte("generation")?.to_owned(),
@@ -200,6 +217,7 @@ impl Manifeste {
             installateur: texte("installateur")?.to_owned(),
             empreinte: lire_empreinte(texte("sha256")?)?,
             serveur,
+            monoposte,
         })
     }
 }
@@ -301,6 +319,9 @@ pub enum Produit {
     Poste { serveur: Option<Version> },
     /// Le serveur (installateur `serveur` du manifeste).
     Serveur,
+    /// Un poste de l'édition monoposte : son serveur est dans la fenêtre, donc
+    /// aucun plafond ; installateur `monoposte` du manifeste.
+    Monoposte,
 }
 
 /// Choisit la release à proposer dans la liste renvoyée par l'API GitHub.
@@ -376,6 +397,10 @@ pub fn choisir(
                 }
             }
             Produit::Serveur => match manifeste.serveur {
+                Some(s) => s,
+                None => continue,
+            },
+            Produit::Monoposte => match manifeste.monoposte {
                 Some(s) => s,
                 None => continue,
             },
@@ -634,7 +659,9 @@ mod tests {
         let url = |nom: &str| format!("https://exemple/{v}/{nom}");
         let installateur = format!("KadenzSetup-{v}.exe");
         let serveur = format!("KadenzServeur-{v}.msi");
+        let monoposte = format!("KadenzMonoposteSetup-{v}.exe");
         let mut actifs = vec![
+            serde_json::json!({"name": monoposte, "browser_download_url": url(&monoposte)}),
             serde_json::json!({"name": installateur, "browser_download_url": url(&installateur)}),
             serde_json::json!({"name": format!("{installateur}.sha256"), "browser_download_url": url("sha")}),
             serde_json::json!({"name": serveur, "browser_download_url": url(&serveur)}),
@@ -671,6 +698,7 @@ mod tests {
             installateur: format!("KadenzSetup-{version}.exe"),
             empreinte: [0xab; 32],
             serveur: None,
+            monoposte: None,
         }
     }
 
@@ -795,6 +823,44 @@ mod tests {
             choisir_dans(&r, &f, "0.2.2"),
             Recherche::AutreGeneration("1.0.0".into())
         );
+    }
+
+    /// Édition monoposte : son installateur, sans plafond de serveur ; une
+    /// release sans installateur monoposte au manifeste n'est pas proposée.
+    #[test]
+    fn edition_monoposte() {
+        let cle = cle_essai();
+        let mut f = HashMap::new();
+        let avec_monoposte = |version: &str| Manifeste {
+            monoposte: Some(Installateur {
+                nom: format!("KadenzMonoposteSetup-{version}.exe"),
+                empreinte: [0xef; 32],
+            }),
+            ..manifeste_v2(version, "0.0.0")
+        };
+        let r = [
+            release("v0.4.0", Some((&avec_monoposte("0.4.0"), &cle)), &mut f),
+            release(
+                "v0.3.1",
+                Some((&manifeste_v2("0.3.1", "0.0.0"), &cle)),
+                &mut f,
+            ),
+        ];
+        let Recherche::Disponible(m) = choisir_pour(&r, &f, "0.3.0", "v2", Produit::Monoposte)
+        else {
+            panic!("mise à jour monoposte attendue");
+        };
+        assert_eq!(m.version, "0.4.0");
+        assert_eq!(m.installateur_nom, "KadenzMonoposteSetup-0.4.0.exe");
+        assert_eq!(m.empreinte, [0xef; 32]);
+        // Le poste multiposte ne prend jamais l'installateur monoposte.
+        let Recherche::Disponible(p) = choisir_pour(&r, &f, "0.3.0", "v2", poste("0.4.0")) else {
+            panic!("mise à jour du poste attendue");
+        };
+        assert_eq!(p.installateur_nom, "KadenzSetup-0.4.0.exe");
+        // Manifeste relu : le champ monoposte survit à la signature.
+        let m = avec_monoposte("0.4.0");
+        assert_eq!(Manifeste::lire(m.json().as_bytes()), Some(m));
     }
 
     #[test]

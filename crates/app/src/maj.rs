@@ -69,6 +69,10 @@ fn verifier_en_fond(f: &FenetrePrincipale, produit: Produit) {
 /// Ce poste, plafonné à la version de son serveur quand il la connaît (F10) :
 /// un poste ne prend jamais une version plus récente que son serveur.
 fn produit_poste(serveur: Option<String>) -> Produit {
+    // Édition monoposte : le serveur est dans la fenêtre, pas de plafond.
+    if crate::monoposte::edition_monoposte() {
+        return Produit::Monoposte;
+    }
     Produit::Poste {
         serveur: serveur.as_deref().and_then(Version::lire),
     }

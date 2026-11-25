@@ -201,26 +201,45 @@ $licences += $composants | ForEach-Object {
     "$($p[0]) : $lic ($depot)"
 }
 [System.IO.File]::WriteAllLines((Join-Path $contenu 'Licences-tierces.txt'), $licences, [System.Text.UTF8Encoding]::new($true))
-$communes += @('-d', "Contenu=$contenu")
 
-Executer wix (@('build', (Join-Path $PSScriptRoot 'Kadenz.wxs'), '-ext', 'WixToolset.Util.wixext', '-d', "Exe=$exe", '-o', $msi) + $communes)
-# Contrôles ICE de Windows Installer. ICE43 et ICE57 sont écartés : ils supposent
-# une installation par compte (raccourcis du menu Démarrer et du bureau dans le
-# profil), alors que le paquet est installé pour tout le poste (ALLUSERS=1), où
-# ces dossiers sont ceux de tous les comptes.
-Executer wix @('msi', 'validate', '-sice', 'ICE43', '-sice', 'ICE57', $msi)
-Signer $msi
-Executer wix (@('build', (Join-Path $PSScriptRoot 'KadenzSetup.wxs'), '-ext', 'WixToolset.BootstrapperApplications.wixext', '-d', "Msi=$msi", '-o', $setup) + $communes)
-if ($signtool) {
-    # Le moteur Burn, qui lit la suite de l'installateur, se signe à part :
-    # détaché, signé, rattaché, puis l'installateur entier est signé.
-    $moteur = Join-Path $sortie 'moteur.exe'
-    Executer wix @('burn', 'detach', $setup, '-engine', $moteur)
-    Signer $moteur
-    Executer wix @('burn', 'reattach', $setup, '-engine', $moteur, '-o', $setup)
-    Remove-Item $moteur
-    Signer $setup
-    Write-Host "Installateur signé : $setup"
-} else {
-    Write-Host "Installateur prêt, non signé : $setup"
+# Deux éditions, un seul programme (docs/spec-monoposte.md, section 6) : le
+# monoposte ajoute la marque « edition-monoposte » à côté de kadenz.exe. Leurs
+# paquets partagent le code de mise à niveau (l'une remplace l'autre), leurs
+# installateurs ont chacun leur nom et leur code.
+$editions = @(
+    @{ Nom = 'multiposte'; Msi = 'Kadenz.msi'; Setup = "KadenzSetup-$version.exe"; Bundle = 'Kadenz'; Code = '39f20fc0-e088-4792-85bb-29b2cc47d5ef' },
+    @{ Nom = 'monoposte'; Msi = 'KadenzMonoposte.msi'; Setup = "KadenzMonoposteSetup-$version.exe"; Bundle = 'Kadenz monoposte'; Code = '5d7c3a1e-8b24-4f6a-9c0d-2e1f7a3b4c58' }
+)
+$contenuBase = $contenu
+foreach ($edition in $editions) {
+    $contenu = Join-Path $sortie "contenu-$($edition.Nom)"
+    if (Test-Path $contenu) { Remove-Item -Recurse -Force $contenu }
+    Copy-Item $contenuBase $contenu -Recurse
+    if ($edition.Nom -eq 'monoposte') {
+        New-Item -ItemType File (Join-Path $contenu 'edition-monoposte') | Out-Null
+    }
+    $msi = Join-Path $sortie $edition.Msi
+    $setup = Join-Path $sortie $edition.Setup
+    $parEdition = @('-d', "Contenu=$contenu", '-d', "Edition=$($edition.Nom)")
+    Executer wix (@('build', (Join-Path $PSScriptRoot 'Kadenz.wxs'), '-ext', 'WixToolset.Util.wixext', '-d', "Exe=$exe", '-o', $msi) + $communes + $parEdition)
+    # Contrôles ICE de Windows Installer. ICE43 et ICE57 sont écartés : ils supposent
+    # une installation par compte (raccourcis du menu Démarrer et du bureau dans le
+    # profil), alors que le paquet est installé pour tout le poste (ALLUSERS=1), où
+    # ces dossiers sont ceux de tous les comptes.
+    Executer wix @('msi', 'validate', '-sice', 'ICE43', '-sice', 'ICE57', $msi)
+    Signer $msi
+    Executer wix (@('build', (Join-Path $PSScriptRoot 'KadenzSetup.wxs'), '-ext', 'WixToolset.BootstrapperApplications.wixext', '-d', "Msi=$msi", '-d', "NomBundle=$($edition.Bundle)", '-d', "CodeBundle=$($edition.Code)", '-o', $setup) + $communes)
+    if ($signtool) {
+        # Le moteur Burn, qui lit la suite de l'installateur, se signe à part :
+        # détaché, signé, rattaché, puis l'installateur entier est signé.
+        $moteur = Join-Path $sortie 'moteur.exe'
+        Executer wix @('burn', 'detach', $setup, '-engine', $moteur)
+        Signer $moteur
+        Executer wix @('burn', 'reattach', $setup, '-engine', $moteur, '-o', $setup)
+        Remove-Item $moteur
+        Signer $setup
+        Write-Host "Installateur signé : $setup"
+    } else {
+        Write-Host "Installateur prêt, non signé : $setup"
+    }
 }

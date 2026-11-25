@@ -11,8 +11,16 @@
   l'utilisateur du 2026-11-12). Une mise à jour désinstalle l'ancienne version
   avec UPGRADINGPRODUCTCODE renseigné : la suppression est alors sautée.
 
+  Deux éditions sortent de ce même fichier (docs/spec-monoposte.md, section 6) :
+  multiposte (Edition=multiposte) et monoposte (Edition=monoposte), dont le
+  dossier Contenu porte en plus la marque « edition-monoposte » que l'application
+  lit à côté de son exécutable. Elles partagent le code de mise à niveau : installer
+  l'une remplace l'autre, même à version égale. En monoposte, la désinstallation
+  supprime aussi %LOCALAPPDATA%\Kadenz (serveur intégré et copie du poste).
+
   Variables passées par construire.ps1 : Version, Exe (chemin de kadenz.exe),
-  Editeur, Icone, Contenu (dossier des fichiers livrés à côté de l'exécutable).
+  Editeur, Icone, Contenu (dossier des fichiers livrés à côté de l'exécutable),
+  Edition (multiposte ou monoposte).
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
@@ -26,7 +34,7 @@
     <SummaryInformation Description="Kadenz, gestion commerciale" Manufacturer="$(var.Editeur)" />
 
     <!-- Une nouvelle version remplace l'ancienne ; un retour en arrière est refusé. -->
-    <MajorUpgrade DowngradeErrorMessage="Une version plus récente de Kadenz est déjà installée." />
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="Une version plus récente de Kadenz est déjà installée." />
     <MediaTemplate EmbedCab="yes" />
 
     <Icon Id="kadenz.ico" SourceFile="$(var.Icone)" />
@@ -35,6 +43,10 @@
 
     <!-- Dossier des données du compte qui désinstalle (voir l'en-tête). -->
     <SetProperty Id="DOSSIERDONNEES" Value="[AppDataFolder]Kadenz" Before="CostInitialize" Sequence="both" />
+    <?if "$(var.Edition)" = "monoposte"?>
+    <!-- Édition monoposte : le serveur intégré et la copie du poste vivent dans le profil local. -->
+    <SetProperty Id="DOSSIERLOCAL" Value="[LocalAppDataFolder]Kadenz" Before="CostInitialize" Sequence="both" />
+    <?endif?>
 
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="INSTALLFOLDER" Name="Kadenz" />
@@ -51,6 +63,12 @@
         <!-- Données supprimées à la désinstallation, jamais pendant une mise à jour. -->
         <util:RemoveFolderEx On="uninstall" Property="DOSSIERDONNEES" Condition="NOT UPGRADINGPRODUCTCODE" />
       </Component>
+      <?if "$(var.Edition)" = "monoposte"?>
+      <Component Id="DonneesLocales" Directory="INSTALLFOLDER">
+        <RegistryValue Root="HKMU" Key="Software\Kadenz" Name="DonneesLocales" Type="integer" Value="1" KeyPath="yes" />
+        <util:RemoveFolderEx On="uninstall" Property="DOSSIERLOCAL" Condition="NOT UPGRADINGPRODUCTCODE" />
+      </Component>
+      <?endif?>
       <!-- Fichiers livrés avec le programme : LISEZMOI, notes de version,
            licences des composants libres et modèles d'import (sous-dossier
            modeles), préparés par construire.ps1 dans le dossier Contenu. -->

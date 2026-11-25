@@ -97,12 +97,13 @@ fn contexte() -> Option<Rc<Contexte>> {
     CONTEXTE.with_borrow(|c| c.clone())
 }
 
-/// Vrai dans l'édition monoposte. En attendant la marque d'édition posée par
-/// l'installateur (lot M5, `kadenz_maj::edition::monoposte`), seulement en
-/// version de développement avec `KADENZ_MONOPOSTE=1` : sans marque, c'est
-/// l'édition multiposte, et rien ne change pour un poste actuel.
+/// Vrai dans l'édition monoposte : marque posée à côté de l'exécutable par
+/// l'installateur monoposte (`kadenz_maj::edition`), ou, en version de
+/// développement seulement, `KADENZ_MONOPOSTE=1`. Sans marque, c'est l'édition
+/// multiposte, et rien ne change pour un poste actuel.
 pub(crate) fn edition_monoposte() -> bool {
-    cfg!(debug_assertions) && std::env::var_os("KADENZ_MONOPOSTE").is_some_and(|v| v == "1")
+    kadenz_maj::edition::monoposte()
+        || cfg!(debug_assertions) && std::env::var_os("KADENZ_MONOPOSTE").is_some_and(|v| v == "1")
 }
 
 /// Dossier du serveur intégré : `%LOCALAPPDATA%\Kadenz\Serveur`, ou

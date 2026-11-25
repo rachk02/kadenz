@@ -10,6 +10,7 @@
          et qu'une section existe dans CHANGELOG.md ;
       3. lance format, Clippy et tests sur tout l'espace de travail ;
       4. compile kadenz.exe en mode release, puis l'installateur KadenzSetup-X.Y.Z.exe
+         et celui de l'édition monoposte KadenzMonoposteSetup-X.Y.Z.exe
          (installateur\construire.ps1, WiX 5) et le paquet du serveur
          KadenzServeur-X.Y.Z.msi (installateur\construire-serveur.ps1), tous
          signés avec -Certificat ;
@@ -24,7 +25,8 @@
          0.x, décision 62) : les postes du pont ne lisent que les 30 dernières
          (spécification de la synchronisation, point 6) ;
       7. crée le tag annoté vX.Y.Z, le pousse, et crée la release GitHub avec
-         l'installateur KadenzSetup-X.Y.Z.exe, le paquet Kadenz-X.Y.Z.msi, le
+         l'installateur KadenzSetup-X.Y.Z.exe, l'installateur monoposte
+         KadenzMonoposteSetup-X.Y.Z.exe, le paquet Kadenz-X.Y.Z.msi, le
          paquet du serveur KadenzServeur-X.Y.Z.msi, leurs empreintes SHA-256
          (.sha256), le manifeste et sa signature ; pas de kadenz.exe seul
          (décision de l'utilisateur du 2026-11-12).
@@ -194,6 +196,9 @@ $signature = if ($CertificatEssai) {
 if ($LASTEXITCODE -ne 0) { throw "échec de la construction de l'installateur" }
 $installateur = Join-Path $racine "target\installateur\KadenzSetup-$Version.exe"
 if (-not (Test-Path $installateur)) { throw "installateur introuvable : $installateur" }
+# Édition monoposte (docs/spec-monoposte.md, section 6) : même programme, installateur à part.
+$monoposte = Join-Path $racine "target\installateur\KadenzMonoposteSetup-$Version.exe"
+if (-not (Test-Path $monoposte)) { throw "installateur monoposte introuvable : $monoposte" }
 
 Etape "Paquet du serveur"
 & (Join-Path $PSScriptRoot '..\installateur\construire-serveur.ps1') @signature
@@ -216,6 +221,7 @@ function Empreinte([string]$fichier) {
 $empreinte = Empreinte $installateur
 $empreintePaquet = Empreinte $paquet
 $empreinteServeur = Empreinte $serveur
+$empreinteMonoposte = Empreinte $monoposte
 
 Etape "Manifeste de mise à jour signé"
 if ($Essai) {
@@ -225,12 +231,12 @@ if ($Essai) {
     if (-not (Test-Path -PathType Leaf $publique)) { throw "clé publique d'essai introuvable : $publique" }
     $env:KADENZ_MAJ_CLE = (Get-Content -Raw $publique).Trim()
     try {
-        $sortieManifeste = & $cargo run --quiet -p kadenz-editeur -- manifeste $CleMaj $installateur $Depuis $serveur
+        $sortieManifeste = & $cargo run --quiet -p kadenz-editeur -- manifeste $CleMaj $installateur $Depuis $serveur $monoposte
     } finally {
         Remove-Item Env:\KADENZ_MAJ_CLE
     }
 } else {
-    $sortieManifeste = & $cargo run --release --quiet -p kadenz-editeur -- manifeste $CleMaj $installateur $Depuis $serveur
+    $sortieManifeste = & $cargo run --release --quiet -p kadenz-editeur -- manifeste $CleMaj $installateur $Depuis $serveur $monoposte
 }
 if ($LASTEXITCODE -ne 0) { throw "manifeste de mise à jour refusé : aucune release sans manifeste valide" }
 $generation = ($sortieManifeste | Select-Object -Last 1).Trim()
@@ -262,7 +268,7 @@ if ($generation -ne 'v1') {
     }
 }
 
-$fichiersRelease = @($installateur, $empreinte, $paquet, $empreintePaquet, $serveur, $empreinteServeur, $manifeste, $signatureManifeste)
+$fichiersRelease = @($installateur, $empreinte, $monoposte, $empreinteMonoposte, $paquet, $empreintePaquet, $serveur, $empreinteServeur, $manifeste, $signatureManifeste)
 
 if ($Simulation) {
     Etape "Simulation terminée : génération $generation, fichiers prêts ($($fichiersRelease -join ', ')), aucun tag ni release créés"
