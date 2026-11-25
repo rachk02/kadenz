@@ -3,7 +3,7 @@
 
 import { ListeDeroulante } from "liste-deroulante.slint";
 import { TableauDonnees } from "tableau.slint";
-import { Bouton, MessageRetour, Rangee, Retour, Theme, Titre } from "composants.slint";
+import { Bouton, Case, MessageRetour, Rangee, Retour, Theme, Titre } from "composants.slint";
 
 export global ImportApi {
     in property <bool> actif;
@@ -19,12 +19,52 @@ export global ImportApi {
     in property <string> colonnes;
     in property <bool> peut-importer;
     in-out property <Retour> retour;
+    // Fenêtre d'instructions : montrée au démarrage tant que l'utilisateur ne l'a
+    // pas masquée, et rouverte à tout moment par le bouton « i ».
+    in-out property <bool> instructions-visibles;
+    in-out property <bool> masquer-instructions;
+    in property <string> instructions;
+    callback ouvrir-instructions();
+    callback valider-instructions(masquer: bool);
     // Cible : 0 tiers, 1 produits.
     callback demarrer(cible: int);
     callback choisir-fichier();
     callback changer-defaut(rang: int);
     callback importer();
     callback fermer();
+}
+
+// Bouton rond « i » qui rouvre les instructions d'import.
+component BoutonInfo inherits Rectangle {
+    callback clicked();
+    width: 28px;
+    height: 28px;
+    horizontal-stretch: 0;
+    vertical-stretch: 0;
+    border-radius: self.width / 2;
+    border-width: 1px;
+    border-color: Theme.bordure;
+    background: zone.has-hover ? Theme.accent-survol : Theme.champ;
+    accessible-role: button;
+    accessible-label: @tr("Instructions d'import");
+    accessible-action-default => {
+        root.clicked();
+    }
+
+    Text {
+        text: "i";
+        font-weight: 700;
+        color: Theme.texte;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+
+    zone := TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            root.clicked();
+        }
+    }
 }
 
 export component PanneauImport inherits Rectangle {
@@ -37,8 +77,19 @@ export component PanneauImport inherits Rectangle {
         padding: 24px;
         spacing: 12px;
 
-        Titre {
-            text: ImportApi.titre;
+        HorizontalLayout {
+            spacing: 12px;
+
+            Titre {
+                text: ImportApi.titre;
+                horizontal-stretch: 1;
+            }
+
+            BoutonInfo {
+                clicked => {
+                    ImportApi.ouvrir-instructions();
+                }
+            }
         }
 
         Rangee {
@@ -142,6 +193,63 @@ export component PanneauImport inherits Rectangle {
         // Sous les boutons : un texte à la ligne dans une Rangee ferait boucler la mise en page.
         MessageRetour {
             retour: ImportApi.retour;
+        }
+    }
+
+    if ImportApi.instructions-visibles: Rectangle {
+        width: root.width;
+        height: root.height;
+        background: #000000a0;
+
+        TouchArea { }
+
+        HorizontalLayout {
+            alignment: center;
+
+            VerticalLayout {
+                alignment: center;
+
+                Rectangle {
+                    width: min(560px, root.width - 32px);
+                    background: Theme.fond-lateral;
+                    border-radius: 4px;
+                    border-width: 1px;
+                    border-color: Theme.bordure;
+
+                    VerticalLayout {
+                        padding: 20px;
+                        spacing: 12px;
+
+                        Titre {
+                            text: @tr("Avant d'importer");
+                        }
+
+                        Text {
+                            horizontal-alignment: Theme.debut;
+                            text: ImportApi.instructions;
+                            color: Theme.texte;
+                            wrap: word-wrap;
+                        }
+
+                        Case {
+                            text: @tr("Ne plus afficher ce message");
+                            checked <=> ImportApi.masquer-instructions;
+                        }
+
+                        Rangee {
+                            alignment: start;
+
+                            Bouton {
+                                text: @tr("J'ai compris, continuer");
+                                primary: true;
+                                clicked => {
+                                    ImportApi.valider-instructions(ImportApi.masquer-instructions);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

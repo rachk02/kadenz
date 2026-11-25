@@ -4844,3 +4844,33 @@ msgstr "订阅已到期：远程访问需要有效的订阅"
 
 msgid "refus du relais : {}"
 msgstr "中继拒绝：{}"
+
+msgid "Instructions d'import"
+msgstr "导入说明"
+
+msgid "Avant d'importer"
+msgstr "导入之前"
+
+msgid "Ne plus afficher ce message"
+msgstr "不再显示此消息"
+
+msgid "J'ai compris, continuer"
+msgstr "我已了解，继续"
+
+msgid "Colonne obligatoire : Nom (ou Raison sociale). Colonnes reconnues : adresse, téléphone, localisation, IFU, RCCM, régime d'imposition et type (Client, Fournisseur ou Les deux)."
+msgstr "必填列：名称（或公司名称）。可识别的列：地址、电话、位置、IFU、RCCM、税制和类型（客户、供应商或两者）。"
+
+msgid "Colonnes obligatoires : Désignation, Référence et Prix (montant entier en FCFA). Colonne facultative : Sens (Vente, Achat ou Les deux)."
+msgstr "必填列：品名、参考号和价格（以FCFA计的整数金额）。可选列：用途（销售、采购或两者）。"
+
+msgid "Formats lus : CSV (UTF-8 ou Windows-1252, séparateur détecté), Excel (xlsx, xlsm, xls) et OpenDocument (ods)."
+msgstr "支持的格式：CSV（UTF-8或Windows-1252，自动识别分隔符）、Excel（xlsx、xlsm、xls）和OpenDocument（ods）。"
+
+msgid "La première ligne non vide du fichier doit contenir les noms des colonnes ; les lignes suivantes sont les fiches."
+msgstr "文件中第一个非空行必须包含列名；之后的行是记录。"
+
+msgid "Les colonnes inconnues sont ignorées. Les doublons (déjà en base ou plus haut dans le fichier) sont ignorés."
+msgstr "未知列将被忽略。重复项（数据库中已有的，或文件中靠前出现的）将被忽略。"
+
+msgid "Un aperçu ligne par ligne s'affiche avant tout enregistrement ; seules les lignes valides sont enregistrées."
+msgstr "保存之前会逐行预览；只保存有效的行。"

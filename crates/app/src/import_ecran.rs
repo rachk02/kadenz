@@ -209,8 +209,70 @@ fn message_bilan(bilan: &BilanImport) -> String {
     message
 }
 
+/// Fichier témoin : s'il existe, la fenêtre d'instructions ne s'ouvre plus d'elle-même
+/// (le bouton « i » reste disponible).
+fn temoin_instructions() -> std::path::PathBuf {
+    crate::dossier_donnees().join("import-instructions-masquees")
+}
+
+fn instructions_masquees() -> bool {
+    temoin_instructions().exists()
+}
+
+/// Consignes affichées avant un import, d'après les règles de lecture du crate
+/// `kadenz-import` (formats, première ligne, colonnes reconnues, doublons).
+fn instructions(cible: Cible) -> String {
+    let colonnes = match cible {
+        Cible::Tiers => tr(
+            "Colonne obligatoire : Nom (ou Raison sociale). Colonnes reconnues : adresse, téléphone, localisation, IFU, RCCM, régime d'imposition et type (Client, Fournisseur ou Les deux).",
+        ),
+        Cible::Produits => tr(
+            "Colonnes obligatoires : Désignation, Référence et Prix (montant entier en FCFA). Colonne facultative : Sens (Vente, Achat ou Les deux).",
+        ),
+    };
+    [
+        tr(
+            "Formats lus : CSV (UTF-8 ou Windows-1252, séparateur détecté), Excel (xlsx, xlsm, xls) et OpenDocument (ods).",
+        ),
+        tr(
+            "La première ligne non vide du fichier doit contenir les noms des colonnes ; les lignes suivantes sont les fiches.",
+        ),
+        colonnes,
+        tr(
+            "Les colonnes inconnues sont ignorées. Les doublons (déjà en base ou plus haut dans le fichier) sont ignorés.",
+        ),
+        tr(
+            "Un aperçu ligne par ligne s'affiche avant tout enregistrement ; seules les lignes valides sont enregistrées.",
+        ),
+    ]
+    .join("\n\n")
+}
+
 pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
     let api = fenetre.global::<ImportApi>();
+    api.on_ouvrir_instructions({
+        let f = fenetre.as_weak();
+        move || {
+            if let Some(f) = f.upgrade() {
+                let api = f.global::<ImportApi>();
+                api.set_masquer_instructions(instructions_masquees());
+                api.set_instructions_visibles(true);
+            }
+        }
+    });
+    api.on_valider_instructions({
+        let f = fenetre.as_weak();
+        move |masquer| {
+            if masquer {
+                let _ = std::fs::write(temoin_instructions(), b"");
+            } else {
+                let _ = std::fs::remove_file(temoin_instructions());
+            }
+            if let Some(f) = f.upgrade() {
+                f.global::<ImportApi>().set_instructions_visibles(false);
+            }
+        }
+    });
     let import: Partage = Rc::new(RefCell::new(ImportEnCours {
         cible: Cible::Tiers,
         table: None,
@@ -259,6 +321,9 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
         api.set_erreur(SharedString::new());
         api.set_retour(Retour::default());
         vider_apercu(&api);
+        api.set_instructions(instructions(cible).into());
+        api.set_masquer_instructions(instructions_masquees());
+        api.set_instructions_visibles(!instructions_masquees());
         api.set_actif(true);
         choisir_et_analyser(&f, &e, &i);
     });

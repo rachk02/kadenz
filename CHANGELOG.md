@@ -12,6 +12,7 @@ Numérotation : Kadenz reste en 0.x (décision du 2026-11-25) ; la phase 2 suit 
 - PDF : quand la TVA d'un document est à zéro, la ligne du total s'intitule « Montant hors TVA » et la somme en lettres se termine par « FCFA hors TVA. » ; sinon « Montant TTC » et « FCFA TTC. »
 
 ### Ajouté
+- Import des tiers et des produits : bouton rond « i » qui rouvre une fenêtre d'instructions (formats lus, première ligne, colonnes reconnues, doublons) ; la fenêtre s'ouvre au démarrage de l'import, avec la case « Ne plus afficher ce message » (fichier témoin `import-instructions-masquees` dans le dossier des données).
 - Diagnostic : un plantage de l'application écrit sa cause, son lieu et la pile dans `journaux\plantage.log` (dossier des données) ; le rendu logiciel se force par `--rendu-logiciel`, par un fichier `rendu-logiciel` dans le dossier des données ou par `KADENZ_RENDU=logiciel` (champs invisibles sur certains pilotes graphiques).
 
 ## [1.0.2] - 2026-11-22

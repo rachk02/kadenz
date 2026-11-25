@@ -4844,3 +4844,33 @@ msgstr "サブスクリプションは期限切れです：リモートアクセ
 
 msgid "refus du relais : {}"
 msgstr "リレーによる拒否: {}"
+
+msgid "Instructions d'import"
+msgstr "インポートの手順"
+
+msgid "Avant d'importer"
+msgstr "インポートする前に"
+
+msgid "Ne plus afficher ce message"
+msgstr "今後このメッセージを表示しない"
+
+msgid "J'ai compris, continuer"
+msgstr "了解して続ける"
+
+msgid "Colonne obligatoire : Nom (ou Raison sociale). Colonnes reconnues : adresse, téléphone, localisation, IFU, RCCM, régime d'imposition et type (Client, Fournisseur ou Les deux)."
+msgstr "必須の列：名称（または会社名）。認識される列：住所、電話番号、所在地、IFU、RCCM、課税区分、種別（顧客、仕入先、または両方）。"
+
+msgid "Colonnes obligatoires : Désignation, Référence et Prix (montant entier en FCFA). Colonne facultative : Sens (Vente, Achat ou Les deux)."
+msgstr "必須の列：品名、参照番号、価格（FCFAの整数金額）。任意の列：用途（販売、購入、または両方）。"
+
+msgid "Formats lus : CSV (UTF-8 ou Windows-1252, séparateur détecté), Excel (xlsx, xlsm, xls) et OpenDocument (ods)."
+msgstr "読み込める形式：CSV（UTF-8またはWindows-1252、区切り文字は自動判別）、Excel（xlsx、xlsm、xls）、OpenDocument（ods）。"
+
+msgid "La première ligne non vide du fichier doit contenir les noms des colonnes ; les lignes suivantes sont les fiches."
+msgstr "ファイルの最初の空でない行に列名を入れてください。次の行以降がデータです。"
+
+msgid "Les colonnes inconnues sont ignorées. Les doublons (déjà en base ou plus haut dans le fichier) sont ignorés."
+msgstr "未知の列は無視されます。重複（すでにデータベースにあるもの、またはファイル内で前にあるもの）は無視されます。"
+
+msgid "Un aperçu ligne par ligne s'affiche avant tout enregistrement ; seules les lignes valides sont enregistrées."
+msgstr "保存の前に行ごとのプレビューが表示され、有効な行だけが保存されます。"

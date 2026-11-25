@@ -4844,3 +4844,33 @@ msgstr "انتهى الاشتراك: يتطلب الوصول عن بُعد اش�
 
 msgid "refus du relais : {}"
 msgstr "رفض المرحّل: {}"
+
+msgid "Instructions d'import"
+msgstr "تعليمات الاستيراد"
+
+msgid "Avant d'importer"
+msgstr "قبل الاستيراد"
+
+msgid "Ne plus afficher ce message"
+msgstr "عدم إظهار هذه الرسالة مرة أخرى"
+
+msgid "J'ai compris, continuer"
+msgstr "فهمت، متابعة"
+
+msgid "Colonne obligatoire : Nom (ou Raison sociale). Colonnes reconnues : adresse, téléphone, localisation, IFU, RCCM, régime d'imposition et type (Client, Fournisseur ou Les deux)."
+msgstr "العمود المطلوب: الاسم (أو الاسم التجاري). الأعمدة المعروفة: العنوان، الهاتف، الموقع، IFU، RCCM، النظام الضريبي والنوع (عميل، مورّد أو كلاهما)."
+
+msgid "Colonnes obligatoires : Désignation, Référence et Prix (montant entier en FCFA). Colonne facultative : Sens (Vente, Achat ou Les deux)."
+msgstr "الأعمدة المطلوبة: الوصف، المرجع والسعر (مبلغ صحيح بالفرنك CFA). عمود اختياري: الاستخدام (بيع، شراء أو كلاهما)."
+
+msgid "Formats lus : CSV (UTF-8 ou Windows-1252, séparateur détecté), Excel (xlsx, xlsm, xls) et OpenDocument (ods)."
+msgstr "الصيغ المقروءة: CSV (UTF-8 أو Windows-1252، مع اكتشاف الفاصل)، Excel (xlsx وxlsm وxls) وOpenDocument (ods)."
+
+msgid "La première ligne non vide du fichier doit contenir les noms des colonnes ; les lignes suivantes sont les fiches."
+msgstr "يجب أن يحتوي أول صف غير فارغ في الملف على أسماء الأعمدة؛ والصفوف التالية هي البطاقات."
+
+msgid "Les colonnes inconnues sont ignorées. Les doublons (déjà en base ou plus haut dans le fichier) sont ignorés."
+msgstr "تُتجاهل الأعمدة غير المعروفة. وتُتجاهل المكررات (الموجودة في القاعدة أو في أعلى الملف)."
+
+msgid "Un aperçu ligne par ligne s'affiche avant tout enregistrement ; seules les lignes valides sont enregistrées."
+msgstr "تظهر معاينة صفًا صفًا قبل أي حفظ؛ ولا تُحفظ إلا الصفوف الصحيحة."
