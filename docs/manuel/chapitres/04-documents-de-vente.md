@@ -2,7 +2,7 @@
 
 Ce chapitre suit la vie d'une vente, du devis à l'avoir : on établit un devis, on le convertit en facture, on livre avec un bordereau, puis on corrige par un avoir. Les mêmes gestes servent à tous les documents, donc on les détaille une fois, sur le devis.
 
-Les données sont celles du chapitre 03 : le client Boulangerie du Marché, les articles FAR-50 et SUC-25. Les captures de ce chapitre sont prises dans une fenêtre plus haute, pour montrer les écrans en entier.
+Les données sont celles du chapitre 03 : le client Boulangerie du Marché, les articles FAR-50 et SUC-25.
 
 ## 4.1 Les documents et leurs numéros
 
