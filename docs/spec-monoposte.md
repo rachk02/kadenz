@@ -179,7 +179,7 @@ Fermeture de la session Windows ou arrêt de la machine : winit (0.30.13, `platf
   - `kadenz_licence::entreprise::Produit` (Entreprise, Monoposte), `produit_courant()` et `definir_produit()` : le programme un poste se déclare au démarrage (marque d'édition, section 6) ; `verifier` ne reconnaît que la licence de l'édition en cours, `verifier_pour` prend l'édition en paramètre. Refus : « cette licence ne convient pas à cette édition de Kadenz : elle est faite pour {} » (six traductions) ;
   - portail : colonne `code_activation.produit` (schéma 12, codes existants = Entreprise), gamme « Kadenz, édition un poste » au tirage (un poste par code), demande d'activation avec le champ `produit` (absent chez un programme antérieur : Entreprise). Un code d'une édition présenté par l'autre est refusé avec le message existant « ce code ne sert pas à ce logiciel » ;
   - le client d'activation envoie `produit` ; le relais et le serveur multiposte restent en Entreprise.
-  Restent à fixer le prix, la formule et les modules (grille de prix ouverte, décision 73).
+  Formule et modules : les mêmes que Kadenz Entreprise (décision de l'utilisateur du 2026-11-26). Le prix sera fixé plus tard ; il n'a aucun effet sur le code (grille de prix ouverte, décision 73).
 - Section 3.1 : essai de 30 jours retenu (voir ci-dessus).
 
 ## 8. Passage au multiposte (plus tard, non spécifié)
