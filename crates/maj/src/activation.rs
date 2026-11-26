@@ -125,7 +125,7 @@ pub fn activer_aupres(
     lire_reponse(&texte)
 }
 
-fn agent() -> Agent {
+pub(crate) fn agent() -> Agent {
     Agent::config_builder()
         .user_agent(format!("Kadenz/{VERSION}"))
         .timeout_connect(Some(Duration::from_secs(8)))

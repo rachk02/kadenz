@@ -6,6 +6,7 @@
 | 0.2 | 2026-11-26 | Lot T1 livré : module `telechargement` du portail (noms de paquets, dernier paquet par édition, liens HMAC de dix minutes, plages), routes `/telecharger/{produit}` et `/fichiers/{nom}`, option `--depot`, frein `TELECHARGEMENT` (vingt liens par adresse, puis jusqu'à 15 minutes), journal `telechargement`. Dépôt à plat. Clé des liens tirée au démarrage. |
 | 0.3 | 2026-11-26 | Lot E1 livré : attestation d'essai signée `KADENZ-T-` (`kadenz_licence::essai`), table `essai` du portail (schéma 13, un essai par poste et par édition), route `POST /api/essai` (adresse email vérifiée, frein par adresse, autre adresse pour un même poste notée au journal `essai_autre_adresse`). |
 | 0.4 | 2026-11-26 | Lot T2 livré : route `GET /api/releases` (versions publiées du dépôt au format de la liste des releases de GitHub, liens signés absolus), dépôt à plat étendu aux paquets MSI, au manifeste `kadenz-maj-X.Y.Z.json`, à sa signature et aux notes `notes-X.Y.Z.md` ; client de mise à jour qui lit le portail d'abord, GitHub si le portail ne répond pas ou n'a rien publié. |
+| 0.5 | 2026-11-26 | Lot E2 livré : adresse email à l'étape Licence de l'assistant (serveur et monoposte, sans code), essai noté « à confirmer » dans la base du serveur, demande au portail hors du fil de l'interface à l'installation puis à chaque lancement tant qu'il n'est pas confirmé, attestation gardée dans `%ProgramData%\Kadenz\essai-<édition>.txt`, lecture seule après sept jours sans confirmation (raison affichée), règle d'adresse partagée (`kadenz_licence::essai::valider_email`). Les essais commencés avant cette règle ne sont pas concernés. |
 
 Statut : **spécifié**. Les lots sont au tableau de la section 7.
 
@@ -69,7 +70,7 @@ Garde-fous :
 
 ### 6.3 Marque d'essai sur le poste
 
-- La date signée reçue du portail est aussi gardée dans `%ProgramData%\Kadenz\essai.json`, fichier nommé, documenté dans le LISEZMOI, que la désinstallation ne supprime pas. Elle évite un appel au portail à chaque réinstallation et sert hors ligne.
+- La date signée reçue du portail est aussi gardée dans `%ProgramData%\Kadenz\essai-<édition>.txt`, fichier nommé, documenté dans le LISEZMOI, que la désinstallation ne supprime pas. Elle évite un appel au portail à chaque réinstallation et sert hors ligne.
 - Le fichier n'est qu'un cache : effacé, il se reconstitue depuis le portail ; modifié, sa signature est refusée.
 
 ### 6.4 Ce qui reste accepté
@@ -84,7 +85,7 @@ Changer de machine et donner une nouvelle adresse redonne un essai. C'est accept
 | T2 (livré) | Route `/api/releases` (manifeste et lien signé) ; client qui essaie le portail puis GitHub. Tests. | `crates/portail`, `crates/maj` |
 | T3 | Publication vers le Dell dans `release.ps1`, dossier, droits, sauvegarde. Demande l'accord de l'utilisateur (serveur de production). | `scripts/`, Dell |
 | E1 (livré) | Table des essais du portail (poste, adresse, produit, début), route `/api/essai`, date signée, recoupement au journal. Tests. | `crates/portail`, `crates/licence` |
-| E2 | Champ email de l'assistant, appel au portail, date « à confirmer » hors ligne, cache `%ProgramData%\Kadenz\essai.json`, lecture seule après sept jours sans confirmation. Six traductions. | `crates/app`, `crates/stockage`, installateur |
+| E2 (livré) | Champ email de l'assistant, appel au portail, date « à confirmer » hors ligne, cache `%ProgramData%\Kadenz\essai.json`, lecture seule après sept jours sans confirmation. Six traductions. | `crates/app`, `crates/stockage`, installateur |
 | E3 | Page de confidentialité du site : usage de l'adresse et de l'identifiant du poste. | site |
 
 Ordre proposé : T1, E1, T2, E2, puis T3 et E3 avec l'utilisateur. Les lots T3 et l'essai sur le portail de production demandent son accord.

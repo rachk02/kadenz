@@ -646,30 +646,6 @@ fn valider_texte(texte: &str, champ: &str, max: usize) -> Resultat<String> {
 /// base de Kadenz.
 /// Identifiant de poste (`kadenz_licence::identifiant_poste`) : quatre
 /// groupes de quatre caractères en base 32 de Crockford, majuscules.
-/// Adresse email plausible, en minuscules : une seule arobase, une partie
-/// locale, un domaine avec un point, rien d'invisible, 254 caractères au plus.
-fn valider_email(texte: &str) -> Option<String> {
-    let email = texte.trim().to_lowercase();
-    if email.is_empty()
-        || email.len() > 254
-        || email.chars().any(|c| c.is_whitespace() || c.is_control())
-    {
-        return None;
-    }
-    let (local, domaine) = email.split_once('@')?;
-    let domaine_valide = domaine.contains('.')
-        && !domaine.starts_with(['.', '-'])
-        && !domaine.ends_with(['.', '-'])
-        && !domaine.contains("..")
-        && domaine
-            .chars()
-            .all(|c| c.is_alphanumeric() || c == '.' || c == '-');
-    let local_valide = !local.is_empty()
-        && local.len() <= 64
-        && !local.contains(['<', '>', '"', ',', ';', '(', ')', '[', ']', '\\']);
-    (local_valide && domaine_valide && !domaine.contains('@')).then_some(email)
-}
-
 fn valider_poste(poste: &str) -> Resultat<String> {
     let poste = poste.trim().to_ascii_uppercase();
     let alphabet = |c: char| c.is_ascii_digit() || (c.is_ascii_uppercase() && !"ILOU".contains(c));
@@ -2467,7 +2443,7 @@ impl Portail {
     /// demande compte dans le frein de l'adresse.
     pub fn demander_essai(&self, demande: &DemandeEssai, adresse: &str) -> Resultat<EssaiAtteste> {
         let invalide = || ErreurPortail::Validation(MODELES_ESSAI[1].into());
-        let email = valider_email(&demande.email)
+        let email = kadenz_licence::essai::valider_email(&demande.email)
             .ok_or_else(|| ErreurPortail::Validation(MODELES_ESSAI[0].into()))?;
         let produit = lic::Produit::depuis_code(demande.produit.trim()).ok_or_else(invalide)?;
         let poste = valider_poste(&demande.poste).map_err(|_| invalide())?;

@@ -46,6 +46,16 @@ const EMISSION_VUE: &str = "abonnement.emission_vue";
 const RECU: &str = "abonnement.recu";
 /// Date de début de l'essai gratuit (installation sans licence).
 const ESSAI_DEBUT: &str = "abonnement.essai_debut";
+/// Adresse email d'un essai pas encore confirmé par le portail (décision 78) :
+/// présente tant que le portail n'a pas rendu la date de début de ce poste.
+/// Les essais d'avant cette règle n'en ont pas et ne sont pas concernés.
+const ESSAI_A_CONFIRMER: &str = "abonnement.essai_a_confirmer";
+/// Jours d'essai permis sans confirmation du portail.
+pub const JOURS_SANS_CONFIRMATION: i64 = 7;
+/// Refus pendant un essai resté sans confirmation au-delà de sept jours.
+pub const MODELE_ESSAI_A_CONFIRMER: &str =
+    "essai gratuit à confirmer : reliez ce poste à Internet, puis relancez Kadenz";
+
 /// Durée de l'essai gratuit, en jours (décision de l'utilisateur du 2026-11-25).
 pub const DUREE_ESSAI_JOURS: i64 = 30;
 /// Postes permis pendant l'essai : l'édition à plusieurs postes peut s'essayer à
@@ -58,6 +68,31 @@ pub fn demarrer_essai(conn: &Connection, horloge: NaiveDate) -> Resultat<()> {
     if lire(conn, ESSAI_DEBUT)?.is_none() {
         ecrire(conn, ESSAI_DEBUT, &en_texte(horloge))?;
     }
+    Ok(())
+}
+
+/// Note l'essai comme à confirmer par le portail, avec l'adresse email donnée
+/// à l'assistant (installation sans licence, portail pas encore joint).
+pub fn noter_essai_a_confirmer(conn: &Connection, email: &str) -> Resultat<()> {
+    ecrire(conn, ESSAI_A_CONFIRMER, email)
+}
+
+/// Adresse email de l'essai encore à confirmer, s'il y en a un.
+pub fn essai_a_confirmer(conn: &Connection) -> Resultat<Option<String>> {
+    Ok(lire(conn, ESSAI_A_CONFIRMER)?.filter(|e| !e.is_empty()))
+}
+
+/// Essai confirmé par le portail : la date de début du portail remplace celle
+/// du poste si elle est plus ancienne (réinstallation), puis l'essai n'est plus
+/// à confirmer.
+pub fn confirmer_essai(conn: &Connection, debut_portail: NaiveDate) -> Resultat<()> {
+    let local = lire(conn, ESSAI_DEBUT)?.as_deref().and_then(date);
+    let debut = local.map_or(debut_portail, |l| l.min(debut_portail));
+    ecrire(conn, ESSAI_DEBUT, &en_texte(debut))?;
+    conn.execute(
+        "DELETE FROM parametre_systeme WHERE cle = ?1",
+        [ESSAI_A_CONFIRMER],
+    )?;
     Ok(())
 }
 
@@ -231,12 +266,19 @@ fn evaluer(
         None => {
             // Sans licence : essai gratuit tant que ses 30 jours ne sont pas passés ;
             // ensuite l'état reste « absent » (lecture seule).
-            let fin = lire(conn, ESSAI_DEBUT)?
-                .as_deref()
-                .and_then(date)
-                .map(|d| d + chrono::Duration::days(DUREE_ESSAI_JOURS));
+            let debut = lire(conn, ESSAI_DEBUT)?.as_deref().and_then(date);
+            let fin = debut.map(|d| d + chrono::Duration::days(DUREE_ESSAI_JOURS));
+            // Sans confirmation du portail, sept jours seulement (décision 78).
+            let sans_confirmation = essai_a_confirmer(conn)?.is_some()
+                && debut.is_some_and(|d| (aujourdhui - d).num_days() > JOURS_SANS_CONFIRMATION);
+            if sans_confirmation {
+                abonnement.erreur = Some(Refus {
+                    modele: MODELE_ESSAI_A_CONFIRMER.to_string(),
+                    valeurs: Vec::new(),
+                });
+            }
             match fin {
-                Some(fin) if (fin - aujourdhui).num_days() >= 0 => {
+                Some(fin) if !sans_confirmation && (fin - aujourdhui).num_days() >= 0 => {
                     let jours = (fin - aujourdhui).num_days();
                     abonnement.statut = Statut::Essai;
                     abonnement.jours_restants = Some(jours);
@@ -462,6 +504,39 @@ mod tests {
             &cle_portail(),
         )
         .unwrap()
+    }
+
+    #[test]
+    fn essai_a_confirmer_par_le_portail() {
+        let conn = ouvrir_en_memoire().unwrap();
+        demarrer_essai(&conn, j("2026-11-25")).unwrap();
+        noter_essai_a_confirmer(&conn, "awa@exemple.bf").unwrap();
+        assert_eq!(
+            essai_a_confirmer(&conn).unwrap().as_deref(),
+            Some("awa@exemple.bf")
+        );
+        // Sept jours sans confirmation : essai en cours.
+        let a = etat_avec(&conn, j("2026-12-02"), &[]).unwrap();
+        assert_eq!(a.statut, Statut::Essai);
+        // Au-delà : lecture seule, avec la raison.
+        let a = etat_avec(&conn, j("2026-12-03"), &[]).unwrap();
+        assert_eq!(a.statut, Statut::Absent);
+        assert_eq!(a.erreur.unwrap().modele, MODELE_ESSAI_A_CONFIRMER);
+        // Le portail confirme avec une date plus ancienne (réinstallation) :
+        // elle est retenue, l'essai n'est plus à confirmer.
+        confirmer_essai(&conn, j("2026-11-20")).unwrap();
+        assert_eq!(essai_a_confirmer(&conn).unwrap(), None);
+        let a = etat_avec(&conn, j("2026-12-03"), &[]).unwrap();
+        assert_eq!(a.statut, Statut::Essai);
+        assert_eq!(a.jours_restants, Some(17));
+        // Une date du portail plus récente ne rallonge pas l'essai.
+        confirmer_essai(&conn, j("2026-12-01")).unwrap();
+        assert_eq!(
+            etat_avec(&conn, j("2026-12-03"), &[])
+                .unwrap()
+                .jours_restants,
+            Some(17)
+        );
     }
 
     #[test]

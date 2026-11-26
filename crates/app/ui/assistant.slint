@@ -41,6 +41,9 @@ export struct DonneesAssistant {
     orthographe-traditionnelle: bool,
     // Clé de licence vérifiée à la première étape, vide pour le socle seul.
     cle-licence: string,
+    // Adresse email de l'essai gratuit (serveur et monoposte, sans code ;
+    // décision 78), vide sinon.
+    email-essai: string,
     // Sauvegardes du serveur (mode serveur seulement, décision 56).
     sauvegarde-dossier: string,
     sauvegarde-heure: string,
@@ -94,6 +97,8 @@ export component EcranAssistant inherits Rectangle {
     // la licence reçue remplit alors cle-licence.
     property <string> code-licence;
     property <bool> code-valide;
+    // Sans code : adresse email de l'essai gratuit, envoyée au portail.
+    property <string> email-essai;
     property <int> etat-activation: ActivationUi.etat;
     changed etat-activation => {
         if (root.etape != 1) {
@@ -150,6 +155,8 @@ export component EcranAssistant inherits Rectangle {
             root.resume-licence = "";
         } else if (root.serveur && root.etape == 0 && root.code-licence != "" && !root.code-valide) {
             root.erreur = @tr("Le code de licence est incomplet ou erroné : corrigez-le, ou videz le champ pour continuer sans licence.");
+        } else if (root.serveur && root.etape == 0 && root.code-licence == "" && !LicenceApi.email-valide(root.email-essai)) {
+            root.erreur = @tr("Sans code, saisissez une adresse email valide : elle sert à l'essai gratuit de 30 jours.");
         } else if (root.etape == 1 && root.nom == "") {
             root.erreur = @tr("Le nom de l'entreprise est obligatoire.");
         } else if (root.serveur && root.etape == 1 && root.code-licence != "" && root.cle-licence == "") {
@@ -169,6 +176,10 @@ export component EcranAssistant inherits Rectangle {
         } else {
             if (!root.serveur && root.etape == 0) {
                 root.resume-licence = root.cle-licence == "" ? "" : root.verification.message;
+            }
+            // L'adresse de l'essai propose l'adresse de l'entreprise.
+            if (root.serveur && root.etape == 0 && root.code-licence == "" && root.email == "") {
+                root.email = root.email-essai;
             }
             root.erreur = "";
             root.etape += 1;
@@ -338,6 +349,19 @@ export component EcranAssistant inherits Rectangle {
                             valide-entree => {
                                 root.suivant();
                             }
+                        }
+
+                        if root.serveur && root.code-licence == "": Champ {
+                            libelle: @tr("Adresse email (obligatoire sans code, pour l'essai gratuit)");
+                            valeur <=> root.email-essai;
+                        }
+
+                        if root.serveur && root.code-licence == "": Text {
+                            horizontal-alignment: Theme.debut;
+                            text: @tr("L'adresse et l'identifiant de cet ordinateur sont envoyés au portail de Kadenz, qui garde la date de début de l'essai : une réinstallation ne relance pas l'essai.");
+                            font-size: 12.5px;
+                            color: Theme.texte-secondaire;
+                            wrap: word-wrap;
                         }
 
                         if root.serveur: Text {
@@ -806,6 +830,7 @@ export component EcranAssistant inherits Rectangle {
                                 modes-paiement: root.modes-paiement,
                                 orthographe-traditionnelle: root.orthographe-traditionnelle,
                                 cle-licence: root.cle-licence,
+                                email-essai: root.serveur && root.cle-licence == "" ? root.email-essai : "",
                                 sauvegarde-dossier: root.sauvegarde-dossier,
                                 sauvegarde-heure: root.sauvegarde-heure,
                                 sauvegarde-mot-de-passe: root.serveur ? root.sauvegarde-mot-de-passe : "",

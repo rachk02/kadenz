@@ -4928,3 +4928,15 @@ msgstr "To activate a code: Settings, “Subscription” section."
 
 msgid "Adressez-vous à l'administrateur pour activer un code d'abonnement."
 msgstr "Ask the administrator to activate a subscription code."
+
+msgid "Sans code, saisissez une adresse email valide : elle sert à l'essai gratuit de 30 jours."
+msgstr "Without a code, enter a valid email address: it is used for the 30-day free trial."
+
+msgid "Adresse email (obligatoire sans code, pour l'essai gratuit)"
+msgstr "Email address (required without a code, for the free trial)"
+
+msgid "L'adresse et l'identifiant de cet ordinateur sont envoyés au portail de Kadenz, qui garde la date de début de l'essai : une réinstallation ne relance pas l'essai."
+msgstr "The address and this computer's identifier are sent to the Kadenz portal, which keeps the trial start date: reinstalling does not restart the trial."
+
+msgid "essai gratuit à confirmer : reliez ce poste à Internet, puis relancez Kadenz"
+msgstr "free trial to be confirmed: connect this computer to the Internet, then restart Kadenz"

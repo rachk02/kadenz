@@ -481,6 +481,7 @@ mod tests {
         textes.extend_from_slice(kadenz_stockage::inscription::MODELES_ERREUR);
         textes.push("le nom du poste est obligatoire");
         textes.push(kadenz_stockage::abonnement::MODELE_RECUL_ECHEANCE);
+        textes.push(kadenz_stockage::abonnement::MODELE_ESSAI_A_CONFIRMER);
         let manquants = crate::traduction::sans_traduction(&textes);
         assert!(manquants.is_empty(), "sans traduction : {manquants:?}");
     }

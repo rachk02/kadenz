@@ -29,6 +29,31 @@ pub const MODELES_ERREUR: &[&str] = &[
     "attestation d'essai signée par une clé inconnue",
 ];
 
+/// Adresse email plausible, en minuscules : une seule arobase, une partie
+/// locale, un domaine avec un point, rien d'invisible, 254 caractères au plus.
+/// Même règle pour le programme (assistant) et le portail.
+pub fn valider_email(texte: &str) -> Option<String> {
+    let email = texte.trim().to_lowercase();
+    if email.is_empty()
+        || email.len() > 254
+        || email.chars().any(|c| c.is_whitespace() || c.is_control())
+    {
+        return None;
+    }
+    let (local, domaine) = email.split_once('@')?;
+    let domaine_valide = domaine.contains('.')
+        && !domaine.starts_with(['.', '-'])
+        && !domaine.ends_with(['.', '-'])
+        && !domaine.contains("..")
+        && domaine
+            .chars()
+            .all(|c| c.is_alphanumeric() || c == '.' || c == '-');
+    let local_valide = !local.is_empty()
+        && local.len() <= 64
+        && !local.contains(['<', '>', '"', ',', ';', '(', ')', '[', ']', '\\']);
+    (local_valide && domaine_valide).then_some(email)
+}
+
 /// Essai attesté par le portail.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Essai {
@@ -124,6 +149,32 @@ mod tests {
             produit: Produit::Monoposte,
             debut: "2026-11-20".into(),
             emise_le: "2026-11-26".into(),
+        }
+    }
+
+    #[test]
+    fn adresses_email() {
+        assert_eq!(
+            valider_email(" Awa@Exemple.BF ").as_deref(),
+            Some("awa@exemple.bf")
+        );
+        assert_eq!(
+            valider_email("a.b-c@sous.domaine.bf").as_deref(),
+            Some("a.b-c@sous.domaine.bf")
+        );
+        for faux in [
+            "",
+            "sans-arobase",
+            "a@b",
+            "a@@b.bf",
+            "a b@c.bf",
+            "@c.bf",
+            "a@.bf",
+            "a@c..bf",
+            "a@c.bf.",
+            "<a>@c.bf",
+        ] {
+            assert_eq!(valider_email(faux), None, "{faux}");
         }
     }
 

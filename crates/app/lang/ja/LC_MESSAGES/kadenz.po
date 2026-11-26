@@ -4928,3 +4928,15 @@ msgstr "コードを有効にするには：設定の「サブスクリプショ
 
 msgid "Adressez-vous à l'administrateur pour activer un code d'abonnement."
 msgstr "管理者に購読コードの有効化を依頼してください。"
+
+msgid "Sans code, saisissez une adresse email valide : elle sert à l'essai gratuit de 30 jours."
+msgstr "コードがない場合は、有効なメールアドレスを入力してください。30 日間の無料試用に使われます。"
+
+msgid "Adresse email (obligatoire sans code, pour l'essai gratuit)"
+msgstr "メールアドレス（コードがない場合は必須、無料試用のため）"
+
+msgid "L'adresse et l'identifiant de cet ordinateur sont envoyés au portail de Kadenz, qui garde la date de début de l'essai : une réinstallation ne relance pas l'essai."
+msgstr "アドレスとこのコンピューターの識別子は Kadenz ポータルに送信され、ポータルが試用の開始日を保存します。再インストールしても試用は再開されません。"
+
+msgid "essai gratuit à confirmer : reliez ce poste à Internet, puis relancez Kadenz"
+msgstr "無料試用の確認が必要です。このコンピューターをインターネットに接続してから、Kadenz を再起動してください"

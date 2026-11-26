@@ -16,6 +16,11 @@ Où sont vos données
   %APPDATA%\Kadenz        base de données, clé et journaux de votre compte.
   La désinstallation supprime ce dossier ; faites d'abord une sauvegarde
   (Paramètres, rubrique Sauvegardes).
+  %ProgramData%\Kadenz\essai-<édition>.txt  date de début de l'essai
+  gratuit, signée par le portail de Kadenz. La désinstallation le garde :
+  une réinstallation ne relance pas l'essai. Ce fichier ne contient que
+  l'identifiant de l'ordinateur (une empreinte, pas son numéro Windows),
+  l'édition et la date ; effacé, il est redemandé au portail.
 
 Importer des fiches (Excel ou CSV)
   Dans Kadenz, ouvrez l'import et cliquez sur le bouton rond « i » : il

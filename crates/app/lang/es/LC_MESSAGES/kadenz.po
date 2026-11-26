@@ -4928,3 +4928,15 @@ msgstr "Para activar un código: Parámetros, sección «Suscripción»."
 
 msgid "Adressez-vous à l'administrateur pour activer un code d'abonnement."
 msgstr "Pida al administrador que active un código de suscripción."
+
+msgid "Sans code, saisissez une adresse email valide : elle sert à l'essai gratuit de 30 jours."
+msgstr "Sin código, introduzca una dirección de correo electrónico válida: sirve para la prueba gratuita de 30 días."
+
+msgid "Adresse email (obligatoire sans code, pour l'essai gratuit)"
+msgstr "Correo electrónico (obligatorio sin código, para la prueba gratuita)"
+
+msgid "L'adresse et l'identifiant de cet ordinateur sont envoyés au portail de Kadenz, qui garde la date de début de l'essai : une réinstallation ne relance pas l'essai."
+msgstr "La dirección y el identificador de este ordenador se envían al portal de Kadenz, que guarda la fecha de inicio de la prueba: una reinstalación no reinicia la prueba."
+
+msgid "essai gratuit à confirmer : reliez ce poste à Internet, puis relancez Kadenz"
+msgstr "prueba gratuita por confirmar: conecte este equipo a Internet y vuelva a abrir Kadenz"

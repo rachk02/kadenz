@@ -4928,3 +4928,15 @@ msgstr "لتفعيل رمز: الإعدادات، قسم «الاشتراك»."
 
 msgid "Adressez-vous à l'administrateur pour activer un code d'abonnement."
 msgstr "اطلب من المسؤول تفعيل رمز اشتراك."
+
+msgid "Sans code, saisissez une adresse email valide : elle sert à l'essai gratuit de 30 jours."
+msgstr "بدون رمز، أدخل عنوان بريد إلكتروني صالحًا: يُستخدم للتجربة المجانية لمدة 30 يومًا."
+
+msgid "Adresse email (obligatoire sans code, pour l'essai gratuit)"
+msgstr "البريد الإلكتروني (إلزامي بدون رمز، للتجربة المجانية)"
+
+msgid "L'adresse et l'identifiant de cet ordinateur sont envoyés au portail de Kadenz, qui garde la date de début de l'essai : une réinstallation ne relance pas l'essai."
+msgstr "يُرسَل العنوان ومعرّف هذا الحاسوب إلى بوابة Kadenz التي تحتفظ بتاريخ بدء التجربة: إعادة التثبيت لا تعيد بدء التجربة."
+
+msgid "essai gratuit à confirmer : reliez ce poste à Internet, puis relancez Kadenz"
+msgstr "التجربة المجانية بانتظار التأكيد: صِل هذا الحاسوب بالإنترنت، ثم أعد تشغيل Kadenz"

@@ -757,8 +757,45 @@ pub(crate) fn arreter_a_la_sortie() {
     }
 }
 
+/// Essai encore à confirmer : la date de début est demandée au portail (ou
+/// lue dans l'attestation gardée sur ce poste), hors du fil de l'interface,
+/// puis retenue par le serveur intégré. Sans réponse, rien ne change : la
+/// demande repart au lancement suivant (décision 78).
+fn confirmer_essai(f: &FenetrePrincipale) {
+    let Some(c) = contexte() else { return };
+    let Ok(Ok(Some(email))) = sur_le_serveur(&c, |conn| {
+        kadenz_stockage::abonnement::essai_a_confirmer(conn)
+    }) else {
+        return;
+    };
+    let fa = f.as_weak();
+    std::thread::spawn(move || {
+        let essai =
+            kadenz_maj::essai::obtenir(&email, kadenz_licence::entreprise::Produit::Monoposte);
+        let _ = fa.upgrade_in_event_loop(move |_| {
+            let Ok(essai) = essai else { return };
+            let Ok(debut) = chrono::NaiveDate::parse_from_str(&essai.debut, "%Y-%m-%d") else {
+                return;
+            };
+            if let Some(c) = contexte() {
+                let retenu = sur_le_serveur(&c, move |conn| {
+                    kadenz_stockage::abonnement::confirmer_essai(conn, debut)
+                });
+                match retenu {
+                    Ok(Ok(())) => {}
+                    Ok(Err(e)) => {
+                        crate::consigner_erreur(&format!("Confirmation de l'essai : {e}"))
+                    }
+                    Err(e) => crate::consigner_erreur(&format!("Confirmation de l'essai : {e}")),
+                }
+            }
+        });
+    });
+}
+
 fn serveur_demarre(f: &FenetrePrincipale) {
     let Some(c) = contexte() else { return };
+    confirmer_essai(f);
     match sur_le_serveur(&c, |conn| comptes::etat_installation(conn)) {
         Ok(Ok(EtatInstallation::AssistantRequis))
             if poste_relie::copie(&dossier_copie()).is_some() =>
@@ -1036,6 +1073,7 @@ fn terminer(f: &FenetrePrincipale, d: &DonneesAssistant) -> SharedString {
     // Licence facultative : sans elle, lecture seule (décision 40), un seul
     // poste permis (décision 41), celui-ci.
     let cle = d.cle_licence.trim().to_string();
+    let email = d.email_essai.trim().to_string();
     let api = f.global::<MonoposteApi>();
     api.set_erreur_installation(SharedString::new());
     api.set_installation(true);
@@ -1048,7 +1086,12 @@ fn terminer(f: &FenetrePrincipale, d: &DonneesAssistant) -> SharedString {
             let resultat = serveur.as_ref().map(|serveur| {
                 serveur.base(move |conn| {
                     let licence = (!cle.is_empty()).then_some(cle.as_str());
-                    admin::installer(conn, &init, licence).map(|_| ())
+                    admin::installer(conn, &init, licence)?;
+                    // Sans licence : l'essai attend la confirmation du portail.
+                    if licence.is_none() && !email.is_empty() {
+                        kadenz_stockage::abonnement::noter_essai_a_confirmer(conn, &email)?;
+                    }
+                    Ok::<(), kadenz_stockage::Erreur>(())
                 })
             });
             (serveur, resultat)
@@ -1058,6 +1101,7 @@ fn terminer(f: &FenetrePrincipale, d: &DonneesAssistant) -> SharedString {
             api.set_installation(false);
             let erreur = match resultat {
                 Some(Ok(Ok(()))) => {
+                    confirmer_essai(f);
                     inscrire(f);
                     return;
                 }
