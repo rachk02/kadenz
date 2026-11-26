@@ -40,7 +40,9 @@ pub fn choisir(code: &str) -> &'static str {
     code
 }
 
-/// Code de la langue en cours, « fr » pour le français.
+/// Code de la langue en cours, « fr » pour le français. Sert à l'application ;
+/// KadenzAdmin, qui partage ce module, ne l'appelle pas.
+#[allow(dead_code)]
 pub fn code_courant() -> &'static str {
     let code = COURANTE.get();
     if code.is_empty() { "fr" } else { code }

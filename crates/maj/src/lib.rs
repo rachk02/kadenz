@@ -636,7 +636,7 @@ fn script_mise_a_jour(
 /// Kadenz est relancé. Windows demande l'autorisation d'administrateur si
 /// nécessaire. L'appelant ferme ensuite l'application.
 #[cfg(windows)]
-pub fn lancer(chemin: &Path, langue: &str, exe: &Path) -> Result<(), MessageCompose> {
+pub fn lancer_mise_a_jour(chemin: &Path, langue: &str, exe: &Path) -> Result<(), MessageCompose> {
     use std::os::windows::ffi::OsStrExt;
     use windows_sys::Win32::UI::Shell::ShellExecuteW;
     use windows_sys::Win32::UI::WindowsAndMessaging::{SW_HIDE, SW_SHOWNORMAL};
@@ -677,7 +677,47 @@ pub fn lancer(chemin: &Path, langue: &str, exe: &Path) -> Result<(), MessageComp
 }
 
 #[cfg(not(windows))]
-pub fn lancer(chemin: &Path, _langue: &str, _exe: &Path) -> Result<(), MessageCompose> {
+pub fn lancer_mise_a_jour(chemin: &Path, _langue: &str, _exe: &Path) -> Result<(), MessageCompose> {
+    std::process::Command::new(chemin)
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| refus(ERREUR_LANCEMENT, e))
+}
+
+/// Ouvre l'installateur comme un double-clic : Windows demande l'autorisation
+/// d'administrateur si nécessaire. L'appelant ferme ensuite l'application.
+/// Sert au paquet du serveur (KadenzAdmin), qui n'est pas un assistant.
+#[cfg(windows)]
+pub fn lancer(chemin: &Path) -> Result<(), MessageCompose> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::UI::Shell::ShellExecuteW;
+    use windows_sys::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+
+    let large = |s: &std::ffi::OsStr| s.encode_wide().chain([0]).collect::<Vec<u16>>();
+    let verbe = large("open".as_ref());
+    let fichier = large(chemin.as_os_str());
+    // SAFETY : chaînes UTF-16 terminées par zéro, vivantes pendant l'appel ;
+    // les pointeurs nuls sont admis pour les paramètres facultatifs.
+    let code = unsafe {
+        ShellExecuteW(
+            std::ptr::null_mut(),
+            verbe.as_ptr(),
+            fichier.as_ptr(),
+            std::ptr::null(),
+            std::ptr::null(),
+            SW_SHOWNORMAL,
+        )
+    } as isize;
+    // ShellExecuteW renvoie une valeur supérieure à 32 en cas de succès.
+    if code > 32 {
+        Ok(())
+    } else {
+        Err(refus(ERREUR_LANCEMENT, format!("code {code}")))
+    }
+}
+
+#[cfg(not(windows))]
+pub fn lancer(chemin: &Path) -> Result<(), MessageCompose> {
     std::process::Command::new(chemin)
         .spawn()
         .map(|_| ())

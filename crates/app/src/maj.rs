@@ -255,7 +255,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale) {
                         .into(),
                     );
                 }
-                Ok(chemin) => match kadenz_maj::lancer(
+                Ok(chemin) => match kadenz_maj::lancer_mise_a_jour(
                     &chemin,
                     crate::traduction::code_courant(),
                     &std::env::current_exe().unwrap_or_default(),
