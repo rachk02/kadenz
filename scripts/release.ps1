@@ -158,7 +158,7 @@ if ($cargoToml -notmatch '(?ms)^\[workspace\.package\].*?^version\s*=\s*"([^"]+)
 if ($Matches[1] -ne $Version) {
     throw "Cargo.toml indique $($Matches[1]), la release demandée est $Version"
 }
-$changelog = Get-Content -Raw (Join-Path $racine 'CHANGELOG.md')
+$changelog = [System.IO.File]::ReadAllText((Join-Path $racine 'CHANGELOG.md'), [System.Text.UTF8Encoding]::new($false))
 if (-not $Essai -and $changelog -notmatch "(?m)^## \[$([regex]::Escape($Version))\]") {
     throw "aucune section ## [$Version] dans CHANGELOG.md"
 }
@@ -294,7 +294,8 @@ Executer git @('push', 'origin', $tag)
 # Notes de version : la section du CHANGELOG correspondant à la version.
 $notes = [regex]::Match($changelog, "(?ms)^## \[$([regex]::Escape($Version))\][^\n]*\n(.*?)(?=^## \[|\z)").Groups[1].Value.Trim()
 $fichierNotes = Join-Path ([System.IO.Path]::GetTempPath()) "kadenz-notes-$Version.md"
-Set-Content -Path $fichierNotes -Value $notes -Encoding utf8
+# UTF-8 sans BOM : Set-Content -Encoding utf8 écrirait un BOM que GitHub afficherait dans les notes.
+[System.IO.File]::WriteAllText($fichierNotes, $notes, [System.Text.UTF8Encoding]::new($false))
 # Le canal de mise à jour lit le dépôt public rachk02/kadenz-releases : la release y est créée.
 Executer gh (@('release', 'create', $tag, '--repo', 'rachk02/kadenz-releases') + $fichiersRelease + @('--title', "Kadenz $Version", '--notes-file', $fichierNotes, $drapeauLatest))
 Remove-Item $fichierNotes
