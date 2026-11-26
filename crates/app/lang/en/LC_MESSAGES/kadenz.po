@@ -2937,6 +2937,9 @@ msgstr "this is not a company subscription licence"
 msgid "licence d'abonnement émise pour une autre entreprise ({})"
 msgstr "subscription licence issued for another company ({})"
 
+msgid "cette licence ne convient pas à cette édition de Kadenz : elle est faite pour {}"
+msgstr "this licence does not fit this edition of Kadenz: it is made for {}"
+
 msgid "abonnement échu : Kadenz est en lecture seule"
 msgstr "subscription expired: Kadenz is read-only"
 

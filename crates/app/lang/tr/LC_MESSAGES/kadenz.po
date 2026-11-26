@@ -2937,6 +2937,9 @@ msgstr "bu bir şirket abonelik lisansı değil"
 msgid "licence d'abonnement émise pour une autre entreprise ({})"
 msgstr "başka bir şirket için düzenlenmiş abonelik lisansı ({})"
 
+msgid "cette licence ne convient pas à cette édition de Kadenz : elle est faite pour {}"
+msgstr "bu lisans Kadenz'in bu sürümüne uygun değil: {} için hazırlanmıştır"
+
 msgid "abonnement échu : Kadenz est en lecture seule"
 msgstr "abonelik süresi doldu: Kadenz salt okunur modda"
 

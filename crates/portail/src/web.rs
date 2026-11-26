@@ -1290,6 +1290,7 @@ async fn activation(
         client: texte("client"),
         version: texte("version"),
         poste: texte("poste"),
+        produit: texte("produit"),
     };
     let adresse = adresse_client(&etat, &entetes, pair);
     let portail = etat.portail.clone();

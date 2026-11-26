@@ -2937,6 +2937,9 @@ msgstr "هذا ليس ترخيص اشتراك لمؤسسة"
 msgid "licence d'abonnement émise pour une autre entreprise ({})"
 msgstr "ترخيص اشتراك صادر لمؤسسة أخرى ({})"
 
+msgid "cette licence ne convient pas à cette édition de Kadenz : elle est faite pour {}"
+msgstr "هذا الترخيص لا يناسب هذا الإصدار من Kadenz: إنه مخصص لـ {}"
+
 msgid "abonnement échu : Kadenz est en lecture seule"
 msgstr "انتهى الاشتراك: Kadenz في وضع القراءة فقط"
 

@@ -174,7 +174,12 @@ Fermeture de la session Windows ou arrêt de la machine : winit (0.30.13, `platf
 
 - Noms commerciaux : **Kadenz** (monoposte) et **Kadenz Entreprise** (serveur et plusieurs postes). Seuls les noms affichés des installateurs changent, pas les noms de fichiers.
 - Essai gratuit de 30 jours, pour les deux éditions, à l'installation sans code : tous les modules, saisie permise, ensuite lecture seule jusqu'à l'activation d'un code. Statut `essai` du protocole ; la date de début est gardée dans les paramètres système et ne se relance pas ; reculer l'horloge ne rend rien. Le monoposte n'inscrit qu'un poste, même pendant l'essai ; l'édition Entreprise en permet 5 pendant l'essai.
-- Licence de l'édition monoposte. Techniquement, un code de gamme `entreprise` à 1 poste suffit déjà : l'abonnement du serveur intégré porte `postes = 1`. Le portail n'a rien à changer. Restent à fixer le prix, la formule et les modules (grille de prix ouverte, décision 73).
+- Licence de l'édition monoposte, **à part** (décision de l'utilisateur du 2026-11-26 : « pour que l'un n'active pas l'autre en aucun cas »). Elle remplace la phrase précédente, qui disait qu'un code Entreprise à 1 poste suffisait. Réalisation :
+  - la licence signée porte `produit: "monoposte"` et `version: 3` ; la licence Entreprise reste en version 2, sans produit. Un logiciel antérieur à cette règle (version 2 seule) refuse donc la licence un poste ;
+  - `kadenz_licence::entreprise::Produit` (Entreprise, Monoposte), `produit_courant()` et `definir_produit()` : le programme un poste se déclare au démarrage (marque d'édition, section 6) ; `verifier` ne reconnaît que la licence de l'édition en cours, `verifier_pour` prend l'édition en paramètre. Refus : « cette licence ne convient pas à cette édition de Kadenz : elle est faite pour {} » (six traductions) ;
+  - portail : colonne `code_activation.produit` (schéma 12, codes existants = Entreprise), gamme « Kadenz, édition un poste » au tirage (un poste par code), demande d'activation avec le champ `produit` (absent chez un programme antérieur : Entreprise). Un code d'une édition présenté par l'autre est refusé avec le message existant « ce code ne sert pas à ce logiciel » ;
+  - le client d'activation envoie `produit` ; le relais et le serveur multiposte restent en Entreprise.
+  Restent à fixer le prix, la formule et les modules (grille de prix ouverte, décision 73).
 - Section 3.1 : essai de 30 jours retenu (voir ci-dessus).
 
 ## 8. Passage au multiposte (plus tard, non spécifié)

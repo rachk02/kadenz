@@ -10,6 +10,12 @@
 //! Format : `KADENZ-E-<données>.<signature>`, comme la clé V1. Les données
 //! signées portent `type: "entreprise"` et `version: 2` : une licence V1 n'est
 //! jamais prise pour une licence d'entreprise, ni l'inverse.
+//!
+//! Édition (décision du 2026-11-26) : la licence de l'édition un poste est à
+//! part. Elle porte `produit: "monoposte"` et `version: 3`, que les logiciels
+//! antérieurs refusent ; la licence d'entreprise reste en version 2, sans
+//! produit. Chaque édition ne reconnaît que son produit : un code de l'une
+//! n'active jamais l'autre.
 
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
@@ -22,13 +28,72 @@ use crate::{CLE_PUBLIQUE_SUIVANTE, cle_publique_depuis_hex, identifiant_cle, nor
 
 pub const PREFIXE: &str = "KADENZ-E-";
 const VERSION: u64 = 2;
+/// Version de la licence de l'édition un poste (porte le champ `produit`).
+const VERSION_MONOPOSTE: u64 = 3;
 const TYPE: &str = "entreprise";
 
 /// Modèles d'erreur propres à la licence d'entreprise, pour leurs traductions.
 pub const MODELES_ERREUR: &[&str] = &[
     "ce n'est pas une licence d'abonnement d'entreprise",
     "licence d'abonnement émise pour une autre entreprise ({})",
+    "cette licence ne convient pas à cette édition de Kadenz : elle est faite pour {}",
 ];
+
+/// Édition de Kadenz à laquelle une licence est destinée.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Produit {
+    /// Kadenz Entreprise : serveur et postes.
+    Entreprise,
+    /// Kadenz, l'édition un poste, à serveur intégré.
+    Monoposte,
+}
+
+impl Produit {
+    pub fn code(self) -> &'static str {
+        match self {
+            Produit::Entreprise => "entreprise",
+            Produit::Monoposte => "monoposte",
+        }
+    }
+
+    pub fn depuis_code(code: &str) -> Option<Produit> {
+        match code {
+            "entreprise" => Some(Produit::Entreprise),
+            "monoposte" => Some(Produit::Monoposte),
+            _ => None,
+        }
+    }
+
+    /// Nom commercial, tel qu'affiché.
+    pub fn libelle(self) -> &'static str {
+        match self {
+            Produit::Entreprise => "Kadenz Entreprise",
+            Produit::Monoposte => "Kadenz",
+        }
+    }
+}
+
+/// Édition du programme en cours : Entreprise tant que l'application de
+/// l'édition un poste ne déclare pas la sienne au démarrage.
+static EDITION_MONOPOSTE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Déclare l'édition du programme en cours (l'application un poste l'appelle au
+/// démarrage, avant le serveur intégré et avant toute activation).
+pub fn definir_produit(produit: Produit) {
+    EDITION_MONOPOSTE.store(
+        produit == Produit::Monoposte,
+        std::sync::atomic::Ordering::SeqCst,
+    );
+}
+
+/// Édition du programme en cours ; seule sa licence est reconnue.
+pub fn produit_courant() -> Produit {
+    if EDITION_MONOPOSTE.load(std::sync::atomic::Ordering::SeqCst) {
+        Produit::Monoposte
+    } else {
+        Produit::Entreprise
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Formule {
@@ -62,6 +127,8 @@ pub enum Emetteur {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LicenceEntreprise {
+    /// Édition à laquelle la licence est destinée.
+    pub produit: Produit,
     /// Identifiant de l'entreprise (UUID tiré à la création de sa base).
     pub entreprise: String,
     /// Raison sociale du client.
@@ -130,9 +197,10 @@ pub fn emettre(
     licence: &LicenceEntreprise,
     cle_privee: &SigningKey,
 ) -> Result<String, MessageCompose> {
+    let monoposte = licence.produit == Produit::Monoposte;
     let mut donnees = json!({
         "type": TYPE,
-        "version": VERSION,
+        "version": if monoposte { VERSION_MONOPOSTE } else { VERSION },
         "entreprise": licence.entreprise,
         "client": licence.client,
         "formule": licence.formule.code(),
@@ -143,6 +211,9 @@ pub fn emettre(
         "emise_le": licence.emise_le,
         "cle": identifiant_cle(&cle_privee.verifying_key()),
     });
+    if monoposte {
+        donnees["produit"] = json!(licence.produit.code());
+    }
     donnees["emetteur"] = match &licence.emetteur {
         Emetteur::Editeur => json!({ "type": "editeur" }),
         Emetteur::Revendeur { identifiant, nom } => {
@@ -159,10 +230,22 @@ pub fn emettre(
 }
 
 /// Vérifie une licence d'entreprise parmi les clés du portail données, pour
-/// l'entreprise donnée.
+/// l'entreprise donnée et l'édition du programme en cours
+/// ([`produit_courant`]).
 pub fn verifier(
     cle: &str,
     entreprise: &str,
+    cles_portail: &[VerifyingKey],
+) -> Result<LicenceEntreprise, MessageCompose> {
+    verifier_pour(cle, entreprise, produit_courant(), cles_portail)
+}
+
+/// Comme [`verifier`], pour une édition donnée : une licence faite pour
+/// l'autre édition est refusée.
+pub fn verifier_pour(
+    cle: &str,
+    entreprise: &str,
+    produit: Produit,
     cles_portail: &[VerifyingKey],
 ) -> Result<LicenceEntreprise, MessageCompose> {
     let cle: String = cle.chars().filter(|c| !c.is_whitespace()).collect();
@@ -190,10 +273,26 @@ pub fn verifier(
         return Err(erreur("ce n'est pas une licence d'abonnement d'entreprise"));
     }
     let version = v.get("version").and_then(Value::as_u64).unwrap_or(0);
-    if version != VERSION {
+    if version != VERSION && version != VERSION_MONOPOSTE {
         return Err(MessageCompose::new(
             "version de clé de licence non prise en charge : {}",
             &[&version],
+        ));
+    }
+    // Version 2 : licence d'entreprise, sans champ produit. Version 3 : licence
+    // de l'édition un poste, qui doit le dire.
+    let produit_licence = if version == VERSION_MONOPOSTE {
+        match v.get("produit").and_then(Value::as_str) {
+            Some("monoposte") => Produit::Monoposte,
+            _ => return Err(illisible()),
+        }
+    } else {
+        Produit::Entreprise
+    };
+    if produit_licence != produit {
+        return Err(MessageCompose::new(
+            "cette licence ne convient pas à cette édition de Kadenz : elle est faite pour {}",
+            &[&produit_licence.libelle()],
         ));
     }
     let texte = |champ: &str| {
@@ -250,6 +349,7 @@ pub fn verifier(
         return Err(illisible());
     }
     Ok(LicenceEntreprise {
+        produit: produit_licence,
         entreprise: licence_entreprise,
         client: texte("client")?,
         formule,
@@ -272,6 +372,7 @@ mod tests {
 
     fn exemple() -> LicenceEntreprise {
         LicenceEntreprise {
+            produit: Produit::Entreprise,
             entreprise: "0190a1b2-0000-7000-8000-000000000001".into(),
             client: "Quincaillerie du Centre".into(),
             formule: Formule::Annuelle,
@@ -351,6 +452,48 @@ mod tests {
             modele(verifier(&falsifiee, &exemple().entreprise, &publique)),
             "signature de la clé de licence invalide"
         );
+    }
+
+    #[test]
+    fn la_licence_un_poste_ne_sert_qu_a_l_edition_un_poste() {
+        let cle = paire();
+        let publique = [cle.verifying_key()];
+        let mut mono = exemple();
+        mono.produit = Produit::Monoposte;
+        mono.postes = 1;
+        let texte = emettre(&mono, &cle).unwrap();
+        // Lue par l'édition un poste : acceptée, avec son produit.
+        let lue = verifier_pour(&texte, &mono.entreprise, Produit::Monoposte, &publique).unwrap();
+        assert_eq!(lue.produit, Produit::Monoposte);
+        // Lue par l'édition Entreprise : refusée, en disant pour qui elle est faite.
+        let refus =
+            verifier_pour(&texte, &mono.entreprise, Produit::Entreprise, &publique).unwrap_err();
+        assert_eq!(
+            refus.modele,
+            "cette licence ne convient pas à cette édition de Kadenz : elle est faite pour {}"
+        );
+        assert_eq!(refus.valeurs, vec!["Kadenz".to_string()]);
+        // Et l'inverse : une licence d'entreprise ne sert pas à l'édition un poste.
+        let entreprise = emettre(&exemple(), &cle).unwrap();
+        let refus = verifier_pour(
+            &entreprise,
+            &exemple().entreprise,
+            Produit::Monoposte,
+            &publique,
+        )
+        .unwrap_err();
+        assert_eq!(refus.valeurs, vec!["Kadenz Entreprise".to_string()]);
+        // La licence un poste est en version 3 : un logiciel antérieur (version 2 seule) la refuse.
+        let (donnees, _) = texte[PREFIXE.len()..].split_once('.').unwrap();
+        let json: Value =
+            serde_json::from_slice(&URL_SAFE_NO_PAD.decode(donnees).unwrap()).unwrap();
+        assert_eq!(json["version"], json!(VERSION_MONOPOSTE));
+        assert_eq!(json["produit"], json!("monoposte"));
+        // La version 2 n'a pas de champ produit.
+        let (donnees, _) = entreprise[PREFIXE.len()..].split_once('.').unwrap();
+        let json: Value =
+            serde_json::from_slice(&URL_SAFE_NO_PAD.decode(donnees).unwrap()).unwrap();
+        assert!(json.get("produit").is_none() && json["version"] == json!(VERSION));
     }
 
     #[test]

@@ -253,6 +253,8 @@ impl Gamme {
 pub struct CodeActivation {
     pub id: i64,
     pub gamme: Gamme,
+    /// Édition à laquelle le code est destiné (décision du 2026-11-26).
+    pub produit: lic::Produit,
     /// Poste lié en ce moment (code V1 activé, pas libéré).
     pub poste: Option<String>,
     /// Cinq derniers caractères, pour le reconnaître.
@@ -292,6 +294,9 @@ pub struct DemandeActivation {
     pub version: String,
     /// Identifiant du poste (ligne V1) ; vide pour une demande d'entreprise.
     pub poste: String,
+    /// Édition du programme qui active (« entreprise » ou « monoposte ») ; vide
+    /// pour un programme antérieur, qui est de l'édition Entreprise.
+    pub produit: String,
 }
 
 /// Réponse d'activation : la licence signée et son résumé pour l'écran.
@@ -886,7 +891,8 @@ fn paiement_depuis(r: &rusqlite::Row) -> rusqlite::Result<Paiement> {
 
 const SELECT_CODE: &str = "SELECT k.id, k.fin, k.postes, k.formule, k.modules, k.paiement,
             k.entreprise, k.etat, c.nom, k.cree_le, k.active_le, l.id, k.cree_par, k.gamme,
-            (SELECT v.poste FROM licence_v1 v WHERE v.code = k.id AND v.liberee_le IS NULL)
+            (SELECT v.poste FROM licence_v1 v WHERE v.code = k.id AND v.liberee_le IS NULL),
+            k.produit
      FROM code_activation k JOIN compte c ON c.id = k.cree_par
      LEFT JOIN licence_emise l ON l.code = k.id";
 
@@ -894,6 +900,8 @@ fn code_depuis(r: &rusqlite::Row) -> rusqlite::Result<CodeActivation> {
     Ok(CodeActivation {
         id: r.get(0)?,
         gamme: Gamme::depuis_code(&r.get::<_, String>(13)?).unwrap_or(Gamme::Entreprise),
+        produit: lic::Produit::depuis_code(&r.get::<_, String>(15)?)
+            .unwrap_or(lic::Produit::Entreprise),
         poste: r.get(14)?,
         fin: r.get(1)?,
         postes: r.get(2)?,
@@ -950,6 +958,7 @@ fn echeance_proposee(
 
 /// Ce qu'une licence à émettre reprend de son paiement ou de son code.
 struct ALicence<'a> {
+    produit: lic::Produit,
     entreprise: &'a Entreprise,
     paiement: Option<i64>,
     code: Option<i64>,
@@ -976,6 +985,7 @@ fn signer_et_enregistrer(
     let (emetteur, libelle_emetteur) = emetteur_de(a.emetteur);
     let jour = aujourdhui.format("%Y-%m-%d").to_string();
     let licence = LicenceEntreprise {
+        produit: a.produit,
         entreprise: a.entreprise.identifiant.clone(),
         client: a.entreprise.client.clone(),
         formule: a.formule,
@@ -987,8 +997,13 @@ fn signer_et_enregistrer(
         emise_le: jour,
     };
     let texte = lic::emettre(&licence, cle).map_err(|e| ErreurPortail::Interne(e.to_string()))?;
-    lic::verifier(&texte, &a.entreprise.identifiant, &[cle.verifying_key()])
-        .map_err(|e| ErreurPortail::Interne(format!("licence émise illisible : {e}")))?;
+    lic::verifier_pour(
+        &texte,
+        &a.entreprise.identifiant,
+        a.produit,
+        &[cle.verifying_key()],
+    )
+    .map_err(|e| ErreurPortail::Interne(format!("licence émise illisible : {e}")))?;
     conn.execute(
         "INSERT INTO licence_emise (entreprise, paiement, texte, debut, echeance, postes,
                                     modules, formule, emetteur, emise_le, par, code)
@@ -1982,6 +1997,7 @@ impl Portail {
             &self.0.cle,
             aujourdhui,
             ALicence {
+                produit: lic::Produit::Entreprise,
                 entreprise: &entreprise,
                 paiement: Some(paiement.id),
                 code: None,
@@ -2039,6 +2055,7 @@ impl Portail {
             &modules,
             Some((paiement.id, &paiement.entreprise)),
             Gamme::Entreprise,
+            lic::Produit::Entreprise,
         )?;
         let details = format!(
             "code …{fin}, paiement {}, {} postes, formule {}, modules : {}",
@@ -2086,8 +2103,21 @@ impl Portail {
         formule: &str,
         modules: &[Module],
     ) -> Resultat<Vec<CodeCree>> {
-        let gamme = Gamme::depuis_code(gamme.trim())
-            .ok_or_else(|| ErreurPortail::Validation("gamme invalide".into()))?;
+        // L'édition un poste est une gamme à part pour l'opérateur (décision du
+        // 2026-11-26) : un code Entreprise sous le capot, d'un poste, et
+        // destiné à l'édition un poste seulement.
+        let monoposte = gamme.trim() == "monoposte";
+        let produit = if monoposte {
+            lic::Produit::Monoposte
+        } else {
+            lic::Produit::Entreprise
+        };
+        let gamme = if monoposte {
+            Gamme::Entreprise
+        } else {
+            Gamme::depuis_code(gamme.trim())
+                .ok_or_else(|| ErreurPortail::Validation("gamme invalide".into()))?
+        };
         let conn = self.conn();
         let acteur = relire(&conn, acteur)?;
         let nombre: u32 = nombre
@@ -2103,6 +2133,9 @@ impl Portail {
         let postes = valider_postes(postes)?;
         if gamme == Gamme::V1 && postes != 1 {
             return refus("un code de la ligne V1 vaut un poste");
+        }
+        if monoposte && postes != 1 {
+            return refus("un code de l'édition un poste vaut un poste");
         }
         let formule = valider_formule(formule)?;
         let modules: Vec<Module> = Module::TOUS
@@ -2120,14 +2153,16 @@ impl Portail {
                 &modules,
                 None,
                 gamme,
+                produit,
             )?;
             tires.push((id, code, fin));
         }
         let fins: Vec<&str> = tires.iter().map(|t| t.2.as_str()).collect();
         let details = format!(
-            "{nombre} codes à vendre (…{}), gamme {}, {postes} postes, formule {}, modules : {}",
+            "{nombre} codes à vendre (…{}), gamme {}, édition {}, {postes} postes, formule {}, modules : {}",
             fins.join(", …"),
             gamme.code(),
+            produit.code(),
             formule.code(),
             liste_modules(&modules)
         );
@@ -2439,6 +2474,17 @@ impl Portail {
         if trouve.gamme != gamme_demandee {
             return Err(ErreurPortail::Validation(MODELES_ACTIVATION[5].into()));
         }
+        // Édition du programme : l'édition un poste et l'édition Entreprise ne
+        // s'activent jamais l'une avec le code de l'autre (décision du
+        // 2026-11-26). Un programme antérieur n'envoie rien : c'est Entreprise.
+        let produit_demande = match demande.produit.trim() {
+            "" => lic::Produit::Entreprise,
+            autre => lic::Produit::depuis_code(autre)
+                .ok_or_else(|| ErreurPortail::Validation(MODELES_ACTIVATION[4].into()))?,
+        };
+        if !par_poste && trouve.produit != produit_demande {
+            return Err(ErreurPortail::Validation(MODELES_ACTIVATION[5].into()));
+        }
         if par_poste {
             let poste = valider_poste(&demande.poste).map_err(invalide)?;
             return self.activer_v1(conn, &trouve, &poste, &client, demande, adresse);
@@ -2522,6 +2568,7 @@ impl Portail {
             &self.0.cle,
             aujourdhui,
             ALicence {
+                produit: trouve.produit,
                 entreprise: &entreprise,
                 paiement: trouve.paiement,
                 code: Some(trouve.id),
@@ -2692,6 +2739,7 @@ fn paiement_permis(conn: &Connection, acteur: &Compte, id: i64) -> Resultat<Paie
 /// Tire un code et l'enregistre ; `lien` : paiement et entreprise d'un code
 /// tiré pour un paiement, aucun pour un code à vendre. Rend l'identifiant, le
 /// code en clair et sa fin.
+#[allow(clippy::too_many_arguments)]
 fn inserer_code(
     conn: &Connection,
     acteur: &Compte,
@@ -2700,14 +2748,15 @@ fn inserer_code(
     modules: &[Module],
     lien: Option<(i64, &str)>,
     gamme: Gamme,
+    produit: lic::Produit,
 ) -> Resultat<(i64, String, String)> {
     let code = code_court::tirer().map_err(ErreurPortail::Interne)?;
     let utiles = code_court::normaliser(&code);
     let fin: String = utiles.chars().skip(code_court::LONGUEUR - 5).collect();
     conn.execute(
         "INSERT INTO code_activation (empreinte, fin, postes, formule, modules, paiement,
-                                      entreprise, cree_par, cree_le, gamme)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+                                      entreprise, cree_par, cree_le, gamme, produit)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
         params![
             empreinte_code(&utiles),
             fin,
@@ -2719,6 +2768,7 @@ fn inserer_code(
             acteur.id,
             maintenant(),
             gamme.code(),
+            produit.code(),
         ],
     )?;
     Ok((conn.last_insert_rowid(), code, fin))

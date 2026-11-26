@@ -135,6 +135,7 @@ fn emettre_entreprise(
         return Err(format!("échéance déjà passée : {echeance}"));
     }
     let licence = LicenceEntreprise {
+        produit: kadenz_licence::entreprise::Produit::Entreprise,
         entreprise: entreprise.trim().to_owned(),
         client: client.trim().to_owned(),
         formule: lic::Formule::depuis_code(formule.trim())

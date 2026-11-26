@@ -43,6 +43,7 @@ fn licence(entreprise: &str) -> String {
     };
     lic::emettre(
         &LicenceEntreprise {
+            produit: kadenz_licence::entreprise::Produit::Entreprise,
             entreprise: entreprise.into(),
             client: "Entreprise Essai".into(),
             formule: lic::Formule::Annuelle,

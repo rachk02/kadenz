@@ -2937,6 +2937,9 @@ msgstr "这不是企业订阅许可证"
 msgid "licence d'abonnement émise pour une autre entreprise ({})"
 msgstr "为其他企业签发的订阅许可证（{}）"
 
+msgid "cette licence ne convient pas à cette édition de Kadenz : elle est faite pour {}"
+msgstr "此许可证不适用于本版本的 Kadenz：它是为 {} 签发的"
+
 msgid "abonnement échu : Kadenz est en lecture seule"
 msgstr "订阅已到期：Kadenz 处于只读模式"
 

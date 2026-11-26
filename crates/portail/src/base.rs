@@ -223,6 +223,13 @@ BEGIN SELECT RAISE(ABORT, 'journal en ajout seul'); END;
 CREATE TRIGGER journal_depart_sans_effacement BEFORE DELETE ON journal_depart
 BEGIN SELECT RAISE(ABORT, 'journal en ajout seul'); END;
 ",
+    // 11 vers 12 : édition du code (décision du 2026-11-26). Un code est fait
+    // pour Kadenz Entreprise ou pour l'édition un poste, jamais pour les deux ;
+    // les codes existants sont des codes Entreprise.
+    "
+ALTER TABLE code_activation ADD COLUMN produit TEXT NOT NULL DEFAULT 'entreprise'
+    CHECK (produit IN ('entreprise', 'monoposte'));
+",
 ];
 
 /// Déclencheurs qui interdisent l'effacement du journal et de sa chaîne

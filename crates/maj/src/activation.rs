@@ -100,6 +100,8 @@ pub fn activer_aupres(
         "entreprise": entreprise.trim(),
         "client": client.trim(),
         "version": VERSION,
+        // Édition du programme : le portail refuse le code de l'autre édition.
+        "produit": kadenz_licence::entreprise::produit_courant().code(),
     })
     .to_string();
     let reponse = agent()

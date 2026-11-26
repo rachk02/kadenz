@@ -6,6 +6,15 @@ Règle d'écriture des notes : elles parlent à l'utilisateur de Kadenz, en lang
 
 ## [Non publié]
 
+### Ajouté
+
+- Licence de l'édition un poste : elle est désormais à part. Un code de Kadenz (un poste) n'active jamais Kadenz Entreprise, et un code de Kadenz Entreprise n'active jamais l'édition un poste ; chaque logiciel dit clairement pour quelle édition la licence a été faite.
+
+### Technique
+
+- Licence : champ signé `produit` (`entreprise` ou `monoposte`), version 3 pour l'édition un poste ; `kadenz_licence::entreprise::verifier_pour` ; le programme un poste se déclare avec `definir_produit`.
+- Portail : colonne `produit` sur les codes d'activation (schéma 12), gamme `monoposte` au tirage, champ `produit` dans la demande d'activation, refus si l'édition ne correspond pas.
+
 ## [0.3.3] - 2026-11-26
 
 ### Corrigé

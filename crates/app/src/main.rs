@@ -628,6 +628,10 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
 }
 
 fn main() -> Result<(), slint::PlatformError> {
+    // Édition du programme : seule sa licence est reconnue (activation et serveur intégré).
+    if monoposte::edition_monoposte() {
+        kadenz_licence::entreprise::definir_produit(kadenz_licence::entreprise::Produit::Monoposte);
+    }
     // Base déjà ouverte par une autre instance : sa fenêtre revient au premier plan.
     if !instance::prendre(&chemin_base()) {
         return Ok(());

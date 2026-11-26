@@ -448,6 +448,7 @@ mod tests {
     fn licence(conn: &Connection, echeance: &str, emise_le: &str) -> String {
         lic::emettre(
             &LicenceEntreprise {
+                produit: kadenz_licence::entreprise::Produit::Entreprise,
                 entreprise: synchro::identifiant_entreprise(conn).unwrap(),
                 client: "Entreprise Essai".into(),
                 formule: lic::Formule::Mensuelle,
@@ -631,6 +632,7 @@ mod tests {
         // Autre entreprise : refusée, rien d'enregistré.
         let autre = lic::emettre(
             &LicenceEntreprise {
+                produit: kadenz_licence::entreprise::Produit::Entreprise,
                 entreprise: "autre".into(),
                 ..lic::verifier(
                     &bonne,

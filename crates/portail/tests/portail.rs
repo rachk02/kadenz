@@ -1267,6 +1267,7 @@ fn demande(code: &str, entreprise: &str) -> DemandeActivation {
         client: "Boulangerie Wendé".into(),
         version: "1.0.1".into(),
         poste: String::new(),
+        produit: String::new(),
     }
 }
 
@@ -1278,6 +1279,7 @@ fn demande_v1(code: &str, poste: &str) -> DemandeActivation {
         client: "Pharmacie Nabiiga".into(),
         version: "0.2.3".into(),
         poste: poste.into(),
+        produit: String::new(),
     }
 }
 
@@ -1288,6 +1290,68 @@ const POSTE_2: &str = "0123-4567-89AB-CDEF";
 /// acceptée par la règle de clé par version (`verifier_selon`).
 fn licence_v1_lue(p: &Portail, texte: &str, poste: &str) -> kadenz_licence::Licence {
     kadenz_licence::verifier_selon(texte, poste, &[], &[p.cle_publique()]).unwrap()
+}
+
+#[test]
+fn code_un_poste_ne_sert_qu_a_l_edition_un_poste() {
+    use kadenz_licence::entreprise::{Produit, verifier_pour};
+    let (p, _d, _editeur, a, _) = portail("codes-monoposte", "2026-11-26");
+    // Un code de l'édition un poste vaut un poste.
+    assert!(matches!(
+        p.creer_codes_gamme(&a, "monoposte", "1", "3", "annuelle", &Module::TOUS),
+        Err(ErreurPortail::Validation(_))
+    ));
+    let code = p
+        .creer_codes_gamme(&a, "monoposte", "1", "1", "annuelle", &[Module::Devis])
+        .unwrap()
+        .remove(0);
+    assert_eq!(code.fiche.produit, Produit::Monoposte);
+
+    // Présenté par l'édition Entreprise (programme antérieur sans produit) : refus [5].
+    assert_eq!(
+        refus(p.activer(&demande(&code.code, ENTREPRISE_A), "10.0.4.1")),
+        MODELES_ACTIVATION[5]
+    );
+    // Présenté par l'édition Entreprise qui se déclare : refus [5].
+    let mut entreprise = demande(&code.code, ENTREPRISE_A);
+    entreprise.produit = "entreprise".into();
+    assert_eq!(
+        refus(p.activer(&entreprise, "10.0.4.2")),
+        MODELES_ACTIVATION[5]
+    );
+
+    // Présenté par l'édition un poste : accepté, licence de l'édition un poste.
+    let mut mono = demande(&code.code, ENTREPRISE_A);
+    mono.produit = "monoposte".into();
+    let activation = p.activer(&mono, "10.0.4.3").unwrap();
+    let lue = verifier_pour(
+        &activation.licence,
+        ENTREPRISE_A,
+        Produit::Monoposte,
+        &[p.cle_publique()],
+    )
+    .unwrap();
+    assert_eq!((lue.produit, lue.postes), (Produit::Monoposte, 1));
+    // Cette licence n'est pas lue par l'édition Entreprise.
+    assert!(
+        verifier_pour(
+            &activation.licence,
+            ENTREPRISE_A,
+            Produit::Entreprise,
+            &[p.cle_publique()]
+        )
+        .is_err()
+    );
+
+    // Un code Entreprise présenté par l'édition un poste : refus [5].
+    let code_entreprise = p
+        .creer_codes_gamme(&a, "entreprise", "1", "3", "annuelle", &Module::TOUS)
+        .unwrap()
+        .remove(0);
+    assert_eq!(code_entreprise.fiche.produit, Produit::Entreprise);
+    let mut mono2 = demande(&code_entreprise.code, ENTREPRISE_A);
+    mono2.produit = "monoposte".into();
+    assert_eq!(refus(p.activer(&mono2, "10.0.4.4")), MODELES_ACTIVATION[5]);
 }
 
 #[test]

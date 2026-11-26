@@ -2937,6 +2937,9 @@ msgstr "企業向けサブスクリプションのライセンスではありま
 msgid "licence d'abonnement émise pour une autre entreprise ({})"
 msgstr "別の企業向けに発行されたサブスクリプションのライセンスです（{}）"
 
+msgid "cette licence ne convient pas à cette édition de Kadenz : elle est faite pour {}"
+msgstr "このライセンスはこのエディションの Kadenz では使えません：{} 向けです"
+
 msgid "abonnement échu : Kadenz est en lecture seule"
 msgstr "サブスクリプションの期限が切れました：Kadenz は閲覧専用です"
 

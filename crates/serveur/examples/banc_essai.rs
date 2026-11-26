@@ -87,6 +87,7 @@ fn installer(conn: &mut Connection) -> Result<(), String> {
     };
     let licence = lic::emettre(
         &LicenceEntreprise {
+            produit: kadenz_licence::entreprise::Produit::Entreprise,
             entreprise,
             client: "Entreprise d'essai".into(),
             formule: lic::Formule::Annuelle,

@@ -144,8 +144,9 @@ pub fn codes(c: &Cadre, liste: &[CodeActivation], erreur: Option<&str>) -> Marku
                             select #gamme name="gamme" required {
                                 option value=(Gamme::Entreprise.code()) selected { (Gamme::Entreprise.libelle()) }
                                 option value=(Gamme::V1.code()) { (Gamme::V1.libelle()) }
+                                option value="monoposte" { "Kadenz, édition un poste" }
                             }
-                            p.aide { "Un code de la ligne V1 vaut un poste." }
+                            p.aide { "Un code de la ligne V1 ou de l'édition un poste vaut un poste. Un code de l'édition un poste n'active pas Kadenz Entreprise, et inversement." }
                         }
                         div.champ {
                             label for="nombre" { "Nombre de codes" }
