@@ -4,6 +4,8 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 
 ## [Non publié]
 
+## [0.3.2] - 2026-11-26
+
 ### Ajouté
 
 - Reprise d'un document Word : les images de l'en-tête et du pied deviennent les lignes {logo} et {logo2}, qui impriment les logos enregistrés pour l'entreprise.
@@ -11,6 +13,9 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 
 ### Corrigé
 
+- Paramètres, rubrique Utilisateurs : la page ne plante plus à l'ouverture (la grille des droits par rôle provoquait une récursion de mise en page).
+- Comptabilité : le journal s'affiche dès l'ouverture de la page, sur le mois précédent, sans avoir à rechoisir le mois.
+- À propos : le texte vaut pour les deux éditions (plus de mention « mono-poste » ni « base locale SQLite »).
 - Essai gratuit : sur un poste relié (dont l'édition un poste), tous les modules sont maintenant actifs pendant l'essai ; ils restaient masqués (seuls Factures et Avoirs apparaissaient dans le menu Documents).
 
 ## [0.3.1] - 2026-11-25
