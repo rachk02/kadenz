@@ -189,6 +189,7 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
         .route("/api/essai", post(essai))
         .route("/telecharger/{produit}", get(page_telechargement))
         .route("/fichiers/{nom}", get(fichier))
+        .route("/api/releases", get(releases))
         .route("/comptes", get(page_comptes).post(nouveau_compte))
         .route("/comptes/{id}/actif", post(regler_actif))
         .route("/mot-de-passe", get(page_mot_de_passe).post(mot_de_passe))
@@ -1578,6 +1579,60 @@ async fn page_telechargement(
         kadenz_licence::entreprise::Produit::Monoposte => "Kadenz",
     };
     html(StatusCode::OK, pages::telechargement(edition, &nom, &lien))
+}
+
+/// Versions publiées, au format de la liste des releases de GitHub que lit le
+/// client de mise à jour (`kadenz_maj::choisir`) : liens signés et absolus,
+/// manifeste et signature compris. Sans dépôt ou sans adresse publique : 404.
+async fn releases(State(etat): State<Etat>) -> Response {
+    let (Some(depot), Some(base)) = (
+        etat.config.depot.clone(),
+        etat.config.adresse_publique.clone(),
+    ) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    let liste = bloquant(move || telechargement::publications(&depot, 30)).await;
+    let maintenant = crate::secondes_publiques();
+    let signataire = &etat.signataire;
+    let releases: Vec<serde_json::Value> = liste
+        .into_iter()
+        .map(|p| {
+            let (a, b, c) = p.version;
+            let actifs: Vec<serde_json::Value> = p
+                .fichiers
+                .iter()
+                .map(|(sorte, nom)| {
+                    // Le client cherche le manifeste et sa signature sous leur nom
+                    // de release ; le dépôt les garde avec la version.
+                    let nom_release = match sorte {
+                        telechargement::Sorte::Manifeste => kadenz_maj_noms::MANIFESTE,
+                        telechargement::Sorte::Signature => kadenz_maj_noms::SIGNATURE,
+                        _ => nom.as_str(),
+                    };
+                    serde_json::json!({
+                        "name": nom_release,
+                        "browser_download_url": format!("{base}{}", signataire.lien(nom, maintenant)),
+                    })
+                })
+                .collect();
+            serde_json::json!({
+                "tag_name": format!("v{a}.{b}.{c}"),
+                "draft": false,
+                "prerelease": false,
+                "html_url": format!("{base}/telecharger/entreprise"),
+                "body": p.notes.unwrap_or_default(),
+                "assets": actifs,
+            })
+        })
+        .collect();
+    json(StatusCode::OK, serde_json::Value::Array(releases))
+}
+
+/// Noms de release du manifeste et de sa signature, ceux que cherche le client
+/// (`kadenz_maj::MANIFESTE`, `kadenz_maj::SIGNATURE`).
+mod kadenz_maj_noms {
+    pub const MANIFESTE: &str = "kadenz-maj.json";
+    pub const SIGNATURE: &str = "kadenz-maj.json.sig";
 }
 
 /// Paquet servi par un lien signé, en flux, avec la reprise (`Range`).

@@ -1549,6 +1549,91 @@ fn essai_par_la_route_du_portail() {
 }
 
 #[test]
+fn mises_a_jour_par_le_portail() {
+    use kadenz_maj::{Installateur, Manifeste, Produit, Recherche, Version};
+    use sha2::{Digest, Sha256};
+    let (p, d, _editeur, _a, _) = portail("releases", "2026-11-26");
+    let depot = d.join("depot");
+    std::fs::create_dir_all(&depot).unwrap();
+    let installateur = b"installateur monoposte 0.3.4".to_vec();
+    std::fs::write(depot.join("KadenzMonoposteSetup-0.3.4.exe"), &installateur).unwrap();
+    std::fs::write(depot.join("KadenzSetup-0.3.4.exe"), b"poste").unwrap();
+    std::fs::write(depot.join("notes-0.3.4.md"), "Corrections.").unwrap();
+    let empreinte: [u8; 32] = Sha256::digest(&installateur).into();
+    let manifeste = Manifeste {
+        version: Version(0, 3, 4),
+        generation: kadenz_maj::GENERATION.into(),
+        depuis: Version(0, 1, 0),
+        installateur: "KadenzSetup-0.3.4.exe".into(),
+        empreinte: Sha256::digest(b"poste").into(),
+        serveur: None,
+        monoposte: Some(Installateur {
+            nom: "KadenzMonoposteSetup-0.3.4.exe".into(),
+            empreinte,
+        }),
+    }
+    .json();
+    let cle_maj = ed25519_dalek::SigningKey::from_bytes(&[8u8; 32]);
+    std::fs::write(depot.join("kadenz-maj-0.3.4.json"), &manifeste).unwrap();
+    std::fs::write(
+        depot.join("kadenz-maj-0.3.4.json.sig"),
+        kadenz_maj::signer_manifeste(manifeste.as_bytes(), &cle_maj),
+    )
+    .unwrap();
+    let base = "https://licences.exemple.bf";
+    let lance = web::lancer(
+        p,
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        ConfigWeb {
+            depot: Some(depot),
+            adresse_publique: Some(base.into()),
+            ..ConfigWeb::default()
+        },
+    )
+    .unwrap();
+    let a = lance.adresse();
+    let r = requete(a, "GET", "/api/releases", None, "");
+    assert_eq!(r.statut, 200);
+
+    // Le client lit cette liste comme celle de GitHub : liens absolus vers le
+    // portail, manifeste vérifié, installateur de l'édition un poste choisi.
+    let lire = |url: &str| -> Option<Vec<u8>> {
+        let chemin = url.strip_prefix(base)?;
+        let r = requete(a, "GET", chemin, None, "");
+        (r.statut == 200).then(|| r.corps.into_bytes())
+    };
+    let trouvee = kadenz_maj::choisir(
+        &r.corps,
+        "0.3.3",
+        Some(&cle_maj.verifying_key()),
+        kadenz_maj::GENERATION,
+        Produit::Monoposte,
+        lire,
+    );
+    let Recherche::Disponible(maj) = trouvee else {
+        panic!("mise à jour attendue : {trouvee:?}");
+    };
+    assert_eq!(maj.version, "0.3.4");
+    assert_eq!(maj.notes, "Corrections.");
+    assert_eq!(maj.installateur_nom, "KadenzMonoposteSetup-0.3.4.exe");
+    assert_eq!(maj.empreinte, empreinte);
+    let telecharge = lire(&maj.installateur_url).unwrap();
+    assert_eq!(telecharge, installateur);
+    // À jour : rien à proposer.
+    assert_eq!(
+        kadenz_maj::choisir(
+            &r.corps,
+            "0.3.4",
+            Some(&cle_maj.verifying_key()),
+            kadenz_maj::GENERATION,
+            Produit::Monoposte,
+            lire,
+        ),
+        Recherche::AJour
+    );
+}
+
+#[test]
 fn code_v1_active_puis_libere() {
     let (p, d, editeur, a, _) = portail("codes-v1", "2026-11-15");
     // Un code V1 vaut un poste.

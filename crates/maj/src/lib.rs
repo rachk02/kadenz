@@ -492,14 +492,42 @@ fn rechercher_dans(liste: &str, produit: Produit) -> Recherche {
 /// l'invite ; ses fichiers joints peuvent alors être des chemins locaux.
 pub const FICHIER_ESSAI: &str = "KADENZ_MAJ_JSON";
 
-/// Réponse brute de l'API pour la liste des releases ; en développement
+/// Liste des releases : celle du portail (décision 77), puis celle de GitHub
+/// si le portail ne répond pas, pendant la transition ; en développement
 /// seulement, le contenu du fichier désigné par `KADENZ_MAJ_JSON`.
 fn releases() -> Option<String> {
     #[cfg(debug_assertions)]
     if let Some(chemin) = std::env::var_os(FICHIER_ESSAI).filter(|v| !v.is_empty()) {
         return std::fs::read_to_string(chemin).ok();
     }
-    releases_github()
+    releases_portail().or_else(releases_github)
+}
+
+/// Liste des releases du portail, au format de GitHub ; `None` si le portail
+/// est injoignable, répond autre chose qu'une liste, ou une liste vide (dépôt
+/// pas encore rempli : GitHub reste la source).
+fn releases_portail() -> Option<String> {
+    let adresse = activation::adresse_portail()?;
+    if !cfg!(debug_assertions) && !adresse.starts_with("https://") {
+        return None;
+    }
+    let texte = agent(Some(Duration::from_secs(8)))
+        .get(&format!("{adresse}/api/releases"))
+        .call()
+        .ok()
+        .filter(|r| r.status().is_success())?
+        .body_mut()
+        .read_to_string()
+        .ok()?;
+    liste_non_vide(&texte).then_some(texte)
+}
+
+/// Vrai pour une liste JSON d'au moins une release.
+fn liste_non_vide(texte: &str) -> bool {
+    matches!(
+        serde_json::from_str::<serde_json::Value>(texte),
+        Ok(serde_json::Value::Array(liste)) if !liste.is_empty()
+    )
 }
 
 /// Réponse brute de l'API GitHub pour la liste des releases.
@@ -728,6 +756,14 @@ pub fn lancer(chemin: &Path) -> Result<(), MessageCompose> {
 mod tests {
     use super::*;
     use std::collections::HashMap;
+
+    #[test]
+    fn liste_du_portail() {
+        assert!(liste_non_vide(r#"[{"tag_name":"v0.3.4"}]"#));
+        assert!(!liste_non_vide("[]"));
+        assert!(!liste_non_vide("{}"));
+        assert!(!liste_non_vide("pas du json"));
+    }
 
     #[test]
     fn le_script_de_mise_a_jour_reprend_la_langue_et_le_dossier() {

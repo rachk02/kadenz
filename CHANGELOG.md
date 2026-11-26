@@ -16,6 +16,7 @@ Règle d'écriture des notes : elles parlent à l'utilisateur de Kadenz, en lang
 - Portail : colonne `produit` sur les codes d'activation (schéma 12), gamme `monoposte` au tirage, champ `produit` dans la demande d'activation, refus si l'édition ne correspond pas.
 - Portail : page `/telecharger/{entreprise|monoposte}` et liens signés `/fichiers/...` (dix minutes, reprise par plage, frein par adresse), option `--depot` ; pas encore branchés sur le site ni sur le Dell.
 - Essai : attestation signée `KADENZ-T-` et route `/api/essai` du portail (un essai par poste et par édition, schéma 13) ; le programme ne l'appelle pas encore (lot E2).
+- Mise à jour : le client lit d'abord la liste des versions du portail (`/api/releases`, même format que GitHub, liens signés), GitHub en repli tant que le dépôt du Dell n'est pas rempli.
 
 ## [0.3.3] - 2026-11-26
 
