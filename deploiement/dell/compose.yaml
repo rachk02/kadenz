@@ -42,8 +42,19 @@ services:
       - /run/secrets/cle_portail
       - --mandataire
       - ${PASSERELLE_PORTAIL:?PASSERELLE_PORTAIL manquant}
+      - --depot
+      - /depot
     volumes:
       - portail-donnees:/donnees
+      # Paquets à télécharger (installateurs, manifestes, notes ; décision 77,
+      # docs/spec-telechargements-essai.md) : dossier de l'hôte en lecture
+      # seule, lisible par l'uid 10001. Absent : refus de démarrer.
+      - type: bind
+        source: ${DEPOT_PAQUETS:-/srv/kadenz/depot}
+        target: /depot
+        read_only: true
+        bind:
+          create_host_path: false
       # Clé du portail : fichier de l'hôte, hors dépôt et hors sauvegardes,
       # propriétaire 10001:10001, mode 400 (le portail refuse une clé lisible
       # par d'autres). Absent : refus de démarrer, aucun dossier créé à sa place.

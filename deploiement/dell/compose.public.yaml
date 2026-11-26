@@ -37,6 +37,9 @@ services:
       # le portail reste en noindex.
       - --adresse-publique
       - ${ADRESSE_PUBLIQUE:?ADRESSE_PUBLIQUE manquant}
+      # Téléchargements et mises à jour servis par le portail (décision 77).
+      - --depot
+      - /depot
     networks:
       portail: {}
       console: {}
