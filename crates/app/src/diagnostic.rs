@@ -4,17 +4,20 @@
 //! `journaux\plantage.log` du dossier des données, que l'utilisateur peut envoyer
 //! au support. Aucune donnée de l'entreprise n'y est écrite.
 //!
-//! Rendu : par défaut, celui de Slint (OpenGL, avec repli automatique si la
-//! fenêtre ne peut pas être créée). Sur un poste dont le pilote graphique affiche
-//! mal l'interface (champs invisibles par exemple), le rendu logiciel se force par
-//! l'option `--rendu-logiciel`, par un fichier vide nommé `rendu-logiciel` dans le
-//! dossier des données, ou par la variable `KADENZ_RENDU=logiciel`.
+//! Rendu : par défaut, le rendu logiciel de Slint (le processeur dessine la
+//! fenêtre, sans pilote graphique). Il évite toute la famille de défauts qui
+//! tiennent aux pilotes OpenGL des vieux postes (champs invisibles, fenêtre
+//! noire) et se voit comme le rendu accéléré. Pour revenir au rendu accéléré
+//! (OpenGL), option `--rendu-accelere`, fichier vide nommé `rendu-accelere` dans
+//! le dossier des données, ou variable `KADENZ_RENDU=accelere`. Le rendu logiciel
+//! reste forçable par `--rendu-logiciel`, par un fichier `rendu-logiciel` ou par
+//! `KADENZ_RENDU=logiciel`, et l'emporte sur le rendu accéléré.
 //!
 //! Garde du démarrage : un fichier `demarrage-en-cours` est posé avant la première
 //! fenêtre et retiré quand elle a tenu quelques secondes ou à la fermeture normale.
 //! Resté en place au lancement suivant (arrêt brutal du pilote graphique, fermeture
-//! sans message), il fait passer seul Kadenz au rendu logiciel, de façon durable
-//! (fichier `rendu-logiciel`, à supprimer pour revenir au rendu par défaut).
+//! sans message), il ramène Kadenz au rendu logiciel de façon durable (fichier
+//! `rendu-logiciel` posé, `rendu-accelere` retiré).
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -29,6 +32,7 @@ pub(crate) fn dossier_journaux(dossier_donnees: &Path) -> PathBuf {
 /// Fichier posé pendant le démarrage ; voir la garde du démarrage plus haut.
 const MARQUE_DEMARRAGE: &str = "demarrage-en-cours";
 const MARQUE_RENDU: &str = "rendu-logiciel";
+const MARQUE_ACCELERE: &str = "rendu-accelere";
 
 /// Vrai si le démarrage précédent n'a pas abouti ; dans ce cas le rendu logiciel
 /// est mémorisé pour les lancements suivants. Pose ensuite la marque du démarrage
@@ -38,9 +42,10 @@ fn garder_le_demarrage(dossier_donnees: &Path) -> bool {
     let echec = marque.exists();
     if echec {
         let _ = std::fs::write(dossier_donnees.join(MARQUE_RENDU), b"");
+        let _ = std::fs::remove_file(dossier_donnees.join(MARQUE_ACCELERE));
         ecrire(
             dossier_donnees,
-            "le démarrage précédent n'a pas abouti avant l'affichage de la fenêtre : rendu logiciel activé ; supprimer le fichier rendu-logiciel du dossier des données pour revenir au rendu par défaut",
+            "le démarrage précédent n'a pas abouti avant l'affichage de la fenêtre : rendu logiciel activé ; supprimer le fichier rendu-logiciel du dossier des données puis créer rendu-accelere pour essayer le rendu accéléré",
         );
     }
     let _ = std::fs::create_dir_all(dossier_donnees);
@@ -71,10 +76,22 @@ pub(crate) fn installer(dossier_donnees: &Path) {
     }
 }
 
+/// Vrai quand le rendu logiciel s'applique : par défaut, sauf demande du rendu
+/// accéléré ; une demande explicite du rendu logiciel l'emporte toujours.
 fn rendu_logiciel_demande(dossier_donnees: &Path) -> bool {
-    std::env::args().any(|a| a == "--rendu-logiciel")
+    let logiciel_explicite = std::env::args().any(|a| a == "--rendu-logiciel")
         || std::env::var("KADENZ_RENDU").is_ok_and(|v| v.eq_ignore_ascii_case("logiciel"))
-        || dossier_donnees.join("rendu-logiciel").exists()
+        || dossier_donnees.join(MARQUE_RENDU).exists();
+    if logiciel_explicite {
+        return true;
+    }
+    !rendu_accelere_demande(dossier_donnees)
+}
+
+fn rendu_accelere_demande(dossier_donnees: &Path) -> bool {
+    std::env::args().any(|a| a == "--rendu-accelere")
+        || std::env::var("KADENZ_RENDU").is_ok_and(|v| v.eq_ignore_ascii_case("accelere"))
+        || dossier_donnees.join(MARQUE_ACCELERE).exists()
 }
 
 fn installer_journal_plantage(dossier_donnees: &Path) {
@@ -163,11 +180,30 @@ mod tests {
     }
 
     #[test]
-    fn le_fichier_marqueur_demande_le_rendu_logiciel() {
+    fn le_rendu_logiciel_est_le_rendu_par_defaut() {
         let dossier = std::env::temp_dir().join(format!("kadenz-rendu-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dossier);
         std::fs::create_dir_all(&dossier).unwrap();
-        assert!(!dossier.join("rendu-logiciel").exists());
-        std::fs::write(dossier.join("rendu-logiciel"), b"").unwrap();
+        // Rien de posé : rendu logiciel.
+        assert!(rendu_logiciel_demande(&dossier));
+        // Le rendu accéléré se demande par un fichier.
+        std::fs::write(dossier.join(MARQUE_ACCELERE), b"").unwrap();
+        assert!(!rendu_logiciel_demande(&dossier));
+        // Le fichier rendu-logiciel l'emporte.
+        std::fs::write(dossier.join(MARQUE_RENDU), b"").unwrap();
+        assert!(rendu_logiciel_demande(&dossier));
+        let _ = std::fs::remove_dir_all(&dossier);
+    }
+
+    #[test]
+    fn un_demarrage_inacheve_retire_le_rendu_accelere() {
+        let dossier = std::env::temp_dir().join(format!("kadenz-accel-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dossier);
+        std::fs::create_dir_all(&dossier).unwrap();
+        std::fs::write(dossier.join(MARQUE_ACCELERE), b"").unwrap();
+        assert!(!garder_le_demarrage(&dossier));
+        assert!(garder_le_demarrage(&dossier));
+        assert!(!dossier.join(MARQUE_ACCELERE).exists());
         assert!(rendu_logiciel_demande(&dossier));
         let _ = std::fs::remove_dir_all(&dossier);
     }

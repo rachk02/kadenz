@@ -29,9 +29,10 @@ Importer des fiches (Excel ou CSV)
 En cas de problème
   Kadenz se ferme tout seul : ouvrez %APPDATA%\Kadenz\journaux\plantage.log.
   La dernière entrée donne la cause. Transmettez ce fichier au support.
-  Des champs de saisie invisibles ou un affichage incomplet viennent le plus
-  souvent du pilote graphique. Créez alors un fichier vide nommé
-  rendu-logiciel dans %APPDATA%\Kadenz, puis relancez Kadenz : l'affichage
-  passe par le processeur, sans carte graphique. Supprimez ce fichier pour
+  Depuis la version 0.3.2, Kadenz dessine sa fenêtre par le processeur, sans
+  pilote graphique : les champs de saisie invisibles et l'affichage incomplet
+  dus aux pilotes ne devraient plus se produire. Pour essayer le rendu
+  accéléré par la carte graphique, créez un fichier vide nommé rendu-accelere
+  dans %APPDATA%\Kadenz, puis relancez Kadenz. Supprimez ce fichier pour
   revenir au mode normal.
   Les erreurs courantes sont aussi notées dans %APPDATA%\Kadenz\erreurs.log.

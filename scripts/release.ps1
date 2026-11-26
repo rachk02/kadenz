@@ -293,6 +293,13 @@ Executer git @('push', 'origin', $tag)
 
 # Notes de version : la section du CHANGELOG correspondant à la version.
 $notes = [regex]::Match($changelog, "(?ms)^## \[$([regex]::Escape($Version))\][^\n]*\n(.*?)(?=^## \[|\z)").Groups[1].Value.Trim()
+# Les détails techniques (section « Technique ») ne vont pas aux utilisateurs.
+$notes = [regex]::Replace($notes, '(?ims)^###\s+Technique[^\n]*\n.*?(?=^###\s|\z)', '').Trim()
+# Garde-fou : un terme interne dans les notes publiées bloque la release.
+$interdits = '(?i)r[ée]cursion|sqlite|\bcrates?\b|\bcommit\b|slint|\bLTO\b|winit|panic|mutex|\.rs\b|\.slint\b|spec-|d[ée]cision\s+\d|FlexboxLayout|Rangee'
+if ($notes -match $interdits) {
+    throw "les notes de version contiennent un terme interne ($($Matches[0])) : le reformuler ou le déplacer sous « ### Technique » dans CHANGELOG.md"
+}
 $fichierNotes = Join-Path ([System.IO.Path]::GetTempPath()) "kadenz-notes-$Version.md"
 # UTF-8 sans BOM : Set-Content -Encoding utf8 écrirait un BOM que GitHub afficherait dans les notes.
 [System.IO.File]::WriteAllText($fichierNotes, $notes, [System.Text.UTF8Encoding]::new($false))

@@ -40,6 +40,12 @@ pub fn choisir(code: &str) -> &'static str {
     code
 }
 
+/// Code de la langue en cours, « fr » pour le français.
+pub fn code_courant() -> &'static str {
+    let code = COURANTE.get();
+    if code.is_empty() { "fr" } else { code }
+}
+
 /// Langue d'avant toute connexion : le français, ou celle de `KADENZ_LANGUE`
 /// (fr, en, ar, ja, zh, tr, es) pour le développement.
 pub fn choisir_demarrage() -> &'static str {

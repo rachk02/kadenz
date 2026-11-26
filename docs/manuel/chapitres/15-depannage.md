@@ -62,13 +62,11 @@ Les comptes se règlent dans **Paramètres**, rubrique **Comptabilité** ; un mo
 
 ### Des champs de saisie sont invisibles ou mal affichés
 
-Sur certains ordinateurs, le pilote graphique affiche mal l'interface. Kadenz sait alors utiliser un **rendu logiciel**, plus lent mais plus sûr. Il s'active de trois manières :
-
-- lancer Kadenz avec l'option `--rendu-logiciel` ;
-- créer un fichier vide nommé `rendu-logiciel` dans le dossier des données (section 15.4) ;
-- définir la variable d'environnement `KADENZ_RENDU` à la valeur `logiciel`.
-
-Si Kadenz s'est fermé brutalement au démarrage (arrêt du pilote graphique, par exemple), il passe seul au rendu logiciel au lancement suivant, de façon durable : le fichier `rendu-logiciel` est alors créé. Pour revenir au rendu par défaut, supprimez ce fichier.
+Depuis la version 0.3.2, Kadenz dessine sa fenêtre par le processeur (**rendu logiciel**), sans passer par le pilote graphique : les champs de saisie invisibles et l'affichage incomplet dus aux pilotes ne devraient plus se produire. Pour essayer le rendu accéléré par la carte graphique, plus rapide sur un poste récent :
+- lancer Kadenz avec l'option `--rendu-accelere` ;
+- ou créer un fichier vide nommé `rendu-accelere` dans le dossier des données (section 15.4) ;
+- ou définir la variable d'environnement `KADENZ_RENDU` à la valeur `accelere`.
+Si Kadenz s'est fermé brutalement au démarrage (arrêt du pilote graphique, par exemple), il revient seul au rendu logiciel au lancement suivant : le fichier `rendu-accelere` est supprimé et le fichier `rendu-logiciel` est créé. Pour forcer le rendu logiciel, créez le fichier `rendu-logiciel` ou lancez Kadenz avec `--rendu-logiciel` ; il l'emporte sur le rendu accéléré.
 
 ## 15.4 Où sont mes fichiers ?
 

@@ -32,6 +32,7 @@
 
 pub mod activation;
 pub mod edition;
+pub mod notes;
 
 use std::fmt;
 use std::io::Read;
@@ -599,17 +600,62 @@ fn ecrire_installateur(maj: &MiseAJour, octets: &[u8]) -> Result<PathBuf, Messag
     Ok(chemin)
 }
 
-/// Ouvre l'installateur comme un double-clic : Windows demande l'autorisation
-/// d'administrateur si nécessaire. L'appelant ferme ensuite l'application.
+/// Langues que l'installateur connaît (variable `KadenzLangue`).
+const LANGUES_INSTALLATEUR: [&str; 7] = ["fr", "en", "ar", "ja", "zh", "tr", "es"];
+
+/// Texte du petit script qui enchaîne la mise à jour : l'installateur en mode
+/// passif (barre de progression seule, sans les écrans de l'assistant), avec la
+/// langue de l'application et son dossier d'installation, puis le relancement de
+/// Kadenz, que l'installation ait réussi ou non (l'ancienne version reste alors
+/// en place). `None` si un chemin contient un guillemet, que le script ne sait
+/// pas protéger.
+fn script_mise_a_jour(
+    installateur: &Path,
+    langue: &str,
+    dossier: &Path,
+    exe: &Path,
+) -> Option<String> {
+    let langue = if LANGUES_INSTALLATEUR.contains(&langue) {
+        langue
+    } else {
+        "fr"
+    };
+    let chemin = |p: &Path| -> Option<String> {
+        let t = p.to_str()?;
+        // Dans un script, « % » commence une variable : il se double.
+        (!t.contains('"')).then(|| t.replace('%', "%%"))
+    };
+    let (installateur, dossier, exe) = (chemin(installateur)?, chemin(dossier)?, chemin(exe)?);
+    Some(format!(
+        "@echo off\r\nchcp 65001 >nul\r\nstart \"\" /wait \"{installateur}\" /passive /norestart KadenzLangue={langue} InstallFolder=\"{dossier}\"\r\nstart \"\" \"{exe}\"\r\n"
+    ))
+}
+
+/// Lance la mise à jour : l'installateur reprend la langue de l'application et
+/// son dossier d'installation (aucun écran de choix), montre sa progression, puis
+/// Kadenz est relancé. Windows demande l'autorisation d'administrateur si
+/// nécessaire. L'appelant ferme ensuite l'application.
 #[cfg(windows)]
-pub fn lancer(chemin: &Path) -> Result<(), MessageCompose> {
+pub fn lancer(chemin: &Path, langue: &str, exe: &Path) -> Result<(), MessageCompose> {
     use std::os::windows::ffi::OsStrExt;
     use windows_sys::Win32::UI::Shell::ShellExecuteW;
-    use windows_sys::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+    use windows_sys::Win32::UI::WindowsAndMessaging::{SW_HIDE, SW_SHOWNORMAL};
 
+    let dossier = exe.parent().filter(|d| !d.as_os_str().is_empty());
     let large = |s: &std::ffi::OsStr| s.encode_wide().chain([0]).collect::<Vec<u16>>();
     let verbe = large("open".as_ref());
-    let fichier = large(chemin.as_os_str());
+    // Un chemin que le script ne sait pas écrire (ou un exécutable inconnu) :
+    // l'installateur s'ouvre comme un double-clic, avec ses écrans, plutôt que de
+    // ne rien faire.
+    let (fichier, affichage) =
+        match dossier.and_then(|d| script_mise_a_jour(chemin, langue, d, exe)) {
+            Some(texte) => {
+                let script = chemin.with_file_name("mise-a-jour.cmd");
+                std::fs::write(&script, texte).map_err(|e| refus(ERREUR_ECRITURE, e))?;
+                (large(script.as_os_str()), SW_HIDE)
+            }
+            None => (large(chemin.as_os_str()), SW_SHOWNORMAL),
+        };
     // SAFETY : chaînes UTF-16 terminées par zéro, vivantes pendant l'appel ;
     // les pointeurs nuls sont admis pour les paramètres facultatifs.
     let code = unsafe {
@@ -619,7 +665,7 @@ pub fn lancer(chemin: &Path) -> Result<(), MessageCompose> {
             fichier.as_ptr(),
             std::ptr::null(),
             std::ptr::null(),
-            SW_SHOWNORMAL,
+            affichage,
         )
     } as isize;
     // ShellExecuteW renvoie une valeur supérieure à 32 en cas de succès.
@@ -631,7 +677,7 @@ pub fn lancer(chemin: &Path) -> Result<(), MessageCompose> {
 }
 
 #[cfg(not(windows))]
-pub fn lancer(chemin: &Path) -> Result<(), MessageCompose> {
+pub fn lancer(chemin: &Path, _langue: &str, _exe: &Path) -> Result<(), MessageCompose> {
     std::process::Command::new(chemin)
         .spawn()
         .map(|_| ())
@@ -642,6 +688,39 @@ pub fn lancer(chemin: &Path) -> Result<(), MessageCompose> {
 mod tests {
     use super::*;
     use std::collections::HashMap;
+
+    #[test]
+    fn le_script_de_mise_a_jour_reprend_la_langue_et_le_dossier() {
+        let t = script_mise_a_jour(
+            Path::new(r"C:\Temp\Kadenz\KadenzSetup-0.3.3.exe"),
+            "ar",
+            Path::new(r"C:\Program Files\Kadenz"),
+            Path::new(r"C:\Program Files\Kadenz\kadenz.exe"),
+        )
+        .unwrap();
+        assert!(t.contains("/passive"));
+        assert!(t.contains("KadenzLangue=ar"));
+        assert!(t.contains(r#"InstallFolder="C:\Program Files\Kadenz""#));
+        assert!(t.contains(r#"start "" "C:\Program Files\Kadenz\kadenz.exe""#));
+        // Une langue inconnue revient au français ; « % » se double ; un guillemet refuse.
+        let t = script_mise_a_jour(
+            Path::new(r"C:\a%b\i.exe"),
+            "xx",
+            Path::new(r"C:\k"),
+            Path::new(r"C:\k\kadenz.exe"),
+        )
+        .unwrap();
+        assert!(t.contains("KadenzLangue=fr") && t.contains(r"C:\a%%b\i.exe"));
+        assert!(
+            script_mise_a_jour(
+                Path::new(r#"C:\a"b.exe"#),
+                "fr",
+                Path::new("C:\\k"),
+                Path::new("C:\\k\\kadenz.exe")
+            )
+            .is_none()
+        );
+    }
 
     fn cle_essai() -> SigningKey {
         SigningKey::from_bytes(&[3u8; 32])

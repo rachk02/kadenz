@@ -2,21 +2,43 @@
 
 Format : une section par version, la plus récente en haut. Numérotation [SemVer](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORRECTIF`, tag Git `vMAJEUR.MINEUR.CORRECTIF`.
 
+Règle d'écriture des notes : elles parlent à l'utilisateur de Kadenz, en langage courant, sans terme interne (composants, fichiers du code, noms de crates ou de bibliothèques, numéros de décision ou de commit, récursion, base de données interne). Ce qui n'intéresse que l'équipe va sous un titre `### Technique` : `scripts/release.ps1` le retire des notes publiées, et la fenêtre de mise à jour l'écarte aussi pour les anciennes releases. La publication refuse des notes qui contiennent encore un terme interne.
+
 ## [Non publié]
+
+## [0.3.3] - 2026-11-26
+
+### Corrigé
+
+- Mise à jour : l'installation reprend la langue et le dossier de Kadenz, se fait sans repasser par les écrans de choix (une barre de progression suffit) et Kadenz se rouvre à la fin.
+- Affichage : Kadenz dessine sa fenêtre sans dépendre de la carte graphique, ce qui évite les champs de saisie invisibles sur certains ordinateurs.
+- Fenêtre de mise à jour : les nouveautés s'affichent en texte lisible, sans signes de mise en forme ni détails techniques.
+
+### Technique
+
+- Rendu : le rendu logiciel de Slint devient le rendu par défaut ; le rendu accéléré se demande par `--rendu-accelere`, le fichier `rendu-accelere` ou `KADENZ_RENDU=accelere`.
+- Mise à jour : l'application lance un script qui exécute l'installateur en `/passive` avec `KadenzLangue` et `InstallFolder`, puis relance `kadenz.exe`. Effet à partir des mises à jour lancées depuis la 0.3.3 : la 0.3.2 installée garde l'ancien lancement.
+- Notes : `kadenz_maj::notes::pour_affichage`, section Technique écartée ; `release.ps1` filtre la section et bloque les termes internes.
 
 ## [0.3.2] - 2026-11-26
 
 ### Ajouté
 
-- Reprise d'un document Word : les images de l'en-tête et du pied deviennent les lignes {logo} et {logo2}, qui impriment les logos enregistrés pour l'entreprise.
-- Dossier d'installation : sous-dossier docs (notes de version, licences des composants) et modèles d'import Excel (.xlsx) à côté des modèles CSV.
+- Reprise d'un document Word : les logos de l'en-tête et du pied de page sont repris avec le texte.
+- Dossier d'installation : les notes de version, les licences des composants et des modèles d'import Excel, à côté des modèles CSV.
 
 ### Corrigé
 
-- Paramètres, rubrique Utilisateurs : la page ne plante plus à l'ouverture (la grille des droits par rôle provoquait une récursion de mise en page).
-- Comptabilité : le journal s'affiche dès l'ouverture de la page, sur le mois précédent, sans avoir à rechoisir le mois.
-- À propos : le texte vaut pour les deux éditions (plus de mention « mono-poste » ni « base locale SQLite »).
-- Essai gratuit : sur un poste relié (dont l'édition un poste), tous les modules sont maintenant actifs pendant l'essai ; ils restaient masqués (seuls Factures et Avoirs apparaissaient dans le menu Documents).
+- Paramètres, rubrique Utilisateurs : la page ne ferme plus Kadenz à l'ouverture.
+- Comptabilité : le journal s'affiche dès l'ouverture de la page, sur le mois précédent, sans rechoisir le mois.
+- À propos : le texte est le même pour les deux éditions.
+- Essai gratuit : tous les modules sont actifs pendant l'essai sur un poste relié (ils restaient masqués, seuls Factures et Avoirs apparaissaient).
+
+### Technique
+
+- Page Utilisateurs : la grille des droits par rôle provoquait une récursion de mise en page (cases hors des Rangee imbriquées).
+- Comptabilité : l'onglet Journal s'initialisait avant la liste des mois ; `ouvrir()` calcule le journal du mois précédent.
+- À propos : « mono-poste » et « base locale SQLite » retirés du texte, six traductions mises à jour.
 
 ## [0.3.1] - 2026-11-25
 

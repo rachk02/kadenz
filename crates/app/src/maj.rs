@@ -111,7 +111,7 @@ pub(crate) fn connexion_changee(f: &FenetrePrincipale, etat: &EtatPartage) {
 fn proposer(f: &FenetrePrincipale, m: MiseAJour) {
     let api = f.global::<MiseAJourApi>();
     api.set_version(m.version.as_str().into());
-    api.set_notes(m.notes.trim().into());
+    api.set_notes(kadenz_maj::notes::pour_affichage(&m.notes).into());
     api.set_etat("".into());
     api.set_erreur(false);
     api.set_en_cours(false);
@@ -255,7 +255,11 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale) {
                         .into(),
                     );
                 }
-                Ok(chemin) => match kadenz_maj::lancer(&chemin) {
+                Ok(chemin) => match kadenz_maj::lancer(
+                    &chemin,
+                    crate::traduction::code_courant(),
+                    &std::env::current_exe().unwrap_or_default(),
+                ) {
                     // L'installateur a démarré : Kadenz se ferme pour le laisser remplacer
                     // l'exécutable ; la base est refermée proprement à la sortie.
                     Ok(()) => {
