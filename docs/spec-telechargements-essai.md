@@ -3,6 +3,7 @@
 | Version | Date | Changement |
 |---|---|---|
 | 0.1 | 2026-11-26 | Premier jet par kadenz-cc, d'après les décisions de l'utilisateur du 2026-11-26 (décisions 77 à 79 du cahier de la phase 2). Rien n'est encore codé. |
+| 0.2 | 2026-11-26 | Lot T1 livré : module `telechargement` du portail (noms de paquets, dernier paquet par édition, liens HMAC de dix minutes, plages), routes `/telecharger/{produit}` et `/fichiers/{nom}`, option `--depot`, frein `TELECHARGEMENT` (vingt liens par adresse, puis jusqu'à 15 minutes), journal `telechargement`. Dépôt à plat. Clé des liens tirée au démarrage. |
 
 Statut : **spécifié**. Les lots sont au tableau de la section 7.
 
@@ -42,7 +43,7 @@ Garde-fous :
 
 ## 5. Stockage des fichiers sur le Dell
 
-- Dossier hors du service web : `D:\kadenz-depot\paquets\<version>\` (lettre à confirmer sur le Dell), lecture seule pour le compte du portail, écriture par la publication seule.
+- Dossier hors du service web, à plat (`KadenzSetup-X.Y.Z.exe`, `KadenzMonoposteSetup-X.Y.Z.exe`), passé au portail par `--depot` ; emplacement sur le Dell à choisir à la mise en place (lot T3). Lecture seule pour le compte du portail, écriture par la publication seule.
 - Publication : `scripts/release.ps1` copie les paquets et le manifeste signé vers le Dell (par Tailscale), en plus de la release GitHub pendant la transition. La copie vérifie l'empreinte à l'arrivée.
 - Sauvegarde : le dossier entre dans la sauvegarde restic existante (OneDrive).
 - Taille : un installateur fait environ 100 Mo. Le fichier passe par le tunnel Cloudflare du portail : les limites et conditions du plan gratuit pour des réponses de cette taille sont à vérifier dans la documentation de Cloudflare, et un essai de bout en bout avec le vrai paquet est obligatoire avant la bascule.
@@ -77,7 +78,7 @@ Changer de machine et donner une nouvelle adresse redonne un essai. C'est accept
 
 | Lot | Contenu | Où |
 |---|---|---|
-| T1 | Liens signés et route `/fichiers/...` (HMAC, échéance, liste fermée, `Range`), page `/telecharger/<produit>`, frein et journal. Tests. | `crates/portail` |
+| T1 (livré) | Liens signés et route `/fichiers/...` (HMAC, échéance, liste fermée, `Range`), page `/telecharger/<produit>`, frein et journal. Tests. | `crates/portail` |
 | T2 | Route `/api/maj` (manifeste et lien signé) ; client qui essaie le portail puis GitHub. Tests. | `crates/portail`, `crates/maj` |
 | T3 | Publication vers le Dell dans `release.ps1`, dossier, droits, sauvegarde. Demande l'accord de l'utilisateur (serveur de production). | `scripts/`, Dell |
 | E1 | Table des essais du portail (poste, adresse, produit, début), route `/api/essai`, date signée, recoupement au journal. Tests. | `crates/portail`, `crates/licence` |

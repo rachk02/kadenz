@@ -50,7 +50,7 @@ const ECOUTE_PAR_DEFAUT: ([u8; 4], u16) = ([127, 0, 0, 1], 47382);
 
 fn usage() -> ExitCode {
     eprintln!(
-        "usage : kadenz-portail --dossier <dossier> --cle <fichier> [--ecoute <adresse:port>] [--mandataire <adresse> [--entete-client x-forwarded-for|cf-connecting-ip]] [--adresse-publique https://<nom>]\n\
+        "usage : kadenz-portail --dossier <dossier> --cle <fichier> [--ecoute <adresse:port>] [--mandataire <adresse> [--entete-client x-forwarded-for|cf-connecting-ip]] [--adresse-publique https://<nom>] [--depot <dossier des paquets>]\n\
          \x20       kadenz-portail --dossier <dossier> creer-editeur <identifiant> <nom>\n\
          \x20       kadenz-portail --dossier <dossier> retirer-double-authentification <identifiant>\n\
          \x20       kadenz-portail --dossier <dossier> journal-verifier [--archive <fichier>|-]\n\
@@ -186,6 +186,10 @@ fn main() -> ExitCode {
                     None => return usage(),
                 }
             }
+            "--depot" => match arguments.next().map(PathBuf::from) {
+                Some(d) if d.is_dir() => config.depot = Some(d),
+                _ => return usage(),
+            },
             "--adresse-publique" => {
                 match arguments.next().and_then(|a| web::adresse_publique(&a)) {
                     Some(a) => config.adresse_publique = Some(a),

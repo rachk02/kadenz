@@ -27,6 +27,7 @@ mod mot_de_passe;
 mod nouveau_paiement;
 mod nouvelle_entreprise;
 mod style;
+mod telechargement;
 
 pub use code::{code, code_cree, codes, codes_crees};
 pub use comptes::comptes;
@@ -43,6 +44,7 @@ pub use mot_de_passe::mot_de_passe;
 pub use nouveau_paiement::nouveau_paiement;
 pub use nouvelle_entreprise::nouvelle_entreprise;
 pub use style::STYLE;
+pub use telechargement::telechargement;
 
 /// Ce que chaque page d'un compte connecté reçoit : le compte, le jeton
 /// anti-falsification de sa session et le message d'une action précédente.

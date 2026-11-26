@@ -1355,6 +1355,87 @@ fn code_un_poste_ne_sert_qu_a_l_edition_un_poste() {
 }
 
 #[test]
+fn telechargement_par_lien_signe() {
+    let (p, d, _editeur, _a, _) = portail("telechargements", "2026-11-26");
+    let depot = d.join("depot");
+    std::fs::create_dir_all(&depot).unwrap();
+    let contenu = "0123456789".repeat(100);
+    std::fs::write(depot.join("KadenzSetup-0.3.4.exe"), &contenu).unwrap();
+    std::fs::write(depot.join("KadenzSetup-0.3.3.exe"), "ancien").unwrap();
+    let lance = web::lancer(
+        p,
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        ConfigWeb {
+            depot: Some(depot.clone()),
+            ..ConfigWeb::default()
+        },
+    )
+    .unwrap();
+    let a = lance.adresse();
+
+    // Page de téléchargement : dernier paquet, lien signé, départ automatique.
+    let r = requete(a, "GET", "/telecharger/entreprise", None, "");
+    assert_eq!(r.statut, 200);
+    assert!(r.corps.contains("Votre téléchargement va démarrer"));
+    assert!(r.corps.contains("http-equiv=\"refresh\""));
+    let debut = r
+        .corps
+        .find("/fichiers/KadenzSetup-0.3.4.exe?exp=")
+        .unwrap();
+    let fin = debut + r.corps[debut..].find('"').unwrap();
+    let lien = r.corps[debut..fin].replace("&amp;", "&");
+
+    // Fichier entier, puis reprise par plage.
+    let r = requete(a, "GET", &lien, None, "");
+    assert_eq!(r.statut, 200);
+    assert_eq!(r.corps, contenu);
+    assert_eq!(r.entete("content-length"), Some("1000"));
+    assert_eq!(r.entete("accept-ranges"), Some("bytes"));
+    assert!(
+        r.entete("content-disposition")
+            .unwrap()
+            .contains("KadenzSetup-0.3.4.exe")
+    );
+    let r = requete_avec(a, "GET", &lien, None, &[("Range", "bytes=10-19")], "");
+    assert_eq!(r.statut, 206);
+    assert_eq!(r.corps, "0123456789");
+    assert_eq!(r.entete("content-range"), Some("bytes 10-19/1000"));
+    let r = requete_avec(a, "GET", &lien, None, &[("Range", "bytes=5000-")], "");
+    assert_eq!(r.statut, 416);
+
+    // Lien abîmé ou fabriqué : refusé ; autre nom : refusé.
+    let abime = format!("{}0", &lien[..lien.len() - 1]);
+    assert_eq!(requete(a, "GET", &abime, None, "").statut, 403);
+    let autre = lien.replace("0.3.4", "0.3.3");
+    assert_eq!(requete(a, "GET", &autre, None, "").statut, 403);
+    assert_eq!(
+        requete(a, "GET", "/fichiers/KadenzSetup-0.3.4.exe", None, "").statut,
+        404
+    );
+
+    // Édition sans paquet, édition inconnue.
+    assert_eq!(
+        requete(a, "GET", "/telecharger/monoposte", None, "").statut,
+        404
+    );
+    assert_eq!(
+        requete(a, "GET", "/telecharger/autre", None, "").statut,
+        404
+    );
+
+    // Frein par adresse : vingt liens, puis attente.
+    for _ in 1..20 {
+        assert_eq!(
+            requete(a, "GET", "/telecharger/entreprise", None, "").statut,
+            200
+        );
+    }
+    let r = requete(a, "GET", "/telecharger/entreprise", None, "");
+    assert_eq!(r.statut, 429);
+    assert!(r.corps.contains("Trop de téléchargements"));
+}
+
+#[test]
 fn code_v1_active_puis_libere() {
     let (p, d, editeur, a, _) = portail("codes-v1", "2026-11-15");
     // Un code V1 vaut un poste.

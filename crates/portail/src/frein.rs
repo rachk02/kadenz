@@ -38,6 +38,13 @@ pub(crate) const LARGE: Regle = Regle {
     attente_max: 60,
 };
 
+/// Liens de téléchargement depuis une adresse : chaque lien compte ; vingt
+/// sans attente (un bureau derrière une même adresse), puis jusqu'à 15 minutes.
+pub(crate) const TELECHARGEMENT: Regle = Regle {
+    permis: 20,
+    attente_max: 15 * 60,
+};
+
 const ATTENTE_MIN: i64 = 5;
 /// Lignes gardées au plus (hors attentes en cours).
 pub(crate) const LIGNES_MAX: i64 = 10_000;
@@ -102,6 +109,14 @@ pub(crate) fn cles_activation(titulaire: Option<Titulaire>, adresse: &str) -> Ve
         });
     }
     cles
+}
+
+/// Clé d'une demande de lien de téléchargement : l'adresse seule.
+pub(crate) fn cles_telechargement(adresse: &str) -> Vec<Cle> {
+    vec![Cle {
+        texte: format!("telechargement:ip:{adresse}"),
+        regle: TELECHARGEMENT,
+    }]
 }
 
 /// Secondes d'attente restantes pour l'une des clés, s'il y en a.

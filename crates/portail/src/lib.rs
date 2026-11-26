@@ -16,6 +16,7 @@ mod coffre;
 mod frein;
 pub mod pages;
 mod sessions;
+pub mod telechargement;
 pub mod totp;
 pub mod web;
 
@@ -549,6 +550,11 @@ fn mot_de_passe_correct(mot_de_passe: &str, hache: Option<&str>) -> bool {
 }
 
 /// Secondes depuis 1970 (UTC), pour le frein.
+/// Horloge du portail en secondes, pour les liens de téléchargement.
+pub(crate) fn secondes_publiques() -> i64 {
+    secondes()
+}
+
 fn secondes() -> i64 {
     Utc::now().timestamp()
 }
@@ -2385,6 +2391,27 @@ impl Portail {
             debut,
             echeance,
         })
+    }
+
+    /// Lien de téléchargement demandé depuis `adresse` (décision 77) : chaque
+    /// lien compte dans le frein de l'adresse ; au-delà, l'attente restante en
+    /// secondes. Le lien donné est noté au journal.
+    pub fn demander_telechargement(&self, nom: &str, adresse: &str) -> Resultat<Option<u64>> {
+        let conn = self.conn();
+        let cles = frein::cles_telechargement(adresse);
+        let maintenant = secondes();
+        if let Some(attente) = frein::attente(&conn, &cles, maintenant)? {
+            return Ok(Some(attente));
+        }
+        frein::echec(&conn, &cles, maintenant)?;
+        noter(
+            &conn,
+            None,
+            "telechargement",
+            None,
+            &format!("{nom}, adresse {adresse}"),
+        )?;
+        Ok(None)
     }
 
     /// Activation demandée par le programme du client, sans compte connecté

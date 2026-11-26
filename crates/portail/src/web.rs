@@ -21,8 +21,8 @@ use axum::Router;
 use axum::body::Bytes;
 use axum::extract::{ConnectInfo, DefaultBodyLimit, Form, Path, Request, State};
 use axum::http::header::{
-    CACHE_CONTROL, CONTENT_LENGTH, CONTENT_TYPE, COOKIE, LOCATION, REFERRER_POLICY, SET_COOKIE,
-    X_CONTENT_TYPE_OPTIONS,
+    ACCEPT_RANGES, CACHE_CONTROL, CONTENT_DISPOSITION, CONTENT_LENGTH, CONTENT_RANGE, CONTENT_TYPE,
+    COOKIE, LOCATION, RANGE, REFERRER_POLICY, SET_COOKIE, X_CONTENT_TYPE_OPTIONS,
 };
 use axum::http::{HeaderMap, HeaderName, HeaderValue, StatusCode, Uri};
 use axum::middleware::{Next, from_fn, map_response};
@@ -32,6 +32,7 @@ use kadenz_domaine::module::Module;
 use maud::Markup;
 
 use crate::pages::{self, Cadre};
+use crate::telechargement::{self, Plage, Signataire};
 use crate::{
     Compte, DemandeActivation, ErreurPortail, MODELES_ACTIVATION, Message, NouveauPaiement, Portail,
 };
@@ -129,6 +130,9 @@ pub struct ConfigWeb {
     /// pour l'aperçu des liens partagés de la page de connexion ; rien n'est
     /// émis sans elle (jamais tirée de l'en-tête `Host`).
     pub adresse_publique: Option<String>,
+    /// Dépôt des paquets à télécharger (option `--depot`, décision 77) ; sans
+    /// lui, les pages de téléchargement répondent 404.
+    pub depot: Option<std::path::PathBuf>,
 }
 
 /// Adresse publique admise par `--adresse-publique` : `https://` puis un nom
@@ -148,6 +152,8 @@ pub fn adresse_publique(texte: &str) -> Option<String> {
 struct Etat {
     portail: Portail,
     config: ConfigWeb,
+    /// Signataire des liens de téléchargement, tiré au démarrage.
+    signataire: Signataire,
 }
 
 type Champs = HashMap<String, String>;
@@ -179,6 +185,8 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
         .route("/codes/{id}/annuler", post(annuler_code))
         .route("/codes/{id}/liberer", post(liberer_poste))
         .route("/api/activation", post(activation))
+        .route("/telecharger/{produit}", get(page_telechargement))
+        .route("/fichiers/{nom}", get(fichier))
         .route("/comptes", get(page_comptes).post(nouveau_compte))
         .route("/comptes/{id}/actif", post(regler_actif))
         .route("/mot-de-passe", get(page_mot_de_passe).post(mot_de_passe))
@@ -244,7 +252,11 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
         .layer(from_fn(borne_corps))
         .layer(from_fn(sans_panique))
         .layer(map_response(entetes))
-        .with_state(Etat { portail, config })
+        .with_state(Etat {
+            portail,
+            config,
+            signataire: Signataire::nouveau().expect("aléa du système indisponible"),
+        })
 }
 
 /// Corps annoncé plus long que `CORPS_MAX` : 413 sans rien lire. Un corps
@@ -1460,6 +1472,161 @@ async fn journal(State(etat): State<Etat>, entetes: HeaderMap) -> Response {
         ),
         Err(e) => page_erreur(Some(&c), &e),
     }
+}
+
+// ----- Téléchargements (décision 77) -----
+
+/// Page « Votre téléchargement va démarrer » : dernier paquet de l'édition,
+/// lien signé de dix minutes, freiné par adresse.
+async fn page_telechargement(
+    State(etat): State<Etat>,
+    ConnectInfo(pair): ConnectInfo<SocketAddr>,
+    entetes: HeaderMap,
+    Path(produit): Path<String>,
+) -> Response {
+    let produit = match produit.as_str() {
+        "entreprise" => kadenz_licence::entreprise::Produit::Entreprise,
+        "monoposte" => kadenz_licence::entreprise::Produit::Monoposte,
+        _ => return page_erreur(None, &ErreurPortail::Introuvable),
+    };
+    let Some(depot) = etat.config.depot.clone() else {
+        return page_erreur(None, &ErreurPortail::Introuvable);
+    };
+    let Some(nom) = bloquant(move || telechargement::dernier(&depot, produit)).await else {
+        return html(
+            StatusCode::NOT_FOUND,
+            pages::erreur(
+                None,
+                404,
+                "Aucun installateur n'est disponible pour le moment. Réessayez plus tard.",
+            ),
+        );
+    };
+    let adresse = adresse_client(&etat, &entetes, pair);
+    let portail = etat.portail.clone();
+    let pour_journal = nom.clone();
+    match bloquant(move || portail.demander_telechargement(&pour_journal, &adresse)).await {
+        Ok(None) => {}
+        Ok(Some(attente)) => {
+            let minutes = attente.div_ceil(60).max(1);
+            return html(
+                StatusCode::TOO_MANY_REQUESTS,
+                pages::erreur(
+                    None,
+                    429,
+                    &format!(
+                        "Trop de téléchargements depuis votre adresse : réessayez dans {minutes} minute(s)."
+                    ),
+                ),
+            );
+        }
+        Err(e) => return page_erreur(None, &e),
+    }
+    let lien = etat.signataire.lien(&nom, crate::secondes_publiques());
+    let edition = match produit {
+        kadenz_licence::entreprise::Produit::Entreprise => "Kadenz Entreprise",
+        kadenz_licence::entreprise::Produit::Monoposte => "Kadenz",
+    };
+    html(StatusCode::OK, pages::telechargement(edition, &nom, &lien))
+}
+
+/// Paquet servi par un lien signé, en flux, avec la reprise (`Range`).
+async fn fichier(
+    State(etat): State<Etat>,
+    Path(nom): Path<String>,
+    uri: Uri,
+    entetes: HeaderMap,
+) -> Response {
+    let refus = || StatusCode::NOT_FOUND.into_response();
+    let mut echeance = None;
+    let mut signature = None;
+    for (cle, valeur) in uri
+        .query()
+        .unwrap_or("")
+        .split('&')
+        .filter_map(|p| p.split_once('='))
+    {
+        match cle {
+            "exp" => echeance = valeur.parse::<i64>().ok(),
+            "sig" => signature = Some(valeur.to_string()),
+            _ => {}
+        }
+    }
+    let (Some(echeance), Some(signature), Some(depot)) =
+        (echeance, signature, etat.config.depot.clone())
+    else {
+        return refus();
+    };
+    if !etat
+        .signataire
+        .verifier(&nom, echeance, &signature, crate::secondes_publiques())
+    {
+        return StatusCode::FORBIDDEN.into_response();
+    }
+    // Le nom suit le modèle d'un paquet (vérifié par la signature) : aucun
+    // séparateur de chemin n'y passe.
+    let chemin = depot.join(&nom);
+    let Ok(mut fichier) = tokio::fs::File::open(&chemin).await else {
+        return refus();
+    };
+    let Ok(meta) = fichier.metadata().await else {
+        return refus();
+    };
+    if !meta.is_file() {
+        return refus();
+    }
+    let taille = meta.len();
+    let demande = entetes.get(RANGE).and_then(|v| v.to_str().ok());
+    let (statut, debut, fin) = match telechargement::plage(demande, taille) {
+        Plage::Tout => (StatusCode::OK, 0, taille.saturating_sub(1)),
+        Plage::Partie(d, f) => (StatusCode::PARTIAL_CONTENT, d, f),
+        Plage::Hors => {
+            return (
+                StatusCode::RANGE_NOT_SATISFIABLE,
+                [(CONTENT_RANGE, format!("bytes */{taille}"))],
+            )
+                .into_response();
+        }
+    };
+    let longueur = if taille == 0 { 0 } else { fin - debut + 1 };
+    if debut > 0 {
+        use tokio::io::AsyncSeekExt;
+        if fichier.seek(std::io::SeekFrom::Start(debut)).await.is_err() {
+            return refus();
+        }
+    }
+    let flux = futures_util::stream::try_unfold((fichier, longueur), |(mut f, reste)| async move {
+        use tokio::io::AsyncReadExt;
+        if reste == 0 {
+            return Ok::<_, std::io::Error>(None);
+        }
+        let mut tampon = vec![0u8; reste.min(64 * 1024) as usize];
+        let lus = f.read(&mut tampon).await?;
+        if lus == 0 {
+            return Err(std::io::Error::from(std::io::ErrorKind::UnexpectedEof));
+        }
+        tampon.truncate(lus);
+        Ok(Some((Bytes::from(tampon), (f, reste - lus as u64))))
+    });
+    let mut reponse = Response::new(axum::body::Body::from_stream(flux));
+    *reponse.status_mut() = statut;
+    let h = reponse.headers_mut();
+    h.insert(
+        CONTENT_TYPE,
+        HeaderValue::from_static("application/octet-stream"),
+    );
+    h.insert(CONTENT_LENGTH, HeaderValue::from(longueur));
+    h.insert(ACCEPT_RANGES, HeaderValue::from_static("bytes"));
+    h.insert(CACHE_CONTROL, HeaderValue::from_static("private, no-store"));
+    if let Ok(v) = HeaderValue::from_str(&format!("attachment; filename=\"{nom}\"")) {
+        h.insert(CONTENT_DISPOSITION, v);
+    }
+    if statut == StatusCode::PARTIAL_CONTENT
+        && let Ok(v) = HeaderValue::from_str(&format!("bytes {debut}-{fin}/{taille}"))
+    {
+        h.insert(CONTENT_RANGE, v);
+    }
+    reponse
 }
 
 async fn introuvable(State(etat): State<Etat>, entetes: HeaderMap) -> Response {

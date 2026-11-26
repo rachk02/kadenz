@@ -14,6 +14,7 @@ Règle d'écriture des notes : elles parlent à l'utilisateur de Kadenz, en lang
 
 - Licence : champ signé `produit` (`entreprise` ou `monoposte`), version 3 pour l'édition un poste ; `kadenz_licence::entreprise::verifier_pour` ; le programme un poste se déclare avec `definir_produit`.
 - Portail : colonne `produit` sur les codes d'activation (schéma 12), gamme `monoposte` au tirage, champ `produit` dans la demande d'activation, refus si l'édition ne correspond pas.
+- Portail : page `/telecharger/{entreprise|monoposte}` et liens signés `/fichiers/...` (dix minutes, reprise par plage, frein par adresse), option `--depot` ; pas encore branchés sur le site ni sur le Dell.
 
 ## [0.3.3] - 2026-11-26
 
