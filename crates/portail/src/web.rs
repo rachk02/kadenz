@@ -34,7 +34,8 @@ use maud::Markup;
 use crate::pages::{self, Cadre};
 use crate::telechargement::{self, Plage, Signataire};
 use crate::{
-    Compte, DemandeActivation, ErreurPortail, MODELES_ACTIVATION, Message, NouveauPaiement, Portail,
+    Compte, DemandeActivation, DemandeEssai, ErreurPortail, MODELES_ACTIVATION, Message,
+    NouveauPaiement, Portail,
 };
 
 /// Nom du cookie de session. Le préfixe `__Host-` oblige le navigateur à ne
@@ -185,6 +186,7 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
         .route("/codes/{id}/annuler", post(annuler_code))
         .route("/codes/{id}/liberer", post(liberer_poste))
         .route("/api/activation", post(activation))
+        .route("/api/essai", post(essai))
         .route("/telecharger/{produit}", get(page_telechargement))
         .route("/fichiers/{nom}", get(fichier))
         .route("/comptes", get(page_comptes).post(nouveau_compte))
@@ -1325,6 +1327,54 @@ async fn activation(
         ),
         Err(e) => {
             eprintln!("activation : {e}");
+            refus_json(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                MODELES_ACTIVATION[3],
+                &[],
+            )
+        }
+    }
+}
+
+/// Essai gratuit demandé par le programme (décision 78) : JSON en entrée,
+/// attestation signée et date de début en sortie.
+async fn essai(
+    State(etat): State<Etat>,
+    ConnectInfo(pair): ConnectInfo<SocketAddr>,
+    entetes: HeaderMap,
+    corps: Bytes,
+) -> Response {
+    let Ok(valeur) = serde_json::from_slice::<serde_json::Value>(&corps) else {
+        return refus_json(StatusCode::BAD_REQUEST, crate::MODELES_ESSAI[1], &[]);
+    };
+    let texte = |nom: &str| {
+        valeur
+            .get(nom)
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("")
+            .to_string()
+    };
+    let demande = DemandeEssai {
+        email: texte("email"),
+        produit: texte("produit"),
+        poste: texte("poste"),
+        version: texte("version"),
+    };
+    let adresse = adresse_client(&etat, &entetes, pair);
+    let portail = etat.portail.clone();
+    match bloquant(move || portail.demander_essai(&demande, &adresse)).await {
+        Ok(e) => json(
+            StatusCode::OK,
+            serde_json::json!({ "attestation": e.attestation, "debut": e.debut }),
+        ),
+        Err(ErreurPortail::Validation(m)) => refus_json(StatusCode::UNPROCESSABLE_ENTITY, &m, &[]),
+        Err(ErreurPortail::Freine(s)) => refus_json(
+            StatusCode::TOO_MANY_REQUESTS,
+            MODELES_ACTIVATION[2],
+            &[s.to_string()],
+        ),
+        Err(e) => {
+            eprintln!("essai : {e}");
             refus_json(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 MODELES_ACTIVATION[3],

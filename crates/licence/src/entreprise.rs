@@ -157,7 +157,7 @@ fn illisible() -> MessageCompose {
 
 /// Date AAAA-MM-JJ bien formée (mois et jour plausibles) ; le calendrier exact
 /// est contrôlé par le stockage.
-fn date_lisible(texte: &str) -> bool {
+pub(crate) fn date_lisible(texte: &str) -> bool {
     let o = texte.as_bytes();
     let chiffres = |r: std::ops::Range<usize>| o[r].iter().all(u8::is_ascii_digit);
     if o.len() != 10 || o[4] != b'-' || o[7] != b'-' {

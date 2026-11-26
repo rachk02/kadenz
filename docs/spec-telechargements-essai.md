@@ -4,6 +4,7 @@
 |---|---|---|
 | 0.1 | 2026-11-26 | Premier jet par kadenz-cc, d'après les décisions de l'utilisateur du 2026-11-26 (décisions 77 à 79 du cahier de la phase 2). Rien n'est encore codé. |
 | 0.2 | 2026-11-26 | Lot T1 livré : module `telechargement` du portail (noms de paquets, dernier paquet par édition, liens HMAC de dix minutes, plages), routes `/telecharger/{produit}` et `/fichiers/{nom}`, option `--depot`, frein `TELECHARGEMENT` (vingt liens par adresse, puis jusqu'à 15 minutes), journal `telechargement`. Dépôt à plat. Clé des liens tirée au démarrage. |
+| 0.3 | 2026-11-26 | Lot E1 livré : attestation d'essai signée `KADENZ-T-` (`kadenz_licence::essai`), table `essai` du portail (schéma 13, un essai par poste et par édition), route `POST /api/essai` (adresse email vérifiée, frein par adresse, autre adresse pour un même poste notée au journal `essai_autre_adresse`). |
 
 Statut : **spécifié**. Les lots sont au tableau de la section 7.
 
@@ -81,7 +82,7 @@ Changer de machine et donner une nouvelle adresse redonne un essai. C'est accept
 | T1 (livré) | Liens signés et route `/fichiers/...` (HMAC, échéance, liste fermée, `Range`), page `/telecharger/<produit>`, frein et journal. Tests. | `crates/portail` |
 | T2 | Route `/api/maj` (manifeste et lien signé) ; client qui essaie le portail puis GitHub. Tests. | `crates/portail`, `crates/maj` |
 | T3 | Publication vers le Dell dans `release.ps1`, dossier, droits, sauvegarde. Demande l'accord de l'utilisateur (serveur de production). | `scripts/`, Dell |
-| E1 | Table des essais du portail (poste, adresse, produit, début), route `/api/essai`, date signée, recoupement au journal. Tests. | `crates/portail`, `crates/licence` |
+| E1 (livré) | Table des essais du portail (poste, adresse, produit, début), route `/api/essai`, date signée, recoupement au journal. Tests. | `crates/portail`, `crates/licence` |
 | E2 | Champ email de l'assistant, appel au portail, date « à confirmer » hors ligne, cache `%ProgramData%\Kadenz\essai.json`, lecture seule après sept jours sans confirmation. Six traductions. | `crates/app`, `crates/stockage`, installateur |
 | E3 | Page de confidentialité du site : usage de l'adresse et de l'identifiant du poste. | site |
 

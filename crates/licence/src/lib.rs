@@ -29,6 +29,7 @@ use sha2::{Digest, Sha256};
 
 pub mod code_court;
 pub mod entreprise;
+pub mod essai;
 
 const PREFIXE: &str = "KADENZ-";
 /// Licence perpétuelle, signée par la clé V1 (licences émises avant les codes).

@@ -1404,7 +1404,8 @@ fn telechargement_par_lien_signe() {
     assert_eq!(r.statut, 416);
 
     // Lien abîmé ou fabriqué : refusé ; autre nom : refusé.
-    let abime = format!("{}0", &lien[..lien.len() - 1]);
+    let dernier = if lien.ends_with('0') { '1' } else { '0' };
+    let abime = format!("{}{dernier}", &lien[..lien.len() - 1]);
     assert_eq!(requete(a, "GET", &abime, None, "").statut, 403);
     let autre = lien.replace("0.3.4", "0.3.3");
     assert_eq!(requete(a, "GET", &autre, None, "").statut, 403);
@@ -1433,6 +1434,118 @@ fn telechargement_par_lien_signe() {
     let r = requete(a, "GET", "/telecharger/entreprise", None, "");
     assert_eq!(r.statut, 429);
     assert!(r.corps.contains("Trop de téléchargements"));
+}
+
+#[test]
+fn essai_connu_du_portail() {
+    use kadenz_licence::entreprise::Produit;
+    use kadenz_portail::{DemandeEssai, MODELES_ESSAI};
+    let (p, _d, _editeur, _a, _) = portail("essais", "2026-11-26");
+    let demande = |email: &str, poste: &str, produit: &str| DemandeEssai {
+        email: email.into(),
+        produit: produit.into(),
+        poste: poste.into(),
+        version: "0.3.4".into(),
+    };
+    // Saisies refusées.
+    for faux in [
+        "",
+        "sans-arobase",
+        "a@b",
+        "a@@b.bf",
+        "a b@c.bf",
+        "@c.bf",
+        "a@.bf",
+        "a@c..bf",
+    ] {
+        assert_eq!(
+            refus_essai(p.demander_essai(&demande(faux, POSTE_1, "monoposte"), "10.0.5.1")),
+            MODELES_ESSAI[0],
+            "{faux}"
+        );
+    }
+    assert_eq!(
+        refus_essai(p.demander_essai(&demande("a@c.bf", "pas-un-poste", "monoposte"), "10.0.5.1")),
+        MODELES_ESSAI[1]
+    );
+    assert_eq!(
+        refus_essai(p.demander_essai(&demande("a@c.bf", POSTE_1, "autre"), "10.0.5.1")),
+        MODELES_ESSAI[1]
+    );
+
+    // Premier essai : commence aujourd'hui, attestation signée pour ce poste.
+    let premier = p
+        .demander_essai(
+            &demande(" Awa@Exemple.BF ", POSTE_1, "monoposte"),
+            "10.0.5.2",
+        )
+        .unwrap();
+    assert_eq!(premier.debut, "2026-11-26");
+    let lu = kadenz_licence::essai::verifier(
+        &premier.attestation,
+        POSTE_1,
+        Produit::Monoposte,
+        &[p.cle_publique()],
+    )
+    .unwrap();
+    assert_eq!(lu.debut, "2026-11-26");
+
+    // Même poste, autre adresse : même date d'origine, noté au journal.
+    let encore = p
+        .demander_essai(
+            &demande("autre@exemple.bf", POSTE_1, "monoposte"),
+            "10.0.5.3",
+        )
+        .unwrap();
+    assert_eq!(encore.debut, "2026-11-26");
+    // L'autre édition sur le même poste a son propre essai.
+    assert!(
+        p.demander_essai(
+            &demande("awa@exemple.bf", POSTE_1, "entreprise"),
+            "10.0.5.4"
+        )
+        .is_ok()
+    );
+}
+
+/// Refus d'une demande d'essai : le modèle.
+fn refus_essai(r: Result<kadenz_portail::EssaiAtteste, ErreurPortail>) -> String {
+    match r {
+        Err(ErreurPortail::Validation(m)) => m,
+        autre => panic!("refus attendu : {autre:?}"),
+    }
+}
+
+#[test]
+fn essai_par_la_route_du_portail() {
+    let (p, _d, _editeur, _a, _) = portail("essais-route", "2026-11-26");
+    let cle = p.cle_publique();
+    let lance = web::lancer(
+        p,
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        ConfigWeb::default(),
+    )
+    .unwrap();
+    let a = lance.adresse();
+    let corps = serde_json::json!({
+        "email": "awa@exemple.bf", "produit": "entreprise", "poste": POSTE_2, "version": "0.3.4"
+    })
+    .to_string();
+    let r = requete(a, "POST", "/api/essai", None, &corps);
+    assert_eq!(r.statut, 200);
+    let v: serde_json::Value = serde_json::from_str(&r.corps).unwrap();
+    assert_eq!(v["debut"], "2026-11-26");
+    assert!(
+        kadenz_licence::essai::verifier(
+            v["attestation"].as_str().unwrap(),
+            POSTE_2,
+            kadenz_licence::entreprise::Produit::Entreprise,
+            &[cle]
+        )
+        .is_ok()
+    );
+    let r = requete(a, "POST", "/api/essai", None, "pas du json");
+    assert_eq!(r.statut, 400);
 }
 
 #[test]

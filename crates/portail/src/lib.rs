@@ -300,6 +300,28 @@ pub struct DemandeActivation {
     pub produit: String,
 }
 
+/// Demande d'essai envoyée par le programme (route `/api/essai`, décision 78).
+#[derive(Debug, Clone, Default)]
+pub struct DemandeEssai {
+    pub email: String,
+    /// `entreprise` ou `monoposte`.
+    pub produit: String,
+    /// Identifiant du poste (`identifiant_poste`).
+    pub poste: String,
+    /// Version du programme, notée au journal.
+    pub version: String,
+}
+
+/// Réponse à une demande d'essai : l'attestation signée et la date de début.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EssaiAtteste {
+    pub attestation: String,
+    pub debut: String,
+}
+
+/// Modèles des refus d'une demande d'essai, traduits par le programme.
+pub const MODELES_ESSAI: &[&str] = &["adresse email invalide", "demande d'essai invalide"];
+
 /// Réponse d'activation : la licence signée et son résumé pour l'écran.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Activation {
@@ -624,6 +646,30 @@ fn valider_texte(texte: &str, champ: &str, max: usize) -> Resultat<String> {
 /// base de Kadenz.
 /// Identifiant de poste (`kadenz_licence::identifiant_poste`) : quatre
 /// groupes de quatre caractères en base 32 de Crockford, majuscules.
+/// Adresse email plausible, en minuscules : une seule arobase, une partie
+/// locale, un domaine avec un point, rien d'invisible, 254 caractères au plus.
+fn valider_email(texte: &str) -> Option<String> {
+    let email = texte.trim().to_lowercase();
+    if email.is_empty()
+        || email.len() > 254
+        || email.chars().any(|c| c.is_whitespace() || c.is_control())
+    {
+        return None;
+    }
+    let (local, domaine) = email.split_once('@')?;
+    let domaine_valide = domaine.contains('.')
+        && !domaine.starts_with(['.', '-'])
+        && !domaine.ends_with(['.', '-'])
+        && !domaine.contains("..")
+        && domaine
+            .chars()
+            .all(|c| c.is_alphanumeric() || c == '.' || c == '-');
+    let local_valide = !local.is_empty()
+        && local.len() <= 64
+        && !local.contains(['<', '>', '"', ',', ';', '(', ')', '[', ']', '\\']);
+    (local_valide && domaine_valide && !domaine.contains('@')).then_some(email)
+}
+
 fn valider_poste(poste: &str) -> Resultat<String> {
     let poste = poste.trim().to_ascii_uppercase();
     let alphabet = |c: char| c.is_ascii_digit() || (c.is_ascii_uppercase() && !"ILOU".contains(c));
@@ -2412,6 +2458,87 @@ impl Portail {
             &format!("{nom}, adresse {adresse}"),
         )?;
         Ok(None)
+    }
+
+    /// Essai gratuit demandé par le programme (décision 78) : poste inconnu,
+    /// l'essai commence aujourd'hui ; poste déjà connu pour cette édition, la
+    /// date de début d'origine est rendue, quelle que soit l'adresse email.
+    /// Une autre adresse pour le même poste est notée au journal. Chaque
+    /// demande compte dans le frein de l'adresse.
+    pub fn demander_essai(&self, demande: &DemandeEssai, adresse: &str) -> Resultat<EssaiAtteste> {
+        let invalide = || ErreurPortail::Validation(MODELES_ESSAI[1].into());
+        let email = valider_email(&demande.email)
+            .ok_or_else(|| ErreurPortail::Validation(MODELES_ESSAI[0].into()))?;
+        let produit = lic::Produit::depuis_code(demande.produit.trim()).ok_or_else(invalide)?;
+        let poste = valider_poste(&demande.poste).map_err(|_| invalide())?;
+        let conn = self.conn();
+        let cles = frein::cles_essai(adresse);
+        let instant = secondes();
+        if let Some(attente) = frein::attente(&conn, &cles, instant)? {
+            return Err(ErreurPortail::Freine(attente));
+        }
+        frein::echec(&conn, &cles, instant)?;
+        let aujourdhui = self.aujourdhui().format("%Y-%m-%d").to_string();
+        let transaction = conn.unchecked_transaction()?;
+        let connu: Option<(i64, String, String)> = transaction
+            .query_row(
+                "SELECT id, email, debut FROM essai WHERE poste = ?1 AND produit = ?2",
+                params![poste, produit.code()],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+            )
+            .optional()?;
+        let version = pour_journal(&demande.version, MAX_VERSION_JOURNAL);
+        let debut = match connu {
+            Some((id, premier, debut)) => {
+                transaction.execute(
+                    "UPDATE essai SET vu_le = ?2 WHERE id = ?1",
+                    params![id, maintenant()],
+                )?;
+                if premier != email {
+                    noter(
+                        &transaction,
+                        None,
+                        "essai_autre_adresse",
+                        Some(&poste),
+                        &format!(
+                            "édition {}, première adresse {premier}, nouvelle adresse {email}, version {version}, adresse {adresse}",
+                            produit.code()
+                        ),
+                    )?;
+                }
+                debut
+            }
+            None => {
+                transaction.execute(
+                    "INSERT INTO essai (poste, produit, email, debut, cree_le, vu_le)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?5)",
+                    params![poste, produit.code(), email, aujourdhui, maintenant()],
+                )?;
+                noter(
+                    &transaction,
+                    None,
+                    "essai_demarre",
+                    Some(&poste),
+                    &format!(
+                        "édition {}, adresse email {email}, version {version}, adresse {adresse}",
+                        produit.code()
+                    ),
+                )?;
+                aujourdhui.clone()
+            }
+        };
+        let attestation = kadenz_licence::essai::emettre(
+            &kadenz_licence::essai::Essai {
+                poste,
+                produit,
+                debut: debut.clone(),
+                emise_le: aujourdhui,
+            },
+            &self.0.cle,
+        )
+        .map_err(|e| ErreurPortail::Interne(e.to_string()))?;
+        transaction.commit()?;
+        Ok(EssaiAtteste { attestation, debut })
     }
 
     /// Activation demandée par le programme du client, sans compte connecté

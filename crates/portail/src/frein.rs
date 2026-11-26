@@ -119,6 +119,15 @@ pub(crate) fn cles_telechargement(adresse: &str) -> Vec<Cle> {
     }]
 }
 
+/// Clé d'une demande d'essai : l'adresse seule, chaque demande compte (un
+/// programme la renvoie à chaque démarrage tant qu'elle n'est pas confirmée).
+pub(crate) fn cles_essai(adresse: &str) -> Vec<Cle> {
+    vec![Cle {
+        texte: format!("essai:ip:{adresse}"),
+        regle: TELECHARGEMENT,
+    }]
+}
+
 /// Secondes d'attente restantes pour l'une des clés, s'il y en a.
 pub(crate) fn attente(
     conn: &Connection,
