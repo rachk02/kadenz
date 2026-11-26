@@ -1,4 +1,4 @@
-"""Manuel d'utilisation complet de Kadenz : mise en page finale (2026-11-26).
+"""Manuel d'utilisation complet de Kadenz : mise en page finale, version 2 (2026-11-26).
 
 Entrées (lues, jamais modifiées) : docs/manuel/chapitres/01-installation.md à 15-depannage.md, index.md,
 docs/manuel/captures/<chapitre>/*.png.
@@ -6,17 +6,19 @@ Design : la version 2 du 2026-11-25 (propositions-2026-11-25-manuel-v2/generer_m
 des couvertures du 2026-11-18 : couverture, sommaire, ouverture de chaque chapitre, pages courantes sans en-tête,
 pied (titre du manuel, version, numéro de page), index, quatrième de couverture.
 
-Méthode (aucune bibliothèque Python, Chrome headless seulement) :
-  1. un convertisseur Markdown maison produit des blocs (titres, paragraphes, éléments de liste, tableaux,
-     figures, encadrés Astuce et Attention) ;
-  2. Chrome mesure la hauteur de chaque bloc à la largeur de la page ;
-  3. la pagination est calculée ici (titres collés au texte suivant, figure collée au texte qui l'introduit,
-     tableaux coupés entre deux lignes avec l'en-tête répété), ce qui donne les numéros de page réels ;
-  4. le sommaire et l'index reçoivent ces numéros, puis Chrome écrit le PDF A4 et une planche de contrôle.
+Méthode (aucune bibliothèque Python pour le document, Chrome headless seulement) :
+  1. un convertisseur Markdown maison produit des blocs (titres, paragraphes, listes, tableaux, captures, encadrés) ;
+  2. les captures sont recadrées (copies dans _captures/, par recadrer_captures.py sous Python 3.13 avec Pillow) ;
+  3. Chrome pagine lui-même (@page nommées, flottants, orphelines et veuves, en-tête de tableau répété) ; les
+     captures flottent à droite ou à gauche, le texte les contourne ;
+  4. les numéros de page du sommaire et de l'index sont lus dans le PDF : chaque titre de section porte un lien
+     invisible, dont la page est lue dans les annotations du PDF ; deuxième passe avec les vrais numéros, troisième
+     passe finale sans les liens ;
+  5. la planche de contrôle est faite de pages réelles du PDF, rastérisées par rasteriser_pdf.ps1 (WinRT).
 
-Usage : py -3.14 -B genere_manuel_complet.py [--apercu 12,13,40]
+Usage : py -3.14 -B genere_manuel_complet.py [--apercu 12,13,40] [--planche]
 Sorties : manuel-complet.pdf, planche-manuel-complet.png (et, avec --apercu, des PNG dans _apercus/).
-Les polices ABC Diatype (essai) sont lues dans crates/app/ui/polices/, jamais copiées.
+Les polices ABC Diatype sont lues dans crates/app/ui/polices/, jamais copiées.
 """
 
 import html as _html
@@ -42,7 +44,6 @@ ENCRE, ARDOISE, TRAIT = "#1F2933", "#52606D", "#D9DCE3"
 PIECES_MOTIF, TEXTE_NUIT = "#232C6B", "#C5CAE0"
 VERSION = "0.3.1"
 NB_CHAP = 15
-FIG_LARGEUR = int(os.environ.get("FIG", "100"))   # largeur des captures en % du texte
 GRAIN = True
 
 PAGE_W, PAGE_H = 793.7008, 1122.5197      # A4 en pixels CSS
@@ -341,187 +342,6 @@ def charger_index():
         elif l.strip() and not l.startswith("#") and intro is None:
             intro = l.strip()
     return intro, entrees
-
-
-# --- rendu HTML d'un bloc --------------------------------------------------------------------------------
-def rel(chemin):
-    return os.path.relpath(chemin, ICI).replace("\\", "/")
-
-
-def h1_html(c):
-    n = len(c["titre"])
-    fs = 54 if n <= 20 else (40 if n <= 36 else 32)
-    return (f'<div class="titre-ch"><h1 class="titre" style="font-size:{fs}px">{inline(c["titre"])}</h1>'
-            f'<span class="chiffre">{c["num"]}</span></div>')
-
-
-def rendu_bloc(b, c, piece=None, premier=False):
-    t = b["t"]
-    cls = f"b b-{t}" + (" prem" if premier else "")
-    if t == "h1":
-        return f'<div class="{cls}">{h1_html(c)}</div>'
-    if t in ("h2", "h3"):
-        txt = inline(b["x"])
-        if t == "h2":
-            m = re.match(r"(\d+\.\d+)\s+(.*)", b["x"])
-            if m:
-                txt = f'<span class="sn">{m.group(1)}</span>{inline(m.group(2))}'
-        return f'<div class="{cls}"><h{t[1]}>{txt}</h{t[1]}></div>'
-    if t == "p":
-        return f'<div class="{cls}"><p>{inline(b["x"])}</p></div>'
-    if t == "li":
-        sub = ""
-        if b["sub"]:
-            sub = "<ul>" + "".join(f"<li>{inline(s)}</li>" for s in b["sub"]) + "</ul>"
-        cl = cls + (" l0" if b["k"] == 0 else "") + (" lN" if b["k"] == b["nk"] - 1 else "")
-        if b["ord"]:
-            return f'<div class="{cl}"><ol start="{b["n"]}"><li>{inline(b["x"])}{sub}</li></ol></div>'
-        return f'<div class="{cl}"><ul><li>{inline(b["x"])}{sub}</li></ul></div>'
-    if t == "note":
-        corps = "".join(f"<p>{inline(p)}</p>" for p in b["paras"])
-        lab = f"<b class='lab'>{inline(b['label'])}</b>" if b["label"] else ""
-        return f'<div class="{cls}"><div class="note">{lab}{corps}</div></div>'
-    if t == "fig":
-        src = rel((c["dir"] / b["src"]).resolve())
-        return (f'<div class="{cls}"><figure class="fig"><div class="cadre-capture"><img src="{src}" width="1264" '
-                f'height="1121" alt="{_html.escape(b["alt"])}"></div>'
-                f'<figcaption>{inline(b["alt"])}</figcaption></figure></div>')
-    if t == "table":
-        r0, r1 = (0, len(b["rows"])) if piece is None else piece
-        th = "".join(f"<th>{inline(x)}</th>" for x in b["head"])
-        lignes = "".join("<tr>" + "".join(f"<td>{inline(x)}</td>" for x in row) + "</tr>"
-                         for row in b["rows"][r0:r1])
-        return f'<div class="{cls}"><table><thead><tr>{th}</tr></thead><tbody>{lignes}</tbody></table></div>'
-    if t == "ie":      # entrée d'index
-        return (f'<div class="{cls}"><span class="t">{inline(b["terme"])}</span>'
-                f'<span class="n">{b["pages"]}</span></div>')
-    if t == "il":      # lettre d'index
-        return f'<div class="{cls}"><span>{b["x"]}</span></div>'
-    raise ValueError(t)
-
-
-def doc_html(corps, titre, classe="", grain=False):
-    return (f'<!doctype html>\n<html lang="fr"><head><meta charset="utf-8"><title>{titre} | Kadenz</title>'
-            f'<style>{feuille(grain)}</style></head><body class="{classe}">{corps}</body></html>\n')
-
-
-# --- pagination ------------------------------------------------------------------------------------------
-def marquer_garde(blocs):
-    """Pose sur chaque bloc l'indicateur « reste avec le suivant »."""
-    n = len(blocs)
-    for i, b in enumerate(blocs):
-        b["keep"] = False
-    for i, b in enumerate(blocs):
-        t = b["t"]
-        if t in ("h1", "h2", "h3"):
-            b["keep"] = True
-        elif t == "p" and b["x"].rstrip().endswith(":"):
-            b["keep"] = True
-        elif t == "fig" and i > 0 and blocs[i - 1]["t"] in ("p", "h2", "h3", "h1"):
-            blocs[i - 1]["keep"] = True
-        elif t == "li" and b["nk"] >= 3 and (b["k"] == 0 or b["k"] == b["nk"] - 2):
-            b["keep"] = True
-        elif t == "li" and b["nk"] == 2 and b["k"] == 0:
-            b["keep"] = True
-
-
-def paginer(blocs, cap, marge=8):
-    """blocs : dicts avec h, pt, keep (et head, rows pour les tableaux). Rend des pages de pièces (i, r0, r1)."""
-    cap = cap - marge
-    pages, cur = [], []
-    used = [0.0]
-
-    def hh(k, premier):
-        return blocs[k]["h"] - (blocs[k]["pt"] if premier else 0)
-
-    def nouvelle():
-        nonlocal cur
-        if cur:
-            pages.append(cur)
-        cur = []
-        used[0] = 0.0
-
-    def poser(k, h, piece=None):
-        cur.append((k,) + (piece if piece else (None, None)))
-        used[0] += h
-
-    def decoupable(k):
-        return blocs[k]["t"] == "table" and blocs[k]["h"] > 520
-
-    def poser_bloc(k):
-        b = blocs[k]
-        if decoupable(k):
-            rows, head = b["hrows"], b["hhead"]
-            surcout = b["h"] - head - sum(rows)
-            r = 0
-            while r < len(rows):
-                premier = not cur
-                libre = cap - used[0]
-                base = surcout - (b["pt"] if premier else 0) + head
-                kk, s = r, base
-                while kk < len(rows) and s + rows[kk] <= libre:
-                    s += rows[kk]
-                    kk += 1
-                if kk - r < 2 and len(rows) - r >= 2 and cur:
-                    nouvelle()
-                    continue
-                if kk == r:
-                    kk = r + 1
-                    s = base + rows[r]
-                if len(rows) - kk == 1 and kk - r > 2:
-                    s -= rows[kk - 1]
-                    kk -= 1
-                poser(k, s, (r, kk))
-                r = kk
-                if r < len(rows):
-                    nouvelle()
-            return
-        h = hh(k, not cur)
-        if cur and used[0] + h > cap:
-            nouvelle()
-            h = hh(k, True)
-        poser(k, h)
-
-    n = len(blocs)
-    i = 0
-    while i < n:
-        j = i
-        while j < n - 1 and blocs[j]["keep"]:
-            j += 1
-        grp = list(range(i, j + 1))
-        i = j + 1
-        gh_cur = sum(blocs[k]["h"] for k in grp) - (0 if cur else blocs[grp[0]]["pt"])
-        gh_new = sum(blocs[k]["h"] for k in grp) - blocs[grp[0]]["pt"]
-        if not decoupable(grp[-1]):
-            if used[0] + gh_cur <= cap:
-                for k in grp:
-                    poser(k, hh(k, not cur))
-                continue
-            if gh_new <= cap:
-                nouvelle()
-                for k in grp:
-                    poser(k, hh(k, not cur))
-                continue
-            for k in grp:
-                poser_bloc(k)
-            continue
-        # le groupe se termine par un grand tableau : les blocs qui le précèdent restent avec ses premières lignes
-        avant = sum(blocs[k]["h"] for k in grp[:-1])
-        tb = blocs[grp[-1]]
-        mini = avant + tb["h"] - sum(tb["hrows"]) + sum(tb["hrows"][:2])
-        if cur and used[0] + mini - 0 > cap:
-            nouvelle()
-        for k in grp:
-            poser_bloc(k)
-    nouvelle()
-    return pages
-
-
-# --- pages ------------------------------------------------------------------------------------------------
-def page_flux(n, contenu):
-    return (f'<section class="page flux"><div class="corps">{contenu}</div><div class="trait"></div>'
-            f'<div class="pied liste a4s"><span>Manuel d\'utilisation</span><span>Kadenz {VERSION}</span>'
-            f'<span>{n}</span></div></section>')
 
 
 def page_plein(interieur):
@@ -825,8 +645,293 @@ OUVERTURES = {
     "15": o_tourn_bas,
 }
 
+# --- chapitres : blocs Markdown vers HTML, captures flottantes ---------------------------------------------
+def rel(chemin):
+    return os.path.relpath(chemin, ICI).replace("\\", "/")
 
-# --- styles ------------------------------------------------------------------------------------------------
+
+RECADRAGES = {}
+
+ANCRES = False                        # passes de repérage : chaque titre porte un lien invisible (voir pages_ancres)
+
+
+def recadrer():
+    """Prépare les copies recadrées des captures (Pillow, Python 3.13)."""
+    global RECADRAGES
+    fichier = ICI / "_captures" / "recadrages.json"
+    if not fichier.exists():
+        subprocess.run(["py", "-3.13", "-B", str(ICI / "recadrer_captures.py")], check=True)
+    RECADRAGES = json.loads(fichier.read_text(encoding="utf-8"))
+
+
+LIENS = {}           # identifiant de capture -> identifiant du dernier texte de sa section
+SAUTS = set()          # captures dont le texte passe sur la page suivante : saut de page avant leur paragraphe
+
+
+def figure_html(b, chap_dir, cote, large=None, fid=None):
+    """Capture flottante ou en bande : cote d (à droite), g (à gauche) ou p (dans une paire)."""
+    cle = f'{b["src"].split("/")[-2]}/{b["src"].split("/")[-1]}'
+    info = RECADRAGES[cle]
+    src = rel(ICI / "_captures" / cle)
+    if large is None:
+        large = 52
+    style = "" if cote == "p" else f' style="width:{large}%"'
+    return (f'<figure class="fl {cote}"{style}><div class="cadre-capture"><img src="{src}" width="{info["w"]}" '
+            f'height="{info["h"]}" alt="{_html.escape(b["alt"])}"></div><figcaption>'
+            + (f'<a class="anc" href="https://k.invalid/f/{fid}">{inline(b["alt"])}</a>' if fid else inline(b["alt"]))
+            + '</figcaption></figure>')
+
+
+def regrouper(blocs):
+    """Les éléments de liste du parseur redeviennent des listes entières."""
+    items, i = [], 0
+    while i < len(blocs):
+        b = blocs[i]
+        if b["t"] == "li":
+            elems = [b]
+            while elems[-1]["k"] < elems[-1]["nk"] - 1:
+                i += 1
+                elems.append(blocs[i])
+            items.append({"t": "list", "ord": b["ord"], "n": b["n"], "elems": elems})
+        else:
+            items.append(b)
+        i += 1
+    return items
+
+
+def rendu_item(it, c, ancres, ancre=None):
+    t = it["t"]
+
+    def lien(x):
+        """Texte d'un bloc, entouré d'un lien invisible de repérage (voir pages_ancres)."""
+        h = inline(x)
+        return f'<a class="anc" href="https://k.invalid/t/{ancre}">{h}</a>' if ancre else h
+
+    if t == "h2":
+        m = re.match(r"(\d+\.\d+)\s+(.*)", it["x"])
+        num, titre = (m.group(1), m.group(2)) if m else ("", it["x"])
+        if m:
+            n = f'<a class="anc" href="https://k.invalid/s/{num}">{num}</a>' if ancres else num
+            return f'<h2><span class="sn">{n}</span>{inline(titre)}</h2>'
+        return f"<h2>{inline(titre)}</h2>"
+    if t == "h3":
+        return f'<h3>{inline(it["x"])}</h3>'
+    if t == "p":
+        return f'<p>{lien(it["x"])}</p>'
+    if t == "list":
+        lis = ""
+        for e in it["elems"]:
+            sub = "<ul>" + "".join(f"<li>{inline(s)}</li>" for s in e["sub"]) + "</ul>" if e["sub"] else ""
+            lis += f'<li>{lien(e["x"]) if e is it["elems"][0] else inline(e["x"])}{sub}</li>'
+        if it["ord"]:
+            return f'<ol start="{it["n"]}">{lis}</ol>'
+        return f"<ul>{lis}</ul>"
+    if t == "note":
+        lab = f'<b class="lab">{inline(it["label"])}</b>' if it["label"] else ""
+        return (f'<div class="note">{lab}' + "".join(f"<p>{lien(p) if q == 0 else inline(p)}</p>"
+                                                       for q, p in enumerate(it["paras"])) + "</div>")
+    if t == "table":
+        th = "".join(f"<th>{inline(x)}</th>" for x in it["head"])
+        lignes = "".join("<tr>" + "".join(f"<td>{inline(x)}</td>" for x in row) + "</tr>" for row in it["rows"])
+        return f"<table><thead><tr>{th}</tr></thead><tbody>{lignes}</tbody></table>"
+    raise ValueError(t)
+
+
+LARG_TEXTE = 793.7008 - 2 * 71.811          # largeur du texte : A4 moins deux marges de 19 mm
+ECART = 20.8                                # 5,5 mm entre la capture et le texte
+LARGEURS = (0.48, 0.52, 0.55, 0.60)         # largeurs possibles d'une capture flottante
+HAUT_UNITE_MAX = 440                        # hauteur d'une unité (capture et texte qui l'entoure) à ne pas dépasser
+REF = 0.52
+
+
+def mesurer(htmls, largeur):
+    """Hauteur de chaque morceau de HTML rendu à la largeur donnée (Chrome, polices chargées)."""
+    divs = "".join(f'<div class="m" style="width:{largeur:.1f}px">{h}</div>' for h in htmls)
+    html = (f'<!doctype html><html lang="fr"><head><meta charset="utf-8"><style>{feuille(False)}'
+            f'.m{{display:flow-root}}</style></head><body><div class="mesure">{divs}</div>'
+            '<script>Promise.all([document.fonts.load("400 13px Diatype"),document.fonts.load("700 13px Diatype"),'
+            'document.fonts.load("400 13px \\"Diatype Mono\\"")]).then(()=>document.fonts.ready).then(()=>{'
+            'const r=[...document.querySelectorAll(".m")].map(e=>e.getBoundingClientRect().height);'
+            'const p=document.createElement("pre");p.id="res";p.textContent=JSON.stringify(r);document.body.appendChild(p)})'
+            '</script></body></html>')
+    tmp = ICI / "_mesure.html"
+    tmp.write_text(html, encoding="utf-8")
+    sortie = chrome("--window-size=1000,1000", "--dump-dom", tmp.as_uri()).stdout
+    tmp.unlink()
+    return json.loads(re.search(r'<pre id="res">(.*?)</pre>', sortie, re.S).group(1))
+
+
+def haut_fig(info, f):
+    return f * LARG_TEXTE * info["h"] / info["w"] + 26
+
+
+def choisir_unite(info, hauteurs, dense):
+    """Largeur de la capture et nombre de blocs de texte à lui associer : la hauteur du texte, rendu dans la colonne
+    restante, doit approcher celle de la capture."""
+    options = (0.55, 0.60) if dense else LARGEURS
+    meilleur = None
+    for f in options:
+        col = LARG_TEXTE * (1 - f) - ECART
+        for k in range(1, len(hauteurs) + 1):
+            t = sum(hauteurs[:k]) * (LARG_TEXTE * (1 - REF) - ECART) / col
+            hf = haut_fig(info, f)
+            haut = max(t, hf)
+            cout = abs(hf - t) + (0 if haut <= HAUT_UNITE_MAX else 400 + haut)
+            if t < 0.6 * hf:
+                cout += 60
+            cle = (cout, k)
+            if meilleur is None or cle < meilleur[0]:
+                meilleur = (cle, f, k)
+    return meilleur[1], meilleur[2]
+
+
+def chapitre_html(c, ancres):
+    """Corps d'un chapitre. Les captures flottent à droite ou à gauche et le texte les contourne (flottants natifs de
+    Chrome), au niveau du paragraphe qui les précède. Deux captures séparées par peu de texte forment une paire côte à
+    côte : sans cela les flottants s'accumulent plus vite que le texte ne les accompagne.
+    Une capture que Chrome repousse après tout le texte de son chapitre (repérée par les liens invisibles, voir
+    construire) reçoit un saut de page avant son paragraphe : elle reste ainsi avec le texte qui l'entoure."""
+    items = regrouper(c["blocs"])
+    n_it = len(items)
+    n = c["num"]
+    texte_ok = ("p", "list", "note")
+    col_ref = LARG_TEXTE * (1 - REF) - ECART
+    cand = [t for t in range(n_it) if items[t]["t"] in texte_ok]
+    haut = dict(zip(cand, mesurer([typo(rendu_item(items[t], c, False)) for t in cand], col_ref) if cand else []))
+
+    def cle(b):
+        return f'{b["src"].split("/")[-2]}/{b["src"].split("/")[-1]}'
+
+    def fin_section(a):
+        """Dernier bloc de texte du chapitre : une capture qui passe après lui n'a plus de texte à ses côtés."""
+        return cand[-1] if cand else None
+
+    idx_fig = [t for t in range(n_it) if items[t]["t"] == "fig"]
+    paires, libres, deja = {}, [], set()
+    k = 0
+    while k < len(idx_fig):
+        a = idx_fig[k]
+        b = idx_fig[k + 1] if k + 1 < len(idx_fig) else None
+        paire = False
+        if b is not None:
+            entre = range(a + 1, b)
+            types = [items[t]["t"] for t in entre]
+            if all(x in texte_ok for x in types):     # ni titre ni tableau entre les deux
+                hf = haut_fig(RECADRAGES[cle(items[a])], REF)
+                paire = (not types) or sum(haut[t] for t in entre) < 0.8 * hf
+        if paire:
+            paires[a] = b
+            k += 2
+        else:
+            libres.append(a)
+            k += 1
+    figs_paires = set(paires) | set(paires.values())
+    # repères : identifiant de chaque groupe de captures et du dernier bloc de texte de sa section
+    tcles = {}
+    ident = {}
+    for a in list(paires) + libres:
+        ident[a] = f"{n}.{a}"
+        e = fin_section(a)
+        if e is not None:
+            tcles[e] = f"{n}.{e}"
+            if ancres:
+                LIENS[f"{n}.{a}"] = f"{n}.{e}"
+
+    saut_a = set()       # indices des éléments devant lesquels commence une page (avec leurs titres)
+
+    def saut(a, cible=None):
+        """Le saut de page précède les titres qui annoncent la capture, jamais ne les sépare du texte."""
+        if ident[a] in SAUTS:
+            t = a if cible is None else min(a, cible)
+            while t > 0 and items[t - 1]["t"] in ("h2", "h3"):
+                t -= 1
+            saut_a.add(t)
+        return ""
+
+    avant, solos, cote = {}, {}, ["d"]
+    for i in libres:
+        prec = items[i - 1] if i > 0 else None
+        suiv = items[i + 1] if i + 1 < n_it else None
+        cible = None
+        if prec is not None and prec["t"] == "p" and (i - 1) not in avant:
+            cible = i - 1
+        elif suiv is not None and suiv["t"] in texte_ok and (i + 1) not in avant:
+            cible = i + 1
+        elif prec is not None and prec["t"] in texte_ok and (i - 1) not in avant:
+            cible = i - 1
+        fid = ident[i] if ancres else None
+        if cible is None:
+            solos[i] = saut(i) + f'<div class="solo">{figure_html(items[i], c["dir"], "d", 52, fid)}</div>'
+            continue
+        if items[cible]["t"] == "p":
+            c_ = cote[0]
+            cote[0] = "g" if c_ == "d" else "d"
+        else:
+            c_ = "d"
+        info = RECADRAGES[cle(items[i])]
+        large = 60 if 0.17 < info["dense"] < 0.40 else 52
+        avant.setdefault(cible, []).append(saut(i, cible) + figure_html(items[i], c["dir"], c_, large, fid))
+    titre = inline(c["titre"])
+    if ancres:
+        titre = f'<a class="anc" href="https://k.invalid/c/{n}">{titre}</a>'
+    long_ = len(c["titre"])
+    fs = 38 if long_ <= 20 else (30 if long_ <= 36 else 24)
+    sortie = (f'<div class="titre-ch"><h1 class="titre" style="font-size:{fs}px">{titre}</h1>'
+              f'<span class="chiffre">{n}</span></div>')
+    for idx in paires:
+        saut(idx)
+    for idx, it in enumerate(items):
+        if idx in saut_a:
+            sortie += '<div class="saut"></div>'
+        if idx in paires:
+            fid = ident[idx] if ancres else None
+            sortie += (figure_html(items[idx], c["dir"], "g", 48, fid)
+                       + figure_html(items[paires[idx]], c["dir"], "d", 48))
+        if idx in figs_paires or idx in libres:
+            sortie += solos.get(idx, "")
+            continue
+        sortie += "".join(avant.get(idx, []))
+        sortie += rendu_item(it, c, ancres, tcles.get(idx) if ancres else None)
+    return f'<div class="texte chap">{typo(sortie)}<div class="fin"></div></div>'
+
+
+def index_html(d, ancres):
+    entrees = d["entrees"]
+    intro = "Les numéros renvoient aux pages du manuel."
+    if ancres:
+        intro = f'<a class="anc" href="https://k.invalid/i">{intro}</a>'
+    corps = ""
+    for kind, a, b in entrees:
+        if kind == "lettre":
+            corps += f'<div class="il">{a}</div>'
+        else:
+            pages = sorted({d["sections"].get(s, 0) for s in b})
+            txt = ", ".join(str(p) if p else "000" for p in pages)
+            corps += f'<div class="ie"><span class="t">{inline(a)}</span><span class="n">{txt}</span></div>'
+    return f'<div class="texte index"><p class="ip">{intro}</p><div class="cols">{typo(corps)}</div></div>'
+
+
+# --- document complet ---------------------------------------------------------------------------------------
+def page_plein(interieur):
+    return f'<section class="plein"><div class="v2">{typo(interieur)}</div></section>'
+
+
+def document(d, ancres, grain):
+    global GRAIN
+    GRAIN = grain
+    chap = d["chap"]
+    pages_ouv = {c["num"]: d["ouv"].get(c["num"], "000") for c in chap}
+    corps = [page_plein(couverture(chap)), page_plein(sommaire(chap, pages_ouv, d["page_index"]))]
+    for c in chap:
+        corps.append(page_plein(OUVERTURES[c["num"]](c)))
+        corps.append(chapitre_html(c, ancres))
+    corps.append(page_plein(o_index(d["lettres"])))
+    corps.append(index_html(d, ancres))
+    corps.append(page_plein(quatrieme()))
+    return (f'<!doctype html>\n<html lang="fr"><head><meta charset="utf-8"><title>Manuel d\'utilisation | Kadenz</title>'
+            f'<style>{feuille(grain)}</style></head><body>{"".join(corps)}</body></html>\n')
+
+
 GRAIN_URI = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E"
              "%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E"
              "%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E")
@@ -838,13 +943,19 @@ CSS = Template("""
 @font-face{font-family:Diatype;src:url($POL/ABCDiatype-Bold.otf);font-weight:700}
 @font-face{font-family:"Diatype Mono";src:url($POL/ABCDiatypeMono-Regular.otf);font-weight:400}
 @page{size:210mm 297mm;margin:0}
+@page plein{margin:0}
+@page texte{margin:19mm 19mm 28mm 19mm;
+  @bottom-left{content:"Manuel d'utilisation";width:33.3%;vertical-align:bottom;padding-bottom:14mm;font:500 13px Diatype;letter-spacing:.07em;text-transform:uppercase;color:$NUIT;background:linear-gradient($NUIT,$NUIT) 0 4mm/100% 2px no-repeat}
+  @bottom-center{content:"Kadenz $VERSION";width:33.4%;text-align:center;vertical-align:bottom;padding-bottom:14mm;font:500 13px Diatype;letter-spacing:.07em;text-transform:uppercase;color:$NUIT;background:linear-gradient($NUIT,$NUIT) 0 4mm/100% 2px no-repeat}
+  @bottom-right{content:counter(page);width:33.3%;text-align:right;vertical-align:bottom;padding-bottom:14mm;font:500 13px Diatype;letter-spacing:.07em;text-transform:uppercase;color:$NUIT;background:linear-gradient($NUIT,$NUIT) 0 4mm/100% 2px no-repeat;font-variant-numeric:tabular-nums}}
 *{box-sizing:border-box;margin:0;padding:0}
 em,i,cite,address,dfn,var{font-style:normal}
 i{display:block}
 html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 body{font-family:Diatype,sans-serif;color:$ENCRE;background:#fff}
-.page{position:relative;width:210mm;height:297mm;overflow:hidden;break-after:page;background:#fff}
-.page:last-child{break-after:auto}
+.plein{page:plein;position:relative;width:210mm;height:297mm;overflow:hidden;break-before:page;break-after:page;background:#fff}
+.plein:first-child{break-before:auto}
+.plein:last-child{break-after:auto}
 .plein .v2{position:absolute;left:${DEC}px;top:0;width:816px;height:1145px;transform:scale($ECH);transform-origin:0 0}
 .cadre{position:relative;overflow:hidden}
 .a4{width:816px;height:1145px}
@@ -873,60 +984,59 @@ $GRAINCSS
 .som{height:46px;border-bottom:1px solid $TRAIT}
 .som:last-child{border-bottom:0}
 
-/* pages courantes : texte noir sur blanc, sans en-tête courant */
-.flux .corps{position:absolute;left:${MARGE}px;right:${MARGE}px;top:${HT}px;height:${CAP}px}
-.flux .trait{position:absolute;left:${MARGE}px;right:${MARGE}px;bottom:98px;height:2px;background:$NUIT}
-.flux .pied{position:absolute;left:${MARGE}px;right:${MARGE}px;bottom:58px;color:$NUIT;display:flex;justify-content:space-between}
-.b{display:flow-root}
-.b.prem{padding-top:0}
-.b-h1{padding-bottom:26px}
-.titre-ch{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}
-.titre-ch h1{color:$NUIT;max-width:590px}
-.titre-ch .chiffre{font-size:54px;color:$NUIT}
-.b-h2{padding-top:30px;padding-bottom:2px}
-.b-h2 h2{font-weight:500;text-transform:uppercase;letter-spacing:.06em;font-size:16.5px;line-height:1.3;color:$NUIT}
-.b-h2 .sn{display:inline-block;min-width:42px;font-variant-numeric:tabular-nums}
-.b-h3{padding-top:20px}
-.b-h3 h3{font-weight:700;font-size:16px;line-height:1.3;color:$NUIT}
-.b-p{padding-top:10px}
-p,li{font-size:14.5px;line-height:1.5}
-.b-li{padding-top:5px}
-.b-li.l0{padding-top:9px}.b-li.lN{padding-bottom:4px}
-ul,ol{padding-left:22px}
+/* texte courant : dense, une colonne, captures flottantes */
+.texte{page:texte;font-size:9.8pt;line-height:1.38;color:$ENCRE}
+.texte p{margin:0 0 5px;orphans:2;widows:2}
+.titre-ch{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:12px}
+.titre-ch h1{color:$NUIT;max-width:560px}
+.titre-ch .chiffre{font-size:38px;color:$NUIT}
+.texte h2{font-weight:500;text-transform:uppercase;letter-spacing:.06em;font-size:11pt;line-height:1.25;color:$NUIT;
+  margin:12px 0 4px;break-after:avoid}
+.texte h2 .sn{display:inline-block;min-width:34px;font-variant-numeric:tabular-nums}
+.texte h3{font-weight:700;font-size:10.4pt;line-height:1.25;color:$NUIT;margin:10px 0 2px;break-after:avoid}
+ul,ol{padding-left:18px;margin:0 0 5px}
+li{margin:0 0 2px;break-inside:avoid;orphans:2;widows:2}
 li::marker{color:$NUIT;font-weight:700}
-li>ul,li>ol{padding-top:3px}
+li>ul,li>ol{margin:2px 0 0}
 b{font-weight:700}
-code{font-family:"Diatype Mono",monospace;font-size:.92em;overflow-wrap:break-word}
-.b-fig{padding-top:14px;padding-bottom:6px}
+code{font-family:"Diatype Mono",monospace;font-size:.9em;overflow-wrap:break-word}
+a.anc{color:inherit;text-decoration:none}
+.saut{break-before:page;height:0}
+.fl{break-inside:avoid;margin-top:2px}
+.fl.d{float:right;margin:3px 0 8px 5.5mm}
+.fl.g{float:left;margin:3px 5.5mm 8px 0}
 .cadre-capture{border:1px solid $TRAIT;background:#fff;border-radius:2px;overflow:hidden}
 .cadre-capture img{display:block;width:100%;height:auto}
-.fig{width:$FIGW%;margin:0 auto}
-.fig figcaption{font-size:11.5px;color:$ARDOISE;margin-top:5px;line-height:1.3}
-.b-note{padding-top:14px}
-.note{padding:13px 18px 14px;background:$BRUME;border-radius:2px}
-.note b.lab{display:block;font-size:15px;color:$ENCRE;margin-bottom:3px}
-.note p{font-size:14.5px;line-height:1.45}
-.note p+p{margin-top:5px}
-.b-table{padding-top:14px;padding-bottom:6px}
-table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.4}
-th{background:$BRUME;color:$NUIT;font-weight:700;text-align:left;padding:7px 10px;vertical-align:top}
-td{padding:7px 10px;border-bottom:1px solid $TRAIT;vertical-align:top}
+.fl figcaption{font-size:7.2pt;line-height:1.3;color:$ARDOISE;margin-top:3px}
+.fl.g[style*="48%"]{margin-right:0}
+.fl.d[style*="48%"]{margin-left:0}
+.solo{clear:both;margin:6px 0 8px;overflow:hidden}
+.solo .fl{width:52%;margin:0 auto;float:none}
+.note{display:flow-root;padding:7px 12px 8px;background:$BRUME;border-radius:2px;margin:6px 0 7px;break-inside:avoid}
+.note b.lab{display:block;font-size:10pt;color:$ENCRE;margin-bottom:2px}
+.note p{margin:0}
+.note p+p{margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:8.6pt;line-height:1.3;margin:6px 0 8px;clear:both}
+thead{display:table-header-group}
+tr{break-inside:avoid}
+th{background:$BRUME;color:$NUIT;font-weight:700;text-align:left;padding:4px 8px;vertical-align:top}
+td{padding:3.5px 8px;border-bottom:1px solid $TRAIT;vertical-align:top}
+.fin{clear:both;height:0}
 /* index */
-.cols{display:grid;grid-template-columns:1fr 1fr;gap:36px;position:absolute;left:${MARGE}px;right:${MARGE}px;top:${HT}px;height:${CAP}px}
-.b-il{padding-top:20px;padding-bottom:4px}
-.b-il span{font-weight:700;font-size:26px;color:$NUIT;letter-spacing:-.01em;line-height:1}
-.b-ie{display:flex;gap:10px;justify-content:space-between;padding-top:5px;font-size:13.5px;line-height:1.35}
-.b-ie .t{flex:1}
-.b-ie .n{text-align:right;font-weight:500;color:$NUIT;font-variant-numeric:tabular-nums;max-width:45%}
-.b-ip{padding-bottom:10px;font-size:13.5px;line-height:1.4;color:$ARDOISE}
+.texte.index .ip{font-size:8.6pt;color:$ARDOISE;margin:0 0 6px}
+.texte.index .cols{columns:2;column-gap:9mm;column-fill:auto}
+.il{font-weight:700;font-size:15pt;line-height:1;color:$NUIT;margin:12px 0 4px;break-after:avoid;break-inside:avoid}
+.il:first-child{margin-top:0}
+.ie{display:flex;gap:8px;justify-content:space-between;font-size:8.8pt;line-height:1.3;margin:0 0 2px;break-inside:avoid}
+.ie .t{flex:1}
+.ie .n{text-align:right;font-weight:500;color:$NUIT;font-variant-numeric:tabular-nums;max-width:45%}
 /* planche */
 body.planche{background:$BRUME;width:2640px;padding:80px}
 .planche h1{font-size:56px;color:$NUIT;letter-spacing:-.01em;font-weight:700}
 .planche .intro{font-size:24px;line-height:1.5;color:$ARDOISE;max-width:2000px;margin-top:16px}
 .grille{display:grid;grid-template-columns:repeat(8,292px);gap:34px 20px;margin-top:50px}
 .grille figure{margin:0}
-.mini{width:292px;height:413px;overflow:hidden;position:relative;box-shadow:0 0 0 1px $TRAIT;background:#fff}
-.mini .page{position:absolute;left:0;top:0;transform:scale(.3679);transform-origin:0 0;break-after:auto}
+.grille img{display:block;width:292px;height:413px;box-shadow:0 0 0 1px $TRAIT}
 .grille figcaption{font-size:18px;color:$ARDOISE;margin-top:8px;line-height:1.3}
 .grille figcaption b{color:$NUIT;font-weight:500}
 .planche .pied-planche{margin-top:56px;font-size:21px;color:$ARDOISE;line-height:1.5;max-width:2100px}
@@ -939,228 +1049,193 @@ def feuille(grain=False):
                 f'.papier.grain::after{{opacity:.10;mix-blend-mode:multiply}}') if grain else ""
     return CSS.substitute(NUIT=NUIT, INDIGO=INDIGO, AMBRE=AMBRE, BRUME=BRUME, ENCRE=ENCRE, ARDOISE=ARDOISE,
                           TRAIT=TRAIT, POL=POL, GRAINCSS=graincss, DEC=f"{-DECALAGE:.3f}", ECH=f"{ECHELLE:.5f}",
-                          MARGE=MARGE, HT=HAUT_TOP, FIGW=FIG_LARGEUR, CAP=f"{CAP:.2f}")
+                          VERSION=VERSION)
 
 
-def chrome(*args, timeout=900):
+def chrome(*args, timeout=1800):
     return subprocess.run([CHROME, "--headless=new", "--hide-scrollbars", "--allow-file-access-from-files",
                            "--virtual-time-budget=20000", *args],
                           check=True, capture_output=True, text=True, encoding="utf-8", timeout=timeout)
 
 
-SCRIPT_MESURE = """<script>
-Promise.all(['400 14px Diatype','500 14px Diatype','700 14px Diatype','400 14px "Diatype Mono"'].map(x=>document.fonts.load(x))).then(()=>document.fonts.ready).then(()=>{
- const out={};
- document.querySelectorAll('#m .b').forEach(b=>{
-  const r={h:b.getBoundingClientRect().height,pt:parseFloat(getComputedStyle(b).paddingTop)};
-  if(b.classList.contains('b-table')){const t=b.querySelector('table');
-    r.hhead=t.tHead.rows[0].getBoundingClientRect().height;
-    r.hrows=[...t.tBodies[0].rows].map(x=>x.getBoundingClientRect().height);
-    r.larg=t.scrollWidth;}
-  out[b.dataset.i]=r;});
- const p=document.createElement('pre');p.id='res';p.textContent=JSON.stringify(out);document.body.appendChild(p);});
-</script>"""
-
-
-def mesurer(blocs_html, largeur):
-    """blocs_html : liste de (indice, html). Rend {indice: mesures}."""
-    corps = "".join(h.replace('class="b ', f'data-i="{i}" class="b ', 1) for i, h in blocs_html)
-    page = (f'<!doctype html><html lang="fr"><head><meta charset="utf-8"><style>{feuille()}</style></head>'
-            f'<body><div id="m" style="width:{largeur}px">{corps}</div>{SCRIPT_MESURE}</body></html>')
-    tmp = ICI / "_mesure.html"
-    tmp.write_text(typo_doc(page), encoding="utf-8")
-    sortie = chrome("--window-size=1000,1000", "--dump-dom", tmp.as_uri()).stdout
-    tmp.unlink()
-    m = re.search(r'<pre id="res">(.*?)</pre>', sortie, re.S)
-    return {int(k): v for k, v in json.loads(_html.unescape(m.group(1))).items()}
-
-
-def typo_doc(page):
-    return page
-
-
-# --- assemblage --------------------------------------------------------------------------------------------
-def construire():
-    chap = charger_chapitres()
-    intro_index, entrees_index = charger_index()
-
-    # 1. blocs et mesures des chapitres
-    tous = []   # (chap, bloc) dans l'ordre
-    for ci, c in enumerate(chap):
-        c["blocs"] = [{"t": "h1"}] + c["blocs"]
-        marquer_garde(c["blocs"])
-        for b in c["blocs"]:
-            tous.append((ci, b))
-    html_blocs = [(i, typo(rendu_bloc(b, chap[ci]))) for i, (ci, b) in enumerate(tous)]
-    mes = mesurer(html_blocs, LARG)
-    for i, (ci, b) in enumerate(tous):
-        b.update(mes[i])
-
-    # 2. pagination par chapitre, numéros de page
-    page = 3                       # 1 couverture, 2 sommaire
-    pages_ouv, plan, sections = {}, [], {}
-    for c in chap:
-        pages_ouv[c["num"]] = page
-        page += 1
-        c["pages"] = paginer(c["blocs"], CAP)
-        c["page0"] = page
-        for pg in c["pages"]:
-            for (k, r0, r1) in pg:
-                b = c["blocs"][k]
-                if b["t"] == "h2":
-                    m = re.match(r"(\d+\.\d+)\s", b["x"])
-                    if m:
-                        sections[m.group(1)] = page
-            page += 1
-    page_index = page
-
-    # 3. index : numéros de page réels, mesure à la largeur d'une colonne
-    larg_col = (LARG - 36) / 2
-    blocs_idx, manquantes = [], []
-    if intro_index:
-        blocs_idx.append({"t": "ip", "x": "Les numéros renvoient aux pages du manuel."})
-    for kind, a, b in entrees_index:
-        if kind == "lettre":
-            blocs_idx.append({"t": "il", "x": a, "keep": True})
-        else:
-            pages_e = []
-            for s in b:
-                if s in sections:
-                    pages_e.append(sections[s])
-                else:
-                    manquantes.append((a, s))
-            pages_e = sorted(set(pages_e))
-            blocs_idx.append({"t": "ie", "terme": a, "pages": ", ".join(str(p) for p in pages_e), "keep": False})
-    # le texte d'introduction de l'index.md est remplacé (voir LISEZMOI) : il annonçait des numéros de section
-    h_idx = []
-    for i, b in enumerate(blocs_idx):
-        if b["t"] == "ip":
-            h_idx.append((i, f'<div class="b b-ip">{b["x"]}</div>'))
-        else:
-            h_idx.append((i, typo(rendu_bloc(b, None))))
-    mes_i = mesurer(h_idx, larg_col)
-    for i, b in enumerate(blocs_idx):
-        b.update(mes_i[i])
-        b.setdefault("keep", False)
-    colonnes = paginer(blocs_idx, CAP)   # chaque "page" est une colonne
-    pages_index = [colonnes[i:i + 2] for i in range(0, len(colonnes), 2)]
-    nb_index = len(pages_index)
-    total = page_index + 1 + nb_index + 1   # ouverture de l'index, pages d'index, quatrième
-    lettres = [a for kind, a, _ in entrees_index if kind == "lettre"]
-    return dict(chap=chap, pages_ouv=pages_ouv, page_index=page_index, sections=sections, blocs_idx=blocs_idx,
-                pages_index=pages_index, total=total - 0, lettres=lettres, manquantes=manquantes,
-                entrees_index=entrees_index)
-
-
-def assembler(d, grain):
-    """Rend la liste de toutes les pages : [(numero, genre, titre, html)]."""
-    global GRAIN
-    GRAIN = grain
-    chap = d["chap"]
-    pages = [(1, "couverture", "Couverture", page_plein(couverture(chap))),
-             (2, "sommaire", "Sommaire", page_plein(sommaire(chap, d["pages_ouv"], d["page_index"])))]
-    n = 3
-    for c in chap:
-        pages.append((n, "ouverture", f'{c["num"]} {c["titre"]}', page_plein(OUVERTURES[c["num"]](c))))
-        n += 1
-        for pg in c["pages"]:
-            contenu = ""
-            for j, (k, r0, r1) in enumerate(pg):
-                b = c["blocs"][k]
-                piece = (r0, r1) if r0 is not None else None
-                contenu += typo(rendu_bloc(b, c, piece, premier=(j == 0)))
-            figs = any(c["blocs"][k]["t"] == "fig" for (k, _, _) in pg)
-            pages.append((n, "texte-fig" if figs else "texte", f'{c["num"]} {c["titre"]}', page_flux(n, contenu)))
-            n += 1
-    pages.append((n, "ouverture", "Index", page_plein(o_index(d["lettres"]))))
-    n += 1
-    for cols in d["pages_index"]:
-        html_cols = ""
-        for col in cols:
-            html_cols += "<div>" + "".join(
-                typo(rendu_bloc(d["blocs_idx"][k], None, None, premier=(j == 0))) if d["blocs_idx"][k]["t"] != "ip"
-                else f'<div class="b b-ip{" prem" if j == 0 else ""}">{d["blocs_idx"][k]["x"]}</div>'
-                for j, (k, _, _) in enumerate(col)) + "</div>"
-        pages.append((n, "index", "Index", f'<section class="page flux"><div class="cols">{html_cols}</div>'
-                      f'<div class="trait"></div><div class="pied liste a4s"><span>Manuel d\'utilisation</span>'
-                      f'<span>Kadenz {VERSION}</span><span>{n}</span></div></section>'))
-        n += 1
-    pages.append((n, "quatrieme", "Quatrième de couverture", page_plein(quatrieme())))
-    return pages
-
-
-SCRIPT_CONTROLE = """<script>
-document.fonts.ready.then(()=>{
- const res={deb:[],larg:[]};
- document.querySelectorAll('.page').forEach((p,i)=>{
-  const c=p.querySelector('.corps,.cols');
-  if(c){const top=c.getBoundingClientRect().top;
-    let bas=0;c.querySelectorAll('.b').forEach(b=>{bas=Math.max(bas,b.getBoundingClientRect().bottom-top)});
-    const lim=c.getBoundingClientRect().height;
-    if(bas>lim+0.5)res.deb.push([i+1,Math.round(bas-lim)]);
-    c.querySelectorAll('table').forEach(t=>{if(t.scrollWidth>t.clientWidth+1)res.larg.push([i+1,'table'])});
-    c.querySelectorAll('.b').forEach(b=>{if(b.scrollWidth>b.clientWidth+1)res.larg.push([i+1,'bloc'])});}
- });
- const p=document.createElement('pre');p.id='res';p.textContent=JSON.stringify(res);document.body.appendChild(p);});
-</script>"""
-
-
-def sauver_pdf(pages, nom_pdf):
-    corps = "".join(h for _, _, _, h in pages)
-    tmp = ICI / "_final.html"
-    tmp.write_text(doc_html(corps, "Manuel d'utilisation") , encoding="utf-8")
+def imprimer(html, nom_pdf):
+    tmp = ICI / "_doc.html"
+    tmp.write_text(html, encoding="utf-8")
     pdf = ICI / nom_pdf
-    chrome("--no-pdf-header-footer", f"--print-to-pdf={pdf}", tmp.as_uri(), timeout=1800)
-    # contrôle de débordement
-    tmp.write_text(doc_html(corps, "Manuel d'utilisation").replace("</body>", SCRIPT_CONTROLE + "</body>"),
-                   encoding="utf-8")
-    sortie = chrome("--window-size=1000,1000", "--dump-dom", tmp.as_uri()).stdout
+    chrome("--no-pdf-header-footer", f"--print-to-pdf={pdf}", tmp.as_uri())
     tmp.unlink()
-    res = json.loads(_html.unescape(re.search(r'<pre id="res">(.*?)</pre>', sortie, re.S).group(1)))
-    nb = len(re.findall(rb"/Type\s*/Page[^s]", pdf.read_bytes()))
-    return pdf, res, nb
+    return pdf
 
 
-def choisir_planche(pages, chap):
-    """Quelques pages par chapitre : ouverture, première page de texte, deux pages à captures."""
-    par_titre = {}
-    for n, genre, titre, _ in pages:
-        par_titre.setdefault(titre, []).append((n, genre))
-    choix = [1, 2]
-    for c in chap:
-        cle = f'{c["num"]} {c["titre"]}'
-        liste_ = par_titre[cle]
-        ouv = [n for n, g in liste_ if g == "ouverture"]
-        texte = [n for n, g in liste_ if g in ("texte", "texte-fig")]
-        figs = [n for n, g in liste_ if g == "texte-fig"]
-        pick = ouv + texte[:1]
-        rest = [n for n in figs if n not in pick]
-        if rest:
-            pick.append(rest[len(rest) // 2])
-            if len(rest) > 3:
-                pick.append(rest[-1])
-        elif len(texte) > 1:
-            pick.append(texte[len(texte) // 2])
-        choix += pick
-    choix += [n for n, g, t, _ in pages if g in ("index", "quatrieme") or t == "Index"]
-    return sorted(set(choix))
+# --- numéros de page réels : lecture du PDF ------------------------------------------------------------------
+def pages_ancres(pdf):
+    """Page de chaque lien invisible https://k.invalid/... : analyse des objets du PDF (sans bibliothèque)."""
+    data = pdf.read_bytes()
+    objs = {int(m.group(1)): m.group(2) for m in re.finditer(rb"(?<![0-9])(\d+) 0 obj(.*?)endobj", data, re.S)}
+    racine = None
+    for num, o in objs.items():
+        if b"/Type /Catalog" in o or b"/Type/Catalog" in o:
+            racine = int(re.search(rb"/Pages (\d+) 0 R", o).group(1))
+    ordre = []
+
+    def descendre(n):
+        o = objs[n]
+        if re.search(rb"/Type\s*/Pages", o):
+            kids = re.search(rb"/Kids\s*\[(.*?)\]", o, re.S).group(1)
+            for k in re.findall(rb"(\d+) 0 R", kids):
+                descendre(int(k))
+        else:
+            ordre.append(n)
+
+    descendre(racine)
+    res = {}
+    for idx, n in enumerate(ordre, 1):
+        o = objs[n]
+        m = re.search(rb"/Annots\s*(\[.*?\]|(\d+) 0 R)", o, re.S)
+        if not m:
+            continue
+        if m.group(2):
+            refs = re.findall(rb"(\d+) 0 R", objs[int(m.group(2))])
+        else:
+            refs = re.findall(rb"(\d+) 0 R", m.group(1))
+        for r in refs:
+            ob = objs.get(int(r), b"")
+            u = re.search(rb"/URI\s*\(([^)]*)\)", ob)
+            if u:
+                cle = u.group(1).decode("latin-1").replace("https://k.invalid/", "")
+                rect = [float(x) for x in re.search(rb"/Rect\s*\[([^\]]*)\]", ob).group(1).split()]
+                haut = rect[3] - rect[1]
+                # un lien coupé par un saut de page laisse parfois un fragment de hauteur nulle sur la page précédente
+                if haut > 0.5:
+                    res.setdefault(cle, []).append((idx, haut))
+    # titres : page du fragment le plus haut ; paragraphes (t/) : dernière page où le texte apparaît
+    sortie = {}
+    for k, v in res.items():
+        if k.startswith("t/"):
+            sortie[k] = max(i for i, _ in v)
+        else:
+            sortie[k] = max(v, key=lambda x: (x[1], -x[0]))[0]
+    return sortie, len(ordre)
 
 
-def planche(pages, chap, total, nom="planche-manuel-complet.png"):
-    choix = choisir_planche(pages, chap)
-    parN = {n: (g, t, h) for n, g, t, h in pages}
+def rasteriser(pdf, pages, dossier, echelle=1.5):
+    dossier.mkdir(exist_ok=True)
+    subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ICI / "rasteriser_pdf.ps1"),
+                    "-Pdf", str(pdf), "-Out", str(dossier), "-Pages", ",".join(str(p) for p in pages),
+                    "-Scale", str(echelle)], check=True, capture_output=True, text=True)
+
+# --- assemblage en deux passes --------------------------------------------------------------------------------
+def donnees():
+    chap = charger_chapitres()
+    _, entrees = charger_index()
+    return {"chap": chap, "entrees": entrees, "lettres": [a for k, a, _ in entrees if k == "lettre"],
+            "sections": {}, "ouv": {}, "page_index": "000"}
+
+
+def passe(d, ancres, grain, nom):
+    html = document(d, ancres, grain)
+    pdf = imprimer(html, nom)
+    return pdf
+
+
+def mettre_a_jour(d, ancres_pdf):
+    res, nb = ancres_pdf
+    d["sections"] = {k[2:]: v for k, v in res.items() if k.startswith("s/")}
+    d["ouv"] = {k[2:]: v - 1 for k, v in res.items() if k.startswith("c/")}
+    d["page_index"] = res["i"] - 1
+    return nb
+
+
+def numeros_pages(d):
+    return (dict(d["sections"]), dict(d["ouv"]), d["page_index"])
+
+
+def captures_repoussees(res):
+    """Captures dont la page suit celle du dernier texte de leur section."""
+    mauvaises = set()
+    for fid, tk in LIENS.items():
+        pf, pt = res.get("f/" + fid), res.get("t/" + tk)
+        if pf is not None and pt is not None and pf > pt:
+            mauvaises.add(fid)
+    return mauvaises
+
+
+def construire(grain=False, nom="manuel-complet.pdf"):
+    d = donnees()
+    recadrer()
+    SAUTS.clear()
+    for essai in range(6):          # repérage des captures repoussées après leur texte, saut de page avant leur paragraphe
+        LIENS.clear()
+        pdf = passe(d, True, grain, "_passe1.pdf")
+        res, nb1 = pages_ancres(pdf)
+        mal = captures_repoussees(res) - SAUTS
+        print("  repérage", essai + 1, ":", nb1, "pages,", len(mal), "capture(s) repoussée(s)")
+        if not mal:
+            break
+        SAUTS.update(mal)
+    nb1 = mettre_a_jour(d, (res, nb1))
+    n1_ = numeros_pages(d)
+    pdf = passe(d, True, grain, "_passe2.pdf")
+    nb2 = mettre_a_jour(d, pages_ancres(pdf))
+    stable = numeros_pages(d) == n1_
+    if not stable:
+        pdf = passe(d, True, grain, "_passe3.pdf")
+        nb3 = mettre_a_jour(d, pages_ancres(pdf))
+        stable = numeros_pages(d) == n1_
+    (ICI / "_passe1.pdf").unlink(missing_ok=True)
+    final = passe(d, False, grain, nom)
+    nbf = pages_ancres(final)[1]
+    for p in ("_passe2.pdf", "_passe3.pdf"):
+        (ICI / p).unlink(missing_ok=True)
+    d["stable"] = stable
+    d["total"] = nbf
+    d["manquantes"] = []
+    for kind, a, nums in d["entrees"]:
+        if kind == "entree":
+            for s in nums:
+                if s not in d["sections"]:
+                    d["manquantes"].append((a, s))
+    d["entrees_index"] = d["entrees"]
+    d["sauts"] = len(SAUTS)
+    return d, final
+
+
+# --- planche et aperçus : pages du vrai PDF rastérisées --------------------------------------------------------
+def choisir_pages(d):
+    ouv = d["ouv"]
+    nums = sorted(ouv)
+    fins = {}
+    for k, n in enumerate(nums):
+        fins[n] = (ouv[nums[k + 1]] - 1) if k + 1 < len(nums) else d["page_index"] - 1
+    choix = [(1, "Couverture"), (2, "Sommaire")]
+    for n in nums:
+        deb, fin = ouv[n], fins[n]
+        titre = next(c["titre"] for c in d["chap"] if c["num"] == n)
+        choix.append((deb, f"{n} {titre}, ouverture"))
+        choix.append((deb + 1, f"{n} {titre}, première page"))
+        if fin - deb >= 3:
+            choix.append((deb + 1 + (fin - deb) // 2, f"{n} {titre}, page courante"))
+    choix.append((d["page_index"], "Index, ouverture"))
+    choix.append((d["page_index"] + 1, "Index, première page"))
+    choix.append((d["total"], "Quatrième de couverture"))
+    return choix
+
+
+def planche(d, pdf, nom="planche-manuel-complet.png"):
+    choix = choisir_pages(d)
+    dossier = ICI / "_apercus"
+    rasteriser(pdf, [n for n, _ in choix], dossier, 0.75)
     figs = ""
-    for n in choix:
-        g, t, h = parN[n]
-        figs += f'<figure><div class="mini">{h}</div><figcaption><b>{n}</b> {_html.escape(t)}</figcaption></figure>'
+    for n, t in choix:
+        figs += (f'<figure><img src="_apercus/p{n:03d}.png" alt=""><figcaption><b>{n}</b> {_html.escape(t)}</figcaption></figure>')
     corps = (f'<h1>Manuel d\'utilisation de Kadenz, version complète</h1>'
-             f'<p class="intro">Mise en page finale des quinze chapitres, de l\'index et des pages de couverture : {total} pages A4 '
+             f'<p class="intro">Mise en page finale des quinze chapitres, de l\'index et des pages de couverture : {d["total"]} pages A4 '
              f'au total, dont {len(choix)} montrées ici (couverture, sommaire, ouverture de chaque chapitre, première page de texte, '
-             f'pages à captures, index, quatrième). Version {VERSION}.</p>'
+             f'page courante, index, quatrième). Version {VERSION}.</p>'
              f'<div class="grille">{figs}</div>'
-             f'<p class="pied-planche">Planche de contrôle avec grain ; le PDF est sans grain. Polices ABC Diatype (essai) lues dans le dépôt privé.</p>')
+             f'<p class="pied-planche">Planche de contrôle : pages rastérisées à partir du PDF. Polices ABC Diatype lues dans le dépôt privé.</p>')
     html = (f'<!doctype html>\n<html lang="fr"><head><meta charset="utf-8"><title>Planche du manuel complet | Kadenz</title>'
-            f'<style>{feuille(True)}</style></head><body class="planche">{corps}</body></html>\n')
+            f'<style>{feuille(False)}</style></head><body class="planche">{corps}</body></html>\n')
     tmp = ICI / "_planche.html"
     tmp.write_text(html.replace("</body>", "<script>document.fonts.ready.then(()=>{const p=document.createElement('pre');"
                                 "p.id='res';p.textContent=document.documentElement.scrollHeight;document.body.appendChild(p)})</script></body>"),
@@ -1170,23 +1245,6 @@ def planche(pages, chap, total, nom="planche-manuel-complet.png"):
     chrome("--force-device-scale-factor=1", f"--window-size=2640,{h}", f"--screenshot={ICI / nom}", tmp.as_uri())
     tmp.unlink()
     return len(choix), h
-
-
-def apercus(pages, numeros, grain=True):
-    dossier = ICI / "_apercus"
-    dossier.mkdir(exist_ok=True)
-    parN = {n: h for n, _, _, h in pages}
-    for k in range(0, len(numeros), 2):
-        lot = numeros[k:k + 2]
-        css = ".page{break-after:auto!important;flex:none}"
-        html = (f'<!doctype html><html lang="fr"><head><meta charset="utf-8"><style>{feuille(grain)}{css}'
-                f'body{{display:flex;gap:12px;background:#888}}</style></head><body>{"".join(parN[n] for n in lot)}</body></html>')
-        tmp = ICI / "_apercu.html"
-        tmp.write_text(html, encoding="utf-8")
-        nom = "-".join(str(n) for n in lot)
-        chrome("--force-device-scale-factor=1", f"--window-size={int((PAGE_W + 12) * len(lot))},{int(PAGE_H) + 2}",
-               f"--screenshot={dossier / (nom + '.png')}", tmp.as_uri())
-        tmp.unlink()
 
 
 def controle_textes(d):
@@ -1264,17 +1322,15 @@ def controle_textes(d):
 
 
 if __name__ == "__main__":
-    d = construire()
-    pages_pdf = assembler(d, grain=False)
-    pdf, res, nb = sauver_pdf(pages_pdf, "manuel-complet.pdf")
-    print("pages prévues", len(pages_pdf), "pages du PDF", nb, pdf.stat().st_size // 1024, "Ko")
-    print("débordements", res["deb"], "largeurs", res["larg"])
-    print("ouvertures", d["pages_ouv"], "index", d["page_index"])
+    t0 = __import__("time").time()
+    d, pdf = construire()
+    print("pages", d["total"], "poids", pdf.stat().st_size // 1024, "Ko", "numéros stables", d["stable"],
+          "durée", int(__import__("time").time() - t0), "s")
+    print("ouvertures", d["ouv"], "index", d["page_index"])
     for ligne in controle_textes(d):
         print("TEXTE", ligne)
     if "--apercu" in sys.argv:
         num = [int(x) for x in sys.argv[sys.argv.index("--apercu") + 1].split(",")]
-        apercus(assembler(d, grain=True), num)
+        rasteriser(pdf, num, ICI / "_apercus", 1.6)
     if "--planche" in sys.argv or "--tout" in sys.argv:
-        avec = assembler(d, grain=True)
-        print("planche", planche(avec, d["chap"], len(avec)))
+        print("planche", planche(d, pdf))
