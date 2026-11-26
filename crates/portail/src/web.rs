@@ -1346,7 +1346,7 @@ async fn essai(
     corps: Bytes,
 ) -> Response {
     let Ok(valeur) = serde_json::from_slice::<serde_json::Value>(&corps) else {
-        return refus_json(StatusCode::BAD_REQUEST, crate::MODELES_ESSAI[1], &[]);
+        return refus_json(StatusCode::BAD_REQUEST, crate::MODELES_ESSAI[0], &[]);
     };
     let texte = |nom: &str| {
         valeur
@@ -1356,7 +1356,6 @@ async fn essai(
             .to_string()
     };
     let demande = DemandeEssai {
-        email: texte("email"),
         produit: texte("produit"),
         poste: texte("poste"),
         version: texte("version"),

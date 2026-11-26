@@ -763,15 +763,14 @@ pub(crate) fn arreter_a_la_sortie() {
 /// demande repart au lancement suivant (décision 78).
 fn confirmer_essai(f: &FenetrePrincipale) {
     let Some(c) = contexte() else { return };
-    let Ok(Ok(Some(email))) = sur_le_serveur(&c, |conn| {
+    let Ok(Ok(true)) = sur_le_serveur(&c, |conn| {
         kadenz_stockage::abonnement::essai_a_confirmer(conn)
     }) else {
         return;
     };
     let fa = f.as_weak();
     std::thread::spawn(move || {
-        let essai =
-            kadenz_maj::essai::obtenir(&email, kadenz_licence::entreprise::Produit::Monoposte);
+        let essai = kadenz_maj::essai::obtenir(kadenz_licence::entreprise::Produit::Monoposte);
         let _ = fa.upgrade_in_event_loop(move |_| {
             let Ok(essai) = essai else { return };
             let Ok(debut) = chrono::NaiveDate::parse_from_str(&essai.debut, "%Y-%m-%d") else {
@@ -1073,7 +1072,6 @@ fn terminer(f: &FenetrePrincipale, d: &DonneesAssistant) -> SharedString {
     // Licence facultative : sans elle, lecture seule (décision 40), un seul
     // poste permis (décision 41), celui-ci.
     let cle = d.cle_licence.trim().to_string();
-    let email = d.email_essai.trim().to_string();
     let api = f.global::<MonoposteApi>();
     api.set_erreur_installation(SharedString::new());
     api.set_installation(true);
@@ -1088,8 +1086,8 @@ fn terminer(f: &FenetrePrincipale, d: &DonneesAssistant) -> SharedString {
                     let licence = (!cle.is_empty()).then_some(cle.as_str());
                     admin::installer(conn, &init, licence)?;
                     // Sans licence : l'essai attend la confirmation du portail.
-                    if licence.is_none() && !email.is_empty() {
-                        kadenz_stockage::abonnement::noter_essai_a_confirmer(conn, &email)?;
+                    if licence.is_none() {
+                        kadenz_stockage::abonnement::noter_essai_a_confirmer(conn)?;
                     }
                     Ok::<(), kadenz_stockage::Erreur>(())
                 })

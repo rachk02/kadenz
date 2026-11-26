@@ -4929,14 +4929,6 @@ msgstr "激活代码：设置中的“订阅”栏目。"
 msgid "Adressez-vous à l'administrateur pour activer un code d'abonnement."
 msgstr "请让管理员激活订阅码。"
 
-msgid "Sans code, saisissez une adresse email valide : elle sert à l'essai gratuit de 30 jours."
-msgstr "没有代码时，请输入有效的电子邮件地址：它用于 30 天免费试用。"
 
-msgid "Adresse email (obligatoire sans code, pour l'essai gratuit)"
-msgstr "电子邮件地址（无代码时必填，用于免费试用）"
 
-msgid "L'adresse et l'identifiant de cet ordinateur sont envoyés au portail de Kadenz, qui garde la date de début de l'essai : une réinstallation ne relance pas l'essai."
-msgstr "该地址和本计算机的标识会发送到 Kadenz 门户，门户会保存试用开始日期：重新安装不会重新开始试用。"
 
-msgid "essai gratuit à confirmer : reliez ce poste à Internet, puis relancez Kadenz"
-msgstr "免费试用待确认：请将本计算机连接到互联网，然后重新启动 Kadenz"

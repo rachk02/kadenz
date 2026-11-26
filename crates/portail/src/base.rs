@@ -232,13 +232,12 @@ ALTER TABLE code_activation ADD COLUMN produit TEXT NOT NULL DEFAULT 'entreprise
 ",
     // 12 vers 13 : essais gratuits (décision 78, docs/spec-telechargements-essai.md,
     // section 6). Un essai par poste et par édition, avec sa date de début ;
-    // l'adresse email est la première reçue, les suivantes vont au journal.
+    // aucune donnée personnelle, l'identifiant du poste seul.
     "
 CREATE TABLE essai (
     id INTEGER PRIMARY KEY,
     poste TEXT NOT NULL,
     produit TEXT NOT NULL CHECK (produit IN ('entreprise', 'monoposte')),
-    email TEXT NOT NULL,
     debut TEXT NOT NULL,
     cree_le TEXT NOT NULL,
     vu_le TEXT NOT NULL

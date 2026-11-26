@@ -7,13 +7,14 @@
 | 0.3 | 2026-11-26 | Lot E1 livré : attestation d'essai signée `KADENZ-T-` (`kadenz_licence::essai`), table `essai` du portail (schéma 13, un essai par poste et par édition), route `POST /api/essai` (adresse email vérifiée, frein par adresse, autre adresse pour un même poste notée au journal `essai_autre_adresse`). |
 | 0.4 | 2026-11-26 | Lot T2 livré : route `GET /api/releases` (versions publiées du dépôt au format de la liste des releases de GitHub, liens signés absolus), dépôt à plat étendu aux paquets MSI, au manifeste `kadenz-maj-X.Y.Z.json`, à sa signature et aux notes `notes-X.Y.Z.md` ; client de mise à jour qui lit le portail d'abord, GitHub si le portail ne répond pas ou n'a rien publié. |
 | 0.5 | 2026-11-26 | Lot E2 livré : adresse email à l'étape Licence de l'assistant (serveur et monoposte, sans code), essai noté « à confirmer » dans la base du serveur, demande au portail hors du fil de l'interface à l'installation puis à chaque lancement tant qu'il n'est pas confirmé, attestation gardée dans `%ProgramData%\Kadenz\essai-<édition>.txt`, lecture seule après sept jours sans confirmation (raison affichée), règle d'adresse partagée (`kadenz_licence::essai::valider_email`). Les essais commencés avant cette règle ne sont pas concernés. |
+| 0.6 | 2026-11-26 | Décision de l'utilisateur du 2026-11-26 : ni email ni connexion exigés. L'essai se reconnaît par l'identifiant du poste seul, envoyé sans rien demander ; sans réponse du portail, l'essai continue normalement et la demande repart à chaque lancement (plus de lecture seule après sept jours). Colonne `email` retirée de la table `essai` (schéma 13, jamais déployé). |
 
 Statut : **spécifié**. Les lots sont au tableau de la section 7.
 
 ## 1. Décisions de l'utilisateur (2026-11-26)
 
 - **77. Téléchargements sans exposer les dépôts.** Les installateurs et les mises à jour ne se prennent plus sur un dépôt public : le portail donne un lien signé et de courte durée, et sert le fichier depuis le Dell. Le téléchargement reste simple : aucun code ni compte pour télécharger, une page « Votre téléchargement va démarrer » avec un bouton de secours, comme sur les autres sites. Pas de lien à usage unique ni lié à une adresse : ce serait trop strict.
-- **78. Essai gratuit avec email.** L'essai de 30 jours (décision du 2026-11-25) démarre avec une adresse email, comme chez les grands éditeurs (compte demandé pour l'essai d'AutoCAD). L'essai est connu du portail, qui recoupe l'identifiant du poste entre les adresses.
+- **78. Essai gratuit connu du portail.** L'essai de 30 jours (décision du 2026-11-25) est connu du portail par l'identifiant du poste, envoyé sans rien demander à l'utilisateur : ni email ni connexion obligatoire (décision de l'utilisateur du 2026-11-26, qui remplace la première version avec email). Une réinstallation sur le même poste retrouve la date d'origine.
 - **79. Rien de caché sur le poste du client.** L'essai se protège par le portail, pas par des traces dissimulées dans le registre ou des services déguisés : ces procédés font classer un logiciel comme indésirable par les antivirus et trahissent la confiance du client. Tout ce que Kadenz pose sur le poste porte son nom et figure dans le LISEZMOI.
 
 ## 2. Ce qui existe aujourd'hui
@@ -55,18 +56,16 @@ Garde-fous :
 
 ### 6.1 Démarrage
 
-- À l'installation sans code, l'assistant demande une adresse email (champ obligatoire, format vérifié) en plus de ce qu'il demande déjà.
-- Le programme envoie au portail `POST /api/essai` : email, produit, identifiant du poste (`identifiant_poste`), version. Le portail répond avec la date de début de l'essai, signée par sa clé.
+- À l'installation sans code, l'assistant ne demande rien de plus : l'essai démarre aussitôt, avec la date du jour, marqué « à confirmer ».
+- Le programme envoie au portail `POST /api/essai`, hors du fil de l'interface : produit, identifiant du poste (`identifiant_poste`, empreinte du `MachineGuid`), version. Aucune donnée personnelle. Le portail répond avec la date de début de l'essai, signée par sa clé.
 - Règle du portail :
   - poste inconnu : l'essai démarre aujourd'hui ;
-  - poste déjà connu (même identifiant, quelle que soit l'adresse) : le portail renvoie la date de début d'origine ; une réinstallation ne relance donc pas l'essai ;
-  - un même poste avec plusieurs adresses est noté au journal, sans blocage automatique au départ.
-- L'adresse sert au suivi commercial (fin d'essai, offre) : la page de confidentialité du site le dit, et l'adresse n'est jamais transmise à un tiers.
+  - poste déjà connu pour cette édition : le portail renvoie la date de début d'origine ; une réinstallation ne relance donc pas l'essai.
+- À la réponse, la date du portail remplace celle du poste si elle est plus ancienne, et l'essai n'est plus « à confirmer ».
 
 ### 6.2 Sans Internet
 
-- Le portail injoignable, l'essai démarre quand même sur le poste, avec la date du jour, marqué « à confirmer ». Le programme renvoie la demande à chaque démarrage tant qu'elle n'est pas confirmée ; à la confirmation, la date du portail remplace celle du poste si elle est plus ancienne.
-- Sept jours sans confirmation : l'essai passe en lecture seule jusqu'à la connexion suivante (message clair, rien n'est perdu).
+- Aucune connexion n'est exigée : sans réponse du portail, l'essai continue normalement. Le programme renvoie la demande à chaque lancement tant qu'elle n'est pas confirmée ; elle aboutit dès que le poste est connecté.
 
 ### 6.3 Marque d'essai sur le poste
 
@@ -75,7 +74,7 @@ Garde-fous :
 
 ### 6.4 Ce qui reste accepté
 
-Changer de machine et donner une nouvelle adresse redonne un essai. C'est accepté (décision 79) : le recoupement du portail suffit contre la réinstallation, et la désinstallation efface de toute façon les données saisies.
+Changer de machine redonne un essai, de même qu'un poste qui ne se connecte jamais pendant ses 30 jours. C'est accepté (décision 79) : le recoupement du portail suffit contre la réinstallation, et la désinstallation efface de toute façon les données saisies.
 
 ## 7. Lots
 
@@ -84,8 +83,8 @@ Changer de machine et donner une nouvelle adresse redonne un essai. C'est accept
 | T1 (livré) | Liens signés et route `/fichiers/...` (HMAC, échéance, liste fermée, `Range`), page `/telecharger/<produit>`, frein et journal. Tests. | `crates/portail` |
 | T2 (livré) | Route `/api/releases` (manifeste et lien signé) ; client qui essaie le portail puis GitHub. Tests. | `crates/portail`, `crates/maj` |
 | T3 | Publication vers le Dell dans `release.ps1`, dossier, droits, sauvegarde. Demande l'accord de l'utilisateur (serveur de production). | `scripts/`, Dell |
-| E1 (livré) | Table des essais du portail (poste, adresse, produit, début), route `/api/essai`, date signée, recoupement au journal. Tests. | `crates/portail`, `crates/licence` |
-| E2 (livré) | Champ email de l'assistant, appel au portail, date « à confirmer » hors ligne, cache `%ProgramData%\Kadenz\essai.json`, lecture seule après sept jours sans confirmation. Six traductions. | `crates/app`, `crates/stockage`, installateur |
-| E3 | Page de confidentialité du site : usage de l'adresse et de l'identifiant du poste. | site |
+| E1 (livré) | Table des essais du portail (poste, produit, début), route `/api/essai`, date signée, journal. Tests. | `crates/portail`, `crates/licence` |
+| E2 (livré) | Appel au portail sans rien demander, date « à confirmer » tant que le portail n'a pas répondu, cache `%ProgramData%\Kadenz\essai-<édition>.txt`. | `crates/app`, `crates/stockage`, installateur |
+| E3 | Page de confidentialité du site : usage de l'identifiant du poste. | site |
 
 Ordre proposé : T1, E1, T2, E2, puis T3 et E3 avec l'utilisateur. Les lots T3 et l'essai sur le portail de production demandent son accord.

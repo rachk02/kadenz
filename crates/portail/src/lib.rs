@@ -303,7 +303,6 @@ pub struct DemandeActivation {
 /// Demande d'essai envoyée par le programme (route `/api/essai`, décision 78).
 #[derive(Debug, Clone, Default)]
 pub struct DemandeEssai {
-    pub email: String,
     /// `entreprise` ou `monoposte`.
     pub produit: String,
     /// Identifiant du poste (`identifiant_poste`).
@@ -320,7 +319,7 @@ pub struct EssaiAtteste {
 }
 
 /// Modèles des refus d'une demande d'essai, traduits par le programme.
-pub const MODELES_ESSAI: &[&str] = &["adresse email invalide", "demande d'essai invalide"];
+pub const MODELES_ESSAI: &[&str] = &["demande d'essai invalide"];
 
 /// Réponse d'activation : la licence signée et son résumé pour l'écran.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -2438,13 +2437,11 @@ impl Portail {
 
     /// Essai gratuit demandé par le programme (décision 78) : poste inconnu,
     /// l'essai commence aujourd'hui ; poste déjà connu pour cette édition, la
-    /// date de début d'origine est rendue, quelle que soit l'adresse email.
-    /// Une autre adresse pour le même poste est notée au journal. Chaque
-    /// demande compte dans le frein de l'adresse.
+    /// date de début d'origine est rendue. Seul l'identifiant du poste sert,
+    /// aucune donnée personnelle (décision de l'utilisateur du 2026-11-26).
+    /// Chaque demande compte dans le frein de l'adresse.
     pub fn demander_essai(&self, demande: &DemandeEssai, adresse: &str) -> Resultat<EssaiAtteste> {
-        let invalide = || ErreurPortail::Validation(MODELES_ESSAI[1].into());
-        let email = kadenz_licence::essai::valider_email(&demande.email)
-            .ok_or_else(|| ErreurPortail::Validation(MODELES_ESSAI[0].into()))?;
+        let invalide = || ErreurPortail::Validation(MODELES_ESSAI[0].into());
         let produit = lic::Produit::depuis_code(demande.produit.trim()).ok_or_else(invalide)?;
         let poste = valider_poste(&demande.poste).map_err(|_| invalide())?;
         let conn = self.conn();
@@ -2456,39 +2453,27 @@ impl Portail {
         frein::echec(&conn, &cles, instant)?;
         let aujourdhui = self.aujourdhui().format("%Y-%m-%d").to_string();
         let transaction = conn.unchecked_transaction()?;
-        let connu: Option<(i64, String, String)> = transaction
+        let connu: Option<(i64, String)> = transaction
             .query_row(
-                "SELECT id, email, debut FROM essai WHERE poste = ?1 AND produit = ?2",
+                "SELECT id, debut FROM essai WHERE poste = ?1 AND produit = ?2",
                 params![poste, produit.code()],
-                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+                |r| Ok((r.get(0)?, r.get(1)?)),
             )
             .optional()?;
         let version = pour_journal(&demande.version, MAX_VERSION_JOURNAL);
         let debut = match connu {
-            Some((id, premier, debut)) => {
+            Some((id, debut)) => {
                 transaction.execute(
                     "UPDATE essai SET vu_le = ?2 WHERE id = ?1",
                     params![id, maintenant()],
                 )?;
-                if premier != email {
-                    noter(
-                        &transaction,
-                        None,
-                        "essai_autre_adresse",
-                        Some(&poste),
-                        &format!(
-                            "édition {}, première adresse {premier}, nouvelle adresse {email}, version {version}, adresse {adresse}",
-                            produit.code()
-                        ),
-                    )?;
-                }
                 debut
             }
             None => {
                 transaction.execute(
-                    "INSERT INTO essai (poste, produit, email, debut, cree_le, vu_le)
-                     VALUES (?1, ?2, ?3, ?4, ?5, ?5)",
-                    params![poste, produit.code(), email, aujourdhui, maintenant()],
+                    "INSERT INTO essai (poste, produit, debut, cree_le, vu_le)
+                     VALUES (?1, ?2, ?3, ?4, ?4)",
+                    params![poste, produit.code(), aujourdhui, maintenant()],
                 )?;
                 noter(
                     &transaction,
@@ -2496,7 +2481,7 @@ impl Portail {
                     "essai_demarre",
                     Some(&poste),
                     &format!(
-                        "édition {}, adresse email {email}, version {version}, adresse {adresse}",
+                        "édition {}, version {version}, adresse {adresse}",
                         produit.code()
                     ),
                 )?;

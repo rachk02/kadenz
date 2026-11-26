@@ -1441,44 +1441,24 @@ fn essai_connu_du_portail() {
     use kadenz_licence::entreprise::Produit;
     use kadenz_portail::{DemandeEssai, MODELES_ESSAI};
     let (p, _d, _editeur, _a, _) = portail("essais", "2026-11-26");
-    let demande = |email: &str, poste: &str, produit: &str| DemandeEssai {
-        email: email.into(),
+    let demande = |poste: &str, produit: &str| DemandeEssai {
         produit: produit.into(),
         poste: poste.into(),
         version: "0.3.4".into(),
     };
     // Saisies refusées.
-    for faux in [
-        "",
-        "sans-arobase",
-        "a@b",
-        "a@@b.bf",
-        "a b@c.bf",
-        "@c.bf",
-        "a@.bf",
-        "a@c..bf",
-    ] {
-        assert_eq!(
-            refus_essai(p.demander_essai(&demande(faux, POSTE_1, "monoposte"), "10.0.5.1")),
-            MODELES_ESSAI[0],
-            "{faux}"
-        );
-    }
     assert_eq!(
-        refus_essai(p.demander_essai(&demande("a@c.bf", "pas-un-poste", "monoposte"), "10.0.5.1")),
-        MODELES_ESSAI[1]
+        refus_essai(p.demander_essai(&demande("pas-un-poste", "monoposte"), "10.0.5.1")),
+        MODELES_ESSAI[0]
     );
     assert_eq!(
-        refus_essai(p.demander_essai(&demande("a@c.bf", POSTE_1, "autre"), "10.0.5.1")),
-        MODELES_ESSAI[1]
+        refus_essai(p.demander_essai(&demande(POSTE_1, "autre"), "10.0.5.1")),
+        MODELES_ESSAI[0]
     );
 
     // Premier essai : commence aujourd'hui, attestation signée pour ce poste.
     let premier = p
-        .demander_essai(
-            &demande(" Awa@Exemple.BF ", POSTE_1, "monoposte"),
-            "10.0.5.2",
-        )
+        .demander_essai(&demande(POSTE_1, "monoposte"), "10.0.5.2")
         .unwrap();
     assert_eq!(premier.debut, "2026-11-26");
     let lu = kadenz_licence::essai::verifier(
@@ -1490,21 +1470,15 @@ fn essai_connu_du_portail() {
     .unwrap();
     assert_eq!(lu.debut, "2026-11-26");
 
-    // Même poste, autre adresse : même date d'origine, noté au journal.
+    // Même poste (réinstallation) : même date d'origine.
     let encore = p
-        .demander_essai(
-            &demande("autre@exemple.bf", POSTE_1, "monoposte"),
-            "10.0.5.3",
-        )
+        .demander_essai(&demande(POSTE_1, "monoposte"), "10.0.5.3")
         .unwrap();
     assert_eq!(encore.debut, "2026-11-26");
     // L'autre édition sur le même poste a son propre essai.
     assert!(
-        p.demander_essai(
-            &demande("awa@exemple.bf", POSTE_1, "entreprise"),
-            "10.0.5.4"
-        )
-        .is_ok()
+        p.demander_essai(&demande(POSTE_1, "entreprise"), "10.0.5.4")
+            .is_ok()
     );
 }
 
@@ -1528,7 +1502,7 @@ fn essai_par_la_route_du_portail() {
     .unwrap();
     let a = lance.adresse();
     let corps = serde_json::json!({
-        "email": "awa@exemple.bf", "produit": "entreprise", "poste": POSTE_2, "version": "0.3.4"
+        "produit": "entreprise", "poste": POSTE_2, "version": "0.3.4"
     })
     .to_string();
     let r = requete(a, "POST", "/api/essai", None, &corps);

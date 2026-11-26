@@ -242,7 +242,6 @@ pub fn modeles_erreur() -> Vec<&'static str> {
     let mut m = kadenz_licence::MODELES_ERREUR.to_vec();
     m.extend_from_slice(kadenz_licence::entreprise::MODELES_ERREUR);
     m.push(crate::abonnement::MODELE_LECTURE_SEULE);
-    m.push(crate::abonnement::MODELE_ESSAI_A_CONFIRMER);
     m.push("le module « {} » n'est pas activé par la licence de ce poste");
     m
 }

@@ -803,15 +803,14 @@ fn brancher_maj(f: &FenetreAdmin) {
 /// l'interface, puis retenue dans la base du serveur. Sans réponse, rien ne
 /// change : la demande repart à l'ouverture suivante (décision 78).
 fn confirmer_essai(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>) {
-    let Ok(Some(email)) = kadenz_stockage::abonnement::essai_a_confirmer(&conn.borrow()) else {
+    let Ok(true) = kadenz_stockage::abonnement::essai_a_confirmer(&conn.borrow()) else {
         return;
     };
     // La connexion reste sur le fil de l'interface : la réponse y revient.
     CONNEXION_ESSAI.with_borrow_mut(|c| *c = Some(conn));
     let fa = f.as_weak();
     std::thread::spawn(move || {
-        let essai =
-            kadenz_maj::essai::obtenir(&email, kadenz_licence::entreprise::Produit::Entreprise);
+        let essai = kadenz_maj::essai::obtenir(kadenz_licence::entreprise::Produit::Entreprise);
         let _ = fa.upgrade_in_event_loop(move |_| {
             let Some(conn) = CONNEXION_ESSAI.with_borrow_mut(Option::take) else {
                 return;
@@ -1052,7 +1051,6 @@ fn brancher_assistant(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossier: 
     let licence = f.global::<LicenceApi>();
     licence.set_poste(entreprise.clone().into());
     brancher_activation(f, entreprise.clone());
-    licence.on_email_valide(|email| kadenz_licence::essai::valider_email(&email).is_some());
     licence.on_verifier(move |cle| {
         match kadenz_licence::entreprise::verifier(
             &cle,
@@ -1107,12 +1105,11 @@ fn brancher_assistant(f: &FenetreAdmin, conn: Rc<RefCell<Connection>>, dossier: 
         // permis, le temps de l'installer depuis ce poste (décisions 40 et 41).
         let cle = d.cle_licence.trim().to_string();
         let licence = (!cle.is_empty()).then_some(cle.as_str());
-        let email = d.email_essai.trim().to_string();
         let installe = admin::installer(&mut conn.borrow_mut(), &init, licence);
         let resultat = installe.and_then(|_| {
             // Sans licence : l'essai attend la confirmation du portail (décision 78).
-            if licence.is_none() && !email.is_empty() {
-                kadenz_stockage::abonnement::noter_essai_a_confirmer(&conn.borrow(), &email)?;
+            if licence.is_none() {
+                kadenz_stockage::abonnement::noter_essai_a_confirmer(&conn.borrow())?;
             }
             Ok(())
         });

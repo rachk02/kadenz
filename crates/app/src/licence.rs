@@ -131,8 +131,6 @@ pub(crate) fn ouvrir(f: &FenetrePrincipale, conn: &kadenz_stockage::Connexion, p
 pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
     let api = fenetre.global::<LicenceApi>();
 
-    api.on_email_valide(|email| kadenz_licence::essai::valider_email(&email).is_some());
-
     // Étape de l'assistant : la base n'a pas encore de compte, la clé est vérifiée seule.
     let e = etat.clone();
     api.on_verifier(move |cle| {

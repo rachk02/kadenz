@@ -4929,14 +4929,6 @@ msgstr "Kodu etkinleştirmek için: Ayarlar, “Abonelik” bölümü."
 msgid "Adressez-vous à l'administrateur pour activer un code d'abonnement."
 msgstr "Yöneticiden bir abonelik kodu etkinleştirmesini isteyin."
 
-msgid "Sans code, saisissez une adresse email valide : elle sert à l'essai gratuit de 30 jours."
-msgstr "Kod olmadan geçerli bir e-posta adresi girin: 30 günlük ücretsiz deneme için kullanılır."
 
-msgid "Adresse email (obligatoire sans code, pour l'essai gratuit)"
-msgstr "E-posta adresi (kod yoksa zorunlu, ücretsiz deneme için)"
 
-msgid "L'adresse et l'identifiant de cet ordinateur sont envoyés au portail de Kadenz, qui garde la date de début de l'essai : une réinstallation ne relance pas l'essai."
-msgstr "Adres ve bu bilgisayarın tanımlayıcısı, denemenin başlangıç tarihini saklayan Kadenz portalına gönderilir: yeniden kurulum denemeyi yeniden başlatmaz."
 
-msgid "essai gratuit à confirmer : reliez ce poste à Internet, puis relancez Kadenz"
-msgstr "ücretsiz denemenin onaylanması gerekiyor: bu bilgisayarı İnternete bağlayın, ardından Kadenz'i yeniden başlatın"

@@ -1,10 +1,11 @@
 //! Essai gratuit confirmé par le portail (décision 78,
 //! `docs/spec-telechargements-essai.md`, section 6).
 //!
-//! À l'installation sans code, le programme envoie au portail l'adresse
-//! email, l'édition et l'identifiant du poste (empreinte du `MachineGuid`,
-//! jamais le `MachineGuid` lui-même) ; le portail rend la date de début de
-//! l'essai de ce poste, signée. L'attestation est gardée dans
+//! À l'installation sans code, le programme envoie au portail l'édition et
+//! l'identifiant du poste (empreinte du `MachineGuid`, jamais le `MachineGuid`
+//! lui-même), aucune donnée personnelle ; le portail rend la date de début de
+//! l'essai de ce poste, signée. Sans connexion, l'essai démarre quand même ;
+//! la demande repart à chaque lancement jusqu'à la réponse. L'attestation est gardée dans
 //! `%ProgramData%\Kadenz\essai-<édition>.txt`, que la désinstallation ne
 //! supprime pas : une réinstallation retrouve la date d'origine sans appeler
 //! le portail. Ce fichier n'est qu'un cache, nommé et documenté : effacé, il
@@ -57,7 +58,7 @@ fn ecrire_cache(produit: Produit, texte: &str) {
 /// Essai de ce poste pour cette édition : l'attestation gardée si elle est
 /// valable, sinon celle du portail, vérifiée puis gardée. Bloquant (20
 /// secondes au plus) : à appeler hors du fil de l'interface.
-pub fn obtenir(email: &str, produit: Produit) -> Result<Essai, MessageCompose> {
+pub fn obtenir(produit: Produit) -> Result<Essai, MessageCompose> {
     let poste = kadenz_licence::poste_local().map_err(|_| fixe(ERREURS_PORTAIL[2]))?;
     if let Some(essai) = lire_cache(produit, &poste) {
         return Ok(essai);
@@ -66,7 +67,7 @@ pub fn obtenir(email: &str, produit: Produit) -> Result<Essai, MessageCompose> {
     if !cfg!(debug_assertions) && !adresse.starts_with("https://") {
         return Err(fixe(ERREURS_PORTAIL[0]));
     }
-    let texte = demander_aupres(&adresse, email, produit, &poste)?;
+    let texte = demander_aupres(&adresse, produit, &poste)?;
     let essai = attestation::verifier(&texte, &poste, produit, &cles_portail())
         .map_err(|_| fixe(ERREURS_PORTAIL[2]))?;
     ecrire_cache(produit, &texte);
@@ -77,12 +78,10 @@ pub fn obtenir(email: &str, produit: Produit) -> Result<Essai, MessageCompose> {
 /// encore vérifiée.
 pub fn demander_aupres(
     adresse: &str,
-    email: &str,
     produit: Produit,
     poste: &str,
 ) -> Result<String, MessageCompose> {
     let corps = serde_json::json!({
-        "email": email.trim(),
         "produit": produit.code(),
         "poste": poste,
         "version": VERSION,
@@ -128,7 +127,7 @@ mod tests {
             lire_reponse(r#"{"attestation":"KADENZ-T-abc.def","debut":"2026-11-26"}"#).unwrap(),
             "KADENZ-T-abc.def"
         );
-        assert!(lire_reponse(r#"{"erreur":"adresse email invalide","valeurs":[]}"#).is_err());
+        assert!(lire_reponse(r#"{"erreur":"demande d'essai invalide","valeurs":[]}"#).is_err());
         assert!(lire_reponse(r#"{"attestation":"KADENZ-E-abc.def"}"#).is_err());
         assert!(lire_reponse("pas du json").is_err());
     }
