@@ -300,6 +300,9 @@ pub enum SourceV1 {
     },
 }
 
+/// Message de l'erreur rendue par une poignée après l'arrêt du synchroniseur.
+pub const SYNCHRO_ARRETE: &str = "synchroniseur arrêté";
+
 /// Attente de la réponse du serveur à une reprise : il verse toute la base.
 pub const DELAI_REPRISE: Duration = Duration::from_secs(120);
 
@@ -569,7 +572,7 @@ impl Synchroniseur {
     fn envoyer(&self, commande: Commande) -> Result<(), ErreurPoste> {
         self.commandes
             .send(commande)
-            .map_err(|_| ErreurPoste::Base("synchroniseur arrêté".into()))
+            .map_err(|_| ErreurPoste::Base(SYNCHRO_ARRETE.into()))
     }
 
     fn sur_fil<T: Send + 'static>(
@@ -671,6 +674,23 @@ impl Poignee {
         })
     }
 
+    /// État de la licence à relayer au portail (décision 80) : tout compte
+    /// connecté ; `HorsConnexion` sans session.
+    pub fn etat_licence(&self) -> Result<kadenz_client::EtatLicence, ErreurPoste> {
+        self.sur_fil(DELAI * 2, |fil| fil.requete_session(|c| c.etat_licence()))
+    }
+
+    /// Transmet au serveur un bulletin du portail (décision 80) ; le nouvel
+    /// état de l'abonnement est noté et annoncé (`Evenement::Abonnement`).
+    pub fn appliquer_bulletin(&self, bulletin: &str) -> Result<Abonnement, ErreurPoste> {
+        let bulletin = bulletin.to_string();
+        self.sur_fil(DELAI * 2, move |fil| {
+            let abonnement = fil.requete_session(|c| c.appliquer_bulletin(&bulletin))?;
+            fil.noter_abonnement(abonnement.clone());
+            Ok(abonnement)
+        })
+    }
+
     /// Le serveur est-il neuf, prêt pour une reprise (décision 55) ? Demande
     /// au serveur, avec un compte connecté. Après un `Delai` de `reprendre`,
     /// `Ok(false)` dit que la reprise est faite : elle est d'un seul tenant.
@@ -715,7 +735,7 @@ impl Poignee {
             .send(Commande::Fil(Box::new(move |fil: &mut Fil| {
                 let _ = retour.send(travail(fil));
             })))
-            .map_err(|_| ErreurPoste::Base("synchroniseur arrêté".into()))?;
+            .map_err(|_| ErreurPoste::Base(SYNCHRO_ARRETE.into()))?;
         reponse
             .recv_timeout(delai)
             .unwrap_or(Err(ErreurPoste::Delai))
@@ -1141,6 +1161,26 @@ impl Fil {
         };
         match client.reprise_possible() {
             Ok(possible) => Ok(possible),
+            Err(e) => Err(self.erreur_requete(e)),
+        }
+    }
+
+    /// Requête qui demande un compte connecté sur la session en cours.
+    fn requete_session<T>(
+        &mut self,
+        requete: impl FnOnce(&mut Client) -> Result<T, ErreurClient>,
+    ) -> Result<T, ErreurPoste> {
+        if self.etat_present().definitif() {
+            return Err(ErreurPoste::Injoignable);
+        }
+        if self.uid_session().is_none() {
+            return Err(ErreurPoste::HorsConnexion);
+        }
+        let Some(client) = self.client.as_mut() else {
+            return Err(ErreurPoste::HorsConnexion);
+        };
+        match requete(client) {
+            Ok(r) => Ok(r),
             Err(e) => Err(self.erreur_requete(e)),
         }
     }

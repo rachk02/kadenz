@@ -1075,6 +1075,7 @@ fn etat_de_licence_et_bulletin_du_portail() {
     let etat = client.etat_licence().unwrap();
     assert_eq!(etat.entreprise, entreprise);
     assert_eq!(etat.dernier_bulletin, None);
+    assert!(etat.licence);
     assert_eq!(etat.postes.len(), 2);
     let rapportee = etat.postes.iter().find(|p| p.nom == "Caisse").unwrap();
     assert_eq!(rapportee.ordinateur, "ABCD-EFGH-JKMN-PQRS");

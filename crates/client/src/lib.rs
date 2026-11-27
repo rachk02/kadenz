@@ -49,6 +49,8 @@ pub struct EtatLicence {
     pub produit: String,
     pub postes: Vec<kadenz_protocole::abonnement::PosteLicence>,
     pub dernier_bulletin: Option<String>,
+    /// Une licence est installée sur le serveur.
+    pub licence: bool,
 }
 
 /// Empreinte SHA-256 d'un certificat, en hexadécimal minuscule.
@@ -691,11 +693,13 @@ impl Client {
                 produit,
                 postes,
                 dernier_bulletin,
+                licence,
             } => Ok(EtatLicence {
                 entreprise,
                 produit,
                 postes,
                 dernier_bulletin,
+                licence,
             }),
             autre => Err(inattendue(&autre)),
         }

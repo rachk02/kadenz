@@ -33,6 +33,7 @@
 pub mod activation;
 pub mod edition;
 pub mod essai;
+pub mod etat;
 pub mod notes;
 
 use std::fmt;

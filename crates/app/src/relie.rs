@@ -119,6 +119,9 @@ pub(crate) fn demarrer(f: &FenetrePrincipale, etat: &EtatPartage, copie: PathBuf
     let relie = match Synchroniseur::demarrer(copie, rappel) {
         Ok(synchro) => {
             let connexion = synchro.etat();
+            // Échange de licence avec le portail, au lancement puis toutes les
+            // 6 heures (décision 80).
+            crate::licence_portail::lancer(synchro.poignee());
             Some(Relie {
                 synchro,
                 connexion,

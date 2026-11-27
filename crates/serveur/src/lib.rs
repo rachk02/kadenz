@@ -1269,9 +1269,10 @@ fn traiter(
                 Ok::<_, kadenz_stockage::Erreur>((
                     postes::liste(c)?,
                     abonnement::dernier_bulletin(c)?,
+                    abonnement::licence(c)?.is_some_and(|l| !l.trim().is_empty()),
                 ))
             }) {
-                Ok(Ok((liste, dernier_bulletin))) => Reponse::EtatLicence {
+                Ok(Ok((liste, dernier_bulletin, licence))) => Reponse::EtatLicence {
                     entreprise,
                     produit: kadenz_licence::entreprise::produit_courant()
                         .code()
@@ -1287,6 +1288,7 @@ fn traiter(
                         })
                         .collect(),
                     dernier_bulletin,
+                    licence,
                 },
                 Ok(Err(e)) => rejet(&e.to_string()),
                 Err(e) => rejet(&e.to_string()),

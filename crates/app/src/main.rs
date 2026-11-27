@@ -20,6 +20,7 @@ mod impression;
 mod imprimante;
 mod instance;
 mod licence;
+mod licence_portail;
 mod maj;
 mod monoposte;
 mod paiements;

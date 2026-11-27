@@ -181,6 +181,21 @@ pub(crate) fn vue(a: &Abonnement, recu_le: &str, gere: bool, poste: NaiveDate) -
             tr("Aucun abonnement enregistré sur le serveur : Kadenz est en lecture seule."),
             tr(SUITE_LECTURE_SEULE)
         ),
+        // Révocation ou licence non confirmée par le portail (décision 80) :
+        // la raison elle-même.
+        (Statut::Invalide, _)
+            if a.erreur.as_ref().is_some_and(|r| {
+                r.modele == kadenz_stockage::abonnement::MODELE_REVOQUEE
+                    || r.modele == kadenz_stockage::abonnement::MODELE_NON_CONFIRMEE
+            }) =>
+        {
+            let modele = a
+                .erreur
+                .as_ref()
+                .map(|r| r.modele.as_str())
+                .unwrap_or_default();
+            format!("{} {}", tr(modele), tr(SUITE_LECTURE_SEULE))
+        }
         (Statut::Invalide, _) => format!(
             "{} {}",
             tr("Licence d'abonnement refusée par le serveur : Kadenz est en lecture seule."),

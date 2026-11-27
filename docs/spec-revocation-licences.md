@@ -6,6 +6,7 @@
 | 0.2 | 2026-11-27 | Réponses de l'utilisateur : 30 jours sans contact puis lecture seule ; appareil déconnecté bloqué jusqu'à ce qu'on le réautorise, reconnu par l'identifiant de l'ordinateur. Révocation gardée malgré une licence réinstallée. Changement d'ordinateur en édition un poste. |
 | 0.3 | 2026-11-27 | Lots R1 et R2 livrés, et les actions du portail du lot R3 (déconnecter, réautoriser, révoquer, rétablir ; pages encore à faire) : bulletin `kadenz_licence::bulletin`, schéma 14 du portail (`appareil`, `ordinateur_bloque`, `revocation`), route `POST /api/licence/etat`, frein sur les échecs, activation refusée tant que la licence est révoquée (`MODELES_ACTIVATION[7]`, traduit). Journal limité aux changements. |
 | 0.4 | 2026-11-27 | Pages du lot R3 livrées (sans le changement d'ordinateur). Lot R4 livré : requêtes `EtatLicence` et `AppliquerBulletin`, migration 0020 du stockage, identifiant de l'ordinateur à l'inscription (les trois inscriptions de l'application l'envoient), révocation et 30 jours sans bulletin dans l'évaluation, report à la restauration. Condition de release ajoutée (section 6.3). |
+| 0.5 | 2026-11-27 | Lot R5 livré : `kadenz_maj::etat` (envoi au portail), `Poignee::etat_licence` et `appliquer_bulletin`, fil `licence_portail` de l'application (au lancement, toutes les 6 heures, une heure après un portail injoignable, 6 heures après un refus), drapeau `licence` dans `EtatLicence` (pas d'appel au portail pendant l'essai gratuit), bandeau qui donne la raison de la révocation. |
 
 Statut : **spécifié**. Les lots sont à la section 8.
 
@@ -128,5 +129,5 @@ La page `/confidentialite` et le LISEZMOI décrivent le nouvel envoi : nom, empr
 | R2 | Schéma 14 (`appareil`, `revocation`), route `/api/licence/etat`, frein, journal, refus d'activation d'une licence révoquée. Tests. | `crates/portail` |
 | R3 | Rubrique « Appareils » de la fiche entreprise, déconnexion et réautorisation, révocation et rétablissement, changement d'ordinateur en édition un poste, droits éditeur et revendeur. Tests. | `crates/portail` |
 | R4 (livré) | Requêtes `EtatLicence` et `AppliquerBulletin`, migration, identifiant d'ordinateur à l'inscription et ordinateurs bloqués, révocation et 30 jours sans contact dans l'évaluation de l'abonnement, retrait des postes. Tests. | `crates/protocole`, `crates/serveur`, `crates/stockage` |
-| R5 | Échange au lancement et toutes les 6 heures, messages traduits, essai à l'écran. | `crates/app` |
+| R5 (livré) | Échange au lancement et toutes les 6 heures, messages traduits, essai à l'écran. | `crates/app` |
 | R6 | Page de confidentialité, LISEZMOI, notes de version ; déploiement du portail et release avec l'accord de l'utilisateur. | portail, installateur |

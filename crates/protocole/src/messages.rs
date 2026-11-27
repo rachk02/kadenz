@@ -141,6 +141,11 @@ pub enum Reponse {
         postes: Vec<PosteLicence>,
         /// Date d'émission du dernier bulletin appliqué.
         dernier_bulletin: Option<String>,
+        /// Une licence est installée sur le serveur : sans elle (essai
+        /// gratuit), le portail ne connaît pas l'entreprise et le poste ne
+        /// l'appelle pas.
+        #[serde(default)]
+        licence: bool,
     },
     Connecte {
         compte: String,
