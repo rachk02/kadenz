@@ -1011,7 +1011,13 @@ fn session(contexte: &Contexte, tcp: TcpStream, distante: bool) {
         return fermer(&mut flux);
     }
     let p = poste.clone();
-    match contexte.base.executer(move |c| postes::est_inscrit(c, &p)) {
+    match contexte.base.executer(move |c| {
+        let inscrit = postes::est_inscrit(c, &p)?;
+        if inscrit {
+            postes::noter_contact(c, &p)?;
+        }
+        Ok::<_, kadenz_stockage::Erreur>(inscrit)
+    }) {
         Ok(Ok(true)) => {}
         Ok(Ok(false)) if !distante => return inscription(contexte, &mut flux, &poste, &ip),
         _ => return fermer(&mut flux),
@@ -1080,7 +1086,9 @@ fn inscription(contexte: &Contexte, flux: &mut Flux, poste: &str, ip: &str) {
         Ok(Requete::Inscription { version, .. }) if version != contexte.version => {
             version_refusee(contexte)
         }
-        Ok(Requete::Inscription { secret, .. }) => inscrire(contexte, poste, ip, secret),
+        Ok(Requete::Inscription {
+            secret, ordinateur, ..
+        }) => inscrire(contexte, poste, ip, secret, ordinateur),
         Ok(_) | Err(ErreurTrame::TropGrand(_)) | Err(ErreurTrame::Illisible(_)) => {
             Reponse::PosteNonInscrit
         }
@@ -1099,7 +1107,13 @@ fn refus(m: MessageCompose) -> Reponse {
     }
 }
 
-fn inscrire(contexte: &Contexte, poste: &str, ip: &str, secret: String) -> Reponse {
+fn inscrire(
+    contexte: &Contexte,
+    poste: &str,
+    ip: &str,
+    secret: String,
+    ordinateur: String,
+) -> Reponse {
     let cles = [format!("ip:{ip}")];
     let verrou = || {
         contexte
@@ -1125,10 +1139,11 @@ fn inscrire(contexte: &Contexte, poste: &str, ip: &str, secret: String) -> Repon
     let resultat = contexte.base.executer(move |c| {
         let a = abonnement::appliquer_avec(c, abonnement::horloge(), &cles_portail)?;
         let permis = abonnement::postes_permis(&a);
-        inscription::consommer(
+        inscription::consommer_sur(
             c,
             &secret,
             &poste,
+            &ordinateur,
             if un_poste { permis.min(1) } else { permis },
             chrono::Utc::now(),
         )
@@ -1240,6 +1255,57 @@ fn traiter(
             }));
             // Nouvelle licence : le relais la reçoit sans attendre la fin
             // d'une attente de reconnexion (F8).
+            if matches!(reponse, Reponse::Abonnement { .. }) {
+                contexte.distance.changer(&contexte.base);
+            }
+            reponse
+        }
+        Requete::EtatLicence => {
+            if compte.is_none() {
+                return rejet("aucun compte connecté");
+            }
+            let entreprise = contexte.entreprise.clone();
+            match contexte.base.executer(move |c| {
+                Ok::<_, kadenz_stockage::Erreur>((
+                    postes::liste(c)?,
+                    abonnement::dernier_bulletin(c)?,
+                ))
+            }) {
+                Ok(Ok((liste, dernier_bulletin))) => Reponse::EtatLicence {
+                    entreprise,
+                    produit: kadenz_licence::entreprise::produit_courant()
+                        .code()
+                        .to_string(),
+                    postes: liste
+                        .into_iter()
+                        .map(|p| kadenz_protocole::abonnement::PosteLicence {
+                            empreinte: p.empreinte,
+                            ordinateur: p.ordinateur,
+                            nom: p.nom,
+                            inscrit_le: p.inscrit_le,
+                            vu_le: p.vu_le,
+                        })
+                        .collect(),
+                    dernier_bulletin,
+                },
+                Ok(Err(e)) => rejet(&e.to_string()),
+                Err(e) => rejet(&e.to_string()),
+            }
+        }
+        Requete::AppliquerBulletin { bulletin } => {
+            if compte.is_none() {
+                return rejet("aucun compte connecté");
+            }
+            let cles = contexte.cles.clone();
+            let reponse = reponse_abonnement(contexte.base.executer(move |c| {
+                match abonnement::appliquer_bulletin(c, &bulletin, abonnement::horloge(), &cles)? {
+                    Ok(()) => abonnement::appliquer_avec(c, abonnement::horloge(), &cles),
+                    Err(m) => Err(Erreur::ValidationComposee {
+                        modele: m.modele.to_string(),
+                        valeurs: m.valeurs,
+                    }),
+                }
+            }));
             if matches!(reponse, Reponse::Abonnement { .. }) {
                 contexte.distance.changer(&contexte.base);
             }

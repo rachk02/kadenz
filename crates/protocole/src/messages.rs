@@ -12,7 +12,7 @@ use std::io::{self, Read, Write};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
-use crate::abonnement::{Abonnement, Refus};
+use crate::abonnement::{Abonnement, PosteLicence, Refus};
 use crate::distance::EtatAccesDistant;
 use crate::reprise::ResumeReprise;
 use crate::sauvegarde::AvertissementSauvegarde;
@@ -49,6 +49,10 @@ pub enum Requete {
     Inscription {
         version: u32,
         secret: String,
+        /// Identifiant de l'ordinateur du poste (`identifiant_poste`,
+        /// décision 80) ; vide pour un poste ancien.
+        #[serde(default)]
+        ordinateur: String,
     },
     /// État de l'abonnement de l'entreprise.
     Abonnement,
@@ -89,6 +93,14 @@ pub enum Requete {
         poste: String,
         autorise: bool,
     },
+    /// État de la licence à relayer au portail (décision 80) : tout compte
+    /// connecté.
+    EtatLicence,
+    /// Bulletin du portail à appliquer (décision 80) : tout compte connecté ;
+    /// le serveur le vérifie avec les clés du portail.
+    AppliquerBulletin {
+        bulletin: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -121,6 +133,15 @@ pub enum Reponse {
     },
     /// Certificat du poste inconnu ou retiré : la connexion est fermée.
     PosteNonInscrit,
+    /// État de la licence (réponse à `EtatLicence`, décision 80).
+    EtatLicence {
+        entreprise: String,
+        /// `entreprise` ou `monoposte`.
+        produit: String,
+        postes: Vec<PosteLicence>,
+        /// Date d'émission du dernier bulletin appliqué.
+        dernier_bulletin: Option<String>,
+    },
     Connecte {
         compte: String,
         nom_complet: String,

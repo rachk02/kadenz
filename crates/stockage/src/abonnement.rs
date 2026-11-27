@@ -52,6 +52,32 @@ const ESSAI_DEBUT: &str = "abonnement.essai_debut";
 /// demande repart à chaque lancement (décision de l'utilisateur du 2026-11-26).
 const ESSAI_A_CONFIRMER: &str = "abonnement.essai_a_confirmer";
 
+/// Dernier bulletin du portail appliqué (décision 80) : texte, date
+/// d'émission (UTC, à la seconde) et date retenue de son application.
+const BULLETIN: &str = "abonnement.bulletin";
+const BULLETIN_EMIS: &str = "abonnement.bulletin_emis";
+const BULLETIN_VU: &str = "abonnement.bulletin_vu";
+/// Licence révoquée par le dernier bulletin (« oui ») ; absente sinon.
+const REVOQUEE: &str = "abonnement.revoquee";
+/// Ordinateurs bloqués par le dernier bulletin, liste JSON.
+const BLOQUES: &str = "abonnement.ordinateurs_bloques";
+/// Départ du compte des jours sans contact avant le premier bulletin : la
+/// première évaluation d'une licence par une version qui sait appliquer les
+/// bulletins (mise à jour du serveur).
+const CONTACT_DEPART: &str = "abonnement.contact_depart";
+
+/// Jours sans bulletin du portail avant la lecture seule d'une licence
+/// (décision de l'utilisateur du 2026-11-27).
+pub const JOURS_SANS_CONTACT: i64 = 30;
+
+/// Raison de la lecture seule d'une licence révoquée au portail.
+pub const MODELE_REVOQUEE: &str = "licence révoquée par l'éditeur : contactez votre revendeur";
+/// Raison de la lecture seule d'une licence sans bulletin depuis 30 jours.
+pub const MODELE_NON_CONFIRMEE: &str = "licence non confirmée depuis 30 jours : reliez à Internet un poste à jour, puis relancez Kadenz";
+/// Refus d'inscription d'un poste sur un ordinateur bloqué au portail.
+pub const MODELE_ORDINATEUR_BLOQUE: &str =
+    "cet ordinateur a été retiré de la licence : contactez votre revendeur";
+
 /// Durée de l'essai gratuit, en jours (décision de l'utilisateur du 2026-11-25).
 pub const DUREE_ESSAI_JOURS: i64 = 30;
 /// Postes permis pendant l'essai : l'édition à plusieurs postes peut s'essayer à
@@ -134,6 +160,11 @@ fn ecrire(conn: &Connection, cle: &str, valeur: &str) -> Resultat<()> {
     Ok(())
 }
 
+fn effacer(conn: &Connection, cle: &str) -> Resultat<()> {
+    conn.execute("DELETE FROM parametre_systeme WHERE cle = ?1", [cle])?;
+    Ok(())
+}
+
 fn date(texte: &str) -> Option<NaiveDate> {
     NaiveDate::parse_from_str(texte, "%Y-%m-%d").ok()
 }
@@ -153,6 +184,32 @@ pub fn reporter(courante: &Connection, cible: &Connection) -> Resultat<()> {
         && vue_cible.is_none_or(|c| c < vue)
     {
         ecrire(cible, DATE_VUE, &en_texte(vue))?;
+    }
+    // Révocation (décision 80) : une sauvegarde plus ancienne ne lève ni une
+    // révocation ni un blocage, et ne remet pas à zéro le compte des jours
+    // sans contact.
+    let bulletin_courant = lire(courante, BULLETIN_EMIS)?;
+    let bulletin_cible = lire(cible, BULLETIN_EMIS)?;
+    if let Some(emis) = &bulletin_courant
+        && bulletin_cible.as_ref().is_none_or(|c| c < emis)
+    {
+        for cle in [BULLETIN, BULLETIN_EMIS, BULLETIN_VU, BLOQUES] {
+            match lire(courante, cle)? {
+                Some(v) => ecrire(cible, cle, &v)?,
+                None => effacer(cible, cle)?,
+            }
+        }
+        match lire(courante, REVOQUEE)? {
+            Some(v) => ecrire(cible, REVOQUEE, &v)?,
+            None => effacer(cible, REVOQUEE)?,
+        }
+    }
+    let depart_courant = lire(courante, CONTACT_DEPART)?.as_deref().and_then(date);
+    let depart_cible = lire(cible, CONTACT_DEPART)?.as_deref().and_then(date);
+    if let Some(d) = depart_courant
+        && depart_cible.is_none_or(|c| c > d)
+    {
+        ecrire(cible, CONTACT_DEPART, &en_texte(d))?;
     }
     let emission_courante = lire(courante, EMISSION_VUE)?.as_deref().and_then(date);
     let emission_cible = lire(cible, EMISSION_VUE)?.as_deref().and_then(date);
@@ -300,7 +357,109 @@ fn evaluer(
             l.modules
         }
     };
+    // Révocation au portail (décision 80) : lecture seule, avec sa raison,
+    // quelle que soit la licence installée.
+    let revoquee = lire(conn, REVOQUEE)?.is_some_and(|v| v == "oui");
+    let refus = |modele: &str| Refus {
+        modele: modele.to_string(),
+        valeurs: Vec::new(),
+    };
+    if revoquee
+        && matches!(
+            abonnement.statut,
+            Statut::Actif | Statut::Essai | Statut::Echu
+        )
+    {
+        abonnement.statut = Statut::Invalide;
+        abonnement.avertissement = None;
+        abonnement.erreur = Some(refus(MODELE_REVOQUEE));
+    } else if abonnement.statut == Statut::Actif {
+        // Licence active : au plus 30 jours sans bulletin du portail. Le
+        // compte part du dernier bulletin appliqué, ou de la mise à jour du
+        // serveur avant le premier.
+        let vu = lire(conn, BULLETIN_VU)?.as_deref().and_then(date);
+        let depart = match lire(conn, CONTACT_DEPART)?.as_deref().and_then(date) {
+            Some(d) => d,
+            None => {
+                ecrire(conn, CONTACT_DEPART, &en_texte(aujourdhui))?;
+                aujourdhui
+            }
+        };
+        let depuis = vu.map_or(depart, |v| v.max(depart));
+        if (aujourdhui - depuis).num_days() > JOURS_SANS_CONTACT {
+            abonnement.statut = Statut::Invalide;
+            abonnement.avertissement = None;
+            abonnement.erreur = Some(refus(MODELE_NON_CONFIRMEE));
+        }
+    }
     Ok((abonnement, modules))
+}
+
+/// Vrai si l'ordinateur est bloqué par le dernier bulletin appliqué.
+pub fn ordinateur_bloque(conn: &Connection, ordinateur: &str) -> Resultat<bool> {
+    let ordinateur = ordinateur.trim();
+    if ordinateur.is_empty() {
+        return Ok(false);
+    }
+    Ok(ordinateurs_bloques(conn)?
+        .iter()
+        .any(|o| o.eq_ignore_ascii_case(ordinateur)))
+}
+
+fn ordinateurs_bloques(conn: &Connection) -> Resultat<Vec<String>> {
+    Ok(lire(conn, BLOQUES)?
+        .and_then(|v| serde_json::from_str(&v).ok())
+        .unwrap_or_default())
+}
+
+/// Date d'émission du dernier bulletin appliqué.
+pub fn dernier_bulletin(conn: &Connection) -> Resultat<Option<String>> {
+    lire(conn, BULLETIN_EMIS)
+}
+
+/// Applique un bulletin du portail (décision 80,
+/// `docs/spec-revocation-licences.md`, section 4), relayé par un poste. Un
+/// bulletin refusé (signature, autre entreprise) n'écrit rien ; un bulletin qui
+/// n'est pas plus récent que le dernier appliqué est ignoré sans erreur.
+/// Applique la révocation, retire les postes demandés et ceux des ordinateurs
+/// bloqués, et remet à zéro le compte des jours sans contact.
+pub fn appliquer_bulletin(
+    conn: &Connection,
+    texte: &str,
+    horloge: NaiveDate,
+    cles_portail: &[VerifyingKey],
+) -> Resultat<Result<(), MessageCompose>> {
+    let entreprise = synchro::identifiant_entreprise(conn)?;
+    let bulletin = match kadenz_licence::bulletin::verifier(texte, &entreprise, cles_portail) {
+        Ok(b) => b,
+        Err(m) => return Ok(Err(m)),
+    };
+    if lire(conn, BULLETIN_EMIS)?.is_some_and(|e| bulletin.emis_le <= e) {
+        return Ok(Ok(()));
+    }
+    let emission = lire(conn, EMISSION_VUE)?.as_deref().and_then(date);
+    let aujourdhui = date_retenue(conn, horloge, emission)?;
+    let tx = conn.unchecked_transaction()?;
+    let texte: String = texte.chars().filter(|c| !c.is_whitespace()).collect();
+    ecrire(&tx, BULLETIN, &texte)?;
+    ecrire(&tx, BULLETIN_EMIS, &bulletin.emis_le)?;
+    ecrire(&tx, BULLETIN_VU, &en_texte(aujourdhui))?;
+    if bulletin.revoquee {
+        ecrire(&tx, REVOQUEE, "oui")?;
+    } else {
+        effacer(&tx, REVOQUEE)?;
+    }
+    ecrire(
+        &tx,
+        BLOQUES,
+        &serde_json::to_string(&bulletin.bloques).unwrap_or_else(|_| "[]".into()),
+    )?;
+    for empreinte in &bulletin.retires {
+        postes::retirer(&tx, empreinte)?;
+    }
+    postes::retirer_ordinateurs(&tx, &bulletin.bloques)?;
+    tx.commit()?;
+    Ok(Ok(()))
 }
 
 /// État de l'abonnement, avec les clés du portail données.
@@ -495,6 +654,173 @@ mod tests {
         .unwrap()
     }
 
+    /// Bulletin du portail pour l'entreprise de cette base (décision 80).
+    fn bulletin(
+        conn: &Connection,
+        emis_le: &str,
+        revoquee: bool,
+        retires: &[&str],
+        bloques: &[&str],
+    ) -> String {
+        kadenz_licence::bulletin::emettre(
+            &kadenz_licence::bulletin::Bulletin {
+                entreprise: synchro::identifiant_entreprise(conn).unwrap(),
+                emis_le: emis_le.into(),
+                revoquee,
+                retires: retires.iter().map(|e| e.to_string()).collect(),
+                bloques: bloques.iter().map(|e| e.to_string()).collect(),
+            },
+            &cle_portail(),
+        )
+        .unwrap()
+    }
+
+    /// Bulletin ordinaire appliqué ce jour-là : la licence est confirmée.
+    fn confirmer(conn: &Connection, jour: &str) {
+        let texte = bulletin(conn, &format!("{jour} 12:00:00"), false, &[], &[]);
+        appliquer_bulletin(conn, &texte, j(jour), &[cle_portail().verifying_key()])
+            .unwrap()
+            .unwrap();
+    }
+
+    #[test]
+    fn revocation_et_ordinateurs_bloques() {
+        let conn = ouvrir_en_memoire().unwrap();
+        let admin = compte(&conn, "admin", Role::Admin);
+        let cles = [cle_portail().verifying_key()];
+        let cle = licence(&conn, "2027-11-30", "2026-11-27");
+        enregistrer_avec(&conn, &admin, &cle, j("2026-11-27"), &cles).unwrap();
+        postes::inscrire_sur(&conn, "aa", "Caisse", "ABCD-EFGH-JKMN-PQRS").unwrap();
+        postes::inscrire_sur(&conn, "bb", "Bureau", "").unwrap();
+        postes::inscrire_sur(&conn, "cc", "Stock", "0123-4567-89AB-CDEF").unwrap();
+
+        // Bulletin d'une autre clé : refusé, rien n'est écrit.
+        let autre = SigningKey::from_bytes(&[9u8; 32]);
+        let faux = kadenz_licence::bulletin::emettre(
+            &kadenz_licence::bulletin::verifier(
+                &bulletin(&conn, "2026-11-27 10:00:00", true, &[], &[]),
+                &synchro::identifiant_entreprise(&conn).unwrap(),
+                &cles,
+            )
+            .unwrap(),
+            &autre,
+        )
+        .unwrap();
+        assert!(
+            appliquer_bulletin(&conn, &faux, j("2026-11-27"), &cles)
+                .unwrap()
+                .is_err()
+        );
+        assert_eq!(dernier_bulletin(&conn).unwrap(), None);
+
+        // Révocation, retrait du bureau, ordinateur de la caisse bloqué.
+        let b = bulletin(
+            &conn,
+            "2026-11-27 10:00:00",
+            true,
+            &["bb"],
+            &["ABCD-EFGH-JKMN-PQRS"],
+        );
+        appliquer_bulletin(&conn, &b, j("2026-11-27"), &cles)
+            .unwrap()
+            .unwrap();
+        let a = appliquer_avec(&conn, j("2026-11-27"), &cles).unwrap();
+        assert_eq!(a.statut, Statut::Invalide);
+        assert!(a.lecture_seule());
+        assert_eq!(a.erreur.unwrap().modele, MODELE_REVOQUEE);
+        assert!(exiger_ecriture(&conn).is_err());
+        let restants: Vec<String> = postes::liste(&conn)
+            .unwrap()
+            .into_iter()
+            .map(|p| p.nom)
+            .collect();
+        assert_eq!(restants, ["Stock"]);
+        assert!(ordinateur_bloque(&conn, "abcd-efgh-jkmn-pqrs").unwrap());
+        assert!(!ordinateur_bloque(&conn, "").unwrap());
+
+        // Réinstaller la licence ne lève pas la révocation.
+        let a = enregistrer_avec(&conn, &admin, &cle, j("2026-11-28"), &cles).unwrap();
+        assert_eq!(a.statut, Statut::Invalide);
+        // Rejouer un bulletin plus ancien non plus : il est ignoré.
+        let ancien = bulletin(&conn, "2026-11-27 09:00:00", false, &[], &[]);
+        appliquer_bulletin(&conn, &ancien, j("2026-11-28"), &cles)
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            etat_avec(&conn, j("2026-11-28"), &cles).unwrap().statut,
+            Statut::Invalide
+        );
+        // Un bulletin plus récent sans révocation la lève, et débloque.
+        confirmer(&conn, "2026-11-28");
+        let a = appliquer_avec(&conn, j("2026-11-28"), &cles).unwrap();
+        assert_eq!(a.statut, Statut::Actif);
+        assert!(!ordinateur_bloque(&conn, "ABCD-EFGH-JKMN-PQRS").unwrap());
+    }
+
+    #[test]
+    fn trente_jours_sans_bulletin() {
+        let conn = ouvrir_en_memoire().unwrap();
+        let admin = compte(&conn, "admin", Role::Admin);
+        let cles = [cle_portail().verifying_key()];
+        let cle = licence(&conn, "2027-11-30", "2026-11-27");
+        // Le compte part de la première évaluation de la licence.
+        enregistrer_avec(&conn, &admin, &cle, j("2026-11-27"), &cles).unwrap();
+        assert_eq!(
+            etat_avec(&conn, j("2026-12-27"), &cles).unwrap().statut,
+            Statut::Actif
+        );
+        let a = etat_avec(&conn, j("2026-12-28"), &cles).unwrap();
+        assert_eq!(a.statut, Statut::Invalide);
+        assert_eq!(a.erreur.unwrap().modele, MODELE_NON_CONFIRMEE);
+        // Un bulletin lève la lecture seule et relance le compte.
+        confirmer(&conn, "2026-12-28");
+        assert_eq!(
+            etat_avec(&conn, j("2027-01-27"), &cles).unwrap().statut,
+            Statut::Actif
+        );
+        assert_eq!(
+            etat_avec(&conn, j("2027-01-28"), &cles).unwrap().statut,
+            Statut::Invalide
+        );
+
+        // Sans licence, l'essai gratuit n'exige aucun contact (décision 78).
+        let conn = ouvrir_en_memoire().unwrap();
+        demarrer_essai(&conn, j("2026-11-01")).unwrap();
+        assert_eq!(
+            etat_avec(&conn, j("2026-11-29"), &cles).unwrap().statut,
+            Statut::Essai
+        );
+    }
+
+    #[test]
+    fn restauration_garde_la_revocation() {
+        let courante = ouvrir_en_memoire().unwrap();
+        let cles = [cle_portail().verifying_key()];
+        let admin = compte(&courante, "admin", Role::Admin);
+        let cle = licence(&courante, "2027-11-30", "2026-11-27");
+        enregistrer_avec(&courante, &admin, &cle, j("2026-11-27"), &cles).unwrap();
+        // Sauvegarde ancienne, sans bulletin (le report suppose la même
+        // entreprise, vérifiée par la restauration).
+        let cible = ouvrir_en_memoire().unwrap();
+        let b = bulletin(
+            &courante,
+            "2026-11-27 10:00:00",
+            true,
+            &[],
+            &["ABCD-EFGH-JKMN-PQRS"],
+        );
+        appliquer_bulletin(&courante, &b, j("2026-11-27"), &cles)
+            .unwrap()
+            .unwrap();
+        reporter(&courante, &cible).unwrap();
+        assert_eq!(
+            dernier_bulletin(&cible).unwrap().as_deref(),
+            Some("2026-11-27 10:00:00")
+        );
+        assert!(ordinateur_bloque(&cible, "ABCD-EFGH-JKMN-PQRS").unwrap());
+        assert_eq!(lire(&cible, REVOQUEE).unwrap().as_deref(), Some("oui"));
+    }
+
     #[test]
     fn essai_a_confirmer_par_le_portail() {
         let conn = ouvrir_en_memoire().unwrap();
@@ -587,6 +913,7 @@ mod tests {
                 .map(|a| (a.palier, a.tous_les_comptes))
         };
         assert_eq!(palier("2026-12-01"), Some((Palier::Trente, false)));
+        confirmer(&conn, "2026-12-01");
         assert_eq!(palier("2026-12-24"), Some((Palier::Sept, true)));
         assert_eq!(palier("2026-12-30"), Some((Palier::Dernier, true)));
         assert_eq!(palier("2026-12-31"), Some((Palier::Dernier, true)));
@@ -632,7 +959,9 @@ mod tests {
             etat_avec(&conn, j("2027-01-07"), &cles).unwrap().statut,
             Statut::Echu
         );
-        // ... rattrapée par une licence plus récente, émise par l'éditeur.
+        // ... rattrapée par une licence plus récente, émise par l'éditeur,
+        // la licence étant confirmée par le portail.
+        confirmer(&conn, "2027-01-07");
         let rattrapage = licence(&conn, "2027-12-31", "2027-01-07");
         let a = enregistrer_avec(&conn, &admin, &rattrapage, j("2027-01-07"), &cles).unwrap();
         assert_eq!(a.statut, Statut::Actif);

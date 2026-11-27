@@ -42,6 +42,15 @@ pub fn fournisseur() -> Arc<CryptoProvider> {
     Arc::new(rustls::crypto::ring::default_provider())
 }
 
+/// État de la licence rendu par le serveur, à relayer au portail (décision 80).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EtatLicence {
+    pub entreprise: String,
+    pub produit: String,
+    pub postes: Vec<kadenz_protocole::abonnement::PosteLicence>,
+    pub dernier_bulletin: Option<String>,
+}
+
 /// Empreinte SHA-256 d'un certificat, en hexadécimal minuscule.
 pub fn empreinte(certificat_der: &[u8]) -> String {
     Sha256::digest(certificat_der)
@@ -510,10 +519,25 @@ impl Client {
         secret: &str,
         delai: Duration,
     ) -> Result<Inscrit, ErreurClient> {
+        Self::inscrire_sur(adresse, empreinte_serveur, identite, secret, "", delai)
+    }
+
+    /// Comme [`Client::inscrire`], avec l'identifiant de l'ordinateur du poste
+    /// (`identifiant_poste`, décision 80), que le serveur refuse s'il a été
+    /// bloqué au portail.
+    pub fn inscrire_sur(
+        adresse: &str,
+        empreinte_serveur: &str,
+        identite: &Identite,
+        secret: &str,
+        ordinateur: &str,
+        delai: Duration,
+    ) -> Result<Inscrit, ErreurClient> {
         let mut client = Client::ouvrir(adresse, empreinte_serveur, identite, delai)?;
         match client.echanger(&Requete::Inscription {
             version: VERSION,
             secret: secret.into(),
+            ordinateur: ordinateur.into(),
         })? {
             Reponse::Inscrit { entreprise, nom } => Ok(Inscrit { entreprise, nom }),
             Reponse::VersionRefusee { version, logiciel } => Err(ErreurClient::VersionDifferente {
@@ -653,6 +677,36 @@ impl Client {
     /// État de l'abonnement de l'entreprise, jugé par le serveur.
     pub fn abonnement(&mut self) -> Result<Abonnement, ErreurClient> {
         match self.echanger(&Requete::Abonnement)? {
+            Reponse::Abonnement { abonnement } => Ok(*abonnement),
+            autre => Err(inattendue(&autre)),
+        }
+    }
+
+    /// État de la licence à relayer au portail (décision 80) : identifiant de
+    /// l'entreprise, édition, postes inscrits, dernier bulletin appliqué.
+    pub fn etat_licence(&mut self) -> Result<EtatLicence, ErreurClient> {
+        match self.echanger(&Requete::EtatLicence)? {
+            Reponse::EtatLicence {
+                entreprise,
+                produit,
+                postes,
+                dernier_bulletin,
+            } => Ok(EtatLicence {
+                entreprise,
+                produit,
+                postes,
+                dernier_bulletin,
+            }),
+            autre => Err(inattendue(&autre)),
+        }
+    }
+
+    /// Transmet au serveur un bulletin du portail (décision 80) ; rend le
+    /// nouvel état de l'abonnement.
+    pub fn appliquer_bulletin(&mut self, bulletin: &str) -> Result<Abonnement, ErreurClient> {
+        match self.echanger(&Requete::AppliquerBulletin {
+            bulletin: bulletin.into(),
+        })? {
             Reponse::Abonnement { abonnement } => Ok(*abonnement),
             autre => Err(inattendue(&autre)),
         }

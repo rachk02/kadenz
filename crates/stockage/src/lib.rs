@@ -91,6 +91,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0017_comptabilite.sql"),
     include_str!("migrations/0018_theme.sql"),
     include_str!("migrations/0019_palette.sql"),
+    include_str!("migrations/0020_revocation.sql"),
 ];
 
 #[derive(Debug)]

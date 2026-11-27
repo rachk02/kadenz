@@ -5,6 +5,7 @@
 | 0.1 | 2026-11-27 | Premier jet par kadenz-cc, d'après la demande de l'utilisateur du 2026-11-27 (décision 80). Rien n'est encore codé. |
 | 0.2 | 2026-11-27 | Réponses de l'utilisateur : 30 jours sans contact puis lecture seule ; appareil déconnecté bloqué jusqu'à ce qu'on le réautorise, reconnu par l'identifiant de l'ordinateur. Révocation gardée malgré une licence réinstallée. Changement d'ordinateur en édition un poste. |
 | 0.3 | 2026-11-27 | Lots R1 et R2 livrés, et les actions du portail du lot R3 (déconnecter, réautoriser, révoquer, rétablir ; pages encore à faire) : bulletin `kadenz_licence::bulletin`, schéma 14 du portail (`appareil`, `ordinateur_bloque`, `revocation`), route `POST /api/licence/etat`, frein sur les échecs, activation refusée tant que la licence est révoquée (`MODELES_ACTIVATION[7]`, traduit). Journal limité aux changements. |
+| 0.4 | 2026-11-27 | Pages du lot R3 livrées (sans le changement d'ordinateur). Lot R4 livré : requêtes `EtatLicence` et `AppliquerBulletin`, migration 0020 du stockage, identifiant de l'ordinateur à l'inscription (les trois inscriptions de l'application l'envoient), révocation et 30 jours sans bulletin dans l'évaluation, report à la restauration. Condition de release ajoutée (section 6.3). |
 
 Statut : **spécifié**. Les lots sont à la section 8.
 
@@ -97,12 +98,23 @@ Règles du serveur :
 - Inscription d'un poste : le poste donne l'identifiant de son ordinateur ; refus s'il est bloqué.
 - `abonnement::evaluer` tient compte de la révocation et des 30 jours sans contact : lecture seule et raison propre, avant l'échéance.
 
+Réalisation (lot R4) :
+
+- Le dernier bulletin (texte, date d'émission, date retenue de son application), la révocation, les ordinateurs bloqués et le départ du compte des 30 jours sont gardés dans les paramètres système (`abonnement.bulletin*`, `abonnement.revoquee`, `abonnement.ordinateurs_bloques`, `abonnement.contact_depart`), comme la licence. La migration 0020 ajoute à `poste_inscrit` les colonnes `ordinateur` et `vu_le`.
+- Statut rendu : `Invalide`, avec la raison « licence révoquée par l'éditeur : contactez votre revendeur » ou « licence non confirmée depuis 30 jours : reliez à Internet un poste à jour, puis relancez Kadenz ». L'essai gratuit n'est pas soumis aux 30 jours ; une licence échue reste `Echu`, sauf révocation.
+- Un bulletin qui n'est pas plus récent que le dernier appliqué est ignoré sans erreur. Une restauration garde le bulletin le plus récent des deux bases et le départ le plus ancien du compte.
+- Poste ancien ou identifiant illisible : inscrit avec un identifiant vide, jamais bloqué par ordinateur, retiré seulement par son empreinte.
+
 ### 6.2 Poste (crate `app`)
 
 - Au lancement, puis toutes les 6 heures tant que l'application est ouverte, un fil à part fait l'échange de la section 3. Aucun message à l'écran tant que tout va bien ; sans Internet, rien ne se passe et l'échange repart à l'heure suivante prévue.
 - Une révocation s'affiche comme l'échéance : bandeau de lecture seule avec la raison.
 - Appareil retiré : la session se coupe avec le message « ce poste a été retiré de l'entreprise ».
 - Les versions 0.3.4 et antérieures ne font pas cet échange : la révocation ne les atteint pas. Elles reçoivent la mise à jour comme les autres.
+
+### 6.3 Condition de release
+
+Le compte des 30 jours part de la mise à jour du serveur. Une release qui contient le lot R4 doit donc contenir le lot R5, et le portail avec la route `/api/licence/etat` doit être en production avant elle : sinon chaque client passerait en lecture seule 30 jours après la mise à jour. Un client qui n'a jamais Internet passe en lecture seule au bout de 30 jours (choix de l'utilisateur).
 
 ## 7. Confidentialité
 
@@ -115,6 +127,6 @@ La page `/confidentialite` et le LISEZMOI décrivent le nouvel envoi : nom, empr
 | R1 | Bulletin signé `KADENZ-B-` : émission, vérification, refus. Tests. | `crates/licence` |
 | R2 | Schéma 14 (`appareil`, `revocation`), route `/api/licence/etat`, frein, journal, refus d'activation d'une licence révoquée. Tests. | `crates/portail` |
 | R3 | Rubrique « Appareils » de la fiche entreprise, déconnexion et réautorisation, révocation et rétablissement, changement d'ordinateur en édition un poste, droits éditeur et revendeur. Tests. | `crates/portail` |
-| R4 | Requêtes `EtatLicence` et `AppliquerBulletin`, migration, identifiant d'ordinateur à l'inscription et ordinateurs bloqués, révocation et 30 jours sans contact dans l'évaluation de l'abonnement, retrait des postes. Tests. | `crates/protocole`, `crates/serveur`, `crates/stockage` |
+| R4 (livré) | Requêtes `EtatLicence` et `AppliquerBulletin`, migration, identifiant d'ordinateur à l'inscription et ordinateurs bloqués, révocation et 30 jours sans contact dans l'évaluation de l'abonnement, retrait des postes. Tests. | `crates/protocole`, `crates/serveur`, `crates/stockage` |
 | R5 | Échange au lancement et toutes les 6 heures, messages traduits, essai à l'écran. | `crates/app` |
 | R6 | Page de confidentialité, LISEZMOI, notes de version ; déploiement du portail et release avec l'accord de l'utilisateur. | portail, installateur |

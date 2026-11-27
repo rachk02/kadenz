@@ -155,8 +155,17 @@ fn lancer_inscription(
             .map_err(ErreurClient::Protocole)
             .and_then(|identite| {
                 let mut derniere = ErreurClient::Injoignable(tr("aucune adresse"));
+                // Identifiant de l'ordinateur (décision 80) ; vide s'il est illisible.
+                let ordinateur = kadenz_licence::poste_local().unwrap_or_default();
                 for adresse in &adresses {
-                    match Client::inscrire(adresse, &empreinte, &identite, &secret, DELAI) {
+                    match Client::inscrire_sur(
+                        adresse,
+                        &empreinte,
+                        &identite,
+                        &secret,
+                        &ordinateur,
+                        DELAI,
+                    ) {
                         Ok(inscrit) => return Ok((adresse.clone(), identite, inscrit)),
                         Err(ErreurClient::Injoignable(e)) => {
                             derniere = ErreurClient::Injoignable(e);

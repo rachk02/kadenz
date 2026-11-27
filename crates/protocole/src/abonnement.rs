@@ -168,3 +168,16 @@ mod tests {
         assert!(Statut::Echu.lecture_seule() && !Statut::Actif.lecture_seule());
     }
 }
+
+/// Poste inscrit, rapporté au portail par l'état de licence (décision 80).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PosteLicence {
+    /// Empreinte SHA-256 du certificat, hexadécimal minuscule.
+    pub empreinte: String,
+    /// Identifiant de l'ordinateur ; vide pour un poste ancien.
+    pub ordinateur: String,
+    pub nom: String,
+    pub inscrit_le: String,
+    /// Dernier contact avec le serveur.
+    pub vu_le: Option<String>,
+}

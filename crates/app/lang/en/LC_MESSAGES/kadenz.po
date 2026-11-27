@@ -4935,3 +4935,21 @@ msgstr "Ask the administrator to activate a subscription code."
 
 msgid "licence révoquée : contactez votre revendeur"
 msgstr "licence revoked: contact your reseller"
+
+msgid "licence révoquée par l'éditeur : contactez votre revendeur"
+msgstr "licence revoked by the publisher: contact your reseller"
+
+msgid "licence non confirmée depuis 30 jours : reliez à Internet un poste à jour, puis relancez Kadenz"
+msgstr "licence not confirmed for 30 days: connect an up-to-date workstation to the Internet, then restart Kadenz"
+
+msgid "cet ordinateur a été retiré de la licence : contactez votre revendeur"
+msgstr "this computer has been removed from the licence: contact your reseller"
+
+msgid "bulletin de licence illisible"
+msgstr "unreadable licence bulletin"
+
+msgid "bulletin de licence émis pour une autre entreprise"
+msgstr "licence bulletin issued for another company"
+
+msgid "bulletin de licence signé par une clé inconnue"
+msgstr "licence bulletin signed by an unknown key"

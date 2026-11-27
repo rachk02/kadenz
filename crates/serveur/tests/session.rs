@@ -1028,3 +1028,95 @@ fn sauvegarde_du_serveur_avec_son_identite() {
     serveur.arreter();
     let _ = std::fs::remove_dir_all(&dossier);
 }
+
+/// Bulletin du portail signé par la clé des essais (décision 80).
+fn bulletin(
+    entreprise: &str,
+    revoquee: bool,
+    retires: Vec<String>,
+    bloques: Vec<String>,
+) -> String {
+    kadenz_licence::bulletin::emettre(
+        &kadenz_licence::bulletin::Bulletin {
+            entreprise: entreprise.into(),
+            emis_le: chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string(),
+            revoquee,
+            retires,
+            bloques,
+        },
+        &cle_portail(),
+    )
+    .unwrap()
+}
+
+#[test]
+fn etat_de_licence_et_bulletin_du_portail() {
+    let serveur = demarrer("bulletin", DELAI_CLIENT, 8);
+    let (entreprise, _) = installer(&serveur);
+    let poste = poste_inscrit(&serveur);
+    // Second poste inscrit par code, avec l'identifiant de son ordinateur.
+    let cree = code(&serveur, "Caisse", 0);
+    let caisse = Identite::nouvelle("caisse").unwrap();
+    Client::inscrire_sur(
+        &serveur.adresse().to_string(),
+        serveur.empreinte(),
+        &caisse,
+        &cree.secret,
+        "ABCD-EFGH-JKMN-PQRS",
+        DELAI_CLIENT,
+    )
+    .unwrap();
+
+    let mut client = connecter(&serveur, &poste).unwrap();
+    // Sans compte connecté : refus.
+    assert!(client.etat_licence().is_err());
+    let mut client = connecter(&serveur, &poste).unwrap();
+    client.connexion("admin", MOT_DE_PASSE).unwrap();
+    let etat = client.etat_licence().unwrap();
+    assert_eq!(etat.entreprise, entreprise);
+    assert_eq!(etat.dernier_bulletin, None);
+    assert_eq!(etat.postes.len(), 2);
+    let rapportee = etat.postes.iter().find(|p| p.nom == "Caisse").unwrap();
+    assert_eq!(rapportee.ordinateur, "ABCD-EFGH-JKMN-PQRS");
+    assert_eq!(rapportee.empreinte, caisse.empreinte());
+    // Le poste connecté a noté son contact.
+    assert!(
+        etat.postes
+            .iter()
+            .any(|p| p.nom == "Poste d'essai" && p.vu_le.is_some())
+    );
+
+    // Bulletin d'une autre entreprise : refusé.
+    assert!(matches!(
+        client.appliquer_bulletin(&bulletin("autre", true, vec![], vec![])),
+        Err(ErreurClient::Refus { .. })
+    ));
+    // Révocation et ordinateur de la caisse bloqué : lecture seule, caisse
+    // retirée, réinscription refusée.
+    let a = client
+        .appliquer_bulletin(&bulletin(
+            &entreprise,
+            true,
+            vec![],
+            vec!["ABCD-EFGH-JKMN-PQRS".into()],
+        ))
+        .unwrap();
+    assert_eq!(a.statut, Statut::Invalide);
+    assert_eq!(a.erreur.unwrap().modele, abonnement::MODELE_REVOQUEE);
+    assert!(client.etat_licence().unwrap().dernier_bulletin.is_some());
+    assert!(connecter(&serveur, &caisse).is_err());
+    let encore = code(&serveur, "Caisse", 0);
+    match Client::inscrire_sur(
+        &serveur.adresse().to_string(),
+        serveur.empreinte(),
+        &caisse,
+        &encore.secret,
+        "abcd-efgh-jkmn-pqrs",
+        DELAI_CLIENT,
+    ) {
+        Err(ErreurClient::Refus { modele, .. }) => {
+            assert_eq!(modele, abonnement::MODELE_ORDINATEUR_BLOQUE)
+        }
+        autre => panic!("{autre:?}"),
+    }
+}

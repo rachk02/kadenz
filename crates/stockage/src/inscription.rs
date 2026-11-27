@@ -146,6 +146,25 @@ pub fn consommer(
     postes_permis: u32,
     maintenant: DateTime<Utc>,
 ) -> Resultat<Result<String, MessageCompose>> {
+    consommer_sur(conn, secret, empreinte, "", postes_permis, maintenant)
+}
+
+/// Comme [`consommer`], avec l'identifiant de l'ordinateur du poste
+/// (décision 80) : un ordinateur bloqué au portail est refusé.
+pub fn consommer_sur(
+    conn: &Connection,
+    secret: &str,
+    empreinte: &str,
+    ordinateur: &str,
+    postes_permis: u32,
+    maintenant: DateTime<Utc>,
+) -> Resultat<Result<String, MessageCompose>> {
+    if crate::abonnement::ordinateur_bloque(conn, ordinateur)? {
+        return Ok(Err(MessageCompose::new(
+            crate::abonnement::MODELE_ORDINATEUR_BLOQUE,
+            &[],
+        )));
+    }
     let inconnu = || {
         Ok(Err(MessageCompose::new(
             "code d'inscription inconnu ou déjà utilisé",
@@ -200,7 +219,7 @@ pub fn consommer(
         };
         return Ok(Err(MessageCompose::new(modele, &[&postes_permis])));
     }
-    postes::inscrire(&tx, empreinte, &nom)?;
+    postes::inscrire_sur(&tx, empreinte, &nom, ordinateur.trim())?;
     tx.execute(
         "UPDATE code_inscription SET servi_le = ?2, poste = ?3 WHERE id = ?1",
         params![id, horodatage(maintenant), empreinte],

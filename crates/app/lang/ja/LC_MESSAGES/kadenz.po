@@ -4935,3 +4935,21 @@ msgstr "管理者に購読コードの有効化を依頼してください。"
 
 msgid "licence révoquée : contactez votre revendeur"
 msgstr "ライセンスは取り消されました。販売店にお問い合わせください"
+
+msgid "licence révoquée par l'éditeur : contactez votre revendeur"
+msgstr "ライセンスは発行元により取り消されました。販売店にお問い合わせください"
+
+msgid "licence non confirmée depuis 30 jours : reliez à Internet un poste à jour, puis relancez Kadenz"
+msgstr "ライセンスが30日間確認されていません。最新の端末をインターネットに接続し、Kadenz を再起動してください"
+
+msgid "cet ordinateur a été retiré de la licence : contactez votre revendeur"
+msgstr "このコンピューターはライセンスから除外されました。販売店にお問い合わせください"
+
+msgid "bulletin de licence illisible"
+msgstr "ライセンス通知を読み取れません"
+
+msgid "bulletin de licence émis pour une autre entreprise"
+msgstr "別の会社に発行されたライセンス通知です"
+
+msgid "bulletin de licence signé par une clé inconnue"
+msgstr "不明な鍵で署名されたライセンス通知です"

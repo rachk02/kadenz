@@ -1144,8 +1144,18 @@ fn inscrire(f: &FenetrePrincipale) {
         let resultat = Identite::nouvelle(&machine)
             .map_err(ErreurClient::Protocole)
             .and_then(|identite| {
-                Client::inscrire(&adresse, &empreinte, &identite, &code.secret, DELAI)
-                    .map(|inscrit| (identite, inscrit))
+                // Identifiant de l'ordinateur (décision 80) : vide s'il est
+                // illisible, le serveur l'accepte alors sans blocage possible.
+                let ordinateur = kadenz_licence::poste_local().unwrap_or_default();
+                Client::inscrire_sur(
+                    &adresse,
+                    &empreinte,
+                    &identite,
+                    &code.secret,
+                    &ordinateur,
+                    DELAI,
+                )
+                .map(|inscrit| (identite, inscrit))
             });
         let _ = fa.upgrade_in_event_loop(move |f| match resultat {
             Ok((identite, inscrit)) => {
