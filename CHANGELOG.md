@@ -4,7 +4,7 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 
 Règle d'écriture des notes : elles parlent à l'utilisateur de Kadenz, en langage courant, sans terme interne (composants, fichiers du code, noms de crates ou de bibliothèques, numéros de décision ou de commit, récursion, base de données interne). Ce qui n'intéresse que l'équipe va sous un titre `### Technique` : `scripts/release.ps1` le retire des notes publiées, et la fenêtre de mise à jour l'écarte aussi pour les anciennes releases. La publication refuse des notes qui contiennent encore un terme interne.
 
-## [Non publié]
+## [0.3.6] - 2026-11-27
 
 ### Ajouté
 

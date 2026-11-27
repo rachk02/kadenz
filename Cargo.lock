@@ -3175,7 +3175,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -3203,7 +3203,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-admin"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "chrono",
  "kadenz-domaine",
@@ -3221,7 +3221,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-client"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "kadenz-protocole",
  "kadenz-relais",
@@ -3233,11 +3233,11 @@ dependencies = [
 
 [[package]]
 name = "kadenz-domaine"
-version = "0.3.5"
+version = "0.3.6"
 
 [[package]]
 name = "kadenz-editeur"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "chrono",
  "ed25519-dalek",
@@ -3250,7 +3250,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-export"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "calamine",
  "chrono",
@@ -3259,7 +3259,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-import"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "calamine",
  "csv",
@@ -3271,7 +3271,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-licence"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "base64 0.22.1",
  "ed25519-dalek",
@@ -3284,7 +3284,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-maj"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "ed25519-dalek",
  "kadenz-domaine",
@@ -3297,7 +3297,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-pdf"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "kadenz-domaine",
  "krilla",
@@ -3306,7 +3306,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-portail"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "argon2",
  "axum",
@@ -3334,7 +3334,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-poste"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "chrono",
  "kadenz-client",
@@ -3349,7 +3349,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-protocole"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "base64 0.22.1",
  "serde",
@@ -3358,7 +3358,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-relais"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -3381,7 +3381,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-serveur"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "chrono",
  "kadenz-client",
@@ -3399,7 +3399,7 @@ dependencies = [
 
 [[package]]
 name = "kadenz-stockage"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "argon2",
  "base64 0.22.1",
