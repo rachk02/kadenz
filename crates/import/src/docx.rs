@@ -149,6 +149,10 @@ fn xml_vers_markup(xml: &str) -> String {
     let mut gras = false;
     let mut image = false;
     let mut logos = 0;
+    // Profondeur dans `mc:Fallback` : Word y redit le contenu d'une zone de
+    // texte ou d'une image (version de secours pour les anciens lecteurs) ;
+    // la lire mettait chaque ligne en double.
+    let mut secours = 0usize;
 
     let finir = |segments: &mut Vec<Segment>, centre: bool, lignes: &mut Vec<String>| {
         if let Some(l) = rendre_ligne(segments, centre) {
@@ -158,7 +162,21 @@ fn xml_vers_markup(xml: &str) -> String {
     };
 
     loop {
-        match lecteur.read_event() {
+        let evenement = lecteur.read_event();
+        match &evenement {
+            Ok(Event::Start(e)) if e.local_name().as_ref() == "Fallback" => {
+                secours += 1;
+                continue;
+            }
+            Ok(Event::End(e)) if e.local_name().as_ref() == "Fallback" => {
+                secours = secours.saturating_sub(1);
+                continue;
+            }
+            Ok(Event::Eof) | Err(_) => {}
+            _ if secours > 0 => continue,
+            _ => {}
+        }
+        match evenement {
             Ok(Event::Start(e)) => match e.local_name().as_ref() {
                 "p" => {
                     segments.clear();
@@ -268,6 +286,16 @@ mod tests {
             "-> **ACME SARL**\nTél. : 70 00 00 00 \\*urgent\\* & \\{x}\nLigne\nsuivante"
         );
         assert_eq!(z.pied, "");
+    }
+
+    /// Zone de texte flottante : Word l'écrit dans `mc:Choice` et la redit dans
+    /// `mc:Fallback` ; elle n'est reprise qu'une fois.
+    #[test]
+    fn la_version_de_secours_de_word_n_est_pas_reprise() {
+        let entete = r#"<w:hdr xmlns:w="w" xmlns:mc="mc"><w:p><w:r><mc:AlternateContent><mc:Choice Requires="wps"><w:drawing><w:txbxContent><w:p><w:r><w:t>MCARRE SARL</w:t></w:r></w:p></w:txbxContent></w:drawing></mc:Choice><mc:Fallback><w:pict><w:txbxContent><w:p><w:r><w:t>MCARRE SARL</w:t></w:r></w:p></w:txbxContent></w:pict></mc:Fallback></mc:AlternateContent></w:r></w:p><w:p><w:r><w:t>Ouagadougou</w:t></w:r></w:p></w:hdr>"#;
+        let z = lire_zones(&docx(Some(entete), None)).unwrap();
+        assert_eq!(z.entete.matches("MCARRE SARL").count(), 1, "{}", z.entete);
+        assert!(z.entete.ends_with("Ouagadougou"), "{}", z.entete);
     }
 
     #[test]
