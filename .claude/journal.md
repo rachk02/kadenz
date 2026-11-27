@@ -1147,3 +1147,4 @@
 [2026-11-27 05:43:24] Instruction - L'utilisateur veut revoquer une licence a distance, voir chaque appareil lie a la licence et les deconnecter un par un, comme Kaspersky ; specification en cours
 [2026-11-27 05:46:21] Suivi - Specification de la revocation a distance (decision 80, docs/spec-revocation-licences.md 0.1) ; deux points poses a l'utilisateur : delai maximal sans contact, appareil deconnecte banni ou non
 [2026-11-27 05:51:49] Instruction permanente - Revocation : 30 jours sans contact avec le portail puis lecture seule (licence installee seulement) ; appareil deconnecte bloque par l'identifiant de l'ordinateur jusqu'a reautorisation (spec 0.2)
+[2026-11-27 05:53:34] Suivi - Lot R1 livre : bulletin de licence signe KADENZ-B- (kadenz_licence::bulletin), emission, verification, refus ; tests verts
