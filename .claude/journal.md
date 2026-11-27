@@ -1145,3 +1145,4 @@
 [2026-11-27 05:32:26] Suivi - Accord de l'utilisateur : mise a jour du portail vers c50805f0c792 (page de confidentialite) lancee sur le Dell (unite kadenz-maj-portail-c50805f0c792, retour automatique a 1c62ec42800b en cas d'echec)
 [2026-11-27 05:43:23] Suivi - Portail c50805f0c792 en service sur le Dell : sain, journal intact (42 entrees), /confidentialite en 200, versions 200, essai 422 sur demande invalide ; retour possible vers 1c62ec42800b (source.avant-c50805f0c792, kadenz.env.avant-c50805f0c792)
 [2026-11-27 05:43:24] Instruction - L'utilisateur veut revoquer une licence a distance, voir chaque appareil lie a la licence et les deconnecter un par un, comme Kaspersky ; specification en cours
+[2026-11-27 05:46:21] Suivi - Specification de la revocation a distance (decision 80, docs/spec-revocation-licences.md 0.1) ; deux points poses a l'utilisateur : delai maximal sans contact, appareil deconnecte banni ou non

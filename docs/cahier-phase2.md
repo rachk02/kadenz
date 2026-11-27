@@ -128,6 +128,7 @@ Visée annoncée par l'utilisateur le 2026-11-11 : une phase suivante plus grand
 77. **Téléchargements sans exposer les dépôts** (2026-11-26, reçue par kadenz-cc) : installateurs et mises à jour servis par le portail depuis le Dell, par un lien signé de courte durée ; téléchargement sans code ni compte, page « Votre téléchargement va démarrer » avec bouton de secours ; pas de lien à usage unique ni lié à une adresse. Détail : `docs/spec-telechargements-essai.md`.
 78. **Essai gratuit connu du portail** (idem, revue le 2026-11-26) : le portail connaît l'essai de 30 jours par l'identifiant du poste, envoyé sans rien demander ; ni email ni connexion obligatoire ; une réinstallation ne relance pas l'essai.
 79. **Rien de caché sur le poste du client** (idem) : l'essai se protège par le portail, jamais par des traces dissimulées ou des services déguisés ; tout ce que Kadenz pose sur le poste porte son nom et figure dans le LISEZMOI.
+80. **Révocation à distance** (2026-11-27, reçue par kadenz-cc) : depuis le portail, on voit chaque appareil relié à une licence, on les déconnecte un par un et on révoque la licence entière, comme chez Kaspersky. Détail et points à trancher : `docs/spec-revocation-licences.md`.
 
 ## 3. Candidats
 
