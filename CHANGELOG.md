@@ -4,7 +4,7 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 
 Règle d'écriture des notes : elles parlent à l'utilisateur de Kadenz, en langage courant, sans terme interne (composants, fichiers du code, noms de crates ou de bibliothèques, numéros de décision ou de commit, récursion, base de données interne). Ce qui n'intéresse que l'équipe va sous un titre `### Technique` : `scripts/release.ps1` le retire des notes publiées, et la fenêtre de mise à jour l'écarte aussi pour les anciennes releases. La publication refuse des notes qui contiennent encore un terme interne.
 
-## [Non publié]
+## [0.3.4] - 2026-11-27
 
 ### Ajouté
 
@@ -15,9 +15,9 @@ Règle d'écriture des notes : elles parlent à l'utilisateur de Kadenz, en lang
 
 - Licence : champ signé `produit` (`entreprise` ou `monoposte`), version 3 pour l'édition un poste ; `kadenz_licence::entreprise::verifier_pour` ; le programme un poste se déclare avec `definir_produit`.
 - Portail : colonne `produit` sur les codes d'activation (schéma 12), gamme `monoposte` au tirage, champ `produit` dans la demande d'activation, refus si l'édition ne correspond pas.
-- Portail : page `/telecharger/{entreprise|monoposte}` et liens signés `/fichiers/...` (dix minutes, reprise par plage, frein par adresse), option `--depot` ; pas encore branchés sur le site ni sur le Dell.
-- Essai : attestation signée `KADENZ-T-` et route `/api/essai` du portail (un essai par poste et par édition, schéma 13) ; le programme ne l'appelle pas encore (lot E2).
-- Mise à jour : le client lit d'abord la liste des versions du portail (`/api/releases`, même format que GitHub, liens signés), GitHub en repli tant que le dépôt du Dell n'est pas rempli.
+- Portail : page `/telecharger/{entreprise|monoposte}` et liens signés `/fichiers/...` (dix minutes, reprise par plage, frein par adresse), option `--depot` ; dossier `/srv/kadenz/depot` du Dell monté en lecture seule (portail 1c62ec42800b en service le 2026-11-27).
+- Essai : attestation signée `KADENZ-T-` et route `/api/essai` du portail (un essai par poste et par édition, schéma 13).
+- Mise à jour : le client lit d'abord la liste des versions du portail (`/api/releases`, même format que GitHub, liens signés), GitHub en repli si la liste du portail est vide ou injoignable.
 - Essai : `kadenz_maj::essai` (attestation demandée au portail avec l'identifiant du poste seul, cache `%ProgramData%\Kadenz\essai-<édition>.txt`), `abonnement::noter_essai_a_confirmer`, `essai_a_confirmer`, `confirmer_essai` ; demande relancée à chaque lancement, sans lecture seule faute de réponse.
 
 ## [0.3.3] - 2026-11-26
