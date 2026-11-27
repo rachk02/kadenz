@@ -176,6 +176,13 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
             get(page_nouvelle_entreprise).post(nouvelle_entreprise),
         )
         .route("/entreprises/{id}", get(fiche))
+        .route("/entreprises/{id}/revoquer", post(revoquer))
+        .route("/entreprises/{id}/retablir", post(retablir))
+        .route(
+            "/entreprises/{id}/ordinateurs/reautoriser",
+            post(reautoriser),
+        )
+        .route("/appareils/{id}/deconnecter", post(deconnecter))
         .route(
             "/entreprises/{id}/paiement",
             get(page_paiement).post(paiement),
@@ -512,6 +519,14 @@ fn message_de(uri: &Uri) -> Option<Message> {
         "actif" => "Compte mis à jour.",
         "mot_de_passe" => "Mot de passe changé.",
         "code_annule" => "Code annulé : il ne peut plus être activé.",
+        "appareil_deconnecte" => {
+            "Déconnexion demandée : le poste sera retiré au prochain contact d'un poste de l'entreprise avec le portail."
+        }
+        "ordinateur_reautorise" => "Ordinateur réautorisé : il peut de nouveau s'inscrire.",
+        "licence_revoquee" => {
+            "Licence révoquée : les postes passeront en lecture seule au prochain contact avec le portail."
+        }
+        "licence_retablie" => "Licence rétablie.",
         "poste_libere" => {
             "Poste libéré : le code peut être activé sur un autre poste, avec la même échéance."
         }
@@ -981,6 +996,103 @@ async fn fiche(
                 pages::fiche_entreprise(&c.cadre(m.as_ref()), &f),
             )
         }
+        Err(e) => page_erreur(Some(&c), &e),
+    }
+}
+
+// ----- Appareils et révocation (décision 80) -----
+
+async fn deconnecter(
+    State(etat): State<Etat>,
+    entetes: HeaderMap,
+    Path(id): Path<i64>,
+    Form(champs): Form<Champs>,
+) -> Response {
+    let c = match exiger(&etat, &entetes, Some(&champs)).await {
+        Ok(c) => c,
+        Err(r) => return *r,
+    };
+    let portail = etat.portail.clone();
+    let compte = c.compte.clone();
+    match bloquant(move || portail.deconnecter_appareil(&compte, id)).await {
+        Ok(a) => rediriger(&format!(
+            "{}?m=appareil_deconnecte",
+            pages::chemin_entreprise(&a.entreprise)
+        )),
+        Err(e) => page_erreur(Some(&c), &e),
+    }
+}
+
+async fn reautoriser(
+    State(etat): State<Etat>,
+    entetes: HeaderMap,
+    Path(id): Path<String>,
+    Form(champs): Form<Champs>,
+) -> Response {
+    let c = match exiger(&etat, &entetes, Some(&champs)).await {
+        Ok(c) => c,
+        Err(r) => return *r,
+    };
+    let portail = etat.portail.clone();
+    let compte = c.compte.clone();
+    let ordinateur = champ(&champs, "ordinateur").to_string();
+    let cible = id.clone();
+    match bloquant(move || portail.reautoriser_ordinateur(&compte, &cible, &ordinateur)).await {
+        Ok(()) => rediriger(&format!(
+            "{}?m=ordinateur_reautorise",
+            pages::chemin_entreprise(&id)
+        )),
+        Err(e) => page_erreur(Some(&c), &e),
+    }
+}
+
+async fn revoquer(
+    State(etat): State<Etat>,
+    entetes: HeaderMap,
+    Path(id): Path<String>,
+    Form(champs): Form<Champs>,
+) -> Response {
+    let c = match exiger(&etat, &entetes, Some(&champs)).await {
+        Ok(c) => c,
+        Err(r) => return *r,
+    };
+    if champ(&champs, "confirmation") != "1" {
+        return page_erreur(
+            Some(&c),
+            &ErreurPortail::Validation("confirmez la révocation".into()),
+        );
+    }
+    let portail = etat.portail.clone();
+    let compte = c.compte.clone();
+    let raison = champ(&champs, "raison").to_string();
+    let cible = id.clone();
+    match bloquant(move || portail.revoquer_licence(&compte, &cible, &raison)).await {
+        Ok(()) => rediriger(&format!(
+            "{}?m=licence_revoquee",
+            pages::chemin_entreprise(&id)
+        )),
+        Err(e) => page_erreur(Some(&c), &e),
+    }
+}
+
+async fn retablir(
+    State(etat): State<Etat>,
+    entetes: HeaderMap,
+    Path(id): Path<String>,
+    Form(champs): Form<Champs>,
+) -> Response {
+    let c = match exiger(&etat, &entetes, Some(&champs)).await {
+        Ok(c) => c,
+        Err(r) => return *r,
+    };
+    let portail = etat.portail.clone();
+    let compte = c.compte.clone();
+    let cible = id.clone();
+    match bloquant(move || portail.retablir_licence(&compte, &cible)).await {
+        Ok(()) => rediriger(&format!(
+            "{}?m=licence_retablie",
+            pages::chemin_entreprise(&id)
+        )),
         Err(e) => page_erreur(Some(&c), &e),
     }
 }

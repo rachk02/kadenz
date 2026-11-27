@@ -2766,3 +2766,117 @@ fn etat_de_licence_par_la_route() {
     lance.arreter();
     let _ = std::fs::remove_dir_all(d);
 }
+
+#[test]
+fn pages_des_appareils_et_de_la_revocation() {
+    let d = dossier("revocation-pages");
+    let p = Portail::ouvrir(&d, cle_essai()).unwrap();
+    let editeur = p.creer_editeur("editeur", "Éditeur", MOT_DE_PASSE).unwrap();
+    let rev = p
+        .creer_revendeur(&editeur, "revendeur", "Revendeur", MOT_DE_PASSE)
+        .unwrap();
+    let code = p
+        .creer_codes_gamme(&rev, "entreprise", "1", "3", "annuelle", &Module::TOUS)
+        .unwrap()
+        .remove(0);
+    let mut dem = demande(&code.code, ENTREPRISE_A);
+    dem.produit = "entreprise".into();
+    p.activer(&dem, "10.0.8.1").unwrap();
+    p.etat_licence(
+        &etat(
+            ENTREPRISE_A,
+            vec![poste_rapporte(EMPREINTE_1, POSTE_1, "Caisse du magasin")],
+        ),
+        "10.0.8.2",
+    )
+    .unwrap();
+    let lance = web::lancer(
+        p,
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        ConfigWeb::default(),
+    )
+    .unwrap();
+    let a = lance.adresse();
+    let r = se_connecter(a, "revendeur", MOT_DE_PASSE, None);
+    let session = morceau_cookie(r.entete("set-cookie").unwrap());
+    let chemin = format!("/entreprises/{ENTREPRISE_A}");
+
+    let page = requete(a, "GET", &chemin, Some(&session), "");
+    assert_eq!(page.statut, 200);
+    assert!(page.corps.contains("Caisse du magasin"));
+    assert!(page.corps.contains(POSTE_1));
+    assert!(page.corps.contains("Révoquer la licence"));
+    assert!(!page.corps.contains("style="));
+    let jeton = csrf(&page.corps);
+
+    // Déconnexion de l'appareil : ordinateur bloqué, réautorisation offerte.
+    let r = requete(
+        a,
+        "POST",
+        "/appareils/1/deconnecter",
+        Some(&session),
+        &format!("csrf={jeton}"),
+    );
+    assert_eq!(r.statut, 303);
+    assert_eq!(
+        r.entete("location"),
+        Some(format!("{chemin}?m=appareil_deconnecte").as_str())
+    );
+    let page = requete(a, "GET", &chemin, Some(&session), "").corps;
+    assert!(page.contains("Déconnexion demandée"));
+    assert!(page.contains("Ordinateurs bloqués"));
+    let r = requete(
+        a,
+        "POST",
+        &format!("{chemin}/ordinateurs/reautoriser"),
+        Some(&session),
+        &format!("ordinateur={POSTE_1}&csrf={jeton}"),
+    );
+    assert_eq!(r.statut, 303);
+    assert!(
+        !requete(a, "GET", &chemin, Some(&session), "")
+            .corps
+            .contains("Ordinateurs bloqués")
+    );
+
+    // Révocation : confirmation exigée, puis état affiché et rétablissement.
+    let r = requete(
+        a,
+        "POST",
+        &format!("{chemin}/revoquer"),
+        Some(&session),
+        &format!("raison=impaye&csrf={jeton}"),
+    );
+    assert_eq!(r.statut, 400);
+    let r = requete(
+        a,
+        "POST",
+        &format!("{chemin}/revoquer"),
+        Some(&session),
+        &format!("raison=impaye&confirmation=1&csrf={jeton}"),
+    );
+    assert_eq!(r.statut, 303);
+    let page = requete(a, "GET", &chemin, Some(&session), "").corps;
+    assert!(page.contains("Révoquée"));
+    assert!(page.contains("Rétablir la licence"));
+    let r = requete(
+        a,
+        "POST",
+        &format!("{chemin}/retablir"),
+        Some(&session),
+        &format!("csrf={jeton}"),
+    );
+    assert_eq!(r.statut, 303);
+    assert!(
+        requete(a, "GET", &chemin, Some(&session), "")
+            .corps
+            .contains("Révoquer la licence")
+    );
+    // Sans jeton : refusé.
+    assert_eq!(
+        requete(a, "POST", &format!("{chemin}/retablir"), Some(&session), "").statut,
+        403
+    );
+    lance.arreter();
+    let _ = std::fs::remove_dir_all(&d);
+}

@@ -409,6 +409,8 @@ pub struct FicheEntreprise {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Appareil {
     pub id: i64,
+    /// Identifiant de l'entreprise.
+    pub entreprise: String,
     pub empreinte: String,
     /// Identifiant de l'ordinateur ; vide pour un poste ancien.
     pub ordinateur: String,
@@ -874,6 +876,7 @@ fn appareils_de(conn: &Connection, entreprise: &str) -> rusqlite::Result<Vec<App
     req.query_map([entreprise], |r| {
         Ok(Appareil {
             id: r.get(0)?,
+            entreprise: entreprise.to_string(),
             empreinte: r.get(1)?,
             ordinateur: r.get(2)?,
             nom: r.get(3)?,

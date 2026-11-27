@@ -401,7 +401,7 @@ fn liste_modules(modules: &[Module]) -> String {
 
 /// Chemin d'une entreprise : son identifiant est un UUID, sans caractère à
 /// échapper dans un chemin.
-fn chemin_entreprise(identifiant: &str) -> String {
+pub(crate) fn chemin_entreprise(identifiant: &str) -> String {
     format!("/entreprises/{identifiant}")
 }
 
