@@ -1486,7 +1486,7 @@ dependencies = [
  "curve25519-dalek",
  "ed25519",
  "serde",
- "sha2",
+ "sha2 0.10.9",
  "subtle",
  "zeroize",
 ]
@@ -3228,7 +3228,7 @@ dependencies = [
  "rcgen",
  "rustls",
  "serde_json",
- "sha2",
+ "sha2 0.11.2",
 ]
 
 [[package]]
@@ -3245,7 +3245,7 @@ dependencies = [
  "kadenz-domaine",
  "kadenz-licence",
  "kadenz-maj",
- "sha2",
+ "sha2 0.11.2",
 ]
 
 [[package]]
@@ -3278,7 +3278,7 @@ dependencies = [
  "getrandom 0.3.4",
  "kadenz-domaine",
  "serde_json",
- "sha2",
+ "sha2 0.11.2",
  "windows-sys 0.61.2",
 ]
 
@@ -3290,7 +3290,7 @@ dependencies = [
  "kadenz-domaine",
  "kadenz-licence",
  "serde_json",
- "sha2",
+ "sha2 0.11.2",
  "ureq",
  "windows-sys 0.61.2",
 ]
@@ -3326,7 +3326,7 @@ dependencies = [
  "rusqlite",
  "serde_json",
  "sha1 0.10.7",
- "sha2",
+ "sha2 0.11.2",
  "subtle",
  "tokio",
  "zeroize",
@@ -3372,7 +3372,7 @@ dependencies = [
  "rustls-webpki",
  "serde",
  "serde_json",
- "sha2",
+ "sha2 0.11.2",
  "subtle",
  "tokio",
  "tokio-rustls",
@@ -3411,7 +3411,7 @@ dependencies = [
  "kadenz-protocole",
  "rusqlite",
  "serde_json",
- "sha2",
+ "sha2 0.11.2",
  "uuid",
  "windows-sys 0.61.2",
 ]
@@ -5538,6 +5538,17 @@ dependencies = [
  "cfg-if",
  "cpufeatures 0.2.17",
  "digest 0.10.7",
+]
+
+[[package]]
+name = "sha2"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b0e5c7d67bc53f435386b2130fdc900488c5703770f6d8a4633060e34288a27"
+dependencies = [
+ "cfg-if",
+ "cpufeatures 0.3.1",
+ "digest 0.11.3",
 ]
 
 [[package]]
