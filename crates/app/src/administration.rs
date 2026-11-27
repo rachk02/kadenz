@@ -107,6 +107,7 @@ fn afficher_logos(fenetre: &FenetrePrincipale, conn: &kadenz_stockage::Connexion
                 api.set_logo_secondaire(image);
                 api.set_a_logo_secondaire(present);
             }
+            Logo::Entete | Logo::Pied => {}
         }
     }
 }

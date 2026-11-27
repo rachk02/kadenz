@@ -4974,3 +4974,45 @@ msgstr "Lisans {} tarihine kadar etkin. Yenileme veya ek iş istasyonları için
 
 msgid "Saisir un autre code"
 msgstr "Başka bir kod gir"
+
+msgid "Image d'en-tête collée depuis Word"
+msgstr "Word'den yapıştırılan üst bilgi görseli"
+
+msgid "Image de pied collée depuis Word"
+msgstr "Word'den yapıştırılan alt bilgi görseli"
+
+msgid "Coller l'en-tête depuis Word"
+msgstr "Üst bilgiyi Word'den yapıştır"
+
+msgid "Coller le pied de page depuis Word"
+msgstr "Alt bilgiyi Word'den yapıştır"
+
+msgid "Dans Word, double-cliquez dans l'en-tête, sélectionnez tout (Ctrl+A), copiez (Ctrl+C), puis cliquez sur « Coller l'en-tête depuis Word ». Même chose pour le pied de page. L'image est imprimée telle que Word l'affiche ; le numéro de page reste ajouté par Kadenz."
+msgstr "Word'de üst bilgiye çift tıklayın, tümünü seçin (Ctrl+A), kopyalayın (Ctrl+C), ardından “Üst bilgiyi Word'den yapıştır” düğmesine tıklayın. Alt bilgi için de aynısını yapın. Görsel Word'de göründüğü gibi yazdırılır; sayfa numarasını Kadenz eklemeye devam eder."
+
+msgid "Image collée depuis Word : vérifiez l'aperçu, puis enregistrez. Pour revenir au texte, remplacez la variable de l'image par le texte voulu."
+msgstr "Görsel Word'den yapıştırıldı: önizlemeyi kontrol edin, ardından kaydedin. Metne dönmek için görsel değişkenini istediğiniz metinle değiştirin."
+
+msgid "l'image dépasse la taille maximale de {} Ko"
+msgstr "görsel {} KB olan azami boyutu aşıyor"
+
+msgid "le presse-papiers est occupé : réessayez"
+msgstr "pano meşgul: yeniden deneyin"
+
+msgid "le presse-papiers ne contient pas de copie de Word : sélectionnez l'en-tête dans Word, copiez-le, puis recommencez"
+msgstr "panoda Word'den bir kopya yok: Word'de üst bilgiyi seçin, kopyalayın ve yeniden deneyin"
+
+msgid "l'image copiée est vide"
+msgstr "kopyalanan görsel boş"
+
+msgid "l'image copiée est illisible"
+msgstr "kopyalanan görsel okunamıyor"
+
+msgid "rendu de l'image impossible"
+msgstr "görsel oluşturulamıyor"
+
+msgid "rendu de l'image impossible : mémoire insuffisante"
+msgstr "görsel oluşturulamıyor: yetersiz bellek"
+
+msgid "l'image copiée est trop lourde : copiez plutôt le texte de l'en-tête dans Word"
+msgstr "kopyalanan görsel çok büyük: bunun yerine Word'de üst bilgi metnini kopyalayın"

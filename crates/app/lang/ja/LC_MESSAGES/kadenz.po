@@ -4974,3 +4974,45 @@ msgstr "ライセンスは {} まで有効です。更新または端末の追�
 
 msgid "Saisir un autre code"
 msgstr "別のコードを入力"
+
+msgid "Image d'en-tête collée depuis Word"
+msgstr "Word から貼り付けたヘッダー画像"
+
+msgid "Image de pied collée depuis Word"
+msgstr "Word から貼り付けたフッター画像"
+
+msgid "Coller l'en-tête depuis Word"
+msgstr "Word からヘッダーを貼り付け"
+
+msgid "Coller le pied de page depuis Word"
+msgstr "Word からフッターを貼り付け"
+
+msgid "Dans Word, double-cliquez dans l'en-tête, sélectionnez tout (Ctrl+A), copiez (Ctrl+C), puis cliquez sur « Coller l'en-tête depuis Word ». Même chose pour le pied de page. L'image est imprimée telle que Word l'affiche ; le numéro de page reste ajouté par Kadenz."
+msgstr "Word でヘッダー内をダブルクリックし、すべて選択 (Ctrl+A)、コピー (Ctrl+C) してから「Word からヘッダーを貼り付け」をクリックします。フッターも同様です。画像は Word の表示どおりに印刷され、ページ番号は引き続き Kadenz が付けます。"
+
+msgid "Image collée depuis Word : vérifiez l'aperçu, puis enregistrez. Pour revenir au texte, remplacez la variable de l'image par le texte voulu."
+msgstr "Word から画像を貼り付けました。プレビューを確認してから保存してください。テキストに戻すには、画像の変数を目的のテキストに置き換えます。"
+
+msgid "l'image dépasse la taille maximale de {} Ko"
+msgstr "画像が最大サイズ {} KB を超えています"
+
+msgid "le presse-papiers est occupé : réessayez"
+msgstr "クリップボードが使用中です。もう一度お試しください"
+
+msgid "le presse-papiers ne contient pas de copie de Word : sélectionnez l'en-tête dans Word, copiez-le, puis recommencez"
+msgstr "クリップボードに Word からのコピーがありません。Word でヘッダーを選択してコピーし、もう一度お試しください"
+
+msgid "l'image copiée est vide"
+msgstr "コピーした画像が空です"
+
+msgid "l'image copiée est illisible"
+msgstr "コピーした画像を読み取れません"
+
+msgid "rendu de l'image impossible"
+msgstr "画像を生成できません"
+
+msgid "rendu de l'image impossible : mémoire insuffisante"
+msgstr "画像を生成できません：メモリ不足です"
+
+msgid "l'image copiée est trop lourde : copiez plutôt le texte de l'en-tête dans Word"
+msgstr "コピーした画像が大きすぎます。代わりに Word でヘッダーのテキストをコピーしてください"

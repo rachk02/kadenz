@@ -102,10 +102,14 @@ pub enum Variable {
     Banque2,
     Logo,
     Logo2,
+    /// Image de l'en-tête collée depuis Word, imprimée sur toute la largeur.
+    ImageEntete,
+    /// Image du pied de page collée depuis Word.
+    ImagePied,
 }
 
 impl Variable {
-    pub const TOUTES: [Variable; 13] = [
+    pub const TOUTES: [Variable; 15] = [
         Variable::Nom,
         Variable::Adresse,
         Variable::Telephone,
@@ -119,6 +123,8 @@ impl Variable {
         Variable::Banque2,
         Variable::Logo,
         Variable::Logo2,
+        Variable::ImageEntete,
+        Variable::ImagePied,
     ];
 
     /// Nom écrit entre accolades dans le markup.
@@ -137,6 +143,8 @@ impl Variable {
             Variable::Banque2 => "banque2",
             Variable::Logo => "logo",
             Variable::Logo2 => "logo2",
+            Variable::ImageEntete => "image_entete",
+            Variable::ImagePied => "image_pied",
         }
     }
 
@@ -156,6 +164,8 @@ impl Variable {
             Variable::Banque2 => "Banque 2",
             Variable::Logo => "Logo principal",
             Variable::Logo2 => "Logo secondaire",
+            Variable::ImageEntete => "Image d'en-tête collée depuis Word",
+            Variable::ImagePied => "Image de pied collée depuis Word",
         }
     }
 
@@ -163,8 +173,18 @@ impl Variable {
         Variable::TOUTES.into_iter().find(|v| v.nom() == nom)
     }
 
+    /// Image seule sur sa ligne : les deux logos et les images collées depuis
+    /// Word.
     pub fn est_un_logo(self) -> bool {
-        matches!(self, Variable::Logo | Variable::Logo2)
+        matches!(
+            self,
+            Variable::Logo | Variable::Logo2 | Variable::ImageEntete | Variable::ImagePied
+        )
+    }
+
+    /// Image collée depuis Word : imprimée sur toute la largeur de la zone.
+    pub fn est_une_image_de_zone(self) -> bool {
+        matches!(self, Variable::ImageEntete | Variable::ImagePied)
     }
 }
 
@@ -261,7 +281,7 @@ fn analyser_ligne(source: &str, numero: usize) -> Result<Ligne, MessageCompose> 
             texte = sans.trim_end();
         }
     }
-    for logo in [Variable::Logo, Variable::Logo2] {
+    for logo in Variable::TOUTES.into_iter().filter(|v| v.est_un_logo()) {
         if texte == format!("{{{}}}", logo.nom()) {
             return Ok(Ligne::Logo { logo, centree });
         }

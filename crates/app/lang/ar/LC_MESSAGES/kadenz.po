@@ -4974,3 +4974,45 @@ msgstr "الترخيص نشط حتى {}. للتجديد أو لمحطات عمل
 
 msgid "Saisir un autre code"
 msgstr "إدخال رمز آخر"
+
+msgid "Image d'en-tête collée depuis Word"
+msgstr "صورة الترويسة الملصقة من Word"
+
+msgid "Image de pied collée depuis Word"
+msgstr "صورة التذييل الملصقة من Word"
+
+msgid "Coller l'en-tête depuis Word"
+msgstr "لصق الترويسة من Word"
+
+msgid "Coller le pied de page depuis Word"
+msgstr "لصق التذييل من Word"
+
+msgid "Dans Word, double-cliquez dans l'en-tête, sélectionnez tout (Ctrl+A), copiez (Ctrl+C), puis cliquez sur « Coller l'en-tête depuis Word ». Même chose pour le pied de page. L'image est imprimée telle que Word l'affiche ; le numéro de page reste ajouté par Kadenz."
+msgstr "في Word، انقر نقرًا مزدوجًا داخل الترويسة، وحدد الكل (Ctrl+A)، وانسخ (Ctrl+C)، ثم انقر على «لصق الترويسة من Word». والأمر نفسه للتذييل. تُطبع الصورة كما يعرضها Word، ويواصل Kadenz إضافة رقم الصفحة."
+
+msgid "Image collée depuis Word : vérifiez l'aperçu, puis enregistrez. Pour revenir au texte, remplacez la variable de l'image par le texte voulu."
+msgstr "تم لصق الصورة من Word: تحقق من المعاينة ثم احفظ. للعودة إلى النص، استبدل متغير الصورة بالنص المطلوب."
+
+msgid "l'image dépasse la taille maximale de {} Ko"
+msgstr "الصورة تتجاوز الحجم الأقصى البالغ {} كيلوبايت"
+
+msgid "le presse-papiers est occupé : réessayez"
+msgstr "الحافظة مشغولة: أعد المحاولة"
+
+msgid "le presse-papiers ne contient pas de copie de Word : sélectionnez l'en-tête dans Word, copiez-le, puis recommencez"
+msgstr "لا تحتوي الحافظة على نسخة من Word: حدد الترويسة في Word وانسخها ثم أعد المحاولة"
+
+msgid "l'image copiée est vide"
+msgstr "الصورة المنسوخة فارغة"
+
+msgid "l'image copiée est illisible"
+msgstr "تعذرت قراءة الصورة المنسوخة"
+
+msgid "rendu de l'image impossible"
+msgstr "تعذر إنشاء الصورة"
+
+msgid "rendu de l'image impossible : mémoire insuffisante"
+msgstr "تعذر إنشاء الصورة: الذاكرة غير كافية"
+
+msgid "l'image copiée est trop lourde : copiez plutôt le texte de l'en-tête dans Word"
+msgstr "الصورة المنسوخة كبيرة جدًا: انسخ نص الترويسة في Word بدلًا منها"

@@ -4,6 +4,25 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 
 Règle d'écriture des notes : elles parlent à l'utilisateur de Kadenz, en langage courant, sans terme interne (composants, fichiers du code, noms de crates ou de bibliothèques, numéros de décision ou de commit, récursion, base de données interne). Ce qui n'intéresse que l'équipe va sous un titre `### Technique` : `scripts/release.ps1` le retire des notes publiées, et la fenêtre de mise à jour l'écarte aussi pour les anciennes releases. La publication refuse des notes qui contiennent encore un terme interne.
 
+## [Non publié]
+
+### Ajouté
+
+- Textes imprimés : boutons « Coller l'en-tête depuis Word » et « Coller le pied de page depuis Word ». Dans Word, sélectionnez l'en-tête, copiez-le, puis cliquez sur le bouton : l'en-tête s'imprime sur vos documents exactement comme dans Word, images et mise en page comprises. Tous les postes l'impriment de la même façon.
+- Rubrique Abonnement : la liste des licences installées, et un champ du code qui reste replié tant que l'échéance est loin, avec un bouton « Saisir un autre code ».
+
+### Corrigé
+
+- Reprise d'un document Word : le texte des zones de texte n'apparaît plus en double.
+- Une licence activée est maintenant confirmée par un message.
+- Édition un poste : le choix du thème fonctionne de nouveau dans l'assistant d'installation.
+
+### Technique
+
+- Images d'en-tête et de pied : variables `{image_entete}` et `{image_pied}`, migration 0021 (fiche entreprise et instantané), 768 Ko au plus chacune pour tenir dans une trame de 8 Mo avec les deux logos ; rendu de l'EMF du presse-papiers par GDI à 300 points par pouce (repli 220, 160, 110), marges blanches retirées, PNG du presse-papiers en repli (`presse_papiers.rs`).
+- Import .docx : contenu de `mc:Fallback` ignoré.
+- Abonnement : `licences` (historique lu au journal d'audit) dans les réponses du serveur.
+
 ## [0.3.5] - 2026-11-27
 
 ### Ajouté

@@ -4974,3 +4974,45 @@ msgstr "La licencia está activa hasta el {}. Para una renovación o puestos adi
 
 msgid "Saisir un autre code"
 msgstr "Introducir otro código"
+
+msgid "Image d'en-tête collée depuis Word"
+msgstr "Imagen de encabezado pegada desde Word"
+
+msgid "Image de pied collée depuis Word"
+msgstr "Imagen de pie de página pegada desde Word"
+
+msgid "Coller l'en-tête depuis Word"
+msgstr "Pegar el encabezado desde Word"
+
+msgid "Coller le pied de page depuis Word"
+msgstr "Pegar el pie de página desde Word"
+
+msgid "Dans Word, double-cliquez dans l'en-tête, sélectionnez tout (Ctrl+A), copiez (Ctrl+C), puis cliquez sur « Coller l'en-tête depuis Word ». Même chose pour le pied de page. L'image est imprimée telle que Word l'affiche ; le numéro de page reste ajouté par Kadenz."
+msgstr "En Word, haga doble clic en el encabezado, seleccione todo (Ctrl+A), copie (Ctrl+C) y luego haga clic en «Pegar el encabezado desde Word». Lo mismo para el pie de página. La imagen se imprime tal como Word la muestra; Kadenz sigue añadiendo el número de página."
+
+msgid "Image collée depuis Word : vérifiez l'aperçu, puis enregistrez. Pour revenir au texte, remplacez la variable de l'image par le texte voulu."
+msgstr "Imagen pegada desde Word: revise la vista previa y guarde. Para volver al texto, sustituya la variable de la imagen por el texto deseado."
+
+msgid "l'image dépasse la taille maximale de {} Ko"
+msgstr "la imagen supera el tamaño máximo de {} KB"
+
+msgid "le presse-papiers est occupé : réessayez"
+msgstr "el portapapeles está ocupado: inténtelo de nuevo"
+
+msgid "le presse-papiers ne contient pas de copie de Word : sélectionnez l'en-tête dans Word, copiez-le, puis recommencez"
+msgstr "el portapapeles no contiene una copia de Word: seleccione el encabezado en Word, cópielo y vuelva a intentarlo"
+
+msgid "l'image copiée est vide"
+msgstr "la imagen copiada está vacía"
+
+msgid "l'image copiée est illisible"
+msgstr "la imagen copiada no se puede leer"
+
+msgid "rendu de l'image impossible"
+msgstr "no se puede generar la imagen"
+
+msgid "rendu de l'image impossible : mémoire insuffisante"
+msgstr "no se puede generar la imagen: memoria insuficiente"
+
+msgid "l'image copiée est trop lourde : copiez plutôt le texte de l'en-tête dans Word"
+msgstr "la imagen copiada es demasiado pesada: copie mejor el texto del encabezado en Word"

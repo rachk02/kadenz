@@ -21,6 +21,10 @@ pub struct EntreprisePdf {
     /// Logo principal et logo secondaire (PNG ou JPEG), tels que stockés en base.
     pub logo: Option<Vec<u8>>,
     pub logo2: Option<Vec<u8>>,
+    /// Images de l'en-tête et du pied collées depuis Word (PNG), imprimées sur
+    /// toute la largeur de leur zone.
+    pub image_entete: Option<Vec<u8>>,
+    pub image_pied: Option<Vec<u8>>,
 }
 
 #[derive(Debug, Clone, Default)]

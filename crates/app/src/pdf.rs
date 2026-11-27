@@ -43,7 +43,11 @@ fn reference(d: &Document) -> String {
     }
 }
 
-fn entreprise_pdf(e: &Entreprise, logo: Option<Vec<u8>>, logo2: Option<Vec<u8>>) -> EntreprisePdf {
+/// Logo, logo secondaire, image d'en-tête et image de pied, dans cet ordre.
+type Images = [Option<Vec<u8>>; 4];
+
+fn entreprise_pdf(e: &Entreprise, images: Images) -> EntreprisePdf {
+    let [logo, logo2, image_entete, image_pied] = images;
     EntreprisePdf {
         nom: e.nom.clone(),
         adresse: e.adresse.clone(),
@@ -58,6 +62,8 @@ fn entreprise_pdf(e: &Entreprise, logo: Option<Vec<u8>>, logo2: Option<Vec<u8>>)
         banque2: e.banque2.clone(),
         logo,
         logo2,
+        image_entete,
+        image_pied,
     }
 }
 
@@ -75,7 +81,15 @@ pub(crate) fn document_pdf(conn: &Connection, d: &Document) -> Result<DocumentPd
         "Client"
     };
     Ok(DocumentPdf {
-        entreprise: entreprise_pdf(&i.entreprise, i.logo.clone(), i.logo2.clone()),
+        entreprise: entreprise_pdf(
+            &i.entreprise,
+            [
+                i.logo.clone(),
+                i.logo2.clone(),
+                i.image_entete.clone(),
+                i.image_pied.clone(),
+            ],
+        ),
         tiers: TiersPdf {
             nom: d.tiers.nom.clone(),
             adresse: d.tiers.adresse.clone(),
@@ -171,13 +185,18 @@ fn entete_du_moment(
     let e = entreprise::lire(conn)
         .map_err(texte_erreur)?
         .unwrap_or_default();
-    let logo = entreprise::lire_logo(conn, Logo::Principal).map_err(texte_erreur)?;
-    let logo2 = entreprise::lire_logo(conn, Logo::Secondaire).map_err(texte_erreur)?;
+    let lire = |l| entreprise::lire_logo(conn, l).map_err(texte_erreur);
+    let images = [
+        lire(Logo::Principal)?,
+        lire(Logo::Secondaire)?,
+        lire(Logo::Entete)?,
+        lire(Logo::Pied)?,
+    ];
     let couleur = parametres::lire(conn)
         .map_err(texte_erreur)?
         .couleur_documents;
     let mep = mise_en_page::lire_analysee(conn).map_err(texte_erreur)?;
-    Ok((entreprise_pdf(&e, logo, logo2), couleur, mep))
+    Ok((entreprise_pdf(&e, images), couleur, mep))
 }
 
 fn colonne(titre: &str, largeur: f32, a_droite: bool) -> ColonnePdf {
@@ -203,7 +222,15 @@ pub(crate) fn lettre_relance(
     };
     let f = &l.facture;
     let lettre = LettrePdf {
-        entreprise: entreprise_pdf(&l.entreprise, l.logo.clone(), l.logo2.clone()),
+        entreprise: entreprise_pdf(
+            &l.entreprise,
+            [
+                l.logo.clone(),
+                l.logo2.clone(),
+                l.image_entete.clone(),
+                l.image_pied.clone(),
+            ],
+        ),
         couleur: l.couleur,
         lieu_et_date,
         destinataire: TiersPdf {
@@ -585,7 +612,15 @@ fn document_exemple(
         "Client"
     };
     Ok(DocumentPdf {
-        entreprise: entreprise_pdf(&i.entreprise, i.logo.clone(), i.logo2.clone()),
+        entreprise: entreprise_pdf(
+            &i.entreprise,
+            [
+                i.logo.clone(),
+                i.logo2.clone(),
+                i.image_entete.clone(),
+                i.image_pied.clone(),
+            ],
+        ),
         tiers: TiersPdf {
             nom: format!("{libelle_tiers} d'exemple"),
             ..Default::default()

@@ -164,7 +164,7 @@ pub(crate) const TABLES: [Table; 8] = [
         entite: Entite::Instantane,
         nom: "instantane_entreprise",
         colonnes: &["donnees"],
-        binaires: &["logo", "logo2"],
+        binaires: &["logo", "logo2", "image_entete", "image_pied"],
         references: &[],
         locales: &[],
         uniques: &[],
@@ -187,7 +187,7 @@ pub(crate) const TABLES: [Table; 8] = [
             "responsable_facturation",
             "responsable_comptabilite",
         ],
-        binaires: &["logo", "logo2"],
+        binaires: &["logo", "logo2", "image_entete", "image_pied"],
         references: &[],
         locales: &[],
         uniques: &[],
@@ -1467,11 +1467,12 @@ pub(crate) mod tests {
     fn pages_bornees_en_octets() {
         let mut serveur = ouvrir_en_memoire().unwrap();
         let r = remplir(&mut serveur);
-        // Deux logos de la taille maximale : l'entreprise et chaque instantané
-        // figé ensuite pèsent près de 5,4 Mo en base64.
-        let mut gros = vec![0u8; entreprise::TAILLE_MAX_LOGO];
-        gros[..PNG.len()].copy_from_slice(PNG);
-        for logo in [Logo::Principal, Logo::Secondaire] {
+        // Quatre images de la taille maximale (deux logos, en-tête et pied
+        // collés depuis Word) : l'entreprise et chaque instantané figé ensuite
+        // pèsent près de 7,5 Mo en base64.
+        for logo in Logo::TOUS {
+            let mut gros = vec![0u8; logo.taille_max()];
+            gros[..PNG.len()].copy_from_slice(PNG);
             entreprise::definir_logo(&serveur, &r.admin, logo, Some(&gros)).unwrap();
         }
         documents::valider(&mut serveur, &r.admin, r.brouillon).unwrap();

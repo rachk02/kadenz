@@ -315,6 +315,8 @@ struct StyleZone {
     couleur: [u8; 3],
     premiere: Option<(f32, f32, [u8; 3])>,
     h_logo: f32,
+    /// Hauteur maximale d'une image collée depuis Word.
+    h_image: f32,
     /// Tout le texte en gras (pied de page accentué).
     gras: bool,
 }
@@ -333,7 +335,9 @@ fn valeur(e: &EntreprisePdf, v: Variable) -> String {
         Variable::Ifu => e.ifu.clone(),
         Variable::Banque1 => e.banque1.clone(),
         Variable::Banque2 => e.banque2.clone(),
-        Variable::Logo | Variable::Logo2 => String::new(),
+        Variable::Logo | Variable::Logo2 | Variable::ImageEntete | Variable::ImagePied => {
+            String::new()
+        }
     }
 }
 
@@ -347,6 +351,8 @@ pub(crate) struct Moteur<'d> {
     pied: Vec<LigneResolue>,
     logo: Option<Image>,
     logo2: Option<Image>,
+    image_entete: Option<Image>,
+    image_pied: Option<Image>,
     colonnes: Vec<Colonne>,
 }
 
@@ -435,6 +441,8 @@ impl<'d> Moteur<'d> {
             pied: zone(&mep.pied),
             logo: lire_image(&doc.entreprise.logo),
             logo2: lire_image(&doc.entreprise.logo2),
+            image_entete: lire_image(&doc.entreprise.image_entete),
+            image_pied: lire_image(&doc.entreprise.image_pied),
             colonnes,
         }
     }
@@ -478,6 +486,8 @@ impl<'d> Moteur<'d> {
         match v {
             Variable::Logo => self.logo.as_ref(),
             Variable::Logo2 => self.logo2.as_ref(),
+            Variable::ImageEntete => self.image_entete.as_ref(),
+            Variable::ImagePied => self.image_pied.as_ref(),
             _ => None,
         }
     }
@@ -557,7 +567,12 @@ impl<'d> Moteur<'d> {
                 LigneResolue::Logo { logo, centree } => {
                     if let Some(image) = self.image_de(*logo) {
                         let alignement = if *centree { 0.5 } else { 0.0 };
-                        h += t.image(image, x, y + h, largeur, style.h_logo, alignement) + 4.0;
+                        let h_max = if logo.est_une_image_de_zone() {
+                            style.h_image
+                        } else {
+                            style.h_logo
+                        };
+                        h += t.image(image, x, y + h, largeur, h_max, alignement) + 4.0;
                     }
                 }
                 LigneResolue::Texte { centree, passages } => {
@@ -607,6 +622,7 @@ impl<'d> Moteur<'d> {
                 couleur: SECONDAIRE,
                 premiere: Some((10.0, 12.5, ENCRE)),
                 h_logo: 42.0,
+                h_image: 130.0,
                 gras: false,
             }
         } else {
@@ -616,6 +632,7 @@ impl<'d> Moteur<'d> {
                 couleur: SECONDAIRE,
                 premiere: Some((11.5, 14.0, ENCRE)),
                 h_logo: 54.0,
+                h_image: 160.0,
                 gras: false,
             }
         }
@@ -632,6 +649,7 @@ impl<'d> Moteur<'d> {
             couleur: if self.accentue() { ENCRE } else { SECONDAIRE },
             premiere: None,
             h_logo: 30.0,
+            h_image: 90.0,
             gras: self.accentue(),
         }
     }
@@ -646,6 +664,21 @@ impl<'d> Moteur<'d> {
         let x_droite = self.g.droite - largeur_droite;
 
         let mut lignes: &[LigneResolue] = &self.entete;
+        let style = self.style_entete();
+        // Image collée depuis Word en tête de zone : sur toute la largeur de la
+        // page, le titre, le numéro et la date passent dessous, à droite.
+        let mut y = y;
+        let y_haut = y;
+        if let Some((LigneResolue::Logo { logo, centree }, reste)) = lignes.split_first()
+            && logo.est_une_image_de_zone()
+        {
+            if let Some(image) = self.image_de(*logo) {
+                let alignement = if *centree { 0.5 } else { 0.0 };
+                let largeur = self.g.droite - self.g.gauche;
+                y += t.image(image, self.g.gauche, y, largeur, style.h_image, alignement) + 6.0;
+            }
+            lignes = reste;
+        }
         let mut logo_gauche = None;
         let mut logo_droite = None;
         if let Some((
@@ -670,7 +703,6 @@ impl<'d> Moteur<'d> {
             logo_droite = self.image_de(*logo);
             lignes = reste;
         }
-        let style = self.style_entete();
 
         // Colonne gauche : logo en tête de zone, puis le reste de la zone.
         let mut x_texte = self.g.gauche;
@@ -751,7 +783,7 @@ impl<'d> Moteur<'d> {
         };
         let bas = y + h_gauche.max(yd - y) + avant;
         t.trait_horizontal(self.g.gauche, self.g.droite, bas, BORDURE, 0.75);
-        bas + apres - y
+        bas + apres - y_haut
     }
 
     // ------------------------------------------------------------ bloc tiers (page 1)
@@ -1478,5 +1510,39 @@ mod tests {
         let mut doc = document(2);
         doc.entreprise.logo = Some(b"pas une image".to_vec());
         assert!(generer(&doc, &Polices::embarquees()).is_ok());
+    }
+
+    /// Image d'en-tête collée depuis Word : sur toute la largeur, au-dessus du
+    /// titre ; l'en-tête s'agrandit de sa hauteur. Image du pied : le pied aussi.
+    #[test]
+    fn image_collee_depuis_word_sur_toute_la_largeur() {
+        const PNG_1X1: &[u8] = &[
+            137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1,
+            8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 218, 99, 100, 96,
+            248, 95, 15, 0, 2, 135, 1, 128, 235, 71, 186, 146, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66,
+            96, 130,
+        ];
+        let polices = Polices::embarquees();
+        let mut doc = document(2);
+        let hauteurs = |doc: &DocumentPdf| {
+            let m = Moteur::new(doc, &polices);
+            (m.en_tete(&mut Toile::a_blanc(), 0.0), m.hauteur_pied())
+        };
+        doc.mise_en_page = kadenz_domaine::mise_en_page::MiseEnPage {
+            entete: "{image_entete}
+**ACME**"
+                .into(),
+            pied: "{image_pied}".into(),
+            ..Default::default()
+        }
+        .analyser()
+        .unwrap();
+        let (entete_sans, pied_sans) = hauteurs(&doc);
+        doc.entreprise.image_entete = Some(PNG_1X1.to_vec());
+        doc.entreprise.image_pied = Some(PNG_1X1.to_vec());
+        let (entete, pied) = hauteurs(&doc);
+        assert!(entete >= entete_sans + 160.0, "{entete_sans} -> {entete}");
+        assert!(pied >= pied_sans + 80.0, "{pied_sans} -> {pied}");
+        assert!(generer(&doc, &polices).is_ok());
     }
 }

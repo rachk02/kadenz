@@ -92,6 +92,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0018_theme.sql"),
     include_str!("migrations/0019_palette.sql"),
     include_str!("migrations/0020_revocation.sql"),
+    include_str!("migrations/0021_images_zones.sql"),
 ];
 
 #[derive(Debug)]
@@ -511,7 +512,8 @@ pub(crate) const THEME_RETIRE_V1: &str = "ALTER TABLE utilisateur DROP COLUMN th
 
 /// Validation par le code d'aujourd'hui d'un document d'une base restée au
 /// schéma de la V1 (essais de reprise) : les deux colonnes de la nature
-/// comptable (migration 0017) le temps de valider, puis retirées.
+/// comptable (migration 0017) et les images collées depuis Word (migration
+/// 0021) le temps de valider, puis retirées.
 #[cfg(test)]
 pub(crate) fn valider_au_schema_v1(
     conn: &mut rusqlite::Connection,
@@ -520,13 +522,21 @@ pub(crate) fn valider_au_schema_v1(
 ) -> String {
     conn.execute_batch(
         "ALTER TABLE produit ADD COLUMN nature_comptable TEXT NOT NULL DEFAULT 'marchandise';
-         ALTER TABLE ligne_document ADD COLUMN nature_snapshot TEXT NOT NULL DEFAULT 'marchandise';",
+         ALTER TABLE ligne_document ADD COLUMN nature_snapshot TEXT NOT NULL DEFAULT 'marchandise';
+         ALTER TABLE entreprise ADD COLUMN image_entete BLOB;
+         ALTER TABLE entreprise ADD COLUMN image_pied BLOB;
+         ALTER TABLE instantane_entreprise ADD COLUMN image_entete BLOB;
+         ALTER TABLE instantane_entreprise ADD COLUMN image_pied BLOB;",
     )
     .unwrap();
     let numero = documents::valider(conn, acteur, id).unwrap();
     conn.execute_batch(
         "ALTER TABLE ligne_document DROP COLUMN nature_snapshot;
-         ALTER TABLE produit DROP COLUMN nature_comptable;",
+         ALTER TABLE produit DROP COLUMN nature_comptable;
+         ALTER TABLE entreprise DROP COLUMN image_entete;
+         ALTER TABLE entreprise DROP COLUMN image_pied;
+         ALTER TABLE instantane_entreprise DROP COLUMN image_entete;
+         ALTER TABLE instantane_entreprise DROP COLUMN image_pied;",
     )
     .unwrap();
     numero

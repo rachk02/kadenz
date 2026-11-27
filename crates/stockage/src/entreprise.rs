@@ -16,6 +16,11 @@ use crate::{Erreur, Resultat, refus};
 /// Taille maximale d'un logo : largement assez pour un en-tête de document A4.
 pub const TAILLE_MAX_LOGO: usize = 2 * 1024 * 1024;
 
+/// Taille maximale d'une image d'en-tête ou de pied collée depuis Word. Avec
+/// les deux logos au maximum, la fiche entreprise tient encore dans un seul
+/// message entre poste et serveur (8 Mo, en base64).
+pub const TAILLE_MAX_IMAGE_ZONE: usize = 768 * 1024;
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Entreprise {
     pub nom: String,
@@ -33,31 +38,46 @@ pub struct Entreprise {
     pub responsable_comptabilite: String,
 }
 
-/// Logo principal ou secondaire.
+/// Image de la fiche entreprise : logo principal ou secondaire, ou image de
+/// l'en-tête ou du pied de page collée depuis Word.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Logo {
     Principal,
     Secondaire,
+    Entete,
+    Pied,
 }
 
 impl Logo {
+    pub const TOUS: [Logo; 4] = [Logo::Principal, Logo::Secondaire, Logo::Entete, Logo::Pied];
+
     pub fn code(self) -> &'static str {
         match self {
             Logo::Principal => "principal",
             Logo::Secondaire => "secondaire",
+            Logo::Entete => "entete",
+            Logo::Pied => "pied",
         }
     }
 
     pub fn depuis_code(code: &str) -> Option<Logo> {
-        [Logo::Principal, Logo::Secondaire]
-            .into_iter()
-            .find(|l| l.code() == code)
+        Logo::TOUS.into_iter().find(|l| l.code() == code)
+    }
+
+    /// Taille maximale acceptée pour cette image.
+    pub fn taille_max(self) -> usize {
+        match self {
+            Logo::Principal | Logo::Secondaire => TAILLE_MAX_LOGO,
+            Logo::Entete | Logo::Pied => TAILLE_MAX_IMAGE_ZONE,
+        }
     }
 
     fn colonne(self) -> &'static str {
         match self {
             Logo::Principal => "logo",
             Logo::Secondaire => "logo2",
+            Logo::Entete => "image_entete",
+            Logo::Pied => "image_pied",
         }
     }
 }
@@ -276,10 +296,10 @@ pub fn definir_logo(
                 "le logo doit être une image PNG ou JPEG".into(),
             ));
         }
-        if o.len() > TAILLE_MAX_LOGO {
+        if o.len() > logo.taille_max() {
             return Err(refus(
-                "le logo dépasse la taille maximale de {} Mo",
-                &[&(TAILLE_MAX_LOGO / (1024 * 1024))],
+                "l'image dépasse la taille maximale de {} Ko",
+                &[&(logo.taille_max() / 1024)],
             ));
         }
     }

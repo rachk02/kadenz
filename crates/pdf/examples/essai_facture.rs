@@ -82,6 +82,7 @@ fn main() {
             localisation: "Secteur fictif".into(),
             logo: lire(2),
             logo2: lire(3),
+            ..Default::default()
         },
         tiers: TiersPdf {
             nom: "Client Alpha".into(),

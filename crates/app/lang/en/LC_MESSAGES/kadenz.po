@@ -4974,3 +4974,45 @@ msgstr "The licence is active until {}. For a renewal or extra workstations, ent
 
 msgid "Saisir un autre code"
 msgstr "Enter another code"
+
+msgid "Image d'en-tête collée depuis Word"
+msgstr "Header image pasted from Word"
+
+msgid "Image de pied collée depuis Word"
+msgstr "Footer image pasted from Word"
+
+msgid "Coller l'en-tête depuis Word"
+msgstr "Paste the header from Word"
+
+msgid "Coller le pied de page depuis Word"
+msgstr "Paste the footer from Word"
+
+msgid "Dans Word, double-cliquez dans l'en-tête, sélectionnez tout (Ctrl+A), copiez (Ctrl+C), puis cliquez sur « Coller l'en-tête depuis Word ». Même chose pour le pied de page. L'image est imprimée telle que Word l'affiche ; le numéro de page reste ajouté par Kadenz."
+msgstr "In Word, double-click in the header, select all (Ctrl+A), copy (Ctrl+C), then click “Paste the header from Word”. Same for the footer. The image prints exactly as Word shows it; Kadenz still adds the page number."
+
+msgid "Image collée depuis Word : vérifiez l'aperçu, puis enregistrez. Pour revenir au texte, remplacez la variable de l'image par le texte voulu."
+msgstr "Image pasted from Word: check the preview, then save. To go back to text, replace the image variable with the text you want."
+
+msgid "l'image dépasse la taille maximale de {} Ko"
+msgstr "the image exceeds the maximum size of {} KB"
+
+msgid "le presse-papiers est occupé : réessayez"
+msgstr "the clipboard is busy: try again"
+
+msgid "le presse-papiers ne contient pas de copie de Word : sélectionnez l'en-tête dans Word, copiez-le, puis recommencez"
+msgstr "the clipboard does not contain a copy from Word: select the header in Word, copy it, then try again"
+
+msgid "l'image copiée est vide"
+msgstr "the copied image is empty"
+
+msgid "l'image copiée est illisible"
+msgstr "the copied image cannot be read"
+
+msgid "rendu de l'image impossible"
+msgstr "the image cannot be rendered"
+
+msgid "rendu de l'image impossible : mémoire insuffisante"
+msgstr "the image cannot be rendered: not enough memory"
+
+msgid "l'image copiée est trop lourde : copiez plutôt le texte de l'en-tête dans Word"
+msgstr "the copied image is too large: copy the header text in Word instead"

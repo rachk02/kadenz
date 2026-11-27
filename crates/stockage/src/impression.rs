@@ -22,6 +22,9 @@ pub struct Impression {
     pub entreprise: Entreprise,
     pub logo: Option<Vec<u8>>,
     pub logo2: Option<Vec<u8>>,
+    /// Images de l'en-tête et du pied collées depuis Word.
+    pub image_entete: Option<Vec<u8>>,
+    pub image_pied: Option<Vec<u8>>,
     pub textes: TextesDocument,
     pub couleur: [u8; 3],
     /// Orthographe du montant en lettres.
@@ -39,6 +42,8 @@ pub fn courante(conn: &Connection, t: TypeDocument) -> Resultat<Impression> {
         entreprise: entreprise::lire(conn)?.unwrap_or_default(),
         logo: entreprise::lire_logo(conn, Logo::Principal)?,
         logo2: entreprise::lire_logo(conn, Logo::Secondaire)?,
+        image_entete: entreprise::lire_logo(conn, Logo::Entete)?,
+        image_pied: entreprise::lire_logo(conn, Logo::Pied)?,
         textes: p.textes(t).clone(),
         couleur: p.couleur_documents,
         orthographe: p.orthographe,
@@ -73,12 +78,8 @@ fn en_json(i: &Impression) -> Value {
     })
 }
 
-fn depuis_json(
-    v: &Value,
-    type_document: TypeDocument,
-    logo: Option<Vec<u8>>,
-    logo2: Option<Vec<u8>>,
-) -> Impression {
+fn depuis_json(v: &Value, type_document: TypeDocument, images: [Option<Vec<u8>>; 4]) -> Impression {
+    let [logo, logo2, image_entete, image_pied] = images;
     let t = |nom: &str| {
         v.get(nom)
             .and_then(Value::as_str)
@@ -103,6 +104,8 @@ fn depuis_json(
         },
         logo,
         logo2,
+        image_entete,
+        image_pied,
         textes: TextesDocument {
             titre: t("titre"),
             phrase_somme: t("phrase_somme"),
@@ -134,8 +137,9 @@ pub(crate) fn figer(conn: &Connection, document_id: i64, t: TypeDocument) -> Res
         .query_row(
             "SELECT id FROM instantane_entreprise
              WHERE donnees = ?1 AND logo IS ?2 AND logo2 IS ?3
+               AND image_entete IS ?4 AND image_pied IS ?5
              ORDER BY id DESC LIMIT 1",
-            params![donnees, i.logo, i.logo2],
+            params![donnees, i.logo, i.logo2, i.image_entete, i.image_pied],
             |r| r.get(0),
         )
         .optional()?;
@@ -143,8 +147,9 @@ pub(crate) fn figer(conn: &Connection, document_id: i64, t: TypeDocument) -> Res
         Some(id) => id,
         None => {
             conn.execute(
-                "INSERT INTO instantane_entreprise (donnees, logo, logo2) VALUES (?1, ?2, ?3)",
-                params![donnees, i.logo, i.logo2],
+                "INSERT INTO instantane_entreprise (donnees, logo, logo2, image_entete, image_pied)
+                 VALUES (?1, ?2, ?3, ?4, ?5)",
+                params![donnees, i.logo, i.logo2, i.image_entete, i.image_pied],
             )?;
             conn.last_insert_rowid()
         }
@@ -172,11 +177,12 @@ pub fn pour_document(conn: &Connection, document_id: i64) -> Resultat<Impression
     let Some(id) = instantane else {
         return courante(conn, t);
     };
-    let (donnees, logo, logo2): (String, Option<Vec<u8>>, Option<Vec<u8>>) = conn.query_row(
-        "SELECT donnees, logo, logo2 FROM instantane_entreprise WHERE id = ?1",
+    let (donnees, images): (String, [Option<Vec<u8>>; 4]) = conn.query_row(
+        "SELECT donnees, logo, logo2, image_entete, image_pied
+         FROM instantane_entreprise WHERE id = ?1",
         [id],
-        |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+        |r| Ok((r.get(0)?, [r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?])),
     )?;
     let v: Value = serde_json::from_str(&donnees).unwrap_or(Value::Null);
-    Ok(depuis_json(&v, t, logo, logo2))
+    Ok(depuis_json(&v, t, images))
 }

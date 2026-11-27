@@ -3191,6 +3191,7 @@ dependencies = [
  "kadenz-protocole",
  "kadenz-serveur",
  "kadenz-stockage",
+ "png",
  "raw-window-handle",
  "rfd",
  "serde_json",

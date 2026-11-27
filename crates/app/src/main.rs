@@ -26,6 +26,7 @@ mod monoposte;
 mod paiements;
 mod pdf;
 mod pilotage;
+mod presse_papiers;
 mod referentiels;
 mod relie;
 mod reprise;

@@ -70,6 +70,8 @@ sha2 = "0.10.9"
 base64 = "0.22.1"
 getrandom = "0.3.4"
 windows-sys = "0.61.2"
+# Coller depuis Word : image de la sélection copiée, encodée en PNG.
+png = "0.18.1"
 # Aperçu et impression (A2) : poignée de la fenêtre de Kadenz, propriétaire de la
 # fenêtre d'impression ; même version que celle de slint et rfd.
 raw-window-handle = "0.6.2"

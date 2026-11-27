@@ -2120,6 +2120,36 @@ mod tests {
         assert_eq!(ancienne.entreprise.nom, "Avant");
     }
 
+    /// Une image d'en-tête collée depuis Word entre dans l'instantané : le
+    /// document validé ensuite ne reprend pas l'instantané précédent, sans elle.
+    #[test]
+    fn image_d_entete_figee_a_la_validation() {
+        use crate::entreprise::{Logo, definir_logo};
+        use crate::impression::pour_document;
+        const PNG: &[u8] = &[0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A, 1, 2];
+        let mut c = contexte();
+        let admin = c.admin.clone();
+        c.conn
+            .execute(
+                "INSERT OR REPLACE INTO entreprise (id, nom) VALUES (1, 'A')",
+                [],
+            )
+            .unwrap();
+        let avant = facture(&mut c, date(2026, 5, 3));
+        valider(&mut c.conn, &admin, avant).unwrap();
+        definir_logo(&c.conn, &admin, Logo::Entete, Some(PNG)).unwrap();
+        definir_logo(&c.conn, &admin, Logo::Pied, Some(PNG)).unwrap();
+        let apres = facture(&mut c, date(2026, 5, 4));
+        valider(&mut c.conn, &admin, apres).unwrap();
+        let i = pour_document(&c.conn, apres).unwrap();
+        assert_eq!(i.image_entete.as_deref(), Some(PNG));
+        assert_eq!(i.image_pied.as_deref(), Some(PNG));
+        assert_eq!(pour_document(&c.conn, avant).unwrap().image_entete, None);
+        // Plafond propre aux images collées.
+        let gros = [PNG, &vec![0u8; crate::entreprise::TAILLE_MAX_IMAGE_ZONE]].concat();
+        assert!(definir_logo(&c.conn, &admin, Logo::Entete, Some(&gros)).is_err());
+    }
+
     #[test]
     fn numerotation_annuelle_reglee() {
         use kadenz_domaine::numerotation::RemiseAZero;

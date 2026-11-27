@@ -1,12 +1,15 @@
 //! Réglages d'impression (jalon J8b) : gabarit, marges, en-tête et pied de page
 //! en contenu libre, aperçu en direct et feuille de calibrage.
 
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use kadenz_domaine::document::TypeDocument;
 use kadenz_domaine::mise_en_page::{
     self, BasDeDocument, Gabarit, LigneTotal, Marges, MiseEnPage, StylePied, Variable,
 };
 use kadenz_domaine::role::Droit;
 use kadenz_protocole::Action;
+use kadenz_stockage::entreprise::{self, Logo};
 use kadenz_stockage::{droits, mise_en_page as reglages};
 use slint::{
     ComponentHandle, Image, Model, ModelRc, Rgba8Pixel, SharedPixelBuffer, SharedString, VecModel,
@@ -260,6 +263,59 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
             }
             Err(message) => api.set_message_docx(message.into()),
         }
+    });
+
+    // Coller depuis Word : l'image de la sélection copiée devient l'image de la
+    // zone (0 : en-tête, 1 : pied), gardée dans la fiche entreprise comme les
+    // logos ; la zone reçoit sa variable, l'aperçu se recalcule.
+    let (f, e) = (fenetre.as_weak(), etat.clone());
+    api.on_coller_word(move |zone| {
+        let Some(f) = f.upgrade() else { return };
+        let api = f.global::<ImpressionApi>();
+        let (logo, variable) = if zone == 1 {
+            (Logo::Pied, "{image_pied}")
+        } else {
+            (Logo::Entete, "{image_entete}")
+        };
+        let octets = match crate::presse_papiers::image_png(logo.taille_max()) {
+            Ok(octets) => octets,
+            Err(message) => {
+                api.set_message_docx(tr(&message).into());
+                return;
+            }
+        };
+        let resultat = {
+            let etat = e.borrow();
+            let Some(acteur) = &etat.utilisateur else {
+                api.set_message_docx(tr("aucune session ouverte").into());
+                return;
+            };
+            let action = Action::DefinirLogo {
+                logo: logo.code().into(),
+                octets: Some(BASE64.encode(&octets)),
+            };
+            match relie::ecrire(&etat, action) {
+                Some(r) => r.map(|_| ()),
+                None => entreprise::definir_logo(&etat.conn, acteur, logo, Some(&octets))
+                    .map_err(texte_erreur),
+            }
+        };
+        if let Err(message) = resultat {
+            api.set_message_docx(message.into());
+            return;
+        }
+        let (entete, pied) = if zone == 1 {
+            (String::new(), variable.to_owned())
+        } else {
+            (variable.to_owned(), String::new())
+        };
+        api.set_docx_entete(entete.into());
+        api.set_docx_pied(pied.into());
+        api.set_message_docx(
+            tr("Image collée depuis Word : vérifiez l'aperçu, puis enregistrez. Pour revenir au texte, remplacez la variable de l'image par le texte voulu.")
+                .into(),
+        );
+        api.set_docx_version(api.get_docx_version() + 1);
     });
 
     let e = etat.clone();

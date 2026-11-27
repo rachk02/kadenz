@@ -162,6 +162,9 @@ pub struct LettreRelance {
     pub entreprise: Entreprise,
     pub logo: Option<Vec<u8>>,
     pub logo2: Option<Vec<u8>>,
+    /// Images de l'en-tête et du pied collées depuis Word.
+    pub image_entete: Option<Vec<u8>>,
+    pub image_pied: Option<Vec<u8>>,
     pub couleur: [u8; 3],
     pub date: NaiveDate,
     pub client: SnapshotTiers,
@@ -228,6 +231,8 @@ pub fn lettre(
         },
         logo: entreprise::lire_logo(conn, Logo::Principal)?,
         logo2: entreprise::lire_logo(conn, Logo::Secondaire)?,
+        image_entete: entreprise::lire_logo(conn, Logo::Entete)?,
+        image_pied: entreprise::lire_logo(conn, Logo::Pied)?,
         couleur: parametres::lire(conn)?.couleur_documents,
         date: aujourd_hui,
         client: d.tiers,

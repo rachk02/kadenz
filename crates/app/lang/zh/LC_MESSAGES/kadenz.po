@@ -4974,3 +4974,45 @@ msgstr "许可证有效期至 {}。如需续订或增加工作站，请输入新
 
 msgid "Saisir un autre code"
 msgstr "输入其他代码"
+
+msgid "Image d'en-tête collée depuis Word"
+msgstr "从 Word 粘贴的页眉图像"
+
+msgid "Image de pied collée depuis Word"
+msgstr "从 Word 粘贴的页脚图像"
+
+msgid "Coller l'en-tête depuis Word"
+msgstr "从 Word 粘贴页眉"
+
+msgid "Coller le pied de page depuis Word"
+msgstr "从 Word 粘贴页脚"
+
+msgid "Dans Word, double-cliquez dans l'en-tête, sélectionnez tout (Ctrl+A), copiez (Ctrl+C), puis cliquez sur « Coller l'en-tête depuis Word ». Même chose pour le pied de page. L'image est imprimée telle que Word l'affiche ; le numéro de page reste ajouté par Kadenz."
+msgstr "在 Word 中双击页眉，全选 (Ctrl+A)，复制 (Ctrl+C)，然后点击“从 Word 粘贴页眉”。页脚同理。图像按 Word 显示的样子打印；页码仍由 Kadenz 添加。"
+
+msgid "Image collée depuis Word : vérifiez l'aperçu, puis enregistrez. Pour revenir au texte, remplacez la variable de l'image par le texte voulu."
+msgstr "已从 Word 粘贴图像：请检查预览后保存。要恢复为文本，请将图像变量替换为所需文本。"
+
+msgid "l'image dépasse la taille maximale de {} Ko"
+msgstr "图像超过 {} KB 的最大大小"
+
+msgid "le presse-papiers est occupé : réessayez"
+msgstr "剪贴板正忙：请重试"
+
+msgid "le presse-papiers ne contient pas de copie de Word : sélectionnez l'en-tête dans Word, copiez-le, puis recommencez"
+msgstr "剪贴板中没有来自 Word 的副本：请在 Word 中选择页眉并复制，然后重试"
+
+msgid "l'image copiée est vide"
+msgstr "复制的图像为空"
+
+msgid "l'image copiée est illisible"
+msgstr "无法读取复制的图像"
+
+msgid "rendu de l'image impossible"
+msgstr "无法生成图像"
+
+msgid "rendu de l'image impossible : mémoire insuffisante"
+msgstr "无法生成图像：内存不足"
+
+msgid "l'image copiée est trop lourde : copiez plutôt le texte de l'en-tête dans Word"
+msgstr "复制的图像太大：请改为在 Word 中复制页眉文本"
