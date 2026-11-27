@@ -3,11 +3,11 @@
 //! /codes), sa fiche sans le code (GET /codes/{id}, avec l'annulation d'un
 //! code libre) et les codes à vendre (GET /codes).
 
-use maud::{Markup, html};
+use maud::{Markup, PreEscaped, html};
 
 use super::{
-    Cadre, Rubrique, bloc_formulaire, chemin_entreprise, erreur_formulaire, heure, jeton,
-    libelle_formule, liste_modules, page, page_formulaire, titre, vide,
+    Cadre, Rubrique, SCRIPT_CODES_TIRES, bloc_formulaire, chemin_entreprise, erreur_formulaire,
+    heure, jeton, libelle_formule, liste_modules, page, page_formulaire, titre, vide,
 };
 use crate::{CODES_PAR_TIRAGE, CodeActivation, CodeCree, EtatCode, Gamme};
 use kadenz_domaine::module::Module;
@@ -233,27 +233,88 @@ pub fn codes(c: &Cadre, liste: &[CodeActivation], erreur: Option<&str>) -> Marku
 /// Codes à vendre tout juste tirés : seul moment où ils s'affichent en clair.
 pub fn codes_crees(c: &Cadre, codes: &[CodeCree]) -> Markup {
     let premier = codes.first().map(|k| &k.fiche);
+    let resume = premier.map(|f| {
+        format!(
+            "{} code{} de {} poste{}, formule {}, modules : {}.",
+            codes.len(),
+            if codes.len() > 1 { "s" } else { "" },
+            f.postes,
+            if f.postes > 1 { "s" } else { "" },
+            libelle_formule(f.formule).to_lowercase(),
+            liste_modules(&f.modules)
+        )
+    });
+    let maintenant = chrono::Local::now();
+    let fichier = liste_a_telecharger(
+        resume.as_deref(),
+        &maintenant.format("%Y-%m-%d %H:%M").to_string(),
+        codes,
+    );
+    let nom_fichier = format!("codes-kadenz-{}.txt", maintenant.format("%Y-%m-%d-%H%M"));
     let contenu = html! {
-        (titre("Codes tirés", html! { a.bouton href="/codes" { "Retour aux codes à vendre" } }))
+        (titre("Codes tirés", html! {
+            a.bouton href=(fichier) download=(nom_fichier) { "Télécharger la liste" }
+            a.bouton href="/codes" { "Retour aux codes à vendre" }
+        }))
         div.carte data-reveal="fade" {
             div.carte-interieur {
-                @if let Some(f) = premier {
-                    p.aide {
-                        (codes.len()) " code" @if codes.len() > 1 { "s" } " de " (f.postes) " poste"
-                        @if f.postes > 1 { "s" } ", formule " (libelle_formule(f.formule).to_lowercase())
-                        ", modules : " (liste_modules(&f.modules)) "."
-                    }
+                @if let Some(r) = &resume {
+                    p.aide { (r) }
                 }
                 ul.codes-tires {
                     @for k in codes {
-                        li { span.code-activation { (k.code) } }
+                        li {
+                            span.code-activation { (k.code) }
+                            button.bouton-copier type="button" hidden data-code=(k.code)
+                                aria-label=(format!("Copier le code {}", k.code)) title="Copier" {
+                                (PreEscaped(ICONE_COPIER))
+                            }
+                        }
                     }
                 }
+                p.avis-code #avis-copie aria-live="polite" {}
                 p.aide {
                     "Notez ou copiez ces codes maintenant : ils ne s'afficheront plus. Chaque code s'active une fois, pour une entreprise, dans Kadenz (assistant de KadenzAdmin, ou Paramètres, rubrique « Abonnement », sur un poste Admin)."
                 }
             }
         }
     };
-    page_formulaire(c, "Codes tirés", Rubrique::Codes, contenu)
+    page_formulaire(
+        c,
+        "Codes tirés",
+        Rubrique::Codes,
+        html! {
+            (contenu)
+            script src=(SCRIPT_CODES_TIRES) defer {}
+        },
+    )
+}
+
+/// Icône « copier » (deux feuilles) et coche affichée après la copie.
+const ICONE_COPIER: &str = r#"<svg class="icone-copier" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><svg class="icone-fait" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>"#;
+
+/// Liste des codes tirés en fichier texte (lignes Windows), en lien `data:`.
+/// Rien n'est gardé ni renvoyé par le serveur : les codes en clair ne
+/// s'affichent qu'une fois.
+fn liste_a_telecharger(resume: Option<&str>, date: &str, codes: &[CodeCree]) -> String {
+    const FIN: &str = "\r\n";
+    let mut texte = format!("Codes d'activation Kadenz tirés le {date}{FIN}");
+    if let Some(r) = resume {
+        texte.push_str(r);
+        texte.push_str(FIN);
+    }
+    texte.push_str(FIN);
+    for k in codes {
+        texte.push_str(&k.code);
+        texte.push_str(FIN);
+    }
+    let mut lien = String::from("data:text/plain;charset=utf-8,");
+    for o in texte.bytes() {
+        if o.is_ascii_alphanumeric() || b"-_.~".contains(&o) {
+            lien.push(o as char);
+        } else {
+            lien.push_str(&format!("%{o:02X}"));
+        }
+    }
+    lien
 }

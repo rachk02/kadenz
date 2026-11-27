@@ -92,6 +92,10 @@ pub const DESCRIPTION: &str = "Portail des licences Kadenz : enregistrement des 
 /// sans lui, le champ unique reste. Même règle d'empreinte que l'image.
 pub const SCRIPT_CODE: &str = "/code-connexion-bd47a7a773.js";
 
+/// Bouton « Copier » de chaque code tiré (2026-11-27). Même règle
+/// d'empreinte ; sans lui, les boutons restent cachés.
+pub const SCRIPT_CODES_TIRES: &str = "/codes-tires-6f68e12de6.js";
+
 /// Empreinte FNV-1a 32 bits d'un texte, calculée à la compilation.
 const fn empreinte(octets: &[u8]) -> u32 {
     let mut h: u32 = 0x811c_9dc5;

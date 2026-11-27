@@ -363,6 +363,20 @@ body.console .colonne-formulaire input[type="text"], body.console .colonne-formu
 body.console .colonne-formulaire input:focus, body.console .colonne-formulaire select:focus, body.console .colonne-formulaire textarea:focus { background: #1D1F21; border-color: #A7B58E; }
 body.console .colonne-formulaire .bouton-principal { min-height: 48px; padding: 0 24px; border-radius: 9px; }
 body.console .colonne-formulaire .codes-tires li { padding: 12px 16px; background: #17181A; border-radius: 9px; }
+/* Copie d'un code tiré (statique/codes-tires-*.js) : bouton caché sans script. */
+body.console .colonne-formulaire .codes-tires li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 8px; padding-bottom: 8px; }
+.bouton-copier { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; padding: 0; color: #8E8E93; background: none; border: 0; border-radius: 8px; cursor: pointer; }
+.bouton-copier[hidden] { display: none; }
+.bouton-copier:hover { color: #F2F3EF; background: #232527; }
+.bouton-copier:focus-visible { outline: 2px solid #A7B58E; outline-offset: 2px; }
+.bouton-copier svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.bouton-copier .icone-fait, .bouton-copier.copie .icone-copier { display: none; }
+.bouton-copier.copie .icone-fait { display: block; }
+.bouton-copier.copie { color: #30D158; }
+body.console .colonne-formulaire .codes-tires .code-activation { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 480px) {
+  body.console .colonne-formulaire .codes-tires .code-activation { font-size: 15px; letter-spacing: 0.02em; }
+}
 
 /* Coque animée (gabarit, 2026-11-21) : l'en-tête est posé au-dessus du
    contenu ; panneau des pages à formulaire animé (C Tournant et pierre). */

@@ -68,6 +68,7 @@ const POLICE_DIATYPE_MONO: &[u8] =
 const FAVICON: &[u8] = include_bytes!("../statique/favicon-portail-6c6118946e.svg");
 const PILIERS: &[u8] = include_bytes!("../statique/piliers-ff8f49030c.svg");
 const SCRIPT_CODE: &[u8] = include_bytes!("../statique/code-connexion-bd47a7a773.js");
+const SCRIPT_CODES_TIRES: &[u8] = include_bytes!("../statique/codes-tires-6f68e12de6.js");
 const PARTAGE: &[u8] = include_bytes!("../statique/partage-9405c98b03.png");
 
 /// robots.txt : le portail reste hors des moteurs de recherche (choix de
@@ -234,6 +235,10 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
             get(|| async { statique("text/javascript; charset=utf-8", SCRIPT_CODE, true) }),
         )
         .route(
+            pages::SCRIPT_CODES_TIRES,
+            get(|| async { statique("text/javascript; charset=utf-8", SCRIPT_CODES_TIRES, true) }),
+        )
+        .route(
             "/robots.txt",
             get(|| async { statique("text/plain; charset=utf-8", ROBOTS.as_bytes(), false) }),
         )
@@ -307,7 +312,7 @@ async fn sans_panique(requete: Request, suite: Next) -> Response {
 }
 
 /// En-têtes de sécurité sur chaque réponse. Scripts : ceux du portail
-/// seulement (`script-src 'self'`, aujourd'hui le seul code en six cases),
+/// seulement (`script-src 'self'` : code en six cases, copie des codes tirés),
 /// jamais en ligne ni évalués.
 async fn entetes(mut reponse: Response) -> Response {
     let h = reponse.headers_mut();
@@ -1869,6 +1874,7 @@ mod tests {
     fn empreinte_des_fichiers_dans_leur_nom() {
         for (chemin, octets) in [
             (pages::SCRIPT_CODE, SCRIPT_CODE),
+            (pages::SCRIPT_CODES_TIRES, SCRIPT_CODES_TIRES),
             (pages::IMAGE_PILIERS, PILIERS),
             (pages::FAVICON, FAVICON),
             (pages::IMAGE_PARTAGE, PARTAGE),
