@@ -4,6 +4,21 @@ Format : une section par version, la plus récente en haut. Numérotation [SemVe
 
 Règle d'écriture des notes : elles parlent à l'utilisateur de Kadenz, en langage courant, sans terme interne (composants, fichiers du code, noms de crates ou de bibliothèques, numéros de décision ou de commit, récursion, base de données interne). Ce qui n'intéresse que l'équipe va sous un titre `### Technique` : `scripts/release.ps1` le retire des notes publiées, et la fenêtre de mise à jour l'écarte aussi pour les anciennes releases. La publication refuse des notes qui contiennent encore un terme interne.
 
+## [0.3.5] - 2026-11-27
+
+### Ajouté
+
+- Licence : votre revendeur voit les ordinateurs reliés à votre licence et peut en retirer un, par exemple un ordinateur perdu ou remplacé. Un ordinateur retiré ne peut plus se relier tant que le revendeur ne l'a pas réautorisé.
+- Licence : Kadenz confirme la licence auprès du portail au lancement puis toutes les 6 heures, sans rien vous demander. Reliez un ordinateur à Internet au moins une fois tous les 30 jours : sans confirmation pendant 30 jours, Kadenz passe en lecture seule jusqu'à la confirmation suivante. L'essai gratuit n'est pas concerné.
+- Une licence suspendue par l'éditeur met Kadenz en lecture seule, avec la raison affichée ; vos données restent consultables.
+
+### Technique
+
+- Révocation (décision 80, `docs/spec-revocation-licences.md`) : bulletin signé `KADENZ-B-`, route `/api/licence/etat` et schéma 14 du portail, pages Appareils et Révocation de la fiche entreprise.
+- Serveur : requêtes `EtatLicence` et `AppliquerBulletin`, migration 0020, identifiant de l'ordinateur à l'inscription, 30 jours sans bulletin en lecture seule.
+- Application : fil `licence_portail`, `kadenz_maj::etat`.
+- Portail : page `/confidentialite`.
+
 ## [0.3.4] - 2026-11-27
 
 ### Ajouté

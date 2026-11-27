@@ -21,6 +21,11 @@ Où sont vos données
   une réinstallation ne relance pas l'essai. Ce fichier ne contient que
   l'identifiant de l'ordinateur (une empreinte, pas son numéro Windows),
   l'édition et la date ; effacé, il est redemandé au portail.
+  Avec une licence installée, un poste envoie au portail, au lancement puis
+  toutes les 6 heures, la liste des postes de l'entreprise (nom, identifiant
+  de l'ordinateur, dates d'inscription et de dernier contact), sans aucune
+  donnée de gestion. Sans réponse du portail pendant 30 jours, la licence
+  passe en lecture seule jusqu'à l'échange suivant.
   Ce que Kadenz envoie au portail : https://licences.mcarre.dev/confidentialite
 
 Importer des fiches (Excel ou CSV)

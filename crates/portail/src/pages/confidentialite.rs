@@ -70,6 +70,31 @@ pub fn confidentialite() -> Markup {
                 "l'identifiant et la raison sociale avec la licence émise."
             }
 
+            h2 { "Postes reliés à une licence" }
+            p.texte {
+                "Quand une licence est installée, un poste de l'entreprise demande au serveur de "
+                "l'entreprise la liste de ses postes et l'envoie au portail, au lancement de Kadenz "
+                "puis toutes les 6 heures. Pour chaque poste, il envoie :"
+            }
+            ul.liste-texte {
+                li { "le nom du poste ;" }
+                li { "l'empreinte de son certificat, qui le désigne auprès du serveur ;" }
+                li { "l'identifiant de l'ordinateur, calculé comme pour l'essai gratuit ;" }
+                li { "la date de son inscription et celle de son dernier contact avec le serveur." }
+            }
+            p.texte {
+                "Il envoie aussi l'identifiant de l'entreprise, l'édition et la version du programme. "
+                "Le portail garde cette liste pour montrer à l'éditeur et au revendeur les postes "
+                "reliés à la licence, retirer un poste à leur demande et appliquer une révocation. "
+                "Il répond par un bulletin signé que le serveur de l'entreprise applique. Le portail "
+                "note au journal l'apparition d'un nouveau poste, avec l'adresse IP de la demande, "
+                "et son retrait. Aucune donnée de gestion n'est envoyée."
+            }
+            p.texte {
+                "Sans connexion à Internet, rien n'est envoyé. Une licence qui n'a reçu aucun bulletin "
+                "du portail depuis 30 jours passe en lecture seule jusqu'à l'échange suivant."
+            }
+
             h2 { "Téléchargements et mises à jour" }
             p.texte {
                 "Pour un téléchargement, le portail note le nom du fichier et l'adresse IP qui l'a "
