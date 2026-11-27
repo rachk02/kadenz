@@ -4932,3 +4932,6 @@ msgstr "Yöneticiden bir abonelik kodu etkinleştirmesini isteyin."
 
 
 
+
+msgid "licence révoquée : contactez votre revendeur"
+msgstr "lisans iptal edildi: bayinizle iletişime geçin"

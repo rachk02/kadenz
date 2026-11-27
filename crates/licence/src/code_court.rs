@@ -37,6 +37,10 @@ pub const MODELES_ACTIVATION: &[&str] = &[
     // d'une gamme présenté par un logiciel de l'autre ; poste déjà pris.
     "ce code ne sert pas à ce logiciel : vérifiez la gamme indiquée sur votre abonnement",
     "ce code est déjà activé sur un autre poste : demandez à votre revendeur de le libérer",
+    // Révocation à distance (décision 80, docs/spec-revocation-licences.md) :
+    // tant que la licence de l'entreprise est révoquée, aucun code ne
+    // s'active pour elle.
+    "licence révoquée : contactez votre revendeur",
 ];
 
 fn rang(c: char) -> Option<u32> {

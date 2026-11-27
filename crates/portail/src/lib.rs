@@ -321,6 +321,39 @@ pub struct EssaiAtteste {
 /// Modèles des refus d'une demande d'essai, traduits par le programme.
 pub const MODELES_ESSAI: &[&str] = &["demande d'essai invalide"];
 
+/// Poste rapporté par un état de licence (décision 80) : ce que le serveur de
+/// l'entreprise sait de lui.
+#[derive(Debug, Clone, Default)]
+pub struct PosteRapporte {
+    /// Empreinte SHA-256 du certificat du poste, hexadécimal minuscule.
+    pub empreinte: String,
+    /// Identifiant de l'ordinateur (`identifiant_poste`) ; vide pour un poste
+    /// qui ne l'a pas donné à son inscription.
+    pub ordinateur: String,
+    pub nom: String,
+    /// Date d'inscription et dernier contact, tels que le serveur les note.
+    pub inscrit_le: String,
+    pub vu_le: String,
+}
+
+/// État de licence envoyé par un poste (`POST /api/licence/etat`).
+#[derive(Debug, Clone, Default)]
+pub struct DemandeEtat {
+    /// Identifiant de l'entreprise.
+    pub entreprise: String,
+    /// `entreprise` ou `monoposte`.
+    pub produit: String,
+    /// Version du programme qui relaie.
+    pub version: String,
+    pub postes: Vec<PosteRapporte>,
+}
+
+/// Refus de la route d'état : le programme les note sans les afficher.
+pub const MODELES_ETAT: &[&str] = &[
+    "demande d'état de licence invalide",
+    "entreprise inconnue du portail",
+];
+
 /// Réponse d'activation : la licence signée et son résumé pour l'écran.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Activation {
@@ -364,6 +397,49 @@ pub struct FicheEntreprise {
     pub licences: Vec<LicenceEmise>,
     /// Codes d'activation liés, du plus récent au plus ancien.
     pub codes: Vec<CodeActivation>,
+    /// Appareils rapportés par les postes (décision 80), actifs d'abord.
+    pub appareils: Vec<Appareil>,
+    /// Ordinateurs bloqués, du plus récent au plus ancien.
+    pub bloques: Vec<OrdinateurBloque>,
+    /// Révocation en cours, s'il y en a une.
+    pub revocation: Option<Revocation>,
+}
+
+/// Appareil d'une licence, tel que les postes l'ont rapporté (décision 80).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Appareil {
+    pub id: i64,
+    pub empreinte: String,
+    /// Identifiant de l'ordinateur ; vide pour un poste ancien.
+    pub ordinateur: String,
+    pub nom: String,
+    pub inscrit_le: String,
+    /// Dernier contact du poste avec son serveur.
+    pub contact_le: String,
+    /// Dernier état reçu par le portail qui le contenait.
+    pub vu_le: String,
+    /// Déconnexion demandée au portail.
+    pub a_retirer_le: Option<String>,
+    /// Absent du dernier état reçu : retiré du serveur de l'entreprise.
+    pub retire_le: Option<String>,
+}
+
+/// Ordinateur bloqué : le serveur de l'entreprise refuse de l'inscrire.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OrdinateurBloque {
+    pub ordinateur: String,
+    pub bloque_le: String,
+    /// Nom du compte qui l'a bloqué.
+    pub par: String,
+}
+
+/// Révocation en cours de la licence d'une entreprise.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Revocation {
+    pub revoquee_le: String,
+    /// Nom du compte qui l'a révoquée.
+    pub par: String,
+    pub raison: String,
 }
 
 /// Ce que la page d'émission propose de saisir.
@@ -786,6 +862,123 @@ fn chiffrer_secrets(conn: &Connection, coffre: &coffre::Coffre) -> Resultat<()> 
     }
     transaction.commit()?;
     Ok(())
+}
+
+/// Appareils d'une entreprise : actifs d'abord (par nom), puis retirés.
+fn appareils_de(conn: &Connection, entreprise: &str) -> rusqlite::Result<Vec<Appareil>> {
+    let mut req = conn.prepare(
+        "SELECT id, empreinte, ordinateur, nom, inscrit_le, contact_le, vu_le, a_retirer_le, retire_le
+         FROM appareil WHERE entreprise = ?1
+         ORDER BY retire_le IS NOT NULL, nom COLLATE NOCASE, id",
+    )?;
+    req.query_map([entreprise], |r| {
+        Ok(Appareil {
+            id: r.get(0)?,
+            empreinte: r.get(1)?,
+            ordinateur: r.get(2)?,
+            nom: r.get(3)?,
+            inscrit_le: r.get(4)?,
+            contact_le: r.get(5)?,
+            vu_le: r.get(6)?,
+            a_retirer_le: r.get(7)?,
+            retire_le: r.get(8)?,
+        })
+    })?
+    .collect()
+}
+
+fn bloques_de(conn: &Connection, entreprise: &str) -> rusqlite::Result<Vec<OrdinateurBloque>> {
+    let mut req = conn.prepare(
+        "SELECT b.ordinateur, b.bloque_le, c.nom FROM ordinateur_bloque b
+         JOIN compte c ON c.id = b.par WHERE b.entreprise = ?1 ORDER BY b.bloque_le DESC",
+    )?;
+    req.query_map([entreprise], |r| {
+        Ok(OrdinateurBloque {
+            ordinateur: r.get(0)?,
+            bloque_le: r.get(1)?,
+            par: r.get(2)?,
+        })
+    })?
+    .collect()
+}
+
+fn revocation_de(conn: &Connection, entreprise: &str) -> rusqlite::Result<Option<Revocation>> {
+    conn.query_row(
+        "SELECT r.revoquee_le, c.nom, r.raison FROM revocation r JOIN compte c ON c.id = r.par
+         WHERE r.entreprise = ?1 AND r.retablie_le IS NULL",
+        [entreprise],
+        |r| {
+            Ok(Revocation {
+                revoquee_le: r.get(0)?,
+                par: r.get(1)?,
+                raison: r.get(2)?,
+            })
+        },
+    )
+    .optional()
+}
+
+/// Vrai si la licence de l'entreprise est révoquée (décision 80).
+fn revoquee(conn: &Connection, entreprise: &str) -> rusqlite::Result<bool> {
+    conn.query_row(
+        "SELECT EXISTS (SELECT 1 FROM revocation WHERE entreprise = ?1 AND retablie_le IS NULL)",
+        [entreprise],
+        |r| r.get(0),
+    )
+}
+
+/// Bulletin à jour d'une entreprise : révocation, postes dont la déconnexion
+/// est demandée et pas encore constatée, ordinateurs bloqués.
+fn bulletin_de(
+    conn: &Connection,
+    entreprise: &str,
+    emis_le: &str,
+) -> rusqlite::Result<kadenz_licence::bulletin::Bulletin> {
+    let liste = |sql: &str| -> rusqlite::Result<Vec<String>> {
+        let mut req = conn.prepare(sql)?;
+        req.query_map([entreprise], |r| r.get(0))?.collect()
+    };
+    Ok(kadenz_licence::bulletin::Bulletin {
+        entreprise: entreprise.to_string(),
+        emis_le: emis_le.to_string(),
+        revoquee: revoquee(conn, entreprise)?,
+        retires: liste(
+            "SELECT empreinte FROM appareil
+             WHERE entreprise = ?1 AND a_retirer_le IS NOT NULL AND retire_le IS NULL
+             ORDER BY empreinte",
+        )?,
+        bloques: liste(
+            "SELECT ordinateur FROM ordinateur_bloque WHERE entreprise = ?1 ORDER BY ordinateur",
+        )?,
+    })
+}
+
+/// Poste rapporté nettoyé, ou `None` s'il est mal formé : empreinte en
+/// hexadécimal de 64 caractères, identifiant d'ordinateur vide ou valide, nom
+/// et dates courts, sans caractère de contrôle.
+fn valider_poste_rapporte(p: &PosteRapporte) -> Option<PosteRapporte> {
+    let empreinte = p.empreinte.trim().to_ascii_lowercase();
+    if empreinte.len() != 64 || !empreinte.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return None;
+    }
+    let ordinateur = if p.ordinateur.trim().is_empty() {
+        String::new()
+    } else {
+        valider_poste(&p.ordinateur).ok()?
+    };
+    let nom = valider_texte(&p.nom, "nom du poste", 100).ok()?;
+    let date = |d: &str| -> Option<String> {
+        let d = d.trim();
+        (d.len() <= 32 && d.bytes().all(|b| b.is_ascii_graphic() || b == b' '))
+            .then(|| d.to_string())
+    };
+    Some(PosteRapporte {
+        empreinte,
+        ordinateur,
+        nom,
+        inscrit_le: date(&p.inscrit_le)?,
+        vu_le: date(&p.vu_le)?,
+    })
 }
 
 fn valider_uuid(identifiant: &str) -> Resultat<String> {
@@ -1874,12 +2067,167 @@ impl Portail {
         let codes = req
             .query_map([&entreprise.identifiant], code_depuis)?
             .collect::<Result<_, _>>()?;
+        let appareils = appareils_de(&conn, &entreprise.identifiant)?;
+        let bloques = bloques_de(&conn, &entreprise.identifiant)?;
+        let revocation = revocation_de(&conn, &entreprise.identifiant)?;
         Ok(FicheEntreprise {
             entreprise,
             paiements,
             licences,
             codes,
+            appareils,
+            bloques,
+            revocation,
         })
+    }
+
+    /// Déconnecte un appareil (décision 80) : le prochain bulletin demande
+    /// son retrait au serveur de l'entreprise, et son ordinateur, s'il est
+    /// connu, est bloqué jusqu'à ce qu'on le réautorise. L'éditeur, ou le
+    /// revendeur de l'entreprise.
+    pub fn deconnecter_appareil(&self, acteur: &Compte, appareil: i64) -> Resultat<Appareil> {
+        let conn = self.conn();
+        let acteur = relire(&conn, acteur)?;
+        let entreprise: String = conn
+            .query_row(
+                "SELECT entreprise FROM appareil WHERE id = ?1",
+                [appareil],
+                |r| r.get(0),
+            )
+            .optional()?
+            .ok_or(ErreurPortail::Introuvable)?;
+        entreprise_permise(&conn, &acteur, &entreprise)?;
+        let transaction = conn.unchecked_transaction()?;
+        let instant = maintenant();
+        transaction.execute(
+            "UPDATE appareil SET a_retirer_le = COALESCE(a_retirer_le, ?2) WHERE id = ?1",
+            params![appareil, instant],
+        )?;
+        let (nom, ordinateur): (String, String) = transaction.query_row(
+            "SELECT nom, ordinateur FROM appareil WHERE id = ?1",
+            [appareil],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )?;
+        if !ordinateur.is_empty() {
+            transaction.execute(
+                "INSERT OR IGNORE INTO ordinateur_bloque (entreprise, ordinateur, bloque_le, par)
+                 VALUES (?1, ?2, ?3, ?4)",
+                params![entreprise, ordinateur, instant, acteur.id],
+            )?;
+        }
+        noter(
+            &transaction,
+            Some(acteur.id),
+            "appareil_deconnexion",
+            Some(&entreprise),
+            &format!(
+                "{}, ordinateur {}",
+                pour_journal(&nom, 100),
+                if ordinateur.is_empty() {
+                    "non donné"
+                } else {
+                    &ordinateur
+                }
+            ),
+        )?;
+        transaction.commit()?;
+        appareils_de(&conn, &entreprise)?
+            .into_iter()
+            .find(|a| a.id == appareil)
+            .ok_or(ErreurPortail::Introuvable)
+    }
+
+    /// Réautorise un ordinateur bloqué : il peut de nouveau s'inscrire. Une
+    /// déconnexion pas encore constatée sur ses appareils est annulée.
+    pub fn reautoriser_ordinateur(
+        &self,
+        acteur: &Compte,
+        entreprise: &str,
+        ordinateur: &str,
+    ) -> Resultat<()> {
+        let conn = self.conn();
+        let acteur = relire(&conn, acteur)?;
+        let entreprise = entreprise_permise(&conn, &acteur, entreprise)?.identifiant;
+        let ordinateur = valider_poste(ordinateur)?;
+        let transaction = conn.unchecked_transaction()?;
+        let retires = transaction.execute(
+            "DELETE FROM ordinateur_bloque WHERE entreprise = ?1 AND ordinateur = ?2",
+            params![entreprise, ordinateur],
+        )?;
+        if retires == 0 {
+            return Err(ErreurPortail::Introuvable);
+        }
+        transaction.execute(
+            "UPDATE appareil SET a_retirer_le = NULL
+             WHERE entreprise = ?1 AND ordinateur = ?2 AND retire_le IS NULL",
+            params![entreprise, ordinateur],
+        )?;
+        noter(
+            &transaction,
+            Some(acteur.id),
+            "ordinateur_reautorise",
+            Some(&entreprise),
+            &ordinateur,
+        )?;
+        transaction.commit()?;
+        Ok(())
+    }
+
+    /// Révoque la licence d'une entreprise (décision 80) : le prochain
+    /// bulletin la met en lecture seule, et aucun code ne s'active plus pour
+    /// elle tant qu'elle n'est pas rétablie.
+    pub fn revoquer_licence(
+        &self,
+        acteur: &Compte,
+        entreprise: &str,
+        raison: &str,
+    ) -> Resultat<()> {
+        let conn = self.conn();
+        let acteur = relire(&conn, acteur)?;
+        let entreprise = entreprise_permise(&conn, &acteur, entreprise)?.identifiant;
+        let raison = valider_texte(raison, "raison", 200)?;
+        if revoquee(&conn, &entreprise)? {
+            return refus("licence déjà révoquée");
+        }
+        let transaction = conn.unchecked_transaction()?;
+        transaction.execute(
+            "INSERT INTO revocation (entreprise, revoquee_le, par, raison) VALUES (?1, ?2, ?3, ?4)",
+            params![entreprise, maintenant(), acteur.id, raison],
+        )?;
+        noter(
+            &transaction,
+            Some(acteur.id),
+            "licence_revoquee",
+            Some(&entreprise),
+            &raison,
+        )?;
+        transaction.commit()?;
+        Ok(())
+    }
+
+    /// Rétablit une licence révoquée.
+    pub fn retablir_licence(&self, acteur: &Compte, entreprise: &str) -> Resultat<()> {
+        let conn = self.conn();
+        let acteur = relire(&conn, acteur)?;
+        let entreprise = entreprise_permise(&conn, &acteur, entreprise)?.identifiant;
+        let transaction = conn.unchecked_transaction()?;
+        let n = transaction.execute(
+            "UPDATE revocation SET retablie_le = ?2, retablie_par = ?3
+             WHERE entreprise = ?1 AND retablie_le IS NULL",
+            params![entreprise, maintenant(), acteur.id],
+        )?;
+        if n == 0 {
+            return refus("licence non révoquée");
+        }
+        noter(
+            &transaction,
+            Some(acteur.id),
+            "licence_retablie",
+            Some(&entreprise),
+            "",
+        )?;
+        transaction.commit()?;
+        Ok(())
     }
 
     /// Entreprise seule, dans la portée du compte.
@@ -2506,6 +2854,143 @@ impl Portail {
     /// (route `/api/activation`). Code libre : la licence est émise, signée et
     /// le code passe à « activé » ; code déjà activé par la même entreprise :
     /// la même licence est rendue. Les refus sont freinés comme les connexions.
+    /// État de licence relayé par un poste (décision 80,
+    /// `docs/spec-revocation-licences.md`, section 5.2) : les postes reçus
+    /// mettent à jour les appareils de l'entreprise, puis le portail rend le
+    /// bulletin signé (révocation, postes à retirer, ordinateurs bloqués). Un
+    /// appareil absent de l'état est noté retiré. Seuls les changements
+    /// (appareil nouveau, appareil retiré) vont au journal, qui ne s'efface
+    /// pas. Les échecs comptent dans le frein de l'adresse et de l'entreprise.
+    pub fn etat_licence(&self, demande: &DemandeEtat, adresse: &str) -> Resultat<String> {
+        let entreprise_valide = valider_uuid(&demande.entreprise).ok();
+        let titulaire = entreprise_valide
+            .as_deref()
+            .map(frein::Titulaire::Entreprise);
+        let cles = frein::cles_etat(titulaire, adresse);
+        let conn = self.conn();
+        let instant = secondes();
+        if let Some(attente) = frein::attente(&conn, &cles, instant)? {
+            return Err(ErreurPortail::Freine(attente));
+        }
+        let resultat = self.etat_sans_frein(&conn, demande, entreprise_valide, adresse);
+        if matches!(resultat, Err(ErreurPortail::Validation(_))) {
+            frein::echec(&conn, &cles, instant)?;
+        }
+        resultat
+    }
+
+    fn etat_sans_frein(
+        &self,
+        conn: &Connection,
+        demande: &DemandeEtat,
+        entreprise: Option<String>,
+        adresse: &str,
+    ) -> Resultat<String> {
+        let invalide = || ErreurPortail::Validation(MODELES_ETAT[0].into());
+        let entreprise = entreprise.ok_or_else(invalide)?;
+        lic::Produit::depuis_code(demande.produit.trim()).ok_or_else(invalide)?;
+        if demande.postes.len() > kadenz_licence::bulletin::MAX_LISTE {
+            return Err(invalide());
+        }
+        let mut postes = Vec::with_capacity(demande.postes.len());
+        for p in &demande.postes {
+            postes.push(valider_poste_rapporte(p).ok_or_else(invalide)?);
+        }
+        let existe: bool = conn.query_row(
+            "SELECT EXISTS (SELECT 1 FROM entreprise WHERE identifiant = ?1)",
+            [&entreprise],
+            |r| r.get(0),
+        )?;
+        if !existe {
+            return Err(ErreurPortail::Validation(MODELES_ETAT[1].into()));
+        }
+        let version = pour_journal(&demande.version, MAX_VERSION_JOURNAL);
+        let instant = maintenant();
+        let transaction = conn.unchecked_transaction()?;
+        for p in &postes {
+            let connu: bool = transaction.query_row(
+                "SELECT EXISTS (SELECT 1 FROM appareil WHERE entreprise = ?1 AND empreinte = ?2)",
+                params![entreprise, p.empreinte],
+                |r| r.get(0),
+            )?;
+            if connu {
+                transaction.execute(
+                    "UPDATE appareil SET ordinateur = ?3, nom = ?4, inscrit_le = ?5, contact_le = ?6,
+                         vu_le = ?7, retire_le = NULL
+                     WHERE entreprise = ?1 AND empreinte = ?2",
+                    params![
+                        entreprise,
+                        p.empreinte,
+                        p.ordinateur,
+                        p.nom,
+                        p.inscrit_le,
+                        p.vu_le,
+                        instant
+                    ],
+                )?;
+            } else {
+                transaction.execute(
+                    "INSERT INTO appareil (entreprise, empreinte, ordinateur, nom, inscrit_le, contact_le, vu_le)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                    params![
+                        entreprise,
+                        p.empreinte,
+                        p.ordinateur,
+                        p.nom,
+                        p.inscrit_le,
+                        p.vu_le,
+                        instant
+                    ],
+                )?;
+                noter(
+                    &transaction,
+                    None,
+                    "appareil_nouveau",
+                    Some(&entreprise),
+                    &format!(
+                        "{}, ordinateur {}, version {version}, adresse {adresse}",
+                        pour_journal(&p.nom, 100),
+                        if p.ordinateur.is_empty() {
+                            "non donné"
+                        } else {
+                            &p.ordinateur
+                        }
+                    ),
+                )?;
+            }
+        }
+        // Appareils absents de l'état : retirés du serveur de l'entreprise.
+        let rapportes: std::collections::HashSet<&str> =
+            postes.iter().map(|p| p.empreinte.as_str()).collect();
+        let presents: Vec<(i64, String, String)> = {
+            let mut req = transaction.prepare(
+                "SELECT id, empreinte, nom FROM appareil WHERE entreprise = ?1 AND retire_le IS NULL",
+            )?;
+            req.query_map([&entreprise], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?
+                .collect::<rusqlite::Result<_>>()?
+        };
+        for (id, empreinte, nom) in presents {
+            if !rapportes.contains(empreinte.as_str()) {
+                transaction.execute(
+                    "UPDATE appareil SET retire_le = ?2 WHERE id = ?1",
+                    params![id, instant],
+                )?;
+                noter(
+                    &transaction,
+                    None,
+                    "appareil_retire",
+                    Some(&entreprise),
+                    &pour_journal(&nom, 100),
+                )?;
+            }
+        }
+        let bulletin = bulletin_de(&transaction, &entreprise, &instant)?;
+        let texte = kadenz_licence::bulletin::emettre(&bulletin, &self.0.cle)
+            .map_err(|e| ErreurPortail::Interne(e.modele.to_string()))?;
+        transaction.commit()?;
+        Ok(texte)
+    }
+
     pub fn activer(&self, demande: &DemandeActivation, adresse: &str) -> Resultat<Activation> {
         let entreprise_demandee =
             pour_journal(&demande.entreprise, MAX_ENTREPRISE_JOURNAL).to_ascii_lowercase();
@@ -2605,6 +3090,9 @@ impl Portail {
             return self.activer_v1(conn, &trouve, &poste, &client, demande, adresse);
         }
         let identifiant = valider_uuid(&demande.entreprise).map_err(invalide)?;
+        if revoquee(conn, &identifiant)? {
+            return Err(ErreurPortail::Validation(MODELES_ACTIVATION[7].into()));
+        }
         if trouve
             .entreprise
             .as_deref()

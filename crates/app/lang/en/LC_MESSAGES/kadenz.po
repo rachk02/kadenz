@@ -4932,3 +4932,6 @@ msgstr "Ask the administrator to activate a subscription code."
 
 
 
+
+msgid "licence révoquée : contactez votre revendeur"
+msgstr "licence revoked: contact your reseller"

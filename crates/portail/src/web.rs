@@ -188,6 +188,7 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
         .route("/codes/{id}/liberer", post(liberer_poste))
         .route("/api/activation", post(activation))
         .route("/api/essai", post(essai))
+        .route("/api/licence/etat", post(etat_licence))
         .route("/telecharger/{produit}", get(page_telechargement))
         .route("/confidentialite", get(page_confidentialite))
         .route("/fichiers/{nom}", get(fichier))
@@ -1345,6 +1346,67 @@ async fn activation(
 
 /// Essai gratuit demandé par le programme (décision 78) : JSON en entrée,
 /// attestation signée et date de début en sortie.
+/// État de licence relayé par un poste (décision 80) : rend le bulletin signé.
+async fn etat_licence(
+    State(etat): State<Etat>,
+    ConnectInfo(pair): ConnectInfo<SocketAddr>,
+    entetes: HeaderMap,
+    corps: Bytes,
+) -> Response {
+    let Ok(valeur) = serde_json::from_slice::<serde_json::Value>(&corps) else {
+        return refus_json(StatusCode::BAD_REQUEST, crate::MODELES_ETAT[0], &[]);
+    };
+    let texte_de = |v: &serde_json::Value, nom: &str| {
+        v.get(nom)
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("")
+            .to_string()
+    };
+    let Some(postes) = valeur
+        .get("postes")
+        .and_then(serde_json::Value::as_array)
+        .map(|liste| {
+            liste
+                .iter()
+                .map(|p| crate::PosteRapporte {
+                    empreinte: texte_de(p, "empreinte"),
+                    ordinateur: texte_de(p, "ordinateur"),
+                    nom: texte_de(p, "nom"),
+                    inscrit_le: texte_de(p, "inscrit_le"),
+                    vu_le: texte_de(p, "vu_le"),
+                })
+                .collect::<Vec<_>>()
+        })
+    else {
+        return refus_json(StatusCode::BAD_REQUEST, crate::MODELES_ETAT[0], &[]);
+    };
+    let demande = crate::DemandeEtat {
+        entreprise: texte_de(&valeur, "entreprise"),
+        produit: texte_de(&valeur, "produit"),
+        version: texte_de(&valeur, "version"),
+        postes,
+    };
+    let adresse = adresse_client(&etat, &entetes, pair);
+    let portail = etat.portail.clone();
+    match bloquant(move || portail.etat_licence(&demande, &adresse)).await {
+        Ok(bulletin) => json(StatusCode::OK, serde_json::json!({ "bulletin": bulletin })),
+        Err(ErreurPortail::Validation(m)) => refus_json(StatusCode::UNPROCESSABLE_ENTITY, &m, &[]),
+        Err(ErreurPortail::Freine(s)) => refus_json(
+            StatusCode::TOO_MANY_REQUESTS,
+            MODELES_ACTIVATION[2],
+            &[s.to_string()],
+        ),
+        Err(e) => {
+            eprintln!("état de licence : {e}");
+            refus_json(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                MODELES_ACTIVATION[3],
+                &[],
+            )
+        }
+    }
+}
+
 async fn essai(
     State(etat): State<Etat>,
     ConnectInfo(pair): ConnectInfo<SocketAddr>,

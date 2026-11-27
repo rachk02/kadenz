@@ -111,6 +111,18 @@ pub(crate) fn cles_activation(titulaire: Option<Titulaire>, adresse: &str) -> Ve
     cles
 }
 
+/// Clés d'un état de licence (décision 80) : comme l'activation, l'adresse et
+/// l'entreprise ; seuls les échecs comptent.
+pub(crate) fn cles_etat(titulaire: Option<Titulaire>, adresse: &str) -> Vec<Cle> {
+    cles_activation(titulaire, adresse)
+        .into_iter()
+        .map(|c| Cle {
+            texte: c.texte.replacen("activation:", "etat:", 1),
+            regle: c.regle,
+        })
+        .collect()
+}
+
 /// Clé d'une demande de lien de téléchargement : l'adresse seule.
 pub(crate) fn cles_telechargement(adresse: &str) -> Vec<Cle> {
     vec![Cle {

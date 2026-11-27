@@ -4,6 +4,7 @@
 |---|---|---|
 | 0.1 | 2026-11-27 | Premier jet par kadenz-cc, d'après la demande de l'utilisateur du 2026-11-27 (décision 80). Rien n'est encore codé. |
 | 0.2 | 2026-11-27 | Réponses de l'utilisateur : 30 jours sans contact puis lecture seule ; appareil déconnecté bloqué jusqu'à ce qu'on le réautorise, reconnu par l'identifiant de l'ordinateur. Révocation gardée malgré une licence réinstallée. Changement d'ordinateur en édition un poste. |
+| 0.3 | 2026-11-27 | Lots R1 et R2 livrés, et les actions du portail du lot R3 (déconnecter, réautoriser, révoquer, rétablir ; pages encore à faire) : bulletin `kadenz_licence::bulletin`, schéma 14 du portail (`appareil`, `ordinateur_bloque`, `revocation`), route `POST /api/licence/etat`, frein sur les échecs, activation refusée tant que la licence est révoquée (`MODELES_ACTIVATION[7]`, traduit). Journal limité aux changements. |
 
 Statut : **spécifié**. Les lots sont à la section 8.
 
@@ -68,7 +69,7 @@ Règles du serveur :
 
 - Table `appareil` : entreprise, empreinte du poste, identifiant de l'ordinateur, nom, inscrit le, dernier contact rapporté, vu par le portail le, à retirer depuis (date de la demande de déconnexion, vide sinon), retiré le (date où un état sans ce poste est revenu).
 - Table `revocation` : entreprise, révoquée le, par (compte), raison, rétablie le, rétablie par.
-- Journal : `licence_etat` (entreprise, nombre de postes, adresse), `appareil_deconnexion`, `licence_revoquee`, `licence_retablie`.
+- Journal, qui ne s'efface pas : les changements seulement, jamais chaque état reçu : `appareil_nouveau` (nom, ordinateur, version, adresse), `appareil_retire`, `appareil_deconnexion`, `ordinateur_reautorise`, `licence_revoquee` (raison), `licence_retablie`.
 
 ### 5.2 Route `POST /api/licence/etat`
 

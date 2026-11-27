@@ -244,6 +244,43 @@ CREATE TABLE essai (
 );
 CREATE UNIQUE INDEX essai_poste ON essai (poste, produit);
 ",
+    // 13 vers 14 : appareils des licences et révocation à distance (décision
+    // 80, docs/spec-revocation-licences.md, section 5). Un appareil par poste
+    // rapporté (empreinte de son certificat) ; un ordinateur bloqué par
+    // identifiant d'ordinateur ; une révocation en cours au plus par
+    // entreprise.
+    "
+CREATE TABLE appareil (
+    id INTEGER PRIMARY KEY,
+    entreprise TEXT NOT NULL REFERENCES entreprise (identifiant),
+    empreinte TEXT NOT NULL,
+    ordinateur TEXT NOT NULL DEFAULT '',
+    nom TEXT NOT NULL,
+    inscrit_le TEXT NOT NULL,
+    contact_le TEXT NOT NULL DEFAULT '',
+    vu_le TEXT NOT NULL,
+    a_retirer_le TEXT,
+    retire_le TEXT
+);
+CREATE UNIQUE INDEX appareil_poste ON appareil (entreprise, empreinte);
+CREATE TABLE ordinateur_bloque (
+    entreprise TEXT NOT NULL REFERENCES entreprise (identifiant),
+    ordinateur TEXT NOT NULL,
+    bloque_le TEXT NOT NULL,
+    par INTEGER NOT NULL REFERENCES compte (id),
+    PRIMARY KEY (entreprise, ordinateur)
+);
+CREATE TABLE revocation (
+    id INTEGER PRIMARY KEY,
+    entreprise TEXT NOT NULL REFERENCES entreprise (identifiant),
+    revoquee_le TEXT NOT NULL,
+    par INTEGER NOT NULL REFERENCES compte (id),
+    raison TEXT NOT NULL,
+    retablie_le TEXT,
+    retablie_par INTEGER REFERENCES compte (id)
+);
+CREATE UNIQUE INDEX revocation_en_cours ON revocation (entreprise) WHERE retablie_le IS NULL;
+",
 ];
 
 /// Déclencheurs qui interdisent l'effacement du journal et de sa chaîne

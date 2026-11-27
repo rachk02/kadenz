@@ -4932,3 +4932,6 @@ msgstr "管理者に購読コードの有効化を依頼してください。"
 
 
 
+
+msgid "licence révoquée : contactez votre revendeur"
+msgstr "ライセンスは取り消されました。販売店にお問い合わせください"
