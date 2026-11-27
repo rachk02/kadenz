@@ -1141,3 +1141,4 @@
 [2026-11-27 02:23:22] Suivi - Release 0.3.4 lancee (accord explicite de l utilisateur « fais le », cle E: branchee) : version 0.3.4 dans Cargo.toml, CHANGELOG fige au 2026-11-27.
 [2026-11-27 04:14:52] Suivi - Release 0.3.4 relancee a la demande de l'utilisateur apres l'arret faute de memoire (CARGO_BUILD_JOBS=1)
 [2026-11-27 05:08:57] Suivi - Release v0.3.4 publiee (rachk02/kadenz-releases) ; paquets, manifeste signe et notes copies dans /srv/kadenz/depot du Dell ; /api/releases liste v0.3.4, /telecharger/monoposte sert l'installateur, empreinte verifiee
+[2026-11-27 05:23:16] Suivi - Lot E3 : page publique /confidentialite du portail (ce que Kadenz et le portail envoient et gardent, tire du code), lien depuis le telechargement et le LISEZMOI, grille mobile des pages piliers en minmax(0, 1fr) ; tests du portail verts ; pas encore deployee sur le Dell

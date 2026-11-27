@@ -8,6 +8,7 @@
 | 0.4 | 2026-11-26 | Lot T2 livré : route `GET /api/releases` (versions publiées du dépôt au format de la liste des releases de GitHub, liens signés absolus), dépôt à plat étendu aux paquets MSI, au manifeste `kadenz-maj-X.Y.Z.json`, à sa signature et aux notes `notes-X.Y.Z.md` ; client de mise à jour qui lit le portail d'abord, GitHub si le portail ne répond pas ou n'a rien publié. |
 | 0.5 | 2026-11-26 | Lot E2 livré : adresse email à l'étape Licence de l'assistant (serveur et monoposte, sans code), essai noté « à confirmer » dans la base du serveur, demande au portail hors du fil de l'interface à l'installation puis à chaque lancement tant qu'il n'est pas confirmé, attestation gardée dans `%ProgramData%\Kadenz\essai-<édition>.txt`, lecture seule après sept jours sans confirmation (raison affichée), règle d'adresse partagée (`kadenz_licence::essai::valider_email`). Les essais commencés avant cette règle ne sont pas concernés. |
 | 0.6 | 2026-11-26 | Décision de l'utilisateur du 2026-11-26 : ni email ni connexion exigés. L'essai se reconnaît par l'identifiant du poste seul, envoyé sans rien demander ; sans réponse du portail, l'essai continue normalement et la demande repart à chaque lancement (plus de lecture seule après sept jours). Colonne `email` retirée de la table `essai` (schéma 13, jamais déployé). |
+| 0.7 | 2026-11-27 | Release 0.3.4 servie par le portail du Dell (`/srv/kadenz/depot`). Lot E3 livré : page publique `/confidentialite` du portail (pas encore de site public), qui décrit d'après le code ce que Kadenz et le portail envoient et gardent (essai, activation, téléchargement, frein, journal, hébergement, cookies) ; lien depuis la page de téléchargement et le LISEZMOI. |
 
 Statut : **spécifié**. Les lots sont au tableau de la section 7.
 
@@ -85,6 +86,6 @@ Changer de machine redonne un essai, de même qu'un poste qui ne se connecte jam
 | T3 | Publication vers le Dell dans `release.ps1`, dossier, droits, sauvegarde. Demande l'accord de l'utilisateur (serveur de production). | `scripts/`, Dell |
 | E1 (livré) | Table des essais du portail (poste, produit, début), route `/api/essai`, date signée, journal. Tests. | `crates/portail`, `crates/licence` |
 | E2 (livré) | Appel au portail sans rien demander, date « à confirmer » tant que le portail n'a pas répondu, cache `%ProgramData%\Kadenz\essai-<édition>.txt`. | `crates/app`, `crates/stockage`, installateur |
-| E3 | Page de confidentialité du site : usage de l'identifiant du poste. | site |
+| E3 (livré) | Page de confidentialité : usage de l'identifiant du poste. Sur le portail, `/confidentialite`, tant que le site public n'existe pas ; à reprendre sur le site. | `crates/portail` |
 
 Ordre proposé : T1, E1, T2, E2, puis T3 et E3 avec l'utilisateur. Les lots T3 et l'essai sur le portail de production demandent son accord.

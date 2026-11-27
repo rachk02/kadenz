@@ -30,6 +30,7 @@ pub fn telechargement(edition: &str, nom: &str, lien: &str) -> Markup {
                 "Une fois le fichier enregistré, ouvrez-le pour installer Kadenz. "
                 "L'essai gratuit de 30 jours est compris."
             }
+            p.aide { a.lien-discret href="/confidentialite" { "Données reçues par Kadenz" } }
         },
     )
 }

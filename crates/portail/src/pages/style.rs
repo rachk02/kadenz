@@ -243,6 +243,15 @@ body.connexion .chiffres-code.faux input { background: #17181A; border-color: #F
    authentification, mot de passe. Mêmes champs, bouton sauge et couleurs que
    la connexion ; clé et codes de secours à chasse fixe sur fond de champ. */
 .connexion-boite-large { max-width: 460px; }
+/* Pages de texte publiques (confidentialité) : colonne plus large, titres de
+   section, listes au ton des textes. */
+.connexion-boite-texte { max-width: 620px; }
+body.connexion .connexion-boite-texte .texte { margin: 0 0 14px; }
+body.connexion h2 { font-family: "ABC Diatype", system-ui, sans-serif; font-weight: 500; font-size: 17px; color: #F2F3EF; margin: 30px 0 10px; }
+body.connexion .liste-texte { color: #8E8E93; font-size: 14px; line-height: 1.6; margin: 0 0 14px; padding-left: 20px; }
+body.connexion .connexion-boite-texte code { font-family: "ABC Diatype Mono", ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 13px; color: #F2F3EF; overflow-wrap: anywhere; }
+.lien-discret { color: #8E8E93; }
+.lien-discret:hover { color: #F2F3EF; }
 a.bouton-sauge, a.bouton-sauge:hover { color: #0E1209; text-decoration: none; }
 body.connexion input[type="text"].sans-icone { padding-left: 16px; }
 body.connexion input.code-activation[type="text"] { font-family: "ABC Diatype Mono", ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 15px; letter-spacing: 0.04em; }
@@ -258,7 +267,7 @@ body.connexion .codes-tires .code-activation { font-size: 15px; letter-spacing: 
 
 @media (max-width: 860px) {
   body.connexion { padding: 12px; }
-  .cadre-connexion { grid-template-columns: 1fr; min-height: calc(100vh - 24px); }
+  .cadre-connexion { grid-template-columns: minmax(0, 1fr); min-height: calc(100vh - 24px); }
   .illustration-connexion { display: none; }
   .colonne-connexion { padding: 40px 20px; }
 }

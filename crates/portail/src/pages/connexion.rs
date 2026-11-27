@@ -90,6 +90,12 @@ pub(super) fn cadre_large(tete_page: Markup, contenu: Markup) -> Markup {
     cadre_commun(tete_page, "connexion-boite connexion-boite-large", contenu)
 }
 
+/// Cadre des pages de texte publiques (confidentialité) : même décor, colonne
+/// la plus large du portail.
+pub(super) fn cadre_texte(tete_page: Markup, contenu: Markup) -> Markup {
+    cadre_commun(tete_page, "connexion-boite connexion-boite-texte", contenu)
+}
+
 /// Page de connexion ; `jeton` est le jeton anti-falsification de la
 /// connexion, le même que dans le cookie posé avec la page ;
 /// `adresse_publique`, l'adresse du portail sur Internet, sans barre finale

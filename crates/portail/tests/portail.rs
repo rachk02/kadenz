@@ -1378,6 +1378,7 @@ fn telechargement_par_lien_signe() {
     assert_eq!(r.statut, 200);
     assert!(r.corps.contains("Votre téléchargement va démarrer"));
     assert!(r.corps.contains("http-equiv=\"refresh\""));
+    assert!(r.corps.contains("href=\"/confidentialite\""));
     let debut = r
         .corps
         .find("/fichiers/KadenzSetup-0.3.4.exe?exp=")
@@ -1434,6 +1435,28 @@ fn telechargement_par_lien_signe() {
     let r = requete(a, "GET", "/telecharger/entreprise", None, "");
     assert_eq!(r.statut, 429);
     assert!(r.corps.contains("Trop de téléchargements"));
+}
+
+/// Page de confidentialité (lot E3) : publique, sans cookie, et elle dit ce
+/// que le portail garde de l'essai, sans email.
+#[test]
+fn page_de_confidentialite() {
+    let (p, d, ..) = portail("confidentialite", "2026-11-27");
+    let lance = web::lancer(
+        p,
+        SocketAddr::from(([127, 0, 0, 1], 0)),
+        ConfigWeb::default(),
+    )
+    .unwrap();
+    let r = requete(lance.adresse(), "GET", "/confidentialite", None, "");
+    assert_eq!(r.statut, 200);
+    assert!(r.entete("set-cookie").is_none());
+    assert!(r.corps.contains("<h1>Données reçues par Kadenz</h1>"));
+    assert!(r.corps.contains("identifiant de l'ordinateur"));
+    assert!(r.corps.contains("essai-&lt;édition&gt;.txt"));
+    assert!(r.corps.contains("noindex"));
+    lance.arreter();
+    let _ = std::fs::remove_dir_all(d);
 }
 
 #[test]

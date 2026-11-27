@@ -13,6 +13,7 @@ use kadenz_licence::entreprise::Formule;
 
 mod code;
 mod comptes;
+mod confidentialite;
 mod connexion;
 mod coque;
 mod double;
@@ -31,6 +32,7 @@ mod telechargement;
 
 pub use code::{code, code_cree, codes, codes_crees};
 pub use comptes::comptes;
+pub use confidentialite::confidentialite;
 pub use connexion::{code_connexion, connexion};
 pub use coque::{Menus, menus};
 pub use double::{codes_secours, double_active, mise_en_place};

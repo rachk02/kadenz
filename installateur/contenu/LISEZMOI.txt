@@ -21,6 +21,7 @@ Où sont vos données
   une réinstallation ne relance pas l'essai. Ce fichier ne contient que
   l'identifiant de l'ordinateur (une empreinte, pas son numéro Windows),
   l'édition et la date ; effacé, il est redemandé au portail.
+  Ce que Kadenz envoie au portail : https://licences.mcarre.dev/confidentialite
 
 Importer des fiches (Excel ou CSV)
   Dans Kadenz, ouvrez l'import et cliquez sur le bouton rond « i » : il

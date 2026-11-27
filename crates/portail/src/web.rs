@@ -188,6 +188,7 @@ pub fn routeur(portail: Portail, config: ConfigWeb) -> Router {
         .route("/api/activation", post(activation))
         .route("/api/essai", post(essai))
         .route("/telecharger/{produit}", get(page_telechargement))
+        .route("/confidentialite", get(page_confidentialite))
         .route("/fichiers/{nom}", get(fichier))
         .route("/api/releases", get(releases))
         .route("/comptes", get(page_comptes).post(nouveau_compte))
@@ -1528,6 +1529,11 @@ async fn journal(State(etat): State<Etat>, entetes: HeaderMap) -> Response {
 
 /// Page « Votre téléchargement va démarrer » : dernier paquet de l'édition,
 /// lien signé de dix minutes, freiné par adresse.
+/// Page publique de confidentialité (lot E3), sans compte ni cookie.
+async fn page_confidentialite() -> Response {
+    html(StatusCode::OK, pages::confidentialite())
+}
+
 async fn page_telechargement(
     State(etat): State<Etat>,
     ConnectInfo(pair): ConnectInfo<SocketAddr>,
