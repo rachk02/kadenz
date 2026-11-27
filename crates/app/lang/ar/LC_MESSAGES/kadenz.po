@@ -4953,3 +4953,24 @@ msgstr "نشرة ترخيص صادرة لشركة أخرى"
 
 msgid "bulletin de licence signé par une clé inconnue"
 msgstr "نشرة ترخيص موقَّعة بمفتاح غير معروف"
+
+msgid "Licence activée : abonnement jusqu'au {}."
+msgstr "تم تفعيل الترخيص: الاشتراك حتى {}."
+
+msgid "Formule de la dernière licence"
+msgstr "صيغة آخر ترخيص"
+
+msgid "Mensuelle, jusqu'au {}"
+msgstr "شهري، حتى {}"
+
+msgid "Annuelle, jusqu'au {}"
+msgstr "سنوي، حتى {}"
+
+msgid "Licences installées"
+msgstr "التراخيص المثبتة"
+
+msgid "La licence est active jusqu'au {}. Pour un renouvellement ou des postes en plus, saisissez le nouveau code."
+msgstr "الترخيص نشط حتى {}. للتجديد أو لمحطات عمل إضافية، أدخل الرمز الجديد."
+
+msgid "Saisir un autre code"
+msgstr "إدخال رمز آخر"

@@ -28,6 +28,24 @@ pub(crate) struct VueAbonnement {
     pub bandeau_grave: bool,
     /// Suite du bandeau : chemin du renouvellement, ou à qui s'adresser.
     pub bandeau_aide: String,
+    /// Licences installées : date d'installation, formule et échéance.
+    pub historique: Vec<(String, String)>,
+    /// Le champ du code s'ouvre de lui-même : pas d'abonnement actif, ou
+    /// échéance dans 30 jours ou moins. Sinon un bouton l'ouvre.
+    pub saisie_proposee: bool,
+    /// Échéance de l'abonnement actif, à afficher (`JJ/MM/AAAA`).
+    pub echeance: String,
+}
+
+/// Message de réussite d'une licence installée par le serveur.
+pub(crate) fn texte_licence_activee(a: &Abonnement) -> String {
+    match &a.licence {
+        Some(l) => trf(
+            "Licence activée : abonnement jusqu'au {}.",
+            &[&date(&l.echeance)],
+        ),
+        None => tr("Licence enregistrée par le serveur."),
+    }
 }
 
 /// `AAAA-MM-JJ` en JJ/MM/AAAA ; un texte illisible est rendu tel quel.
@@ -105,7 +123,11 @@ pub(crate) fn vue(a: &Abonnement, recu_le: &str, gere: bool, poste: NaiveDate) -
     if let Some(l) = &a.licence {
         v.lignes.push((tr("Client"), l.client.clone()));
         v.lignes.push((
-            tr("Formule"),
+            if a.licences.len() > 1 {
+                tr("Formule de la dernière licence")
+            } else {
+                tr("Formule")
+            },
             match l.formule {
                 Formule::Mensuelle => tr("Mensuelle"),
                 Formule::Annuelle => tr("Annuelle"),
@@ -162,6 +184,26 @@ pub(crate) fn vue(a: &Abonnement, recu_le: &str, gere: bool, poste: NaiveDate) -
             },
         ));
     }
+    v.historique = a
+        .licences
+        .iter()
+        .map(|l| {
+            let jour = l.installee_le.get(..10).unwrap_or(&l.installee_le);
+            (
+                date(jour),
+                match l.formule {
+                    Formule::Mensuelle => trf("Mensuelle, jusqu'au {}", &[&date(&l.echeance)]),
+                    Formule::Annuelle => trf("Annuelle, jusqu'au {}", &[&date(&l.echeance)]),
+                },
+            )
+        })
+        .collect();
+    v.saisie_proposee = a.statut != Statut::Actif || a.avertissement.is_some();
+    v.echeance = a
+        .licence
+        .as_ref()
+        .map(|l| date(&l.echeance))
+        .unwrap_or_default();
     v.lignes.push((tr("Date du serveur"), date(&a.aujourdhui)));
     v.lignes.push((tr("État reçu le"), date_heure(recu_le)));
 
@@ -306,6 +348,17 @@ pub(crate) fn afficher(
     api.set_bandeau_grave(v.bandeau_grave);
     api.set_bandeau_aide(v.bandeau_aide.into());
     api.set_peut_ouvrir(gere);
+    api.set_historique(ModelRc::new(VecModel::from(
+        v.historique
+            .into_iter()
+            .map(|(libelle, valeur)| LigneAbonnementUi {
+                libelle: libelle.into(),
+                valeur: valeur.into(),
+            })
+            .collect::<Vec<_>>(),
+    )));
+    api.set_saisie_proposee(v.saisie_proposee || recu.is_none());
+    api.set_echeance(v.echeance.into());
     recu.is_some()
 }
 
@@ -347,6 +400,7 @@ mod tests {
             postes_utilises: 3,
             licence: Some(licence(&echeance)),
             erreur: None,
+            licences: Vec::new(),
         }
     }
 

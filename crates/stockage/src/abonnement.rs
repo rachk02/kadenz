@@ -314,6 +314,7 @@ fn evaluer(
         postes_utilises,
         licence: None,
         erreur: None,
+        licences: Vec::new(),
     };
     let modules = match verifiee {
         None => {
@@ -393,6 +394,50 @@ fn evaluer(
         }
     }
     Ok((abonnement, modules))
+}
+
+/// Ajoute à l'état les licences installées sur ce serveur, lues au journal
+/// d'audit (de la plus ancienne à la plus récente ; une même licence
+/// réinstallée n'y figure qu'une fois). Seulement pour les réponses aux postes :
+/// l'évaluation faite avant chaque opération ne lit pas le journal.
+pub fn avec_licences(conn: &Connection, mut abonnement: Abonnement) -> Resultat<Abonnement> {
+    let mut requete = conn.prepare(
+        "SELECT nouvelle_valeur ->> '$.formule', nouvelle_valeur ->> '$.echeance', date_action
+         FROM audit_log
+         WHERE entite = 'parametres' AND action = 'modification_abonnement'
+         ORDER BY id",
+    )?;
+    let lignes = requete
+        .query_map([], |r| {
+            Ok((
+                r.get::<_, Option<String>>(0)?,
+                r.get::<_, Option<String>>(1)?,
+                r.get::<_, String>(2)?,
+            ))
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
+    let mut licences: Vec<proto::LicenceInstallee> = Vec::new();
+    for (formule, echeance, installee_le) in lignes {
+        let formule = match formule.as_deref() {
+            Some("mensuelle") => proto::Formule::Mensuelle,
+            Some("annuelle") => proto::Formule::Annuelle,
+            _ => continue,
+        };
+        let Some(echeance) = echeance else { continue };
+        if licences
+            .iter()
+            .any(|l| l.formule == formule && l.echeance == echeance)
+        {
+            continue;
+        }
+        licences.push(proto::LicenceInstallee {
+            formule,
+            echeance,
+            installee_le,
+        });
+    }
+    abonnement.licences = licences;
+    Ok(abonnement)
 }
 
 /// Vrai si l'ordinateur est bloqué par le dernier bulletin appliqué.

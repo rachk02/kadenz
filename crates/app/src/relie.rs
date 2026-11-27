@@ -379,7 +379,7 @@ pub(crate) fn brancher(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                 return retour_erreur(texte_erreur(&ErreurPoste::HorsConnexion));
             };
             match r.synchro.renouveler(&cle) {
-                Ok(_) => retour_ok(tr("Licence enregistrée par le serveur.")),
+                Ok(a) => retour_ok(crate::abonnement::texte_licence_activee(&a)),
                 Err(e) => retour_erreur(texte_erreur(&e)),
             }
         });
@@ -439,8 +439,16 @@ fn brancher_activation(fenetre: &FenetrePrincipale, etat: &EtatPartage) {
                             ui.set_licence(texte.clone().into());
                             let retour =
                                 f.global::<AbonnementApi>().invoke_renouveler(texte.into());
-                            ui.set_message(retour.message);
-                            ui.set_etat(if retour.ok { 2 } else { 3 });
+                            // Réussite : alerte en bas de la fenêtre, le champ se
+                            // referme ; refus : message sous le champ.
+                            if retour.ok {
+                                f.global::<Alerte>().invoke_montrer(retour.message);
+                                ui.set_message(SharedString::new());
+                                ui.set_etat(2);
+                            } else {
+                                ui.set_message(retour.message);
+                                ui.set_etat(3);
+                            }
                         }
                         Err(m) => {
                             ui.set_message(crate::activation_ui::message(&m).into());

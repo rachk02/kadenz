@@ -21,6 +21,21 @@ pub struct Abonnement {
     pub licence: Option<LicenceAbonnement>,
     /// Raison du refus de la licence enregistrée (statut `Invalide`).
     pub erreur: Option<Refus>,
+    /// Licences installées sur le serveur, de la plus ancienne à la plus
+    /// récente : les codes cumulés (une annuelle puis deux mensuelles, par
+    /// exemple) restent visibles.
+    #[serde(default)]
+    pub licences: Vec<LicenceInstallee>,
+}
+
+/// Licence installée sur le serveur, lue au journal d'audit.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LicenceInstallee {
+    pub formule: Formule,
+    /// Dernier jour couvert, `AAAA-MM-JJ`.
+    pub echeance: String,
+    /// Date de l'installation, `AAAA-MM-JJTHH:MM:SS`.
+    pub installee_le: String,
 }
 
 impl Abonnement {

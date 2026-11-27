@@ -4953,3 +4953,24 @@ msgstr "许可证通告是为另一家企业签发的"
 
 msgid "bulletin de licence signé par une clé inconnue"
 msgstr "许可证通告由未知密钥签名"
+
+msgid "Licence activée : abonnement jusqu'au {}."
+msgstr "许可证已激活：订阅至 {}。"
+
+msgid "Formule de la dernière licence"
+msgstr "最新许可证的方案"
+
+msgid "Mensuelle, jusqu'au {}"
+msgstr "按月，至 {}"
+
+msgid "Annuelle, jusqu'au {}"
+msgstr "按年，至 {}"
+
+msgid "Licences installées"
+msgstr "已安装的许可证"
+
+msgid "La licence est active jusqu'au {}. Pour un renouvellement ou des postes en plus, saisissez le nouveau code."
+msgstr "许可证有效期至 {}。如需续订或增加工作站，请输入新代码。"
+
+msgid "Saisir un autre code"
+msgstr "输入其他代码"

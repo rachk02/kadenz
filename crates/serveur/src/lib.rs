@@ -1235,11 +1235,10 @@ fn traiter(
                 return rejet("aucun compte connecté");
             }
             let cles = contexte.cles.clone();
-            reponse_abonnement(
-                contexte
-                    .base
-                    .executer(move |c| abonnement::appliquer_avec(c, abonnement::horloge(), &cles)),
-            )
+            reponse_abonnement(contexte.base.executer(move |c| {
+                let a = abonnement::appliquer_avec(c, abonnement::horloge(), &cles)?;
+                abonnement::avec_licences(c, a)
+            }))
         }
         Requete::RenouvelerAbonnement { cle } => {
             let Some(uid) = compte.clone() else {
@@ -1251,7 +1250,9 @@ fn traiter(
                     .ok_or_else(|| Erreur::Validation("compte inconnu sur le serveur".into()))?;
                 let acteur = comptes::lire(c, id)?
                     .ok_or_else(|| Erreur::Validation("compte inconnu sur le serveur".into()))?;
-                abonnement::enregistrer_avec(c, &acteur, &cle, abonnement::horloge(), &cles)
+                let a =
+                    abonnement::enregistrer_avec(c, &acteur, &cle, abonnement::horloge(), &cles)?;
+                abonnement::avec_licences(c, a)
             }));
             // Nouvelle licence : le relais la reçoit sans attendre la fin
             // d'une attente de reconnexion (F8).
@@ -1301,7 +1302,10 @@ fn traiter(
             let cles = contexte.cles.clone();
             let reponse = reponse_abonnement(contexte.base.executer(move |c| {
                 match abonnement::appliquer_bulletin(c, &bulletin, abonnement::horloge(), &cles)? {
-                    Ok(()) => abonnement::appliquer_avec(c, abonnement::horloge(), &cles),
+                    Ok(()) => {
+                        let a = abonnement::appliquer_avec(c, abonnement::horloge(), &cles)?;
+                        abonnement::avec_licences(c, a)
+                    }
                     Err(m) => Err(Erreur::ValidationComposee {
                         modele: m.modele.to_string(),
                         valeurs: m.valeurs,

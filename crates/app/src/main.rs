@@ -587,21 +587,6 @@ fn brancher(fenetre: &FenetrePrincipale, etat: EtatPartage) {
             resultat.err().unwrap_or_default()
         });
 
-    // Avant toute connexion (premier lancement) : réglage du poste, appliqué aussitôt.
-    let f = fenetre.as_weak();
-    fenetre
-        .global::<Affichage>()
-        .on_choisir_poste(move |rang, rang_palette| {
-            let reglage = (
-                theme::depuis_rang(rang),
-                theme::palette_depuis_rang(rang_palette),
-            );
-            theme::enregistrer_poste(reglage.0, reglage.1);
-            if let Some(f) = f.upgrade() {
-                theme::appliquer(&f, reglage);
-            }
-        });
-
     let e = etat;
     fenetre.on_changer_mot_de_passe(move |ancien, nouveau, confirmation| {
         if nouveau != confirmation {
@@ -726,6 +711,22 @@ fn main() -> Result<(), slint::PlatformError> {
         .global::<Affichage>()
         .set_animations(theme::animations_du_poste());
     let _suivi_windows = theme::suivre_windows(&fenetre);
+    // Avant toute connexion (premier lancement, assistant de l'édition un poste
+    // compris) : réglage du poste, appliqué aussitôt. Branché ici et non avec la
+    // session, qui n'existe pas encore pendant l'assistant.
+    let f = fenetre.as_weak();
+    fenetre
+        .global::<Affichage>()
+        .on_choisir_poste(move |rang, rang_palette| {
+            let reglage = (
+                theme::depuis_rang(rang),
+                theme::palette_depuis_rang(rang_palette),
+            );
+            theme::enregistrer_poste(reglage.0, reglage.1);
+            if let Some(f) = f.upgrade() {
+                theme::appliquer(&f, reglage);
+            }
+        });
     // Champ des codes de licence courts (ChampCode).
     fenetre
         .global::<CodeCourtUi>()

@@ -1132,6 +1132,7 @@ pub(crate) mod tests {
                 postes_utilises: 0,
                 licence: None,
                 erreur: None,
+                licences: Vec::new(),
             },
         )
         .unwrap();

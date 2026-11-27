@@ -25,6 +25,13 @@ export global AbonnementApi {
     // Le compte gère les paramètres : le bandeau ouvre la rubrique, et la
     // rubrique permet de saisir une nouvelle licence.
     in property <bool> peut-ouvrir;
+    // Licences installées : date d'installation, formule et échéance.
+    in property <[LigneAbonnementUi]> historique;
+    // Le champ du code s'ouvre de lui-même (pas d'abonnement actif, ou
+    // échéance dans 30 jours ou moins) ; sinon un bouton l'ouvre.
+    in property <bool> saisie-proposee: true;
+    // Échéance de l'abonnement actif, JJ/MM/AAAA.
+    in property <string> echeance;
     // Nouvelle licence envoyée au serveur, qui la vérifie et l'applique ;
     // appelée par l'application une fois le code activé au portail
     // (ActivationUi), jamais par l'écran.
@@ -123,7 +130,7 @@ component LigneAbonnement inherits GridLayout {
 // pour un compte qui gère les paramètres : l'application demande la licence au
 // portail, la vérifie, puis la fait enregistrer par le serveur. ActivationUi
 // rend l'état (1 en cours, 2 licence enregistrée, 3 refus) et le message.
-component RenouvellementCode inherits VerticalLayout {
+component ZoneCode inherits VerticalLayout {
     property <bool> en-cours: ActivationUi.etat == 1;
     spacing: 12px;
 
@@ -136,14 +143,6 @@ component RenouvellementCode inherits VerticalLayout {
     changed en-cours => {
         if (!root.en-cours && ActivationUi.etat == 2) {
             champ.vider();
-        }
-    }
-
-    // Pas de message d'une visite précédente de la rubrique.
-    init => {
-        if (!root.en-cours) {
-            ActivationUi.etat = 0;
-            ActivationUi.message = "";
         }
     }
 
@@ -172,6 +171,52 @@ component RenouvellementCode inherits VerticalLayout {
             enabled: champ.valide && !root.en-cours;
             clicked => {
                 root.activer();
+            }
+        }
+    }
+
+}
+
+// Zone du code, ouverte d'elle-même quand un code est attendu ; avec un
+// abonnement actif loin de l'échéance, un bouton l'ouvre. Après une licence
+// installée, elle se referme (l'alerte en bas de la fenêtre le confirme).
+component RenouvellementCode inherits VerticalLayout {
+    property <bool> en-cours: ActivationUi.etat == 1;
+    in-out property <bool> demande;
+    property <bool> montre: AbonnementApi.saisie-proposee || root.demande;
+    spacing: 12px;
+
+    changed en-cours => {
+        if (!root.en-cours && ActivationUi.etat == 2) {
+            root.demande = false;
+        }
+    }
+
+    // Pas de message d'une visite précédente de la rubrique.
+    init => {
+        if (!root.en-cours) {
+            ActivationUi.etat = 0;
+            ActivationUi.message = "";
+        }
+    }
+
+    if root.montre: ZoneCode { }
+
+    if !root.montre: Text {
+        horizontal-alignment: Theme.debut;
+        text: @tr("La licence est active jusqu'au {}. Pour un renouvellement ou des postes en plus, saisissez le nouveau code.", AbonnementApi.echeance);
+        color: Theme.texte-secondaire;
+        wrap: word-wrap;
+    }
+
+    if !root.montre: Rangee {
+        spacing: 8px;
+        alignment: start;
+
+        Bouton {
+            text: @tr("Saisir un autre code");
+            clicked => {
+                root.demande = true;
             }
         }
     }
@@ -206,6 +251,15 @@ export component PageAbonnement inherits ScrollView {
         }
 
         for ligne in AbonnementApi.lignes: LigneAbonnement {
+            libelle: ligne.libelle;
+            valeur: ligne.valeur;
+        }
+
+        if AbonnementApi.historique.length > 0: Section {
+            text: @tr("Licences installées");
+        }
+
+        for ligne in AbonnementApi.historique: LigneAbonnement {
             libelle: ligne.libelle;
             valeur: ligne.valeur;
         }

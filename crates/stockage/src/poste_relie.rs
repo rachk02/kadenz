@@ -288,6 +288,7 @@ mod tests {
             postes_utilises: 1,
             licence: None,
             erreur: None,
+            licences: Vec::new(),
         };
         // Sans licence ni essai : le socle seul.
         crate::abonnement::garder(&conn, &recu(Statut::Absent)).unwrap();

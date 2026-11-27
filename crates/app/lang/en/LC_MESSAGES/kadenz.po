@@ -4953,3 +4953,24 @@ msgstr "licence bulletin issued for another company"
 
 msgid "bulletin de licence signé par une clé inconnue"
 msgstr "licence bulletin signed by an unknown key"
+
+msgid "Licence activée : abonnement jusqu'au {}."
+msgstr "Licence activated: subscription until {}."
+
+msgid "Formule de la dernière licence"
+msgstr "Plan of the latest licence"
+
+msgid "Mensuelle, jusqu'au {}"
+msgstr "Monthly, until {}"
+
+msgid "Annuelle, jusqu'au {}"
+msgstr "Annual, until {}"
+
+msgid "Licences installées"
+msgstr "Installed licences"
+
+msgid "La licence est active jusqu'au {}. Pour un renouvellement ou des postes en plus, saisissez le nouveau code."
+msgstr "The licence is active until {}. For a renewal or extra workstations, enter the new code."
+
+msgid "Saisir un autre code"
+msgstr "Enter another code"

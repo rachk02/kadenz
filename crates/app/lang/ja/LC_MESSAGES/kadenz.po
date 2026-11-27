@@ -4953,3 +4953,24 @@ msgstr "別の会社に発行されたライセンス通知です"
 
 msgid "bulletin de licence signé par une clé inconnue"
 msgstr "不明な鍵で署名されたライセンス通知です"
+
+msgid "Licence activée : abonnement jusqu'au {}."
+msgstr "ライセンスを有効にしました：サブスクリプションは {} まで"
+
+msgid "Formule de la dernière licence"
+msgstr "最新ライセンスのプラン"
+
+msgid "Mensuelle, jusqu'au {}"
+msgstr "月額、{} まで"
+
+msgid "Annuelle, jusqu'au {}"
+msgstr "年額、{} まで"
+
+msgid "Licences installées"
+msgstr "インストール済みのライセンス"
+
+msgid "La licence est active jusqu'au {}. Pour un renouvellement ou des postes en plus, saisissez le nouveau code."
+msgstr "ライセンスは {} まで有効です。更新または端末の追加には、新しいコードを入力してください。"
+
+msgid "Saisir un autre code"
+msgstr "別のコードを入力"

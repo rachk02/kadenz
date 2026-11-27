@@ -4953,3 +4953,24 @@ msgstr "başka bir şirket için düzenlenmiş lisans bülteni"
 
 msgid "bulletin de licence signé par une clé inconnue"
 msgstr "bilinmeyen bir anahtarla imzalanmış lisans bülteni"
+
+msgid "Licence activée : abonnement jusqu'au {}."
+msgstr "Lisans etkinleştirildi: abonelik {} tarihine kadar."
+
+msgid "Formule de la dernière licence"
+msgstr "Son lisansın planı"
+
+msgid "Mensuelle, jusqu'au {}"
+msgstr "Aylık, {} tarihine kadar"
+
+msgid "Annuelle, jusqu'au {}"
+msgstr "Yıllık, {} tarihine kadar"
+
+msgid "Licences installées"
+msgstr "Kurulu lisanslar"
+
+msgid "La licence est active jusqu'au {}. Pour un renouvellement ou des postes en plus, saisissez le nouveau code."
+msgstr "Lisans {} tarihine kadar etkin. Yenileme veya ek iş istasyonları için yeni kodu girin."
+
+msgid "Saisir un autre code"
+msgstr "Başka bir kod gir"
